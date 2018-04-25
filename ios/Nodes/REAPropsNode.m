@@ -2,6 +2,7 @@
 
 #import "REANodesManager.h"
 #import "REAStyleNode.h"
+#import "REAModule.h"
 
 #import <React/RCTLog.h>
 #import <React/RCTUIManager.h>
@@ -38,18 +39,42 @@
 
 - (id)evaluate
 {
-  NSMutableDictionary *props = [NSMutableDictionary new];
+  NSMutableDictionary *nativeProps = [NSMutableDictionary new];
+  NSMutableDictionary *jsProps = [NSMutableDictionary new];
+
+  void (^addBlock)(NSString *key, id obj, BOOL * stop) = ^(NSString *key, id obj, BOOL * stop){
+    if ([self.nodesManager.nativeProps containsObject:key]) {
+      nativeProps[key] = obj;
+    } else {
+      jsProps[key] = obj;
+    }
+  };
+
   for (NSString *prop in _propsConfig) {
     REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
 
     if ([propNode isKindOfClass:[REAStyleNode class]]) {
-      [props addEntriesFromDictionary:[propNode value]];
+      [[propNode value] enumerateKeysAndObjectsUsingBlock:addBlock];
     } else {
-      props[prop] = [propNode value];
+      addBlock(prop, [propNode value], nil);
     }
   }
 
-  return props;
+  if (_connectedViewTag != nil) {
+    if (nativeProps.count > 0) {
+      [self.nodesManager.uiManager
+       synchronouslyUpdateViewOnUIThread:_connectedViewTag
+       viewName:_connectedViewName
+       props:nativeProps];
+    }
+    if (jsProps.count > 0) {
+      [self.nodesManager.reanimatedModule
+       sendEventWithName:@"onReanimatedPropsChange"
+       body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
+    }
+  }
+
+  return @(0);
 }
 
 - (void)update
@@ -61,13 +86,8 @@
     return;
   }
 
-  NSDictionary *props = [self value];
-  if (props.count) {
-    [self.nodesManager.uiManager
-     synchronouslyUpdateViewOnUIThread:_connectedViewTag
-     viewName:_connectedViewName
-     props:props];
-  }
+  // triger for side effect
+  [self value];
 }
 
 @end

@@ -3,7 +3,26 @@
 
 #import <React/RCTDefines.h>
 
-static NSUInteger loopID = 1;
+@interface REAUpdateContext ()
+
+@property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
+@property (nonatomic) NSUInteger loopID;
+
+@end
+
+@implementation REAUpdateContext
+
+- (instancetype)init
+{
+  if ((self = [super init])) {
+    _loopID = 1;
+    _updatedNodes = [NSMutableArray new];
+  }
+  return self;
+}
+
+@end
+
 
 @interface REANode ()
 
@@ -45,8 +64,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value
 {
-  if (_lastLoopID < loopID) {
-    _lastLoopID = loopID;
+  if (_lastLoopID < _updateContext.loopID) {
+    _lastLoopID = _updateContext.loopID;
     return (_memoizedValue = [self evaluate]);
   }
   return _memoizedValue;
@@ -72,12 +91,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)markUpdated
 {
-  [[REANode updatedNodes] addObject:self];
-  if ([REANode updatedNodes].count == 1) {
-    [self.nodesManager postAfterAnimation:^{
-      [REANode runPropUpdates];
-    }];
-  }
+  [_updateContext.updatedNodes addObject:self];
+  [self.nodesManager postRunUpdatesAfterAnimation];
 }
 
 + (NSMutableArray<REANode *> *)updatedNodes
@@ -90,30 +105,31 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   return updatedNodes;
 }
 
-+ (void)runPropUpdates
++ (void)findAndUpdateNodes:(nonnull REANode *)node
+            withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
+{
+  if ([visitedNodes containsObject:node]) {
+    return;
+  } else {
+    [visitedNodes addObject:node];
+  }
+  if ([node respondsToSelector:@selector(update)]) {
+    [(id)node update];
+  } else {
+    for (REANode *child in node.childNodes) {
+      [self findAndUpdateNodes:child withVisitedSet:visitedNodes];
+    }
+  }
+}
+
++ (void)runPropUpdates:(REAUpdateContext *)context
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
-  __block __weak void (^ weak_FindAndUpdateNodes)(REANode *);
-  void (^findAndUpdateNodes)(REANode *);
-  weak_FindAndUpdateNodes = findAndUpdateNodes = ^(REANode *node) {
-    if ([visitedNodes containsObject:node]) {
-      return;
-    } else {
-      [visitedNodes addObject:node];
-    }
-    if ([node respondsToSelector:@selector(update)]) {
-      [(id)node update];
-    } else {
-      for (REANode *child in node.childNodes) {
-        weak_FindAndUpdateNodes(child);
-      }
-    }
-  };
-  for (NSUInteger i = 0; i < [self updatedNodes].count; i++) {
-    findAndUpdateNodes([[self updatedNodes] objectAtIndex:i]);
+  for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
+    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes];
   }
-  [[self updatedNodes] removeAllObjects];
-  loopID++;
+  [context.updatedNodes removeAllObjects];
+  context.loopID++;
 }
 
 @end

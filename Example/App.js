@@ -63,7 +63,7 @@ const ExampleApp = StackNavigator(
     ...SCREENS,
   },
   {
-    initialRouteName: 'Snappable',
+    initialRouteName: 'Main',
   }
 );
 

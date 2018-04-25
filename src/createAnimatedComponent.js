@@ -1,10 +1,25 @@
 import React from 'react';
+import {
+  NativeModules,
+  NativeEventEmitter,
+  findNodeHandle,
+} from 'react-native';
 import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
 
 import AnimatedProps from './core/AnimatedProps';
 import AnimatedEvent from './core/AnimatedEvent';
 
 import invariant from 'fbjs/lib/invariant';
+
+const { ReanimatedModule } = NativeModules;
+const EVENT_EMITTER = new NativeEventEmitter(ReanimatedModule);
+
+const NODE_MAPPING = new Map();
+
+function listener(data) {
+  const component = NODE_MAPPING.get(data.viewTag);
+  component && component._updateFromNative(data.props);
+}
 
 export default function createAnimatedComponent(Component) {
   invariant(
@@ -27,6 +42,7 @@ export default function createAnimatedComponent(Component) {
     }
 
     componentWillUnmount() {
+      this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
     }
@@ -47,6 +63,7 @@ export default function createAnimatedComponent(Component) {
 
       this._propsAnimated.setNativeView(this._component);
       this._attachNativeEvents();
+      this._attachPropUpdater();
     }
 
     _attachNativeEvents() {
@@ -112,6 +129,26 @@ export default function createAnimatedComponent(Component) {
       // this expensive recursive detaching to then re-attach everything on
       // the very next operation.
       oldPropsAnimated && oldPropsAnimated.__detach();
+    }
+
+    _updateFromNative(props) {
+      this._component.setNativeProps(props);
+    }
+
+    _attachPropUpdater() {
+      const viewTag = findNodeHandle(this);
+      NODE_MAPPING.set(viewTag, this);
+      if (NODE_MAPPING.size === 1) {
+        EVENT_EMITTER.addListener('onReanimatedPropsChange', listener);
+      }
+    }
+
+    _detachPropUpdater() {
+      const viewTag = findNodeHandle(this);
+      NODE_MAPPING.delete(viewTag);
+      if (NODE_MAPPING.size === 0) {
+        EVENT_EMITTER.removeAllListeners('onReanimatedPropsChange');
+      }
     }
 
     componentWillReceiveProps(newProps) {

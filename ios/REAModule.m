@@ -107,6 +107,13 @@ RCT_EXPORT_METHOD(detachEvent:(nonnull NSNumber *)viewTag
   }];
 }
 
+RCT_EXPORT_METHOD(configureNativeProps:(nonnull NSArray<NSString *> *)nativeProps)
+{
+    [self addOperationBlock:^(REANodesManager *nodesManager) {
+        [nodesManager configureNativeProps:[NSSet setWithArray:nativeProps]];
+    }];
+}
+
 #pragma mark -- Batch handling
 
 - (void)addOperationBlock:(AnimatedOperation)operation
@@ -138,7 +145,7 @@ RCT_EXPORT_METHOD(detachEvent:(nonnull NSNumber *)viewTag
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[@"onReanimatedCall"];
+  return @[@"onReanimatedCall", @"onReanimatedPropsChange"];
 }
 
 - (void)eventDispatcherWillDispatchEvent:(id<RCTEvent>)event

@@ -23,7 +23,8 @@
   NSMapTable<NSString *, REANode *> *_eventMapping;
   NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
-  NSMutableArray<REAAfterAnimationCallback> *_afterAnimationCallbacks;
+  REAUpdateContext *_updateContext;
+  BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
 }
 
@@ -36,8 +37,9 @@
     _nodes = [NSMutableDictionary new];
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
+    _updateContext = [REAUpdateContext new];
+    _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
-    _afterAnimationCallbacks = [NSMutableArray new];
   }
   return self;
 }
@@ -58,9 +60,9 @@
   [self startUpdatingOnAnimationFrame];
 }
 
-- (void)postAfterAnimation:(REAAfterAnimationCallback)clb
+- (void)postRunUpdatesAfterAnimation
 {
-  [_afterAnimationCallbacks addObject:clb];
+  _wantRunUpdates = YES;
   [self startUpdatingOnAnimationFrame];
 }
 
@@ -101,13 +103,8 @@
     block(displayLink);
   }
 
-  // new items can be added to the _afterAnimationCallback array during the
-  // loop by the enqueued callbacks. In that case we want to run them immediately
-  // and clear after animation queue once all the callbacks are done
-  for (NSUInteger i = 0; i < _afterAnimationCallbacks.count; i++) {
-    _afterAnimationCallbacks[i]();
-  }
-  [_afterAnimationCallbacks removeAllObjects];
+  [REANode runPropUpdates:_updateContext];
+  _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {
     [self stopUpdatingOnAnimationFrame];
@@ -152,6 +149,7 @@
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
   node.nodesManager = self;
+  node.updateContext = _updateContext;
   _nodes[nodeID] = node;
 }
 
@@ -254,6 +252,11 @@
     [_eventQueue addObject:event];
     [self startUpdatingOnAnimationFrame];
   }
+}
+
+- (void)configureNativeProps:(NSSet<NSString *> *)nativeProps
+{
+  _nativeProps = nativeProps;
 }
 
 @end

@@ -11,14 +11,18 @@ typedef NSNumber* REANodeID;
 
 @end
 
+@interface REAUpdateContext : NSObject
+@end
+
 @interface REANode : NSObject
 
-+ (void)runPropUpdates;
++ (void)runPropUpdates:(nonnull REAUpdateContext *)context;
 
 - (instancetype)initWithID:(REANodeID)nodeID
                     config:(NSDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, weak, nullable) REANodesManager *nodesManager;
+@property (nonatomic, nullable) REAUpdateContext *updateContext;
 @property (nonatomic, readonly, nonnull) REANodeID nodeID;
 
 - (_Nullable id)evaluate;

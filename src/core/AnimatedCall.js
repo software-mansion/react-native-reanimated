@@ -34,7 +34,7 @@ export default class AnimatedCall extends AnimatedNode {
   __detach() {
     NODE_MAPPING.delete(this.__nodeID);
     if (NODE_MAPPING.size === 0) {
-      EVENT_EMITTER.removeAllListeners();
+      EVENT_EMITTER.removeAllListeners('onReanimatedCall');
     }
     super.__detach();
   }

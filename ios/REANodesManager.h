@@ -7,13 +7,14 @@
 @class REAModule;
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
-typedef void (^REAAfterAnimationCallback)();
 
 @interface REANodesManager : NSObject
 
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;
+
+@property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
@@ -25,7 +26,7 @@ typedef void (^REAAfterAnimationCallback)();
 //
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
-- (void)postAfterAnimation:(REAAfterAnimationCallback)clb;
+- (void)postRunUpdatesAfterAnimation;
 
 // graph
 
@@ -54,6 +55,10 @@ typedef void (^REAAfterAnimationCallback)();
 - (void)detachEvent:(nonnull NSNumber *)viewTag
           eventName:(nonnull NSString *)eventName
         eventNodeID:(nonnull REANodeID)eventNodeID;
+
+// configuration
+
+- (void)configureNativeProps:(nonnull NSSet<NSString *> *)nativeProps;
 
 // events
 

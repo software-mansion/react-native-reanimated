@@ -12,6 +12,7 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
+import { addWhitelistedNativeProps } from './ConfigHelper';
 
 function backwardsCompatibleAnim(node, AnimationClass) {
   return (clock, state, config) => {
@@ -50,6 +51,9 @@ const Animated = {
   decay: backwardsCompatibleAnim(decay, DecayAnimation),
   timing: backwardsCompatibleAnim(timing, TimingAnimation),
   spring: backwardsCompatibleAnim(spring, SpringAnimation),
+
+  // configuration
+  addWhitelistedNativeProps,
 };
 
 export default Animated;
