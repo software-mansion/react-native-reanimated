@@ -1,0 +1,58 @@
+{
+  "name": "react-native-reanimated",
+  "version": "1.0.0-alpha.1",
+  "description": "More powerfull alternative to Animated library for React Native",
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest",
+    "precommit": "lint-staged"
+  },
+  "main": "src/Animated.js",
+  "files": [
+    "src/",
+    "android/src/main/AndroidManifest.xml",
+    "android/src/main/java/",
+    "ios/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kmagiera/react-native-reanimated.git"
+  },
+  "author": {
+    "email": "krzys.magiera@gmail.com",
+    "name": "Krzysztof Magiera"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/kmagiera/react-native-reanimated/issues"
+  },
+  "homepage": "https://github.com/kmagiera/react-native-reanimated#readme",
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "react": "16.0.0-alpha.6",
+    "react-native": "^0.44.1"
+  },
+  "jest": {
+    "preset": "jest-react-native"
+  },
+  "devDependencies": {
+    "babel-jest": "16.0.0",
+    "babel-preset-react-native": "1.9.0",
+    "husky": "^0.14.3",
+    "jest": "16.0.2",
+    "jest-react-native": "16.0.0",
+    "lint-staged": "^4.0.3",
+    "prettier": "^1.7.0",
+    "react": "16.0.0-alpha.6",
+    "react-native": "^0.44.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write --print-width 80 --tab-width 2 --single-quote --jsx-bracket-same-line=true --trailing-comma=es5",
+      "git add"
+    ]
+  }
+}
