@@ -2,8 +2,12 @@ package com.swmansion.reanimated.nodes;
 
 import android.view.View;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
@@ -14,7 +18,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class PropsNode extends Node<WritableMap> implements FinalNode {
+public class PropsNode extends Node<Double> implements FinalNode {
+
+  private static final Double ZERO = Double.valueOf(0);
 
   private final Map<String, Integer> mMapping;
   private final UIImplementation mUIImplementation;
@@ -23,7 +29,11 @@ public class PropsNode extends Node<WritableMap> implements FinalNode {
   private final JavaOnlyMap mPropMap;
   private final ReactStylesDiffMap mDiffMap;
 
-  public PropsNode(int nodeID, ReadableMap config, NodesManager nodesManager, UIImplementation uiImplementation) {
+  public PropsNode(
+          int nodeID,
+          ReadableMap config,
+          NodesManager nodesManager,
+          UIImplementation uiImplementation) {
     super(nodeID, config, nodesManager);
     mMapping = Utils.processMapping(config.getMap("props"));
     mUIImplementation = uiImplementation;
@@ -41,19 +51,67 @@ public class PropsNode extends Node<WritableMap> implements FinalNode {
   }
 
   @Override
-  protected WritableMap evaluate() {
+  protected Double evaluate() {
+    boolean hasNativeProps = false;
+    boolean hasJSProps = false;
+    WritableMap jsProps = Arguments.createMap();
+
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       @Nullable Node node = mNodesManager.findNodeById(entry.getValue());
       if (node == null) {
         throw new IllegalArgumentException("Mapped style node does not exists");
       } else if (node instanceof StyleNode) {
-        mPropMap.merge(((StyleNode) node).value());
+        WritableMap style = ((StyleNode) node).value();
+        ReadableMapKeySetIterator iter = style.keySetIterator();
+        while (iter.hasNextKey()) {
+          String key = iter.nextKey();
+          WritableMap dest;
+          if (mNodesManager.nativeProps.contains(key)) {
+            hasNativeProps = true;
+            dest = mPropMap;
+          } else {
+            hasJSProps = true;
+            dest = jsProps;
+          }
+          ReadableType type = style.getType(key);
+          switch (type) {
+            case Number:
+              dest.putDouble(key, style.getDouble(key));
+              break;
+            case Array:
+              dest.putArray(key, (WritableArray) style.getArray(key));
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected type " + type);
+          }
+        }
       } else {
-        mPropMap.putDouble(entry.getKey(), (Double) node.value());
+        String key = entry.getKey();
+        if (mNodesManager.nativeProps.contains(key)) {
+          hasNativeProps = true;
+          mPropMap.putDouble(key, (Double) node.value());
+        } else {
+          hasJSProps = true;
+          jsProps.putDouble(key, (Double) node.value());
+        }
       }
     }
 
-    return mPropMap;
+    if (mConnectedViewTag != View.NO_ID) {
+      if (hasNativeProps) {
+        mUIImplementation.synchronouslyUpdateViewOnUIThread(
+                mConnectedViewTag,
+                mDiffMap);
+      }
+      if (hasJSProps) {
+        WritableMap evt = Arguments.createMap();
+        evt.putInt("viewTag", mConnectedViewTag);
+        evt.putMap("props", jsProps);
+        mNodesManager.sendEvent("onReanimatedPropsChange", evt);
+      }
+    }
+
+    return ZERO;
   }
 
   @Override
@@ -67,9 +125,5 @@ public class PropsNode extends Node<WritableMap> implements FinalNode {
 
     // call value for side effect (diff map update via changes made to prop map)
     value();
-
-    mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            mConnectedViewTag,
-            mDiffMap);
   }
 }

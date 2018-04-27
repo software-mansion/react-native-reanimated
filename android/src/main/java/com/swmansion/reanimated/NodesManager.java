@@ -1,6 +1,5 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
 import android.util.SparseArray;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -32,9 +31,11 @@ import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -61,6 +62,7 @@ public class NodesManager implements EventDispatcherListener {
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
+  public Set<String> nativeProps = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
     UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
@@ -261,6 +263,10 @@ public class NodesManager implements EventDispatcherListener {
   public void detachEvent(int viewTag, String eventName, int eventNodeID) {
     String key = viewTag + eventName;
     mEventMapping.remove(key);
+  }
+
+  public void configureNativeProps(Set<String> nativePropsSet) {
+    nativeProps = nativePropsSet;
   }
 
   public void postRunUpdatesAfterAnimation() {

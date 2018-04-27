@@ -4,6 +4,7 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
@@ -12,6 +13,8 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -167,6 +170,21 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       @Override
       public void execute(NodesManager nodesManager) {
         nodesManager.detachEvent(viewTag, eventName, eventNodeID);
+      }
+    });
+  }
+
+  @ReactMethod
+  public void configureNativeProps(ReadableArray nativePropsArray) {
+    int size = nativePropsArray.size();
+    final Set<String> nativeProps = new HashSet<>(size);
+    for (int i = 0; i < size; i++) {
+      nativeProps.add(nativePropsArray.getString(i));
+    }
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.configureNativeProps(nativeProps);
       }
     });
   }
