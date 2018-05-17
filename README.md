@@ -213,7 +213,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns their su
 ### `sub`
 
 ```js
-add(nodeOrNumber1, nodeOrNumber2, ...)
+sub(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
 Takes two or more animatyed nodes or values, and when evaluated returns the result of subtracting their values in the exact order.
@@ -222,7 +222,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 ### `multiply`
 
 ```js
-add(nodeOrNumber1, nodeOrNumber2, ...)
+multiply(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
 Takes two or more animatyed nodes or values, and when evaluated returns the result of multiplying their values in the exact order.
@@ -231,7 +231,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 ### `divide`
 
 ```js
-add(nodeOrNumber1, nodeOrNumber2, ...)
+divide(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
 Takes two or more animatyed nodes or values, and when evaluated returns the result of dividing their values in the exact order.
@@ -241,7 +241,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 ### `pow`
 
 ```js
-add(nodeOrNumber1, nodeOrNumber2, ...)
+pow(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
 Takes two or more animatyed nodes or values, and when evaluated returns the result of deviding their values in the exact order.
