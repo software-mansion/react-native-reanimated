@@ -6,7 +6,7 @@ It provides a more comprahensive, low level abstraction for the Animated library
 
 ![](/assets/meme.png)
 
-## OMG, why would you bild this? (motivation)
+## OMG, why would you build this? (motivation)
 
 Animated library has several limitation that becomes troubling when it comes to gesture based interactions.
 I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
@@ -53,7 +53,7 @@ II. Link native code with `react-native` cli:
 
 III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
 ```js
-import Animated 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 ```
 
 Similarly when you need `Easing` import it from `react-native-reanimated` package instead of `react-native`:
@@ -120,7 +120,7 @@ Follow the original Animated library guides to learn how values can be connected
 Similarly with reanimated you need to use components prefixed with `Animated.` (remember to [import](#getting-started) `Animated` from reanimated package). For example:
 
 ```js
-import Animated 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 // use
 <Animated.View/>
