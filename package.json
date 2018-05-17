@@ -1,7 +1,8 @@
 {
   "name": "react-native-reanimated",
-  "version": "1.0.0-alpha.1",
-  "description": "More powerfull alternative to Animated library for React Native",
+  "version": "1.0.0-alpha.2",
+  "description":
+    "More powerfull alternative to Animated library for React Native",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
@@ -29,8 +30,7 @@
     "url": "https://github.com/kmagiera/react-native-reanimated/issues"
   },
   "homepage": "https://github.com/kmagiera/react-native-reanimated#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": "16.0.0-alpha.6",
     "react-native": "^0.44.1"
