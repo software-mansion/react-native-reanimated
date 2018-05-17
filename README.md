@@ -23,7 +23,7 @@ Let's take take "diffClamp" node as an example, it is currently implemented in t
 
 On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even so provides a legitimate usecase I understand the maintainers being hesitant on merging it. The Animated API shouldn't block people for building things like this and the goal of reanimated API is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
 
-You can watch my [React Europe talk](https://github.com) where I explain the motivation.
+You can watch my [React Europe talk](https://youtu.be/-EF6RmH2eR4?t=3h10s) where I explain the motivation.
 
 The goals:
  - More generic primitive node types leads to more code reuse for the library internals and hence makes it easier to add new features and fix bugs.
