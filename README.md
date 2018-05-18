@@ -2,26 +2,26 @@
 
 React Native's Animated library reimplemented.
 
-It provides a more comprahensive, low level abstraction for the Animated library API to be build on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
+It provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
 
 ![](/assets/meme.png)
 
 ## OMG, why would you build this? (motivation)
 
-Animated library has several limitation that becomes troubling when it comes to gesture based interactions.
+Animated library has several limitations that become troubling when it comes to gesture based interactions.
 I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
-The problem there was that even though using `Animated.event` we could map gesture state to the position of the box and make this whole interation run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
-It is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, that is when it gets executed is has a "side effect" of starting a process (an animation) that updates the value for some time.
-Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API is that is that it runs all the dependant nodes each frame for the views that needs to update.
-We don't want to run "side effects" too more often than necessary as it would for example result in the animation starting multiple times.
+The problem there was that even though using `Animated.event` we could map gesture state to the position of the box and make this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
+It is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, that is when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
+Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API is that it runs all the dependant nodes each frame for the views that needs to update.
+We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
 
-Another reason why I started rethinking how the internals of Animated can be redesign was my recent work on porting "Animated Tracking" functionality to the native driver.
+Another reason why I started rethinking how the internals of Animated can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
 Apparently even so the native driver is out for quite a while it still does not support all the things non-native Animated lib can do.
-Obviously, it is far more difficult to build three versions of each features (JS, Android and iOS) instead of one and the same applies for fixing bugs.
-One of the goals of reanimated lib was to provide a more generic building blocks for the API, that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
-Let's take take "diffClamp" node as an example, it is currently implemented in three different places in Animated core and even though it is pretty useful it actually only have one usecase (collapsable scrollview header).
+Obviously, it is far more difficult to build three versions of each feature (JS, Android and iOS) instead of one, and the same applies for fixing bugs.
+One of the goals of reanimated lib was to provide a more generic building block for the API, that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
+Let's take "diffClamp" node as an example, it is currently implemented in three different places in Animated core and even though it is pretty useful it actually only has one usecase (collapsible scrollview header).
 
-On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even so provides a legitimate usecase I understand the maintainers being hesitant on merging it. The Animated API shouldn't block people for building things like this and the goal of reanimated API is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
+On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even though it provides a legitimate usecase I understand the maintainers being hesitant on merging it. The Animated API shouldn't block people from building things like this and the goal of reanimated API is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
 
 You can watch my [React Europe talk](https://youtu.be/-EF6RmH2eR4?t=3h10s) where I explain the motivation.
 
@@ -35,7 +35,7 @@ The goals:
 
 ## Getting started
 
-Before you get started you should definitely get yourself familiarize with the original Animated API first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
+Before you get started you should definitely familiarize yourself with the original Animated API first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
 
 Throughout this document when we refer to classes or methods prefixed with `Animated` we usually refer to them being imported from `react-native-reanimated` package instead of plain `react-native`.
 
@@ -63,7 +63,7 @@ import Animated, { Easing } from 'react-native-reanimated';
 
 ## Reanimated vs Animated
 
-We aim to bring this project to be fully complatible with Animated API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that hasn't yet been ported from the original version of Animated library.
+We aim to bring this project to be fully compatible with Animated API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that hasn't yet been ported from the original version of Animated library.
 All the functionality that missing elements provide in Animated can be already achieved with reanimated although a different methodology for implementing those may be required (e.g. check ["Running animations" section](#running-animations) to see how the implementation may differ).
  - [ ] using value offsets
  - [ ] imperative api for starting animations (`Animated.timing({}).start()` and similar)
