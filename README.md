@@ -43,12 +43,12 @@ Throughout this document when we refer to classes or methods prefixed with `Anim
 
 I. First install the library from npm repository using `yarn`:
 ```bash
-  yarn add react-native-gesture-handler
+  yarn add react-native-reanimated
 ```
 
 II. Link native code with `react-native` cli:
 ```bash
-  react-native link react-native-gesture-handler
+  react-native link react-native-reanimated
 ```
 
 III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
