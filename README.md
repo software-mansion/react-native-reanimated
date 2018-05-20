@@ -12,16 +12,16 @@ Animated library has several limitations that become troubling when it comes to 
 I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
 The problem there was that even though using `Animated.event` we could map gesture state to the position of the box and make this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
 It is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, that is when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
-Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API is that it runs all the dependant nodes each frame for the views that needs to update.
+Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API is that it runs all the dependent nodes each frame for the views that needs to update.
 We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
 
 Another reason why I started rethinking how the internals of Animated can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
 Apparently even so the native driver is out for quite a while it still does not support all the things non-native Animated lib can do.
 Obviously, it is far more difficult to build three versions of each feature (JS, Android and iOS) instead of one, and the same applies for fixing bugs.
 One of the goals of reanimated lib was to provide a more generic building block for the API, that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
-Let's take "diffClamp" node as an example, it is currently implemented in three different places in Animated core and even though it is pretty useful it actually only has one usecase (collapsible scrollview header).
+Let's take "diffClamp" node as an example, it is currently implemented in three different places in Animated core and even though it is pretty useful it actually only has one use case (collapsible scrollview header).
 
-On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even though it provides a legitimate usecase I understand the maintainers being hesitant on merging it. The Animated API shouldn't block people from building things like this and the goal of reanimated API is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
+On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even though it provides a legitimate use case I understand the maintainers being hesitant on merging it. The Animated API shouldn't block people from building things like this and the goal of reanimated API is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
 
 You can watch my [React Europe talk](https://youtu.be/-EF6RmH2eR4?t=3h10s) where I explain the motivation.
 
@@ -85,19 +85,19 @@ Because `Animated.Clock` just extends the `Animated.Value` you can use it in the
 ## At most once evaluation (the algorithm)
 
 Unlike the original Animated library where each node could have been evaluated many times within a single frame reanimated restricts each node to be evaluated at most once in a frame.
-This restricion is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
+This restriction is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
 When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
 This notion also helps with performance as we can try to evaluate as few nodes as expected.
 The current algorithm for making decisions of which nodes to evaluate works as follows:
  1. Each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
- 2. Then we update values that corrsponds to [clock](#clocks) nodes that are "running".
+ 2. Then we update values that corresponds to [clock](#clocks) nodes that are "running".
  3. We traverse nodes tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evalue them. This can recursively trigger evaluation for their input nodes etc.
+ 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
  5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 ## Blocks
 
-Blocks are just an arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be ommited and we can just pass a nodes array directly. See an example below:
+Blocks are just an arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
 
 ```js
 cond(
@@ -207,7 +207,7 @@ Works the same way as with the original Animated library.
 add(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animatyed nodes or values, and when evaluated returns their sum.
+Takes two or more animated nodes or values, and when evaluated returns their sum.
 
 ---
 ### `sub`
@@ -216,7 +216,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns their su
 sub(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animatyed nodes or values, and when evaluated returns the result of subtracting their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated returns the result of subtracting their values in the exact order.
 
 ---
 ### `multiply`
@@ -225,7 +225,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 multiply(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animatyed nodes or values, and when evaluated returns the result of multiplying their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated returns the result of multiplying their values in the exact order.
 
 ---
 ### `divide`
@@ -234,7 +234,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 divide(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animatyed nodes or values, and when evaluated returns the result of dividing their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated returns the result of dividing their values in the exact order.
 
 
 ---
@@ -244,7 +244,7 @@ Takes two or more animatyed nodes or values, and when evaluated returns the resu
 pow(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animatyed nodes or values, and when evaluated returns the result of deviding their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated returns the result of dividing their values in the exact order.
 
 ---
 ### `modulo`
@@ -286,7 +286,7 @@ Returns an exponent of the value of the given node.
 lessThan(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of the first node is less than the value of the second node. Otherwise returs `0`.
+Returns `1` if the value of the first node is less than the value of the second node. Otherwise returns `0`.
 
 ---
 ### `eq`
@@ -295,7 +295,7 @@ Returns `1` if the value of the first node is less than the value of the second 
 eq(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of both nodes are equal. Otherwise returs `0`.
+Returns `1` if the value of both nodes are equal. Otherwise returns `0`.
 
 ---
 ### `greaterThan`
@@ -305,7 +305,7 @@ Returns `1` if the value of both nodes are equal. Otherwise returs `0`.
 greaterThan(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of the first node is greater than the value of the second node. Otherwise returs `0`.
+Returns `1` if the value of the first node is greater than the value of the second node. Otherwise returns `0`.
 
 ---
 ### `lessOrEq`
@@ -314,7 +314,7 @@ Returns `1` if the value of the first node is greater than the value of the seco
 lessOrEq(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of the first node is less or equal to the value of the second node. Otherwise returs `0`.
+Returns `1` if the value of the first node is less or equal to the value of the second node. Otherwise returns `0`.
 
 ---
 ### `greaterOrEq`
@@ -323,7 +323,7 @@ Returns `1` if the value of the first node is less or equal to the value of the 
 greaterOrEq(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of the first node is greater or equal to the value of the second node. Otherwise returs `0`.
+Returns `1` if the value of the first node is greater or equal to the value of the second node. Otherwise returns `0`.
 
 ---
 ### `neq`
@@ -332,7 +332,7 @@ Returns `1` if the value of the first node is greater or equal to the value of t
 neq(nodeOrValueA, nodeOrValueB)
 ```
 
-Returns `1` if the value of the first node is not equal to the value of the second node. Otherwise returs `0`.
+Returns `1` if the value of the first node is not equal to the value of the second node. Otherwise returns `0`.
 
 ---
 ### `and`
@@ -341,7 +341,7 @@ Returns `1` if the value of the first node is not equal to the value of the seco
 and(nodeOrValue1, ...)
 ```
 
-Acts as a logical AND operator. Takes one or more nodes as an input and evalues them in sequence until some node evaluates to a "falsy" value. Then returns that value and stops evaluating further nodes. If all nodes avaluate to a "truthy" it returns the last node's value.
+Acts as a logical AND operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "falsy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "truthy" it returns the last node's value.
 
 ---
 ### `or`
@@ -350,7 +350,7 @@ Acts as a logical AND operator. Takes one or more nodes as an input and evalues 
 or(nodeOrValue1, ...)
 ```
 
-Acts as a logical OR operator. Takes one or more nodes as an input and evalues them in sequence until some node evaluates to a "truthy" value. Then returns that value and stops evaluating further nodes. If all nodes avaluate to a "falsy" value it returns the last node's value.
+Acts as a logical OR operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "truthy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "falsy" value it returns the last node's value.
 
 ---
 ### `defined`
@@ -359,7 +359,7 @@ Acts as a logical OR operator. Takes one or more nodes as an input and evalues t
 defined(node)
 ```
 
-Returns `1` if the given node evalues to a "defined" value (that is to something that is non-null, non-undefined and non-NaN). Returns `0` otherwise.
+Returns `1` if the given node evaluates to a "defined" value (that is to something that is non-null, non-undefined and non-NaN). Returns `0` otherwise.
 
 ---
 ### `not`
@@ -428,10 +428,10 @@ Works the same way as with the original Animated library.
 ### `decay`
 
 ```js
-decay(clock, { finished, velocity, position, time }, { decceleration })
+decay(clock, { finished, velocity, position, time }, { deceleration })
 ```
 
-Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automaticaly by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `decceleration` config param and it controls how fast the animation deccelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
+Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation deccelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
 
 ---
 #### `timing`
@@ -517,7 +517,7 @@ export class AnimatedBox extends Component {
 
 ## 100% declarative gesture interactions
 
-Reanimated works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler) library. Currenly all the examples are made using that library including the ultimate [ImagePreview app](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/imageViewer). See it in action below:
+Reanimated works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler) library. Currently all the examples are made using that library including the ultimate [ImagePreview app](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/imageViewer). See it in action below:
 
 ![](/assets/imagepreview.gif)
 
