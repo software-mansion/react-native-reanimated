@@ -274,7 +274,7 @@ Returns a cosine of the value of the given node.
 ### `exp`
 
 ```js
-sin(node)
+exp(node)
 ```
 
 Returns an exponent of the value of the given node.
@@ -431,7 +431,7 @@ Works the same way as with the original Animated library.
 decay(clock, { finished, velocity, position, time }, { deceleration })
 ```
 
-Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation deccelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
+Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
 
 ---
 #### `timing`
@@ -441,7 +441,7 @@ timing(clock, { finished, position, frameTime, time }, { toValue, duration, easi
 ```
 
 Updates `position` node by running timing based animation from a given position to a destination determined by `toValue`. The animation is expected to last `duration` milliseconds and use `easing` function that could be set to one of the nodes exported by the `Easing` object.
-The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far). Similarily to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
+The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far). Similarly to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
 
 ---
 #### `spring`
