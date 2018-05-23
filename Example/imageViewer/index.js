@@ -263,6 +263,8 @@ const WIDTH = 300;
 const HEIGHT = 300;
 
 class Viewer extends Component {
+  pinchRef = React.createRef();
+  panRef = React.createRef();
   constructor(props) {
     super(props);
 
@@ -380,15 +382,15 @@ class Viewer extends Component {
     return (
       <View style={styles.wrapper}>
         <PinchGestureHandler
-          id="pinch"
-          simultaneousHandlers="pan"
+          ref={this.pinchRef}
+          simultaneousHandlers={this.panRef}
           onGestureEvent={this._onPinchEvent}
           onHandlerStateChange={this._onPinchEvent}>
           <Animated.View>
             <PanGestureHandler
-              id="pan"
+              ref={this.panRef}
               avgTouches
-              simultaneousHandlers="pinch"
+              simultaneousHandlers={this.pinchRef}
               onGestureEvent={this._onPanEvent}
               onHandlerStateChange={this._onPanEvent}>
               <Animated.Image
