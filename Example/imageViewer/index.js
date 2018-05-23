@@ -263,6 +263,8 @@ const WIDTH = 300;
 const HEIGHT = 300;
 
 class Viewer extends Component {
+  pinchRef = React.createRef();
+  panRef = React.createRef();
   constructor(props) {
     super(props);
 
@@ -372,8 +374,6 @@ class Viewer extends Component {
     );
   }
   render() {
-    const pinchRef = React.createRef();
-    const panRef = React.createRef();
     // The below two animated values makes it so that scale appears to be done
     // from the top left corner of the image view instead of its center. This
     // is required for the "scale focal point" math to work correctly
@@ -382,15 +382,15 @@ class Viewer extends Component {
     return (
       <View style={styles.wrapper}>
         <PinchGestureHandler
-          ref={pinchRef}
-          simultaneousHandlers={panRef}
+          ref={this.pinchRef}
+          simultaneousHandlers={this.panRef}
           onGestureEvent={this._onPinchEvent}
           onHandlerStateChange={this._onPinchEvent}>
           <Animated.View>
             <PanGestureHandler
-              ref={panRef}
+              ref={this.panRef}
               avgTouches
-              simultaneousHandlers={pinchRef}
+              simultaneousHandlers={this.pinchRef}
               onGestureEvent={this._onPanEvent}
               onHandlerStateChange={this._onPanEvent}>
               <Animated.Image
