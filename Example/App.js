@@ -6,6 +6,7 @@ import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import Snappable from './snappable';
 import ImageViewer from './imageViewer';
 import Test from './test';
+import Interpolate from './interpolate'
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -18,6 +19,7 @@ const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  Interpolate: { screen: Interpolate, title: 'Interpolate' },
 };
 
 class MainScreen extends React.Component {

@@ -1715,6 +1715,10 @@ decode-uri-component@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.0.tgz#eb3913333458775cb84cd1a1fae062106bb87545"
 
+dedent-js@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/dedent-js/-/dedent-js-1.0.1.tgz#bee5fb7c9e727d85dffa24590d10ec1ab1255305"
+
 deep-extend@~0.4.0:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/deep-extend/-/deep-extend-0.4.2.tgz#48b699c27e334bf89f10892be432f6e4c7d34a7f"
@@ -3407,6 +3411,12 @@ metro-source-map@0.30.2:
   resolved "https://registry.yarnpkg.com/metro-source-map/-/metro-source-map-0.30.2.tgz#4ac056642a2c521d974d42a617c8731d094365bb"
   dependencies:
     source-map "^0.5.6"
+
+metro-with-symlinks@^1.0.12:
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/metro-with-symlinks/-/metro-with-symlinks-1.0.12.tgz#d76599face0e6f6dfc849de042249427809ee48c"
+  dependencies:
+    dedent-js "^1.0.1"
 
 metro@^0.30.0:
   version "0.30.2"

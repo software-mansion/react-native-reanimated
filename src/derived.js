@@ -7,11 +7,12 @@ import {
   sub,
   set,
   add,
+  divide,
 } from './base';
 import AnimatedValue from './core/AnimatedValue';
 import { adapt } from './utils';
 
-export function abs(a) {
+export const abs = function(a) {
   return cond(lessThan(a, 0), multiply(-1, a), a);
 }
 
@@ -49,3 +50,27 @@ export const diffClamp = function(a, minVal, maxVal) {
     min(max(add(cond(defined(value), value, a), diff(a)), minVal), maxVal)
   );
 };
+
+const interpolateInternalSingle = function(value, inputRange, outputRange, offset) {
+  const inS = inputRange[offset];
+  const inE = inputRange[offset + 1];
+  const outS = outputRange[offset];
+  const outE = outputRange[offset + 1];
+  const progress = divide(sub(value, inS), sub(inE, inS));
+  return add(outS, multiply(progress, sub(outE, outS)));
+}
+
+const interpolateInternal = function(value, inputRange, outputRange, offset = 0) {
+  if (inputRange.length - offset === 2) {
+    return interpolateSingle(value, inputRange, outputRange, offset);
+  }
+  return cond(
+    lessThan(value, inputRange[offset + 1]),
+    interpolateSingle(value, inputRange, outputRange, offset),
+    interpolate(value, inputRange, outputRange, offset + 1)
+  );
+}
+
+export const interpolate = function(value, inputRange, outputRange) {
+  return interpolateInternal(value, inputRange, outputRange)
+}
