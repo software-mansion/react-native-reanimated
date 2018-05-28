@@ -420,6 +420,9 @@ class Viewer extends Component {
 }
 
 export default class Example extends Component {
+  static navigationOptions = {
+    title: 'Image Viewer Example',
+  };
   render() {
     return (
       <View style={styles.container}>

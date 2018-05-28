@@ -81,6 +81,41 @@ const interpolateInternal = function(
   );
 };
 
-export const interpolate = function(value, inputRange, outputRange) {
-  return interpolateInternal(value, inputRange, outputRange);
+export const Extrapolate = {
+  EXTEND: 'EXTEND',
+  CLAMP: 'CLAMP',
+  IDENTITY: 'IDENTITY',
+};
+
+export const interpolate = function(value, config) {
+  const {
+    inputRange,
+    outputRange,
+    extrapolate = Extrapolate.EXTEND,
+    extrapolateLeft,
+    extrapolateRight,
+  } = config;
+  const left = extrapolateLeft || extrapolate;
+  const right = extrapolateRight || extrapolate;
+  let output = interpolateInternal(value, inputRange, outputRange);
+
+  if (left === Extrapolate.EXTEND) {
+  } else if (left === Extrapolate.CLAMP) {
+    output = max(outputRange[0], output);
+  } else if (left === Extrapolate.IDENTITY) {
+    output = cond(lessThan(output, outputRange[0]), value, output);
+  }
+
+  if (right === Extrapolate.EXTEND) {
+  } else if (right === Extrapolate.CLAMP) {
+    output = min(outputRange[outputRange.length - 1], output);
+  } else if (right === Extrapolate.IDENTITY) {
+    output = cond(
+      greaterThan(output, outputRange[outputRange.length - 1]),
+      value,
+      output
+    );
+  }
+
+  return output;
 };
