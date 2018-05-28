@@ -244,7 +244,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 pow(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns the result of dividing their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated returns the result of powering their values in the exact order.
 
 ---
 ### `modulo`
