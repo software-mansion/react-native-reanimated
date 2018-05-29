@@ -101,17 +101,21 @@ export const interpolate = function(value, config) {
 
   if (left === Extrapolate.EXTEND) {
   } else if (left === Extrapolate.CLAMP) {
-    output = max(outputRange[0], output);
+    output = cond(lessThan(value, inputRange[0]), outputRange[0], output);
   } else if (left === Extrapolate.IDENTITY) {
-    output = cond(lessThan(output, outputRange[0]), value, output);
+    output = cond(lessThan(value, inputRange[0]), value, output);
   }
 
   if (right === Extrapolate.EXTEND) {
   } else if (right === Extrapolate.CLAMP) {
-    output = min(outputRange[outputRange.length - 1], output);
+    output = cond(
+      greaterThan(value, inputRange[inputRange.length - 1]),
+      outputRange[outputRange.length - 1],
+      output
+    );
   } else if (right === Extrapolate.IDENTITY) {
     output = cond(
-      greaterThan(output, outputRange[outputRange.length - 1]),
+      greaterThan(value, inputRange[inputRange.length - 1]),
       value,
       output
     );
