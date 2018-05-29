@@ -95,7 +95,7 @@ function runTiming(clock, value, dest) {
   ]);
 }
 
-const getThing = (min, max) => {
+const getAnimation = (min, max) => {
   const clock = new Clock();
   const state = {
     finished: new Value(1),
@@ -176,8 +176,8 @@ export default class AnimatedBounds extends Component {
       extrapolate: 'clamp',
     });
 
-    const min = getThing(-100, -50);
-    const max = getThing(100, 50);
+    const min = getAnimation(-100, -50);
+    const max = getAnimation(100, 50);
     this._transXA = interpolate(this._transX, {
       inputRange: [-100, 100],
       outputRange: [min, max],
