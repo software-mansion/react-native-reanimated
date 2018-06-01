@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description":
     "More powerfull alternative to Animated library for React Native",
   "scripts": {
