@@ -1,6 +1,8 @@
+import { Platform } from 'react-native';
 import {
   cond,
   lessThan,
+  greaterThan,
   multiply,
   block,
   defined,
@@ -8,6 +10,7 @@ import {
   set,
   add,
   divide,
+  round,
 } from './base';
 import AnimatedValue from './core/AnimatedValue';
 import { adapt } from './utils';
@@ -36,6 +39,29 @@ export const diff = function(v) {
     set(prev, v),
     stash,
   ]);
+};
+
+export const color = function(r, g, b, a = 1) {
+  if (a instanceof AnimatedValue) {
+    a = round(multiply(a, 255));
+  } else {
+    a = Math.round(a * 255);
+  }
+  const color = add(
+    multiply(a, 1 << 24),
+    multiply(r, 1 << 16),
+    multiply(g, 1 << 8),
+    b
+  );
+  if (Platform.OS === 'android') {
+    // on Android color is represented as signed 32 bit int
+    return cond(
+      lessThan(color, (1 << 31) >>> 0),
+      color,
+      sub(color, Math.pow(2, 32))
+    );
+  }
+  return color;
 };
 
 export const acc = function(v) {
@@ -82,9 +108,9 @@ const interpolateInternal = function(
 };
 
 export const Extrapolate = {
-  EXTEND: 'EXTEND',
-  CLAMP: 'CLAMP',
-  IDENTITY: 'IDENTITY',
+  EXTEND: 'extend',
+  CLAMP: 'clamp',
+  IDENTITY: 'identity',
 };
 
 export const interpolate = function(value, config) {

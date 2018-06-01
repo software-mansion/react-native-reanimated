@@ -8,6 +8,16 @@ const { ReanimatedModule } = NativeModules;
 let NATIVE_PROPS_WHITELIST = {
   opacity: true,
   transform: true,
+  /* colors */
+  backgroundColor: true,
+  borderRightColor: true,
+  borderBottomColor: true,
+  borderColor: true,
+  borderEndColor: true,
+  borderLeftColor: true,
+  backgroundColor: true,
+  borderStartColor: true,
+  borderTopColor: true,
   /* ios styles */
   shadowOpacity: true,
   shadowRadius: true,

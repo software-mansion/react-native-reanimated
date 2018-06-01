@@ -25,6 +25,7 @@ export const sqrt = operator('sqrt');
 export const sin = operator('sin');
 export const cos = operator('cos');
 export const exp = operator('exp');
+export const round = operator('round');
 export const lessThan = operator('lessThan');
 export const eq = operator('eq');
 export const greaterThan = operator('greaterThan');
