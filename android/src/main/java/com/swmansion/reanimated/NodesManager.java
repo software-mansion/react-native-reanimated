@@ -192,6 +192,12 @@ public class NodesManager implements EventDispatcherListener {
     mAnimatedNodes.remove(tag);
   }
 
+  public void evaluateClock(int clockId) {
+    Node clock = findNodeById(clockId);
+    if (clock instanceof ClockNode)
+      ((ClockNode) clock).start();
+  }
+
   public void connectNodes(int parentID, int childID) {
     Node parentNode = mAnimatedNodes.get(parentID);
     if (parentNode == null) {

@@ -9,7 +9,7 @@ import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 
-import { adapt } from './utils';
+import { adapt, evaluateClock } from './utils';
 
 function operator(name) {
   return (...args) => new AnimatedOperator(name, args.map(adapt));
@@ -66,6 +66,10 @@ export const onChange = function(value, action) {
 
 export const startClock = function(clock) {
   return new AnimatedStartClock(clock);
+};
+
+export const forceStartClock = function(clock) {
+  evaluateClock(clock);
 };
 
 export const stopClock = function(clock) {
