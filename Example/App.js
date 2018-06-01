@@ -7,6 +7,7 @@ import Snappable from './snappable';
 import ImageViewer from './imageViewer';
 import Test from './test';
 import Interpolate from './src/interpolate';
+import Colors from './colors';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -20,6 +21,7 @@ const SCREENS = {
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
+  Colors: { screen: Colors, title: 'Colors' },
 };
 
 class MainScreen extends React.Component {
