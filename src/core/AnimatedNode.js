@@ -106,7 +106,7 @@ export default class AnimatedNode {
   }
 
   __onEvaluate() {
-    throw new Excaption('Missing implementation of onEvaluate');
+    throw new Error('Missing implementation of onEvaluate');
   }
 
   __getProps() {
