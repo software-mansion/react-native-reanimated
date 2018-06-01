@@ -1,6 +1,9 @@
 import AnimatedBlock from './core/AnimatedBlock';
 import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
+import { NativeModules } from 'react-native';
+
+const { ReanimatedModule } = NativeModules;
 
 function nodify(v) {
   // TODO: cache some typical static values (e.g. 0, 1, -1)
@@ -15,4 +18,8 @@ export function adapt(v) {
 
 export function val(v) {
   return v && v.__getValue ? v.__getValue() : v || 0;
+}
+
+export function evaluateClock(clock) {
+  ReanimatedModule.evaluateClock(clock.__nodeID);
 }

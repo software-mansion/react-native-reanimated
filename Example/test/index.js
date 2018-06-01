@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
@@ -21,6 +21,7 @@ const {
   Value,
   Clock,
   event,
+  forceStartClock,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -77,7 +78,7 @@ function runTiming(clock, value, dest) {
       set(state.position, value),
       set(state.frameTime, 0),
       set(config.toValue, dest),
-      startClock(clock),
+      //startClock(clock),
     ]),
     timing(clock, state, config),
     cond(state.finished, debug('stop clock', stopClock(clock))),
@@ -90,11 +91,12 @@ export default class Example extends Component {
     super(props);
 
     // const transX = new Value(0);
-    const clock = new Clock();
+    this.clock = new Clock();
+    this.state = { moving: false };
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock, -120, 120);
+    this._transX = runTiming(this.clock, -120, 120);
   }
   componentDidMount() {
     // Animated.spring(this._transX, {
@@ -108,6 +110,12 @@ export default class Example extends Component {
       <View style={styles.container}>
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
+        />
+        <Button
+          title="1"
+          onPress={() => {
+            forceStartClock(this.clock);
+          }}
         />
       </View>
     );

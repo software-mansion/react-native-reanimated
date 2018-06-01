@@ -175,6 +175,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+  public void evaluateClock(final int nodeID) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.evaluateClock(nodeID);
+      }
+    });
+  }
+
+  @ReactMethod
   public void configureNativeProps(ReadableArray nativePropsArray) {
     int size = nativePropsArray.size();
     final Set<String> nativeProps = new HashSet<>(size);
