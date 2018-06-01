@@ -70,7 +70,6 @@ All the functionality that missing elements provide in Animated can be already a
  - [ ] value tracking (can be achieved in different way, reanimated also allows for tracking all the animation parameters not only destination params)
  - [ ] animation delays
  - [ ] animation staggering
- - [ ] interpolate method
 
 ## Clocks
 
@@ -422,6 +421,29 @@ Returns an accumulated value of the given node. This node stores a sum of all ev
 
 Works the same way as with the original Animated library.
 
+---
+### `interpolate`
+```js
+interpolate(node, {
+  // Input range for the interpolation. Should be monotonically increasing.
+  inputRange: [nodeOrValue...],
+  // Output range for the interpolation, should be the same length as the input range.
+  outputRange: [nodeOrValue...],
+  // Sets the left and right extrapolate modes.
+  extrapolate?: Extrapolate.EXTEND | Extrapolate.CLAMP | Extrapolate.IDENTITY,
+  // Set the left extrapolate mode, the behavior if the input is less than the first value in inputRange.
+  extrapolateLeft?: Extrapolate.EXTEND | Extrapolate.CLAMP | Extrapolate.IDENTITY,
+  // Set the right extrapolate mode, the behavior if the input is greater than the last value in inputRange.
+  extrapolateRight?: Extrapolate.EXTEND | Extrapolate.CLAMP | Extrapolate.IDENTITY,
+})
+
+Extrapolate.EXTEND; // Will extend the range linearly.
+Extrapolate.CLAMP; // Will clamp the input value to the range.
+Extrapolate.IDENTITY; // Will return the input value if the input value is out of range.
+```
+
+Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range.
+
 <!-- Anims -->
 
 ---
@@ -434,7 +456,7 @@ decay(clock, { finished, velocity, position, time }, { deceleration })
 Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
 
 ---
-#### `timing`
+### `timing`
 
 ```js
 timing(clock, { finished, position, frameTime, time }, { toValue, duration, easing })
@@ -444,7 +466,7 @@ Updates `position` node by running timing based animation from a given position 
 The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far). Similarly to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
 
 ---
-#### `spring`
+### `spring`
 
 ```js
 spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness, overshootClamping, restSpeedThreshold, restDisplacementThreshold, toValue })

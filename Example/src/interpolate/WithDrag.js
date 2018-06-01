@@ -1,30 +1,32 @@
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { Easing } from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
-
-// setInterval(() => {
-//   let iters = 1e8,
-//     sum = 0;
-//   while (iters-- > 0) sum += iters;
-// }, 300);
+import Box from '../Box';
+import Row from '../Row';
 
 const {
   set,
   cond,
+  sub,
   eq,
+  and,
   add,
+  call,
   multiply,
   lessThan,
-  spring,
   startClock,
   stopClock,
   clockRunning,
-  sub,
-  defined,
+  block,
+  timing,
+  debug,
+  spring,
   Value,
   Clock,
   event,
+  interpolate,
+  defined,
 } = Animated;
 
 function runSpring(clock, value, velocity, dest) {
@@ -53,41 +55,62 @@ function runSpring(clock, value, velocity, dest) {
       set(config.toValue, dest),
       startClock(clock),
     ]),
-    spring(clock, state, config),
     cond(state.finished, stopClock(clock)),
     state.position,
   ];
 }
 
-class Snappable extends Component {
+function runTiming(clock, value, dest) {
+  const state = {
+    finished: new Value(1),
+    position: new Value(value),
+    time: new Value(0),
+    frameTime: new Value(0),
+  };
+
+  const config = {
+    duration: 500,
+    toValue: new Value(0),
+    easing: Easing.inOut(Easing.ease),
+  };
+
+  const reset = [
+    set(state.finished, 0),
+    set(state.time, 0),
+    set(state.frameTime, 0),
+  ];
+
+  return block([
+    cond(and(state.finished, eq(state.position, value)), [
+      ...reset,
+      set(config.toValue, dest),
+    ]),
+    cond(and(state.finished, eq(state.position, dest)), [
+      ...reset,
+      set(config.toValue, value),
+    ]),
+    cond(clockRunning(clock), 0, startClock(clock)),
+    timing(clock, state, config),
+    state.position,
+  ]);
+}
+
+export default class WithDrag extends Component {
   constructor(props) {
     super(props);
-
     const TOSS_SEC = 0.2;
 
     const dragX = new Value(0);
     const state = new Value(-1);
     const dragVX = new Value(0);
+    const transX = new Value();
+    const prevDragX = new Value(0);
+    const clock = new Clock();
 
     this._onGestureEvent = event([
       { nativeEvent: { translationX: dragX, velocityX: dragVX, state: state } },
     ]);
 
-    const transX = new Value();
-    const prevDragX = new Value(0);
-
-    const clock = new Clock();
-
-    // If transX has not yet been defined we stay in the center (value is 0).
-    // When transX is defined, it means drag has already occured. In such a case
-    // we want to snap to -100 if the final position of the block is below 0
-    // and to 100 otherwise.
-    // We also take into account gesture velocity at the moment of release. To
-    // do that we calculate final position of the block as if it was moving for
-    // TOSS_SEC seconds with a constant speed the block had when released (dragVX).
-    // So the formula for the final position is:
-    //   finalX = transX + TOSS_SEC * dragVelocityX
-    //
     const snapPoint = cond(
       lessThan(add(transX, multiply(TOSS_SEC, dragVX)), 0),
       -100,
@@ -110,53 +133,44 @@ class Snappable extends Component {
         ),
       ]
     );
-  }
-  render() {
-    const { children, ...rest } = this.props;
-    return (
-      <PanGestureHandler
-        {...rest}
-        maxPointers={1}
-        onGestureEvent={this._onGestureEvent}
-        onHandlerStateChange={this._onGestureEvent}>
-        <Animated.View style={{ transform: [{ translateX: this._transX }] }}>
-          {children}
-        </Animated.View>
-      </PanGestureHandler>
-    );
-  }
-}
 
-export default class Example extends Component {
-  static navigationOptions = {
-    title: 'Snappable Example',
-  };
+    this._transXA = interpolate(this._transX, {
+      inputRange: [-120, 120],
+      outputRange: [-100, 100],
+    });
+    this._transXB = interpolate(this._transX, {
+      inputRange: [-120, -60, 60, 120],
+      outputRange: [-60, -10, 10, 60],
+    });
+  }
   render() {
     return (
       <View style={styles.container}>
-        <Snappable>
-          <View style={styles.box} />
-        </Snappable>
+        <Row>
+          <PanGestureHandler
+            maxPointers={1}
+            onGestureEvent={this._onGestureEvent}
+            onHandlerStateChange={this._onGestureEvent}>
+            <Box style={{ transform: [{ translateX: this._transX }] }} />
+          </PanGestureHandler>
+        </Row>
+        <Row>
+          <Box style={{ transform: [{ translateX: this._transXA }] }} />
+        </Row>
+        <Row>
+          <Box style={{ transform: [{ translateX: this._transXB }] }} />
+        </Row>
       </View>
     );
   }
 }
 
-const BOX_SIZE = 100;
+const BOX_SIZE = 44;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE,
-    borderColor: '#F5FCFF',
-    alignSelf: 'center',
-    backgroundColor: 'plum',
-    margin: BOX_SIZE / 2,
   },
 });

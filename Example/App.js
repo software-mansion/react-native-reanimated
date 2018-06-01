@@ -1,11 +1,12 @@
 import React from 'react';
 import { Text, View, FlatList, StyleSheet, YellowBox } from 'react-native';
-import { StackNavigator } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 
 import Snappable from './snappable';
 import ImageViewer from './imageViewer';
 import Test from './test';
+import Interpolate from './src/interpolate';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -18,11 +19,12 @@ const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  Interpolate: { screen: Interpolate, title: 'Interpolate' },
 };
 
 class MainScreen extends React.Component {
   static navigationOptions = {
-    title: '🎬 Reanimated Demo',
+    title: '🎬 Reanimated Examples',
   };
   render() {
     const data = Object.keys(SCREENS).map(key => ({ key }));
@@ -57,7 +59,7 @@ class MainScreenItem extends React.Component {
   }
 }
 
-const ExampleApp = StackNavigator(
+const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
     ...SCREENS,
