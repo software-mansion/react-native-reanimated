@@ -3,6 +3,12 @@ import { StyleSheet, View, Dimensions } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
+// setInterval(() => {
+//   let iters = 1e8,
+//     sum = 0;
+//   while (iters-- > 0) sum += iters;
+// }, 300);
+
 const {
   set,
   cond,
