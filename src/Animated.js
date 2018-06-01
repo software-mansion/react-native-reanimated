@@ -21,11 +21,33 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     }
     // reassign to match spec of old Animated lib where first arg was value
     // and second arg was animation config
-    const value = clock;
-    config = state;
+    const _value = clock;
+    const _config = state;
+
+    const newValue = new AnimatedValue(0);
+    const clock = new AnimatedClock();
+    const _state = {
+      finished: new AnimatedValue(0),
+      position: newValue,
+      time: new AnimatedValue(0),
+      frameTime: new AnimatedValue(0),
+    };
+
+    const currentNode = base.block([
+      base.cond(base.clockRunning(clock), 0, [
+        base.set(newValue, _value),
+        base.startClock(clock),
+      ]),
+      node(clock, _state, _config),
+      base.cond(_state.finished, base.stopClock(clock)),
+      _state.position,
+    ]);
+    const setNode = base.set(_value, currentNode);
+    const dummyNode = base.dummyFinal(setNode);
     return {
       start: () => {
-        value.animate(new AnimationClass(config));
+        setNode.__attach();
+        dummyNode.__attach();
       },
     };
   };

@@ -20,6 +20,7 @@ import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
 import com.swmansion.reanimated.nodes.CondNode;
 import com.swmansion.reanimated.nodes.DebugNode;
+import com.swmansion.reanimated.nodes.DummyFinalNode;
 import com.swmansion.reanimated.nodes.EventNode;
 import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.Node;
@@ -182,6 +183,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new BezierNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
+    } else if ("dummyFinal".equals(type)) {
+      node = new DummyFinalNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }

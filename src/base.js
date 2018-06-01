@@ -8,8 +8,9 @@ import AnimatedClockTest from './core/AnimatedClockTest';
 import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
+import AnimatedDummyFinal from './core/AnimatedDummyFinal';
 
-import { adapt } from './utils';
+import { adapt, evaluateClock } from './utils';
 
 function operator(name) {
   return (...args) => new AnimatedOperator(name, args.map(adapt));
@@ -25,7 +26,6 @@ export const sqrt = operator('sqrt');
 export const sin = operator('sin');
 export const cos = operator('cos');
 export const exp = operator('exp');
-export const round = operator('round');
 export const lessThan = operator('lessThan');
 export const eq = operator('eq');
 export const greaterThan = operator('greaterThan');
@@ -67,6 +67,10 @@ export const onChange = function(value, action) {
 
 export const startClock = function(clock) {
   return new AnimatedStartClock(clock);
+};
+
+export const dummyFinal = function(item) {
+  return new AnimatedDummyFinal(item);
 };
 
 export const stopClock = function(clock) {
