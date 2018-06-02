@@ -8,6 +8,7 @@ import {
   greaterThan,
 } from '../base';
 import invariant from 'fbjs/lib/invariant';
+import AnimatedNode from '../core/AnimatedNode';
 
 function interpolateInternalSingle(value, inputRange, outputRange, offset) {
   const inS = inputRange[offset];
@@ -35,28 +36,28 @@ export const Extrapolate = {
   IDENTITY: 'IDENTITY',
 };
 
-function checkValidInputRange(arr) {
-  // We can't validate animated nodes in JS.
-  if (!arr.every(v => typeof v === 'number')) return;
-  for (var i = 1; i < arr.length; ++i) {
+function checkIncreasing(arr) {
+  for (let i = 1; i < arr.length; ++i) {
+    // We can't validate animated nodes in JS.
+    if (arr[i] instanceof AnimatedNode || arr[i - 1] instanceof AnimatedNode)
+      continue;
     invariant(
       arr[i] >= arr[i - 1],
-      'inputRange must be monotonically increasing ' + arr
+      `${name} must be monotonically increasing (${arr}).`
     );
   }
 }
 
 function checkMinElements(name, arr) {
-  invariant(arr.length >= 2, name + ' must have at least 2 elements');
+  invariant(arr.length >= 2, `${name} must have at least 2 elements.`);
 }
 
-function checkInfiniteRange(name, arr) {
-  // We can't validate animated nodes in JS.
-  if (!arr.every(v => typeof v === 'number')) return;
-  invariant(
-    arr.length !== 2 || arr[0] !== -Infinity || arr[1] !== Infinity,
-    name + 'cannot be ]-infinity;+infinity[ ' + arr
-  );
+function checkValidNumbers(name, arr) {
+  for (let i = 0; i < arr.length; i++) {
+    // We can't validate animated nodes in JS.
+    if (arr[i] instanceof AnimatedNode) continue;
+    invariant(Number.isFinite(arr[i]), `${name} cannot include ${arr[i]}.`);
+  }
 }
 
 export default function interpolate(value, config) {
@@ -68,10 +69,10 @@ export default function interpolate(value, config) {
     extrapolateRight,
   } = config;
   checkMinElements('inputRange', inputRange);
-  checkInfiniteRange('inputRange', inputRange);
+  checkValidNumbers('inputRange', inputRange);
   checkMinElements('outputRange', outputRange);
-  checkInfiniteRange('outputRange', outputRange);
-  checkValidInputRange(inputRange);
+  checkValidNumbers('outputRange', outputRange);
+  checkIncreasing('inputRange', inputRange);
   invariant(
     inputRange.length === outputRange.length,
     'inputRange and outputRange must be the same length.'
