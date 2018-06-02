@@ -11,6 +11,7 @@
   "main": "src/Animated.js",
   "files": [
     "src/",
+    "android/build.gradle",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "ios/",
