@@ -36,27 +36,40 @@ export const Extrapolate = {
   IDENTITY: 'IDENTITY',
 };
 
-function checkIncreasing(arr) {
+function checkIncreasing(name, arr) {
   for (let i = 1; i < arr.length; ++i) {
     // We can't validate animated nodes in JS.
     if (arr[i] instanceof AnimatedNode || arr[i - 1] instanceof AnimatedNode)
       continue;
     invariant(
       arr[i] >= arr[i - 1],
-      `${name} must be monotonically increasing (${arr}).`
+      '%s must be monotonically increasing. (%s)',
+      name,
+      arr
     );
   }
 }
 
 function checkMinElements(name, arr) {
-  invariant(arr.length >= 2, `${name} must have at least 2 elements.`);
+  invariant(
+    arr.length >= 2,
+    '%s must have at least 2 elements. (%s)',
+    name,
+    arr
+  );
 }
 
 function checkValidNumbers(name, arr) {
   for (let i = 0; i < arr.length; i++) {
     // We can't validate animated nodes in JS.
     if (arr[i] instanceof AnimatedNode) continue;
-    invariant(Number.isFinite(arr[i]), `${name} cannot include ${arr[i]}.`);
+    invariant(
+      Number.isFinite(arr[i]),
+      '%s cannot include %s. (%s)',
+      name,
+      arr[i],
+      arr
+    );
   }
 }
 

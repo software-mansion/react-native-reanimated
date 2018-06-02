@@ -1,14 +1,17 @@
 module.exports = {
-  parser: "babel-eslint",
-  extends: "standard",
+  parser: 'babel-eslint',
   extends: [
-    "prettier",
-    "prettier/flowtype",
-    "prettier/react",
-    "prettier/standard"
+    'standard',
+    'prettier',
+    'prettier/flowtype',
+    'prettier/react',
+    'prettier/standard',
   ],
-  plugins: ["import"],
+  plugins: ['react', 'react-native', 'import'],
+  env: {
+    'react-native/react-native': true,
+  },
   rules: {
-    "import/no-unresolved": 2
-  }
+    'import/no-unresolved': 2,
+  },
 };
