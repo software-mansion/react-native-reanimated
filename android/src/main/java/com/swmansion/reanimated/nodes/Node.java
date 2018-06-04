@@ -9,7 +9,9 @@ import com.swmansion.reanimated.UpdateContext;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -71,7 +73,7 @@ public abstract class Node<T> {
     markUpdated();
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Queue<FinalNode> finals) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
@@ -80,12 +82,14 @@ public abstract class Node<T> {
 
     List<Node> children = node.mChildren;
 
-    if (node instanceof FinalNode) {
-      ((FinalNode) node).update();
-    } else if (children != null) {
+
+    if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes);
+        findAndUpdateNodes(child, visitedNodes, finals);
       }
+    }
+    if (node instanceof FinalNode) {
+      finals.offer((FinalNode) node);
     }
   }
 
@@ -94,7 +98,11 @@ public abstract class Node<T> {
 
     SparseArray<Node> updatedNodes = updateContext.updatedNodes;
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>());
+      Queue<FinalNode> finalsToBeUpdated = new LinkedList<>();
+      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalsToBeUpdated);;
+      for (FinalNode nodeIterator : finalsToBeUpdated) {
+        nodeIterator.update();
+      }
     }
 
     updatedNodes.clear();

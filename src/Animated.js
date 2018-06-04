@@ -47,7 +47,7 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     const dummyNode = base.dummyFinal(setNode);
     return {
       start: () => {
-        dummyNode.__attach();
+        dummyNode.__addChild(_value);
       },
     };
   };
