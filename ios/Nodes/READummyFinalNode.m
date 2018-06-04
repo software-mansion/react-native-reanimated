@@ -1,9 +1,7 @@
 #import "READummyFinalNode.h"
-
 #import "REANodesManager.h"
 #import "REAStyleNode.h"
 #import "REAModule.h"
-
 #import <React/RCTLog.h>
 #import <React/RCTUIManager.h>
 
@@ -19,8 +17,6 @@
     }
     return self;
 }
-
-
 
 - (id)evaluate
 {

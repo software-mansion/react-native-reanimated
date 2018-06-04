@@ -107,18 +107,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
+     withFinalsToBeUpdated:(NSMutableArray<REANode *> *)finalsToBeUpdated
 {
   if ([visitedNodes containsObject:node]) {
     return;
   } else {
     [visitedNodes addObject:node];
   }
+  for (REANode *child in node.childNodes) {
+    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalsToBeUpdated:finalsToBeUpdated];
+  }
   if ([node respondsToSelector:@selector(update)]) {
-    [(id)node update];
-  } else {
-    for (REANode *child in node.childNodes) {
-      [self findAndUpdateNodes:child withVisitedSet:visitedNodes];
-    }
+    [finalsToBeUpdated addObject:node];
   }
 }
 
@@ -126,7 +126,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes];
+    NSMutableArray<REANode *> * finalsToBeUpdated = [NSMutableArray new];
+    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes withFinalsToBeUpdated:finalsToBeUpdated];
+    for (REANode *nodeIterator in finalsToBeUpdated) {
+      [(id)nodeIterator update];
+    }
   }
   [context.updatedNodes removeAllObjects];
   context.loopID++;
