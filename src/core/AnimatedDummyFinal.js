@@ -6,9 +6,12 @@ function sanitizeValue(value) {
 }
 
 export default class AnimatedValue extends AnimatedNode {
-  constructor(value) {
-    super({ type: 'dummyFinal', value: sanitizeValue(value) });
-    this._animation = null;
+  constructor(what, value) {
+    super({
+      type: 'dummyFinal',
+      value: sanitizeValue(value),
+      what: what.__nodeID,
+    });
   }
 
   __onEvaluate() {
