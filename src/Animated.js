@@ -40,13 +40,13 @@ function backwardsCompatibleAnim(node, AnimationClass) {
       ]),
       node(_clock, _state, _config),
       base.cond(_state.finished, base.stopClock(_clock)),
+      base.cond(_state.finished, base.call([], () => dummyNode.__detach())),
       _state.position,
     ]);
     const setNode = base.set(_value, currentNode);
     const dummyNode = base.dummyFinal(setNode);
     return {
       start: () => {
-        setNode.__attach();
         dummyNode.__attach();
       },
     };
