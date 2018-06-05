@@ -95,16 +95,14 @@ public abstract class Node<T> {
 
   public static void runUpdates(UpdateContext updateContext) {
     UiThreadUtil.assertOnUiThread();
-
     SparseArray<Node> updatedNodes = updateContext.updatedNodes;
     for (int i = 0; i < updatedNodes.size(); i++) {
-      Deque<FinalNode> finalsToBeUpdated  = new ArrayDeque<>();
+      Deque<FinalNode> finalsToBeUpdated = new ArrayDeque<>();
       findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalsToBeUpdated);
       while (!finalsToBeUpdated.isEmpty()) {
         finalsToBeUpdated.pop().update();
       }
     }
-
     updatedNodes.clear();
     updateContext.updateLoopID++;
   }
