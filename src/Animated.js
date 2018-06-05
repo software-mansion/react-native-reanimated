@@ -25,8 +25,8 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     const _config = state;
 
     const newValue = new AnimatedValue(0);
-    const _clock = new AnimatedClock();
-    const _state = {
+    const newClock = new AnimatedClock();
+    const state = {
       finished: new AnimatedValue(0),
       position: newValue,
       time: new AnimatedValue(0),
@@ -34,14 +34,14 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     };
 
     const currentNode = base.block([
-      base.cond(base.clockRunning(_clock), 0, [
+      base.cond(base.clockRunning(newClock), 0, [
         base.set(newValue, _value),
-        base.startClock(_clock),
+        base.startClock(newClock),
       ]),
-      node(_clock, _state, _config),
-      base.cond(_state.finished, base.stopClock(_clock)),
-      base.cond(_state.finished, base.call([], () => dummyNode.__detach())),
-      _state.position,
+      node(newClock, state, _config),
+      base.cond(state.finished, base.stopClock(newClock)),
+      base.cond(state.finished, base.call([], () => dummyNode.__detach())),
+      state.position,
     ]);
     const setNode = base.set(_value, currentNode);
     const dummyNode = base.dummyFinal(setNode);
