@@ -24,8 +24,10 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     const _value = clock;
     const _config = state;
     let evaluativeNode;
+    let returnMethod;
     return {
-      start: () => {
+      start: m => {
+        returnMethod = m;
         const newValue = new AnimatedValue(0);
         const newClock = new AnimatedClock();
         const _state = {
@@ -44,7 +46,10 @@ function backwardsCompatibleAnim(node, AnimationClass) {
           base.cond(_state.finished, base.stopClock(newClock)),
           base.cond(
             _state.finished,
-            base.call([], () => evaluativeNode.__removeChild(_value))
+            base.call([], () => {
+              evaluativeNode.__removeChild(_value);
+              returnMethod({ finished: true });
+            })
           ),
           _state.position,
         ]);
@@ -54,6 +59,7 @@ function backwardsCompatibleAnim(node, AnimationClass) {
       },
       stop: () => {
         evaluativeNode.__removeChild(_value);
+        returnMethod({ finished: false });
       },
     };
   };
