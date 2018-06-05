@@ -23,7 +23,7 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     // and second arg was animation config
     const _value = clock;
     const _config = state;
-    let evaluativeNode;
+    let alwaysNode;
     let returnMethod;
     return {
       start: m => {
@@ -47,18 +47,18 @@ function backwardsCompatibleAnim(node, AnimationClass) {
           base.cond(
             _state.finished,
             base.call([], () => {
-              evaluativeNode.__removeChild(_value);
+              alwaysNode.__removeChild(_value);
               returnMethod && returnMethod({ finished: true });
             })
           ),
           _state.position,
         ]);
         const setNode = base.set(_value, currentNode);
-        evaluativeNode = base.always(setNode);
-        evaluativeNode.__addChild(_value);
+        alwaysNode = base.always(setNode);
+        alwaysNode.__addChild(_value);
       },
       stop: () => {
-        evaluativeNode.__removeChild(_value);
+        alwaysNode.__removeChild(_value);
         returnMethod && returnMethod({ finished: false });
       },
     };
