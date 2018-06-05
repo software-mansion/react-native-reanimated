@@ -1,11 +1,11 @@
-#import "READummyFinalNode.h"
+#import "REAAlwaysEvaluativeNode.h"
 #import "REANodesManager.h"
 #import "REAStyleNode.h"
 #import "REAModule.h"
 #import <React/RCTLog.h>
 #import <React/RCTUIManager.h>
 
-@implementation READummyFinalNode
+@implementation REAAlwaysEvaluativeNode
 {
   NSNumber * _nodeToBeValued;
 }
