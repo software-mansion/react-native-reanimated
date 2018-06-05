@@ -127,9 +127,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
     NSMutableArray<REANode *> * finalsToBeUpdated = [NSMutableArray new];
-    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes withFinalsToBeUpdated:finalsToBeUpdated];
-    for (REANode *nodeIterator in finalsToBeUpdated) {
-      [(id)nodeIterator update];
+    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes
+       withFinalsToBeUpdated:finalsToBeUpdated];
+    while (finalsToBeUpdated.count > 0) {
+      // NSMutableArray used for stack implementation
+      [(id)[finalsToBeUpdated lastObject] update];
+      [finalsToBeUpdated removeLastObject];
     }
   }
   [context.updatedNodes removeAllObjects];

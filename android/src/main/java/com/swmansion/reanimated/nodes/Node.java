@@ -7,11 +7,11 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.UpdateContext;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -73,7 +73,7 @@ public abstract class Node<T> {
     markUpdated();
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Queue<FinalNode> finals) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Deque<FinalNode> finalsToBeUpdated) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
@@ -85,11 +85,11 @@ public abstract class Node<T> {
 
     if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finals);
+        findAndUpdateNodes(child, visitedNodes, finalsToBeUpdated);
       }
     }
     if (node instanceof FinalNode) {
-      finals.offer((FinalNode) node);
+      finalsToBeUpdated.push((FinalNode) node);
     }
   }
 
@@ -98,10 +98,10 @@ public abstract class Node<T> {
 
     SparseArray<Node> updatedNodes = updateContext.updatedNodes;
     for (int i = 0; i < updatedNodes.size(); i++) {
-      Queue<FinalNode> finalsToBeUpdated = new LinkedList<>();
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalsToBeUpdated);;
-      for (FinalNode nodeIterator : finalsToBeUpdated) {
-        nodeIterator.update();
+      Deque<FinalNode> finalsToBeUpdated  = new ArrayDeque<>();
+      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalsToBeUpdated);
+      while (!finalsToBeUpdated.isEmpty()) {
+        finalsToBeUpdated.pop().update();
       }
     }
 
