@@ -91,8 +91,13 @@ export default class Example extends Component {
     super(props);
 
     this.clock = new Clock();
-    this._timing = runTiming(this.clock, -120, 120);
     this._transX = new Value(0);
+    this._config = {
+      duration: 5000,
+      toValue: 120,
+      easing: Easing.inOut(Easing.ease),
+    };
+    this._anim = timing(this._transX, this._config);
   }
 
   render() {
@@ -106,14 +111,15 @@ export default class Example extends Component {
         />
         <Button
           onPress={() => {
-            const config = {
-              duration: 5000,
-              toValue: new Value(120),
-              easing: Easing.inOut(Easing.ease),
-            };
-            timing(this._transX, config).start();
+            this._anim.start();
           }}
-          title="sample 2"
+          title="Start"
+        />
+        <Button
+          onPress={() => {
+            this._anim.stop();
+          }}
+          title="Stop"
         />
       </View>
     );

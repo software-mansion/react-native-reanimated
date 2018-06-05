@@ -1,4 +1,4 @@
-import { Image, Text, View, ScrollView } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
@@ -23,34 +23,37 @@ function backwardsCompatibleAnim(node, AnimationClass) {
     // and second arg was animation config
     const _value = clock;
     const _config = state;
-
-    const newValue = new AnimatedValue(0);
-    const newClock = new AnimatedClock();
-    const _state = {
-      finished: new AnimatedValue(0),
-      position: newValue,
-      time: new AnimatedValue(0),
-      frameTime: new AnimatedValue(0),
-    };
-
-    const currentNode = base.block([
-      base.cond(base.clockRunning(newClock), 0, [
-        base.set(newValue, _value),
-        base.startClock(newClock),
-      ]),
-      node(newClock, _state, _config),
-      base.cond(_state.finished, base.stopClock(newClock)),
-      base.cond(
-        _state.finished,
-        base.call([], () => evaluativeNode.__detach())
-      ),
-      _state.position,
-    ]);
-    const setNode = base.set(_value, currentNode);
-    const evaluativeNode = base.alwaysEvaluative(setNode);
+    let evaluativeNode;
     return {
       start: () => {
+        const newValue = new AnimatedValue(0);
+        const newClock = new AnimatedClock();
+        const _state = {
+          finished: new AnimatedValue(0),
+          position: newValue,
+          time: new AnimatedValue(0),
+          frameTime: new AnimatedValue(0),
+        };
+
+        const currentNode = base.block([
+          base.cond(base.clockRunning(newClock), 0, [
+            base.set(newValue, _value),
+            base.startClock(newClock),
+          ]),
+          node(newClock, _state, _config),
+          base.cond(_state.finished, base.stopClock(newClock)),
+          base.cond(
+            _state.finished,
+            base.call([], () => evaluativeNode.__removeChild(_value))
+          ),
+          _state.position,
+        ]);
+        const setNode = base.set(_value, currentNode);
+        evaluativeNode = base.alwaysEvaluative(setNode);
         evaluativeNode.__addChild(_value);
+      },
+      stop: () => {
+        evaluativeNode.__removeChild(_value);
       },
     };
   };
