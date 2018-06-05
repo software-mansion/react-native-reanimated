@@ -16,7 +16,7 @@
 #import "Nodes/REAJSCallNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
-#import "Nodes/REAAlwaysEvaluativeNode.h"
+#import "Nodes/REAAlwaysNode.h"
 
 @implementation REANodesManager
 {
@@ -136,7 +136,7 @@
             @"call": [REAJSCallNode class],
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
-            @"alwaysEvaluative": [REAAlwaysEvaluativeNode class],
+            @"always": [REAAlwaysNode class],
 //            @"listener": nil,
             };
   });

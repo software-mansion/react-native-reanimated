@@ -48,18 +48,18 @@ function backwardsCompatibleAnim(node, AnimationClass) {
             _state.finished,
             base.call([], () => {
               evaluativeNode.__removeChild(_value);
-              returnMethod({ finished: true });
+              returnMethod && returnMethod({ finished: true });
             })
           ),
           _state.position,
         ]);
         const setNode = base.set(_value, currentNode);
-        evaluativeNode = base.alwaysEvaluative(setNode);
+        evaluativeNode = base.always(setNode);
         evaluativeNode.__addChild(_value);
       },
       stop: () => {
         evaluativeNode.__removeChild(_value);
-        returnMethod({ finished: false });
+        returnMethod && returnMethod({ finished: false });
       },
     };
   };
