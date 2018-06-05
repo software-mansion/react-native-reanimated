@@ -8,7 +8,7 @@ import AnimatedClockTest from './core/AnimatedClockTest';
 import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
-import AnimatedDummyFinal from './core/AnimatedDummyFinal';
+import AnimatedAlwaysEvaluative from './core/AnimatedAlwaysEvaluative';
 
 import { adapt, evaluateClock } from './utils';
 
@@ -69,8 +69,8 @@ export const startClock = function(clock) {
   return new AnimatedStartClock(clock);
 };
 
-export const dummyFinal = function(item) {
-  return new AnimatedDummyFinal(item);
+export const alwaysEvaluative = function(item) {
+  return new AnimatedAlwaysEvaluative(item);
 };
 
 export const stopClock = function(clock) {
