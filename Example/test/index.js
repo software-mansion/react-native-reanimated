@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
+import AnimatedBezier from 'react-native-reanimated/src/core/AnimatedBezier';
 
 const {
   set,
@@ -19,8 +20,12 @@ const {
   debug,
   spring,
   Value,
+  or,
   Clock,
+  and,
   event,
+  vibrate,
+  greaterThan,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -104,10 +109,23 @@ export default class Example extends Component {
     // }).start();
   }
   render() {
+    const b = or(0);
+    const v = vibrate();
+    const u = new Value(1);
     return (
       <View style={styles.container}>
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
+        />
+        <Animated.View
+          style={[
+            styles.box,
+            {
+              transform: [
+                { translateX: cond(and(greaterThan(this._transX, 0), u), v) },
+              ],
+            },
+          ]}
         />
       </View>
     );

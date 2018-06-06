@@ -8,6 +8,7 @@ import AnimatedClockTest from './core/AnimatedClockTest';
 import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
+import AnimatedVibrate from './core/AnimatedVibrate';
 
 import { adapt } from './utils';
 
@@ -71,6 +72,10 @@ export const startClock = function(clock) {
 
 export const stopClock = function(clock) {
   return new AnimatedStopClock(clock);
+};
+
+export const vibrate = function() {
+  return new AnimatedVibrate();
 };
 
 export const clockRunning = function(clock) {
