@@ -110,7 +110,15 @@ export default class Example extends Component {
   }
   render() {
     const b = or(0);
-    const v = vibrate();
+    const v = vibrate({
+      ios: {
+        feedback: 'notification',
+        style: 'error',
+      },
+      android: {
+        //TODO
+      },
+    });
     const u = new Value(1);
     return (
       <View style={styles.container}>
@@ -122,7 +130,13 @@ export default class Example extends Component {
             styles.box,
             {
               transform: [
-                { translateX: cond(and(greaterThan(this._transX, 0), u), v) },
+                {
+                  translateX: cond(
+                    and(greaterThan(this._transX, 0), u),
+                    [v, set(u, 0)],
+                    0
+                  ),
+                },
               ],
             },
           ]}

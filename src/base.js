@@ -74,8 +74,8 @@ export const stopClock = function(clock) {
   return new AnimatedStopClock(clock);
 };
 
-export const vibrate = function() {
-  return new AnimatedVibrate();
+export const vibrate = function(params) {
+  return new AnimatedVibrate(params);
 };
 
 export const clockRunning = function(clock) {
