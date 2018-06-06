@@ -8,7 +8,7 @@ import AnimatedClockTest from './core/AnimatedClockTest';
 import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
-import AnimatedVibrate from './core/AnimatedVibrate';
+import AnimatedFeedback from './core/AnimatedFeedback';
 
 import { adapt } from './utils';
 
@@ -74,8 +74,8 @@ export const stopClock = function(clock) {
   return new AnimatedStopClock(clock);
 };
 
-export const vibrate = function(params) {
-  return new AnimatedVibrate(params);
+export const feedback = function(params) {
+  return new AnimatedFeedback(params);
 };
 
 export const clockRunning = function(clock) {

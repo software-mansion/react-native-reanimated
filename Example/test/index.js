@@ -24,7 +24,7 @@ const {
   Clock,
   and,
   event,
-  vibrate,
+  feedback,
   greaterThan,
 } = Animated;
 
@@ -110,7 +110,7 @@ export default class Example extends Component {
   }
   render() {
     const b = or(0);
-    const v = vibrate({
+    const v = feedback({
       ios: {
         feedback: 'notification',
         style: 'error',

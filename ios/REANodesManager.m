@@ -16,7 +16,7 @@
 #import "Nodes/REAJSCallNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
-#import "Nodes/REAVibrateNode.h"
+#import "Nodes/REAFeedbackNode.h"
 
 @implementation REANodesManager
 {
@@ -136,7 +136,7 @@
             @"call": [REAJSCallNode class],
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
-            @"vibrate": [REAVibrateNode class],
+            @"feedback": [REAFeedbackNode class],
 //            @"listener": nil,
             };
   });

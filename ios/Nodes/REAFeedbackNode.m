@@ -1,10 +1,10 @@
-#import "REAVibrateNode.h"
+#import "REAFeedbackNode.h"
 #import "REANodesManager.h"
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <sys/utsname.h>
 
-@implementation REAVibrateNode {
+@implementation REAFeedbackNode {
   NSString *_type;
   NSString *_style;
   BOOL _shouldUseAlternativeHaptic;
