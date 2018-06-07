@@ -1,5 +1,6 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../utils';
+import interpolate from '../derived/interpolate';
 
 function sanitizeValue(value) {
   return value === null || value === undefined ? value : Number(value);
@@ -26,5 +27,9 @@ export default class AnimatedValue extends AnimatedNode {
   _updateValue(value) {
     this._value = value;
     this.__forceUpdateCache(value);
+  }
+
+  interpolate(config) {
+    return interpolate(this, config);
   }
 }

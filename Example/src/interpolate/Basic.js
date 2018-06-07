@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
 import Animated, { Easing } from 'react-native-reanimated';
 import Box from '../Box';
 import Row from '../Row';
@@ -9,20 +8,12 @@ const {
   cond,
   eq,
   and,
-  add,
-  call,
-  multiply,
-  lessThan,
   startClock,
-  stopClock,
   clockRunning,
   block,
   timing,
-  debug,
-  spring,
   Value,
   Clock,
-  event,
   interpolate,
 } = Animated;
 

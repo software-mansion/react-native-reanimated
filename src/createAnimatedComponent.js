@@ -34,6 +34,7 @@ export default function createAnimatedComponent(Component) {
 
     _eventDetachers = [];
 
+    /* eslint-disable-next-line camelcase */
     static __skipSetNativeProps_FOR_TESTS_ONLY = false;
 
     constructor(props) {

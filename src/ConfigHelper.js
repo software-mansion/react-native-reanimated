@@ -15,7 +15,6 @@ let NATIVE_PROPS_WHITELIST = {
   borderColor: true,
   borderEndColor: true,
   borderLeftColor: true,
-  backgroundColor: true,
   borderStartColor: true,
   borderTopColor: true,
   /* ios styles */
