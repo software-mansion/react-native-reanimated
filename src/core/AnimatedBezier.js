@@ -65,7 +65,6 @@ function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
 
 function bezier(mX1, mY1, mX2, mY2) {
   if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
-    // eslint-disable-line yoda
     throw new Error('bezier x values must be in [0, 1] range');
   }
 
