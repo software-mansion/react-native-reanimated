@@ -1,18 +1,12 @@
 import React from 'react';
-import {
-  NativeModules,
-  NativeEventEmitter,
-  findNodeHandle,
-} from 'react-native';
+import { findNodeHandle } from 'react-native';
+import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
 
 import AnimatedEvent from './core/AnimatedEvent';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 
 import invariant from 'fbjs/lib/invariant';
-
-const { ReanimatedModule } = NativeModules;
-const EVENT_EMITTER = new NativeEventEmitter(ReanimatedModule);
 
 const NODE_MAPPING = new Map();
 
@@ -168,7 +162,7 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.set(viewTag, this);
       if (NODE_MAPPING.size === 1) {
-        EVENT_EMITTER.addListener('onReanimatedPropsChange', listener);
+        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
       }
     }
 
@@ -176,7 +170,7 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.delete(viewTag);
       if (NODE_MAPPING.size === 0) {
-        EVENT_EMITTER.removeAllListeners('onReanimatedPropsChange');
+        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
       }
     }
 

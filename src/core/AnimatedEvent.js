@@ -1,11 +1,10 @@
-import { NativeModules, findNodeHandle } from 'react-native';
+import { findNodeHandle } from 'react-native';
+import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
 import AnimatedValue from './AnimatedValue';
 
 import invariant from 'fbjs/lib/invariant';
-
-const { ReanimatedModule } = NativeModules;
 
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
