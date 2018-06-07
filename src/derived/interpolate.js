@@ -31,9 +31,9 @@ function interpolateInternal(value, inputRange, outputRange, offset = 0) {
 }
 
 export const Extrapolate = {
-  EXTEND: 'EXTEND',
-  CLAMP: 'CLAMP',
-  IDENTITY: 'IDENTITY',
+  EXTEND: 'extend',
+  CLAMP: 'clamp',
+  IDENTITY: 'identity',
 };
 
 function checkNonDecreasing(name, arr) {
