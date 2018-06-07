@@ -46,6 +46,7 @@ export default class AnimatedNode {
   constructor(nodeConfig, inputNodes) {
     this.__nodeID = ++nodeCount;
     this.__nodeConfig = sanitizeConfig(nodeConfig);
+    this.__initialized = false;
     this.__inputNodes =
       inputNodes && inputNodes.filter(node => node instanceof AnimatedNode);
   }
@@ -93,15 +94,18 @@ export default class AnimatedNode {
   }
 
   __nativeInitialize() {
-    if (this.__nodeConfig) {
+    if (!this.__initialized) {
       ReanimatedModule.createNode(this.__nodeID, this.__nodeConfig);
-      this.__nodeConfig = undefined;
+      this.__initialized = true;
     }
   }
 
   __nativeTearDown() {
-    if (!this.__nodeConfig) {
+    if (this.__initialized) {
       ReanimatedModule.dropNode(this.__nodeID);
+      // TODO: the below line throws "object has been frozen" exception. Need to
+      // figure out the root cause of this issue and enable back that line
+      // this.__initialized = false;
     }
   }
 

@@ -1,7 +1,9 @@
 import { StyleSheet } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
-import AnimatedTransform from './AnimatedTransform';
+import { createOrReuseTransformNode } from './AnimatedTransform';
+
+import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeStyle(inputStyle) {
   const style = {};
@@ -14,16 +16,32 @@ function sanitizeStyle(inputStyle) {
   return style;
 }
 
+export function createOrReuseStyleNode(style, oldNode) {
+  style = StyleSheet.flatten(style) || {};
+  if (style.transform) {
+    style = {
+      ...style,
+      transform: createOrReuseTransformNode(
+        style.transform,
+        oldNode && oldNode._style.transform
+      ),
+    };
+  }
+  const config = sanitizeStyle(style);
+  if (oldNode && deepEqual(config, oldNode._config)) {
+    return oldNode;
+  }
+  return new AnimatedStyle(style, config);
+}
+
+/**
+ * AnimatedStyle should never be directly instantiated, use createOrReuseStyleNode
+ * in order to make a new instance of this node.
+ */
 export default class AnimatedStyle extends AnimatedNode {
-  constructor(style) {
-    style = StyleSheet.flatten(style) || {};
-    if (style.transform) {
-      style = {
-        ...style,
-        transform: new AnimatedTransform(style.transform),
-      };
-    }
-    super({ type: 'style', style: sanitizeStyle(style) }, Object.values(style));
+  constructor(style, config) {
+    super({ type: 'style', style: config }, Object.values(style));
+    this._config = config;
     this._style = style;
   }
 

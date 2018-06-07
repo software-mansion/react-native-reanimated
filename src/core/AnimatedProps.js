@@ -1,10 +1,11 @@
 import { findNodeHandle } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
-import AnimatedStyle from './AnimatedStyle';
 import AnimatedEvent from './AnimatedEvent';
+import AnimatedStyle, { createOrReuseStyleNode } from './AnimatedStyle';
 
 import invariant from 'fbjs/lib/invariant';
+import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeProps(inputProps) {
   const props = {};
@@ -17,16 +18,30 @@ function sanitizeProps(inputProps) {
   return props;
 }
 
-export default class AnimatedProps extends AnimatedNode {
-  constructor(props, callback) {
-    if (props.style) {
-      props = { ...props, style: new AnimatedStyle(props.style) };
-    }
-    const nonEventProps = sanitizeProps(props);
+export function createOrReusePropsNode(props, callback, oldNode) {
+  if (props.style) {
+    props = {
+      ...props,
+      style: createOrReuseStyleNode(
+        props.style,
+        oldNode && oldNode._props.style
+      ),
+    };
+  }
+  const config = sanitizeProps(props);
+  if (oldNode && deepEqual(config, oldNode._config)) {
+    return oldNode;
+  }
+  return new AnimatedProps(props, config, callback);
+}
+
+class AnimatedProps extends AnimatedNode {
+  constructor(props, config, callback) {
     super(
-      { type: 'props', props: nonEventProps },
+      { type: 'props', props: config },
       Object.values(props).filter(n => !(n instanceof AnimatedEvent))
     );
+    this._config = config;
     this._props = props;
     this._callback = callback;
     this.__attach();
