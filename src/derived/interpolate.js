@@ -36,14 +36,14 @@ export const Extrapolate = {
   IDENTITY: 'IDENTITY',
 };
 
-function checkIncreasing(name, arr) {
+function checkNonDecreasing(name, arr) {
   for (let i = 1; i < arr.length; ++i) {
     // We can't validate animated nodes in JS.
     if (arr[i] instanceof AnimatedNode || arr[i - 1] instanceof AnimatedNode)
       continue;
     invariant(
       arr[i] >= arr[i - 1],
-      '%s must be monotonically increasing. (%s)',
+      '%s must be monotonically non-decreasing. (%s)',
       name,
       arr
     );
@@ -85,7 +85,7 @@ export default function interpolate(value, config) {
   checkValidNumbers('inputRange', inputRange);
   checkMinElements('outputRange', outputRange);
   checkValidNumbers('outputRange', outputRange);
-  checkIncreasing('inputRange', inputRange);
+  checkNonDecreasing('inputRange', inputRange);
   invariant(
     inputRange.length === outputRange.length,
     'inputRange and outputRange must be the same length.'
