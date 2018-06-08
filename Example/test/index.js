@@ -116,8 +116,8 @@ export default class Example extends Component {
         style: 'error',
       },
       android: {
-        pattern: [100, 100],
-        repeat: 2,
+        pattern: [0, 100, 100, 200],
+        amplitudes: [0, 255, 0, 120],
       },
     });
     const u = new Value(1);
