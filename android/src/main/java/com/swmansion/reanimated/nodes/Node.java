@@ -16,8 +16,8 @@ import javax.annotation.Nullable;
 
 public abstract class Node<T> {
 
-  private static final Double ZERO = Double.valueOf(0);
-  private static final Double ONE = Double.valueOf(0);
+  public static final Double ZERO = Double.valueOf(0);
+  public static final Double ONE = Double.valueOf(1);
 
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
@@ -28,7 +28,7 @@ public abstract class Node<T> {
   private @Nullable T mMemoizedValue;
   private @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
 
-  public Node(int nodeID, ReadableMap config, NodesManager nodesManager) {
+  public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
     mNodesManager = nodesManager;
     mUpdateContext = nodesManager.updateContext;

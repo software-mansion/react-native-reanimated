@@ -5,8 +5,6 @@ import com.swmansion.reanimated.NodesManager;
 
 public class CondNode extends Node {
 
-  private final static Double ZERO = Double.valueOf(0);
-
   private final int mCondID, mIfBlockID, mElseBlockID;
 
   public CondNode(int nodeID, ReadableMap config, NodesManager nodesManager) {

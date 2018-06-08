@@ -14,8 +14,6 @@ import javax.annotation.Nullable;
 
 public class EventNode extends Node<Double> implements RCTEventEmitter {
 
-  private static final Double ZERO = 0.;
-
   private static class EventMap {
     private final int nodeID;
     private final String[] path;

@@ -5,8 +5,6 @@ import com.swmansion.reanimated.NodesManager;
 
 public abstract class ClockOpNode extends Node<Double> {
 
-  private static final Double ZERO = new Double(0);
-
   public static class ClockStartNode extends ClockOpNode {
     public ClockStartNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
       super(nodeID, config, nodesManager);

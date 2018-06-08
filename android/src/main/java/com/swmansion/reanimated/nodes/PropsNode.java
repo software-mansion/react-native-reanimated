@@ -16,11 +16,7 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 public class PropsNode extends Node<Double> implements FinalNode {
-
-  private static final Double ZERO = Double.valueOf(0);
 
   private final Map<String, Integer> mMapping;
   private final UIImplementation mUIImplementation;

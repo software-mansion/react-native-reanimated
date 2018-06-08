@@ -9,8 +9,6 @@ import com.swmansion.reanimated.Utils;
 
 public class JSCallNode extends Node<Double> {
 
-  private static final Double ZERO = new Double(0);
-
   private final int[] mInputIDs;
 
   public JSCallNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
