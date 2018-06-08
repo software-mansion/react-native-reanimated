@@ -18,7 +18,7 @@ public class AlwaysNode extends Node<Double> implements FinalNode {
 
   @Override
   protected Double evaluate() {
-    return 0.0;
+    return ZERO;
   }
 
 }
