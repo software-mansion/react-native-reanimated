@@ -69,7 +69,7 @@ public class EventNode extends Node<Double> implements RCTEventEmitter {
       EventMap eventMap = mMapping.get(i);
       Double value = eventMap.lookupValue(event);
       if (value != null) {
-        ((ValueNode) mNodesManager.findNodeById(eventMap.nodeID)).setValue(value);
+        mNodesManager.findNodeById(eventMap.nodeID, ValueNode.class).setValue(value);
       }
     }
   }

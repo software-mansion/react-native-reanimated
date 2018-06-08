@@ -23,6 +23,7 @@ import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
 import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.Node;
+import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
 import com.swmansion.reanimated.nodes.SetNode;
@@ -43,6 +44,8 @@ import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
 
+  private static final Double ZERO = Double.valueOf(0);
+
   public interface OnAnimationFrame {
     void onAnimationFrame();
   }
@@ -55,6 +58,7 @@ public class NodesManager implements EventDispatcherListener {
   private final GuardedFrameCallback mChoreographerCallback;
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
+  private final NoopNode mNoopNode;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -80,6 +84,8 @@ public class NodesManager implements EventDispatcherListener {
         onAnimationFrame(frameTimeNanos);
       }
     };
+
+    mNoopNode = new NoopNode(this);
   }
 
   public void onHostPause() {
@@ -139,8 +145,37 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public @Nullable Node findNodeById(int id) {
-    return mAnimatedNodes.get(id);
+  /**
+   * Null-safe way of getting node's value. If node is not present we return 0. This also matches
+   * iOS behavior when the app won't just crash.
+   */
+  public Double getNodeValue(int nodeID) {
+    Node node = mAnimatedNodes.get(nodeID);
+    if (node != null) {
+      return node.doubleValue();
+    }
+    return ZERO;
+  }
+
+  /**
+   * Null-safe way of getting node reference. This method always returns non-null instance. If the
+   * node is not present we try to return a "no-op" node that allows for "set" calls and always
+   * returns 0 as a value.
+   */
+  public <T extends Node> T findNodeById(int id, Class<T> type) {
+    Node node = mAnimatedNodes.get(id);
+    if (node == null) {
+      if (type == Node.class || type == ValueNode.class) {
+        return (T) mNoopNode;
+      }
+      throw new IllegalArgumentException("Requested node with id " + id + " of type " + type +
+              " cannot be found");
+    }
+    if (type.isInstance(node)) {
+      return (T) node;
+    }
+    throw new IllegalArgumentException("Node with id " + id + " is of incompatible type " +
+            node.getClass() + ", requested type was " + type);
   }
 
   public void createNode(int nodeID, ReadableMap config) {

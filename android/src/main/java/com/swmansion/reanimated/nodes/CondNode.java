@@ -5,6 +5,8 @@ import com.swmansion.reanimated.NodesManager;
 
 public class CondNode extends Node {
 
+  private final static Double ZERO = Double.valueOf(0);
+
   private final int mCondID, mIfBlockID, mElseBlockID;
 
   public CondNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
@@ -16,11 +18,11 @@ public class CondNode extends Node {
 
   @Override
   protected Object evaluate() {
-    Object cond = mNodesManager.findNodeById(mCondID).value();
+    Object cond = mNodesManager.getNodeValue(mCondID);
     if (cond instanceof Number && ((Number) cond).doubleValue() != 0.0) {
       // This is not a good way to compare doubles but in this case it is what we want
-      return mIfBlockID != -1 ? mNodesManager.findNodeById(mIfBlockID).value() : 0.;
+      return mIfBlockID != -1 ? mNodesManager.getNodeValue(mIfBlockID) : ZERO;
     }
-    return mElseBlockID != -1 ? mNodesManager.findNodeById(mElseBlockID).value() : 0.;
+    return mElseBlockID != -1 ? mNodesManager.getNodeValue(mElseBlockID) : ZERO;
   }
 }

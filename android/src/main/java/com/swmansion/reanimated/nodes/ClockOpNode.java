@@ -51,7 +51,7 @@ public abstract class ClockOpNode extends Node<Double> {
 
   @Override
   protected Double evaluate() {
-    ClockNode clock = (ClockNode) mNodesManager.findNodeById(clockID);
+    ClockNode clock = mNodesManager.findNodeById(clockID, ClockNode.class);
     return eval(clock);
   }
 
