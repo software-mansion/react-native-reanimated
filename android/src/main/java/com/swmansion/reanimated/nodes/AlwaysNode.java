@@ -13,7 +13,7 @@ public class AlwaysNode extends Node<Double> implements FinalNode {
 
   @Override
   public void update() {
-    mNodesManager.findNodeById(mNodeToBeValued).value();
+    mNodesManager.findNodeById(mNodeToBeValued, Node.class).value();
   }
 
   @Override
