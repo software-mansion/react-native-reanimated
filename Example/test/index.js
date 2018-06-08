@@ -116,15 +116,13 @@ export default class Example extends Component {
         style: 'error',
       },
       android: {
-        //TODO
+        pattern: [100, 100],
+        repeat: 2,
       },
     });
     const u = new Value(1);
     return (
       <View style={styles.container}>
-        <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
-        />
         <Animated.View
           style={[
             styles.box,

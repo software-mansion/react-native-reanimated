@@ -21,6 +21,7 @@ import com.swmansion.reanimated.nodes.ClockOpNode;
 import com.swmansion.reanimated.nodes.CondNode;
 import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
+import com.swmansion.reanimated.nodes.FeedbackNode;
 import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.OperatorNode;
@@ -62,9 +63,11 @@ public class NodesManager implements EventDispatcherListener {
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
+  public final ReactContext mCtx;
   public Set<String> nativeProps = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
+    mCtx = context;
     UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
     updateContext = new UpdateContext();
     mUIImplementation = uiManager.getUIImplementation();
@@ -182,6 +185,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new BezierNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
+    } else if ("feedback".equals(type)) {
+      node = new FeedbackNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
