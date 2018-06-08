@@ -61,7 +61,7 @@ public class TransformNode extends Node<WritableArray> {
     return configs;
   }
 
-  private static List<TransformConfig> mTransforms;
+  private List<TransformConfig> mTransforms;
 
   public TransformNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
