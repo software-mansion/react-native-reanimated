@@ -40,10 +40,12 @@ const OPERATIONS = {
 
   // comparing
   lessThan: infix((a, b) => a < b),
+  /* eslint-disable-next-line eqeqeq */
   eq: infix((a, b) => a == b),
   greaterThan: infix((a, b) => a > b),
   lessOrEq: infix((a, b) => a <= b),
   greaterOrEq: infix((a, b) => a >= b),
+  /* eslint-disable-next-line eqeqeq */
   neq: infix((a, b) => a != b),
 };
 

@@ -33,9 +33,9 @@ function getSlope(aT, aA1, aA2) {
 }
 
 function binarySubdivide(aX, aA, aB, mX1, mX2) {
-  var currentX,
-    currentT,
-    i = 0;
+  var currentX = 0;
+  var currentT = 0;
+  var i = 0;
   do {
     currentT = aA + (aB - aA) / 2.0;
     currentX = calcBezier(currentT, mX1, mX2) - aX;
@@ -64,8 +64,7 @@ function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
 }
 
 function bezier(mX1, mY1, mX2, mY2) {
-  if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
-    // eslint-disable-line yoda
+  if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
     throw new Error('bezier x values must be in [0, 1] range');
   }
 

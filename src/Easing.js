@@ -1,7 +1,5 @@
 import {
-  greaterThan,
   cond,
-  greaterOrEq,
   lessThan,
   multiply,
   pow,
@@ -9,7 +7,6 @@ import {
   sqrt,
   sub,
   add,
-  debug,
   divide,
 } from './base';
 import AnimatedBezier from './core/AnimatedBezier';
