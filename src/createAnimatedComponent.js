@@ -31,7 +31,6 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-    _component = React.createRef();
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -40,7 +39,7 @@ export default function createAnimatedComponent(Component) {
     }
 
     setNativeProps(props) {
-      this._component.current.setNativeProps(props);
+      this._component.setNativeProps(props);
     }
 
     componentWillMount() {
@@ -53,7 +52,7 @@ export default function createAnimatedComponent(Component) {
         this._animatedPropsCallback();
       }
 
-      this._propsAnimated.setNativeView(this._component.current);
+      this._propsAnimated.setNativeView(this._component);
       this._attachNativeEvents();
       this._attachPropUpdater();
     }
@@ -61,9 +60,9 @@ export default function createAnimatedComponent(Component) {
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return this._component.current.getScrollableNode
-        ? this._component.current.getScrollableNode()
-        : this._component.current;
+      return this._component.getScrollableNode
+        ? this._component.getScrollableNode()
+        : this._component;
     }
 
     _attachNativeEvents() {
@@ -188,13 +187,19 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._propsAnimated.__getProps();
-      return <Component {...props} ref={this._component} collapsable={false} />;
+      return (
+        <Component
+          {...props}
+          ref={ref => (this._component = ref)}
+          collapsable={false}
+        />
+      );
     }
 
     // A third party library can use getNode()
     // to get the node reference of the decorated component
     getNode() {
-      return this._component.current;
+      return this._component;
     }
   }
 
