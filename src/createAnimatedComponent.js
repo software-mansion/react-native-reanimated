@@ -6,8 +6,8 @@ import {
 } from 'react-native';
 import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
 
-import AnimatedProps from './core/AnimatedProps';
 import AnimatedEvent from './core/AnimatedEvent';
+import { createOrReusePropsNode } from './core/AnimatedProps';
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -31,16 +31,6 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-
-    _eventDetachers = [];
-
-    /* eslint-disable-next-line camelcase */
-    static __skipSetNativeProps_FOR_TESTS_ONLY = false;
-
-    constructor(props) {
-      super(props);
-      this._setComponentRef = this._setComponentRef.bind(this);
-    }
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -67,27 +57,65 @@ export default function createAnimatedComponent(Component) {
       this._attachPropUpdater();
     }
 
-    _attachNativeEvents() {
+    _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      const scrollableNode = this._component.getScrollableNode
+      return this._component.getScrollableNode
         ? this._component.getScrollableNode()
         : this._component;
+    }
+
+    _attachNativeEvents() {
+      const node = this._getEventViewRef();
 
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          prop.attachEvent(scrollableNode, key);
-          this._eventDetachers.push(() =>
-            prop.detachEvent(scrollableNode, key)
-          );
+          prop.attachEvent(node, key);
         }
       }
     }
 
     _detachNativeEvents() {
-      this._eventDetachers.forEach(remove => remove());
-      this._eventDetachers = [];
+      const node = this._getEventViewRef();
+
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          prop.detachEvent(node, key);
+        }
+      }
+    }
+
+    _reattachNativeEvents(prevProps) {
+      const node = this._getEventViewRef();
+      const attached = new Set();
+      const nextEvts = new Set();
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          nextEvts.add(prop);
+        }
+      }
+      for (const key in prevProps) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          if (!nextEvts.has(prop)) {
+            // event was in prev props but not in current props, we detach
+            prop.detachEvent(node, key);
+          } else {
+            // event was in prev and is still in current props
+            attached.add(prop);
+          }
+        }
+      }
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent && !attached.has(prop)) {
+          // not yet attached
+          prop.attachEvent(node, key);
+        }
+      }
     }
 
     // The system is best designed when setNativeProps is implemented. It is
@@ -103,10 +131,7 @@ export default function createAnimatedComponent(Component) {
         // React may throw away uncommitted work in async mode,
         // So a deferred call won't always be invoked.
         this._invokeAnimatedPropsCallbackOnMount = true;
-      } else if (
-        AnimatedComponent.__skipSetNativeProps_FOR_TESTS_ONLY ||
-        typeof this._component.setNativeProps !== 'function'
-      ) {
+      } else if (typeof this._component.setNativeProps !== 'function') {
         this.forceUpdate();
       } else {
         this._component.setNativeProps(this._propsAnimated.__getValue());
@@ -116,20 +141,23 @@ export default function createAnimatedComponent(Component) {
     _attachProps(nextProps) {
       const oldPropsAnimated = this._propsAnimated;
 
-      this._propsAnimated = new AnimatedProps(
+      this._propsAnimated = createOrReusePropsNode(
         nextProps,
-        this._animatedPropsCallback
+        this._animatedPropsCallback,
+        oldPropsAnimated
       );
-
-      // When you call detach, it removes the element from the parent list
-      // of children. If it goes to 0, then the parent also detaches itself
-      // and so on.
-      // An optimization is to attach the new elements and THEN detach the old
-      // ones instead of detaching and THEN attaching.
-      // This way the intermediate state isn't to go to 0 and trigger
-      // this expensive recursive detaching to then re-attach everything on
-      // the very next operation.
-      oldPropsAnimated && oldPropsAnimated.__detach();
+      // If prop node has been reused we don't need to call into "__detach"
+      if (oldPropsAnimated !== this._propsAnimated) {
+        // When you call detach, it removes the element from the parent list
+        // of children. If it goes to 0, then the parent also detaches itself
+        // and so on.
+        // An optimization is to attach the new elements and THEN detach the old
+        // ones instead of detaching and THEN attaching.
+        // This way the intermediate state isn't to go to 0 and trigger
+        // this expensive recursive detaching to then re-attach everything on
+        // the very next operation.
+        oldPropsAnimated && oldPropsAnimated.__detach();
+      }
     }
 
     _updateFromNative(props) {
@@ -152,30 +180,20 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    componentWillReceiveProps(newProps) {
-      this._attachProps(newProps);
-    }
-
     componentDidUpdate(prevProps) {
-      if (this._component !== this._prevComponent) {
-        this._propsAnimated.setNativeView(this._component);
-      }
-      if (this._component !== this._prevComponent || prevProps !== this.props) {
-        this._detachNativeEvents();
-        this._attachNativeEvents();
-      }
+      this._attachProps(this.props);
+      this._reattachNativeEvents(prevProps);
     }
 
     render() {
       const props = this._propsAnimated.__getProps();
       return (
-        <Component {...props} ref={this._setComponentRef} collapsable={false} />
+        <Component
+          {...props}
+          ref={ref => (this._component = ref)}
+          collapsable={false}
+        />
       );
-    }
-
-    _setComponentRef(c) {
-      this._prevComponent = this._component;
-      this._component = c;
     }
 
     // A third party library can use getNode()

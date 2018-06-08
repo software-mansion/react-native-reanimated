@@ -1,5 +1,7 @@
 import AnimatedNode from './AnimatedNode';
 
+import deepEqual from 'fbjs/lib/areEqual';
+
 function sanitizeTransform(inputTransform) {
   const outputTransform = [];
   inputTransform.forEach(transform => {
@@ -34,12 +36,21 @@ function extractAnimatedParentNodes(transform) {
   return parents;
 }
 
-export default class AnimatedTransform extends AnimatedNode {
-  constructor(transform) {
+export function createOrReuseTransformNode(transform, oldNode) {
+  const config = sanitizeTransform(transform);
+  if (oldNode && deepEqual(config, oldNode._config)) {
+    return oldNode;
+  }
+  return new AnimatedTransform(transform, config);
+}
+
+class AnimatedTransform extends AnimatedNode {
+  constructor(transform, config) {
     super(
-      { type: 'transform', transform: sanitizeTransform(transform) },
+      { type: 'transform', transform: config },
       extractAnimatedParentNodes(transform)
     );
+    this._config = config;
     this._transform = transform;
   }
 
