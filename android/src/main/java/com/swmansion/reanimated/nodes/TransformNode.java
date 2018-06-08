@@ -23,12 +23,7 @@ public class TransformNode extends Node<WritableArray> {
 
     @Override
     public double getValue(NodesManager nodesManager) {
-      Node node = nodesManager.findNodeById(nodeID);
-      if (node == null) {
-        throw new IllegalArgumentException("Mapped style node does not exists");
-      } else {
-        return (Double) node.value();
-      }
+      return nodesManager.getNodeValue(nodeID);
     }
   }
 
