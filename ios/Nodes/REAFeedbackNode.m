@@ -7,6 +7,10 @@
 @implementation REAFeedbackNode {
   NSString *_type;
   NSString *_style;
+  UIImpactFeedbackGenerator *_impactGenerator;
+  UISelectionFeedbackGenerator *_selectionGenerator;
+  UINotificationFeedbackGenerator *_notificationGenerator;
+  
   BOOL _shouldUseAlternativeHaptic;
 }
 - (instancetype)initWithID:(REANodeID)nodeID
@@ -20,6 +24,22 @@
       _shouldUseAlternativeHaptic = [RCTConvert BOOL:prop];
     } else {
       _shouldUseAlternativeHaptic = YES;
+    }
+  }
+  if (![self needsAlternativeHaptic]) {
+    if ([_type isEqualToString:@"notification"]) {
+      _notificationGenerator = [UINotificationFeedbackGenerator new];
+      
+    } else if ([_type isEqualToString:@"selection"]) {
+      _selectionGenerator = [UISelectionFeedbackGenerator new];
+    } else {
+      if ([_style isEqualToString:@"heavy"]) {
+        _impactGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleHeavy)];
+      } else if ([_style isEqualToString:@"light"]) {
+        _impactGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleLight)];
+      } else {
+        _impactGenerator = [[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleMedium)];
+      }
     }
   }
   return self;
@@ -46,24 +66,17 @@
   }
   
   if ([_type isEqualToString:@"notification"]) {
-    UINotificationFeedbackGenerator *generator = [UINotificationFeedbackGenerator new];
     if ([_style isEqualToString:@"error"]) {
-      [generator notificationOccurred:UINotificationFeedbackTypeError];
+      [_notificationGenerator notificationOccurred:UINotificationFeedbackTypeError];
     } else if ([_style isEqualToString:@"warning"]) {
-      [generator notificationOccurred:UINotificationFeedbackTypeWarning];
+      [_notificationGenerator notificationOccurred:UINotificationFeedbackTypeWarning];
     } else {
-      [generator notificationOccurred:UINotificationFeedbackTypeSuccess];
+      [_notificationGenerator notificationOccurred:UINotificationFeedbackTypeSuccess];
     }
   } else if ([_type isEqualToString:@"selection"]) {
-    [[UISelectionFeedbackGenerator new] selectionChanged];
+    [_selectionGenerator selectionChanged];
   } else {
-    if ([_style isEqualToString:@"heavy"]) {
-      [[[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleHeavy)] impactOccurred];
-    } else if ([_style isEqualToString:@"light"]) {
-      [[[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleLight)] impactOccurred];
-    } else {
-      [[[UIImpactFeedbackGenerator alloc] initWithStyle:(UIImpactFeedbackStyleMedium)] impactOccurred];
-    }
+    [_impactGenerator impactOccurred];
   }
   
   return 0;
