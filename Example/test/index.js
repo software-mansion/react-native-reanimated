@@ -68,6 +68,7 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 5000,
     toValue: new Value(0),
+    delay: 2000,
     easing: Easing.inOut(Easing.ease),
   };
 
@@ -96,16 +97,18 @@ export default class Example extends Component {
       duration: 5000,
       toValue: 120,
       easing: Easing.inOut(Easing.ease),
+      delay: 1000,
     };
     this._anim = timing(this._transX, this._config);
+    this._timing = runTiming(this.clock, 0, 150);
   }
 
   render() {
     return (
       <View style={styles.container}>
-        {/*   <Animated.View
+        <Animated.View
           style={[styles.box, { transform: [{ translateX: this._timing }] }]}
-        />*/}
+        />
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
         />
