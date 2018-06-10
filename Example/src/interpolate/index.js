@@ -1,8 +1,5 @@
 import React from 'react';
-import { Text, View, FlatList, StyleSheet, YellowBox } from 'react-native';
-import { StackNavigator } from 'react-navigation';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-
+import { Text, View, FlatList, StyleSheet } from 'react-native';
 import Basic from './Basic';
 import WithDrag from './WithDrag';
 import AnimatedBounds from './AnimatedBounds';

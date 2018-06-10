@@ -1,10 +1,6 @@
-import { NativeEventEmitter, NativeModules } from 'react-native';
-
+import ReanimatedEventEmitter from '../ReanimatedEventEmitter';
 import { val } from '../utils';
 import AnimatedNode from './AnimatedNode';
-
-const { ReanimatedModule } = NativeModules;
-const EVENT_EMITTER = new NativeEventEmitter(ReanimatedModule);
 
 const NODE_MAPPING = new Map();
 
@@ -27,14 +23,14 @@ export default class AnimatedCall extends AnimatedNode {
     super.__attach();
     NODE_MAPPING.set(this.__nodeID, this);
     if (NODE_MAPPING.size === 1) {
-      EVENT_EMITTER.addListener('onReanimatedCall', listener);
+      ReanimatedEventEmitter.addListener('onReanimatedCall', listener);
     }
   }
 
   __detach() {
     NODE_MAPPING.delete(this.__nodeID);
     if (NODE_MAPPING.size === 0) {
-      EVENT_EMITTER.removeAllListeners('onReanimatedCall');
+      ReanimatedEventEmitter.removeAllListeners('onReanimatedCall');
     }
     super.__detach();
   }

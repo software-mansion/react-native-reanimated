@@ -1,6 +1,4 @@
-import { NativeModules } from 'react-native';
-
-const { ReanimatedModule } = NativeModules;
+import ReanimatedModule from './ReanimatedModule';
 
 /**
  * Styles allowed to be direcly updated in native thread
