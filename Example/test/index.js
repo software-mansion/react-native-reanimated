@@ -6,11 +6,6 @@ import Animated, { Easing } from 'react-native-reanimated';
 const {
   set,
   cond,
-  eq,
-  add,
-  call,
-  multiply,
-  lessThan,
   startClock,
   stopClock,
   clockRunning,
@@ -19,9 +14,6 @@ const {
   debug,
   spring,
   Value,
-  Clock,
-  event,
-  dummyFinal,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -90,8 +82,6 @@ function runTiming(clock, value, dest) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
-
-    this.clock = new Clock();
     this._transX = new Value(0);
     this._config = {
       duration: 5000,
@@ -100,15 +90,11 @@ export default class Example extends Component {
       delay: 1000,
     };
     this._anim = timing(this._transX, this._config);
-    this._timing = runTiming(this.clock, 0, 150);
   }
 
   render() {
     return (
       <View style={styles.container}>
-        <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._timing }] }]}
-        />
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
         />
@@ -117,12 +103,6 @@ export default class Example extends Component {
             this._anim.start();
           }}
           title="Start"
-        />
-        <Button
-          onPress={() => {
-            this._anim.stop();
-          }}
-          title="Stop"
         />
       </View>
     );
