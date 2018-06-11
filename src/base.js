@@ -10,7 +10,7 @@ import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedAlways from './core/AnimatedAlways';
 
-import { adapt, evaluateClock } from './utils';
+import { adapt } from './utils';
 
 function operator(name) {
   return (...args) => new AnimatedOperator(name, args.map(adapt));
