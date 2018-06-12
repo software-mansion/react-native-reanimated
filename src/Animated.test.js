@@ -1,9 +1,9 @@
 import { initializedNodes } from './core/AnimatedNode';
+import Animated, { Easing } from './Animated';
+import AnimatedAlways from './core/AnimatedAlways';
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
-import Animated, { Easing } from './Animated';
-import AnimatedAlways from './core/AnimatedAlways';
 
 const { Value, timing, spring, decay } = Animated;
 expect.extend({
