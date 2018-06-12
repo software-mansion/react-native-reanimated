@@ -27,17 +27,21 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
     const _config = state;
     let alwaysNode;
     let returnMethod;
+    let isStarted = false;
     return {
-      start: m => {
-        returnMethod = m;
+      start: _returnMethod => {
+        if (isStarted) {
+          console.warn(
+            'Trying to start animation which has been already stared'
+          );
+          return;
+        }
+        isStarted = true;
+        returnMethod = _returnMethod;
         const newValue = new Value(0);
         const newClock = new Clock();
-        const _state = {
-          finished: new Value(0),
-          position: newValue,
-          time: new Value(0),
-          frameTime: new Value(0),
-        };
+        const _state = AnimationClass.getDefaultState();
+        _state.position = newValue;
 
         const wrappedNode = backwardsCompatibleWrapper(node, AnimationClass)(
           newClock,

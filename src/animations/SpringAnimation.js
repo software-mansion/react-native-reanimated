@@ -109,4 +109,11 @@ export default class SpringAnimation extends Animation {
   stop() {
     // this._finished && this._finished.setValue(1);
   }
+  static getDefaultState() {
+    return {
+      finished: new AnimatedValue(0),
+      velocity: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+    };
+  }
 }
