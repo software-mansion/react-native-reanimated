@@ -69,7 +69,7 @@ const ExampleApp = createStackNavigator(
     ...SCREENS,
   },
   {
-    initialRouteName: 'Main',
+    initialRouteName: 'StartApi',
   }
 );
 

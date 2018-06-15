@@ -36,6 +36,7 @@ class DecayAnimation extends Animation {
   stop() {
     // not implemented yet
   }
+  static persistenceStateVariables = [];
   static getDefaultState() {
     return {
       finished: new AnimatedValue(0),

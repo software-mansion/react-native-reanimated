@@ -13,6 +13,7 @@ const {
   timing,
   debug,
   spring,
+  sequence,
   Value,
 } = Animated;
 
@@ -21,12 +22,24 @@ export default class Example extends Component {
     super(props);
     this._transX = new Value(0);
     this._config = {
+      toValue: 100,
+      damping: 2,
+      mass: 1,
+      delay: 1000,
+      stiffness: 121.6,
+      overshootClamping: false,
+      restSpeedThreshold: 0.001,
+      restDisplacementThreshold: 0.001,
+    };
+    this._config2 = {
       duration: 5000,
-      toValue: 120,
+      toValue: -120,
       easing: Easing.inOut(Easing.ease),
       delay: 500,
     };
-    this._anim = timing(this._transX, this._config);
+    this._anim2 = spring(this._transX, this._config);
+    this._anim = timing(this._transX, this._config2);
+    this._seq = sequence([this._anim, this._anim2]);
   }
 
   render() {
@@ -37,9 +50,15 @@ export default class Example extends Component {
         />
         <Button
           onPress={() => {
-            this._anim.start();
+            this._seq.start();
           }}
           title="Start"
+        />
+        <Button
+          onPress={() => {
+            this._seq.stop();
+          }}
+          title="Sop"
         />
       </View>
     );

@@ -109,6 +109,7 @@ export default class SpringAnimation extends Animation {
   stop() {
     // this._finished && this._finished.setValue(1);
   }
+  static persistenceStateVariables = [];
   static getDefaultState() {
     return {
       finished: new AnimatedValue(0),

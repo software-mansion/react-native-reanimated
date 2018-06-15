@@ -48,6 +48,7 @@ export default class TimingAnimation extends Animation {
   stop() {
     // this._finished && this._finished.setValue(1);
   }
+  static persistenceStateVariables = ['frameTime'];
   static getDefaultState() {
     return {
       finished: new AnimatedValue(0),

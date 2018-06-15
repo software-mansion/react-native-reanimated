@@ -85,3 +85,19 @@ it('fails if spring does attach nodes correctly', () => {
     },
   }).toAttachNodesProperly();
 });
+
+it('fails if clock while animation does not behave correctly', () => {
+  expect({
+    node: spring,
+    name: 'spring',
+    config: {
+      toValue: 0,
+      damping: 7,
+      mass: 1,
+      stiffness: 121.6,
+      overshootClamping: false,
+      restSpeedThreshold: 0.001,
+      restDisplacementThreshold: 0.001,
+    },
+  }).toAttachNodesProperly();
+});

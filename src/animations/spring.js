@@ -15,6 +15,8 @@ import {
   neq,
   and,
   lessThan,
+  defined,
+  greaterOrEq,
   greaterThan,
 } from '../base';
 import { min, abs } from '../derived';
@@ -25,7 +27,15 @@ const MAX_STEPS_MS = 64;
 export default function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
 
-  const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
+  const initTime = new AnimatedValue(0);
+  const delay = cond(defined(config.delay), config.delay, 0);
+  const passedDelay = cond(greaterOrEq(clock, add(initTime, delay)), 1, 0);
+
+  const deltaTime = cond(
+    passedDelay,
+    min(sub(clock, lastTime), MAX_STEPS_MS),
+    0
+  );
 
   const c = config.damping;
   const m = config.mass;
@@ -103,6 +113,7 @@ export default function spring(clock, state, config) {
   );
 
   return block([
+    cond(initTime, 0, set(initTime, clock)),
     set(prevPosition, state.position),
     cond(
       lessThan(zeta, 1),
