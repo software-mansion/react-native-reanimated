@@ -1,11 +1,16 @@
 import React, { Component } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
 const {
   set,
   cond,
+  eq,
+  add,
+  call,
+  multiply,
+  lessThan,
   startClock,
   stopClock,
   clockRunning,
@@ -14,6 +19,8 @@ const {
   debug,
   spring,
   Value,
+  Clock,
+  event,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -60,7 +67,6 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 5000,
     toValue: new Value(0),
-    delay: 2000,
     easing: Easing.inOut(Easing.ease),
   };
 
@@ -82,27 +88,26 @@ function runTiming(clock, value, dest) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this._transX = new Value(0);
-    this._config = {
-      duration: 5000,
-      toValue: 120,
-      easing: Easing.inOut(Easing.ease),
-      delay: 1000,
-    };
-    this._anim = timing(this._transX, this._config);
-  }
 
+    // const transX = new Value(0);
+    const clock = new Clock();
+    // const twenty = new Value(20);
+    // const thirty = new Value(30);
+    // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
+    this._transX = runTiming(clock, -120, 120);
+  }
+  componentDidMount() {
+    // Animated.spring(this._transX, {
+    //   duration: 300,
+    //   velocity: -300,
+    //   toValue: 150,
+    // }).start();
+  }
   render() {
     return (
       <View style={styles.container}>
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
-        />
-        <Button
-          onPress={() => {
-            this._anim.start();
-          }}
-          title="Start"
         />
       </View>
     );
