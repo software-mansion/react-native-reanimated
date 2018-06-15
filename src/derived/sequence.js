@@ -1,15 +1,4 @@
-import {
-  cond,
-  lessThan,
-  multiply,
-  sub,
-  add,
-  divide,
-  greaterThan,
-  always,
-  debug,
-  call,
-} from '../base';
+import { cond, always, call } from '../base';
 import invariant from 'fbjs/lib/invariant';
 
 export default function sequence(nodes) {
