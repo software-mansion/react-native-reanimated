@@ -1,5 +1,4 @@
 import { cond, always, call } from '../base';
-import invariant from 'fbjs/lib/invariant';
 
 export default function sequence(nodes) {
   let c = nodes[0].__state.set;
