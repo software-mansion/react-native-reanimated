@@ -18,6 +18,9 @@ expect.extend({
     anim.start();
     const during = initializedNodes.size;
     anim.stop();
+    for (let i = 0; i < anim.__state.persConf.length; i++) {
+      anim.__state.persConf[i].__removeChild(anim.__state.val);
+    }
     const after = initializedNodes.size;
     v.__removeChild(v);
     const final = initializedNodes.size;
