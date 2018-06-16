@@ -3,7 +3,7 @@ import {
   block,
   clockRunning,
   cond,
-  greaterThan,
+  greaterOrEq,
   or,
   set,
   startClock,
@@ -19,7 +19,7 @@ export default function delay(t, node, nodeBefore = 0) {
   return block([
     cond(clockRunning(c), 0, [startClock(c), set(needed, add(c, t))]),
     cond(
-      or(greaterThan(c, needed), passed),
+      or(greaterOrEq(c, needed), passed),
       [stopClock(c), set(passed, 1), node],
       nodeBefore
     ),
