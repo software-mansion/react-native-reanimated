@@ -38,6 +38,7 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
         set(initialized, 1),
       ]);
     const wrappedNode = node(newClock, _state, _config);
+    const shouldStopClockInNexFrame = new Value(0); // needed for seq
     const createSetNode = () =>
       set(
         _value,
@@ -46,6 +47,10 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
             initPersCache(),
             call([_state.frameTime], p => (cachedValue = p[0])),
           ],
+          cond(shouldStopClockInNexFrame, [
+            set(shouldStopClockInNexFrame, 0),
+            stopClock(newClock),
+          ]),
           cond(clockRunning(newClock), 0, [
             set(newValue, _value),
             startClock(newClock),
@@ -59,7 +64,7 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
               }
               returnMethod && returnMethod({ finished: true });
             }),
-            delay(1, stopClock(newClock)),
+            set(shouldStopClockInNexFrame, 1),
           ]),
           _state.position,
         ])
