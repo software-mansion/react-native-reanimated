@@ -39,7 +39,13 @@ export default class Example extends Component {
     };
     this._anim2 = spring(this._transX, this._config);
     this._anim = timing(this._transX, this._config2);
-    this._seq = sequence([this._anim, this._anim2]);
+
+    this._anim2_ = spring(this._transX, this._config);
+    this._anim_ = timing(this._transX, this._config2);
+
+    this._seq1 = sequence([this._anim_, this._anim2_]);
+    this._seq2 = sequence([this._anim, this._anim2]);
+    this._seq = sequence([this._seq1, this._seq2]);
   }
 
   render() {
@@ -50,7 +56,7 @@ export default class Example extends Component {
         />
         <Button
           onPress={() => {
-            this._seq.start();
+            this._seq.start(({ finished }) => console.warn(finished));
           }}
           title="Start"
         />

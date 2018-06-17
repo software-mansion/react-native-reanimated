@@ -24,43 +24,56 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
     const newClock = new Clock();
     const _state = AnimationClass.getDefaultState();
     _state.position = newValue;
-    const persConf = AnimationClass.persistenceStateVariables.map(
-      s => _state[s]
-    );
+
+    let finished = 0;
+
     let enabledDetaching = true;
+    let ps = AnimationClass.persistenceStateValue;
+    let cachedValue = 0;
+    let initialized = new Value(0);
+    const initPersCache = () =>
+      cond(initialized, 0, [
+        set(_state[ps], cachedValue),
+        set(_state.finished, finished),
+        set(initialized, 1),
+      ]);
     const wrappedNode = node(newClock, _state, _config);
-    let currentNode = block([
-      cond(clockRunning(newClock), 0, [
-        set(newValue, _value),
-        startClock(newClock),
-      ]),
-      wrappedNode,
-      cond(_state.finished, delay(1, stopClock(newClock))),
-      cond(
-        _state.finished,
-        call([], () => {
-          if (enabledDetaching) {
-            alwaysNode.__removeChild(_value);
-            for (let i = 0; i < persConf.length; i++) {
-              persConf[i].__removeChild(_value);
-            }
-          }
-          returnMethod && returnMethod({ finished: true });
-        })
-      ),
-      _state.position,
-    ]);
-    const setNode = set(_value, currentNode);
-    let alwaysNode = always(setNode);
+    const createSetNode = () =>
+      set(
+        _value,
+        block([
+          ps && [
+            initPersCache(),
+            call([_state.frameTime], p => (cachedValue = p[0])),
+          ],
+          cond(clockRunning(newClock), 0, [
+            set(newValue, _value),
+            startClock(newClock),
+          ]),
+          wrappedNode,
+          cond(_state.finished, [
+            call([], () => {
+              finished = 1;
+              if (enabledDetaching) {
+                alwaysNode.__removeChild(_value);
+              }
+              returnMethod && returnMethod({ finished: true });
+            }),
+            delay(1, stopClock(newClock)),
+          ]),
+          _state.position,
+        ])
+      );
+    let alwaysNode;
     let isStarted = false;
     return {
       __state: {
         // for sequencing
         finished: _state.finished,
-        set: setNode,
-        persConf,
-        val: _value,
+        node: createSetNode,
         disableDetaching: () => (enabledDetaching = false),
+        attachToVal: an => an.__addChild(_value),
+        detachFromVal: an => an.__removeChild(_value),
       },
       start: _returnMethod => {
         if (isStarted) {
@@ -70,11 +83,9 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
           return;
         }
         isStarted = true;
+        alwaysNode = always(createSetNode());
         returnMethod = _returnMethod;
         alwaysNode.__addChild(_value);
-        for (let i = 0; i < persConf.length; i++) {
-          persConf[i].__addChild(_value);
-        }
       },
       stop: () => {
         isStarted = false;

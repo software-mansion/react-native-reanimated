@@ -1,47 +1,72 @@
-import { cond, always, call } from '../base';
+import {
+  cond,
+  lessThan,
+  multiply,
+  sub,
+  add,
+  divide,
+  greaterThan,
+  always,
+  call,
+} from '../base';
+import invariant from 'fbjs/lib/invariant';
 
 export default function sequence(nodes) {
-  let c = nodes[0].__state.set;
-  nodes[0].__state.disableDetaching();
-  for (let i = 1; i < nodes.length; i++) {
-    c = cond(nodes[i - 1].__state.finished, nodes[i].__state.set, c);
-    nodes[i].__state.disableDetaching();
-  }
-  c = cond(
-    nodes[nodes.length - 1].__state.finished,
-    call([], () => detachAll()),
-    c
-  );
-  let enabledDetaching = true;
+  const createSeq = () => {
+    let c = nodes[0].__state.node();
+    nodes[0].__state.disableDetaching();
+    for (let i = 1; i < nodes.length; i++) {
+      c = cond(nodes[i - 1].__state.finished, nodes[i].__state.node(), c);
+      nodes[i].__state.disableDetaching();
+    }
+    c = cond(
+      nodes[nodes.length - 1].__state.finished,
+      call([], () => {
+        detachAll();
+        returnMethod && returnMethod({ finished: true });
+      }),
+      c
+    );
+    return c;
+  };
 
-  const alwaysNode = always(c);
-  const persConf = [];
-  for (let i = 0; i < nodes.length; i++) {
-    persConf.push(nodes[i].__state.persConf);
-  }
-
+  let enabledDataching = true;
+  let alwaysNode;
+  let returnMethod;
   const detachAll = () => {
-    if (enabledDetaching) {
-      for (let i = 0; i < nodes.length; i++) {
-        alwaysNode.__removeChild(nodes[i].__state.val);
-        for (let i = 0; i < nodes[i].__state.persConf.length; i++)
-          nodes[i].__state.persConf[i].__removeChild(nodes[i].__state.val);
-      }
+    if (!enabledDataching) return;
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].__state.detachFromVal(alwaysNode);
     }
   };
 
   return {
-    start: () => {
+    __state: {
+      // for further sequencing
+      finished: nodes[nodes.length - 1].__state.finished,
+      node: createSeq,
+      disableDetaching: () => (enabledDetaching = false),
+      attachToVal: an => {
+        for (let i = 0; i < nodes.length; i++) {
+          nodes[i].__state.attachToVal(an);
+        }
+      },
+      detachFromVal: an => {
+        for (let i = 0; i < nodes.length; i++) {
+          nodes[i].__state.detachFromVal(an);
+        }
+      },
+    },
+    start: _returnMethod => {
+      returnMethod = _returnMethod;
+      alwaysNode = always(createSeq());
       for (let i = 0; i < nodes.length; i++) {
-        alwaysNode.__addChild(nodes[i].__state.val);
-        for (let i = 0; i < nodes[i].__state.persConf.length; i++)
-          nodes[i].__state.persConf[i].__addChild(nodes[i].__state.val);
+        nodes[i].__state.attachToVal(alwaysNode);
       }
     },
     stop: () => {
-      for (let i = 0; i < nodes.length; i++) {
-        alwaysNode.__removeChild(nodes[i].__state.val);
-      }
+      detachAll();
+      returnMethod && returnMethod({ finished: false });
     },
   };
 }
