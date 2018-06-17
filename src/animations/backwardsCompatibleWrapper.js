@@ -10,7 +10,6 @@ import {
 } from '../base';
 import { default as Clock } from '../core/AnimatedClock';
 import { default as Value } from '../core/AnimatedValue';
-import delay from '../derived/delay';
 
 export default function backwardsCompatibleWrapper(node, AnimationClass) {
   return (clock, state, config) => {
