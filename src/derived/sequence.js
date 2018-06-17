@@ -1,15 +1,4 @@
-import {
-  cond,
-  lessThan,
-  multiply,
-  sub,
-  add,
-  divide,
-  greaterThan,
-  always,
-  call,
-} from '../base';
-import invariant from 'fbjs/lib/invariant';
+import { cond, always, call } from '../base';
 
 export default function sequence(nodes) {
   const createSeq = () => {
@@ -30,11 +19,11 @@ export default function sequence(nodes) {
     return c;
   };
 
-  let enabledDataching = true;
+  let enabledDetaching = true;
   let alwaysNode;
   let returnMethod;
   const detachAll = () => {
-    if (!enabledDataching) return;
+    if (!enabledDetaching) return;
     for (let i = 0; i < nodes.length; i++) {
       nodes[i].__state.detachFromVal(alwaysNode);
     }
