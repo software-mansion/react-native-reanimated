@@ -609,6 +609,8 @@ This API gives possibility to use animation with original Animated API. It's als
 ### `sequence`
 Reanimated provides API for sequencing animations and as it base on backward compatible API it has the same syntax like in `Animated`
 
+### `parallel`
+
 ## 100% declarative gesture interactions
 
 Reanimated works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler) library. Currently all the examples are made using that library including the ultimate [ImagePreview app](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/imageViewer). See it in action below:

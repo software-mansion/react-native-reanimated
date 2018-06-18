@@ -1,7 +1,7 @@
 import AnimatedBlock from './core/AnimatedBlock';
 import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
-import { block, set, call, always, cond, startClock } from './base';
+import { block, call, always } from './base';
 function nodify(v) {
   // TODO: cache some typical static values (e.g. 0, 1, -1)
   return v instanceof AnimatedNode ? v : new AnimatedValue(v);
@@ -18,6 +18,7 @@ export function val(v) {
 }
 
 export function evaluateOnce(node, children = []) {
+  let _children;
   if (Array.isArray(children)) {
     _children = children;
   } else {
