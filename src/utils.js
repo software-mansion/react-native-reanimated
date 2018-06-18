@@ -24,16 +24,16 @@ export function evaluateOnce(node, children = []) {
   } else {
     _children = [children];
   }
-  const s = block([
+  const evalNode = block([
     node,
     call([], () => {
       for (let i = 0; i < _children.length; i++) {
-        a.__removeChild(_children[i]);
+        alwaysNode.__removeChild(_children[i]);
       }
     }),
   ]);
-  const a = always(s);
+  const alwaysNode = always(evalNode);
   for (let i = 0; i < _children.length; i++) {
-    a.__addChild(_children[i]);
+    alwaysNode.__addChild(_children[i]);
   }
 }
