@@ -14,6 +14,7 @@ import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
 import backwardsCompatibleWrapper from './animations/backwardsCompatibleWrapper';
+import { evaluateOnce } from './utils';
 
 const Animated = {
   // components
@@ -38,6 +39,7 @@ const Animated = {
 
   // configuration
   addWhitelistedNativeProps,
+  evaluateOnce,
 };
 
 export default Animated;

@@ -71,6 +71,14 @@ All the functionality that missing elements provide in Animated can be already a
  - [ ] animation delays
  - [ ] animation staggering
 
+## Value
+`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+```js
+const v = new Value(0);
+/// ...
+v.setValue(100);
+```  
+
 ## Clocks
 
 Original Animated API makes an "animation" object a first class citizen.

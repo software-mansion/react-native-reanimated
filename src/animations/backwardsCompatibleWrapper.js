@@ -44,7 +44,7 @@ export default function backwardsCompatibleWrapper(node, AnimationClass) {
         block([
           ps && [
             initPersCache(),
-            call([_state.frameTime], p => (cachedValue = p[0])),
+            call([_state[ps]], p => (cachedValue = p[0])),
           ],
           cond(shouldStopClockInNexFrame, [
             set(shouldStopClockInNexFrame, 0),
