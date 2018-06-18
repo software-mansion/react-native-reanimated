@@ -7,25 +7,26 @@
 
 @implementation REAAlwaysNode
 {
-  NSNumber * _nodeToBeValued;
+  NSNumber * _nodesToBeEvaluated;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
 {
     if ((self = [super initWithID:nodeID config:config])) {
-        _nodeToBeValued = config[@"what"];
+        _nodesToBeEvaluated = config[@"what"];
     }
     return self;
 }
 
-- (id)evaluate
+- (id)value
 {
+  [[self.nodesManager findNodeByID:_nodesToBeEvaluated] value];
   return @(0);
 }
 
 - (void)update
 {
-  [[self.nodesManager findNodeByID:_nodeToBeValued] value];
+  [self value];
 }
 
 @end

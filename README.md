@@ -66,9 +66,7 @@ import Animated, { Easing } from 'react-native-reanimated';
 We aim to bring this project to be fully compatible with Animated API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that hasn't yet been ported from the original version of Animated library.
 All the functionality that missing elements provide in Animated can be already achieved with reanimated although a different methodology for implementing those may be required (e.g. check ["Running animations" section](#running-animations) to see how the implementation may differ).
  - [ ] using value offsets
- - [ ] imperative api for starting animations (`Animated.timing({}).start()` and similar)
  - [ ] value tracking (can be achieved in different way, reanimated also allows for tracking all the animation parameters not only destination params)
- - [ ] animation delays
  - [ ] animation staggering
 
 ## Value
@@ -475,7 +473,7 @@ The returned node can be mapped to view properties that represents color (e.g. [
 ```js
 dalay(time, node, nodeBefore)
 ```
-On attaching it returns `nodeBefore` before given `time` pass ans `node` after.
+On attaching it returns `nodeBefore` before given `time` pass and `node` after.
 
 ## Animations
 

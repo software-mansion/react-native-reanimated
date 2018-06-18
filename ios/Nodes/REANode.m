@@ -107,7 +107,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
-     withFinalsToBeUpdated:(NSMutableArray<REANode *> *)finalsToBeUpdated
+     withFinalNodesQueue:(NSMutableArray<REANode *> *)finalNodesQueue
 {
   if ([visitedNodes containsObject:node]) {
     return;
@@ -115,25 +115,25 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [visitedNodes addObject:node];
   }
   for (REANode *child in node.childNodes) {
-    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalsToBeUpdated:finalsToBeUpdated];
+    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodesQueue:finalNodesQueue];
   }
   if ([node respondsToSelector:@selector(update)]) {
-    [finalsToBeUpdated addObject:node];
+    [finalNodesQueue addObject:node];
   }
 }
 
 + (void)runPropUpdates:(REAUpdateContext *)context
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
+  NSMutableArray<REANode *> * finalNodesQueue = [NSMutableArray new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    NSMutableArray<REANode *> * finalsToBeUpdated = [NSMutableArray new];
     [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes
-       withFinalsToBeUpdated:finalsToBeUpdated];
-    while (finalsToBeUpdated.count > 0) {
-      // NSMutableArray used for stack implementation
-      [(id)[finalsToBeUpdated lastObject] update];
-      [finalsToBeUpdated removeLastObject];
-    }
+       withFinalNodesQueue:finalNodesQueue];
+  }
+  while (finalNodesQueue.count > 0) {
+    // NSMutableArray used for stack implementation
+    [(id)[finalNodesQueue lastObject] update];
+    [finalNodesQueue removeLastObject];
   }
   [context.updatedNodes removeAllObjects];
   context.loopID++;

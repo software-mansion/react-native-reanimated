@@ -1,21 +1,9 @@
 import React, { Component } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, View, Alert } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
-const {
-  set,
-  cond,
-  startClock,
-  stopClock,
-  clockRunning,
-  block,
-  timing,
-  debug,
-  spring,
-  sequence,
-  Value,
-} = Animated;
+const { timing, spring, sequence, Value } = Animated;
 
 export default class Example extends Component {
   constructor(props) {
@@ -56,7 +44,9 @@ export default class Example extends Component {
         />
         <Button
           onPress={() => {
-            this._seq.start(({ finished }) => console.warn(finished));
+            this._seq.start(({ finished }) =>
+              Alert.alert(finished ? 'Finished' : 'Not finished yet')
+            );
           }}
           title="Start"
         />
