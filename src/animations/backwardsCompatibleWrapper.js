@@ -17,20 +17,14 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
   currentState.position = newValue;
-
-  let finished = 0;
-
   let enabledDetaching = true;
-  let ps = AnimationClass.persistenceStateValue;
-  let cachedValue = 0;
-  let initialized = new Value(0);
   const wrappedNode = node(newClock, currentState, config);
   let alwaysNode;
   let isStarted = false;
   return {
     start: currentReturnMethod => {
       if (isStarted) {
-        console.warn('Trying to start animation which has been already stared');
+        returnMethod && returnMethod({ finished: false });
         return;
       }
       isStarted = true;
@@ -38,14 +32,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         set(
           value,
           block([
-            ps && [
-              cond(initialized, 0, [
-                set(currentState[ps], cachedValue),
-                set(currentState.finished, finished),
-                set(initialized, 1),
-              ]),
-              call([currentState[ps]], p => (cachedValue = p[0])),
-            ],
+            cond(currentState.finished, set(currentState.finished, 0)),
             cond(clockRunning(newClock), 0, [
               set(newValue, value),
               startClock(newClock),
@@ -53,7 +40,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
             wrappedNode,
             cond(currentState.finished, [
               call([], () => {
-                finished = 1;
+                isStarted = false;
                 if (enabledDetaching) {
                   alwaysNode.__removeChild(value);
                 }
