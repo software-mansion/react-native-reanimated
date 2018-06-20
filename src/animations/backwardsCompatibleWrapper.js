@@ -18,11 +18,6 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
   currentState.position = newValue;
-  const wrappedNode = backwardsCompatibleWrapper(node, AnimationClass)(
-    newClock,
-    currentState,
-    config
-  );
   let alwaysNode;
   let isStarted = false;
   return {
@@ -41,7 +36,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               set(newValue, value),
               startClock(newClock),
             ]),
-            wrappedNode,
+            backwardsCompatibleWrapper(node, AnimationClass)(
+              newClock,
+              currentState,
+              config
+            ),
             cond(currentState.finished, [
               call([], () => {
                 isStarted = false;
