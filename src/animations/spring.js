@@ -28,14 +28,8 @@ export default function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
 
   const initTime = new AnimatedValue(0);
-  const delay = cond(defined(config.delay), config.delay, 0);
-  const passedDelay = cond(greaterOrEq(clock, add(initTime, delay)), 1, 0);
 
-  const deltaTime = cond(
-    passedDelay,
-    min(sub(clock, lastTime), MAX_STEPS_MS),
-    0
-  );
+  const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
 
   const c = config.damping;
   const m = config.mass;
