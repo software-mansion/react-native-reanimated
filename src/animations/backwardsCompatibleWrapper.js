@@ -27,6 +27,15 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let alwaysNode;
   let isStarted = false;
   return {
+    __seqNode: {
+      AnimationClass,
+      createNode: ({ state, clock }) =>
+        backwardsCompatibleWrapper(node, AnimationClass)(
+          clock,
+          { ...state, position: newValue },
+          config
+        ),
+    },
     start: currentReturnMethod => {
       if (isStarted) {
         returnMethod && returnMethod({ finished: false });
