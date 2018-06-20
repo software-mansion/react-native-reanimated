@@ -18,7 +18,6 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
   currentState.position = newValue;
-  let enabledDetaching = true;
   const wrappedNode = backwardsCompatibleWrapper(node, AnimationClass)(
     newClock,
     currentState,
@@ -46,9 +45,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
             cond(currentState.finished, [
               call([], () => {
                 isStarted = false;
-                if (enabledDetaching) {
-                  alwaysNode.__removeChild(value);
-                }
+                alwaysNode.__removeChild(value);
                 returnMethod && returnMethod({ finished: true });
               }),
               stopClock(newClock),
