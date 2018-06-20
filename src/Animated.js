@@ -8,6 +8,7 @@ import * as derived from './derived';
 import createAnimatedComponent from './createAnimatedComponent';
 import decay from './animations/decay';
 import timing from './animations/timing';
+import sequence from './animations/sequence';
 import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
@@ -33,6 +34,7 @@ const Animated = {
   ...derived,
 
   // animations
+  sequence,
   decay: backwardsCompatibleWrapper(decay, DecayAnimation),
   timing: backwardsCompatibleWrapper(timing, TimingAnimation),
   spring: backwardsCompatibleWrapper(spring, SpringAnimation),
