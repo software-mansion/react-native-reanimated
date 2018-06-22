@@ -7,14 +7,13 @@ import {
   block,
   set,
   greaterOrEq,
-  defined,
 } from '../base';
 
 export default function timing(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
   const frameTime = add(state.frameTime, sub(clock, lastTime));
 
-  const duration = add(config.duration, config.delay);
+  const duration = add(config.duration);
   const progress = config.easing(divide(state.frameTime, duration));
   const distanceLeft = sub(config.toValue, state.position);
   const fullDistance = divide(distanceLeft, sub(1, progress));

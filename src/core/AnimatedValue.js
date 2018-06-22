@@ -1,6 +1,7 @@
 import AnimatedNode from './AnimatedNode';
 import { set } from '../base';
-import { val, evaluateOnce } from '../utils';
+import { val } from '../utils';
+import { evaluateOnce } from '../derived/evaluateOnce';
 import interpolate from '../derived/interpolate';
 
 function sanitizeValue(value) {

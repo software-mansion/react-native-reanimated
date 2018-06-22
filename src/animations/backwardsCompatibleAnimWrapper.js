@@ -36,7 +36,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               set(newValue, value),
               startClock(newClock),
             ]),
-            backwardsCompatibleWrapper(node, AnimationClass)(
+            backwardsCompatibleAnimWrapper(node, AnimationClass)(
               newClock,
               currentState,
               config
@@ -64,7 +64,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   };
 }
 
-export default function backwardsCompatibleWrapper(node, AnimationClass) {
+export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
   return (clock, state, config) => {
     if (config !== undefined) {
       let resultNode = node(clock, state, config);
