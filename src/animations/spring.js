@@ -15,8 +15,6 @@ import {
   neq,
   and,
   lessThan,
-  defined,
-  greaterOrEq,
   greaterThan,
 } from '../base';
 import { min, abs } from '../derived';

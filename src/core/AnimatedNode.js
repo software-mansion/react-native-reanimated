@@ -2,7 +2,11 @@ import ReanimatedModule from '../ReanimatedModule';
 
 const UPDATED_NODES = [];
 
-export const initializedNodes = new Set();
+const initializedNodes = new Set();
+
+// eslint-disable-next-line
+export const getNumberOfInitializedNodes_forTestsOnly = () =>
+  initializedNodes.size;
 
 let loopID = 1;
 let propUpdatesEnqueued = null;

@@ -1,4 +1,4 @@
-import { initializedNodes } from './core/AnimatedNode';
+import { getNumberOfInitializedNodes_forTestsOnly as numberOfNodes } from './core/AnimatedNode';
 import Animated, { Easing } from './Animated';
 import AnimatedAlways from './core/AnimatedAlways';
 
@@ -11,16 +11,16 @@ expect.extend({
     const transX = new Value(0);
 
     const v = new AnimatedAlways(transX);
-    const initial = initializedNodes.size;
+    const initial = numberOfNodes();
     v.__addChild(v);
-    const before = initializedNodes.size;
+    const before = numberOfNodes();
     const anim = animation.node(transX, animation.config);
     anim.start();
-    const during = initializedNodes.size;
+    const during = numberOfNodes();
     anim.stop();
-    const after = initializedNodes.size;
+    const after = numberOfNodes();
     v.__removeChild(v);
-    const final = initializedNodes.size;
+    const final = numberOfNodes();
 
     const pass =
       initial === final &&
