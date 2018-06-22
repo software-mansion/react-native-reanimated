@@ -8,6 +8,7 @@ import {
   startClock,
   stopClock,
 } from '../base';
+import { delay } from '../derived';
 import { default as Clock } from '../core/AnimatedClock';
 import { default as Value } from '../core/AnimatedValue';
 
@@ -35,7 +36,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               set(newValue, value),
               startClock(newClock),
             ]),
-            node(newClock, currentState, config),
+            backwardsCompatibleAnimWrapper(node, AnimationClass)(
+              newClock,
+              currentState,
+              config
+            ),
             cond(currentState.finished, [
               call([], () => {
                 isStarted = false;
@@ -62,7 +67,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
 export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
   return (clock, state, config) => {
     if (config !== undefined) {
-      return node(clock, state, config);
+      let resultNode = node(clock, state, config);
+      if (config.delay) {
+        resultNode = delay(config.delay, resultNode);
+      }
+      return resultNode;
     }
     return backwardsCompatibleInvoke(node, AnimationClass, clock, state);
   };
