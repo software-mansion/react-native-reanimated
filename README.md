@@ -469,13 +469,19 @@ Creates a color node in RGBA format. Where first three input nodes should have i
 
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
+### `delay`
+```js
+dalay(time, node, nodeBefore)
+```
+On attaching it returns `nodeBefore` before given `time` pass and `node` after.
+
 ## Animations
 
 ---
 ### `decay`
 
 ```js
-decay(clock, { finished, velocity, position, time }, { deceleration })
+decay(clock, { finished, velocity, position, time }, { deceleration, delay })
 ```
 
 Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` would yield meaningful results.
@@ -484,7 +490,7 @@ Updates `position` and `velocity` nodes by running a single step of animation ea
 ### `timing`
 
 ```js
-timing(clock, { finished, position, frameTime, time }, { toValue, duration, easing })
+timing(clock, { finished, position, frameTime, time }, { toValue, duration, easing, delay })
 ```
 
 Updates `position` node by running timing based animation from a given position to a destination determined by `toValue`. The animation is expected to last `duration` milliseconds and use `easing` function that could be set to one of the nodes exported by the `Easing` object.
@@ -494,7 +500,7 @@ The `frameTime` node will also get updated and represents the progress of animat
 ### `spring`
 
 ```js
-spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness, overshootClamping, restSpeedThreshold, restDisplacementThreshold, toValue })
+spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness, overshootClamping, restSpeedThreshold, restDisplacementThreshold, toValue, delay })
 ```
 
 When evaluated updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original Animated API docs to lear about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
@@ -574,6 +580,7 @@ class Example extends Component {
       duration: 5000,
       toValue: 120,
       easing: Easing.inOut(Easing.ease),
+      delay: 1000,
     };
     this._anim = timing(this._transX, this._config);
   }

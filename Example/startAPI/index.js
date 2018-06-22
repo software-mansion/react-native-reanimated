@@ -13,6 +13,7 @@ export default class Example extends Component {
       toValue: 100,
       damping: 2,
       mass: 1,
+      delay: 1000,
       stiffness: 121.6,
       overshootClamping: false,
       restSpeedThreshold: 0.001,
