@@ -1,5 +1,6 @@
 import AnimatedNode from './AnimatedNode';
-import { val } from '../utils';
+import { set } from '../base';
+import { val, evaluateOnce } from '../utils';
 import interpolate from '../derived/interpolate';
 
 function sanitizeValue(value) {
@@ -27,6 +28,10 @@ export default class AnimatedValue extends AnimatedNode {
   _updateValue(value) {
     this._value = value;
     this.__forceUpdateCache(value);
+  }
+
+  setValue(value) {
+    evaluateOnce(set(this, value), this);
   }
 
   interpolate(config) {

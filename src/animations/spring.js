@@ -15,6 +15,8 @@ import {
   neq,
   and,
   lessThan,
+  defined,
+  greaterOrEq,
   greaterThan,
 } from '../base';
 import { min, abs } from '../derived';
@@ -24,6 +26,8 @@ const MAX_STEPS_MS = 64;
 
 export default function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
+
+  const initTime = new AnimatedValue(0);
 
   const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
 
@@ -103,6 +107,7 @@ export default function spring(clock, state, config) {
   );
 
   return block([
+    cond(initTime, 0, set(initTime, clock)),
     set(prevPosition, state.position),
     cond(
       lessThan(zeta, 1),

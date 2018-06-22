@@ -19,6 +19,7 @@ const {
   debug,
   spring,
   Value,
+  sequence,
   Clock,
   event,
 } = Animated;
@@ -50,9 +51,37 @@ function runSpring(clock, value, dest) {
       set(config.toValue, dest),
       startClock(clock),
     ]),
+
     spring(clock, state, config),
     cond(state.finished, debug('stop clock', stopClock(clock))),
     state.position,
+  ]);
+}
+
+function runSeq(t) {
+  const clock = new Clock();
+  const state = {
+    finished: new Value(0),
+  };
+  const config1 = {
+    duration: 5000,
+    toValue: -100,
+    easing: Easing.inOut(Easing.ease),
+  };
+  const config2 = {
+    toValue: new Value(0),
+    damping: 7,
+    mass: 1,
+    stiffness: 121.6,
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
+  };
+  return block([
+    cond(clockRunning(clock), 0, startClock(clock)),
+    sequence(clock, state, [timing(t, config1), spring(t, config2)]),
+    cond(state.finished, debug('stop clock', stopClock(clock))),
+    t,
   ]);
 }
 
@@ -94,7 +123,7 @@ export default class Example extends Component {
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock, -120, 120);
+    this._transX = runSeq(new Value(0));
   }
   componentDidMount() {
     // Animated.spring(this._transX, {
