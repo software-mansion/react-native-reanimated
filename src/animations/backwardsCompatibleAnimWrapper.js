@@ -69,7 +69,11 @@ export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
     if (config !== undefined) {
       let resultNode = node(clock, state, config);
       if (config.delay) {
-        resultNode = delay(config.delay, resultNode);
+        resultNode = delay(
+          clock,
+          { finished: new Value(0) },
+          { time: config.delay, node: resultNode }
+        );
       }
       return resultNode;
     }

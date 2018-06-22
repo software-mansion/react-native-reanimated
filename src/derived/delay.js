@@ -1,27 +1,15 @@
-import {
-  add,
-  block,
-  clockRunning,
-  cond,
-  greaterOrEq,
-  or,
-  set,
-  startClock,
-  stopClock,
-} from '../base';
+import { add, block, cond, defined, greaterOrEq, set } from '../base';
 import { default as Value } from '../core/AnimatedValue';
-import { default as Clock } from '../core/AnimatedClock';
 
-export default function delay(t, node, nodeBefore = 0) {
-  const c = new Clock();
-  const needed = new Value(0);
-  const passed = new Value(0);
+export default function delay(clock, state, config) {
+  const when = new Value();
   return block([
-    cond(clockRunning(c), 0, [startClock(c), set(needed, add(c, t))]),
+    cond(defined(when), 0, [set(when, add(clock, config.time))]),
     cond(
-      or(greaterOrEq(c, needed), passed),
-      [stopClock(c), set(passed, 1), node],
-      nodeBefore
+      greaterOrEq(clock, when),
+      config.node ? config.node : 0,
+      config.nodeBefore ? config.nodeBefore : 0,
+      cond(state.finished, 0, set(state.finished, 1))
     ),
   ]);
 }
