@@ -68,7 +68,6 @@ All the functionality that missing elements provide in Animated can be already a
  - [ ] using value offsets
  - [ ] value tracking (can be achieved in different way, reanimated also allows for tracking all the animation parameters not only destination params)
  - [ ] animation staggering
- - [ ] animation delays
 
 ## Value
 `Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:

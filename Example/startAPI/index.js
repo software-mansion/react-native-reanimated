@@ -22,6 +22,7 @@ export default class Example extends Component {
       duration: 5000,
       toValue: -120,
       easing: Easing.inOut(Easing.ease),
+      delay: 500,
     };
     this._anim2 = spring(this._transX, this._config);
     this._anim = timing(this._transX, this._config2);
