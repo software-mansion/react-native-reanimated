@@ -55,7 +55,6 @@ it('fails if timing does attach nodes correctly', () => {
       duration: 5000,
       toValue: 120,
       easing: Easing.inOut(Easing.ease),
-      delay: 1000,
     },
   }).toAttachNodesProperly();
 });
