@@ -2,6 +2,8 @@ import ReanimatedModule from '../ReanimatedModule';
 
 const UPDATED_NODES = [];
 
+const initializedNodes = new Set();
+
 let loopID = 1;
 let propUpdatesEnqueued = null;
 
@@ -47,6 +49,20 @@ export default class AnimatedNode {
     this.__initialized = false;
     this.__inputNodes =
       inputNodes && inputNodes.filter(node => node instanceof AnimatedNode);
+  }
+  // Workaround above allows for counting already initialized  easily
+  // and fix issue of changing immutable object's field `initialized` while detaching
+  // ("object has been frozen" exception)
+  set __initialized(value) {
+    if (value) {
+      initializedNodes.add(this.__nodeID);
+    } else {
+      initializedNodes.delete(this.__nodeID);
+    }
+  }
+
+  get __initialized() {
+    return initializedNodes.has(this.__nodeID);
   }
 
   __attach() {
@@ -101,9 +117,7 @@ export default class AnimatedNode {
   __nativeTearDown() {
     if (this.__initialized) {
       ReanimatedModule.dropNode(this.__nodeID);
-      // TODO: the below line throws "object has been frozen" exception. Need to
-      // figure out the root cause of this issue and enable back that line
-      // this.__initialized = false;
+      this.__initialized = false;
     }
   }
 
