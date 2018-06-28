@@ -21,6 +21,7 @@ expect.extend({
     anim.start();
     const during = getNumberOfNodes();
     anim.stop();
+    anim.__detach_testOnly();
     const after = getNumberOfNodes();
     v.__removeChild(v);
     const final = getNumberOfNodes();

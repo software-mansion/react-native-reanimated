@@ -20,6 +20,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   currentState.position = newValue;
   let alwaysNode;
   let isStarted = false;
+  let evaluateNode_testOnly;
   return {
     start: currentReturnMethod => {
       if (isStarted) {
@@ -54,7 +55,14 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
     stop: () => {
       returnMethod && returnMethod({ finished: false });
       returnMethod = null; // as not to call while detach
-      evaluateOnce(set(currentState.finished, 1), currentState.finished);
+      evaluateNode_testOnly = evaluateOnce(
+        set(currentState.finished, 1),
+        currentState.finished
+      );
+    },
+    __detach_testOnly: () => {
+      alwaysNode.__removeChild(value);
+      evaluateNode_testOnly.__detach();
     },
   };
 }

@@ -24,4 +24,5 @@ export function evaluateOnce(node, children = []) {
   for (let i = 0; i < children.length; i++) {
     alwaysNode.__addChild(children[i]);
   }
+  return alwaysNode;
 }
