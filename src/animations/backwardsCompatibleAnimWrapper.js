@@ -10,6 +10,7 @@ import {
 } from '../base';
 import { default as Clock } from '../core/AnimatedClock';
 import { default as Value } from '../core/AnimatedValue';
+import { evaluateOnce } from '../derived/evaluateOnce';
 
 function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let returnMethod;
@@ -51,9 +52,9 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       alwaysNode.__addChild(value);
     },
     stop: () => {
-      isStarted = false;
-      alwaysNode.__removeChild(value);
       returnMethod && returnMethod({ finished: false });
+      returnMethod = null; // as not to call while detach
+      evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
   };
 }
