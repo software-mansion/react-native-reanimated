@@ -1,7 +1,7 @@
 import AnimatedValue from '../core/AnimatedValue';
 import { block, call, always, cond, set } from '../base';
 
-// node is a node to be evaluated and children are nodes to be marked as updated
+// node is a node to be evaluated and children are nodes to be notified
 export function evaluateOnce(node, children = []) {
   if (!Array.isArray(children)) {
     children = [children];
