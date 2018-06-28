@@ -26,8 +26,6 @@ expect.extend({
     v.__removeChild(v);
     const final = getNumberOfNodes();
 
-    console.log(initial, before, during, after, final);
-
     const pass =
       initial === final &&
       after === before &&
