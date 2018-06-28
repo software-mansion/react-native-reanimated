@@ -1,6 +1,7 @@
 import AnimatedBlock from './core/AnimatedBlock';
 import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
+
 function nodify(v) {
   // TODO: cache some typical static values (e.g. 0, 1, -1)
   return v instanceof AnimatedNode ? v : new AnimatedValue(v);
