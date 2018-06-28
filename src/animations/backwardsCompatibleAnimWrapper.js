@@ -67,7 +67,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
     __detach_testOnly: () => {
-      alwaysNode.__removeChild(value);
+      value.__setAnimation(null, true);
     },
   };
 }

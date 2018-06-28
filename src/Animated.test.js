@@ -1,6 +1,6 @@
 import Animated, { Easing } from './Animated';
-import AnimatedAlways from './core/AnimatedAlways';
 import ReanimatedModule from './ReanimatedModule';
+import AnimatedNode from './core/AnimatedNode';
 const { getNumberOfNodes } = ReanimatedModule;
 
 jest.mock('./ReanimatedEventEmitter');
@@ -11,17 +11,19 @@ expect.extend({
   toAttachNodesProperly(animation) {
     const transX = new Value(0);
 
-    const v = new AnimatedAlways(transX);
     const initial = getNumberOfNodes();
-    v.__addChild(v);
+    const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [transX]);
+    v.__addChild(transX);
     const before = getNumberOfNodes();
     const anim = animation.node(transX, animation.config);
     anim.start();
     const during = getNumberOfNodes();
     anim.__detach_testOnly();
     const after = getNumberOfNodes();
-    v.__removeChild(v);
+    v.__removeChild(transX);
     const final = getNumberOfNodes();
+
+    console.log(initial, before, during, after, final);
 
     const pass =
       initial === final &&
@@ -31,7 +33,7 @@ expect.extend({
       before === 2;
     if (pass) {
       return {
-        pass: true,
+        pass,
       };
     } else {
       return {
@@ -108,9 +110,10 @@ it('fails if animation related nodes are still attached after detaching of value
   };
   const anim = timing(transX, config);
   const anim2 = timing(transX, config);
-  transX.__attach();
+  const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [transX]);
+  transX.__addChild(v);
   anim.start();
   anim2.start();
-  transX.__detach();
+  v.__detach();
   expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
 });
