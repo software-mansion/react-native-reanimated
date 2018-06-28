@@ -102,8 +102,6 @@ public abstract class Node<T> {
     }
 
     List<Node> children = node.mChildren;
-
-
     if (children != null) {
       for (Node child : children) {
         findAndUpdateNodes(child, visitedNodes, finalNodes);
