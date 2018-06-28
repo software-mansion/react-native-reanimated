@@ -1,6 +1,7 @@
-import { getNumberOfInitializedNodes_forTestsOnly as numberOfNodes } from './core/AnimatedNode';
 import Animated, { Easing } from './Animated';
 import AnimatedAlways from './core/AnimatedAlways';
+import ReanimatedModule from './ReanimatedModule';
+const { getNumberOfNodes } = ReanimatedModule;
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
@@ -11,16 +12,16 @@ expect.extend({
     const transX = new Value(0);
 
     const v = new AnimatedAlways(transX);
-    const initial = numberOfNodes();
+    const initial = getNumberOfNodes();
     v.__addChild(v);
-    const before = numberOfNodes();
+    const before = getNumberOfNodes();
     const anim = animation.node(transX, animation.config);
     anim.start();
-    const during = numberOfNodes();
+    const during = getNumberOfNodes();
     anim.stop();
-    const after = numberOfNodes();
+    const after = getNumberOfNodes();
     v.__removeChild(v);
-    const final = numberOfNodes();
+    const final = getNumberOfNodes();
 
     const pass =
       initial === final &&

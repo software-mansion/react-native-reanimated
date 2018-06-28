@@ -4,10 +4,6 @@ const UPDATED_NODES = [];
 
 const initializedNodes = new Set();
 
-// eslint-disable-next-line
-export const getNumberOfInitializedNodes_forTestsOnly = () =>
-  initializedNodes.size;
-
 let loopID = 1;
 let propUpdatesEnqueued = null;
 

@@ -1,7 +1,9 @@
+let nodesCreated = 0;
 export default {
   configureNativeProps: () => {},
-  createNode: () => {},
+  createNode: () => nodesCreated++,
   connectNodes: () => {},
   disconnectNodes: () => {},
-  dropNode: () => {},
+  dropNode: () => nodesCreated--,
+  getNumberOfNodes: () => nodesCreated,
 };
