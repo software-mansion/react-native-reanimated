@@ -25,8 +25,6 @@ const MAX_STEPS_MS = 64;
 export default function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
 
-  const initTime = new AnimatedValue(0);
-
   const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
 
   const c = config.damping;
@@ -105,7 +103,6 @@ export default function spring(clock, state, config) {
   );
 
   return block([
-    cond(initTime, 0, set(initTime, clock)),
     set(prevPosition, state.position),
     cond(
       lessThan(zeta, 1),
