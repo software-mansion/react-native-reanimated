@@ -115,12 +115,12 @@ public abstract class Node<T> {
   public static void runUpdates(UpdateContext updateContext) {
     UiThreadUtil.assertOnUiThread();
     SparseArray<Node> updatedNodes = updateContext.updatedNodes;
-    Stack<FinalNode> finalNodesQueue = new Stack<>();
+    Stack<FinalNode> finalNodes = new Stack<>();
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodesQueue);
+      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes);
     }
-    while (!finalNodesQueue.isEmpty()) {
-      finalNodesQueue.pop().update();
+    while (!finalNodes.isEmpty()) {
+      finalNodes.pop().update();
     }
     updatedNodes.clear();
     updateContext.updateLoopID++;
