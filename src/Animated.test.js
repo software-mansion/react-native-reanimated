@@ -1,6 +1,8 @@
 import Animated, { Easing } from './Animated';
+import React from 'react';
 import AnimatedAlways from './core/AnimatedAlways';
 import ReanimatedModule from './ReanimatedModule';
+import ReactTestRenderer from 'react-test-renderer';
 const { getNumberOfNodes } = ReanimatedModule;
 
 jest.mock('./ReanimatedEventEmitter');
@@ -22,6 +24,8 @@ expect.extend({
     const after = getNumberOfNodes();
     v.__removeChild(v);
     const final = getNumberOfNodes();
+
+    console.log(initial, before, during, after, final);
 
     const pass =
       initial === final &&
@@ -97,3 +101,24 @@ it('fails if clock while animation does not behave correctly', () => {
     },
   }).toAttachNodesProperly();
 });
+
+/*
+it('fails if animation related nodes are still attached after detaching of view', () => {
+  const { timing, Value } = Animated;
+  const transX = new Value(0);
+  const config2 = {
+    duration: 5000,
+    toValue: -120,
+    easing: Easing.inOut(Easing.ease),
+  };
+  const anim = timing(transX, config2);
+  const animView = ReactTestRenderer.create(
+    <Animated.View
+      style={[styles.box, { transform: [{ translateX: transX }] }]}
+    />
+  );
+  anim.start();
+  animView.unmount();
+  expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
+})
+*/
