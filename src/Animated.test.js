@@ -20,7 +20,6 @@ expect.extend({
     const anim = animation.node(transX, animation.config);
     anim.start();
     const during = getNumberOfNodes();
-    anim.stop();
     anim.__detach_testOnly();
     const after = getNumberOfNodes();
     v.__removeChild(v);
@@ -121,3 +120,20 @@ it('fails if animation related nodes are still attached after detaching of view'
   expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
 });
 */
+
+it('fails if animation related nodes are still attached after detaching of value', () => {
+  const { timing, Value } = Animated;
+  const transX = new Value(0);
+  const config = {
+    duration: 5000,
+    toValue: -120,
+    easing: Easing.inOut(Easing.ease),
+  };
+  const anim = timing(transX, config);
+  const anim2 = timing(transX, config);
+  transX.__attach();
+  anim.start();
+  anim2.start();
+  transX.__detach();
+  expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
+});

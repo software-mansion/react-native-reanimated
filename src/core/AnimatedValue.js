@@ -16,7 +16,17 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
+    this.__detachAnimation();
     super.__detach();
+  }
+
+  __detachAnimation() {
+    this.animation && this.animation.__removeChild(this);
+  }
+
+  __setAnimation(animation) {
+    this.__detachAnimation();
+    this.animation = animation;
   }
 
   __onEvaluate() {
