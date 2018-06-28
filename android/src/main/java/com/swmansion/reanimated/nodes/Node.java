@@ -94,7 +94,7 @@ public abstract class Node<T> {
     markUpdated();
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodesQueue) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
@@ -106,11 +106,11 @@ public abstract class Node<T> {
 
     if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finalNodesQueue);
+        findAndUpdateNodes(child, visitedNodes, finalNodes);
       }
     }
     if (node instanceof FinalNode) {
-      finalNodesQueue.push((FinalNode) node);
+      finalNodes.push((FinalNode) node);
     }
   }
 
