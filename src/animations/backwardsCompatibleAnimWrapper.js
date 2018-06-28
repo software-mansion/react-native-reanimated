@@ -30,7 +30,6 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         set(
           value,
           block([
-            cond(currentState.finished, set(currentState.finished, 0)),
             cond(clockRunning(newClock), 0, [
               set(newValue, value),
               startClock(newClock),

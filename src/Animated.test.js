@@ -1,6 +1,7 @@
-import { getNumberOfInitializedNodes_forTestsOnly as numberOfNodes } from './core/AnimatedNode';
 import Animated, { Easing } from './Animated';
 import AnimatedAlways from './core/AnimatedAlways';
+import ReanimatedModule from './ReanimatedModule';
+const { getNumberOfNodes } = ReanimatedModule;
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
@@ -11,16 +12,16 @@ expect.extend({
     const transX = new Value(0);
 
     const v = new AnimatedAlways(transX);
-    const initial = numberOfNodes();
+    const initial = getNumberOfNodes();
     v.__addChild(v);
-    const before = numberOfNodes();
+    const before = getNumberOfNodes();
     const anim = animation.node(transX, animation.config);
     anim.start();
-    const during = numberOfNodes();
+    const during = getNumberOfNodes();
     anim.stop();
-    const after = numberOfNodes();
+    const after = getNumberOfNodes();
     v.__removeChild(v);
-    const final = numberOfNodes();
+    const final = getNumberOfNodes();
 
     const pass =
       initial === final &&
@@ -30,10 +31,6 @@ expect.extend({
       before === 2;
     if (pass) {
       return {
-        message: () =>
-          `expected ${
-            animation.name
-          }'s nodes to be attached and detached correctly`,
         pass: true,
       };
     } else {
@@ -47,7 +44,7 @@ expect.extend({
     }
   },
 });
-it('fails if timing does attach nodes correctly', () => {
+it('fails if timing does not attach nodes correctly', () => {
   expect({
     node: timing,
     name: 'timing',
@@ -59,7 +56,7 @@ it('fails if timing does attach nodes correctly', () => {
   }).toAttachNodesProperly();
 });
 
-it('fails if decay does attach nodes correctly', () => {
+it('fails if decay does not attach nodes correctly', () => {
   expect({
     node: decay,
     name: 'decay',
@@ -69,7 +66,7 @@ it('fails if decay does attach nodes correctly', () => {
   }).toAttachNodesProperly();
 });
 
-it('fails if spring does attach nodes correctly', () => {
+it('fails if spring does not attach nodes correctly', () => {
   expect({
     node: spring,
     name: 'spring',
