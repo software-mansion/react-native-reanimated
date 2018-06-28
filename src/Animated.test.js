@@ -1,5 +1,4 @@
 import Animated, { Easing } from './Animated';
-import React from 'react';
 import AnimatedAlways from './core/AnimatedAlways';
 import ReanimatedModule from './ReanimatedModule';
 const { getNumberOfNodes } = ReanimatedModule;
