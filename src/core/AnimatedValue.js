@@ -16,16 +16,22 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
-    this.__detachAnimation();
     super.__detach();
   }
 
-  __detachAnimation() {
-    this.animation && this.animation.__removeChild(this);
+  __detachAnimation(result) {
+    if (this.animation) {
+      this.animation.returnMethod &&
+        this.animation.returnMethod({ finished: result });
+      const oldAnim = this.animation;
+      this.animation = null;
+      oldAnim.node.__removeChild(this);
+    }
+    this.animation = null;
   }
 
-  __setAnimation(animation) {
-    this.__detachAnimation();
+  __setAnimation(animation, result = false) {
+    this.__detachAnimation(result);
     this.animation = animation;
   }
 
@@ -34,6 +40,13 @@ export default class AnimatedValue extends AnimatedNode {
       this.__inputNodes.forEach(val);
     }
     return this._value + this._offset;
+  }
+  __removeChild(child) {
+    super.__removeChild(child);
+    if (this.__children.length === 1 && this.animation) {
+      // handle issue when only animation child left
+      this.__detachAnimation();
+    }
   }
 
   _updateValue(value) {
