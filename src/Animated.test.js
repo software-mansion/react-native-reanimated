@@ -105,19 +105,19 @@ it('fails if clock while animation does not behave correctly', () => {
 it('fails if animation related nodes are still attached after detaching of view', () => {
   const { timing, Value } = Animated;
   const transX = new Value(0);
-  const config2 = {
+  const config = {
     duration: 5000,
     toValue: -120,
     easing: Easing.inOut(Easing.ease),
   };
-  const anim = timing(transX, config2);
+  const anim = timing(transX, config);
   const animView = ReactTestRenderer.create(
     <Animated.View
-      style={[styles.box, { transform: [{ translateX: transX }] }]}
+      style={{ transform: [{ translateX: transX }] }}
     />
   );
   anim.start();
   animView.unmount();
   expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
-})
+});
 */
