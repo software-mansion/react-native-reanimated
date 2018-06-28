@@ -30,10 +30,6 @@ expect.extend({
       before === 2;
     if (pass) {
       return {
-        message: () =>
-          `expected ${
-            animation.name
-          }'s nodes to be attached and detached correctly`,
         pass: true,
       };
     } else {
@@ -47,7 +43,7 @@ expect.extend({
     }
   },
 });
-it('fails if timing does attach nodes correctly', () => {
+it('fails if timing does not attach nodes correctly', () => {
   expect({
     node: timing,
     name: 'timing',
@@ -60,7 +56,7 @@ it('fails if timing does attach nodes correctly', () => {
   }).toAttachNodesProperly();
 });
 
-it('fails if decay does attach nodes correctly', () => {
+it('fails if decay does not attach nodes correctly', () => {
   expect({
     node: decay,
     name: 'decay',
@@ -70,7 +66,7 @@ it('fails if decay does attach nodes correctly', () => {
   }).toAttachNodesProperly();
 });
 
-it('fails if spring does attach nodes correctly', () => {
+it('fails if spring does not attach nodes correctly', () => {
   expect({
     node: spring,
     name: 'spring',
