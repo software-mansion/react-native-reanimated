@@ -22,8 +22,6 @@ function checkIfAttachAndDetachNodesProperly(animation) {
   v.__removeChild(transX);
   const final = getNumberOfNodes();
 
-  console.log(initial, before, during, after, final);
-
   return (
     initial === final &&
     after === before &&
