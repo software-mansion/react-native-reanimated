@@ -31,8 +31,8 @@ export default class AnimatedValue extends AnimatedNode {
     this.animation = null;
   }
 
-  __setAnimation(animation, result = false) {
-    this.__detachAnimation(result);
+  __setAnimation(animation, resultOfDetachingPrevious = false) {
+    this.__detachAnimation(resultOfDetachingPrevious);
     this.animation = animation;
   }
 
