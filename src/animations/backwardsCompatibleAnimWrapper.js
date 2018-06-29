@@ -29,6 +29,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         return;
       }
       if (isDone) {
+        console.warn('Animation has been finished before');
         // inconsistent with React Native
         return;
       }
