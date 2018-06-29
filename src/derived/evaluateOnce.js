@@ -1,5 +1,6 @@
 import AnimatedValue from '../core/AnimatedValue';
 import { block, call, always, cond, set } from '../base';
+
 /**
  * evaluate given node and notify children
  * @node node to be evaluated
