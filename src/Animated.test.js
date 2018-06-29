@@ -4,6 +4,7 @@ import AnimatedNode from './core/AnimatedNode';
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
+jest.mock('./derived/evaluateOnce');
 
 const { Value, timing, spring, decay } = Animated;
 describe('Reanimated backward compatible API', () => {
@@ -29,7 +30,6 @@ describe('Reanimated backward compatible API', () => {
     transX.__removeChild(v);
     v.__detach();
     const final = ReanimatedModule.getNumberOfNodes();
-
     return (
       initial === final &&
       after === before &&

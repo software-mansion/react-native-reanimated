@@ -34,36 +34,41 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         return;
       }
       isStarted = true;
-      evaluateOnce(set(currentState.position, value), currentState.position);
-      alwaysNode = always(
-        set(
-          value,
-          block([
-            cond(clockRunning(newClock), 0, [startClock(newClock)]),
-            node(newClock, currentState, config),
-            cond(currentState.finished, [
-              call([], () => {
-                isStarted = false;
-                isDone = true;
-                value.__setAnimation(null, !wasStopped);
-                if (!wasStopped) {
-                  wasStopped = false;
-                }
-              }),
-              stopClock(newClock),
-            ]),
-            currentState.position,
-          ])
-        )
+      evaluateOnce(
+        set(currentState.position, value),
+        currentState.position,
+        () => {
+          alwaysNode = always(
+            set(
+              value,
+              block([
+                cond(clockRunning(newClock), 0, startClock(newClock)),
+                node(newClock, currentState, config),
+                cond(currentState.finished, [
+                  call([], () => {
+                    isStarted = false;
+                    isDone = true;
+                    value.__setAnimation(null, !wasStopped);
+                    if (!wasStopped) {
+                      wasStopped = false;
+                    }
+                  }),
+                  stopClock(newClock),
+                ]),
+                currentState.position,
+              ])
+            )
+          );
+          returnMethod = currentReturnMethod;
+          alwaysNode.__addChild(value);
+          value.__setAnimation({
+            node: alwaysNode,
+            returnMethod: arg => {
+              returnMethod && returnMethod(arg);
+            },
+          });
+        }
       );
-      returnMethod = currentReturnMethod;
-      alwaysNode.__addChild(value);
-      value.__setAnimation({
-        node: alwaysNode,
-        returnMethod: arg => {
-          returnMethod && returnMethod(arg);
-        },
-      });
     },
     stop: () => {
       if (isDone) {
