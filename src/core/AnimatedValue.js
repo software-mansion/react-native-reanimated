@@ -24,9 +24,7 @@ export default class AnimatedValue extends AnimatedNode {
     if (this.animation) {
       this.animation.returnMethod &&
         this.animation.returnMethod({ finished: result });
-      const oldAnim = this.animation;
-      this.animation = null; // in order to prevent detaching from 'this.__removeChild'
-      oldAnim.node.__removeChild(this);
+      this.animation.node.__removeChild(this);
     }
     this.animation = null;
   }
