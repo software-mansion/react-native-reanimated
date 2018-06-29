@@ -47,7 +47,7 @@ export default class Example extends Component {
           onPress={() => {
             this._anim.stop();
           }}
-          title="Sop"
+          title="Stop"
         />
       </View>
     );

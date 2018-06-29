@@ -475,6 +475,7 @@ dalay(clock,{ finished }, { node, nodeBefore, time} )
 ```
 On attaching it returns `nodeBefore` before given `time` pass and `node` after.
 
+<!-- Anims -->
 ## Animations
 
 ---
@@ -580,7 +581,6 @@ class Example extends Component {
       duration: 5000,
       toValue: 120,
       easing: Easing.inOut(Easing.ease),
-      delay: 1000,
     };
     this._anim = timing(this._transX, this._config);
   }

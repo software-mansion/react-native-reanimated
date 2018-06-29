@@ -11,6 +11,7 @@ import {
 import { delay } from '../derived';
 import { default as Clock } from '../core/AnimatedClock';
 import { default as Value } from '../core/AnimatedValue';
+import { evaluateOnce } from '../derived/evaluateOnce';
 
 function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let returnMethod;
@@ -20,10 +21,17 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   currentState.position = newValue;
   let alwaysNode;
   let isStarted = false;
+  let isDone = false;
+  let wasStopped = false;
   return {
     start: currentReturnMethod => {
       if (isStarted) {
         returnMethod && returnMethod({ finished: false });
+        return;
+      }
+      if (isDone) {
+        console.warn('Animation has been finished before');
+        // inconsistent with React Native
         return;
       }
       isStarted = true;
@@ -44,8 +52,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
             cond(currentState.finished, [
               call([], () => {
                 isStarted = false;
-                alwaysNode.__removeChild(value);
-                returnMethod && returnMethod({ finished: true });
+                isDone = true;
+                value.__setAnimation(null, !wasStopped);
+                if (!wasStopped) {
+                  wasStopped = false;
+                }
               }),
               stopClock(newClock),
             ]),
@@ -55,12 +66,26 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       );
       returnMethod = currentReturnMethod;
       alwaysNode.__addChild(value);
+      value.__setAnimation({
+        node: alwaysNode,
+        returnMethod: arg => {
+          returnMethod && returnMethod(arg);
+        },
+      });
     },
     stop: () => {
-      isStarted = false;
-      alwaysNode.__removeChild(value);
-      returnMethod && returnMethod({ finished: false });
+      if (isDone) {
+        console.warn('Animation has been finished before');
+        return;
+      }
+      if (!isStarted) {
+        console.warn("Animation hasn't been started");
+        return;
+      }
+      wasStopped = true;
+      evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
+    __value_testOnly: value,
   };
 }
 

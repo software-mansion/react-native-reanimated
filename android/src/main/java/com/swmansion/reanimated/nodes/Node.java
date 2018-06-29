@@ -94,7 +94,7 @@ public abstract class Node<T> {
     markUpdated();
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodesQueue) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
@@ -102,27 +102,25 @@ public abstract class Node<T> {
     }
 
     List<Node> children = node.mChildren;
-
-
     if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finalNodesQueue);
+        findAndUpdateNodes(child, visitedNodes, finalNodes);
       }
     }
     if (node instanceof FinalNode) {
-      finalNodesQueue.push((FinalNode) node);
+      finalNodes.push((FinalNode) node);
     }
   }
 
   public static void runUpdates(UpdateContext updateContext) {
     UiThreadUtil.assertOnUiThread();
     SparseArray<Node> updatedNodes = updateContext.updatedNodes;
-    Stack<FinalNode> finalNodesQueue = new Stack<>();
+    Stack<FinalNode> finalNodes = new Stack<>();
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodesQueue);
+      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes);
     }
-    while (!finalNodesQueue.isEmpty()) {
-      finalNodesQueue.pop().update();
+    while (!finalNodes.isEmpty()) {
+      finalNodes.pop().update();
     }
     updatedNodes.clear();
     updateContext.updateLoopID++;

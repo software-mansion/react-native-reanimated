@@ -8,7 +8,7 @@ import ImageViewer from './imageViewer';
 import Test from './test';
 import Interpolate from './src/interpolate';
 import Colors from './colors';
-import StartApi from './startAPI';
+import StartAPI from './startAPI';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -23,7 +23,7 @@ const SCREENS = {
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
-  StartAPI: { screen: StartApi, title: 'Start API' },
+  StartAPI: { screen: StartAPI, title: 'Start API' },
 };
 
 class MainScreen extends React.Component {
