@@ -1,7 +1,10 @@
 import AnimatedValue from '../core/AnimatedValue';
 import { block, call, always, cond, set } from '../base';
-
-// node is a node to be evaluated and children are nodes to be notified
+/**
+ * evaluate given node and notify children
+ * @node node to be evaluated
+ * @children nodes to be notified
+ */
 export function evaluateOnce(node, children = []) {
   if (!Array.isArray(children)) {
     children = [children];
@@ -24,5 +27,4 @@ export function evaluateOnce(node, children = []) {
   for (let i = 0; i < children.length; i++) {
     alwaysNode.__addChild(children[i]);
   }
-  return alwaysNode;
 }
