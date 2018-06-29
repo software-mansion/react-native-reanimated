@@ -1,9 +1,5 @@
-let nodesCreated = 0;
 export default {
-  configureNativeProps: () => {},
-  createNode: () => nodesCreated++,
-  connectNodes: () => {},
-  disconnectNodes: () => {},
-  dropNode: () => nodesCreated--,
-  getNumberOfNodes: () => nodesCreated,
+  configureNativeProps: jest.fn(),
+  connectNodes: jest.fn(),
+  disconnectNodes: jest.fn(),
 };
