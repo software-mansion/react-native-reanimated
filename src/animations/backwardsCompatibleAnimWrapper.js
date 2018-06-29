@@ -20,16 +20,16 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   currentState.position = newValue;
   let alwaysNode;
   let isStarted = false;
-  let isFinished = false;
+  let isDone = false;
+  let wasStopped = false;
   return {
     start: currentReturnMethod => {
       if (isStarted) {
         returnMethod && returnMethod({ finished: false });
         return;
       }
-      if (isFinished) {
+      if (isDone) {
         // inconsistent with React Native
-        returnMethod && returnMethod({ finished: true });
         return;
       }
       isStarted = true;
@@ -42,8 +42,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
             cond(currentState.finished, [
               call([], () => {
                 isStarted = false;
-                isFinished = true;
-                value.__setAnimation(null, true);
+                isDone = true;
+                value.__setAnimation(null, !wasStopped);
+                if (!wasStopped) {
+                  wasStopped = false;
+                }
               }),
               stopClock(newClock),
             ]),
@@ -55,12 +58,13 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       alwaysNode.__addChild(value);
       value.__setAnimation({
         node: alwaysNode,
-        returnMethod: arg => returnMethod && returnMethod(arg),
+        returnMethod: arg => {
+          returnMethod && returnMethod(arg);
+        },
       });
     },
     stop: () => {
-      returnMethod && returnMethod({ finished: false });
-      returnMethod = null; // as not to call while detach
+      wasStopped = true;
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
     __getValue_testOnly: () => value,
