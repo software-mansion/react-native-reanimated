@@ -66,9 +66,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       returnMethod = null; // as not to call while detach
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
-    __detach_testOnly: () => {
-      value.__setAnimation(null, true);
-    },
+    __getValue_testOnly: () => value,
   };
 }
 

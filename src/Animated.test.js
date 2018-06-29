@@ -17,7 +17,7 @@ function checkIfAttachAndDetachNodesProperly(animation) {
   const anim = animation.node(transX, animation.config);
   anim.start();
   const during = getNumberOfNodes();
-  anim.__detach_testOnly();
+  anim.__getValue_testOnly().__setAnimation(null, true);
   const after = getNumberOfNodes();
   v.__removeChild(transX);
   const final = getNumberOfNodes();
