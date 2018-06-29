@@ -11,15 +11,16 @@ function checkIfAttachAndDetachNodesProperly(animation) {
   const transX = new Value(0);
 
   const initial = getNumberOfNodes();
-  const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [transX]);
-  v.__addChild(transX);
+  const v = new AnimatedNode({ type: 'sampleView', value: 0 });
+  transX.__addChild(v);
   const before = getNumberOfNodes();
   const anim = animation.node(transX, animation.config);
   anim.start();
   const during = getNumberOfNodes();
   anim.__getValue_testOnly().__setAnimation(null, true);
   const after = getNumberOfNodes();
-  v.__removeChild(transX);
+  transX.__removeChild(v);
+  v.__detach();
   const final = getNumberOfNodes();
 
   return (
@@ -83,12 +84,15 @@ it('fails if animation related nodes are still attached after detaching of value
     toValue: -120,
     easing: Easing.inOut(Easing.ease),
   };
+
   const anim = timing(transX, config);
   const anim2 = timing(transX, config);
   const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [transX]);
+
   transX.__addChild(v);
   anim.start();
   anim2.start();
+
   v.__detach();
-  expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
+  expect(getNumberOfNodes()).toBe(0);
 });

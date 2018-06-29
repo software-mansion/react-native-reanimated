@@ -37,10 +37,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         set(
           value,
           block([
-            cond(clockRunning(newClock), 0, [
-              set(newValue, value),
-              startClock(newClock),
-            ]),
+            cond(clockRunning(newClock), 0, [startClock(newClock)]),
             node(newClock, currentState, config),
             cond(currentState.finished, [
               call([], () => {
@@ -58,7 +55,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       alwaysNode.__addChild(value);
       value.__setAnimation({
         node: alwaysNode,
-        returnMethod: currentReturnMethod,
+        returnMethod: arg => returnMethod && returnMethod(arg),
       });
     },
     stop: () => {

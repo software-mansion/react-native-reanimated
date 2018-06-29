@@ -16,6 +16,7 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
+    this.__detachAnimation();
     super.__detach();
   }
 
@@ -44,10 +45,6 @@ export default class AnimatedValue extends AnimatedNode {
 
   __removeChild(child) {
     super.__removeChild(child);
-    if (this.__children.length === 1 && this.animation) {
-      // handle issue when only animation child left
-      this.__detachAnimation();
-    }
   }
 
   _updateValue(value) {
