@@ -34,6 +34,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         return;
       }
       isStarted = true;
+      evaluateOnce(set(currentState.position, value), currentState.position);
       alwaysNode = always(
         set(
           value,

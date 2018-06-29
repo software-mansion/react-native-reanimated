@@ -8,7 +8,7 @@ const { timing, spring, Value } = Animated;
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this._transX = new Value(0);
+    this._transX = new Value(100);
     this._config = {
       toValue: 100,
       damping: 2,
