@@ -41,6 +41,7 @@ export default class AnimatedValue extends AnimatedNode {
     }
     return this._value + this._offset;
   }
+
   __removeChild(child) {
     super.__removeChild(child);
     if (this.__children.length === 1 && this.animation) {
