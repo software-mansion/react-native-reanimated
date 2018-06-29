@@ -76,7 +76,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       wasStopped = true;
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
-    __getValue_testOnly: () => value,
+    __value_testOnly: value,
   };
 }
 

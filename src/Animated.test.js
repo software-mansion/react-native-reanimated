@@ -24,7 +24,7 @@ describe('Reanimated backward compatible API', () => {
     const anim = animation.node(transX, animation.config);
     anim.start();
     const during = ReanimatedModule.getNumberOfNodes();
-    anim.__getValue_testOnly().__setAnimation(null, true);
+    anim.__value_testOnly.__setAnimation(null, true);
     const after = ReanimatedModule.getNumberOfNodes();
     transX.__removeChild(v);
     v.__detach();
