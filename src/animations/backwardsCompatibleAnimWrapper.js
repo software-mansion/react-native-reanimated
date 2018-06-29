@@ -65,6 +65,15 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       });
     },
     stop: () => {
+      if (isDone) {
+        console.warn('Animation has been finished before');
+        // inconsistent with React Native
+        return;
+      }
+      if (!isStarted) {
+        console.warn("Animation hasn't been started");
+        return;
+      }
       wasStopped = true;
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
