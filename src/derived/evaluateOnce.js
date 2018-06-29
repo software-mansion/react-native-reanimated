@@ -3,8 +3,8 @@ import { block, call, always, cond, set } from '../base';
 
 /**
  * evaluate given node and notify children
- * @node node to be evaluated
- * @children nodes to be notified
+ * @param node - node to be evaluated
+ * @param children - children (or one child) nodes to be notified
  */
 export function evaluateOnce(node, children = []) {
   if (!Array.isArray(children)) {
