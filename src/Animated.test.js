@@ -75,24 +75,6 @@ it('fails if spring does not attach nodes correctly', () => {
   ).toBeTruthy();
 });
 
-it('fails if clock while animation does not behave correctly', () => {
-  expect(
-    checkIfAttachAndDetachNodesProperly({
-      node: spring,
-      name: 'spring',
-      config: {
-        toValue: 0,
-        damping: 7,
-        mass: 1,
-        stiffness: 121.6,
-        overshootClamping: false,
-        restSpeedThreshold: 0.001,
-        restDisplacementThreshold: 0.001,
-      },
-    })
-  ).toBeTruthy();
-});
-
 it('fails if animation related nodes are still attached after detaching of value', () => {
   const { timing, Value } = Animated;
   const transX = new Value(0);
