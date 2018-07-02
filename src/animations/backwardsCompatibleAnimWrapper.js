@@ -19,9 +19,9 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let isDone = false;
   let wasStopped = false;
   return {
-    start: returnMethod => {
+    start: animationCallback => {
       if (isStarted) {
-        returnMethod && returnMethod({ finished: false });
+        animationCallback && animationCallback({ finished: false });
         return;
       }
       if (isDone) {
@@ -57,8 +57,8 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
           );
           value.__setAnimation({
             node: alwaysNode,
-            returnMethod: arg => {
-              returnMethod && returnMethod(arg);
+            animationCallback: arg => {
+              animationCallback && animationCallback(arg);
             },
           });
         }

@@ -20,18 +20,18 @@ export default class AnimatedValue extends AnimatedNode {
     super.__detach();
   }
 
-  __detachAnimation(animationCallback) {
+  __detachAnimation(isFinished) {
     if (this.animation) {
-      this.animation.returnMethod &&
-        this.animation.returnMethod({ finished: animationCallback });
+      this.animation.animationCallback &&
+        this.animation.animationCallback({ finished: isFinished });
       this.animation.node.__removeChild(this);
     }
     this.animation = null;
   }
 
-  __setAnimation(animation, previousAnimationCallback = false) {
+  __setAnimation(animation, hasFinishedPreviousAnimation = false) {
     animation && animation.node && animation.node.__addChild(this);
-    this.__detachAnimation(previousAnimationCallback);
+    this.__detachAnimation(hasFinishedPreviousAnimation);
     this.animation = animation;
   }
 
