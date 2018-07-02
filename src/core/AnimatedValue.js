@@ -20,10 +20,10 @@ export default class AnimatedValue extends AnimatedNode {
     super.__detach();
   }
 
-  __detachAnimation(result) {
+  __detachAnimation(animationCallback) {
     if (this.animation) {
       this.animation.returnMethod &&
-        this.animation.returnMethod({ finished: result });
+        this.animation.returnMethod({ finished: animationCallback });
       this.animation.node.__removeChild(this);
     }
     this.animation = null;
