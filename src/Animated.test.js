@@ -103,4 +103,31 @@ describe('Reanimated backward compatible API', () => {
     v.__detach();
     expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
   });
+
+  it('fails if animation related nodes are detached if there are two children and only one detach', () => {
+    const { timing, Value } = Animated;
+    const transX = new Value(0);
+    const transY = new Value(0);
+    const config = {
+      duration: 5000,
+      toValue: -120,
+      easing: Easing.inOut(Easing.ease),
+    };
+    const anim = timing(transX, config);
+    const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [
+      transX,
+      transY,
+    ]);
+    transX.__addChild(v);
+    transY.__addChild(v);
+    anim.start();
+    const numberOfNodesBoforeDetach = ReanimatedModule.getNumberOfNodes();
+    transY.__removeChild(v);
+    const numberOfNodesAfterDetach = ReanimatedModule.getNumberOfNodes();
+    const result =
+      numberOfNodesBoforeDetach - 1 === numberOfNodesAfterDetach &&
+      numberOfNodesAfterDetach > 1;
+
+    expect(result).toBeTruthy();
+  });
 });
