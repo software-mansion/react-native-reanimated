@@ -9,11 +9,9 @@ import {
   stopClock,
 } from '../base';
 import { default as Clock } from '../core/AnimatedClock';
-import { default as Value } from '../core/AnimatedValue';
 import { evaluateOnce } from '../derived/evaluateOnce';
 
 function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
-  let returnMethod;
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
   let alwaysNode;
@@ -21,7 +19,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let isDone = false;
   let wasStopped = false;
   return {
-    start: currentReturnMethod => {
+    start: returnMethod => {
       if (isStarted) {
         returnMethod && returnMethod({ finished: false });
         return;
@@ -57,7 +55,6 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               ])
             )
           );
-          returnMethod = currentReturnMethod;
           alwaysNode.__addChild(value);
           value.__setAnimation({
             node: alwaysNode,
