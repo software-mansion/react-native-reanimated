@@ -55,7 +55,6 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               ])
             )
           );
-          alwaysNode.__addChild(value);
           value.__setAnimation({
             node: alwaysNode,
             returnMethod: arg => {
