@@ -38,6 +38,7 @@ class DecayAnimation extends Animation {
   }
   static getDefaultState() {
     return {
+      position: new AnimatedValue(0),
       finished: new AnimatedValue(0),
       time: new AnimatedValue(0),
       velocity: new AnimatedValue(0),

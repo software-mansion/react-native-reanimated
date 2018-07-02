@@ -50,6 +50,7 @@ export default class TimingAnimation extends Animation {
   }
   static getDefaultState() {
     return {
+      position: new AnimatedValue(0),
       finished: new AnimatedValue(0),
       time: new AnimatedValue(0),
       frameTime: new AnimatedValue(0),

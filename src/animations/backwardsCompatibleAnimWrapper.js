@@ -14,10 +14,8 @@ import { evaluateOnce } from '../derived/evaluateOnce';
 
 function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let returnMethod;
-  const newValue = new Value(0);
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
-  currentState.position = newValue;
   let alwaysNode;
   let isStarted = false;
   let isDone = false;
