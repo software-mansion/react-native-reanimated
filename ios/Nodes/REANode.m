@@ -107,7 +107,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
-            withFinalNodes:(NSMutableArray<REANode *> *)finalNodes
+            withFinalNodes:(NSMutableArray<id<REAFinalNode>> *)finalNodes
 {
   if ([visitedNodes containsObject:node]) {
     return;
@@ -117,15 +117,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   for (REANode *child in node.childNodes) {
     [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes];
   }
-  if ([node respondsToSelector:@selector(update)]) {
-    [finalNodes addObject:node];
+  if ([node conformsToProtocol:@protocol(REAFinalNode)]) {
+    [finalNodes addObject:(id<REAFinalNode>)node];
   }
 }
 
 + (void)runPropUpdates:(REAUpdateContext *)context
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
-  NSMutableArray<REANode *> *finalNodes = [NSMutableArray new];
+  NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
     [self findAndUpdateNodes:context.updatedNodes[i]
               withVisitedSet:visitedNodes
@@ -133,7 +133,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
   while (finalNodes.count > 0) {
     // NSMutableArray used for stack implementation
-    [(id)[finalNodes lastObject] update];
+    [[finalNodes lastObject] update];
     [finalNodes removeLastObject];
   }
   [context.updatedNodes removeAllObjects];
