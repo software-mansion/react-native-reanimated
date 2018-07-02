@@ -41,16 +41,13 @@ export default class AnimatedValue extends AnimatedNode {
     return this._value + this._offset;
   }
 
-  __removeChild(child) {
-    super.__removeChild(child);
-  }
-
   _updateValue(value) {
     this._value = value;
     this.__forceUpdateCache(value);
   }
 
   setValue(value) {
+    this.__detachAnimation();
     evaluateOnce(set(this, value), this);
   }
 

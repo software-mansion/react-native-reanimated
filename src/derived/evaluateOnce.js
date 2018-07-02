@@ -15,16 +15,12 @@ export function evaluateOnce(node, children = [], callback) {
   const evalNode = cond(
     done,
     0,
-    block([
-      node,
-      call([], () => {
-        callback && callback();
-        for (let i = 0; i < children.length; i++) {
-          alwaysNode.__removeChild(children[i]);
-        }
-      }),
-      set(done, 1),
-    ])
+    call([node, set(done, 1)], () => {
+      callback && callback();
+      for (let i = 0; i < children.length; i++) {
+        alwaysNode.__removeChild(children[i]);
+      }
+    })
   );
   const alwaysNode = always(evalNode);
   for (let i = 0; i < children.length; i++) {

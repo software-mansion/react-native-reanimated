@@ -9,13 +9,13 @@ jest.mock('./derived/evaluateOnce');
 const { Value, timing, spring, decay } = Animated;
 describe('Reanimated backward compatible API', () => {
   beforeEach(() => {
-    let nodesCreated = 0;
-    ReanimatedModule.createNode = () => nodesCreated++;
-    ReanimatedModule.dropNode = () => nodesCreated--;
-    ReanimatedModule.getNumberOfNodes = () => nodesCreated;
+    let numberOfNodes = 0;
+    ReanimatedModule.createNode = () => numberOfNodes++;
+    ReanimatedModule.dropNode = () => numberOfNodes--;
+    ReanimatedModule.getNumberOfNodes = () => numberOfNodes;
   });
 
-  const checkIfAttachAndDetachNodesProperly = jest.fn(animation => {
+  const checkIfAttachAndDetachNodesProperly = animation => {
     const transX = new Value(0);
 
     const initial = ReanimatedModule.getNumberOfNodes();
@@ -37,7 +37,7 @@ describe('Reanimated backward compatible API', () => {
       initial === 0 &&
       before === 2
     );
-  });
+  };
 
   it('fails if timing does not attach nodes correctly', () => {
     expect(
