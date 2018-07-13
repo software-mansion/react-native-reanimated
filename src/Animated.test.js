@@ -142,27 +142,36 @@ describe('Reanimated backward compatible API', () => {
   it('fails if animation related nodes are detached if there are two children and only one detach', () => {
     const { timing, Value } = Animated;
     const transX = new Value(0);
-    const transY = new Value(0);
+    const wrapper1 = renderer.create(
+      <Animated.View
+        style={{
+          transform: [{ translateX: transX }],
+        }}
+      />
+    );
+    const wrapper2 = renderer.create(
+      <Animated.View
+        style={{
+          transform: [{ translateX: transX }],
+        }}
+      />
+    );
     const config = {
       duration: 5000,
       toValue: -120,
       easing: Easing.inOut(Easing.ease),
     };
     const anim = timing(transX, config);
-    const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [
-      transX,
-      transY,
-    ]);
-    transX.__addChild(v);
-    transY.__addChild(v);
     anim.start();
-    const numberOfNodesBoforeDetach = ReanimatedModule.getNumberOfNodes();
-    transY.__removeChild(v);
+    const numberOfNodesBeforeDetach = ReanimatedModule.getNumberOfNodes();
+    wrapper1.unmount();
     const numberOfNodesAfterDetach = ReanimatedModule.getNumberOfNodes();
     const result =
-      numberOfNodesBoforeDetach - 1 === numberOfNodesAfterDetach &&
-      numberOfNodesAfterDetach > 1;
-
-    expect(result).toBeTruthy();
+      // 3 means AnimatedProps, AnimatedStyle and AnimatedTransform
+      // which are nodes not related to animation and has to be detached
+      numberOfNodesBeforeDetach - 3 === numberOfNodesAfterDetach &&
+      numberOfNodesAfterDetach > 3;
+    wrapper2.unmount();
+    expect(result && ReanimatedModule.getNumberOfNodes() === 0).toBeTruthy();
   });
 });
