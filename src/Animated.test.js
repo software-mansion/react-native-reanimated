@@ -1,10 +1,14 @@
 import Animated, { Easing } from './Animated';
 import ReanimatedModule from './ReanimatedModule';
 import AnimatedNode from './core/AnimatedNode';
+import React from 'react';
+
+import renderer from 'react-test-renderer';
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
 jest.mock('./derived/evaluateOnce');
+jest.mock('./core/AnimatedProps');
 
 const { Value, timing, spring, decay } = Animated;
 describe('Reanimated backward compatible API', () => {
@@ -16,26 +20,42 @@ describe('Reanimated backward compatible API', () => {
   });
 
   const checkIfAttachAndDetachNodesProperly = animation => {
-    const transX = new Value(0);
+    class TestComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.transX = new Value(0);
+        this.anim = animation.node(this.transX, animation.config);
+      }
+      start() {
+        this.anim.start();
+      }
+      stop() {
+        this.anim.__stopImmediately_testOnly();
+      }
+      render() {
+        return (
+          <Animated.View style={{ transform: [{ translateX: this.transX }] }} />
+        );
+      }
+    }
+    const ref = React.createRef();
 
     const initial = ReanimatedModule.getNumberOfNodes();
-    const v = new AnimatedNode({ type: 'sampleView', value: 0 });
-    transX.__addChild(v);
+    const wrapper = renderer.create(<TestComponent ref={ref} />);
     const before = ReanimatedModule.getNumberOfNodes();
-    const anim = animation.node(transX, animation.config);
-    anim.start();
+    ref.current.start();
     const during = ReanimatedModule.getNumberOfNodes();
-    anim.__value_testOnly.__setAnimation(null, true);
+    ref.current.stop();
     const after = ReanimatedModule.getNumberOfNodes();
-    transX.__removeChild(v);
-    v.__detach();
+    wrapper.unmount();
     const final = ReanimatedModule.getNumberOfNodes();
+
     return (
       initial === final &&
       after === before &&
       during > after &&
       initial === 0 &&
-      before === 2
+      before === 4
     );
   };
 
