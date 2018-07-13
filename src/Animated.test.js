@@ -105,22 +105,37 @@ describe('Reanimated backward compatible API', () => {
 
   it('fails if animation related nodes are still attached after detaching of value', () => {
     const { timing, Value } = Animated;
-    const transX = new Value(0);
-    const config = {
-      duration: 5000,
-      toValue: -120,
-      easing: Easing.inOut(Easing.ease),
-    };
+    class TestComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.transX = new Value(0);
+        const config = {
+          duration: 5000,
+          toValue: -120,
+          easing: Easing.inOut(Easing.ease),
+        };
+        this.anim = timing(this.transX, config);
+        this.anim2 = timing(this.transX, config);
+      }
+      start1() {
+        this.anim.start();
+      }
+      start2() {
+        this.anim2.start();
+      }
+      render() {
+        return (
+          <Animated.View style={{ transform: [{ translateX: this.transX }] }} />
+        );
+      }
+    }
+    const ref = React.createRef();
+    const wrapper = renderer.create(<TestComponent ref={ref} />);
 
-    const anim = timing(transX, config);
-    const anim2 = timing(transX, config);
-    const v = new AnimatedNode({ type: 'sampleView', value: 0 }, [transX]);
+    ref.current.start1();
+    ref.current.start2();
 
-    transX.__addChild(v);
-    anim.start();
-    anim2.start();
-
-    v.__detach();
+    wrapper.unmount();
     expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
   });
 
