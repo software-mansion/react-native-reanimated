@@ -36,11 +36,11 @@
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
 {
-    if ((self = [super init])) {
-      _nodeID = nodeID;
-      _lastLoopID = 0;
-    }
-    return self;
+  if ((self = [super init])) {
+    _nodeID = nodeID;
+    _lastLoopID = 0;
+  }
+  return self;
 }
 
 RCT_NOT_IMPLEMENTED(- (instancetype)init)
@@ -107,26 +107,34 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
+            withFinalNodes:(NSMutableArray<REANode *> *)finalNodes
 {
   if ([visitedNodes containsObject:node]) {
     return;
   } else {
     [visitedNodes addObject:node];
   }
+  for (REANode *child in node.childNodes) {
+    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes];
+  }
   if ([node respondsToSelector:@selector(update)]) {
-    [(id)node update];
-  } else {
-    for (REANode *child in node.childNodes) {
-      [self findAndUpdateNodes:child withVisitedSet:visitedNodes];
-    }
+    [finalNodes addObject:node];
   }
 }
 
 + (void)runPropUpdates:(REAUpdateContext *)context
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
+  NSMutableArray<REANode *> *finalNodes = [NSMutableArray new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes];
+    [self findAndUpdateNodes:context.updatedNodes[i]
+              withVisitedSet:visitedNodes
+              withFinalNodes:finalNodes];
+  }
+  while (finalNodes.count > 0) {
+    // NSMutableArray used for stack implementation
+    [(id)[finalNodes lastObject] update];
+    [finalNodes removeLastObject];
   }
   [context.updatedNodes removeAllObjects];
   context.loopID++;

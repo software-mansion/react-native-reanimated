@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
+import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
 import com.swmansion.reanimated.nodes.ClockNode;
@@ -217,6 +218,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new BezierNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
+    } else if ("always".equals(type)) {
+      node = new AlwaysNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }

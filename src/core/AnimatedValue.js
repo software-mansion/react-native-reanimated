@@ -1,5 +1,7 @@
 import AnimatedNode from './AnimatedNode';
+import { set } from '../base';
 import { val } from '../utils';
+import { evaluateOnce } from '../derived/evaluateOnce';
 import interpolate from '../derived/interpolate';
 
 function sanitizeValue(value) {
@@ -14,7 +16,22 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
+    this.__detachAnimation();
     super.__detach();
+  }
+
+  __detachAnimation(result) {
+    if (this.animation) {
+      this.animation.returnMethod &&
+        this.animation.returnMethod({ finished: result });
+      this.animation.node.__removeChild(this);
+    }
+    this.animation = null;
+  }
+
+  __setAnimation(animation, resultOfDetachingPrevious = false) {
+    this.__detachAnimation(resultOfDetachingPrevious);
+    this.animation = animation;
   }
 
   __onEvaluate() {
@@ -24,9 +41,17 @@ export default class AnimatedValue extends AnimatedNode {
     return this._value + this._offset;
   }
 
+  __removeChild(child) {
+    super.__removeChild(child);
+  }
+
   _updateValue(value) {
     this._value = value;
     this.__forceUpdateCache(value);
+  }
+
+  setValue(value) {
+    evaluateOnce(set(this, value), this);
   }
 
   interpolate(config) {

@@ -23,6 +23,7 @@
 		440FEC39209062F100EEC73A /* REABlockNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC25209062F100EEC73A /* REABlockNode.m */; };
 		440FEC3A209062F100EEC73A /* REAModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2A209062F100EEC73A /* REAModule.m */; };
 		440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2B209062F100EEC73A /* REANodesManager.m */; };
+		66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 66240C6820C68DEA00648F55 /* REAAlwaysNode.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -71,6 +72,8 @@
 		440FEC28209062F100EEC73A /* REAValueNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAValueNode.h; sourceTree = "<group>"; };
 		440FEC2A209062F100EEC73A /* REAModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAModule.m; sourceTree = "<group>"; };
 		440FEC2B209062F100EEC73A /* REANodesManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REANodesManager.m; sourceTree = "<group>"; };
+		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
+		66240C6820C68DEA00648F55 /* REAAlwaysNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAAlwaysNode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +98,8 @@
 		440FEC0C209062F100EEC73A /* Nodes */ = {
 			isa = PBXGroup;
 			children = (
+				66240C6720C68DEA00648F55 /* REAAlwaysNode.h */,
+				66240C6820C68DEA00648F55 /* REAAlwaysNode.m */,
 				440FEC11209062F100EEC73A /* REANode.h */,
 				440FEC1F209062F100EEC73A /* REANode.m */,
 				440FEC28209062F100EEC73A /* REAValueNode.h */,
@@ -205,6 +210,7 @@
 				440FEC2C209062F100EEC73A /* REAPropsNode.m in Sources */,
 				440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */,
 				440FEC36209062F100EEC73A /* REAEventNode.m in Sources */,
+				66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */,
 				440FEC2F209062F100EEC73A /* REAClockNodes.m in Sources */,
 				440FEC38209062F100EEC73A /* REAOperatorNode.m in Sources */,
 				440FEC34209062F100EEC73A /* REANode.m in Sources */,
