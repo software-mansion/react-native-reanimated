@@ -20,26 +20,21 @@ import {
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
 import invariant from 'fbjs/lib/invariant';
-import SpringConfig from './../SpringConfig';
+import {
+  fromBouncinessAndSpeed,
+  fromOrigamiTensionAndFriction,
+} from '../SpringConfig';
 
 const MAX_STEPS_MS = 64;
 
-function withDefault<T>(value: ?T, defaultValue: T): T {
+function withDefault(value, defaultValue) {
   if (value === undefined || value === null) {
     return defaultValue;
   }
   return value;
 }
 
-export default function spring(clock, state, config) {
-  const lastTime = cond(state.time, state.time, clock);
-
-  const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
-
-  let c;
-  let k;
-  let m;
-
+function cohereConfig(config) {
   if (
     config.stiffness !== undefined ||
     config.damping !== undefined ||
@@ -52,10 +47,14 @@ export default function spring(clock, state, config) {
         config.friction === undefined,
       'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
     );
-    k = withDefault(config.stiffness, 100);
-    c = withDefault(config.damping, 10);
-    m = withDefault(config.mass, 1);
-  } else if (config.bounciness !== undefined || config.speed !== undefined) {
+    return {
+      k: withDefault(config.stiffness, 100),
+      c: withDefault(config.damping, 10),
+      m: withDefault(config.mass, 1),
+    };
+  }
+
+  if (config.bounciness !== undefined || config.speed !== undefined) {
     // Convert the origami bounciness/speed values to stiffness/damping
     // We assume mass is 1.
     invariant(
@@ -66,24 +65,37 @@ export default function spring(clock, state, config) {
         config.mass === undefined,
       'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
     );
-    const springConfig = SpringConfig.fromBouncinessAndSpeed(
+    const springConfig = fromBouncinessAndSpeed(
       withDefault(config.bounciness, 8),
       withDefault(config.speed, 12)
     );
-    k = springConfig.stiffness;
-    c = springConfig.damping;
-    m = 1;
-  } else {
-    // Convert the origami tension/friction values to stiffness/damping
-    // We assume mass is 1.
-    const springConfig = SpringConfig.fromOrigamiTensionAndFriction(
-      withDefault(config.tension, 40),
-      withDefault(config.friction, 7)
-    );
-    k = springConfig.stiffness;
-    c = springConfig.damping;
-    m = 1;
+
+    return {
+      k: springConfig.stiffness,
+      c: springConfig.damping,
+      m: 1,
+    };
   }
+
+  // Convert the origami tension/friction values to stiffness/damping
+  // We assume mass is 1.
+  const springConfig = fromOrigamiTensionAndFriction(
+    withDefault(config.tension, 40),
+    withDefault(config.friction, 7)
+  );
+  return {
+    k: springConfig.stiffness,
+    c: springConfig.damping,
+    m: 1,
+  };
+}
+
+export default function spring(clock, state, config) {
+  const lastTime = cond(state.time, state.time, clock);
+
+  const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
+
+  const { c, k, m } = cohereConfig(config);
 
   const v0 = multiply(-1, state.velocity);
   const x0 = sub(config.toValue, state.position);
@@ -140,7 +152,7 @@ export default function spring(clock, state, config) {
   const prevPosition = new AnimatedValue(0);
 
   const isOvershooting = cond(
-    and(config.overshootClamping, neq(config.stiffness, 0)),
+    and(config.overshootClamping, neq(k, 0)),
     cond(
       lessThan(prevPosition, config.toValue),
       greaterThan(state.position, config.toValue),
@@ -149,7 +161,7 @@ export default function spring(clock, state, config) {
   );
   const isVelocity = lessThan(abs(state.velocity), config.restSpeedThreshold);
   const isDisplacement = or(
-    eq(config.stiffness, 0),
+    eq(k, 0),
     lessThan(
       abs(sub(config.toValue, state.position)),
       config.restDisplacementThreshold
@@ -171,7 +183,7 @@ export default function spring(clock, state, config) {
     ),
     set(state.time, clock),
     cond(or(isOvershooting, and(isVelocity, isDisplacement)), [
-      cond(neq(config.stiffness, 0), [
+      cond(neq(k, 0), [
         set(state.velocity, 0),
         set(state.position, config.toValue),
       ]),

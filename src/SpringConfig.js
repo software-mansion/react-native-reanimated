@@ -1,3 +1,15 @@
+import {
+  cond,
+  sub,
+  divide,
+  multiply,
+  add,
+  pow,
+  lessOrEq,
+  and,
+  greaterThan,
+} from './base';
+
 function stiffnessFromOrigamiValue(oValue) {
   return (oValue - 30) * 3.62 + 194;
 }
@@ -6,14 +18,103 @@ function dampingFromOrigamiValue(oValue) {
   return (oValue - 8) * 3 + 25;
 }
 
+function stiffnessFromOrigamiNode(oValue) {
+  return add(multiply(sub(oValue, 30), 3.62), 194);
+}
+
+function dampingFromOrigamiNode(oValue) {
+  return add(multiply(sub(oValue, 8), 3), 25);
+}
+
 function fromOrigamiTensionAndFriction(tension, friction) {
   return {
-    stiffness: stiffnessFromOrigamiValue(tension),
-    damping: dampingFromOrigamiValue(friction),
+    stiffness:
+      typeof tension === 'number'
+        ? stiffnessFromOrigamiValue(tension)
+        : stiffnessFromOrigamiNode(tension),
+    damping:
+      typeof friction === 'number'
+        ? dampingFromOrigamiValue(friction)
+        : dampingFromOrigamiNode(friction),
   };
 }
 
 function fromBouncinessAndSpeed(bounciness, speed) {
+  if (typeof bounciness === 'number' && typeof speed === 'number') {
+    return fromBouncinessAndSpeedNumbers(bounciness, speed);
+  }
+  return fromBouncinessAndSpeedNodes(bounciness, speed);
+}
+
+function fromBouncinessAndSpeedNodes(bounciness, speed) {
+  function normalize(value, startValue, endValue) {
+    return divide(sub(value, startValue), sub(endValue, startValue));
+  }
+
+  function projectNormal(n, start, end) {
+    return add(start, multiply(n, sub(end, start)));
+  }
+
+  function linearInterpolation(t, start, end) {
+    return add(multiply(t, end), multiply(sub(1, t), start));
+  }
+
+  function quadraticOutInterpolation(t, start, end) {
+    return linearInterpolation(sub(multiply(2, t), multiply(t, t)), start, end);
+  }
+
+  function b3Friction1(x) {
+    return add(
+      sub(multiply(0.0007, pow(x, 3)), multiply(0.031, pow(x, 2))),
+      multiply(0.64, x),
+      1.28
+    );
+  }
+
+  function b3Friction2(x) {
+    return add(
+      sub(multiply(0.000044, pow(x, 3)), multiply(0.006, pow(x, 2))),
+      multiply(0.36, x),
+      2
+    );
+  }
+
+  function b3Friction3(x) {
+    return add(
+      sub(multiply(0.00000045, pow(x, 3)), multiply(0.000332, pow(x, 2))),
+      multiply(0.1078, x),
+      5.84
+    );
+  }
+
+  function b3Nobounce(tension) {
+    cond(
+      lessOrEq(tension, 18),
+      b3Friction1(tension),
+      cond(
+        and(greaterThan(tension, 18), lessOrEq(tension, 44)),
+        b3Friction2(tension),
+        b3Friction3(tension)
+      )
+    );
+  }
+
+  let b = normalize(divide(bounciness, 1.7), 0, 20);
+  b = projectNormal(b, 0, 0.8);
+  let s = normalize(divide(speed, 1.7), 0, 20);
+  let bouncyTension = projectNormal(s, 0.5, 200);
+  let bouncyFriction = quadraticOutInterpolation(
+    b,
+    b3Nobounce(bouncyTension),
+    0.01
+  );
+  return {
+    stiffness: stiffnessFromOrigamiNode(bouncyTension),
+    damping: dampingFromOrigamiNode(bouncyFriction),
+  };
+}
+
+function fromBouncinessAndSpeedNumbers(bounciness, speed) {
   function normalize(value, startValue, endValue) {
     return (value - startValue) / (endValue - startValue);
   }
@@ -57,11 +158,11 @@ function fromBouncinessAndSpeed(bounciness, speed) {
     }
   }
 
-  var b = normalize(bounciness / 1.7, 0, 20);
+  let b = normalize(bounciness / 1.7, 0, 20);
   b = projectNormal(b, 0, 0.8);
-  var s = normalize(speed / 1.7, 0, 20);
-  var bouncyTension = projectNormal(s, 0.5, 200);
-  var bouncyFriction = quadraticOutInterpolation(
+  const s = normalize(speed / 1.7, 0, 20);
+  const bouncyTension = projectNormal(s, 0.5, 200);
+  const bouncyFriction = quadraticOutInterpolation(
     b,
     b3Nobounce(bouncyTension),
     0.01
