@@ -19,17 +19,71 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
+import invariant from 'fbjs/lib/invariant';
+import SpringConfig from './../SpringConfig';
 
 const MAX_STEPS_MS = 64;
+
+function withDefault<T>(value: ?T, defaultValue: T): T {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+  return value;
+}
 
 export default function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
 
   const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
 
-  const c = config.damping;
-  const m = config.mass;
-  const k = config.stiffness;
+  let c;
+  let k;
+  let m;
+
+  if (
+    config.stiffness !== undefined ||
+    config.damping !== undefined ||
+    config.mass !== undefined
+  ) {
+    invariant(
+      config.bounciness === undefined &&
+        config.speed === undefined &&
+        config.tension === undefined &&
+        config.friction === undefined,
+      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
+    );
+    k = withDefault(config.stiffness, 100);
+    c = withDefault(config.damping, 10);
+    m = withDefault(config.mass, 1);
+  } else if (config.bounciness !== undefined || config.speed !== undefined) {
+    // Convert the origami bounciness/speed values to stiffness/damping
+    // We assume mass is 1.
+    invariant(
+      config.tension === undefined &&
+        config.friction === undefined &&
+        config.stiffness === undefined &&
+        config.damping === undefined &&
+        config.mass === undefined,
+      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
+    );
+    const springConfig = SpringConfig.fromBouncinessAndSpeed(
+      withDefault(config.bounciness, 8),
+      withDefault(config.speed, 12)
+    );
+    k = springConfig.stiffness;
+    c = springConfig.damping;
+    m = 1;
+  } else {
+    // Convert the origami tension/friction values to stiffness/damping
+    // We assume mass is 1.
+    const springConfig = SpringConfig.fromOrigamiTensionAndFriction(
+      withDefault(config.tension, 40),
+      withDefault(config.friction, 7)
+    );
+    k = springConfig.stiffness;
+    c = springConfig.damping;
+    m = 1;
+  }
 
   const v0 = multiply(-1, state.velocity);
   const x0 = sub(config.toValue, state.position);
