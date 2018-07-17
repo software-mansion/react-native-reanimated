@@ -88,7 +88,7 @@ function fromBouncinessAndSpeedNodes(bounciness, speed) {
   }
 
   function b3Nobounce(tension) {
-    cond(
+    return cond(
       lessOrEq(tension, 18),
       b3Friction1(tension),
       cond(
