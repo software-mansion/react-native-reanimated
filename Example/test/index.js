@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
@@ -24,7 +24,8 @@ const {
   event,
 } = Animated;
 
-function runSpring(clock, value, dest) {
+function runSpring(value, dest) {
+  const clock = new Clock();
   const state = {
     finished: new Value(0),
     velocity: new Value(0),
@@ -91,11 +92,16 @@ export default class Example extends Component {
     super(props);
 
     // const transX = new Value(0);
-    const clock = new Clock();
+
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runSpring(clock, -120, 120);
+    this._transX = [];
+    for (let i = 0; i < 10; i++) {
+      this._transX.push(
+        runSpring(Math.random() * 240 - 120, Math.random() * 240 - 120)
+      );
+    }
   }
   componentDidMount() {
     // Animated.spring(this._transX, {
@@ -104,112 +110,26 @@ export default class Example extends Component {
     //   toValue: 150,
     // }).start();
   }
-  discreter = new ReusableNode(x =>
-    cond(
-      lessThan(x, -90),
-      -100,
-      cond(
-        lessThan(x, -80),
-        -90,
-        cond(
-          lessThan(x, -70),
-          -80,
-          cond(
-            lessThan(x, -60),
-            -70,
-            cond(
-              lessThan(x, -50),
-              -60,
-              cond(
-                lessThan(x, -40),
-                -50,
-                cond(
-                  lessThan(x, -30),
-                  -40,
-                  cond(
-                    lessThan(x, -20),
-                    -30,
-                    cond(
-                      lessThan(x, -10),
-                      -20,
-                      cond(
-                        lessThan(x, 0),
-                        -10,
-                        cond(
-                          lessThan(x, 10),
-                          0,
-                          cond(
-                            lessThan(x, 20),
-                            10,
-                            cond(
-                              lessThan(x, 30),
-                              20,
-                              cond(
-                                lessThan(x, 40),
-                                30,
-                                cond(
-                                  lessThan(x, 50),
-                                  40,
-                                  cond(
-                                    lessThan(x, 60),
-                                    50,
-                                    cond(
-                                      lessThan(x, 70),
-                                      60,
-                                      cond(
-                                        lessThan(x, 80),
-                                        70,
-                                        cond(
-                                          lessThan(x, 90),
-                                          80,
-                                          cond(lessThan(x, 100), 90, 100)
-                                        )
-                                      )
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  );
   render() {
     return (
-      <View style={styles.container}>
-        <Animated.View
-          style={[
-            styles.box,
-            {
-              transform: [
-                { translateX: this.discreter.invoke(new Value(-50)) },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.box,
-            {
-              transform: [{ translateX: this._transX }],
-            },
-          ]}
-        />
-      </View>
+      <ScrollView contentContainerStyle={styles.container}>
+        {this._transX.map(i => (
+          <Animated.View
+            key={i.__nodeID}
+            style={[
+              styles.box,
+              {
+                transform: [{ translateX: i }],
+              },
+            ]}
+          />
+        ))}
+      </ScrollView>
     );
   }
 }
 
-const BOX_SIZE = 100;
+const BOX_SIZE = 8;
 
 const styles = StyleSheet.create({
   container: {
