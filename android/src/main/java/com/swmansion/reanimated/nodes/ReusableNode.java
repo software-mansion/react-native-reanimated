@@ -28,6 +28,11 @@ public class ReusableNode extends Node {
     }
   }
 
+  @Override
+  protected void markReusing() {
+    // no-op
+  }
+
   public void setInputNodes(int [] nodes){
     for (int i = 0; i < nodes.length; i++) {
       ValueNode nodeToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
