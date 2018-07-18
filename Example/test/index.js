@@ -17,6 +17,7 @@ const {
   block,
   timing,
   debug,
+  ReusableNode,
   spring,
   Value,
   Clock,
@@ -94,7 +95,6 @@ export default class Example extends Component {
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock, -120, 120);
   }
   componentDidMount() {
     // Animated.spring(this._transX, {
@@ -103,11 +103,105 @@ export default class Example extends Component {
     //   toValue: 150,
     // }).start();
   }
+  discreter = new ReusableNode(x =>
+    cond(
+      lessThan(x, -90),
+      -100,
+      cond(
+        lessThan(x, -80),
+        -90,
+        cond(
+          lessThan(x, -70),
+          -80,
+          cond(
+            lessThan(x, -60),
+            -70,
+            cond(
+              lessThan(x, -50),
+              -60,
+              cond(
+                lessThan(x, -40),
+                -50,
+                cond(
+                  lessThan(x, -30),
+                  -40,
+                  cond(
+                    lessThan(x, -20),
+                    -30,
+                    cond(
+                      lessThan(x, -10),
+                      -20,
+                      cond(
+                        lessThan(x, 0),
+                        -10,
+                        cond(
+                          lessThan(x, 10),
+                          0,
+                          cond(
+                            lessThan(x, 20),
+                            10,
+                            cond(
+                              lessThan(x, 30),
+                              20,
+                              cond(
+                                lessThan(x, 40),
+                                30,
+                                cond(
+                                  lessThan(x, 50),
+                                  40,
+                                  cond(
+                                    lessThan(x, 60),
+                                    50,
+                                    cond(
+                                      lessThan(x, 70),
+                                      60,
+                                      cond(
+                                        lessThan(x, 80),
+                                        70,
+                                        cond(
+                                          lessThan(x, 90),
+                                          80,
+                                          cond(lessThan(x, 100), 90, 100)
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  );
   render() {
     return (
       <View style={styles.container}>
         <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
+          style={[
+            styles.box,
+            {
+              transform: [
+                { translateX: this.discreter.invoke(new Value(-50)) },
+              ],
+            },
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.box,
+            {
+              transform: [{ translateX: this.discreter.invoke(new Value(50)) }],
+            },
+          ]}
         />
       </View>
     );

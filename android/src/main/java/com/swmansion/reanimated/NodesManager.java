@@ -26,6 +26,8 @@ import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
+import com.swmansion.reanimated.nodes.ReusableNode;
+import com.swmansion.reanimated.nodes.ReusablePerformNode;
 import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
@@ -178,6 +180,8 @@ public class NodesManager implements EventDispatcherListener {
             node.getClass() + ", requested type was " + type);
   }
 
+
+
   public void createNode(int nodeID, ReadableMap config) {
     if (mAnimatedNodes.get(nodeID) != null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
@@ -211,6 +215,10 @@ public class NodesManager implements EventDispatcherListener {
       node = new ClockOpNode.ClockStopNode(nodeID, config, this);
     } else if ("clockTest".equals(type)) {
       node = new ClockOpNode.ClockTestNode(nodeID, config, this);
+    } else if ("reusable".equals(type)) {
+      node = new ReusableNode(nodeID, config, this);
+    } else if ("reusablePerform".equals(type)) {
+      node = new ReusablePerformNode(nodeID, config, this);
     } else if ("call".equals(type)) {
       node = new JSCallNode(nodeID, config, this);
     } else if ("bezier".equals(type)) {
