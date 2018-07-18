@@ -38,12 +38,28 @@ public class ReusableNode extends Node {
       ValueNode nodeToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
       Node<Double> nodesWhichValueIsToBeSet = (Node<Double>)mNodesManager.findNodeById(nodes[i], Node.class);
       nodeToBeSet.markReusing();
-      nodeToBeSet.setValue(nodesWhichValueIsToBeSet.evaluate());
+      nodeToBeSet.setValue(nodesWhichValueIsToBeSet.value());
+    }
+  }
+
+  public void setArguments(int [] nodes){
+    for (int i = 0; i < nodes.length; i++) {
+      Node<Double> nodeToBeSet = (Node<Double>)mNodesManager.findNodeById(nodes[i], Node.class);
+      if (!(nodeToBeSet instanceof ValueNode)) {
+        continue;
+      }
+
+      ValueNode nodesWhichValueIsToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
+      Double valueToBeSetWith = nodesWhichValueIsToBeSet.value();
+      if (valueToBeSetWith == null || valueToBeSetWith.equals(nodeToBeSet.value())) {
+        continue;
+      }
+      ((ValueNode)nodeToBeSet).setValue(nodesWhichValueIsToBeSet.value());
     }
   }
 
   @Override
   protected Object evaluate() {
-   return mNodesManager.findNodeById(mAnchorNode, Node.class).evaluate();
+   return mNodesManager.findNodeById(mAnchorNode, Node.class).value();
   }
 }

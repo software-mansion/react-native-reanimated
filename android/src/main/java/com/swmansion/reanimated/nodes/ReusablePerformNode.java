@@ -32,6 +32,8 @@ public class ReusablePerformNode extends Node {
   protected Object evaluate() {
    ReusableNode reusableNode = mNodesManager.findNodeById(mReusableNode, ReusableNode.class);
    reusableNode.setInputNodes(mArguments);
-   return reusableNode.evaluate();
+   Object value = reusableNode.value();
+   reusableNode.setArguments(mArguments);
+   return value;
   }
 }

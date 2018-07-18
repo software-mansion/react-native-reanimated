@@ -19,20 +19,35 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
+import AnimatedReusableNode from '../core/AnimatedReusableNode';
 
 const MAX_STEPS_MS = 64;
 
-export default function spring(clock, state, config) {
-  const lastTime = cond(state.time, state.time, clock);
+const innerSpring = (
+  clock,
+  position,
+  velocity,
+  finished,
+  time,
+  damping,
+  stiffness,
+  mass,
+  toValue,
+  overshootClamping,
+  restSpeedThreshold,
+  restDisplacementThreshold,
+  prevPosition
+) => {
+  const lastTime = cond(time, time, clock);
 
   const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
 
-  const c = config.damping;
-  const m = config.mass;
-  const k = config.stiffness;
+  const c = damping;
+  const m = mass;
+  const k = stiffness;
 
-  const v0 = multiply(-1, state.velocity);
-  const x0 = sub(config.toValue, state.position);
+  const v0 = multiply(-1, velocity);
+  const x0 = sub(toValue, position);
 
   const zeta = divide(c, multiply(2, sqrt(multiply(k, m)))); // damping ratio
   const omega0 = sqrt(divide(k, m)); // undamped angular frequency of the oscillator (rad/ms)
@@ -52,7 +67,7 @@ export default function spring(clock, state, config) {
       multiply(x0, cos1)
     )
   );
-  const underDampedPosition = sub(config.toValue, underDampedFrag1);
+  const underDampedPosition = sub(toValue, underDampedFrag1);
   // This looks crazy -- it's actually just the derivative of the oscillation function
   const underDampedVelocity = sub(
     multiply(zeta, omega0, underDampedFrag1),
@@ -68,7 +83,7 @@ export default function spring(clock, state, config) {
   // critically damped
   const criticallyDampedEnvelope = exp(multiply(-1, omega0, t));
   const criticallyDampedPosition = sub(
-    config.toValue,
+    toValue,
     multiply(
       criticallyDampedEnvelope,
       add(x0, multiply(add(v0, multiply(omega0, x0)), t))
@@ -82,46 +97,56 @@ export default function spring(clock, state, config) {
     )
   );
 
-  // conditions for stopping the spring animations
-  const prevPosition = new AnimatedValue(0);
-
   const isOvershooting = cond(
-    and(config.overshootClamping, neq(config.stiffness, 0)),
+    and(overshootClamping, neq(stiffness, 0)),
     cond(
-      lessThan(prevPosition, config.toValue),
-      greaterThan(state.position, config.toValue),
-      lessThan(state.position, config.toValue)
+      lessThan(prevPosition, toValue),
+      greaterThan(position, toValue),
+      lessThan(position, toValue)
     )
   );
-  const isVelocity = lessThan(abs(state.velocity), config.restSpeedThreshold);
+  const isVelocity = lessThan(abs(velocity), restSpeedThreshold);
   const isDisplacement = or(
-    eq(config.stiffness, 0),
-    lessThan(
-      abs(sub(config.toValue, state.position)),
-      config.restDisplacementThreshold
-    )
+    eq(stiffness, 0),
+    lessThan(abs(sub(toValue, position)), restDisplacementThreshold)
   );
 
   return block([
-    set(prevPosition, state.position),
+    set(prevPosition, position),
     cond(
       lessThan(zeta, 1),
+      [set(position, underDampedPosition), set(velocity, underDampedVelocity)],
       [
-        set(state.position, underDampedPosition),
-        set(state.velocity, underDampedVelocity),
-      ],
-      [
-        set(state.position, criticallyDampedPosition),
-        set(state.velocity, criticallyDampedVelocity),
+        set(position, criticallyDampedPosition),
+        set(velocity, criticallyDampedVelocity),
       ]
     ),
-    set(state.time, clock),
+    set(time, clock),
     cond(or(isOvershooting, and(isVelocity, isDisplacement)), [
-      cond(neq(config.stiffness, 0), [
-        set(state.velocity, 0),
-        set(state.position, config.toValue),
-      ]),
-      set(state.finished, 1),
+      cond(neq(stiffness, 0), [set(velocity, 0), set(position, toValue)]),
+      set(finished, 1),
     ]),
   ]);
+};
+
+const springStatic = new AnimatedReusableNode(innerSpring);
+
+export default function spring(clock, state, config) {
+  // conditions for stopping the spring animations
+  const prevPosition = new AnimatedValue(0);
+  return springStatic.invoke(
+    clock,
+    state.position,
+    state.velocity,
+    state.finished,
+    state.time,
+    config.damping,
+    config.stiffness,
+    config.mass,
+    config.toValue,
+    config.overshootClamping,
+    config.restSpeedThreshold,
+    config.restDisplacementThreshold,
+    prevPosition
+  );
 }

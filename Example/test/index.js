@@ -95,6 +95,7 @@ export default class Example extends Component {
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
+    this._transX = runSpring(clock, -120, 120);
   }
   componentDidMount() {
     // Animated.spring(this._transX, {
@@ -199,7 +200,7 @@ export default class Example extends Component {
           style={[
             styles.box,
             {
-              transform: [{ translateX: this.discreter.invoke(new Value(50)) }],
+              transform: [{ translateX: this._transX }],
             },
           ]}
         />

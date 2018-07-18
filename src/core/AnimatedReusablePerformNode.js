@@ -1,23 +1,18 @@
 import AnimatedNode from './AnimatedNode';
-import { val } from '../utils';
-import interpolate from '../derived/interpolate';
-import Animated from '../Animated';
-
-function sanitizeValue(value) {
-  return value === null || value === undefined ? value : Number(value);
-}
+import AnimatedValue from './AnimatedValue';
 
 export default class AnimatedReusablePerformNode extends AnimatedNode {
-  numberOfArgs;
   constructor(reusableNode, args) {
-    const inputNodes = [];
+    const flattenArgs = args.map(
+      i => (typeof i === 'object' ? i : new AnimatedValue(i))
+    );
     super(
       {
         type: 'reusablePerform',
         reusableNode: reusableNode.__nodeID,
-        args: args.map(i => i.__nodeID),
+        args: flattenArgs.map(node => node.__nodeID),
       },
-      [reusableNode, ...args]
+      [reusableNode, ...flattenArgs]
     );
   }
 }
