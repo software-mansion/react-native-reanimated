@@ -180,8 +180,6 @@ public class NodesManager implements EventDispatcherListener {
             node.getClass() + ", requested type was " + type);
   }
 
-
-
   public void createNode(int nodeID, ReadableMap config) {
     if (mAnimatedNodes.get(nodeID) != null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +

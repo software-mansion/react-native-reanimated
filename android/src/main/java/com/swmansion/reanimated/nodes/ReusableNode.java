@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
@@ -14,8 +13,6 @@ public class ReusableNode extends Node {
   public ReusableNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mAnchorNode = config.getInt("anchor");
-
-
     ArrayList anchorInput = (config.getArray("anchorInput").toArrayList());
     ArrayList<Integer> anchorListConverted = new ArrayList<>();
     for (Object ids: anchorInput) {
@@ -29,7 +26,6 @@ public class ReusableNode extends Node {
       mAnchorInput[i] = id;
       i++;
     }
-
   }
 
   public void setInputNodes(int [] nodes){
@@ -43,12 +39,6 @@ public class ReusableNode extends Node {
 
   @Override
   protected Object evaluate() {
-   /* Object cond = mNodesManager.getNodeValue(mCondID);
-    if (cond instanceof Number && ((Number) cond).doubleValue() != 0.0) {
-      // This is not a good way to compare doubles but in this case it is what we want
-      return mIfBlockID != -1 ? mNodesManager.getNodeValue(mIfBlockID) : ZERO;
-    }
-    return mElseBlockID != -1 ? mNodesManager.getNodeValue(mElseBlockID) : ZERO;*/
    return mNodesManager.findNodeById(mAnchorNode, Node.class).evaluate();
   }
 }

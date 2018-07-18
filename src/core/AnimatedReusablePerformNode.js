@@ -7,7 +7,6 @@ function sanitizeValue(value) {
   return value === null || value === undefined ? value : Number(value);
 }
 
-// TODO m
 export default class AnimatedReusablePerformNode extends AnimatedNode {
   numberOfArgs;
   constructor(reusableNode, args) {

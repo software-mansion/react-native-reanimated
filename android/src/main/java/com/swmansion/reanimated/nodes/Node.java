@@ -47,7 +47,6 @@ public abstract class Node<T> {
 
   protected abstract @Nullable T evaluate();
 
-
   public final @Nullable T value() {
     if (mLastLoopID < mUpdateContext.updateLoopID || isReusing) {
       mLastLoopID = mUpdateContext.updateLoopID;
