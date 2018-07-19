@@ -23,7 +23,7 @@ public abstract class Node<T> {
   protected final NodesManager mNodesManager;
 
   private final UpdateContext mUpdateContext;
-  private boolean isReusing = false;
+  protected boolean mIsReusing = false;
 
   private long mLastLoopID = -1;
   private @Nullable T mMemoizedValue;
@@ -36,7 +36,7 @@ public abstract class Node<T> {
   }
 
   protected void markReusing() {
-    isReusing = true;
+    mIsReusing = true;
     if (mChildren == null) {
       return;
     }
@@ -48,9 +48,9 @@ public abstract class Node<T> {
   protected abstract @Nullable T evaluate();
 
   public final @Nullable T value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID || isReusing) {
+    if (mLastLoopID < mUpdateContext.updateLoopID || mIsReusing) {
       mLastLoopID = mUpdateContext.updateLoopID;
-      isReusing = false;
+      mIsReusing = false;
       return (mMemoizedValue = evaluate());
     }
     return mMemoizedValue;

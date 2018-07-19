@@ -1,14 +1,7 @@
 import AnimatedNode from './AnimatedNode';
-import { val } from '../utils';
-import interpolate from '../derived/interpolate';
-import Animated from '../Animated';
 import invariant from 'fbjs/lib/invariant';
 import AnimatedReusablePerformNode from './AnimatedReusablePerformNode';
 import AnimatedValue from './AnimatedValue';
-
-function sanitizeValue(value) {
-  return value === null || value === undefined ? value : Number(value);
-}
 
 export default class AnimatedReusableNode extends AnimatedNode {
   numberOfArgs;

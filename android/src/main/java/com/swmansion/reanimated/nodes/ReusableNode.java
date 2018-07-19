@@ -30,7 +30,7 @@ public class ReusableNode extends Node {
 
   @Override
   protected void markReusing() {
-    // no-op
+    mIsReusing = true;
   }
 
   public void setInputNodes(int [] nodes){
@@ -51,9 +51,9 @@ public class ReusableNode extends Node {
 
       ValueNode nodesWhichValueIsToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
       Double valueToBeSetWith = nodesWhichValueIsToBeSet.value();
-      if (valueToBeSetWith == null || valueToBeSetWith.equals(nodeToBeSet.value())) {
-        continue;
-      }
+     // if (valueToBeSetWith == null || valueToBeSetWith.equals(nodeToBeSet.value())) {
+     //   continue;
+     // }
       ((ValueNode)nodeToBeSet).setValue(nodesWhichValueIsToBeSet.value());
     }
   }
