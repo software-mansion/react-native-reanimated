@@ -16,7 +16,7 @@ describe('ReusableNode test', () => {
     ReanimatedModule.getNumberOfNodes = () => numberOfNodes;
   });
 
-  it('fails if animation related nodes are still attached after detaching of value', () => {
+  it('pass if reusable node economize number of attached nodes', () => {
     const { Value, ReusableNode, pow, add, modulo } = Animated;
 
     const sampleRN = new ReusableNode(x =>
