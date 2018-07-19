@@ -49,12 +49,12 @@ public class ReusableNode extends Node {
         continue;
       }
 
-      ValueNode nodesWhichValueIsToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
-      Double valueToBeSetWith = nodesWhichValueIsToBeSet.value();
-     // if (valueToBeSetWith == null || valueToBeSetWith.equals(nodeToBeSet.value())) {
-     //   continue;
-     // }
-      ((ValueNode)nodeToBeSet).setValue(nodesWhichValueIsToBeSet.value());
+      ValueNode nodeWhichValueIsToBeSet = mNodesManager.findNodeById(mAnchorInput[i], ValueNode.class);
+      Double valueToBeSetWith = nodeWhichValueIsToBeSet.value();
+      if (valueToBeSetWith == null || nodeToBeSet.value().equals(valueToBeSetWith)) {
+        continue;
+      }
+      ((ValueNode)nodeToBeSet).setValue(valueToBeSetWith);
     }
   }
 
