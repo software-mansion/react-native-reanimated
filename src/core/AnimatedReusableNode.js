@@ -17,7 +17,7 @@ export default class AnimatedReusableNode extends AnimatedNode {
         anchor: anchorNode.__nodeID,
         anchorInput: inputNodes.map(i => i.__nodeID),
       },
-      [anchorNode]
+      [anchorNode, ...inputNodes]
     );
     this.numberOfArgs = inputNodes.length;
   }

@@ -97,10 +97,8 @@ export default class Example extends Component {
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
     this._transX = [];
-    for (let i = 0; i < 10; i++) {
-      this._transX.push(
-        runSpring(Math.random() * 240 - 120, Math.random() * 240 - 120)
-      );
+    for (let i = 0; i < 20; i++) {
+      this._transX.push(runSpring(Math.random() * 240 - 120, 0));
     }
   }
   componentDidMount() {
