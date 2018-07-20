@@ -18,8 +18,10 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
   let isStarted = false;
   let isDone = false;
   let wasStopped = false;
-  return {
-    start: animationCallback => {
+  let animationCallback;
+  const animation = {
+    start: currentAnimationCallback => {
+      animationCallback = currentAnimationCallback;
       if (isStarted) {
         animationCallback && animationCallback({ finished: false });
         return;
@@ -60,15 +62,12 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               ])
             )
           );
-          value.__setAnimation({
-            node: alwaysNode,
-            animationCallback: arg => {
-              animationCallback && animationCallback(arg);
-            },
-          });
+          value.__setAnimation(animation);
         }
       );
     },
+    getNode: () => alwaysNode,
+    animationCallback: arg => animationCallback && animationCallback(arg),
     stop: () => {
       if (isDone) {
         console.warn('Animation has been finished before');
@@ -81,8 +80,12 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       wasStopped = true;
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
-    __stopImmediately_testOnly: () => value.__setAnimation(null, true),
+    __stopImmediately_testOnly: result => {
+      animation.stop();
+      value.__detachAnimation(result);
+    },
   };
+  return animation;
 }
 
 export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {

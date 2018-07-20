@@ -16,22 +16,22 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
-    this.__detachAnimation(false);
+    this.__detachAnimation();
     super.__detach();
   }
 
-  __detachAnimation(isFinished) {
+  __detachAnimation(isFinished = false) {
     if (this.animation) {
       this.animation.animationCallback &&
         this.animation.animationCallback({ finished: isFinished });
-      this.animation.node.__removeChild(this);
+      this.animation.getNode().__removeChild(this);
     }
     this.animation = null;
   }
 
-  __setAnimation(animation, hasFinishedPreviousAnimation = false) {
-    animation && animation.node && animation.node.__addChild(this);
-    this.__detachAnimation(hasFinishedPreviousAnimation);
+  __setAnimation(animation) {
+    animation && animation.getNode() && animation.getNode().__addChild(this);
+    this.__detachAnimation();
     this.animation = animation;
   }
 
@@ -48,7 +48,7 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   setValue(value) {
-    this.__detachAnimation(false);
+    this.__detachAnimation();
     evaluateOnce(set(this, value), this);
   }
 

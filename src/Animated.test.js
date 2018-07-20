@@ -25,11 +25,11 @@ describe('Reanimated backward compatible API', () => {
         this.transX = new Value(0);
         this.anim = animation.node(this.transX, animation.config);
       }
-      start() {
-        this.anim.start();
+      start(method) {
+        this.anim.start(method);
       }
-      stop() {
-        this.anim.__stopImmediately_testOnly();
+      stop(res) {
+        this.anim.__stopImmediately_testOnly(res);
       }
       render() {
         return (
@@ -38,18 +38,20 @@ describe('Reanimated backward compatible API', () => {
       }
     }
     const ref = React.createRef();
-
+    let result;
+    const resMethod = ({ finished }) => (result = finished);
     const initial = ReanimatedModule.getNumberOfNodes();
     const wrapper = renderer.create(<TestComponent ref={ref} />);
     const before = ReanimatedModule.getNumberOfNodes();
-    ref.current.start();
+    ref.current.start(resMethod);
     const during = ReanimatedModule.getNumberOfNodes();
-    ref.current.stop();
+    ref.current.stop(true);
     const after = ReanimatedModule.getNumberOfNodes();
     wrapper.unmount();
     const final = ReanimatedModule.getNumberOfNodes();
 
     return (
+      result &&
       initial === final &&
       after === before &&
       during > after &&
@@ -116,11 +118,11 @@ describe('Reanimated backward compatible API', () => {
         this.anim = timing(this.transX, config);
         this.anim2 = timing(this.transX, config);
       }
-      start1() {
-        this.anim.start();
+      start1(method) {
+        this.anim.start(method);
       }
-      start2() {
-        this.anim2.start();
+      start2(method) {
+        this.anim2.start(method);
       }
       render() {
         return (
@@ -130,11 +132,15 @@ describe('Reanimated backward compatible API', () => {
     }
     const ref = React.createRef();
     const wrapper = renderer.create(<TestComponent ref={ref} />);
-
-    ref.current.start1();
-    ref.current.start2();
+    let result = true;
+    const resMethod = ({ finished }) => (result = finished);
+    ref.current.start1(resMethod);
+    ref.current.start2(resMethod);
+    expect(result).toBeFalsy();
+    result = true;
     const numberOfNodesBeforeUnmounting = ReanimatedModule.getNumberOfNodes();
     wrapper.unmount();
+    expect(result).toBeFalsy();
     const numberOfNodesAfterUnmounting = ReanimatedModule.getNumberOfNodes();
     const pass =
       numberOfNodesAfterUnmounting === 0 && numberOfNodesBeforeUnmounting > 0;
