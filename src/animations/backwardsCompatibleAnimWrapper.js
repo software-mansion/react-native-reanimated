@@ -50,8 +50,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
                 cond(currentState.finished, [
                   call([], () => {
                     isStarted = false;
+                    if (!wasStopped) {
+                      isDone = true;
+                    }
+                    value.__detachAnimation(animation);
                     isDone = true;
-                    value.__detachAnimation(!wasStopped);
                     if (!wasStopped) {
                       wasStopped = false;
                     }
@@ -67,7 +70,8 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
       );
     },
     getNode: () => alwaysNode,
-    animationCallback: arg => animationCallback && animationCallback(arg),
+    animationCallback: () =>
+      animationCallback && animationCallback({ finished: isDone }),
     stop: () => {
       if (isDone) {
         console.warn('Animation has been finished before');
@@ -82,7 +86,8 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
     },
     __stopImmediately_testOnly: result => {
       animation.stop();
-      value.__detachAnimation(result);
+      isDone = result;
+      value.__detachAnimation(animation);
     },
   };
   return animation;
