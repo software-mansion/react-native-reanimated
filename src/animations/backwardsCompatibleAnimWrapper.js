@@ -49,7 +49,7 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
                   call([], () => {
                     isStarted = false;
                     isDone = true;
-                    value.__setAnimation(null, !wasStopped);
+                    value.__detachAnimation(!wasStopped);
                     if (!wasStopped) {
                       wasStopped = false;
                     }

@@ -48,7 +48,7 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   setValue(value) {
-    this.__detachAnimation();
+    this.__detachAnimation(false);
     evaluateOnce(set(this, value), this);
   }
 
