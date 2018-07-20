@@ -26,7 +26,7 @@ const {
   event,
 } = Animated;
 
-function follow(clock, value) {
+function follow(value) {
   const config = {
     damping: 28,
     mass: 0.3,
@@ -34,6 +34,8 @@ function follow(clock, value) {
     overshootClamping: false,
     toValue: value,
   };
+
+  const clock = new Clock();
 
   const state = {
     finished: new Value(0),
@@ -57,7 +59,7 @@ class Tracking extends Component {
     const dragX = new Value(0);
     const dragY = new Value(0);
 
-    const animState = new Value(-1);
+    const gestureState = new Value(-1);
     const dragVX = new Value(0);
     const dragVY = new Value(0);
 
@@ -67,7 +69,7 @@ class Tracking extends Component {
           translationX: dragX,
           velocityX: dragVX,
           velocityY: dragVY,
-          state: animState,
+          state: gestureState,
           translationY: dragY,
         },
       },
@@ -78,7 +80,6 @@ class Tracking extends Component {
     const clock = new Clock();
     const prevDragX = new Value(0);
     const prevDragY = new Value(0);
-    const clock2 = new Clock();
     const snapPoint = cond(
       lessThan(add(transX, multiply(TOSS_SEC, dragVX)), 0),
       -(width / 2),
@@ -103,14 +104,14 @@ class Tracking extends Component {
     };
 
     this._transX = cond(
-      eq(animState, State.ACTIVE),
+      eq(gestureState, State.ACTIVE),
       [
         stopClock(clock),
         set(transX, add(transX, sub(dragX, prevDragX))),
         set(prevDragX, dragX),
         transX,
       ],
-      cond(neq(animState, -1), [
+      cond(neq(gestureState, -1), [
         set(prevDragX, 0),
         set(
           transX,
@@ -124,7 +125,7 @@ class Tracking extends Component {
                 startClock(clock),
               ]),
               spring(clock, state, config),
-              cond(state.finished, [stopClock(clock)]),
+              cond(state.finished, stopClock(clock)),
               state.position,
             ],
             0
@@ -135,7 +136,7 @@ class Tracking extends Component {
 
     this._transY = block([
       cond(
-        eq(animState, State.ACTIVE),
+        eq(gestureState, State.ACTIVE),
         [
           set(transY, add(transY, sub(dragY, prevDragY))),
           set(prevDragY, dragY),
@@ -145,14 +146,14 @@ class Tracking extends Component {
       transY,
     ]);
 
-    this.follow1x = follow(clock2, this._transX);
-    this.follow1y = follow(clock2, this._transY);
+    this.follow1x = follow(this._transX);
+    this.follow1y = follow(this._transY);
 
-    this.follow2x = follow(clock2, this.follow1x);
-    this.follow2y = follow(clock2, this.follow1y);
+    this.follow2x = follow(this.follow1x);
+    this.follow2y = follow(this.follow1y);
 
-    this.follow3x = follow(clock2, this.follow2x);
-    this.follow3y = follow(clock2, this.follow2y);
+    this.follow3x = follow(this.follow2x);
+    this.follow3y = follow(this.follow2y);
   }
 
   render() {
