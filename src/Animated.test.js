@@ -19,7 +19,7 @@ describe('Reanimated backward compatible API', () => {
     ReanimatedModule.getNumberOfNodes = () => numberOfNodes;
   });
 
-  const checkIfAttachAndDetachNodesProperly = animation => {
+  const checkIfNodesGetDetachedCorrectly = animation => {
     class TestComponent extends React.Component {
       constructor(props) {
         super(props);
@@ -61,7 +61,7 @@ describe('Reanimated backward compatible API', () => {
 
   it('fails if timing does not attach nodes correctly', () => {
     expect(
-      checkIfAttachAndDetachNodesProperly({
+      checkIfNodesGetDetachedCorrectly({
         node: timing,
         name: 'timing',
         config: {
@@ -75,7 +75,7 @@ describe('Reanimated backward compatible API', () => {
 
   it('fails if decay does not attach nodes correctly', () => {
     expect(
-      checkIfAttachAndDetachNodesProperly({
+      checkIfNodesGetDetachedCorrectly({
         node: decay,
         name: 'decay',
         config: {
@@ -87,7 +87,7 @@ describe('Reanimated backward compatible API', () => {
 
   it('fails if spring does not attach nodes correctly', () => {
     expect(
-      checkIfAttachAndDetachNodesProperly({
+      checkIfNodesGetDetachedCorrectly({
         node: spring,
         name: 'spring',
         config: {
