@@ -103,7 +103,7 @@ describe('Reanimated backward compatible API', () => {
     ).toBeTruthy();
   });
 
-  it('fails if animation related nodes are still attached after detaching of value', () => {
+  it('fails if animation related nodes are still attached after detaching of value with two animations triggered', () => {
     const { timing, Value } = Animated;
     class TestComponent extends React.Component {
       constructor(props) {
@@ -134,9 +134,12 @@ describe('Reanimated backward compatible API', () => {
 
     ref.current.start1();
     ref.current.start2();
-
+    const numberOfNodesBeforeUnmounting = ReanimatedModule.getNumberOfNodes();
     wrapper.unmount();
-    expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
+    const numberOfNodesAfterUnmounting = ReanimatedModule.getNumberOfNodes();
+    const pass =
+      numberOfNodesAfterUnmounting === 0 && numberOfNodesBeforeUnmounting > 0;
+    expect(pass).toBeTruthy();
   });
 
   it('fails if animation related nodes are detached if there are two children and only one detach', () => {
@@ -171,7 +174,8 @@ describe('Reanimated backward compatible API', () => {
       // which are nodes not related to animation and has to be detached
       numberOfNodesBeforeDetach - 3 === numberOfNodesAfterDetach &&
       numberOfNodesAfterDetach > 3;
+    expect(result).toBeTruthy();
     wrapper2.unmount();
-    expect(result && ReanimatedModule.getNumberOfNodes() === 0).toBeTruthy();
+    expect(ReanimatedModule.getNumberOfNodes() === 0).toBeTruthy();
   });
 });
