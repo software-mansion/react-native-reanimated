@@ -29,6 +29,11 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
         // inconsistent with React Native
         return;
       }
+
+      if (!value.isNativelyInitialized()) {
+        return;
+      }
+
       isStarted = true;
       evaluateOnce(
         set(currentState.position, value),

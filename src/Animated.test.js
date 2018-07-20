@@ -1,6 +1,5 @@
 import Animated, { Easing } from './Animated';
 import ReanimatedModule from './ReanimatedModule';
-import AnimatedNode from './core/AnimatedNode';
 import React from 'react';
 
 import renderer from 'react-test-renderer';
@@ -177,5 +176,19 @@ describe('Reanimated backward compatible API', () => {
     expect(result).toBeTruthy();
     wrapper2.unmount();
     expect(ReanimatedModule.getNumberOfNodes() === 0).toBeTruthy();
+  });
+
+  it('fails if animation attaches some node without view related', () => {
+    const { timing, Value } = Animated;
+    const transX = new Value(0);
+
+    const config = {
+      duration: 5000,
+      toValue: -120,
+      easing: Easing.inOut(Easing.ease),
+    };
+    const anim = timing(transX, config);
+    anim.start();
+    expect(ReanimatedModule.getNumberOfNodes()).toBe(0);
   });
 });
