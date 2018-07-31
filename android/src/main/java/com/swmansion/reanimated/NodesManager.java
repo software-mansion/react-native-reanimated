@@ -59,6 +59,8 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
+  public final ReactContext mContext;
+  public final UIManagerModule mUIManager;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -69,11 +71,12 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> nativeProps = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
-    UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
+    mContext = context;
+    mUIManager = context.getNativeModule(UIManagerModule.class);
     updateContext = new UpdateContext();
-    mUIImplementation = uiManager.getUIImplementation();
-    mCustomEventNamesResolver = uiManager.getDirectEventNamesResolver();
-    uiManager.getEventDispatcher().addListener(this);
+    mUIImplementation = mUIManager.getUIImplementation();
+    mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
+    mUIManager.getEventDispatcher().addListener(this);
 
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 

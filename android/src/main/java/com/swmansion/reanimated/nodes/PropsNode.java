@@ -3,7 +3,9 @@ package com.swmansion.reanimated.nodes;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
@@ -50,7 +52,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
   protected Double evaluate() {
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
-    WritableMap jsProps = Arguments.createMap();
+    final WritableMap jsProps = Arguments.createMap();
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
@@ -98,10 +100,16 @@ public class PropsNode extends Node<Double> implements FinalNode {
                 mDiffMap);
       }
       if (hasJSProps) {
-        WritableMap evt = Arguments.createMap();
-        evt.putInt("viewTag", mConnectedViewTag);
-        evt.putMap("props", jsProps);
-        mNodesManager.sendEvent("onReanimatedPropsChange", evt);
+        ReactContext reactApplicationContext = mNodesManager.mContext;
+        reactApplicationContext.runOnNativeModulesQueueThread(
+                new GuardedRunnable(reactApplicationContext) {
+                  @Override
+                  public void runGuarded() {
+                    mNodesManager.mUIManager.updateView(mConnectedViewTag, "RCTView", jsProps);
+                    mNodesManager.mUIManager.onBatchComplete();
+                  }
+                });
+
       }
     }
 

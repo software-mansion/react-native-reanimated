@@ -9,6 +9,7 @@ import Test from './test';
 import Interpolate from './src/interpolate';
 import Colors from './colors';
 import ChatHeads from './chatHeads';
+import Widther from './widther';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -24,6 +25,7 @@ const SCREENS = {
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
+  widther: { screen: Widther, title: 'widther' },
 };
 
 class MainScreen extends React.Component {
@@ -69,7 +71,7 @@ const ExampleApp = createStackNavigator(
     ...SCREENS,
   },
   {
-    initialRouteName: 'Main',
+    initialRouteName: 'widther',
   }
 );
 
