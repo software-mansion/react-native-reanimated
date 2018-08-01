@@ -71,7 +71,7 @@ const ExampleApp = createStackNavigator(
     ...SCREENS,
   },
   {
-    initialRouteName: 'widther',
+    initialRouteName: 'Main',
   }
 );
 

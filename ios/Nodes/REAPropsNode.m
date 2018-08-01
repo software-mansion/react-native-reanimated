@@ -70,28 +70,29 @@
     }
     if (jsProps.count > 0)
     {
-        NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [self.nodesManager.uiManager valueForKey:@"_shadowViewRegistry"];
-        NSDictionary *componentDataByName = [self.nodesManager.uiManager valueForKey:@"_componentDataByName"];
-        NSMapTable<RCTShadowView *, NSArray<NSString *> *> *shadowViewsWithUpdatedProps = [self.nodesManager.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"];
-        RCTShadowView *shadowView = shadowViewRegistry[_connectedViewTag];
-        RCTComponentData *componentData = componentDataByName[_connectedViewName];
-        RCTExecuteOnUIManagerQueue(^{
-            [componentData setProps:jsProps forShadowView:shadowView];
-            [self.nodesManager.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-                UIView *view = viewRegistry[_connectedViewTag];
-                [componentData setProps:jsProps forView:view];
-            }];
-            NSArray<NSString *> *newProps = [jsProps allKeys];
-            NSArray<NSString *> *previousProps;
-            if ((previousProps = [shadowViewsWithUpdatedProps objectForKey:shadowView])) {
-                NSMutableSet *set = [NSMutableSet setWithArray:previousProps];
-                [set addObjectsFromArray:newProps];
-                newProps = [set allObjects];
-            }
-            
-            [shadowViewsWithUpdatedProps setObject:newProps forKey:shadowView];
-            [self.nodesManager.uiManager batchDidComplete];
-        });
+      NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [self.nodesManager.uiManager valueForKey:@"_shadowViewRegistry"];
+      NSDictionary *componentDataByName = [self.nodesManager.uiManager valueForKey:@"_componentDataByName"];
+      NSMapTable<RCTShadowView *, NSArray<NSString *> *> *shadowViewsWithUpdatedProps = [self.nodesManager.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"];
+      RCTShadowView *shadowView = shadowViewRegistry[_connectedViewTag];
+      RCTComponentData *componentData = componentDataByName[_connectedViewName];
+      RCTExecuteOnUIManagerQueue(^{
+        [componentData setProps:jsProps forShadowView:shadowView];
+        [self.nodesManager.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+          UIView *view = viewRegistry[_connectedViewTag];
+          [componentData setProps:jsProps forView:view];
+        }];
+        NSArray<NSString *> *newProps = [jsProps allKeys];
+        NSArray<NSString *> *previousProps;
+        if ((previousProps = [shadowViewsWithUpdatedProps objectForKey:shadowView]))
+        {
+          NSMutableSet *set = [NSMutableSet setWithArray:previousProps];
+          [set addObjectsFromArray:newProps];
+          newProps = [set allObjects];
+        }
+        
+        [shadowViewsWithUpdatedProps setObject:newProps forKey:shadowView];
+        [self.nodesManager.uiManager batchDidComplete];
+      });
     }
   }
 

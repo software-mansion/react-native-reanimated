@@ -53,13 +53,15 @@ export default class Example extends Component {
   constructor(props) {
     super(props);
     const clock = new Clock();
-    this._transX = runTiming(clock, 10, 120);
+    this._transX = runTiming(clock, 10, 150);
   }
   componentDidMount() {}
   render() {
     return (
       <View style={styles.container}>
-        <Animated.View style={[styles.box, { width: this._transX }]} />
+        <Animated.Text style={[styles.box, { width: this._transX }]}>
+          sample text
+        </Animated.Text>
       </View>
     );
   }
