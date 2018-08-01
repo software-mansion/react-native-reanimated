@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import android.util.SparseArray;
 
+import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -137,6 +138,17 @@ public class NodesManager implements EventDispatcherListener {
 
     if (mWantRunUpdates) {
       Node.runUpdates(updateContext);
+    }
+
+    if (updateContext.shouldTriggerUIUpdate) {
+      mContext.runOnNativeModulesQueueThread(
+              new GuardedRunnable(mContext) {
+                @Override
+                public void runGuarded() {
+                  mUIManager.onBatchComplete();
+                }
+              });
+      updateContext.shouldTriggerUIUpdate = false;
     }
 
     mCallbackPosted.set(false);

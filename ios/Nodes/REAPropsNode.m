@@ -81,8 +81,8 @@
     {
       RCTExecuteOnUIManagerQueue(^{
         [self.nodesManager.uiManager updateView:_connectedViewTag viewName:_connectedViewName props:jsProps];
-        self.updateContext.shouldTriggerUIUpdate = true;
       });
+      self.updateContext.shouldTriggerUIUpdate = true;
     }
   }
   

@@ -106,10 +106,9 @@ public class PropsNode extends Node<Double> implements FinalNode {
                   @Override
                   public void runGuarded() {
                     mNodesManager.mUIManager.updateView(mConnectedViewTag, "RCTView", jsProps);
-                    mNodesManager.mUIManager.onBatchComplete();
                   }
                 });
-
+        mNodesManager.updateContext.shouldTriggerUIUpdate = true;
       }
     }
 
