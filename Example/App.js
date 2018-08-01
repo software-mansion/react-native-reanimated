@@ -9,7 +9,7 @@ import Test from './test';
 import Interpolate from './src/interpolate';
 import Colors from './colors';
 import ChatHeads from './chatHeads';
-import Widther from './widther';
+import WidthAndHeight from './widthAndHeight';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -25,7 +25,7 @@ const SCREENS = {
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  widther: { screen: Widther, title: 'widther' },
+  width: { screen: WidthAndHeight, title: 'width & height' },
 };
 
 class MainScreen extends React.Component {

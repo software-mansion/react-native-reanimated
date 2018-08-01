@@ -2,11 +2,7 @@ import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
-setInterval(() => {
-  let iters = 1e8,
-    sum = 0;
-  while (iters-- > 0) sum += iters;
-}, 300);
+
 const {
   set,
   cond,
@@ -53,14 +49,15 @@ export default class Example extends Component {
   constructor(props) {
     super(props);
     const clock = new Clock();
-    this._transX = runTiming(clock, 10, 150);
+    this._trans = runTiming(clock, 10, 150);
   }
   componentDidMount() {}
   render() {
     return (
       <View style={styles.container}>
-        <Animated.Text style={[styles.box, { width: this._transX }]}>
-          sample text
+        <Animated.Text
+          style={[styles.box, { width: this._trans, height: this._trans }]}>
+          sample text is getting bigger and bigger moar and moar staph staph
         </Animated.Text>
       </View>
     );
