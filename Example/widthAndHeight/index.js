@@ -57,7 +57,8 @@ export default class Example extends Component {
       <View style={styles.container}>
         <Animated.Text
           style={[styles.box, { width: this._trans, height: this._trans }]}>
-          sample text is getting bigger and bigger moar and moar staph staph
+          sample text is getting bigger and bigger more and moar staph staph
+          stophhh
         </Animated.Text>
       </View>
     );
