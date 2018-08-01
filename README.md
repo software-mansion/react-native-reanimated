@@ -66,10 +66,17 @@ import Animated, { Easing } from 'react-native-reanimated';
 We aim to bring this project to be fully compatible with Animated API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that hasn't yet been ported from the original version of Animated library.
 All the functionality that missing elements provide in Animated can be already achieved with reanimated although a different methodology for implementing those may be required (e.g. check ["Running animations" section](#running-animations) to see how the implementation may differ).
  - [ ] using value offsets
- - [ ] imperative api for starting animations (`Animated.timing({}).start()` and similar)
  - [ ] value tracking (can be achieved in different way, reanimated also allows for tracking all the animation parameters not only destination params)
- - [ ] animation delays
  - [ ] animation staggering
+ - [ ] animation delays
+
+## Value
+`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+```js
+const v = new Value(0);
+/// ...
+v.setValue(100);
+```  
 
 ## Clocks
 
@@ -464,6 +471,7 @@ Creates a color node in RGBA format. Where first three input nodes should have i
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
 <!-- Anims -->
+## Animations
 
 ---
 ### `decay`
@@ -493,9 +501,10 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 
 When evaluated updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original Animated API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
 
-## Running animations
 
-With the current API invoking animation differs a from the way you would do that with the original Animated API.
+## Running animations
+### Declarative API 
+Invoking animation differs a from the way you would do that with the original Animated API.
 Here instead of having animation objects we operate on nodes that can perform single animation steps.
 In order to map an animation into a value we will make the value to be assigned to a node that among few other things will call into the animation step node. Check [`timing`](#timing), [`decay`](#decay) and [`spring`](#spring) nodes documentation for some details how animation step nodes can be configured.
 
@@ -555,6 +564,40 @@ export class AnimatedBox extends Component {
   }
 }
 ```
+
+### Backward compatible API
+As it might sometimes impractical to use API above, there's alternative way of invoking animation, which is similar to original Animated API.
+```js
+class Example extends Component {
+  constructor(props) {
+    super(props);
+    this._transX = new Value(0);
+    this._config = {
+      duration: 5000,
+      toValue: 120,
+      easing: Easing.inOut(Easing.ease),
+    };
+    this._anim = timing(this._transX, this._config);
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <Animated.View
+          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
+        />
+        <Button
+          onPress={() => {
+            this._anim.start();
+          }}
+          title="Start"
+        />
+      </View>
+    );
+  }
+}
+```
+This API gives possibility to use animation with original Animated API. It's also the the way of running animation on some interaction without necessity or rerendering view.
 
 ## 100% declarative gesture interactions
 
