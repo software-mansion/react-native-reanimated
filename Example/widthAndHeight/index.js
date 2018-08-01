@@ -4,31 +4,36 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing } from 'react-native-reanimated';
 
 const {
+  divide,
   set,
   cond,
   startClock,
   stopClock,
   clockRunning,
   block,
-  multiply,
-  timing,
+  spring,
+  add,
   debug,
   Value,
   Clock,
 } = Animated;
 
-function runTiming(clock, value, dest) {
+function runSpring(clock, value, dest) {
   const state = {
     finished: new Value(0),
+    velocity: new Value(0),
     position: new Value(0),
     time: new Value(0),
-    frameTime: new Value(0),
   };
 
   const config = {
-    duration: 5000,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
+    damping: 10,
+    mass: 5,
+    stiffness: 101.6,
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
   };
 
   return block([
@@ -36,11 +41,11 @@ function runTiming(clock, value, dest) {
       set(state.finished, 0),
       set(state.time, 0),
       set(state.position, value),
-      set(state.frameTime, 0),
+      set(state.velocity, -2500),
       set(config.toValue, dest),
       startClock(clock),
     ]),
-    timing(clock, state, config),
+    spring(clock, state, config),
     cond(state.finished, debug('stop clock', stopClock(clock))),
     state.position,
   ]);
@@ -50,25 +55,36 @@ export default class Example extends Component {
   constructor(props) {
     super(props);
     const clock = new Clock();
-    this._trans = runTiming(clock, 10, 150);
+    this._trans = runSpring(clock, 10, 150);
   }
   componentDidMount() {}
   render() {
     return (
-      <View style={styles.container}>
+      <Animated.View
+        style={[styles.container, { borderWidth: divide(this._trans, 5) }]}>
         <Animated.Text
           style={[
             styles.box,
             {
               width: this._trans,
               height: this._trans,
-              top: multiply(this._trans, -0.5),
             },
           ]}>
           sample text is getting bigger and bigger more and moar staph staph
           stophhh
         </Animated.Text>
-      </View>
+        <Animated.Text
+          style={[
+            styles.text,
+            {
+              fontSize: add(divide(this._trans, 10), 15),
+              letterSpacing: add(divide(this._trans, -15), 10),
+            },
+          ]}>
+          aesthetic
+        </Animated.Text>
+        <Animated.View style={[styles.box, { top: this._trans }]} />
+      </Animated.View>
     );
   }
 }
@@ -76,18 +92,24 @@ export default class Example extends Component {
 const BOX_SIZE = 100;
 
 const styles = StyleSheet.create({
+  text: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    borderColor: '#fb628c',
+    backgroundColor: '#2e13ff',
   },
   box: {
     width: BOX_SIZE,
     height: BOX_SIZE,
-    borderColor: '#F5FCFF',
+    borderColor: '#f900ff',
     alignSelf: 'center',
-    backgroundColor: 'plum',
+    backgroundColor: '#19ff75',
     margin: BOX_SIZE / 2,
   },
 });
