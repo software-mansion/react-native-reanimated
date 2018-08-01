@@ -8,6 +8,15 @@
 #import <React/RCTUIManager.h>
 #import "RCTComponentData.h"
 
+
+@interface RCTUIManager ()
+
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *)viewName
+             props:(NSDictionary *)props;
+
+@end
+
 @implementation REAPropsNode
 {
   NSNumber *_connectedViewTag;
@@ -50,17 +59,17 @@
       jsProps[key] = obj;
     }
   };
-
+  
   for (NSString *prop in _propsConfig) {
     REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
-
+    
     if ([propNode isKindOfClass:[REAStyleNode class]]) {
       [[propNode value] enumerateKeysAndObjectsUsingBlock:addBlock];
     } else {
       addBlock(prop, [propNode value], nil);
     }
   }
-
+  
   if (_connectedViewTag != nil) {
     if (nativeProps.count > 0) {
       [self.nodesManager.uiManager
@@ -70,32 +79,13 @@
     }
     if (jsProps.count > 0)
     {
-      NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [self.nodesManager.uiManager valueForKey:@"_shadowViewRegistry"];
-      NSDictionary *componentDataByName = [self.nodesManager.uiManager valueForKey:@"_componentDataByName"];
-      NSMapTable<RCTShadowView *, NSArray<NSString *> *> *shadowViewsWithUpdatedProps = [self.nodesManager.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"];
-      RCTShadowView *shadowView = shadowViewRegistry[_connectedViewTag];
-      RCTComponentData *componentData = componentDataByName[_connectedViewName];
       RCTExecuteOnUIManagerQueue(^{
-        [componentData setProps:jsProps forShadowView:shadowView];
-        [self.nodesManager.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-          UIView *view = viewRegistry[_connectedViewTag];
-          [componentData setProps:jsProps forView:view];
-        }];
-        NSArray<NSString *> *newProps = [jsProps allKeys];
-        NSArray<NSString *> *previousProps;
-        if ((previousProps = [shadowViewsWithUpdatedProps objectForKey:shadowView]))
-        {
-          NSMutableSet *set = [NSMutableSet setWithArray:previousProps];
-          [set addObjectsFromArray:newProps];
-          newProps = [set allObjects];
-        }
-        
-        [shadowViewsWithUpdatedProps setObject:newProps forKey:shadowView];
-        [self.nodesManager.uiManager batchDidComplete];
+        [self.nodesManager.uiManager updateView:_connectedViewTag viewName:_connectedViewName props:jsProps];
+        self.updateContext.shouldTriggerUIUpdate = true;
       });
     }
   }
-
+  
   return @(0);
 }
 

@@ -16,6 +16,7 @@
 #import "Nodes/REAJSCallNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
+#import "REAModule.h"
 
 @implementation REANodesManager
 {
@@ -104,6 +105,12 @@
   }
 
   [REANode runPropUpdates:_updateContext];
+  if (_updateContext.shouldTriggerUIUpdate) {
+    RCTExecuteOnUIManagerQueue(^{
+      [self.uiManager batchDidComplete];
+    });
+    _updateContext.shouldTriggerUIUpdate = false;
+  }
   _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {

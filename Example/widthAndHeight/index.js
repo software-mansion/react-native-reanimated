@@ -50,7 +50,7 @@ export default class Example extends Component {
   constructor(props) {
     super(props);
     const clock = new Clock();
-    this._trans = runTiming(clock, 10, 120);
+    this._trans = runTiming(clock, 10, 150);
   }
   componentDidMount() {}
   render() {
@@ -63,7 +63,6 @@ export default class Example extends Component {
               width: this._trans,
               height: this._trans,
               top: multiply(this._trans, -0.5),
-              left: multiply(this._trans, -0.5),
             },
           ]}>
           sample text is getting bigger and bigger more and moar staph staph
