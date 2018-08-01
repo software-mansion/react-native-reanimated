@@ -17,6 +17,7 @@
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
 #import "REAModule.h"
+#import "Nodes/REAAlwaysNode.h"
 
 @implementation REANodesManager
 {
@@ -142,6 +143,7 @@
             @"call": [REAJSCallNode class],
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
+            @"always": [REAAlwaysNode class],
 //            @"listener": nil,
             };
   });
