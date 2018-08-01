@@ -9,6 +9,7 @@ import Test from './test';
 import Interpolate from './src/interpolate';
 import Colors from './colors';
 import StartAPI from './startAPI';
+import ChatHeads from './chatHeads';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -24,6 +25,7 @@ const SCREENS = {
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
+  chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
 };
 
 class MainScreen extends React.Component {
