@@ -8,6 +8,7 @@ import AnimatedClockTest from './core/AnimatedClockTest';
 import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
+import AnimatedAlways from './core/AnimatedAlways';
 
 import { adapt } from './utils';
 
@@ -67,6 +68,10 @@ export const onChange = function(value, action) {
 
 export const startClock = function(clock) {
   return new AnimatedStartClock(clock);
+};
+
+export const always = function(item) {
+  return new AnimatedAlways(item);
 };
 
 export const stopClock = function(clock) {
