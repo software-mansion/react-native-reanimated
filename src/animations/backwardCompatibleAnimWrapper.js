@@ -11,7 +11,7 @@ import {
 import { default as Clock } from '../core/AnimatedClock';
 import { evaluateOnce } from '../derived/evaluateOnce';
 
-function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
+function createOldAnimationObject(node, AnimationClass, value, config) {
   const newClock = new Clock();
   const currentState = AnimationClass.getDefaultState();
   let alwaysNode;
@@ -65,20 +65,27 @@ function backwardsCompatibleInvoke(node, AnimationClass, value, config) {
               ])
             )
           );
-          value.__setAnimation(animation);
+          value.__attachAnimation(animation);
+          alwaysNode.__addChild(value);
         }
       );
     },
-    getNode: () => alwaysNode,
-    animationCallback: () =>
-      animationCallback && animationCallback({ finished: isDone }),
+    detach: () => {
+      animationCallback && animationCallback({ finished: isDone });
+      animationCallback = null;
+      alwaysNode.__removeChild(value);
+    },
     stop: () => {
       if (isDone) {
-        console.warn('Animation has been finished before');
+        console.warn(
+          'Calling stop has no effect as the animation has already completed'
+        );
         return;
       }
       if (!isStarted) {
-        console.warn("Animation hasn't been started");
+        console.warn(
+          "Calling stop has no effect as the animation hasn't been started"
+        );
         return;
       }
       wasStopped = true;
@@ -98,6 +105,6 @@ export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
     if (config !== undefined) {
       return node(clock, state, config);
     }
-    return backwardsCompatibleInvoke(node, AnimationClass, clock, state);
+    return createOldAnimationObject(node, AnimationClass, clock, state);
   };
 }

@@ -13,7 +13,7 @@ import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
-import backwardsCompatibleAnimWrapper from './animations/backwardsCompatibleAnimWrapper';
+import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
 
 const Animated = {
   // components
@@ -32,9 +32,9 @@ const Animated = {
   ...derived,
 
   // animations
-  decay: backwardsCompatibleAnimWrapper(decay, DecayAnimation),
-  timing: backwardsCompatibleAnimWrapper(timing, TimingAnimation),
-  spring: backwardsCompatibleAnimWrapper(spring, SpringAnimation),
+  decay: backwardCompatibleAnimWrapper(decay, DecayAnimation),
+  timing: backwardCompatibleAnimWrapper(timing, TimingAnimation),
+  spring: backwardCompatibleAnimWrapper(spring, SpringAnimation),
 
   // configuration
   addWhitelistedNativeProps,
