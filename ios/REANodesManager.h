@@ -15,6 +15,7 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;
 
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
+@property (nonatomic, nullable) NSSet<NSString *> *jsPropsHandledNatively;
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
@@ -59,6 +60,7 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 // configuration
 
 - (void)configureNativeProps:(nonnull NSSet<NSString *> *)nativeProps;
+- (void)configureJSPropsHandledNatively:(nonnull NSSet<NSString *> *)jsProps;
 
 // events
 

@@ -266,4 +266,9 @@
   _nativeProps = nativeProps;
 }
 
+- (void)configureJSPropsHandledNatively:(NSSet<NSString *> *)jsProps
+{
+  _jsPropsHandledNatively = jsProps;
+}
+
 @end

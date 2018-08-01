@@ -41,8 +41,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nullable;
-
 public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
@@ -70,6 +68,7 @@ public class NodesManager implements EventDispatcherListener {
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
   public Set<String> nativeProps = Collections.emptySet();
+  public Set<String> jsPropsHandledNatively = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
     mContext = context;
@@ -317,6 +316,10 @@ public class NodesManager implements EventDispatcherListener {
 
   public void configureNativeProps(Set<String> nativePropsSet) {
     nativeProps = nativePropsSet;
+  }
+
+  public void configureJSPropsHandledNatively(Set<String> jsPropsSet) {
+    jsPropsHandledNatively = jsPropsSet;
   }
 
   public void postRunUpdatesAfterAnimation() {

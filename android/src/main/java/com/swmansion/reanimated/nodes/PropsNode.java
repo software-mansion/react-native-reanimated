@@ -65,9 +65,11 @@ public class PropsNode extends Node<Double> implements FinalNode {
           if (mNodesManager.nativeProps.contains(key)) {
             hasNativeProps = true;
             dest = mPropMap;
-          } else {
+          } else if (mNodesManager.jsPropsHandledNatively.contains(key)){
             hasJSProps = true;
             dest = jsProps;
+          } else {
+            continue;
           }
           ReadableType type = style.getType(key);
           switch (type) {

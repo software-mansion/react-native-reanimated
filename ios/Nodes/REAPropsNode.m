@@ -55,7 +55,7 @@
   void (^addBlock)(NSString *key, id obj, BOOL * stop) = ^(NSString *key, id obj, BOOL * stop){
     if ([self.nodesManager.nativeProps containsObject:key]) {
       nativeProps[key] = obj;
-    } else {
+    } else if ([self.nodesManager.jsPropsHandledNatively containsObject:key]) {
       jsProps[key] = obj;
     }
   };

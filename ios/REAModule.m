@@ -107,11 +107,18 @@ RCT_EXPORT_METHOD(detachEvent:(nonnull NSNumber *)viewTag
   }];
 }
 
+RCT_EXPORT_METHOD(configureJSPropsHandledNatively:(nonnull NSArray<NSString *> *)jsProps)
+{
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager configureJSPropsHandledNatively:[NSSet setWithArray:jsProps]];
+  }];
+}
+
 RCT_EXPORT_METHOD(configureNativeProps:(nonnull NSArray<NSString *> *)nativeProps)
 {
-    [self addOperationBlock:^(REANodesManager *nodesManager) {
-        [nodesManager configureNativeProps:[NSSet setWithArray:nativeProps]];
-    }];
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager configureNativeProps:[NSSet setWithArray:nativeProps]];
+  }];
 }
 
 #pragma mark -- Batch handling
