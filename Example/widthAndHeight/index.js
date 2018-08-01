@@ -10,6 +10,7 @@ const {
   stopClock,
   clockRunning,
   block,
+  multiply,
   timing,
   debug,
   Value,
@@ -56,7 +57,14 @@ export default class Example extends Component {
     return (
       <View style={styles.container}>
         <Animated.Text
-          style={[styles.box, { width: this._trans, height: this._trans }]}>
+          style={[
+            styles.box,
+            {
+              width: this._trans,
+              height: this._trans,
+              top: multiply(this._trans, -0.5),
+            },
+          ]}>
           sample text is getting bigger and bigger more and moar staph staph
           stophhh
         </Animated.Text>
