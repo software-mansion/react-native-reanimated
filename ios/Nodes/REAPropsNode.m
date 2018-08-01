@@ -8,7 +8,6 @@
 #import <React/RCTUIManager.h>
 #import "RCTComponentData.h"
 
-
 @interface RCTUIManager ()
 
 - (void)updateView:(nonnull NSNumber *)reactTag
