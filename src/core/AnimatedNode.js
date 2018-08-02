@@ -106,6 +106,10 @@ export default class AnimatedNode {
     }
   }
 
+  isNativelyInitialized() {
+    return INITIALIZED_NODES.has(this.__nodeID);
+  }
+
   __onEvaluate() {
     throw new Error('Missing implementation of onEvaluate');
   }
