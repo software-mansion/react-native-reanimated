@@ -59,9 +59,9 @@ export default class Example extends Component {
     super(props);
     this.proc = new ProceduralNode(x => multiply(x, 0.3));
 
-    const transX = new Value(0);
+    const transX = new Value(100);
 
-    this._transX = runTiming(new Clock(), transX, 100);
+    this._transX = runTiming(new Clock(), transX, 300);
 
     // const twenty = new Value(20);
     // const thirty = new Value(30);
