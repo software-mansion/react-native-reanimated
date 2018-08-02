@@ -10,7 +10,7 @@ export default class Example extends Component {
     super(props);
     this._transX = new Value(100);
     this._config = {
-      toValue: 100,
+      toValue: -60,
       damping: 2,
       mass: 1,
       stiffness: 121.6,
@@ -36,7 +36,7 @@ export default class Example extends Component {
         <Button
           onPress={() => {
             this._anim.start(({ finished }) =>
-              Alert.alert(finished ? 'Finished' : 'Not finished yet')
+              Alert.alert(finished ? 'Finished' : 'Not completed')
             );
           }}
           title="Start"
@@ -46,6 +46,14 @@ export default class Example extends Component {
             this._anim.stop();
           }}
           title="Stop"
+        />
+        <Button
+          onPress={() => {
+            this._anim2.start(({ finished }) =>
+              Alert.alert(finished ? '2 Finished' : '2 Not completed')
+            );
+          }}
+          title="Start another"
         />
       </View>
     );

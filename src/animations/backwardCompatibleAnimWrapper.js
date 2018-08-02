@@ -70,7 +70,7 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
         }
       );
     },
-    detach: () => {
+    __detach: () => {
       animationCallback && animationCallback({ finished: isDone });
       animationCallback = null;
       alwaysNode.__removeChild(value);
@@ -100,6 +100,10 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
   return animation;
 }
 
+/**
+ * Depending on the arguments list we either return animation node or return an
+ * animation object that is compatible with the original Animated API
+ */
 export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
   return (clock, state, config) => {
     if (config !== undefined) {
