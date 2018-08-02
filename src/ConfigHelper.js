@@ -98,6 +98,7 @@ const JS_PROPS_HANDLED_NATIVELY_WHITELIST = {
   textShadowRadius: true,
   letterSpacing: true,
 };
+
 function configureJSPropsHandledNatively() {
   ReanimatedModule.configureJSPropsHandledNatively(
     Object.keys(JS_PROPS_HANDLED_NATIVELY_WHITELIST)
