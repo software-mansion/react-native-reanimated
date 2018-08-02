@@ -57,11 +57,15 @@ function runTiming(clock, value, dest) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this.proc = new ProceduralNode(x => multiply(x, 0.3));
+    this.proc = new ProceduralNode(x => multiply(x, -1));
 
-    const transX = new Value(100);
+    const transX = new Value(0);
 
-    this._transX = runTiming(new Clock(), transX, 300);
+    this._transX = runTiming(new Clock(), transX, 120);
+
+    const transX2 = new Value(0);
+
+    this._transX2 = runTiming(new Clock(), transX2, -120);
 
     // const twenty = new Value(20);
     // const thirty = new Value(30);
@@ -75,6 +79,15 @@ export default class Example extends Component {
             styles.box,
             {
               transform: [{ translateX: this.proc.invoke(this._transX) }],
+            },
+          ]}
+        />
+
+        <Animated.View
+          style={[
+            styles.box,
+            {
+              transform: [{ translateX: this.proc.invoke(this._transX2) }],
             },
           ]}
         />

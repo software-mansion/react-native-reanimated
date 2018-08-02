@@ -38,8 +38,8 @@ public abstract class Node<T> {
       evaluationContext.lastLoopsIDs.put(mNodeID, (long) -1);
     }
     long lastLoopID = evaluationContext.lastLoopsIDs.get(mNodeID);
-    if (lastLoopID < evaluationContext.updateLoopID) {
-      evaluationContext.lastLoopsIDs.put(mNodeID, evaluationContext.updateLoopID);
+    if (lastLoopID < mNodesManager.updateLoopID) {
+      evaluationContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
       evaluationContext.memoizedValues.put(mNodeID,  evaluate(evaluationContext));
     }
     return (T) evaluationContext.memoizedValues.get(mNodeID);
@@ -112,7 +112,7 @@ public abstract class Node<T> {
     }
   }
 
-  public static void runUpdates(EvaluationContext evaluationContext) {
+  public static void runUpdates(EvaluationContext evaluationContext, NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
     SparseArray<Node> updatedNodes = evaluationContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
@@ -123,6 +123,6 @@ public abstract class Node<T> {
       finalNodes.pop().update();
     }
     updatedNodes.clear();
-    evaluationContext.updateLoopID++;
+    nodesManager.updateLoopID++;
   }
 }

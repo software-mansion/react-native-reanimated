@@ -60,6 +60,7 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
+  public long updateLoopID = 0;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -134,7 +135,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(mGlobalEvaluationContext);
+      Node.runUpdates(mGlobalEvaluationContext, this);
     }
 
     mCallbackPosted.set(false);
