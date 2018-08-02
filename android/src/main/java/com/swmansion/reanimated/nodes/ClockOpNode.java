@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 
 public abstract class ClockOpNode extends Node<Double> {
@@ -48,7 +49,7 @@ public abstract class ClockOpNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate() {
+  protected Double evaluate(EvaluationContext evaluationContext) {
     ClockNode clock = mNodesManager.findNodeById(clockID, ClockNode.class);
     return eval(clock);
   }

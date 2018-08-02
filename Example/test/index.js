@@ -22,41 +22,8 @@ const {
   Value,
   Clock,
   event,
+  ProceduralNode,
 } = Animated;
-
-function runSpring(value, dest) {
-  const clock = new Clock();
-  const state = {
-    finished: new Value(0),
-    velocity: new Value(0),
-    position: new Value(0),
-    time: new Value(0),
-  };
-
-  const config = {
-    toValue: new Value(0),
-    damping: 7,
-    mass: 1,
-    stiffness: 121.6,
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001,
-  };
-
-  return block([
-    cond(clockRunning(clock), 0, [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.position, value),
-      set(state.velocity, -2500),
-      set(config.toValue, dest),
-      startClock(clock),
-    ]),
-    spring(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
-    state.position,
-  ]);
-}
 
 function runTiming(clock, value, dest) {
   const state = {
@@ -90,44 +57,33 @@ function runTiming(clock, value, dest) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
+    this.proc = new ProceduralNode(x => multiply(x, 0.3));
 
-    // const transX = new Value(0);
+    const transX = new Value(0);
+
+    this._transX = runTiming(new Clock(), transX, 100);
 
     // const twenty = new Value(20);
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = [];
-    for (let i = 0; i < 20; i++) {
-      this._transX.push(runSpring(Math.random() * 240 - 120, 0));
-    }
-  }
-  componentDidMount() {
-    // Animated.spring(this._transX, {
-    //   duration: 300,
-    //   velocity: -300,
-    //   toValue: 150,
-    // }).start();
   }
   render() {
     return (
       <ScrollView contentContainerStyle={styles.container}>
-        {this._transX.map(i => (
-          <Animated.View
-            key={i.__nodeID}
-            style={[
-              styles.box,
-              {
-                transform: [{ translateX: i }],
-              },
-            ]}
-          />
-        ))}
+        <Animated.View
+          style={[
+            styles.box,
+            {
+              transform: [{ translateX: this.proc.invoke(this._transX) }],
+            },
+          ]}
+        />
       </ScrollView>
     );
   }
 }
 
-const BOX_SIZE = 8;
+const BOX_SIZE = 100;
 
 const styles = StyleSheet.create({
   container: {

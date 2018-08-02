@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.graphics.PointF;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class BezierNode extends Node<Double> {
@@ -82,8 +83,8 @@ public class BezierNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate() {
-    Double in = mNodesManager.getNodeValue(mInputID);
+  protected Double evaluate(EvaluationContext evaluationContext) {
+    Double in = mNodesManager.getNodeValue(mInputID, evaluationContext);
     return Double.valueOf(mInterpolator.getInterpolation(in.floatValue()));
   }
 }

@@ -13,7 +13,7 @@ import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
-import AnimatedReusableNode from './core/AnimatedReusableNode';
+import AnimatedProceduralNode from './core/AnimatedProceduralNode';
 
 function backwardsCompatibleAnim(node, AnimationClass) {
   return (clock, state, config) => {
@@ -43,7 +43,7 @@ const Animated = {
   Clock: AnimatedClock,
   Value: AnimatedValue,
   Node: AnimatedNode,
-  ReusableNode: AnimatedReusableNode,
+  ProceduralNode: AnimatedProceduralNode,
 
   // operations
   ...base,

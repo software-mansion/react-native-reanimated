@@ -26,8 +26,7 @@ import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
-import com.swmansion.reanimated.nodes.ReusableNode;
-import com.swmansion.reanimated.nodes.ReusablePerformNode;
+import com.swmansion.reanimated.nodes.ProceduralNode;
 import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
@@ -42,8 +41,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nullable;
-
 public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
@@ -52,6 +49,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame();
   }
 
+  public final EvaluationContext mGlobalEvaluationContext = new EvaluationContext();
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;
@@ -135,7 +133,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(updateContext);
+      Node.runUpdates(mGlobalEvaluationContext);
     }
 
     mCallbackPosted.set(false);
@@ -151,10 +149,10 @@ public class NodesManager implements EventDispatcherListener {
    * Null-safe way of getting node's value. If node is not present we return 0. This also matches
    * iOS behavior when the app won't just crash.
    */
-  public Double getNodeValue(int nodeID) {
+  public Double getNodeValue(int nodeID, EvaluationContext evaluationContext) {
     Node node = mAnimatedNodes.get(nodeID);
     if (node != null) {
-      return node.doubleValue();
+      return node.doubleValue(evaluationContext);
     }
     return ZERO;
   }
@@ -213,10 +211,12 @@ public class NodesManager implements EventDispatcherListener {
       node = new ClockOpNode.ClockStopNode(nodeID, config, this);
     } else if ("clockTest".equals(type)) {
       node = new ClockOpNode.ClockTestNode(nodeID, config, this);
-    } else if ("reusable".equals(type)) {
-      node = new ReusableNode(nodeID, config, this);
-    } else if ("reusablePerform".equals(type)) {
-      node = new ReusablePerformNode(nodeID, config, this);
+    } else if ("procedural".equals(type)) {
+      node = new ProceduralNode(nodeID, config, this);
+    } else if ("argument".equals(type)) {
+      node = new ProceduralNode.ArgumentNode(nodeID, config, this);
+    } else if ("perform".equals(type)) {
+      node = new ProceduralNode.PerformNode(nodeID, config, this);
     } else if ("call".equals(type)) {
       node = new JSCallNode(nodeID, config, this);
     } else if ("bezier".equals(type)) {

@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 
 import javax.annotation.Nullable;
@@ -16,11 +17,11 @@ public class ValueNode extends Node<Double> {
 
   public void setValue(Double value) {
     mValue = value;
-    forceUpdateMemoizedValue(mValue);
+    forceUpdateMemoizedValue(mValue, mNodesManager.mGlobalEvaluationContext);
   }
 
   @Override
-  protected Double evaluate() {
+  protected Double evaluate(EvaluationContext evaluationContext) {
     return mValue;
   }
 }

@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class CondNode extends Node {
@@ -15,12 +16,12 @@ public class CondNode extends Node {
   }
 
   @Override
-  protected Object evaluate() {
-    Object cond = mNodesManager.getNodeValue(mCondID);
+  protected Object evaluate(EvaluationContext evaluationContext) {
+    Object cond = mNodesManager.getNodeValue(mCondID, evaluationContext);
     if (cond instanceof Number && ((Number) cond).doubleValue() != 0.0) {
       // This is not a good way to compare doubles but in this case it is what we want
-      return mIfBlockID != -1 ? mNodesManager.getNodeValue(mIfBlockID) : ZERO;
+      return mIfBlockID != -1 ? mNodesManager.getNodeValue(mIfBlockID, evaluationContext) : ZERO;
     }
-    return mElseBlockID != -1 ? mNodesManager.getNodeValue(mElseBlockID) : ZERO;
+    return mElseBlockID != -1 ? mNodesManager.getNodeValue(mElseBlockID, evaluationContext) : ZERO;
   }
 }

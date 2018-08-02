@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.nodes;
 
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 
 /**
@@ -31,7 +32,7 @@ public class NoopNode extends ValueNode {
   }
 
   @Override
-  protected void markUpdated() {
+  protected void markUpdated(EvaluationContext context) {
     // no-op
   }
 }

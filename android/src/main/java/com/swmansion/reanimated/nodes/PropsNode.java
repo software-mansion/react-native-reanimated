@@ -11,6 +11,7 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -39,7 +40,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
 
   public void connectToView(int viewTag) {
     mConnectedViewTag = viewTag;
-    dangerouslyRescheduleEvaluate();
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext);
   }
 
   public void disconnectFromView(int viewTag) {
@@ -47,7 +48,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
   }
 
   @Override
-  protected Double evaluate() {
+  protected Double evaluate(EvaluationContext evaluationContext) {
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
@@ -55,7 +56,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof StyleNode) {
-        WritableMap style = ((StyleNode) node).value();
+        WritableMap style = ((StyleNode) node).value(evaluationContext);
         ReadableMapKeySetIterator iter = style.keySetIterator();
         while (iter.hasNextKey()) {
           String key = iter.nextKey();
@@ -83,10 +84,10 @@ public class PropsNode extends Node<Double> implements FinalNode {
         String key = entry.getKey();
         if (mNodesManager.nativeProps.contains(key)) {
           hasNativeProps = true;
-          mPropMap.putDouble(key, node.doubleValue());
+          mPropMap.putDouble(key, node.doubleValue(evaluationContext));
         } else {
           hasJSProps = true;
-          jsProps.putDouble(key, node.doubleValue());
+          jsProps.putDouble(key, node.doubleValue(evaluationContext));
         }
       }
     }
@@ -118,6 +119,6 @@ public class PropsNode extends Node<Double> implements FinalNode {
     }
 
     // call value for side effect (diff map update via changes made to prop map)
-    value();
+    value(mNodesManager.mGlobalEvaluationContext); // TODO not sure
   }
 }

@@ -4,8 +4,8 @@ import android.util.SparseArray;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.swmansion.reanimated.EvaluationContext;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.UpdateContext;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,38 +23,26 @@ public abstract class Node<T> {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private final UpdateContext mUpdateContext;
-  protected boolean mIsReusing = false;
-
-  private long mLastLoopID = -1;
-  private @Nullable T mMemoizedValue;
   private @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
     mNodesManager = nodesManager;
-    mUpdateContext = nodesManager.updateContext;
   }
 
-  protected void markReusing() {
-    mIsReusing = true;
-    if (mChildren == null) {
-      return;
-    }
-    for(Node c : mChildren) {
-      c.markReusing();
-    }
-  }
 
-  protected abstract @Nullable T evaluate();
+  protected abstract @Nullable T evaluate(EvaluationContext evaluationContext);
 
-  public final @Nullable T value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID || mIsReusing) {
-      mLastLoopID = mUpdateContext.updateLoopID;
-      mIsReusing = false;
-      return (mMemoizedValue = evaluate());
+  public final @Nullable T value(EvaluationContext evaluationContext) {
+    if (evaluationContext.lastLoopsIDs.indexOfKey(mNodeID) < 0) {
+      evaluationContext.lastLoopsIDs.put(mNodeID, (long) -1);
     }
-    return mMemoizedValue;
+    long lastLoopID = evaluationContext.lastLoopsIDs.get(mNodeID);
+    if (lastLoopID < evaluationContext.updateLoopID) {
+      evaluationContext.lastLoopsIDs.put(mNodeID, evaluationContext.updateLoopID);
+      evaluationContext.memoizedValues.put(mNodeID,  evaluate(evaluationContext));
+    }
+    return (T) evaluationContext.memoizedValues.get(mNodeID);
   }
 
   /**
@@ -62,8 +50,8 @@ public abstract class Node<T> {
    * return 0 if we fail to properly cast the value. This is to match iOS behavior where the node
    * would not throw even if the value was not set.
    */
-  public final Double doubleValue() {
-    T value = value();
+  public final Double doubleValue(EvaluationContext evaluationContext) {
+    T value = value(evaluationContext);
     if (value == null) {
       return ZERO;
     } else if (value instanceof Double) {
@@ -81,7 +69,7 @@ public abstract class Node<T> {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate();
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext); // TODO not sure
   }
 
   public void removeChild(Node child) {
@@ -90,20 +78,20 @@ public abstract class Node<T> {
     }
   }
 
-  protected void markUpdated() {
+  protected void markUpdated(EvaluationContext context) {
     UiThreadUtil.assertOnUiThread();
-    mUpdateContext.updatedNodes.put(mNodeID, this);
+    context.updatedNodes.put(mNodeID, this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
-  protected final void dangerouslyRescheduleEvaluate() {
-    mLastLoopID = -1;
-    markUpdated();
+  protected final void dangerouslyRescheduleEvaluate(EvaluationContext context) {
+    context.lastLoopsIDs.put(mNodeID, (long) -1);
+    markUpdated(context);
   }
 
-  protected final void forceUpdateMemoizedValue(T value) {
-    mMemoizedValue = value;
-    markUpdated();
+  protected final void forceUpdateMemoizedValue(T value, EvaluationContext context) {
+    context.memoizedValues.put(mNodeID, value);
+    markUpdated(context);
   }
 
   private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
@@ -124,9 +112,9 @@ public abstract class Node<T> {
     }
   }
 
-  public static void runUpdates(UpdateContext updateContext) {
+  public static void runUpdates(EvaluationContext evaluationContext) {
     UiThreadUtil.assertOnUiThread();
-    SparseArray<Node> updatedNodes = updateContext.updatedNodes;
+    SparseArray<Node> updatedNodes = evaluationContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
     for (int i = 0; i < updatedNodes.size(); i++) {
       findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes);
@@ -135,6 +123,6 @@ public abstract class Node<T> {
       finalNodes.pop().update();
     }
     updatedNodes.clear();
-    updateContext.updateLoopID++;
+    evaluationContext.updateLoopID++;
   }
 }
