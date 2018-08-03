@@ -8,7 +8,6 @@
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 
-
 @interface REANodesManager : NSObject
 
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
