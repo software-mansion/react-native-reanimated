@@ -8,13 +8,6 @@
 #import <React/RCTUIManager.h>
 #import "RCTComponentData.h"
 
-@interface RCTUIManager ()
-
-- (void)updateView:(nonnull NSNumber *)reactTag
-          viewName:(NSString *)viewName
-             props:(NSDictionary *)props;
-
-@end
 
 @implementation REAPropsNode
 {
@@ -48,14 +41,14 @@
 
 - (id)evaluate
 {
+  NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
-  NSMutableDictionary *jsProps = [NSMutableDictionary new];
 
   void (^addBlock)(NSString *key, id obj, BOOL * stop) = ^(NSString *key, id obj, BOOL * stop){
-    if ([self.nodesManager.nativeProps containsObject:key]) {
+    if ([self.nodesManager.uiProps containsObject:key]) {
+      uiProps[key] = obj;
+    } else if ([self.nodesManager.nativeProps containsObject:key]) {
       nativeProps[key] = obj;
-    } else if ([self.nodesManager.jsPropsHandledNatively containsObject:key]) {
-      jsProps[key] = obj;
     }
   };
   
@@ -70,18 +63,17 @@
   }
   
   if (_connectedViewTag != nil) {
-    if (nativeProps.count > 0) {
+    if (uiProps.count > 0) {
       [self.nodesManager.uiManager
        synchronouslyUpdateViewOnUIThread:_connectedViewTag
        viewName:_connectedViewName
-       props:nativeProps];
+       props:uiProps];
     }
-    if (jsProps.count > 0)
+    if (nativeProps.count > 0)
     {
       RCTExecuteOnUIManagerQueue(^{
-        [self.nodesManager.uiManager updateView:_connectedViewTag viewName:_connectedViewName props:jsProps];
+        [self.nodesManager setUpdateView:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
       });
-      self.updateContext.shouldTriggerUIUpdate = true;
     }
   }
   

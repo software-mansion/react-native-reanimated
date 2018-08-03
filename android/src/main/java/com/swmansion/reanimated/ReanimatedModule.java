@@ -175,31 +175,22 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
-  public void configureNativeProps(ReadableArray nativePropsArray) {
+  public void configureProps(ReadableArray nativePropsArray, ReadableArray uiPropsArray) {
     int size = nativePropsArray.size();
     final Set<String> nativeProps = new HashSet<>(size);
     for (int i = 0; i < size; i++) {
       nativeProps.add(nativePropsArray.getString(i));
     }
-    mOperations.add(new UIThreadOperation() {
-      @Override
-      public void execute(NodesManager nodesManager) {
-        nodesManager.configureNativeProps(nativeProps);
-      }
-    });
-  }
 
-  @ReactMethod
-  public void configureJSPropsHandledNatively(ReadableArray jsPropsArray) {
-    int size = jsPropsArray.size();
-    final Set<String> jsProps = new HashSet<>(size);
+    size = uiPropsArray.size();
+    final Set<String> uiProps = new HashSet<>(size);
     for (int i = 0; i < size; i++) {
-      jsProps.add(jsPropsArray.getString(i));
+      uiProps.add(uiPropsArray.getString(i));
     }
     mOperations.add(new UIThreadOperation() {
       @Override
       public void execute(NodesManager nodesManager) {
-        nodesManager.configureJSPropsHandledNatively(jsProps);
+        nodesManager.configureProps(nativeProps, uiProps);
       }
     });
   }

@@ -11,6 +11,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
+import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.Event;
@@ -36,8 +37,10 @@ import com.swmansion.reanimated.nodes.ValueNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -68,8 +71,19 @@ public class NodesManager implements EventDispatcherListener {
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
+  public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
-  public Set<String> jsPropsHandledNatively = Collections.emptySet();
+
+  private final class NativeUpdateOperation {
+    public int mViewTag;
+    public WritableMap mNativeProps;
+    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
+      mViewTag = viewTag;
+      mNativeProps = nativeProps;
+    }
+  }
+  private final Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
+
 
   public NodesManager(ReactContext context) {
     mContext = context;
@@ -140,15 +154,21 @@ public class NodesManager implements EventDispatcherListener {
       Node.runUpdates(updateContext);
     }
 
-    if (updateContext.shouldTriggerUIUpdate) {
+    if (!mOperationsInBatch.isEmpty()) {
       mContext.runOnNativeModulesQueueThread(
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  mUIManager.onBatchComplete();
+                  while (!mOperationsInBatch.isEmpty()) {
+                    NativeUpdateOperation op = mOperationsInBatch.remove();
+                    ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                    if (shadowNode != null) {
+                      mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                    }
+                  }
+                  mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
                 }
               });
-      updateContext.shouldTriggerUIUpdate = false;
     }
 
     mCallbackPosted.set(false);
@@ -298,6 +318,10 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
+  public void setUpdateView(int viewTag, WritableMap nativeProps) {
+    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
+  }
+
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
     String key = viewTag + eventName;
 
@@ -317,13 +341,11 @@ public class NodesManager implements EventDispatcherListener {
     mEventMapping.remove(key);
   }
 
-  public void configureNativeProps(Set<String> nativePropsSet) {
+  public void configureProps(Set<String> nativePropsSet, Set<String> uiPropsSet) {
     nativeProps = nativePropsSet;
+    uiProps = uiPropsSet;
   }
 
-  public void configureJSPropsHandledNatively(Set<String> jsPropsSet) {
-    jsPropsHandledNatively = jsPropsSet;
-  }
 
   public void postRunUpdatesAfterAnimation() {
     mWantRunUpdates = true;

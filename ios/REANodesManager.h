@@ -8,14 +8,15 @@
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 
+
 @interface REANodesManager : NSObject
 
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;
 
+@property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
-@property (nonatomic, nullable) NSSet<NSString *> *jsPropsHandledNatively;
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
@@ -28,6 +29,9 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)postRunUpdatesAfterAnimation;
+- (void)setUpdateView:(nonnull NSNumber *)reactTag
+             viewName:(NSString *) viewName
+          nativeProps:(NSMutableDictionary *)nativeProps;
 
 // graph
 
@@ -59,8 +63,8 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 
 // configuration
 
-- (void)configureNativeProps:(nonnull NSSet<NSString *> *)nativeProps;
-- (void)configureJSPropsHandledNatively:(nonnull NSSet<NSString *> *)jsProps;
+- (void)configureProps:(nonnull NSSet<NSString *> *)nativeProps
+               uiProps:(nonnull NSSet<NSString *> *)uiProps;
 
 // events
 

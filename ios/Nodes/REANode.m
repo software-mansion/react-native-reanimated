@@ -17,7 +17,6 @@
   if ((self = [super init])) {
     _loopID = 1;
     _updatedNodes = [NSMutableArray new];
-    _shouldTriggerUIUpdate = false;
   }
   return self;
 }

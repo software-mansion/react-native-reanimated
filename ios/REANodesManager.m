@@ -19,6 +19,39 @@
 #import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
 
+@interface RCTUIManager ()
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *)viewName
+             props:(NSDictionary *)props;
+@end
+
+@interface REANativeUpdateOperation : NSObject
+@property (nonatomic) NSNumber *reactTag;
+@property (nonatomic) NSString *viewName;
+@property (nonatomic) NSMutableDictionary *nativeProps;
+
+- (instancetype)initWithReactTag:(NSNumber *) reactTag
+                       viewName:(NSString *) viewName
+                    nativeProps:(NSMutableDictionary *) nativeProps;
+
+@end
+
+@implementation REANativeUpdateOperation
+
+- (instancetype)initWithReactTag:(NSNumber *) reactTag
+                       viewName:(NSString *) viewName
+                    nativeProps:(NSMutableDictionary *) nativeProps;
+{
+  self = [super init];
+  if (self) {
+    _reactTag = reactTag;
+    _viewName = viewName;
+    _nativeProps = nativeProps;
+  }
+  return self;
+}
+@end
+
 @implementation REANodesManager
 {
   NSMutableDictionary<REANodeID, REANode *> *_nodes;
@@ -28,6 +61,8 @@
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
+  NSMutableArray<REANativeUpdateOperation *> *_operationsInBatch;
+  int _numberOfOperationsInBatch;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -42,6 +77,8 @@
     _updateContext = [REAUpdateContext new];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
+    _operationsInBatch = [NSMutableArray new];
+    _numberOfOperationsInBatch = 0;
   }
   return self;
 }
@@ -106,17 +143,31 @@
   }
 
   [REANode runPropUpdates:_updateContext];
-  if (_updateContext.shouldTriggerUIUpdate) {
+  if (_numberOfOperationsInBatch != 0) {
     RCTExecuteOnUIManagerQueue(^{
-      [self.uiManager batchDidComplete];
+      BOOL shouldHandlePropsUpdatingManually = ((NSHashTable<RCTShadowView *> *)[self.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]).count == 0;
+      for (int i = 0; i < _numberOfOperationsInBatch; i++) {
+        [self.uiManager updateView:_operationsInBatch[i].reactTag viewName:_operationsInBatch[i].viewName props:_operationsInBatch[i].nativeProps];
+      }
+      if (shouldHandlePropsUpdatingManually) {
+        [self.uiManager batchDidComplete];
+      }
+      _numberOfOperationsInBatch = 0;
+      [_operationsInBatch removeAllObjects];
     });
-    _updateContext.shouldTriggerUIUpdate = false;
   }
   _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {
     [self stopUpdatingOnAnimationFrame];
   }
+}
+
+- (void)setUpdateView:(nonnull NSNumber *)reactTag
+             viewName:(NSString *) viewName
+          nativeProps:(NSMutableDictionary *)nativeProps {
+  [_operationsInBatch addObject:[[REANativeUpdateOperation alloc] initWithReactTag:reactTag viewName:viewName nativeProps:nativeProps]];
+  _numberOfOperationsInBatch++;
 }
 
 #pragma mark -- Graph
@@ -263,14 +314,11 @@
   }
 }
 
-- (void)configureNativeProps:(NSSet<NSString *> *)nativeProps
+- (void)configureProps:(NSSet<NSString *> *)nativeProps
+               uiProps:(NSSet<NSString *> *)uiProps
 {
+  _uiProps = uiProps;
   _nativeProps = nativeProps;
-}
-
-- (void)configureJSPropsHandledNatively:(NSSet<NSString *> *)jsProps
-{
-  _jsPropsHandledNatively = jsProps;
 }
 
 @end

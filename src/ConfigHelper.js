@@ -3,7 +3,7 @@ import ReanimatedModule from './ReanimatedModule';
 /**
  * Styles allowed to be direcly updated in native thread
  */
-let NATIVE_PROPS_WHITELIST = {
+let UI_THREAD_PROPS_WHITELIST = {
   opacity: true,
   transform: true,
   /* colors */
@@ -25,18 +25,10 @@ let NATIVE_PROPS_WHITELIST = {
   translateY: true,
 };
 
-function configureNativeProps() {
-  ReanimatedModule.configureNativeProps(Object.keys(NATIVE_PROPS_WHITELIST));
-}
-
-export function addWhitelistedNativeProps(props) {
-  NATIVE_PROPS_WHITELIST = { ...NATIVE_PROPS_WHITELIST, ...props };
-  configureNativeProps();
-}
-
-configureNativeProps();
-
-const JS_PROPS_HANDLED_NATIVELY_WHITELIST = {
+/**
+ * Whitelist of view props that can be updated in native thread via UIManagerModule
+ */
+const NATIVE_THREAD_PROPS_WHITELIST = {
   borderBottomWidth: true,
   borderEndWidth: true,
   borderLeftWidth: true,
@@ -99,10 +91,11 @@ const JS_PROPS_HANDLED_NATIVELY_WHITELIST = {
   letterSpacing: true,
 };
 
-function configureJSPropsHandledNatively() {
-  ReanimatedModule.configureJSPropsHandledNatively(
-    Object.keys(JS_PROPS_HANDLED_NATIVELY_WHITELIST)
+function configureProps() {
+  ReanimatedModule.configureProps(
+    Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
+    Object.keys(UI_THREAD_PROPS_WHITELIST)
   );
 }
 
-configureJSPropsHandledNatively();
+configureProps();

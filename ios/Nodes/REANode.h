@@ -12,7 +12,6 @@ typedef NSNumber* REANodeID;
 @end
 
 @interface REAUpdateContext : NSObject
-  @property (nonatomic) Boolean shouldTriggerUIUpdate;
 @end
 
 @interface REANode : NSObject
