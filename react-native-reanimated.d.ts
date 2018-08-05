@@ -34,13 +34,6 @@ declare module 'react-native-reanimated' {
 
   class AnimatedClock extends AnimatedNode<number> {
     constructor();
-
-    /** @deprecated use Animated.startClock(clock) instead */
-    start(): void;
-    /** @deprecated use Animated.stopClock(clock) instead */
-    stop(): void;
-    /** @deprecated use Animated.clockRunning(clock) instead */
-    isStarted(): boolean;
   }
 
   enum Extrapolate {
