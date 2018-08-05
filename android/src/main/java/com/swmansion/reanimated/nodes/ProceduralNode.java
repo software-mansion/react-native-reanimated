@@ -24,18 +24,12 @@ public class ProceduralNode extends Node {
       super(nodeID, config, nodesManager);
 
       mProceduralNode = config.getInt("proceduralNode");
-      ArrayList proceduralInput = (config.getArray("args").toArrayList());
-      ArrayList<Integer> inputListConverted = new ArrayList<>();
-      for (Object ids : proceduralInput) {
-        if (ids instanceof Double) {
-          inputListConverted.add(((Double) ids).intValue());
+      ArrayList argumentsInput = (config.getArray("args").toArrayList());
+      mArgumentsInputs = new int[argumentsInput.size()];
+      for (int i = 0; i < argumentsInput.size(); i++) {
+        if (argumentsInput.get(i) instanceof Double) {
+          mArgumentsInputs[i] = ((Double) argumentsInput.get(i)).intValue();
         }
-      }
-      mArgumentsInputs = new int[inputListConverted.size()];
-      int i = 0;
-      for (Integer id : inputListConverted) {
-        mArgumentsInputs[i] = id;
-        i++;
       }
     }
 
@@ -115,18 +109,12 @@ public class ProceduralNode extends Node {
   public ProceduralNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mResultNode = config.getInt("result");
-    ArrayList anchorInput = (config.getArray("arguments").toArrayList());
-    ArrayList<Integer> proceduralListConverted = new ArrayList<>();
-    for (Object ids : anchorInput) {
-      if (ids instanceof Double) {
-        proceduralListConverted.add(((Double) ids).intValue());
+    ArrayList argumentsInput = (config.getArray("arguments").toArrayList());
+    mProceduralArguments = new int [argumentsInput.size()];
+    for (int i = 0; i < argumentsInput.size(); i++) {
+      if (argumentsInput.get(i) instanceof Double) {
+        mProceduralArguments[i] = ((Double) argumentsInput.get(i)).intValue();
       }
-    }
-    mProceduralArguments = new int[proceduralListConverted.size()];
-    int i = 0;
-    for (Integer id : proceduralListConverted) {
-      mProceduralArguments[i] = id;
-      i++;
     }
   }
 
@@ -137,11 +125,8 @@ public class ProceduralNode extends Node {
       result.add(context.parent);
       return result;
     }
-
     return mChildren;
   }
-
-
 
   @Override
   protected Object evaluate(EvaluationContext evaluationContext) {
