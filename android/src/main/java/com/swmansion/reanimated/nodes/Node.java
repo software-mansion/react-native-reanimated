@@ -78,6 +78,10 @@ public abstract class Node<T> {
     }
   }
 
+  public void onDrop() {
+    // no-op
+  }
+
   public @Nullable List<Node<?>> getChildrenInContext(EvaluationContext context) {
     return mChildren;
   }

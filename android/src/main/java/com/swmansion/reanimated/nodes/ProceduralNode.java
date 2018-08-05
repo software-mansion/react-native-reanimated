@@ -34,13 +34,28 @@ public class ProceduralNode extends Node {
     }
 
     @Override
+    public void onDrop(){
+      if (!mNodesManager.isNodeCreated(mProceduralNode)) {
+        return;
+      }
+      ProceduralNode proceduralNode = mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class);
+      if (mOldContext != null) {
+        for (int i = 0; i < mArgumentsInputs.length; i++) {
+          if (mNodesManager.isNodeCreated(proceduralNode.mProceduralArguments[i])) {
+            ArgumentNode arg = mNodesManager.findNodeById(proceduralNode.mProceduralArguments[i], ArgumentNode.class);
+            arg.dropContext(mEvaluationContext);
+          }
+        }
+      }
+    }
+
+    @Override
     protected Object evaluate(EvaluationContext oldEvaluationContext) {
       if (mOldContext == null) {
+        ProceduralNode proceduralNode =  mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class);
         mOldContext = oldEvaluationContext;
         for (int i = 0; i < mArgumentsInputs.length; i++) {
-          int argumentID =
-                  mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class)
-                          .mProceduralArguments[i];
+          int argumentID = proceduralNode.mProceduralArguments[i];
           ArgumentNode arg = mNodesManager.findNodeById(argumentID, ArgumentNode.class);
           Node inputNode = mNodesManager.findNodeById(mArgumentsInputs[i], Node.class);
           arg.matchContextWithValue(
@@ -74,6 +89,13 @@ public class ProceduralNode extends Node {
     public void matchContextWithValue(EvaluationContext context, Node node) {
       mValuesByContext.put(context.contextID, node);
       mContextsByValue.put(node.mNodeID, context);
+    }
+
+    public void dropContext(EvaluationContext context) {
+      Node relatedNode = mValuesByContext.get(context.contextID);
+      mContextsByValue.remove(relatedNode.mNodeID);
+      mValuesByContext.remove(context.contextID);
+      mOldContextByValue.remove(relatedNode.mNodeID);
     }
 
     public void matchValueWithOldContext(Node node, EvaluationContext context) {

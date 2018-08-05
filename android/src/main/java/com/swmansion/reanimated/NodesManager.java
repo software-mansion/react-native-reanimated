@@ -162,6 +162,11 @@ public class NodesManager implements EventDispatcherListener {
    * node is not present we try to return a "no-op" node that allows for "set" calls and always
    * returns 0 as a value.
    */
+
+  public boolean isNodeCreated(int id) {
+    return mAnimatedNodes.indexOfKey(id) >= 0;
+  }
+
   public <T extends Node> T findNodeById(int id, Class<T> type) {
     Node node = mAnimatedNodes.get(id);
     if (node == null) {
@@ -232,6 +237,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dropNode(int tag) {
+    findNodeById(tag, Node.class).onDrop();
     mAnimatedNodes.remove(tag);
   }
 
