@@ -36,7 +36,7 @@ export default class AnimatedValue extends AnimatedNode {
     if (this.__inputNodes && this.__inputNodes.length) {
       this.__inputNodes.forEach(val);
     }
-    return this._value + this._offset;
+    return this._value;
   }
 
   _updateValue(value) {
