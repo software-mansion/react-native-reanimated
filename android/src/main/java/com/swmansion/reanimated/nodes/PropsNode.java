@@ -119,6 +119,6 @@ public class PropsNode extends Node<Double> implements FinalNode {
     }
 
     // call value for side effect (diff map update via changes made to prop map)
-    value(mNodesManager.mGlobalEvaluationContext); // TODO not sure
+    value(mNodesManager.mGlobalEvaluationContext);
   }
 }

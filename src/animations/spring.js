@@ -19,7 +19,7 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
-import AnimatedReusableNode from '../core/AnimatedReusableNode';
+import AnimatedProceduralNode from '../core/AnimatedProceduralNode';
 
 const MAX_STEPS_MS = 64;
 
@@ -129,7 +129,7 @@ const innerSpring = (
   ]);
 };
 
-const springStatic = new AnimatedReusableNode(innerSpring);
+const springStatic = new AnimatedProceduralNode(innerSpring);
 
 export default function spring(clock, state, config) {
   // conditions for stopping the spring animations

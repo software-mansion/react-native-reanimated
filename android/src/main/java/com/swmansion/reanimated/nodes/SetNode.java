@@ -19,7 +19,7 @@ public class SetNode extends Node<Double> {
   protected Double evaluate(EvaluationContext evaluationContext) {
     Double newValue = mNodesManager.getNodeValue(mValueNodeID, evaluationContext);
     ValueNode what = mNodesManager.findNodeById(mWhatNodeID, ValueNode.class);
-    what.setValue(newValue);
+    what.setValue(newValue, evaluationContext);
     return newValue;
   }
 }

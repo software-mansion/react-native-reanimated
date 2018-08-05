@@ -50,7 +50,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame();
   }
 
-  public final EvaluationContext mGlobalEvaluationContext = new EvaluationContext();
+  public final EvaluationContext mGlobalEvaluationContext = new EvaluationContext(null);
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;

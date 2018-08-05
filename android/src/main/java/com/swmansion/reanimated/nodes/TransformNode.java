@@ -24,7 +24,7 @@ public class TransformNode extends Node<WritableArray> {
 
     @Override
     public double getValue(NodesManager nodesManager) {
-      return nodesManager.getNodeValue(nodeID, nodesManager.mGlobalEvaluationContext); //TODO not sure
+      return nodesManager.getNodeValue(nodeID, nodesManager.mGlobalEvaluationContext);
     }
   }
 

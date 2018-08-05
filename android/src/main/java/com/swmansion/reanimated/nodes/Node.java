@@ -23,7 +23,7 @@ public abstract class Node<T> {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
+  protected  @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
@@ -69,13 +69,21 @@ public abstract class Node<T> {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext); // TODO not sure
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext);
   }
 
   public void removeChild(Node child) {
     if (mChildren != null) {
       mChildren.remove(child);
     }
+  }
+
+  public @Nullable List<Node<?>> getChildrenInContext(EvaluationContext context) {
+    return mChildren;
+  }
+
+  public EvaluationContext switchContextWhileUpdatingIfNeeded(EvaluationContext context, Node lastVisited) {
+    return context;
   }
 
   protected void markUpdated(EvaluationContext context) {
@@ -94,21 +102,45 @@ public abstract class Node<T> {
     markUpdated(context);
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvaluationContext> contexts, Node lastVisited) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
       visitedNodes.add(node);
     }
 
-    List<Node> children = node.mChildren;
+
+    EvaluationContext currentContext = contexts.peek();
+    List<Node> children = node.getChildrenInContext(currentContext);
+    EvaluationContext newContext = node.switchContextWhileUpdatingIfNeeded(currentContext, lastVisited);
+    boolean pushedNewContext = false;
+    EvaluationContext contextPopped = null;
+
+
+    if (newContext != currentContext && newContext != null) {
+      contexts.push(newContext);
+      pushedNewContext = true;
+    }
+
+    if (node instanceof ProceduralNode.PerformNode && contexts.size() > 1) {
+      contextPopped = contexts.pop();
+    }
+
     if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finalNodes);
+        findAndUpdateNodes(child, visitedNodes, finalNodes, contexts, node);
       }
     }
     if (node instanceof FinalNode) {
       finalNodes.push((FinalNode) node);
+    }
+
+    if (pushedNewContext) {
+      contexts.pop();
+    }
+
+    if (contextPopped != null) {
+      contexts.push(contextPopped);
     }
   }
 
@@ -116,8 +148,13 @@ public abstract class Node<T> {
     UiThreadUtil.assertOnUiThread();
     SparseArray<Node> updatedNodes = evaluationContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
+    Stack<EvaluationContext> contexts = new Stack<>();
+    contexts.push(nodesManager.mGlobalEvaluationContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes);
+      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes, contexts, null);
+      if (contexts.size() != 1) {
+        throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
+      }
     }
     while (!finalNodes.isEmpty()) {
       finalNodes.pop().update();

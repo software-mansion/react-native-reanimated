@@ -15,7 +15,7 @@ public class ValueNode extends Node<Double> {
     mValue = (config != null && config.hasKey("value")) ? config.getDouble("value") : null;
   }
 
-  public void setValue(Double value) {
+  public void setValue(Double value, EvaluationContext context) {
     mValue = value;
     forceUpdateMemoizedValue(mValue, mNodesManager.mGlobalEvaluationContext);
   }
