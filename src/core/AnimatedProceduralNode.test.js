@@ -23,23 +23,7 @@ describe('ProceduralNode test', () => {
       add(modulo(add(pow(x, 2), 5)), 12, x)
     );
 
-    class TestComponent1 extends React.Component {
-      constructor(props) {
-        super(props);
-        this.transX = new Value(0);
-      }
-      render() {
-        return (
-          <Animated.View
-            style={{
-              transform: [{ translateX: sampleRN.invoke(this.transX) }],
-            }}
-          />
-        );
-      }
-    }
-
-    class TestComponent2 extends React.Component {
+    class TestComponent extends React.Component {
       constructor(props) {
         super(props);
         this.transX = new Value(0);
@@ -56,9 +40,9 @@ describe('ProceduralNode test', () => {
     }
 
     const numberOfNodesInitially = ReanimatedModule.getNumberOfNodes();
-    const wrapper1 = renderer.create(<TestComponent1 />);
+    const wrapper1 = renderer.create(<TestComponent />);
     const numberOfNodesAfterFirstRender = ReanimatedModule.getNumberOfNodes();
-    const wrapper2 = renderer.create(<TestComponent2 />);
+    const wrapper2 = renderer.create(<TestComponent />);
     const numberOfNodesAfterSecondRender = ReanimatedModule.getNumberOfNodes();
     wrapper1.unmount();
     const numberOfNodesAfterFirstUnmount = ReanimatedModule.getNumberOfNodes();

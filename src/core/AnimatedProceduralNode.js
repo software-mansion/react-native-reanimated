@@ -26,11 +26,9 @@ export default class AnimatedProceduralNode extends AnimatedNode {
       args.length === this.numberOfArgs,
       'number of arguments to reusable node does not match'
     );
-    const flattenArgs = args.map((n, i) => {
-      const node = typeof n === 'object' ? n : new AnimatedValue(n);
-      //s node.__addChild(this.inputNodes[i]);
-      return node;
-    });
+    const flattenArgs = args.map(
+      n => (typeof n === 'object' ? n : new AnimatedValue(n))
+    );
     return new AnimatedProceduralPerformNode(this, flattenArgs);
   }
 }
