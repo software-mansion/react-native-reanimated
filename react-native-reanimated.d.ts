@@ -19,9 +19,13 @@ declare module 'react-native-reanimated' {
       nodeConfig: object,
       inputNodes?: ReadonlyArray<AnimatedNode<any>>
     );
-    __nodeID: number;
-    __getValue(): T;
     isNativelyInitialized(): boolean;
+    /**
+     * ' __value' is not available at runtime on AnimatedNode<T>. It is
+     * necessary to have some discriminating property on a type to know that
+     * an AnimatedNode<number> and AnimatedNode<string> are not compatible types.
+     */
+    ' __value': T;
   }
   // exporting the AnimatedNode as an interface because it is often needed at
   // type-time, but not available at runtime except on the default export
@@ -30,8 +34,12 @@ declare module 'react-native-reanimated' {
 
   class AnimatedClock extends AnimatedNode<number> {
     constructor();
+
+    /** @deprecated use Animated.startClock(clock) instead */
     start(): void;
+    /** @deprecated use Animated.stopClock(clock) instead */
     stop(): void;
+    /** @deprecated use Animated.clockRunning(clock) instead */
     isStarted(): boolean;
   }
 
@@ -239,7 +247,13 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<number>;
 
     // configuration
-    addWhitelistedNativeProps(props: { [key: string]: true }): void;
+
+    // `addWhitelistedNativeProps` will likely be removed soon, and so is
+    // intentionally not exposed to TypeScript. If it is needed, it could be
+    // uncommented here, or just use
+    // `(Animated as any).addWhitelistedNativeProps({ myProp: true });`
+
+    // addWhitelistedNativeProps(props: { [key: string]: true }): void;
   }
   const Animated: Animated;
   export default Animated;
