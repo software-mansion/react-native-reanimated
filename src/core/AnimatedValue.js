@@ -5,7 +5,9 @@ import { evaluateOnce } from '../derived/evaluateOnce';
 import interpolate from '../derived/interpolate';
 
 function sanitizeValue(value) {
-  return value === null || value === undefined ? value : Number(value);
+  return value === null || value === undefined || typeof value === 'string'
+    ? value
+    : Number(value);
 }
 
 export default class AnimatedValue extends AnimatedNode {

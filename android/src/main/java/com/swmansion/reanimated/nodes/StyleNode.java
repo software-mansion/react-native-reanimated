@@ -27,7 +27,16 @@ public class StyleNode extends Node<WritableMap> {
       if (node instanceof TransformNode) {
         propMap.putArray(entry.getKey(), ((TransformNode) node).value());
       } else {
-        propMap.putDouble(entry.getKey(), node.doubleValue());
+        Object val = node.value();
+        if (val instanceof Double) {
+          propMap.putDouble(entry.getKey(), (Double) val);
+        } else if (val instanceof String) {
+          propMap.putString(entry.getKey(), (String) val);
+        } else if (val instanceof Boolean) {
+          propMap.putBoolean(entry.getKey(), (Boolean) val);
+        } else {
+          throw new IllegalStateException("Wrong style form");
+        }
       }
     }
     return propMap;

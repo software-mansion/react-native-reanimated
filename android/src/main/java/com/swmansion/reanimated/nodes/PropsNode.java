@@ -75,6 +75,9 @@ public class PropsNode extends Node<Double> implements FinalNode {
             case Number:
               dest.putDouble(key, style.getDouble(key));
               break;
+            case String:
+              dest.putString(key, style.getString(key));
+              break;
             case Array:
               dest.putArray(key, (WritableArray) style.getArray(key));
               break;

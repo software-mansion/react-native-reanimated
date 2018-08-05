@@ -184,10 +184,10 @@ public class NodesManager implements EventDispatcherListener {
    * Null-safe way of getting node's value. If node is not present we return 0. This also matches
    * iOS behavior when the app won't just crash.
    */
-  public Double getNodeValue(int nodeID) {
+  public Object getNodeValue(int nodeID) {
     Node node = mAnimatedNodes.get(nodeID);
     if (node != null) {
-      return node.doubleValue();
+      return node.value();
     }
     return ZERO;
   }

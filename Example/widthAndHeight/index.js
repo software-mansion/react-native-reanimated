@@ -5,6 +5,7 @@ import Animated, { Easing } from 'react-native-reanimated';
 
 const {
   divide,
+  greaterThan,
   set,
   cond,
   startClock,
@@ -79,6 +80,7 @@ export default class Example extends Component {
             {
               fontSize: add(divide(this._trans, 10), 15),
               letterSpacing: add(divide(this._trans, -15), 10),
+              display: cond(greaterThan(this._trans, 140), 'flex', 'none'),
             },
           ]}>
           aesthetic

@@ -23,7 +23,7 @@ public class TransformNode extends Node<WritableArray> {
 
     @Override
     public double getValue(NodesManager nodesManager) {
-      return nodesManager.getNodeValue(nodeID);
+      return (double) nodesManager.getNodeValue(nodeID);
     }
   }
 

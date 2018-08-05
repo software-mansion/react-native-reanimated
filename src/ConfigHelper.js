@@ -89,6 +89,7 @@ const NATIVE_THREAD_PROPS_WHITELIST = {
   lineHeight: true,
   textShadowRadius: true,
   letterSpacing: true,
+  display: true,
 };
 
 function configureProps() {
