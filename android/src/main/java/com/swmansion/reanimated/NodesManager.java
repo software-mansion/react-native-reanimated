@@ -67,12 +67,10 @@ public class NodesManager implements EventDispatcherListener {
   private boolean mWantRunUpdates;
 
   public double currentFrameTimeMs;
-  public final UpdateContext updateContext;
   public Set<String> nativeProps = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
     UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
-    updateContext = new UpdateContext();
     mUIImplementation = uiManager.getUIImplementation();
     mCustomEventNamesResolver = uiManager.getDirectEventNamesResolver();
     uiManager.getEventDispatcher().addListener(this);
