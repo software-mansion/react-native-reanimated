@@ -11,13 +11,15 @@
     "precommit": "lint-staged"
   },
   "main": "src/Animated.js",
+  "types": "react-native-reanimated.d.ts",
   "files": [
     "src/",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
     "ios/",
-    "README.md"
+    "README.md",
+    "react-native-reanimated.d.ts"
   ],
   "repository": {
     "type": "git",
