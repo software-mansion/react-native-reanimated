@@ -3,7 +3,6 @@ package com.swmansion.reanimated.nodes;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -101,7 +100,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
                 mDiffMap);
       }
       if (hasNativeProps) {
-        mNodesManager.setUpdateView(mConnectedViewTag, nativeProps);
+        mNodesManager.updateView(mConnectedViewTag, nativeProps);
       }
     }
 

@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.UIManagerUtils;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
@@ -155,18 +156,25 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (!mOperationsInBatch.isEmpty()) {
+      final Queue<NativeUpdateOperation> copiedQueue =  new LinkedList<>(mOperationsInBatch);
+      while (!mOperationsInBatch.isEmpty()) {
+        mOperationsInBatch.remove();
+      }
       mContext.runOnNativeModulesQueueThread(
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  while (!mOperationsInBatch.isEmpty()) {
-                    NativeUpdateOperation op = mOperationsInBatch.remove();
+                  boolean shouldFinishBatch = UIManagerUtils.getUIViewOperationQueue(mUIImplementation).isEmpty();
+                  while (!copiedQueue.isEmpty()) {
+                    NativeUpdateOperation op = copiedQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                     if (shadowNode != null) {
                       mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                     }
                   }
-                  mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  if (shouldFinishBatch) {
+                    mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  }
                 }
               });
     }
@@ -318,7 +326,7 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  public void setUpdateView(int viewTag, WritableMap nativeProps) {
+  public void updateView(int viewTag, WritableMap nativeProps) {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 

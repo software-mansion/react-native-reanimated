@@ -163,9 +163,9 @@
   }
 }
 
-- (void)setUpdateView:(nonnull NSNumber *)reactTag
-             viewName:(NSString *) viewName
-          nativeProps:(NSMutableDictionary *)nativeProps {
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *) viewName
+       nativeProps:(NSMutableDictionary *)nativeProps {
   [_operationsInBatch addObject:[[REANativeUpdateOperation alloc] initWithReactTag:reactTag viewName:viewName nativeProps:nativeProps]];
   _numberOfOperationsInBatch++;
 }

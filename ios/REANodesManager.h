@@ -28,9 +28,9 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)postRunUpdatesAfterAnimation;
-- (void)setUpdateView:(nonnull NSNumber *)reactTag
-             viewName:(NSString *) viewName
-          nativeProps:(NSMutableDictionary *)nativeProps;
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *) viewName
+       nativeProps:(NSMutableDictionary *)nativeProps;
 
 // graph
 

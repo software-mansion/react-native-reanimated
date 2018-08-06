@@ -72,7 +72,7 @@
     if (nativeProps.count > 0)
     {
       RCTExecuteOnUIManagerQueue(^{
-        [self.nodesManager setUpdateView:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
+        [self.nodesManager updateView:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
       });
     }
   }
