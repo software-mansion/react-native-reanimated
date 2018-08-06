@@ -14,7 +14,7 @@ import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.UIManagerUtils;
+import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
@@ -164,7 +164,7 @@ public class NodesManager implements EventDispatcherListener {
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = UIManagerUtils.getUIViewOperationQueue(mUIImplementation).isEmpty();
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEpmty(mUIImplementation);
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
