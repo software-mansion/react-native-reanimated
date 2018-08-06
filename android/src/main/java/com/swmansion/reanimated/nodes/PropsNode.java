@@ -100,7 +100,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
                 mDiffMap);
       }
       if (hasNativeProps) {
-        mNodesManager.updateView(mConnectedViewTag, nativeProps);
+        mNodesManager.enqueueUpdateViewOnNativeThread(mConnectedViewTag, nativeProps);
       }
     }
 

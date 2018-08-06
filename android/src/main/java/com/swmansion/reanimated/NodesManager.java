@@ -326,7 +326,7 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  public void updateView(int viewTag, WritableMap nativeProps) {
+  public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps) {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
