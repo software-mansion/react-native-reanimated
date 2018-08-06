@@ -71,7 +71,7 @@
     }
     if (nativeProps.count > 0)
     {
-      [self.nodesManager updateView:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
+      [self.nodesManager enqueueUpdateViewOnNativeThread:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
     }
   }
   

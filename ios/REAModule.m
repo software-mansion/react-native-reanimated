@@ -108,7 +108,7 @@ RCT_EXPORT_METHOD(detachEvent:(nonnull NSNumber *)viewTag
 }
 
 RCT_EXPORT_METHOD(configureProps:(nonnull NSArray<NSString *> *)nativeProps
-                  nativeProps:(nonnull NSArray<NSString *> *)uiProps)
+                         uiProps:(nonnull NSArray<NSString *> *)uiProps)
 {
   [self addOperationBlock:^(REANodesManager *nodesManager) {
     [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];

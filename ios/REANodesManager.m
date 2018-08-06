@@ -20,37 +20,15 @@
 #import "Nodes/REAAlwaysNode.h"
 
 @interface RCTUIManager ()
+
 - (void)updateView:(nonnull NSNumber *)reactTag
           viewName:(NSString *)viewName
              props:(NSDictionary *)props;
-@end
 
-@interface REANativeUpdateOperation : NSObject
-@property (nonatomic) NSNumber *reactTag;
-@property (nonatomic) NSString *viewName;
-@property (nonatomic) NSMutableDictionary *nativeProps;
-
-- (instancetype)initWithReactTag:(NSNumber *) reactTag
-                       viewName:(NSString *) viewName
-                    nativeProps:(NSMutableDictionary *) nativeProps;
+- (void)setNeedsLayout;
 
 @end
 
-@implementation REANativeUpdateOperation
-
-- (instancetype)initWithReactTag:(NSNumber *) reactTag
-                       viewName:(NSString *) viewName
-                    nativeProps:(NSMutableDictionary *) nativeProps;
-{
-  self = [super init];
-  if (self) {
-    _reactTag = reactTag;
-    _viewName = viewName;
-    _nativeProps = nativeProps;
-  }
-  return self;
-}
-@end
 
 @implementation REANodesManager
 {
@@ -61,7 +39,7 @@
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
-  NSMutableArray<REANativeUpdateOperation *> *_operationsInBatch;
+  NSMutableArray<void (^) (RCTUIManager *)> *_operationsInBatch;
   int _numberOfOperationsInBatch;
 }
 
@@ -143,19 +121,16 @@
   }
 
   [REANode runPropUpdates:_updateContext];
-  NSMutableArray<REANativeUpdateOperation *> *copiedProps = [_operationsInBatch copy];
+  NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = [_operationsInBatch copy];
   int copiedNumberOfOperationsInBatch = _numberOfOperationsInBatch;
   [_operationsInBatch removeAllObjects];
   _numberOfOperationsInBatch = 0;
   if (copiedNumberOfOperationsInBatch != 0) {
     RCTExecuteOnUIManagerQueue(^{
-      BOOL shouldFinishBatch = ((NSHashTable<RCTShadowView *> *)[self.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]).count == 0;
       for (int i = 0; i < copiedNumberOfOperationsInBatch; i++) {
-        [self.uiManager updateView:copiedProps[i].reactTag viewName:copiedProps[i].viewName props:copiedProps[i].nativeProps];
+        copiedOperationsQueue[i](self.uiManager);
       }
-      if (shouldFinishBatch) {
-        [self.uiManager batchDidComplete];
-      }
+      [self.uiManager setNeedsLayout];
     });
   }
   _wantRunUpdates = NO;
@@ -165,10 +140,12 @@
   }
 }
 
-- (void)updateView:(nonnull NSNumber *)reactTag
-          viewName:(NSString *) viewName
-       nativeProps:(NSMutableDictionary *)nativeProps {
-  [_operationsInBatch addObject:[[REANativeUpdateOperation alloc] initWithReactTag:reactTag viewName:viewName nativeProps:nativeProps]];
+- (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
+                               viewName:(NSString *) viewName
+                            nativeProps:(NSMutableDictionary *)nativeProps {
+    [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
+  }];
   _numberOfOperationsInBatch++;
 }
 
