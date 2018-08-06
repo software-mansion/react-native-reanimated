@@ -156,7 +156,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (!mOperationsInBatch.isEmpty()) {
-      final Queue<NativeUpdateOperation> copiedQueue =  new LinkedList<>(mOperationsInBatch);
+      final Queue<NativeUpdateOperation> copiedProps =  new LinkedList<>(mOperationsInBatch);
       while (!mOperationsInBatch.isEmpty()) {
         mOperationsInBatch.remove();
       }
@@ -165,8 +165,8 @@ public class NodesManager implements EventDispatcherListener {
                 @Override
                 public void runGuarded() {
                   boolean shouldFinishBatch = UIManagerUtils.getUIViewOperationQueue(mUIImplementation).isEmpty();
-                  while (!copiedQueue.isEmpty()) {
-                    NativeUpdateOperation op = copiedQueue.remove();
+                  while (!copiedProps.isEmpty()) {
+                    NativeUpdateOperation op = copiedProps.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                     if (shadowNode != null) {
                       mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);

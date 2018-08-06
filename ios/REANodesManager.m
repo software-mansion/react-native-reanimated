@@ -143,17 +143,19 @@
   }
 
   [REANode runPropUpdates:_updateContext];
-  if (_numberOfOperationsInBatch != 0) {
+  NSMutableArray<REANativeUpdateOperation *> *copiedProps = [_operationsInBatch copy];
+  int copiedNumberOfOperationsInBatch = _numberOfOperationsInBatch;
+  [_operationsInBatch removeAllObjects];
+  _numberOfOperationsInBatch = 0;
+  if (copiedNumberOfOperationsInBatch != 0) {
     RCTExecuteOnUIManagerQueue(^{
-      BOOL shouldHandlePropsUpdatingManually = ((NSHashTable<RCTShadowView *> *)[self.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]).count == 0;
-      for (int i = 0; i < _numberOfOperationsInBatch; i++) {
-        [self.uiManager updateView:_operationsInBatch[i].reactTag viewName:_operationsInBatch[i].viewName props:_operationsInBatch[i].nativeProps];
+      BOOL shouldFinishBatch = ((NSHashTable<RCTShadowView *> *)[self.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]).count == 0;
+      for (int i = 0; i < copiedNumberOfOperationsInBatch; i++) {
+        [self.uiManager updateView:copiedProps[i].reactTag viewName:copiedProps[i].viewName props:copiedProps[i].nativeProps];
       }
-      if (shouldHandlePropsUpdatingManually) {
+      if (shouldFinishBatch) {
         [self.uiManager batchDidComplete];
       }
-      _numberOfOperationsInBatch = 0;
-      [_operationsInBatch removeAllObjects];
     });
   }
   _wantRunUpdates = NO;
