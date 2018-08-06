@@ -11,6 +11,7 @@
     "precommit": "lint-staged"
   },
   "main": "src/Animated.js",
+  "types": "react-native-reanimated.d.ts",
   "files": [
     "src/",
     "android/src/main/AndroidManifest.xml",

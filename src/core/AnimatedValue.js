@@ -22,7 +22,7 @@ export default class AnimatedValue extends AnimatedNode {
 
   __detachAnimation(animation) {
     animation && animation.__detach();
-    if (this._animation == animation) {
+    if (this._animation === animation) {
       this._animation = null;
     }
   }
