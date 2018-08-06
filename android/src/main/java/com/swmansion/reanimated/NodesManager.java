@@ -164,7 +164,7 @@ public class NodesManager implements EventDispatcherListener {
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldFinishBatch = UIManagerUtils.getUIViewOperationQueue(mUIImplementation).isEmpty();
+                  boolean shouldDispatchUpdates = UIManagerUtils.getUIViewOperationQueue(mUIImplementation).isEmpty();
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
@@ -172,7 +172,7 @@ public class NodesManager implements EventDispatcherListener {
                       mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                     }
                   }
-                  if (shouldFinishBatch) {
+                  if (shouldDispatchUpdates) {
                     mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
                   }
                 }
