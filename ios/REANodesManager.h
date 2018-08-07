@@ -7,6 +7,7 @@
 @class REAModule;
 
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
+typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 
 @interface REANodesManager : NSObject
 

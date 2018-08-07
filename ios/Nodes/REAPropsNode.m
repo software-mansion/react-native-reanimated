@@ -71,14 +71,13 @@
        viewName:_connectedViewName
        props:uiProps];
     }
-    if (nativeProps.count > 0)
-    {
+    if (nativeProps.count > 0) {
       [self.nodesManager enqueueUpdateViewOnNativeThread:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
     }
     if (jsProps.count > 0) {
       [self.nodesManager.reanimatedModule
-      sendEventWithName:@"onReanimatedPropsChange"
-      body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
+       sendEventWithName:@"onReanimatedPropsChange"
+       body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
     }
   }
   
