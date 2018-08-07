@@ -1,6 +1,5 @@
 package com.facebook.react.uimanager;
 
-// This class has been made
 /**
  * This class provides a workaround that makes it possible to access UIViewOperationQueue.
  * In react-native core UIViewOperationQueue#getUIViewOperationQueue has limited visibility
