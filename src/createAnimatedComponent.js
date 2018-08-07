@@ -10,6 +10,11 @@ import invariant from 'fbjs/lib/invariant';
 
 const NODE_MAPPING = new Map();
 
+function listener(data) {
+  const component = NODE_MAPPING.get(data.viewTag);
+  component && component._updateFromNative(data.props);
+}
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -149,14 +154,24 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
+    _updateFromNative(props) {
+      this._component.setNativeProps(props);
+    }
+
     _attachPropUpdater() {
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.set(viewTag, this);
+      if (NODE_MAPPING.size === 1) {
+        ReanimatedEventEmitter.addListener('onReanimatedPropsChange', listener);
+      }
     }
 
     _detachPropUpdater() {
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.delete(viewTag);
+      if (NODE_MAPPING.size === 0) {
+        ReanimatedEventEmitter.removeAllListeners('onReanimatedPropsChange');
+      }
     }
 
     componentDidUpdate(prevProps) {
