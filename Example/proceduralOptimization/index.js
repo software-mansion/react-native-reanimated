@@ -6,23 +6,16 @@ import Animated, { Easing } from 'react-native-reanimated';
 const {
   set,
   cond,
-  eq,
   add,
-  call,
   multiply,
-  lessThan,
   startClock,
   stopClock,
   clockRunning,
   block,
   timing,
-  debug,
-  ReusableNode,
-  spring,
   Value,
   Clock,
-  event,
-  ProceduralNode,
+  proc,
 } = Animated;
 
 function runTiming(clock, value, dest, time) {
@@ -57,8 +50,8 @@ function runTiming(clock, value, dest, time) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this.reverse = new ProceduralNode(x => multiply(x, -1));
-    this.add50 = new ProceduralNode(x => add(x, 50));
+    this.reverse = proc(x => multiply(x, -1));
+    this.add50 = proc(x => add(x, 50));
     this.transX = runTiming(new Clock(), new Value(0), 120, 5000);
   }
   render() {
@@ -78,7 +71,7 @@ export default class Example extends Component {
           style={[
             styles.box,
             {
-              transform: [{ translateX: this.add50.invoke(this.transX) }],
+              transform: [{ translateX: this.add50(this.transX) }],
             },
           ]}
         />
@@ -87,7 +80,7 @@ export default class Example extends Component {
           style={[
             styles.box,
             {
-              transform: [{ translateX: this.reverse.invoke(this.transX) }],
+              transform: [{ translateX: this.reverse(this.transX) }],
             },
           ]}
         />
@@ -98,9 +91,7 @@ export default class Example extends Component {
             {
               transform: [
                 {
-                  translateX: this.add50.invoke(
-                    this.reverse.invoke(this.transX)
-                  ),
+                  translateX: this.add50(this.reverse(this.transX)),
                 },
               ],
             },
@@ -113,9 +104,7 @@ export default class Example extends Component {
             {
               transform: [
                 {
-                  translateX: this.reverse.invoke(
-                    this.add50.invoke(this.transX)
-                  ),
+                  translateX: this.reverse(this.add50(this.transX)),
                 },
               ],
             },
@@ -128,8 +117,8 @@ export default class Example extends Component {
             {
               transform: [
                 {
-                  translateX: this.reverse.invoke(
-                    this.add50.invoke(this.reverse.invoke(this.transX))
+                  translateX: this.reverse(
+                    this.add50(this.reverse(this.transX))
                   ),
                 },
               ],
@@ -144,10 +133,8 @@ export default class Example extends Component {
             {
               transform: [
                 {
-                  translateX: this.add50.invoke(
-                    this.reverse.invoke(
-                      this.add50.invoke(this.reverse.invoke(this.transX))
-                    )
+                  translateX: this.add50(
+                    this.reverse(this.add50(this.reverse(this.transX)))
                   ),
                 },
               ],

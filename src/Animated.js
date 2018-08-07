@@ -14,7 +14,6 @@ import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
-import AnimatedProceduralNode from './core/AnimatedProceduralNode';
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -26,7 +25,6 @@ const Animated = {
   Clock: AnimatedClock,
   Value: AnimatedValue,
   Node: AnimatedNode,
-  ProceduralNode: AnimatedProceduralNode,
 
   // operations
   ...base,

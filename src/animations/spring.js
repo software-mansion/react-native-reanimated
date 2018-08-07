@@ -19,7 +19,7 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
-import AnimatedProceduralNode from '../core/AnimatedProceduralNode';
+import AnimatedProceduralNode from '../core/AnimatedProcedural';
 
 const MAX_STEPS_MS = 64;
 

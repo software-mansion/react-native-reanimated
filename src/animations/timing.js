@@ -8,7 +8,7 @@ import {
   set,
   greaterOrEq,
 } from '../base';
-import AnimatedProceduralNode from '../core/AnimatedProceduralNode';
+import AnimatedProceduralNode from '../core/AnimatedProcedural';
 
 const innerTiming = (
   clock,
