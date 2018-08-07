@@ -34,10 +34,7 @@ public abstract class Node<T> {
   protected abstract @Nullable T evaluate(EvalContext evalContext);
 
   public final @Nullable T value(EvalContext evalContext) {
-    if (evalContext.lastLoopsIDs.indexOfKey(mNodeID) < 0) {
-      evalContext.lastLoopsIDs.put(mNodeID, (long) -1);
-    }
-    long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID);
+    long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID, (long) -1);
     if (lastLoopID < mNodesManager.updateLoopID) {
       evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
       evalContext.memoizedValues.put(mNodeID,  evaluate(evalContext));
