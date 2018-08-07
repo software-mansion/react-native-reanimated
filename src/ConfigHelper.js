@@ -1,7 +1,7 @@
 import ReanimatedModule from './ReanimatedModule';
 
 /**
- * Styles allowed to be direcly updated in native thread
+ * Styles allowed to be direcly updated in UI thread
  */
 let UI_THREAD_PROPS_WHITELIST = {
   opacity: true,
@@ -28,7 +28,7 @@ let UI_THREAD_PROPS_WHITELIST = {
 /**
  * Whitelist of view props that can be updated in native thread via UIManagerModule
  */
-const NATIVE_THREAD_PROPS_WHITELIST = {
+let NATIVE_THREAD_PROPS_WHITELIST = {
   borderBottomWidth: true,
   borderEndWidth: true,
   borderLeftWidth: true,
@@ -97,6 +97,19 @@ function configureProps() {
     Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
     Object.keys(UI_THREAD_PROPS_WHITELIST)
   );
+}
+
+export function addWhitelistedNativeProps(props) {
+  NATIVE_THREAD_PROPS_WHITELIST = {
+    ...NATIVE_THREAD_PROPS_WHITELIST,
+    ...props,
+  };
+  configureProps();
+}
+
+export function addWhitelistedUIProps(props) {
+  UI_THREAD_PROPS_WHITELIST = { ...UI_THREAD_PROPS_WHITELIST, ...props };
+  configureProps();
 }
 
 configureProps();

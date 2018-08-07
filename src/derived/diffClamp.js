@@ -1,8 +1,8 @@
 import { cond, defined, set, add } from '../base';
 import AnimatedValue from '../core/AnimatedValue';
-import { min } from './min';
-import { max } from './max';
-import { diff } from './diff';
+import min from './min';
+import max from './max';
+import diff from './diff';
 
 export default function diffClamp(a, minVal, maxVal) {
   const value = new AnimatedValue();

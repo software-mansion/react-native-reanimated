@@ -3,7 +3,6 @@ package com.swmansion.reanimated.nodes;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -51,6 +50,8 @@ public class PropsNode extends Node<Double> implements FinalNode {
   protected Double evaluate() {
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
+    boolean hasJSProps = false;
+    WritableMap jsProps = Arguments.createMap();
     final WritableMap nativeProps = Arguments.createMap();
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
@@ -68,7 +69,8 @@ public class PropsNode extends Node<Double> implements FinalNode {
             hasNativeProps = true;
             dest = nativeProps;
           } else {
-            continue;
+            hasJSProps = true;
+            dest = jsProps;
           }
           ReadableType type = style.getType(key);
           switch (type) {
@@ -104,7 +106,13 @@ public class PropsNode extends Node<Double> implements FinalNode {
                 mDiffMap);
       }
       if (hasNativeProps) {
-        mNodesManager.setUpdateView(mConnectedViewTag, nativeProps);
+        mNodesManager.enqueueUpdateViewOnNativeThread(mConnectedViewTag, nativeProps);
+      }
+      if (hasJSProps) {
+        WritableMap evt = Arguments.createMap();
+        evt.putInt("viewTag", mConnectedViewTag);
+        evt.putMap("props", jsProps);
+        mNodesManager.sendEvent("onReanimatedPropsChange", evt);
       }
     }
 

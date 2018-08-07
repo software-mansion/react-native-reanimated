@@ -14,6 +14,7 @@ import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
@@ -62,8 +63,8 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
-  public final ReactContext mContext;
-  public final UIManagerModule mUIManager;
+  private final ReactContext mContext;
+  private final UIManagerModule mUIManager;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -82,8 +83,7 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProps = nativeProps;
     }
   }
-  private final Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
-
+  private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
 
   public NodesManager(ReactContext context) {
     mContext = context;
@@ -155,18 +155,23 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (!mOperationsInBatch.isEmpty()) {
+      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      mOperationsInBatch = new LinkedList<>();
       mContext.runOnNativeModulesQueueThread(
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  while (!mOperationsInBatch.isEmpty()) {
-                    NativeUpdateOperation op = mOperationsInBatch.remove();
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  while (!copiedOperationsQueue.isEmpty()) {
+                    NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                     if (shadowNode != null) {
                       mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                     }
                   }
-                  mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  if (shouldDispatchUpdates) {
+                    mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  }
                 }
               });
     }
@@ -318,7 +323,7 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  public void setUpdateView(int viewTag, WritableMap nativeProps) {
+  public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps) {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
@@ -345,7 +350,6 @@ public class NodesManager implements EventDispatcherListener {
     nativeProps = nativePropsSet;
     uiProps = uiPropsSet;
   }
-
 
   public void postRunUpdatesAfterAnimation() {
     mWantRunUpdates = true;
