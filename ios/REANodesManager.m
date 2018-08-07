@@ -16,8 +16,9 @@
 #import "Nodes/REAJSCallNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
-#import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
+#import "Nodes/REAConcatNode.h"
+#import "REAModule.h"
 
 @interface RCTUIManager ()
 
@@ -169,6 +170,7 @@
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
+            @"concat": [REAConcatNode class],
 //            @"listener": nil,
             };
   });

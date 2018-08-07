@@ -5,7 +5,7 @@ import android.util.Log;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class ClockNode extends Node<Double> implements NodesManager.OnAnimationFrame {
+public class ClockNode extends Node implements NodesManager.OnAnimationFrame {
 
   public boolean isRunning;
 

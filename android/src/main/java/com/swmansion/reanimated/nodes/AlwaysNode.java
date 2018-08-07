@@ -3,7 +3,7 @@ package com.swmansion.reanimated.nodes;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class AlwaysNode extends Node<Double> implements FinalNode {
+public class AlwaysNode extends Node implements FinalNode {
   public AlwaysNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mNodeToBeEvaluated = config.getInt("what");

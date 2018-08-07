@@ -5,7 +5,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-public class OperatorNode extends Node<Double> {
+public class OperatorNode extends Node {
 
   private static boolean truthy(Object value) {
     return value != null && !value.equals(0.);
@@ -38,6 +38,15 @@ public class OperatorNode extends Node<Double> {
   }
 
   private static abstract class CompOperator implements Operator {
+    @Override
+    public double evaluate(Node[] input) {
+      return eval((Double) input[0].value(), (Double) input[1].value()) ? 1. : 0.;
+    }
+
+    public abstract boolean eval(Double x, Double y);
+  }
+
+  private static abstract class StringOperator implements Operator {
     @Override
     public double evaluate(Node[] input) {
       return eval((Double) input[0].value(), (Double) input[1].value()) ? 1. : 0.;

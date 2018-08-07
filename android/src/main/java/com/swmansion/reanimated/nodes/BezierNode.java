@@ -5,7 +5,7 @@ import android.graphics.PointF;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class BezierNode extends Node<Double> {
+public class BezierNode extends Node {
 
   private static class CubicBezierInterpolator {
 

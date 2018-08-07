@@ -11,6 +11,7 @@ import Colors from './colors';
 import StartAPI from './startAPI';
 import ChatHeads from './chatHeads';
 import WidthAndHeight from './widthAndHeight';
+import Rotations from './rotations';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -28,6 +29,7 @@ const SCREENS = {
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
+  rotations: { screen: Rotations, title: 'rotations (concat node)' },
 };
 
 class MainScreen extends React.Component {
