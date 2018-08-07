@@ -5,7 +5,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ public class EventNode extends Node<Double> implements RCTEventEmitter {
       EventMap eventMap = mMapping.get(i);
       Double value = eventMap.lookupValue(event);
       if (value != null) {
-        mNodesManager.findNodeById(eventMap.nodeID, ValueNode.class).setValue(value, mNodesManager.mGlobalEvaluationContext);
+        mNodesManager.findNodeById(eventMap.nodeID, ValueNode.class).setValue(value, mNodesManager.mGlobalEvalContext);
       }
     }
   }
@@ -79,7 +79,7 @@ public class EventNode extends Node<Double> implements RCTEventEmitter {
   }
 
   @Override
-  protected Double evaluate(EvaluationContext evaluationContext) {
+  protected Double evaluate(EvalContext evalContext) {
     return ZERO;
   }
 }

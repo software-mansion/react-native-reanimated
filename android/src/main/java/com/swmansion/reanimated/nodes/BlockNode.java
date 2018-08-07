@@ -1,7 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -15,10 +15,10 @@ public class BlockNode extends Node {
   }
 
   @Override
-  protected Object evaluate(EvaluationContext evaluationContext) {
+  protected Object evaluate(EvalContext evalContext) {
     Object res = null;
     for (int i = 0; i < mBlock.length; i++) {
-      res = mNodesManager.findNodeById(mBlock[i], Node.class).value(evaluationContext);
+      res = mNodesManager.findNodeById(mBlock[i], Node.class).value(evalContext);
     }
     return res;
   }

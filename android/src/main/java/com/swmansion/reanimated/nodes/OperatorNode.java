@@ -2,7 +2,7 @@ package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -13,15 +13,15 @@ public class OperatorNode extends Node<Double> {
   }
 
   private interface Operator {
-    double evaluate(Node[] input, EvaluationContext evaluationContext);
+    double evaluate(Node[] input, EvalContext evalContext);
   }
 
   private static abstract class ReduceOperator implements Operator {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      double acc = input[0].doubleValue(evaluationContext);
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      double acc = input[0].doubleValue(evalContext);
       for (int i = 1; i < input.length; i++) {
-        acc = reduce(acc, input[i].doubleValue(evaluationContext));
+        acc = reduce(acc, input[i].doubleValue(evalContext));
       }
       return acc;
     }
@@ -31,8 +31,8 @@ public class OperatorNode extends Node<Double> {
 
   private static abstract class SingleOperator implements Operator {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      return eval((Double) input[0].value(evaluationContext));
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      return eval((Double) input[0].value(evalContext));
     }
 
     public abstract double eval(Double x);
@@ -40,8 +40,8 @@ public class OperatorNode extends Node<Double> {
 
   private static abstract class CompOperator implements Operator {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      return eval((Double) input[0].value(evaluationContext), (Double) input[1].value(evaluationContext)) ? 1. : 0.;
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      return eval((Double) input[0].value(evalContext), (Double) input[1].value(evalContext)) ? 1. : 0.;
     }
 
     public abstract boolean eval(Double x, Double y);
@@ -118,34 +118,34 @@ public class OperatorNode extends Node<Double> {
   // logical
   private static final Operator AND = new Operator() {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      boolean res = truthy(input[0].value(evaluationContext));
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      boolean res = truthy(input[0].value(evalContext));
       for (int i = 1; i < input.length && res; i++) {
-        res = res && truthy(input[i].value(evaluationContext));
+        res = res && truthy(input[i].value(evalContext));
       }
       return res ? 1. : 0.;
     }
   };
   private static final Operator OR = new Operator() {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      boolean res = truthy(input[0].value(evaluationContext));
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      boolean res = truthy(input[0].value(evalContext));
       for (int i = 1; i < input.length && !res; i++) {
-        res = res || truthy(input[i].value(evaluationContext));
+        res = res || truthy(input[i].value(evalContext));
       }
       return res ? 1. : 0.;
     }
   };
   private static final Operator NOT = new Operator() {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      return truthy(input[0].value(evaluationContext)) ? 0. : 1.;
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      return truthy(input[0].value(evalContext)) ? 0. : 1.;
     }
   };
   private static final Operator DEFINED = new Operator() {
     @Override
-    public double evaluate(Node[] input, EvaluationContext evaluationContext) {
-      Object res = input[0].value(evaluationContext);
+    public double evaluate(Node[] input, EvalContext evalContext) {
+      Object res = input[0].value(evalContext);
       return (res != null && !((Double) res).isNaN()) ? 1. : 0.;
     }
   };
@@ -246,10 +246,10 @@ public class OperatorNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate(EvaluationContext evaluationContext) {
+  protected Double evaluate(EvalContext evalContext) {
     for (int i = 0; i < mInputIDs.length; i++) {
       mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
     }
-    return mOperator.evaluate(mInputNodes, evaluationContext);
+    return mOperator.evaluate(mInputNodes, evalContext);
   }
 }

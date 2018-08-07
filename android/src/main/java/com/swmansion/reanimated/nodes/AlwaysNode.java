@@ -1,7 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class AlwaysNode extends Node<Double> implements FinalNode {
@@ -14,12 +14,12 @@ public class AlwaysNode extends Node<Double> implements FinalNode {
 
   @Override
   public void update() {
-    this.value(mNodesManager.mGlobalEvaluationContext);
+    this.value(mNodesManager.mGlobalEvalContext);
   }
 
   @Override
-  protected Double evaluate(EvaluationContext evaluationContext) {
-    mNodesManager.findNodeById(mNodeToBeEvaluated, Node.class).value(evaluationContext);
+  protected Double evaluate(EvalContext evalContext) {
+    mNodesManager.findNodeById(mNodeToBeEvaluated, Node.class).value(evalContext);
     return ZERO;
   }
 }

@@ -4,7 +4,7 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -18,14 +18,14 @@ public class JSCallNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate(EvaluationContext evaluationContext) {
+  protected Double evaluate(EvalContext evalContext) {
     WritableArray args = Arguments.createArray();
     for (int i = 0; i < mInputIDs.length; i++) {
       Node node = mNodesManager.findNodeById(mInputIDs[i], Node.class);
-      if (node.value(evaluationContext) == null) {
+      if (node.value(evalContext) == null) {
         args.pushNull();
       } else {
-        args.pushDouble(node.doubleValue(evaluationContext));
+        args.pushDouble(node.doubleValue(evalContext));
       }
     }
     WritableMap eventData = Arguments.createMap();

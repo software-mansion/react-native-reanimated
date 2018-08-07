@@ -50,7 +50,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame();
   }
 
-  public final EvaluationContext mGlobalEvaluationContext = new EvaluationContext(null);
+  public final EvalContext mGlobalEvalContext = new EvalContext(null);
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;
@@ -133,7 +133,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(mGlobalEvaluationContext, this);
+      Node.runUpdates(mGlobalEvalContext, this);
     }
 
     mCallbackPosted.set(false);
@@ -149,10 +149,10 @@ public class NodesManager implements EventDispatcherListener {
    * Null-safe way of getting node's value. If node is not present we return 0. This also matches
    * iOS behavior when the app won't just crash.
    */
-  public Double getNodeValue(int nodeID, EvaluationContext evaluationContext) {
+  public Double getNodeValue(int nodeID, EvalContext evalContext) {
     Node node = mAnimatedNodes.get(nodeID);
     if (node != null) {
-      return node.doubleValue(evaluationContext);
+      return node.doubleValue(evalContext);
     }
     return ZERO;
   }

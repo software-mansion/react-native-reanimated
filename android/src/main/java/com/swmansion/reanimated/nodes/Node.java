@@ -4,7 +4,7 @@ import android.util.SparseArray;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 import java.util.ArrayList;
@@ -31,18 +31,18 @@ public abstract class Node<T> {
   }
 
 
-  protected abstract @Nullable T evaluate(EvaluationContext evaluationContext);
+  protected abstract @Nullable T evaluate(EvalContext evalContext);
 
-  public final @Nullable T value(EvaluationContext evaluationContext) {
-    if (evaluationContext.lastLoopsIDs.indexOfKey(mNodeID) < 0) {
-      evaluationContext.lastLoopsIDs.put(mNodeID, (long) -1);
+  public final @Nullable T value(EvalContext evalContext) {
+    if (evalContext.lastLoopsIDs.indexOfKey(mNodeID) < 0) {
+      evalContext.lastLoopsIDs.put(mNodeID, (long) -1);
     }
-    long lastLoopID = evaluationContext.lastLoopsIDs.get(mNodeID);
+    long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID);
     if (lastLoopID < mNodesManager.updateLoopID) {
-      evaluationContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
-      evaluationContext.memoizedValues.put(mNodeID,  evaluate(evaluationContext));
+      evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
+      evalContext.memoizedValues.put(mNodeID,  evaluate(evalContext));
     }
-    return (T) evaluationContext.memoizedValues.get(mNodeID);
+    return (T) evalContext.memoizedValues.get(mNodeID);
   }
 
   /**
@@ -50,8 +50,8 @@ public abstract class Node<T> {
    * return 0 if we fail to properly cast the value. This is to match iOS behavior where the node
    * would not throw even if the value was not set.
    */
-  public final Double doubleValue(EvaluationContext evaluationContext) {
-    T value = value(evaluationContext);
+  public final Double doubleValue(EvalContext evalContext) {
+    T value = value(evalContext);
     if (value == null) {
       return ZERO;
     } else if (value instanceof Double) {
@@ -69,7 +69,7 @@ public abstract class Node<T> {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext);
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvalContext);
   }
 
   public void removeChild(Node child) {
@@ -82,31 +82,31 @@ public abstract class Node<T> {
     // no-op
   }
 
-  public @Nullable List<Node<?>> getChildrenInContext(EvaluationContext context) {
+  public @Nullable List<Node<?>> getChildrenInContext(EvalContext context) {
     return mChildren;
   }
 
-  public EvaluationContext switchContextWhileUpdatingIfNeeded(EvaluationContext context, Node lastVisited) {
+  public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext context, Node lastVisited) {
     return context;
   }
 
-  protected void markUpdated(EvaluationContext context) {
+  protected void markUpdated(EvalContext context) {
     UiThreadUtil.assertOnUiThread();
     context.updatedNodes.put(mNodeID, this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
-  protected final void dangerouslyRescheduleEvaluate(EvaluationContext context) {
+  protected final void dangerouslyRescheduleEvaluate(EvalContext context) {
     context.lastLoopsIDs.put(mNodeID, (long) -1);
     markUpdated(context);
   }
 
-  protected final void forceUpdateMemoizedValue(T value, EvaluationContext context) {
+  protected final void forceUpdateMemoizedValue(T value, EvalContext context) {
     context.memoizedValues.put(mNodeID, value);
     markUpdated(context);
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvaluationContext> contexts, Node lastVisited) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvalContext> contexts, Node lastVisited) {
     if (visitedNodes.contains(node)) {
       return;
     } else {
@@ -114,11 +114,11 @@ public abstract class Node<T> {
     }
 
 
-    EvaluationContext currentContext = contexts.peek();
+    EvalContext currentContext = contexts.peek();
     List<Node> children = node.getChildrenInContext(currentContext);
-    EvaluationContext newContext = node.switchContextWhileUpdatingIfNeeded(currentContext, lastVisited);
+    EvalContext newContext = node.switchContextWhileUpdatingIfNeeded(currentContext, lastVisited);
     boolean pushedNewContext = false;
-    EvaluationContext contextPopped = null;
+    EvalContext contextPopped = null;
 
 
     if (newContext != currentContext && newContext != null) {
@@ -148,12 +148,12 @@ public abstract class Node<T> {
     }
   }
 
-  public static void runUpdates(EvaluationContext evaluationContext, NodesManager nodesManager) {
+  public static void runUpdates(EvalContext evalContext, NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    SparseArray<Node> updatedNodes = evaluationContext.updatedNodes;
+    SparseArray<Node> updatedNodes = evalContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
-    Stack<EvaluationContext> contexts = new Stack<>();
-    contexts.push(nodesManager.mGlobalEvaluationContext);
+    Stack<EvalContext> contexts = new Stack<>();
+    contexts.push(nodesManager.mGlobalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
       findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes, contexts, null);
       if (contexts.size() != 1) {

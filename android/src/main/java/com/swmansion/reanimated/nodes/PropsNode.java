@@ -11,7 +11,7 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
-import com.swmansion.reanimated.EvaluationContext;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -40,7 +40,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
 
   public void connectToView(int viewTag) {
     mConnectedViewTag = viewTag;
-    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvaluationContext);
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvalContext);
   }
 
   public void disconnectFromView(int viewTag) {
@@ -48,7 +48,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
   }
 
   @Override
-  protected Double evaluate(EvaluationContext evaluationContext) {
+  protected Double evaluate(EvalContext evalContext) {
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
@@ -56,7 +56,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof StyleNode) {
-        WritableMap style = ((StyleNode) node).value(evaluationContext);
+        WritableMap style = ((StyleNode) node).value(evalContext);
         ReadableMapKeySetIterator iter = style.keySetIterator();
         while (iter.hasNextKey()) {
           String key = iter.nextKey();
@@ -84,10 +84,10 @@ public class PropsNode extends Node<Double> implements FinalNode {
         String key = entry.getKey();
         if (mNodesManager.nativeProps.contains(key)) {
           hasNativeProps = true;
-          mPropMap.putDouble(key, node.doubleValue(evaluationContext));
+          mPropMap.putDouble(key, node.doubleValue(evalContext));
         } else {
           hasJSProps = true;
-          jsProps.putDouble(key, node.doubleValue(evaluationContext));
+          jsProps.putDouble(key, node.doubleValue(evalContext));
         }
       }
     }
@@ -119,6 +119,6 @@ public class PropsNode extends Node<Double> implements FinalNode {
     }
 
     // call value for side effect (diff map update via changes made to prop map)
-    value(mNodesManager.mGlobalEvaluationContext);
+    value(mNodesManager.mGlobalEvalContext);
   }
 }
