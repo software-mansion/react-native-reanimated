@@ -1,7 +1,5 @@
 package com.swmansion.reanimated;
 
-import android.util.SparseArray;
-
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
