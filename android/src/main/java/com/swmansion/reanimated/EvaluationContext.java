@@ -8,8 +8,8 @@ import com.swmansion.reanimated.nodes.ProceduralNode;
 
 public class EvaluationContext {
   private static int nextContextID = 0;
-  public int contextID = EvaluationContext.nextContextID++;
-  public SparseArray<Object> memoizedValues = new SparseArray<>();
+  public final int contextID = EvaluationContext.nextContextID++;
+  public final SparseArray<Object> memoizedValues = new SparseArray<>();
   public final SparseArray<Node> updatedNodes = new SparseArray<>();
   public final SparseArray<Long> lastLoopsIDs = new SparseArray<>();
   public final ProceduralNode.PerformNode parent;
