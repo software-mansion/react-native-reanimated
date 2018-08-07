@@ -40,7 +40,6 @@
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<void (^) (RCTUIManager *)> *_operationsInBatch;
-  int _numberOfOperationsInBatch;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -143,7 +142,6 @@
     [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
-  _numberOfOperationsInBatch++;
 }
 
 #pragma mark -- Graph
