@@ -351,7 +351,6 @@ public class NodesManager implements EventDispatcherListener {
     uiProps = uiPropsSet;
   }
 
-
   public void postRunUpdatesAfterAnimation() {
     mWantRunUpdates = true;
     startUpdatingOnAnimationFrame();
