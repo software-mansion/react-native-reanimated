@@ -8,7 +8,6 @@
 #import <React/RCTUIManager.h>
 #import "RCTComponentData.h"
 
-
 @implementation REAPropsNode
 {
   NSNumber *_connectedViewTag;
