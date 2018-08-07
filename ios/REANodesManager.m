@@ -121,9 +121,9 @@
   [REANode runPropUpdates:_updateContext];
   NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = _operationsInBatch;
   _operationsInBatch = [NSMutableArray new];
-  if ([copiedOperationsQueue count] != 0) {
+  if (copiedOperationsQueue.count != 0) {
     RCTExecuteOnUIManagerQueue(^{
-      for (int i = 0; i < [copiedOperationsQueue count]; i++) {
+      for (int i = 0; i < copiedOperationsQueue.count; i++) {
         copiedOperationsQueue[i](self.uiManager);
       }
       [self.uiManager setNeedsLayout];
