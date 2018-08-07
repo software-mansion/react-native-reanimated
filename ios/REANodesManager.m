@@ -39,7 +39,7 @@
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
-  NSMutableArray<void (^) (RCTUIManager *)> *_operationsInBatch;
+  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -119,9 +119,9 @@
   }
 
   [REANode runPropUpdates:_updateContext];
-  NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = _operationsInBatch;
-  _operationsInBatch = [NSMutableArray new];
-  if (copiedOperationsQueue.count != 0) {
+  if (_operationsInBatch.count != 0) {
+    NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
+    _operationsInBatch = [NSMutableArray new];
     RCTExecuteOnUIManagerQueue(^{
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
         copiedOperationsQueue[i](self.uiManager);
@@ -139,7 +139,7 @@
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *) viewName
                             nativeProps:(NSMutableDictionary *)nativeProps {
-    [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 }

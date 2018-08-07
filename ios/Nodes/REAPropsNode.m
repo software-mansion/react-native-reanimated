@@ -77,8 +77,8 @@
     }
     if (jsProps.count > 0) {
       [self.nodesManager.reanimatedModule
-      sendEventWithName:@"onReanimatedPropsChange"
-      body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
+       sendEventWithName:@"onReanimatedPropsChange"
+       body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
     }
   }
   
