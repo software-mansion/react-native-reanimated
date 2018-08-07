@@ -46,15 +46,6 @@ public class OperatorNode extends Node {
     public abstract boolean eval(Double x, Double y);
   }
 
-  private static abstract class StringOperator implements Operator {
-    @Override
-    public double evaluate(Node[] input) {
-      return eval((Double) input[0].value(), (Double) input[1].value()) ? 1. : 0.;
-    }
-
-    public abstract boolean eval(Double x, Double y);
-  }
-
   // arithmetic
   private static final Operator ADD = new ReduceOperator() {
     @Override
