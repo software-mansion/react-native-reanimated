@@ -23,7 +23,7 @@ public abstract class Node<T> {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  protected  @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
+  protected @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
