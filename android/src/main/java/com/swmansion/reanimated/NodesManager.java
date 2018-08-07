@@ -63,8 +63,8 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
-  public final ReactContext mContext;
-  public final UIManagerModule mUIManager;
+  private final ReactContext mContext;
+  private final UIManagerModule mUIManager;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -83,7 +83,7 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProps = nativeProps;
     }
   }
-  private final Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
+  private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
 
 
   public NodesManager(ReactContext context) {
@@ -156,15 +156,13 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (!mOperationsInBatch.isEmpty()) {
-      final Queue<NativeUpdateOperation> copiedOperationsQueue =  new LinkedList<>(mOperationsInBatch);
-      while (!mOperationsInBatch.isEmpty()) {
-        mOperationsInBatch.remove();
-      }
+      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      mOperationsInBatch = new LinkedList<>();
       mContext.runOnNativeModulesQueueThread(
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEpmty(mUIImplementation);
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);

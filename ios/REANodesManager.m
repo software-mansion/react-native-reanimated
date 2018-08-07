@@ -121,7 +121,8 @@
   }
 
   [REANode runPropUpdates:_updateContext];
-  NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = [_operationsInBatch copy];
+  NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = _operationsInBatch;
+  _operationsInBatch = [NSMutableArray new];
   int copiedNumberOfOperationsInBatch = _numberOfOperationsInBatch;
   [_operationsInBatch removeAllObjects];
   _numberOfOperationsInBatch = 0;
