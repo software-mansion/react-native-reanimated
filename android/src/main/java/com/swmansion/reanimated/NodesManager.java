@@ -84,7 +84,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
   private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
-  
+
   public NodesManager(ReactContext context) {
     mContext = context;
     mUIManager = context.getNativeModule(UIManagerModule.class);

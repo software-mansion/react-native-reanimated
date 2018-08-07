@@ -42,12 +42,15 @@
 {
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
-
+  NSMutableDictionary *jsProps = [NSMutableDictionary new];
+  
   void (^addBlock)(NSString *key, id obj, BOOL * stop) = ^(NSString *key, id obj, BOOL * stop){
     if ([self.nodesManager.uiProps containsObject:key]) {
       uiProps[key] = obj;
     } else if ([self.nodesManager.nativeProps containsObject:key]) {
       nativeProps[key] = obj;
+    } else {
+      jsProps[key] = obj;
     }
   };
   
@@ -71,6 +74,11 @@
     if (nativeProps.count > 0)
     {
       [self.nodesManager enqueueUpdateViewOnNativeThread:_connectedViewTag viewName:_connectedViewName nativeProps:nativeProps];
+    }
+    if (jsProps.count > 0) {
+      [self.nodesManager.reanimatedModule
+      sendEventWithName:@"onReanimatedPropsChange"
+      body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
     }
   }
   
