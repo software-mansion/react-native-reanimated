@@ -1,7 +1,7 @@
 import ReanimatedModule from './ReanimatedModule';
 
 /**
- * Styles allowed to be direcly updated in native thread
+ * Styles allowed to be direcly updated in UI thread
  */
 let UI_THREAD_PROPS_WHITELIST = {
   opacity: true,
