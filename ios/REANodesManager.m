@@ -124,7 +124,6 @@
   NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = _operationsInBatch;
   _operationsInBatch = [NSMutableArray new];
   int copiedNumberOfOperationsInBatch = _numberOfOperationsInBatch;
-  [_operationsInBatch removeAllObjects];
   _numberOfOperationsInBatch = 0;
   if (copiedNumberOfOperationsInBatch != 0) {
     RCTExecuteOnUIManagerQueue(^{
