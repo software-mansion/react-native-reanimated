@@ -56,7 +56,6 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
-    _numberOfOperationsInBatch = 0;
   }
   return self;
 }
@@ -123,11 +122,9 @@
   [REANode runPropUpdates:_updateContext];
   NSMutableArray<void (^) (RCTUIManager *)> *copiedOperationsQueue = _operationsInBatch;
   _operationsInBatch = [NSMutableArray new];
-  int copiedNumberOfOperationsInBatch = _numberOfOperationsInBatch;
-  _numberOfOperationsInBatch = 0;
-  if (copiedNumberOfOperationsInBatch != 0) {
+  if ([copiedOperationsQueue count] != 0) {
     RCTExecuteOnUIManagerQueue(^{
-      for (int i = 0; i < copiedNumberOfOperationsInBatch; i++) {
+      for (int i = 0; i < [copiedOperationsQueue count]; i++) {
         copiedOperationsQueue[i](self.uiManager);
       }
       [self.uiManager setNeedsLayout];
