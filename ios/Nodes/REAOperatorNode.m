@@ -3,25 +3,25 @@
 #import "REAOperatorNode.h"
 #import "REANodesManager.h"
 
-typedef id (^REAOperatorBlock)(NSArray<REANode *> *inputNodes);
+typedef id (^REAOperatorBlock)(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext);
 
-#define REA_REDUCE(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat acc = [[inputNodes[0] value] doubleValue]; \
+#define REA_REDUCE(OP, evalContext) ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) { \
+CGFloat acc = [[inputNodes[0] value:evalContext] doubleValue]; \
 for (NSUInteger i = 1; i < inputNodes.count; i++) { \
-  CGFloat a = acc, b = [[inputNodes[i] value] doubleValue]; \
+  CGFloat a = acc, b = [[inputNodes[i] value:evalContext] doubleValue]; \
   acc = OP; \
 } \
 return @(acc); \
 }
 
-#define REA_SINGLE(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat a = [[inputNodes[0] value] doubleValue]; \
+#define REA_SINGLE(OP, evalContext) ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) { \
+CGFloat a = [[inputNodes[0] value:evalContext] doubleValue]; \
 return @(OP); \
 }
 
-#define REA_INFIX(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat a = [[inputNodes[0] value] doubleValue]; \
-CGFloat b = [[inputNodes[1] value] doubleValue]; \
+#define REA_INFIX(OP, evalContext) ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) { \
+CGFloat a = [[inputNodes[0] value:evalContext] doubleValue]; \
+CGFloat b = [[inputNodes[1] value:evalContext] doubleValue]; \
 return @(OP); \
 }
 
@@ -38,47 +38,47 @@ return @(OP); \
   dispatch_once(&opsToken, ^{
     OPS = @{
             // arithmetic
-            @"add": REA_REDUCE(a + b),
-            @"sub": REA_REDUCE(a - b),
-            @"multiply": REA_REDUCE(a * b),
-            @"divide": REA_REDUCE(a / b),
-            @"pow": REA_REDUCE(pow(a, b)),
-            @"modulo": REA_REDUCE(fmodf(fmodf(a, b) + b, b)),
-            @"sqrt": REA_SINGLE(sqrt(a)),
-            @"sin": REA_SINGLE(sin(a)),
-            @"cos": REA_SINGLE(cos(a)),
-            @"exp": REA_SINGLE(exp(a)),
-            @"round": REA_SINGLE(round(a)),
+            @"add": REA_REDUCE(a + b, evalContext),
+            @"sub": REA_REDUCE(a - b, evalContext),
+            @"multiply": REA_REDUCE(a * b, evalContext),
+            @"divide": REA_REDUCE(a / b, evalContext),
+            @"pow": REA_REDUCE(pow(a, b), evalContext),
+            @"modulo": REA_REDUCE(fmodf(fmodf(a, b) + b, b), evalContext),
+            @"sqrt": REA_SINGLE(sqrt(a), evalContext),
+            @"sin": REA_SINGLE(sin(a), evalContext),
+            @"cos": REA_SINGLE(cos(a), evalContext),
+            @"exp": REA_SINGLE(exp(a), evalContext),
+            @"round": REA_SINGLE(round(a), evalContext),
 
             // logical
-            @"and": ^(NSArray<REANode *> *inputNodes) {
-              BOOL res = [[inputNodes[0] value] doubleValue];
+            @"and": ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) {
+              BOOL res = [[inputNodes[0] value:evalContext] doubleValue];
               for (NSUInteger i = 1; i < inputNodes.count && res; i++) {
-                res = res && [[inputNodes[i] value] doubleValue];
+                res = res && [[inputNodes[i] value:evalContext] doubleValue];
               }
               return res ? @(1.) : @(0.);
             },
-            @"or": ^(NSArray<REANode *> *inputNodes) {
-              BOOL res = [[inputNodes[0] value] doubleValue];
+            @"or": ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) {
+              BOOL res = [[inputNodes[0] value:evalContext] doubleValue];
               for (NSUInteger i = 1; i < inputNodes.count && !res; i++) {
-                res = res || [[inputNodes[i] value] doubleValue];
+                res = res || [[inputNodes[i] value:evalContext] doubleValue];
               }
               return res ? @(1.) : @(0.);
             },
-            @"not": REA_SINGLE(!a),
-            @"defined": ^(NSArray<REANode *> *inputNodes) {
-              id val = [inputNodes[0] value];
+            @"not": REA_SINGLE(!a, evalContext),
+            @"defined": ^(NSArray<REANode *> *inputNodes, REAEvalContext *evalContext) {
+              id val = [inputNodes[0] value:evalContext];
               id res = @(val != nil && !isnan([val doubleValue]));
               return res;
             },
 
             // comparing
-            @"lessThan": REA_INFIX(a < b),
-            @"eq": REA_INFIX(a == b),
-            @"greaterThan": REA_INFIX(a > b),
-            @"lessOrEq": REA_INFIX(a <= b),
-            @"greaterOrEq": REA_INFIX(a >= b),
-            @"neq": REA_INFIX(a != b),
+            @"lessThan": REA_INFIX(a < b, evalContext),
+            @"eq": REA_INFIX(a == b, evalContext),
+            @"greaterThan": REA_INFIX(a > b, evalContext),
+            @"lessOrEq": REA_INFIX(a <= b, evalContext),
+            @"greaterOrEq": REA_INFIX(a >= b, evalContext),
+            @"neq": REA_INFIX(a != b, evalContext),
             };
   });
   if ((self = [super initWithID:nodeID config:config])) {
@@ -92,12 +92,12 @@ return @(OP); \
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   for (NSUInteger i = 0; i < _input.count; i++) {
     _inputNodes[i] = [self.nodesManager findNodeByID:_input[i]];
   }
-  return _op(_inputNodes);
+  return _op(_inputNodes, evalContext);
 }
 
 @end

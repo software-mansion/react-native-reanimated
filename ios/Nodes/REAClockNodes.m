@@ -29,7 +29,7 @@
 
   weak_animationClb = animationClb = ^(CADisplayLink *displayLink) {
     if (!weakSelf.isRunning) return;
-    [weakSelf markUpdated];
+    [weakSelf markUpdated:self.nodesManager.globalEvalContext];
     [weakSelf.nodesManager postOnAnimation:weak_animationClb];
   };
 
@@ -69,7 +69,7 @@
 
 @implementation REAClockStartNode
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   [[self clockNode] start];
   return @(0);

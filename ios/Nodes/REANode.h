@@ -11,28 +11,35 @@ typedef NSNumber* REANodeID;
 
 @end
 
-@interface REAUpdateContext : NSObject
+@interface REAEvalContext : NSObject
+
+@property (nonatomic) NSMutableDictionary<NSNumber *, id> *__strong memoizedValues;
+@property (nonatomic) NSMutableDictionary<NSNumber *, NSNumber *> *__strong lastLoopIDs;
+@property (nonatomic, nonnull) NSNumber *contextID;
+
 @end
+
 
 @interface REANode : NSObject
 
-+ (void)runPropUpdates:(nonnull REAUpdateContext *)context;
++ (void)runPropUpdates:(nonnull REANodesManager *)nodesManager;
 
 - (instancetype)initWithID:(REANodeID)nodeID
-                    config:(NSDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
+                    config:(NSMutableDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, weak, nullable) REANodesManager *nodesManager;
-@property (nonatomic, nullable) REAUpdateContext *updateContext;
 @property (nonatomic, readonly, nonnull) REANodeID nodeID;
 
-- (_Nullable id)evaluate;
-- (_Nullable id)value;
-- (void)markUpdated;
+- (_Nullable id)evaluate:(REAEvalContext *)evalContext;
+- (_Nullable id)value:(REAEvalContext *)evalContext;;
+- (void)markUpdated:(REAEvalContext *)evalContext;;
 
 - (void)addChild:(REANode *)child NS_REQUIRES_SUPER;
 - (void)removeChild:(REANode *)child NS_REQUIRES_SUPER;
 
-- (void)dangerouslyRescheduleEvaluate;
-- (void)forceUpdateMemoizedValue:(id)value;
+- (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
+- (void)forceUpdateMemoizedValue:(id)value
+                 withEvalContext:(REAEvalContext *)evalContext;
 
 @end
+

@@ -6,6 +6,7 @@
 
 @interface REAValueNode : REANode
 
-- (void)setValue:(NSNumber *)value;
+- (void)setValue:(NSNumber *)value
+ withEvalContext:(REAEvalContext *)evalContext;
 
 @end

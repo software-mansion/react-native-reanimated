@@ -17,13 +17,13 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
-  id cond = [[self.nodesManager findNodeByID:_condNodeID] value];
+  id cond = [[self.nodesManager findNodeByID:_condNodeID] value:evalContext];
   if ([cond doubleValue]) {
-    return [[self.nodesManager findNodeByID:_ifBlockID] value];
+    return [[self.nodesManager findNodeByID:_ifBlockID] value:evalContext];
   }
-  return _elseBlockID != nil ? [[self.nodesManager findNodeByID:_elseBlockID] value] : @(0);
+  return _elseBlockID != nil ? [[self.nodesManager findNodeByID:_elseBlockID] value:evalContext] : @(0);
 }
 
 @end

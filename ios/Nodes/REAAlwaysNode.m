@@ -18,15 +18,15 @@
     return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
-  [[self.nodesManager findNodeByID:_nodeToBeEvaluated] value];
+  [[self.nodesManager findNodeByID:_nodeToBeEvaluated] value:evalContext];
   return @(0);
 }
 
 - (void)update
 {
-  [self value];
+  [self value:self.nodesManager.globalEvalContext];
 }
 
 @end

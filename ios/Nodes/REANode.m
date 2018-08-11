@@ -3,20 +3,21 @@
 
 #import <React/RCTDefines.h>
 
-@interface REAUpdateContext ()
-
-@property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
-@property (nonatomic) NSUInteger loopID;
-
+@interface REAEvalContext()
+@property (nonatomic, nonnull) NSMutableArray< REANode * >  *updatedNodes;
 @end
 
-@implementation REAUpdateContext
+
+@implementation REAEvalContext
+static int _nextContextID = 0;
 
 - (instancetype)init
 {
   if ((self = [super init])) {
-    _loopID = 1;
     _updatedNodes = [NSMutableArray new];
+    _memoizedValues = [NSMutableDictionary new];
+    _lastLoopIDs = [NSMutableDictionary new];
+    _contextID = [NSNumber numberWithInt:_nextContextID++];
   }
   return self;
 }
@@ -45,28 +46,29 @@
 
 RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
-- (void)dangerouslyRescheduleEvaluate
+- (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
 {
   _lastLoopID = 0;
-  [self markUpdated];
+  [self markUpdated:evalContext];
 }
 
 - (void)forceUpdateMemoizedValue:(id)value
+                withEvalContext:(REAEvalContext *)evalContext;
 {
   _memoizedValue = value;
-  [self markUpdated];
+  [self markUpdated:evalContext];
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   return 0;
 }
 
-- (id)value
+- (id)value:(REAEvalContext *)evalContext;
 {
-  if (_lastLoopID < _updateContext.loopID) {
-    _lastLoopID = _updateContext.loopID;
-    return (_memoizedValue = [self evaluate]);
+  if (_lastLoopID < _nodesManager.loopID) {
+    _lastLoopID = _nodesManager.loopID;
+    return (_memoizedValue = [self evaluate:evalContext]);
   }
   return _memoizedValue;
 }
@@ -78,7 +80,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
   if (child) {
     [_childNodes addObject:child];
-    [self dangerouslyRescheduleEvaluate];
+    [self dangerouslyRescheduleEvaluate:self.nodesManager.globalEvalContext];
   }
 }
 
@@ -89,9 +91,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
-- (void)markUpdated
+- (void)markUpdated:(REAEvalContext *)evalContext;
 {
-  [_updateContext.updatedNodes addObject:self];
+  [evalContext.updatedNodes addObject:self];
   [self.nodesManager postRunUpdatesAfterAnimation];
 }
 
@@ -122,12 +124,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
-+ (void)runPropUpdates:(REAUpdateContext *)context
++ (void)runPropUpdates:(REANodesManager *)nodesManager
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
-  for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    [self findAndUpdateNodes:context.updatedNodes[i]
+  for (NSUInteger i = 0; i < nodesManager.globalEvalContext.updatedNodes.count; i++) {
+    [self findAndUpdateNodes:nodesManager.globalEvalContext.updatedNodes[i]
               withVisitedSet:visitedNodes
               withFinalNodes:finalNodes];
   }
@@ -136,8 +138,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [[finalNodes lastObject] update];
     [finalNodes removeLastObject];
   }
-  [context.updatedNodes removeAllObjects];
-  context.loopID++;
+  [nodesManager.globalEvalContext.updatedNodes removeAllObjects];
+  nodesManager.loopID++;
 }
 
 @end

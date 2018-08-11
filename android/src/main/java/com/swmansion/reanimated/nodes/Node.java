@@ -145,9 +145,9 @@ public abstract class Node<T> {
     }
   }
 
-  public static void runUpdates(EvalContext evalContext, NodesManager nodesManager) {
+  public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    SparseArray<Node> updatedNodes = evalContext.updatedNodes;
+    SparseArray<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();
     contexts.push(nodesManager.mGlobalEvalContext);

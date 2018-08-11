@@ -133,7 +133,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(mGlobalEvalContext, this);
+      Node.runUpdates(this);
     }
 
     mCallbackPosted.set(false);

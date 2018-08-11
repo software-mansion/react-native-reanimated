@@ -24,7 +24,6 @@
   NSMapTable<NSString *, REANode *> *_eventMapping;
   NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
-  REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
 }
@@ -38,7 +37,8 @@
     _nodes = [NSMutableDictionary new];
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
-    _updateContext = [REAUpdateContext new];
+    _globalEvalContext = [REAEvalContext new];
+    _loopID = 1;
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
   }
@@ -104,7 +104,7 @@
     block(displayLink);
   }
 
-  [REANode runPropUpdates:_updateContext];
+  [REANode runPropUpdates:self];
   _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {
@@ -151,7 +151,7 @@
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
   node.nodesManager = self;
-  node.updateContext = _updateContext;
+ // node.updateContext = _globalEvalContext;
   _nodes[nodeID] = node;
 }
 

@@ -15,7 +15,7 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   NSMutableArray<NSDictionary *> *transform = [NSMutableArray arrayWithCapacity:_transformConfigs.count];
   for (NSDictionary *transformConfig in _transformConfigs) {
@@ -24,7 +24,7 @@
     NSNumber *value;
     if (nodeID) {
       REANode *node = [self.nodesManager findNodeByID:nodeID];
-      value = [node value];
+      value = [node value:evalContext];
     } else {
       value = transformConfig[@"value"];
     }
