@@ -133,7 +133,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [self findAndUpdateNodes:nodesManager.globalEvalContext.updatedNodes[i]
               withVisitedSet:visitedNodes
               withFinalNodes:finalNodes];
-    if (i == context.updatedNodes.count - 1) {
+    if (i == nodesManager.globalEvalContext.updatedNodes.count - 1) {
       while (finalNodes.count > 0) {
         // NSMutableArray used for stack implementation
         [[finalNodes lastObject] update];

@@ -89,7 +89,7 @@ public abstract class Node<T> {
 
   protected void markUpdated(EvalContext context) {
     UiThreadUtil.assertOnUiThread();
-    context.updatedNodes.put(mNodeID, this);
+    context.updatedNodes.add( this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
@@ -147,12 +147,12 @@ public abstract class Node<T> {
 
   public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    ArrayList<Node> updatedNodes = updateContext.updatedNodes;
+    ArrayList<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();
     contexts.push(nodesManager.mGlobalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes);
+      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes, contexts, null);
       if (contexts.size() != 1) {
         throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
       }
