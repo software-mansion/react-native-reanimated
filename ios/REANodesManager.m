@@ -38,7 +38,7 @@
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
     _globalEvalContext = [REAEvalContext new];
-    _loopID = 1;
+    _loopID = [NSNumber numberWithInt:1];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
   }

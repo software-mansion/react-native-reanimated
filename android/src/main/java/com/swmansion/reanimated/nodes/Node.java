@@ -37,7 +37,9 @@ public abstract class Node<T> {
     long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID, (long) -1);
     if (lastLoopID < mNodesManager.updateLoopID) {
       evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
-      evalContext.memoizedValues.put(mNodeID,  evaluate(evalContext));
+      Object result = evaluate(evalContext);
+      evalContext.memoizedValues.put(mNodeID,  result);
+      return (T)result;
     }
     return (T) evalContext.memoizedValues.get(mNodeID);
   }

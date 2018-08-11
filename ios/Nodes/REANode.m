@@ -27,8 +27,6 @@ static int _nextContextID = 0;
 
 @interface REANode ()
 
-@property (nonatomic) NSUInteger lastLoopID;
-@property (nonatomic) id memoizedValue;
 @property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
 
 @end
@@ -39,7 +37,6 @@ static int _nextContextID = 0;
 {
   if ((self = [super init])) {
     _nodeID = nodeID;
-    _lastLoopID = 0;
   }
   return self;
 }
@@ -48,14 +45,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
 {
-  _lastLoopID = 0;
+  evalContext.lastLoopIDs[_nodeID] = 0;
   [self markUpdated:evalContext];
 }
 
 - (void)forceUpdateMemoizedValue:(id)value
                 withEvalContext:(REAEvalContext *)evalContext;
 {
-  _memoizedValue = value;
+  evalContext.memoizedValues[_nodeID] = value;
   [self markUpdated:evalContext];
 }
 
@@ -66,11 +63,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value:(REAEvalContext *)evalContext;
 {
-  if (_lastLoopID < _nodesManager.loopID) {
-    _lastLoopID = _nodesManager.loopID;
-    return (_memoizedValue = [self evaluate:evalContext]);
+  NSNumber *__nullable lastLoopID = evalContext.lastLoopIDs[_nodeID];
+  if (!lastLoopID || lastLoopID < _nodesManager.loopID) {
+    lastLoopID = _nodesManager.loopID;
+    evalContext.lastLoopIDs[_nodeID] = _nodesManager.loopID;
+    id result = [self evaluate:evalContext];
+    evalContext.memoizedValues[_nodeID] = result;
+    return result;
   }
-  return _memoizedValue;
+  return evalContext.memoizedValues[_nodeID];
 }
 
 - (void)addChild:(REANode *)child
@@ -139,7 +140,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [finalNodes removeLastObject];
   }
   [nodesManager.globalEvalContext.updatedNodes removeAllObjects];
-  nodesManager.loopID++;
+  nodesManager.loopID = [NSNumber numberWithLong: [nodesManager.loopID longValue] + 1];
 }
 
 @end
