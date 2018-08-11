@@ -76,7 +76,7 @@ All the functionality that missing elements provide in Animated can be already a
 const v = new Value(0);
 /// ...
 v.setValue(100);
-```  
+```
 
 ## Clocks
 
@@ -155,6 +155,15 @@ set(conditionNode, ifNode, [elseNode])
 ```
 
 If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node and returns its value, otherwise it evaluates `elseNode` and returns its value. `elseNode` is optional.
+
+---
+### `call`
+
+```js
+call(argsNodes, callback)
+```
+
+If one of the nodes from `argsNodes` array updates, `callback` method will be run in Javascript provided with a list of current values of nodes from `argsNodes` array as the first argument.
 
 ---
 ### `block`
@@ -503,7 +512,7 @@ When evaluated updates `position` and `velocity` nodes by running a single step 
 
 
 ## Running animations
-### Declarative API 
+### Declarative API
 Invoking animation differs a from the way you would do that with the original Animated API.
 Here instead of having animation objects we operate on nodes that can perform single animation steps.
 In order to map an animation into a value we will make the value to be assigned to a node that among few other things will call into the animation step node. Check [`timing`](#timing), [`decay`](#decay) and [`spring`](#spring) nodes documentation for some details how animation step nodes can be configured.

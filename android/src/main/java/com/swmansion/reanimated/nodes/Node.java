@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.SparseArray;
-
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.EvalContext;
@@ -149,18 +147,20 @@ public abstract class Node<T> {
 
   public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    SparseArray<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
+    ArrayList<Node> updatedNodes = updateContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();
     contexts.push(nodesManager.mGlobalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.valueAt(i), new HashSet<Node>(), finalNodes, contexts, null);
+      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes);
       if (contexts.size() != 1) {
         throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
       }
-    }
-    while (!finalNodes.isEmpty()) {
-      finalNodes.pop().update();
+      if (i == updatedNodes.size() - 1) {
+        while (!finalNodes.isEmpty()) {
+          finalNodes.pop().update();
+        }
+      }
     }
     updatedNodes.clear();
     nodesManager.updateLoopID++;

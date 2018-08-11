@@ -133,11 +133,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [self findAndUpdateNodes:nodesManager.globalEvalContext.updatedNodes[i]
               withVisitedSet:visitedNodes
               withFinalNodes:finalNodes];
-  }
-  while (finalNodes.count > 0) {
-    // NSMutableArray used for stack implementation
-    [[finalNodes lastObject] update];
-    [finalNodes removeLastObject];
+    if (i == context.updatedNodes.count - 1) {
+      while (finalNodes.count > 0) {
+        // NSMutableArray used for stack implementation
+        [[finalNodes lastObject] update];
+        [finalNodes removeLastObject];
+      }
+    }
   }
   [nodesManager.globalEvalContext.updatedNodes removeAllObjects];
   nodesManager.loopID = [NSNumber numberWithLong: [nodesManager.loopID longValue] + 1];
