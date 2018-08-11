@@ -41,7 +41,7 @@
   _isRunning = false;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   return @(self.nodesManager.currentAnimationTimestamp * 1000.);
 }
@@ -79,7 +79,7 @@
 
 @implementation REAClockStopNode
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   [[self clockNode] stop];
   return @(0);
@@ -89,7 +89,7 @@
 
 @implementation REAClockTestNode
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   return @([self clockNode].isRunning ? 1 : 0);
 }
