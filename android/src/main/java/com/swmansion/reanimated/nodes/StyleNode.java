@@ -33,8 +33,6 @@ public class StyleNode extends Node {
           propMap.putDouble(entry.getKey(), (Double) val);
         } else if (val instanceof String) {
           propMap.putString(entry.getKey(), (String) val);
-        } else if (val instanceof Boolean) {
-          propMap.putBoolean(entry.getKey(), (Boolean) val);
         } else {
           throw new IllegalStateException("Wrong style form");
         }
