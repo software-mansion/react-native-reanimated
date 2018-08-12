@@ -302,6 +302,14 @@ round(node)
 
 Returns node that rounds input value to the nearest integer.
 
+### `floor`
+
+```js
+floor(node)
+```
+
+Returns node that represents the largest integer less than or equal to the input value.
+
 ---
 ### `lessThan`
 
