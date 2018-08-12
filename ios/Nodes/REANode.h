@@ -33,9 +33,12 @@ typedef NSNumber* REANodeID;
 - (_Nullable id)evaluate:(REAEvalContext *)evalContext;
 - (_Nullable id)value:(REAEvalContext *)evalContext;;
 - (void)markUpdated:(REAEvalContext *)evalContext;;
+- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
+                                   withLastVisitedNode:(REANode *) lastVisited;
 
 - (void)addChild:(REANode *)child NS_REQUIRES_SUPER;
 - (void)removeChild:(REANode *)child NS_REQUIRES_SUPER;
+- (NSMutableArray *)getChildenByContext:(REAEvalContext *) evalContext;
 
 - (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
 - (void)forceUpdateMemoizedValue:(id)value

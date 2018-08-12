@@ -92,10 +92,20 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
+-(NSMutableArray *)getChildenByContext:(REAEvalContext *) evalContext {
+  return _childNodes;
+}
+
 - (void)markUpdated:(REAEvalContext *)evalContext;
 {
   [evalContext.updatedNodes addObject:self];
   [self.nodesManager postRunUpdatesAfterAnimation];
+}
+
+- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
+                                   withLastVisitedNode:(REANode *) lastVisited
+{
+  return evalContext;
 }
 
 + (NSMutableArray<REANode *> *)updatedNodes
@@ -111,17 +121,44 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
             withFinalNodes:(NSMutableArray<id<REAFinalNode>> *)finalNodes
+        withStackedContext:(NSMutableArray<REAEvalContext *> *)contexts
+       withLastVisitedNode:(REANode *)lastVisited
 {
   if ([visitedNodes containsObject:node]) {
     return;
   } else {
     [visitedNodes addObject:node];
   }
-  for (REANode *child in node.childNodes) {
-    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes];
+  
+  REAEvalContext *currentContext = contexts.lastObject;
+  NSMutableArray *__nullable children = [node getChildenByContext:currentContext];
+  REAEvalContext *newContext = [node switchContextWhileUpdatingIfNeeded:currentContext withLastVisitedNode:lastVisited];
+  BOOL pushedNewContext = false;
+  REAEvalContext *__nullable contextPopped = NULL;
+  
+  if (newContext != currentContext && currentContext) {
+    [contexts addObject:newContext];
+    pushedNewContext = true;
   }
+  
+  //if () TODO
+  
+  if (children) {
+    for (REANode *child in children) {
+      [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes withStackedContext:contexts withLastVisitedNode:node];
+    }
+  }
+  
   if ([node conformsToProtocol:@protocol(REAFinalNode)]) {
     [finalNodes addObject:(id<REAFinalNode>)node];
+  }
+  
+  if (pushedNewContext) {
+    [contexts removeLastObject];
+  }
+  
+  if (contextPopped) {
+    [contexts addObject:contextPopped];
   }
 }
 
@@ -129,10 +166,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
+  NSMutableArray<REAEvalContext *> *contexts = [NSMutableArray new];
+  [contexts addObject:nodesManager.globalEvalContext];
   for (NSUInteger i = 0; i < nodesManager.globalEvalContext.updatedNodes.count; i++) {
     [self findAndUpdateNodes:nodesManager.globalEvalContext.updatedNodes[i]
               withVisitedSet:visitedNodes
-              withFinalNodes:finalNodes];
+              withFinalNodes:finalNodes
+          withStackedContext:contexts
+         withLastVisitedNode:NULL
+     ];
+    if (contexts.count != 1) {
+      // error TODO
+    }
     if (i == nodesManager.globalEvalContext.updatedNodes.count - 1) {
       while (finalNodes.count > 0) {
         // NSMutableArray used for stack implementation
