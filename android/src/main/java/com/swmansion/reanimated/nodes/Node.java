@@ -28,7 +28,6 @@ public abstract class Node<T> {
     mNodesManager = nodesManager;
   }
 
-
   protected abstract @Nullable T evaluate(EvalContext evalContext);
 
   public final @Nullable T value(EvalContext evalContext) {
@@ -109,7 +108,6 @@ public abstract class Node<T> {
     } else {
       visitedNodes.add(node);
     }
-
 
     EvalContext currentContext = contexts.peek();
     List<Node> children = node.getChildrenInContext(currentContext);
