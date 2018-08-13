@@ -154,6 +154,4 @@
   return [value value:[_oldContextsByValue objectForKey:value.nodeID]];
 }
 
-
 @end
-
