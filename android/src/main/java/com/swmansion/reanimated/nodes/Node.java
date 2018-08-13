@@ -115,7 +115,6 @@ public abstract class Node<T> {
     boolean pushedNewContext = false;
     EvalContext contextPopped = null;
 
-
     if (newContext != currentContext && newContext != null) {
       contexts.push(newContext);
       pushedNewContext = true;
