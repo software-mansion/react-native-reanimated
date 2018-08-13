@@ -1,5 +1,5 @@
-import { add, sub, round } from '../base';
+import { sub, round } from '../base';
 
 export default function floor(a) {
-  return sub(round(add(a, 0.5)), 1);
+  return round(sub(a, 0.5));
 }
