@@ -23,7 +23,7 @@ import AnimatedProceduralNode from '../core/AnimatedProcedural';
 
 const MAX_STEPS_MS = 64;
 
-const innerSpring = (
+const springInternal = (
   clock,
   position,
   velocity,
@@ -129,7 +129,7 @@ const innerSpring = (
   ]);
 };
 
-const springStatic = new AnimatedProceduralNode(innerSpring);
+const springStatic = new AnimatedProceduralNode(springInternal);
 
 export default function spring(clock, state, config) {
   // conditions for stopping the spring animations
