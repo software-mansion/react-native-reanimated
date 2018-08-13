@@ -88,7 +88,7 @@ public abstract class Node<T> {
 
   protected void markUpdated(EvalContext context) {
     UiThreadUtil.assertOnUiThread();
-    context.updatedNodes.add( this);
+    context.updatedNodes.add(this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
