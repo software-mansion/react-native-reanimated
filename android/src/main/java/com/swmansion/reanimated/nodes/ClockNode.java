@@ -1,8 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class ClockNode extends Node<Double> implements NodesManager.OnAnimationFrame {
@@ -26,14 +25,14 @@ public class ClockNode extends Node<Double> implements NodesManager.OnAnimationF
   }
 
   @Override
-  protected Double evaluate() {
+  protected Double evaluate(EvalContext evalContext) {
     return mNodesManager.currentFrameTimeMs;
   }
 
   @Override
   public void onAnimationFrame() {
     if (isRunning) {
-      markUpdated();
+      markUpdated(mNodesManager.mGlobalEvalContext);
       mNodesManager.postOnAnimation(this);
     }
   }

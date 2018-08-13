@@ -27,6 +27,7 @@ import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
+import com.swmansion.reanimated.nodes.ProceduralNode;
 import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
@@ -41,8 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nullable;
-
 public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
@@ -51,6 +50,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame();
   }
 
+  public final EvalContext mGlobalEvalContext = new EvalContext(null);
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;
@@ -60,18 +60,17 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
+  public long updateLoopID = 0;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
   private boolean mWantRunUpdates;
 
   public double currentFrameTimeMs;
-  public final UpdateContext updateContext;
   public Set<String> nativeProps = Collections.emptySet();
 
   public NodesManager(ReactContext context) {
     UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
-    updateContext = new UpdateContext();
     mUIImplementation = uiManager.getUIImplementation();
     mCustomEventNamesResolver = uiManager.getDirectEventNamesResolver();
     uiManager.getEventDispatcher().addListener(this);
@@ -134,7 +133,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(updateContext);
+      Node.runUpdates(this);
     }
 
     mCallbackPosted.set(false);
@@ -150,10 +149,10 @@ public class NodesManager implements EventDispatcherListener {
    * Null-safe way of getting node's value. If node is not present we return 0. This also matches
    * iOS behavior when the app won't just crash.
    */
-  public Double getNodeValue(int nodeID) {
+  public Double getNodeValue(int nodeID, EvalContext evalContext) {
     Node node = mAnimatedNodes.get(nodeID);
     if (node != null) {
-      return node.doubleValue();
+      return node.doubleValue(evalContext);
     }
     return ZERO;
   }
@@ -163,6 +162,11 @@ public class NodesManager implements EventDispatcherListener {
    * node is not present we try to return a "no-op" node that allows for "set" calls and always
    * returns 0 as a value.
    */
+
+  public boolean isNodeCreated(int id) {
+    return mAnimatedNodes.indexOfKey(id) >= 0;
+  }
+
   public <T extends Node> T findNodeById(int id, Class<T> type) {
     Node node = mAnimatedNodes.get(id);
     if (node == null) {
@@ -212,6 +216,12 @@ public class NodesManager implements EventDispatcherListener {
       node = new ClockOpNode.ClockStopNode(nodeID, config, this);
     } else if ("clockTest".equals(type)) {
       node = new ClockOpNode.ClockTestNode(nodeID, config, this);
+    } else if ("procedural".equals(type)) {
+      node = new ProceduralNode(nodeID, config, this);
+    } else if ("argument".equals(type)) {
+      node = new ProceduralNode.ArgumentNode(nodeID, config, this);
+    } else if ("perform".equals(type)) {
+      node = new ProceduralNode.PerformNode(nodeID, config, this);
     } else if ("call".equals(type)) {
       node = new JSCallNode(nodeID, config, this);
     } else if ("bezier".equals(type)) {
@@ -227,6 +237,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dropNode(int tag) {
+    findNodeById(tag, Node.class).onDrop();
     mAnimatedNodes.remove(tag);
   }
 

@@ -13,11 +13,11 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   id result;
   for (NSNumber *inputID in _block) {
-    result = [[self.nodesManager findNodeByID:inputID] value];
+    result = [[self.nodesManager findNodeByID:inputID] value:evalContext];
   }
   return result;
 }

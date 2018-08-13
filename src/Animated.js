@@ -14,7 +14,6 @@ import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
-
 const Animated = {
   // components
   View: createAnimatedComponent(View),

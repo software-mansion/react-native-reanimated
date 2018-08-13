@@ -14,12 +14,13 @@
 }
 
 - (void)setValue:(NSNumber *)value
+ withEvalContext:(REAEvalContext *)evalContext
 {
   _value = value;
-  [self forceUpdateMemoizedValue:value];
+  [self forceUpdateMemoizedValue:value withEvalContext:evalContext];
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   return _value;
 }

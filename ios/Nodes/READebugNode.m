@@ -15,9 +15,9 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
-  id value = [[self.nodesManager findNodeByID:_valueNodeID] value];
+  id value = [[self.nodesManager findNodeByID:_valueNodeID] value:evalContext];
   NSLog(@"%@ %@", _message, value);
   return value;
 }

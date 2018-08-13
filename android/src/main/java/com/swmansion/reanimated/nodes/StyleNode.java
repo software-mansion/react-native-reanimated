@@ -3,12 +3,11 @@ package com.swmansion.reanimated.nodes;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 public class StyleNode extends Node<WritableMap> {
 
@@ -20,14 +19,14 @@ public class StyleNode extends Node<WritableMap> {
   }
 
   @Override
-  protected WritableMap evaluate() {
+  protected WritableMap evaluate(EvalContext evalContext) {
     JavaOnlyMap propMap = new JavaOnlyMap();
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof TransformNode) {
-        propMap.putArray(entry.getKey(), ((TransformNode) node).value());
+        propMap.putArray(entry.getKey(), ((TransformNode) node).value(evalContext));
       } else {
-        propMap.putDouble(entry.getKey(), node.doubleValue());
+        propMap.putDouble(entry.getKey(), node.doubleValue(evalContext));
       }
     }
     return propMap;

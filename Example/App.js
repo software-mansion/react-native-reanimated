@@ -10,6 +10,7 @@ import Interpolate from './src/interpolate';
 import Colors from './colors';
 import StartAPI from './startAPI';
 import ChatHeads from './chatHeads';
+import ProceduralOptimization from './proceduralOptimization';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -26,6 +27,10 @@ const SCREENS = {
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
+  proceduralOptimization: {
+    screen: ProceduralOptimization,
+    title: 'Optimization of amount of nodes',
+  },
 };
 
 class MainScreen extends React.Component {

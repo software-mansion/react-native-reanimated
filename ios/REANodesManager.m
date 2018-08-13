@@ -17,6 +17,7 @@
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
 #import "Nodes/REAAlwaysNode.h"
+#import "Nodes/REAProceduralNode.h"
 
 @implementation REANodesManager
 {
@@ -24,7 +25,6 @@
   NSMapTable<NSString *, REANode *> *_eventMapping;
   NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
-  REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
 }
@@ -38,7 +38,8 @@
     _nodes = [NSMutableDictionary new];
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
-    _updateContext = [REAUpdateContext new];
+    _globalEvalContext = [[REAEvalContext alloc] initWithParent: NULL];
+    _loopID = [NSNumber numberWithInt:1];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
   }
@@ -48,6 +49,10 @@
 - (void)invalidate
 {
   [self stopUpdatingOnAnimationFrame];
+}
+
+- (BOOL)isNodeCreated:(NSNumber *)id {
+  return [_nodes objectForKey:id];
 }
 
 - (REANode *)findNodeByID:(REANodeID)nodeID
@@ -104,7 +109,7 @@
     block(displayLink);
   }
 
-  [REANode runPropUpdates:_updateContext];
+  [REANode runPropUpdates:self];
   _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {
@@ -137,6 +142,9 @@
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
+            @"procedural": [REAProceduralNode class],
+            @"perform": [REAPerformNode class],
+            @"argument": [REAArgumentNode class],
 //            @"listener": nil,
             };
   });
@@ -151,13 +159,14 @@
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
   node.nodesManager = self;
-  node.updateContext = _updateContext;
+ // node.updateContext = _globalEvalContext;
   _nodes[nodeID] = node;
 }
 
 - (void)dropNode:(REANodeID)nodeID
 {
   REANode *node = _nodes[nodeID];
+  [node onDrop];
   if (node) {
     [_nodes removeObjectForKey:nodeID];
   }

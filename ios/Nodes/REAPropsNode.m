@@ -28,7 +28,7 @@
 {
   _connectedViewTag = viewTag;
   _connectedViewName = viewName;
-  [self dangerouslyRescheduleEvaluate];
+  [self dangerouslyRescheduleEvaluate:self.nodesManager.globalEvalContext];
 }
 
 - (void)disconnectFromView:(NSNumber *)viewTag
@@ -37,7 +37,7 @@
   _connectedViewName = nil;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
   NSMutableDictionary *jsProps = [NSMutableDictionary new];
@@ -54,9 +54,9 @@
     REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
 
     if ([propNode isKindOfClass:[REAStyleNode class]]) {
-      [[propNode value] enumerateKeysAndObjectsUsingBlock:addBlock];
+      [[propNode value:evalContext] enumerateKeysAndObjectsUsingBlock:addBlock];
     } else {
-      addBlock(prop, [propNode value], nil);
+      addBlock(prop, [propNode value:evalContext], nil);
     }
   }
 
@@ -87,7 +87,7 @@
   }
 
   // triger for side effect
-  [self value];
+  [self value:self.nodesManager.globalEvalContext];
 }
 
 @end

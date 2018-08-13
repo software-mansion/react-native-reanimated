@@ -5,6 +5,7 @@ import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class TransformNode extends Node<WritableArray> {
 
     @Override
     public double getValue(NodesManager nodesManager) {
-      return nodesManager.getNodeValue(nodeID);
+      return nodesManager.getNodeValue(nodeID, nodesManager.mGlobalEvalContext);
     }
   }
 
@@ -64,7 +65,7 @@ public class TransformNode extends Node<WritableArray> {
   }
 
   @Override
-  protected WritableArray evaluate() {
+  protected WritableArray evaluate(EvalContext evalContext) {
     List<JavaOnlyMap> transforms = new ArrayList<>(mTransforms.size());
 
     for (TransformConfig transformConfig : mTransforms) {

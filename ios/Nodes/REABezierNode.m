@@ -89,9 +89,9 @@
   return t2;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
-  CGFloat x = [[[self.nodesManager findNodeByID:_inputNodeID] value] doubleValue];
+  CGFloat x = [[[self.nodesManager findNodeByID:_inputNodeID] value:evalContext] doubleValue];
   CGFloat y = [self sampleCurveY:[self solveCurveX:x withEpsilon:EPS]];
   return @(y);
 }

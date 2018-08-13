@@ -16,11 +16,11 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
-  NSNumber *newValue = [[self.nodesManager findNodeByID:_valueNodeID] value];
+  NSNumber *newValue = [[self.nodesManager findNodeByID:_valueNodeID] value:evalContext];
   REAValueNode *what = (REAValueNode *)[self.nodesManager findNodeByID:_whatNodeID];
-  [what setValue:newValue];
+  [what setValue:newValue withEvalContext:evalContext];
   return newValue;
 }
 

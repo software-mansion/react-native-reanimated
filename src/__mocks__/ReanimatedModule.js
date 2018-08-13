@@ -1,5 +1,5 @@
 export default {
-  configureNativeProps: () => {},
-  connectNodes: () => {},
-  disconnectNodes: () => {},
+  configureNativeProps: jest.fn(),
+  connectNodes: jest.fn(),
+  disconnectNodes: jest.fn(),
 };

@@ -9,6 +9,7 @@ import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedAlways from './core/AnimatedAlways';
+import AnimatedProcedular from './core/AnimatedProcedural';
 
 import { adapt } from './utils';
 
@@ -84,4 +85,8 @@ export const clockRunning = function(clock) {
 
 export const event = function(argMapping, config) {
   return new AnimatedEvent(argMapping, config);
+};
+
+export const proc = function(fun) {
+  return new AnimatedProcedular(fun).invoke;
 };

@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class DebugNode extends Node {
@@ -17,8 +18,8 @@ public class DebugNode extends Node {
   }
 
   @Override
-  protected Object evaluate() {
-    Object value = mNodesManager.findNodeById(mValueID, Node.class).value();
+  protected Object evaluate(EvalContext evalContext) {
+    Object value = mNodesManager.findNodeById(mValueID, Node.class).value(evalContext);
     Log.d("REANIMATED", String.format("%s %s", mMessage, value));
     return value;
   }

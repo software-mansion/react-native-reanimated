@@ -2,8 +2,8 @@ package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.UpdateContext;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,26 +21,24 @@ public abstract class Node<T> {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private final UpdateContext mUpdateContext;
-
-  private long mLastLoopID = -1;
-  private @Nullable T mMemoizedValue;
-  private @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
+  protected @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
     mNodesManager = nodesManager;
-    mUpdateContext = nodesManager.updateContext;
   }
 
-  protected abstract @Nullable T evaluate();
+  protected abstract @Nullable T evaluate(EvalContext evalContext);
 
-  public final @Nullable T value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID) {
-      mLastLoopID = mUpdateContext.updateLoopID;
-      return (mMemoizedValue = evaluate());
+  public final @Nullable T value(EvalContext evalContext) {
+    long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID, (long) -1);
+    if (lastLoopID < mNodesManager.updateLoopID) {
+      evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
+      Object result = evaluate(evalContext);
+      evalContext.memoizedValues.put(mNodeID,  result);
+      return (T)result;
     }
-    return mMemoizedValue;
+    return (T) evalContext.memoizedValues.get(mNodeID);
   }
 
   /**
@@ -48,8 +46,8 @@ public abstract class Node<T> {
    * return 0 if we fail to properly cast the value. This is to match iOS behavior where the node
    * would not throw even if the value was not set.
    */
-  public final Double doubleValue() {
-    T value = value();
+  public final Double doubleValue(EvalContext evalContext) {
+    T value = value(evalContext);
     if (value == null) {
       return ZERO;
     } else if (value instanceof Double) {
@@ -67,7 +65,7 @@ public abstract class Node<T> {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate();
+    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvalContext);
   }
 
   public void removeChild(Node child) {
@@ -76,46 +74,84 @@ public abstract class Node<T> {
     }
   }
 
-  protected void markUpdated() {
+  public void onDrop() {
+    // no-op
+  }
+
+  public @Nullable List<Node<?>> getChildrenInContext(EvalContext context) {
+    return mChildren;
+  }
+
+  public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext context, Node lastVisited) {
+    return context;
+  }
+
+  protected void markUpdated(EvalContext context) {
     UiThreadUtil.assertOnUiThread();
-    mUpdateContext.updatedNodes.add(this);
+    context.updatedNodes.add(this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
-  protected final void dangerouslyRescheduleEvaluate() {
-    mLastLoopID = -1;
-    markUpdated();
+  protected final void dangerouslyRescheduleEvaluate(EvalContext context) {
+    context.lastLoopsIDs.put(mNodeID, (long) -1);
+    markUpdated(context);
   }
 
-  protected final void forceUpdateMemoizedValue(T value) {
-    mMemoizedValue = value;
-    markUpdated();
+  protected final void forceUpdateMemoizedValue(T value, EvalContext context) {
+    context.memoizedValues.put(mNodeID, value);
+    markUpdated(context);
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
+  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvalContext> contexts, Node lastVisited) {
     if (visitedNodes.contains(node)) {
       return;
-    } else {
-      visitedNodes.add(node);
+    }
+    visitedNodes.add(node);
+
+    EvalContext currentContext = contexts.peek();
+    List<Node> children = node.getChildrenInContext(currentContext);
+    EvalContext newContext = node.switchContextWhileUpdatingIfNeeded(currentContext, lastVisited);
+    boolean pushedNewContext = false;
+    EvalContext contextPopped = null;
+
+    if (newContext != currentContext && newContext != null) {
+      contexts.push(newContext);
+      pushedNewContext = true;
     }
 
-    List<Node> children = node.mChildren;
+    if (node instanceof ProceduralNode.PerformNode && contexts.size() > 1) {
+      contextPopped = contexts.pop();
+    }
+
     if (children != null) {
       for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finalNodes);
+        findAndUpdateNodes(child, visitedNodes, finalNodes, contexts, node);
       }
     }
     if (node instanceof FinalNode) {
       finalNodes.push((FinalNode) node);
     }
+
+    if (pushedNewContext) {
+      contexts.pop();
+    }
+
+    if (contextPopped != null) {
+      contexts.push(contextPopped);
+    }
   }
 
-  public static void runUpdates(UpdateContext updateContext) {
+  public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    ArrayList<Node> updatedNodes = updateContext.updatedNodes;
+    ArrayList<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
     Stack<FinalNode> finalNodes = new Stack<>();
+    Stack<EvalContext> contexts = new Stack<>();
+    contexts.push(nodesManager.mGlobalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes);
+      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes, contexts, null);
+      if (contexts.size() != 1) {
+        throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
+      }
       if (i == updatedNodes.size() - 1) {
         while (!finalNodes.isEmpty()) {
           finalNodes.pop().update();
@@ -123,6 +159,6 @@ public abstract class Node<T> {
       }
     }
     updatedNodes.clear();
-    updateContext.updateLoopID++;
+    nodesManager.updateLoopID++;
   }
 }

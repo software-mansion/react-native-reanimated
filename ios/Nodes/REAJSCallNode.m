@@ -14,11 +14,11 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   NSMutableArray *args = [NSMutableArray arrayWithCapacity:_input.count];
   for (NSUInteger i = 0; i < _input.count; i++) {
-    args[i] = [[self.nodesManager findNodeByID:_input[i]] value];
+    args[i] = [[self.nodesManager findNodeByID:_input[i]] value:evalContext];
   }
 
   [self.nodesManager.reanimatedModule

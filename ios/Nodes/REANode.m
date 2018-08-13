@@ -1,36 +1,10 @@
 #import "REANode.h"
 #import "REANodesManager.h"
+#import "REAProceduralNode.h"
+#import "REAEvalContext.h"
 
 #import <React/RCTDefines.h>
 
-@interface REAUpdateContext ()
-
-@property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
-@property (nonatomic) NSUInteger loopID;
-
-@end
-
-@implementation REAUpdateContext
-
-- (instancetype)init
-{
-  if ((self = [super init])) {
-    _loopID = 1;
-    _updatedNodes = [NSMutableArray new];
-  }
-  return self;
-}
-
-@end
-
-
-@interface REANode ()
-
-@property (nonatomic) NSUInteger lastLoopID;
-@property (nonatomic) id memoizedValue;
-@property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
-
-@end
 
 @implementation REANode
 
@@ -38,37 +12,41 @@
 {
   if ((self = [super init])) {
     _nodeID = nodeID;
-    _lastLoopID = 0;
   }
   return self;
 }
 
 RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
-- (void)dangerouslyRescheduleEvaluate
+- (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
 {
-  _lastLoopID = 0;
-  [self markUpdated];
+  evalContext.lastLoopIDs[_nodeID] = 0;
+  [self markUpdated:evalContext];
 }
 
 - (void)forceUpdateMemoizedValue:(id)value
+                withEvalContext:(REAEvalContext *)evalContext;
 {
-  _memoizedValue = value;
-  [self markUpdated];
+  evalContext.memoizedValues[_nodeID] = value;
+  [self markUpdated:evalContext];
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   return 0;
 }
 
-- (id)value
+- (id)value:(REAEvalContext *)evalContext;
 {
-  if (_lastLoopID < _updateContext.loopID) {
-    _lastLoopID = _updateContext.loopID;
-    return (_memoizedValue = [self evaluate]);
+  NSNumber *__nullable lastLoopID = evalContext.lastLoopIDs[_nodeID];
+  if (!lastLoopID || lastLoopID < _nodesManager.loopID) {
+    lastLoopID = _nodesManager.loopID;
+    evalContext.lastLoopIDs[_nodeID] = _nodesManager.loopID;
+    id result = [self evaluate:evalContext];
+    evalContext.memoizedValues[_nodeID] = result;
+    return result;
   }
-  return _memoizedValue;
+  return evalContext.memoizedValues[_nodeID];
 }
 
 - (void)addChild:(REANode *)child
@@ -78,7 +56,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
   if (child) {
     [_childNodes addObject:child];
-    [self dangerouslyRescheduleEvaluate];
+    [self dangerouslyRescheduleEvaluate:self.nodesManager.globalEvalContext];
   }
 }
 
@@ -89,10 +67,24 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
-- (void)markUpdated
+-(NSMutableArray *)getChildenByContext:(REAEvalContext *) evalContext {
+  return _childNodes;
+}
+
+- (void)markUpdated:(REAEvalContext *)evalContext;
 {
-  [_updateContext.updatedNodes addObject:self];
+  [evalContext.updatedNodes addObject:self];
   [self.nodesManager postRunUpdatesAfterAnimation];
+}
+
+- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
+                                   withLastVisitedNode:(REANode *) lastVisited
+{
+  return evalContext;
+}
+
+- (void)onDrop {
+  // no-op
 }
 
 + (NSMutableArray<REANode *> *)updatedNodes
@@ -108,29 +100,65 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 + (void)findAndUpdateNodes:(nonnull REANode *)node
             withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
             withFinalNodes:(NSMutableArray<id<REAFinalNode>> *)finalNodes
+        withStackedContext:(NSMutableArray<REAEvalContext *> *)contexts
+       withLastVisitedNode:(REANode *)lastVisited
 {
   if ([visitedNodes containsObject:node]) {
     return;
   } else {
     [visitedNodes addObject:node];
   }
-  for (REANode *child in node.childNodes) {
-    [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes];
+  
+  REAEvalContext *currentContext = contexts.lastObject;
+  NSMutableArray *__nullable children = [node getChildenByContext:currentContext];
+  REAEvalContext *newContext = [node switchContextWhileUpdatingIfNeeded:currentContext withLastVisitedNode:lastVisited];
+  BOOL pushedNewContext = false;
+  REAEvalContext *__nullable contextPopped = NULL;
+  
+  if (newContext != currentContext && currentContext) {
+    [contexts addObject:newContext];
+    pushedNewContext = true;
   }
+  
+  if ([node isKindOfClass:[REAPerformNode class]] && contexts.count > 1) {
+    contextPopped = [contexts lastObject];
+    [contexts removeLastObject];
+  }
+  
+  if (children) {
+    for (REANode *child in children) {
+      [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes withStackedContext:contexts withLastVisitedNode:node];
+    }
+  }
+  
   if ([node conformsToProtocol:@protocol(REAFinalNode)]) {
     [finalNodes addObject:(id<REAFinalNode>)node];
   }
+  
+  if (pushedNewContext) {
+    [contexts removeLastObject];
+  }
+  
+  if (contextPopped) {
+    [contexts addObject:contextPopped];
+  }
 }
 
-+ (void)runPropUpdates:(REAUpdateContext *)context
++ (void)runPropUpdates:(REANodesManager *)nodesManager
 {
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
-  for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    [self findAndUpdateNodes:context.updatedNodes[i]
+  NSMutableArray<REAEvalContext *> *contexts = [NSMutableArray new];
+  [contexts addObject:nodesManager.globalEvalContext];
+  for (NSUInteger i = 0; i < nodesManager.globalEvalContext.updatedNodes.count; i++) {
+    [self findAndUpdateNodes:nodesManager.globalEvalContext.updatedNodes[i]
               withVisitedSet:visitedNodes
-              withFinalNodes:finalNodes];
-    if (i == context.updatedNodes.count - 1) {
+              withFinalNodes:finalNodes
+          withStackedContext:contexts
+         withLastVisitedNode:NULL
+     ];
+    RCTAssert(contexts.count == 1, @"Stacking of contexts was not performed correctly");
+    if (i == nodesManager.globalEvalContext.updatedNodes.count - 1) {
       while (finalNodes.count > 0) {
         // NSMutableArray used for stack implementation
         [[finalNodes lastObject] update];
@@ -138,9 +166,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
       }
     }
   }
-
-  [context.updatedNodes removeAllObjects];
-  context.loopID++;
+  [nodesManager.globalEvalContext.updatedNodes removeAllObjects];
+  nodesManager.loopID = [NSNumber numberWithLong: [nodesManager.loopID longValue] + 1];
 }
 
 @end

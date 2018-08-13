@@ -13,11 +13,15 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;
+@property (nonatomic) NSNumber *loopID;
+@property (nonatomic) REAEvalContext *globalEvalContext;
 
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
+
+- (BOOL)isNodeCreated:(NSNumber *)id;
 
 - (REANode* _Nullable)findNodeByID:(nonnull REANodeID)nodeID;
 

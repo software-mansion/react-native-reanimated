@@ -1,7 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 
 public class SetNode extends Node<Double> {
@@ -15,10 +15,10 @@ public class SetNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate() {
-    Double newValue = mNodesManager.getNodeValue(mValueNodeID);
+  protected Double evaluate(EvalContext evalContext) {
+    Double newValue = mNodesManager.getNodeValue(mValueNodeID, evalContext);
     ValueNode what = mNodesManager.findNodeById(mWhatNodeID, ValueNode.class);
-    what.setValue(newValue);
+    what.setValue(newValue, evalContext);
     return newValue;
   }
 }

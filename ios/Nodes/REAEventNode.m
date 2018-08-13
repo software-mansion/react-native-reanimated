@@ -26,7 +26,7 @@
         value = [value valueForKey:eventPath[i]];
       } else {
         REAValueNode *node = (REAValueNode *)[self.nodesManager findNodeByID:eventPath[i]];
-        [node setValue:value];
+        [node setValue:value withEvalContext:self.nodesManager.globalEvalContext];
       }
     }
   }

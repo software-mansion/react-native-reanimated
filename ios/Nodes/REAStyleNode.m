@@ -16,12 +16,12 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext
 {
   NSMutableDictionary *styles = [NSMutableDictionary new];
   for (NSString *prop in _styleConfig) {
     REANode *propNode = [self.nodesManager findNodeByID:_styleConfig[prop]];
-    styles[prop] = [propNode value];
+    styles[prop] = [propNode value:evalContext];
   }
 
   return styles;
