@@ -68,7 +68,6 @@
       REANode *inputNode = [self.nodesManager findNodeByID:_argumentsInput[i]];
       [arg matchContextWithNode:_evalContext withNode:inputNode];
       [arg matchNodeWithOldContext:inputNode withContext:oldEvalContext];
-      
     }
   } else {
     RCTAssert(_oldContext == oldEvalContext, @"Tried to evaluate perform node in more than one contexts");
