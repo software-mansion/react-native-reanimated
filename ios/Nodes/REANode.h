@@ -40,4 +40,3 @@ typedef NSNumber* REANodeID;
                  withEvalContext:(REAEvalContext *)evalContext;
 
 @end
-
