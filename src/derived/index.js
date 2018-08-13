@@ -7,3 +7,4 @@ export { default as interpolate, Extrapolate } from './interpolate';
 export { default as max } from './max';
 export { default as min } from './min';
 export { default as floor } from './floor';
+export { default as ceil } from './ceil';
