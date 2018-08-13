@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "REAEvalContext.h"
 
 @class REANodesManager;
 
@@ -8,14 +9,6 @@ typedef NSNumber* REANodeID;
 @protocol REAFinalNode
 
 - (void)update;
-
-@end
-
-@interface REAEvalContext : NSObject
-
-@property (nonatomic) NSMutableDictionary<NSNumber *, id> *__strong memoizedValues;
-@property (nonatomic) NSMutableDictionary<NSNumber *, NSNumber *> *__strong lastLoopIDs;
-@property (nonatomic, nonnull) NSNumber *contextID;
 
 @end
 
@@ -29,10 +22,12 @@ typedef NSNumber* REANodeID;
 
 @property (nonatomic, weak, nullable) REANodesManager *nodesManager;
 @property (nonatomic, readonly, nonnull) REANodeID nodeID;
+@property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
 
 - (_Nullable id)evaluate:(REAEvalContext *)evalContext;
-- (_Nullable id)value:(REAEvalContext *)evalContext;;
-- (void)markUpdated:(REAEvalContext *)evalContext;;
+- (_Nullable id)value:(REAEvalContext *)evalContext;
+- (void)markUpdated:(REAEvalContext *)evalContext;
+- (void)onDrop;
 - (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
                                    withLastVisitedNode:(REANode *) lastVisited;
 

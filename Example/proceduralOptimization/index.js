@@ -10,6 +10,7 @@ const {
   multiply,
   startClock,
   stopClock,
+  debug,
   clockRunning,
   block,
   timing,

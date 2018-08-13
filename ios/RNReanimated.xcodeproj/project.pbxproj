@@ -24,6 +24,7 @@
 		440FEC3A209062F100EEC73A /* REAModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2A209062F100EEC73A /* REAModule.m */; };
 		440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2B209062F100EEC73A /* REANodesManager.m */; };
 		66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 66240C6820C68DEA00648F55 /* REAAlwaysNode.m */; };
+		667B710321216E760025ED30 /* REAProceduralNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 667B710221216E760025ED30 /* REAProceduralNode.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -74,6 +75,9 @@
 		440FEC2B209062F100EEC73A /* REANodesManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REANodesManager.m; sourceTree = "<group>"; };
 		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
 		66240C6820C68DEA00648F55 /* REAAlwaysNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAAlwaysNode.m; sourceTree = "<group>"; };
+		667B710221216E760025ED30 /* REAProceduralNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REAProceduralNode.m; sourceTree = "<group>"; };
+		667B710421216E990025ED30 /* REAProceduralNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAProceduralNode.h; sourceTree = "<group>"; };
+		667B710521217E930025ED30 /* REAEvalContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAEvalContext.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +132,8 @@
 				440FEC1C209062F100EEC73A /* REABezierNode.m */,
 				440FEC10209062F100EEC73A /* REAEventNode.h */,
 				440FEC21209062F100EEC73A /* REAEventNode.m */,
+				667B710221216E760025ED30 /* REAProceduralNode.m */,
+				667B710421216E990025ED30 /* REAProceduralNode.h */,
 			);
 			path = Nodes;
 			sourceTree = "<group>";
@@ -135,6 +141,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				667B710521217E930025ED30 /* REAEvalContext.h */,
 				440FEC0C209062F100EEC73A /* Nodes */,
 				440FEC0A209062F100EEC73A /* REAModule.h */,
 				440FEC2A209062F100EEC73A /* REAModule.m */,
@@ -203,6 +210,7 @@
 				440FEC2E209062F100EEC73A /* READebugNode.m in Sources */,
 				440FEC37209062F100EEC73A /* REASetNode.m in Sources */,
 				440FEC3A209062F100EEC73A /* REAModule.m in Sources */,
+				667B710321216E760025ED30 /* REAProceduralNode.m in Sources */,
 				440FEC39209062F100EEC73A /* REABlockNode.m in Sources */,
 				440FEC33209062F100EEC73A /* REABezierNode.m in Sources */,
 				440FEC2D209062F100EEC73A /* REAStyleNode.m in Sources */,

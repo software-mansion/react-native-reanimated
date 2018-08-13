@@ -21,6 +21,8 @@ typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
 
+- (BOOL)isNodeCreated:(NSNumber *)id;
+
 - (REANode* _Nullable)findNodeByID:(nonnull REANodeID)nodeID;
 
 - (void)invalidate;

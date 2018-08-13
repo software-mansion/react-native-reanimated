@@ -5,6 +5,7 @@ import android.util.SparseArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,20 +18,14 @@ public class ProceduralNode extends Node {
 
     private final int mProceduralNode;
     private final int[] mArgumentsInputs;
-    EvalContext mOldContext = null;
-    EvalContext mEvalContext = new EvalContext(this);
+    private EvalContext mOldContext = null;
+    private final EvalContext mEvalContext = new EvalContext(this);
 
     public PerformNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
       super(nodeID, config, nodesManager);
 
       mProceduralNode = config.getInt("proceduralNode");
-      ArrayList argumentsInput = (config.getArray("args").toArrayList());
-      mArgumentsInputs = new int[argumentsInput.size()];
-      for (int i = 0; i < argumentsInput.size(); i++) {
-        if (argumentsInput.get(i) instanceof Double) {
-          mArgumentsInputs[i] = ((Double) argumentsInput.get(i)).intValue();
-        }
-      }
+      mArgumentsInputs = Utils.processIntArray(config.getArray("args"));
     }
 
     @Override
@@ -58,11 +53,11 @@ public class ProceduralNode extends Node {
           int argumentID = proceduralNode.mProceduralArguments[i];
           ArgumentNode arg = mNodesManager.findNodeById(argumentID, ArgumentNode.class);
           Node inputNode = mNodesManager.findNodeById(mArgumentsInputs[i], Node.class);
-          arg.matchContextWithValue(
+          arg.matchContextWithNode(
                   mEvalContext,
                   inputNode
           );
-          arg.matchValueWithOldContext(
+          arg.matchNodeWithOldContext(
                   inputNode,
                   oldEvalContext
           );
@@ -78,34 +73,34 @@ public class ProceduralNode extends Node {
 
   static public class ArgumentNode extends ValueNode {
 
-    private SparseArray<Node> mValuesByContext = new SparseArray<>();
-    private SparseArray<EvalContext> mContextsByValue = new SparseArray<>();
-    private SparseArray<EvalContext> mOldContextByValue = new SparseArray<>();
+    private final SparseArray<Node> mValuesByContext = new SparseArray<>();
+    private final SparseArray<EvalContext> mContextsByValue = new SparseArray<>();
+    private final SparseArray<EvalContext> mOldContextByValue = new SparseArray<>();
 
     public ArgumentNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
       super(nodeID, config, nodesManager);
     }
 
-    public void matchContextWithValue(EvalContext context, Node node) {
+    public void matchContextWithNode(EvalContext context, Node node) {
       mValuesByContext.put(context.contextID, node);
       mContextsByValue.put(node.mNodeID, context);
     }
 
-    public void dropContext(EvalContext context) {
-      Node relatedNode = mValuesByContext.get(context.contextID);
+    public void dropContext(EvalContext evalContext) {
+      Node relatedNode = mValuesByContext.get(evalContext.contextID);
       mContextsByValue.remove(relatedNode.mNodeID);
-      mValuesByContext.remove(context.contextID);
+      mValuesByContext.remove(evalContext.contextID);
       mOldContextByValue.remove(relatedNode.mNodeID);
     }
 
-    public void matchValueWithOldContext(Node node, EvalContext context) {
-      mOldContextByValue.put(node.mNodeID, context);
+    public void matchNodeWithOldContext(Node node, EvalContext evalContext) {
+      mOldContextByValue.put(node.mNodeID, evalContext);
     }
 
     @Override
-    public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext context, Node lastVisited) {
+    public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext evalContext, Node lastVisited) {
       if (lastVisited == null) {
-        return context;
+        return evalContext;
       }
       return mContextsByValue.get(lastVisited.mNodeID);
     }
@@ -131,13 +126,7 @@ public class ProceduralNode extends Node {
   public ProceduralNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mResultNode = config.getInt("result");
-    ArrayList argumentsInput = (config.getArray("arguments").toArrayList());
-    mProceduralArguments = new int [argumentsInput.size()];
-    for (int i = 0; i < argumentsInput.size(); i++) {
-      if (argumentsInput.get(i) instanceof Double) {
-        mProceduralArguments[i] = ((Double) argumentsInput.get(i)).intValue();
-      }
-    }
+    mProceduralArguments = Utils.processIntArray(config.getArray("arguments"));
   }
 
   @Override

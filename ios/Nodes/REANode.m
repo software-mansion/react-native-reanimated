@@ -1,5 +1,6 @@
 #import "REANode.h"
 #import "REANodesManager.h"
+#import "REAProceduralNode.h"
 
 #import <React/RCTDefines.h>
 
@@ -11,9 +12,10 @@
 @implementation REAEvalContext
 static int _nextContextID = 0;
 
-- (instancetype)init
+- (instancetype)initWithParent:(REAPerformNode *) parent
 {
   if ((self = [super init])) {
+    _parent = _parent;
     _updatedNodes = [NSMutableArray new];
     _memoizedValues = [NSMutableDictionary new];
     _lastLoopIDs = [NSMutableDictionary new];
@@ -24,12 +26,6 @@ static int _nextContextID = 0;
 
 @end
 
-
-@interface REANode ()
-
-@property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
-
-@end
 
 @implementation REANode
 
@@ -108,6 +104,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   return evalContext;
 }
 
+- (void)onDrop {
+  // no-op
+}
+
 + (NSMutableArray<REANode *> *)updatedNodes
 {
   static NSMutableArray<REANode *> *updatedNodes;
@@ -141,7 +141,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     pushedNewContext = true;
   }
   
-  //if () TODO
+  if ([node isKindOfClass:[REAPerformNode class]] && contexts.count > 1) {
+    contextPopped = [contexts lastObject];
+    [contexts removeLastObject];
+  }
   
   if (children) {
     for (REANode *child in children) {

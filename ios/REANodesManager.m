@@ -17,6 +17,7 @@
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
 #import "Nodes/REAAlwaysNode.h"
+#import "Nodes/REAProceduralNode.h"
 
 @implementation REANodesManager
 {
@@ -37,7 +38,7 @@
     _nodes = [NSMutableDictionary new];
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
-    _globalEvalContext = [REAEvalContext new];
+    _globalEvalContext = [[REAEvalContext alloc] initWithParent: NULL];
     _loopID = [NSNumber numberWithInt:1];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
@@ -48,6 +49,10 @@
 - (void)invalidate
 {
   [self stopUpdatingOnAnimationFrame];
+}
+
+- (BOOL)isNodeCreated:(NSNumber *)id {
+  return [_nodes objectForKey:id];
 }
 
 - (REANode *)findNodeByID:(REANodeID)nodeID
@@ -137,6 +142,9 @@
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
+            @"procedural": [REAProceduralNode class],
+            @"perform": [REAPerformNode class],
+            @"argument": [REAArgumentNode class],
 //            @"listener": nil,
             };
   });
@@ -158,6 +166,7 @@
 - (void)dropNode:(REANodeID)nodeID
 {
   REANode *node = _nodes[nodeID];
+  [node onDrop];
   if (node) {
     [_nodes removeObjectForKey:nodeID];
   }
