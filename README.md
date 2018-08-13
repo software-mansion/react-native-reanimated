@@ -310,7 +310,7 @@ Returns node that rounds input value to the nearest integer.
 floor(node)
 ```
 
-Returns node that represents the largest integer less than or equal to the input value.
+Returns node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `ceil`
@@ -319,7 +319,7 @@ Returns node that represents the largest integer less than or equal to the input
 ceil(node)
 ```
 
-Returns node that represents the largest integer greater than or equal to the input value.
+Returns node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `lessThan`

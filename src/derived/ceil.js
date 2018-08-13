@@ -1,6 +1,5 @@
-import { add, round, cond, eq } from '../base';
-import floor from './floor';
+import { sub, round } from '../base';
 
 export default function ceil(a) {
-  return cond(eq(floor(a), a), a, round(add(a, 0.5)));
+  return sub(1, round(sub(0.5, a)));
 }
