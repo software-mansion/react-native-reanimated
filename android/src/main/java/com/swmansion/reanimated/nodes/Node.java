@@ -105,9 +105,8 @@ public abstract class Node<T> {
   private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvalContext> contexts, Node lastVisited) {
     if (visitedNodes.contains(node)) {
       return;
-    } else {
-      visitedNodes.add(node);
     }
+    visitedNodes.add(node);
 
     EvalContext currentContext = contexts.peek();
     List<Node> children = node.getChildrenInContext(currentContext);
