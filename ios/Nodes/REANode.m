@@ -157,9 +157,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
           withStackedContext:contexts
          withLastVisitedNode:NULL
      ];
-    if (contexts.count != 1) {
-      // error TODO
-    }
+    RCTAssert(contexts.count == 1, @"Stacking of contexts was not performed correctly");
     if (i == nodesManager.globalEvalContext.updatedNodes.count - 1) {
       while (finalNodes.count > 0) {
         // NSMutableArray used for stack implementation

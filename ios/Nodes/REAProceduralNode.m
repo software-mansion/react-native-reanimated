@@ -70,8 +70,8 @@
       [arg matchNodeWithOldContext:inputNode withContext:oldEvalContext];
       
     }
-  } else if (_oldContext != oldEvalContext) {
-    // ERROR TODO
+  } else {
+    RCTAssert(_oldContext == oldEvalContext, @"Tried to evaluate perform node in more than one contexts");
   }
   
   REAProceduralNode *proceduralNode = (REAProceduralNode *)[self.nodesManager findNodeByID:_proceduralNode];
@@ -147,9 +147,7 @@
 
 - (id)evaluate:(REAEvalContext *)evalContext;
 {
-  if (evalContext == self.nodesManager.globalEvalContext) {
-    // ERROR TODO
-  }
+  RCTAssert(evalContext != self.nodesManager.globalEvalContext, @"Tried to evaluate argumentNode in global context");
   REANode *value = [_valuesByContext objectForKey:evalContext.contextID];
   return [value value:[_oldContextsByValue objectForKey:value.nodeID]];
 }
