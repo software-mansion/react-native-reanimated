@@ -17,11 +17,9 @@ describe('ProceduralNode test', () => {
   });
 
   it('pass if reusable node economizes number of attached nodes', () => {
-    const { Value, ProceduralNode, pow, add, modulo } = Animated;
+    const { Value, proc, pow, add, modulo } = Animated;
 
-    const sampleRN = new ProceduralNode(x =>
-      add(modulo(add(pow(x, 2), 5)), 12, x)
-    );
+    const sampleRN = proc(x => add(modulo(add(pow(x, 2), 5)), 12, x));
 
     class TestComponent extends React.Component {
       constructor(props) {
@@ -32,7 +30,7 @@ describe('ProceduralNode test', () => {
         return (
           <Animated.View
             style={{
-              transform: [{ translateX: sampleRN.invoke(this.transX) }],
+              transform: [{ translateX: sampleRN(this.transX) }],
             }}
           />
         );
