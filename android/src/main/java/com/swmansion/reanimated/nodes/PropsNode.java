@@ -48,9 +48,11 @@ public class PropsNode extends Node<Double> implements FinalNode {
 
   @Override
   protected Double evaluate() {
+    boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
+    final WritableMap nativeProps = Arguments.createMap();
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
@@ -60,9 +62,12 @@ public class PropsNode extends Node<Double> implements FinalNode {
         while (iter.hasNextKey()) {
           String key = iter.nextKey();
           WritableMap dest;
-          if (mNodesManager.nativeProps.contains(key)) {
-            hasNativeProps = true;
+          if (mNodesManager.uiProps.contains(key)) {
+            hasUIProps = true;
             dest = mPropMap;
+          } else if (mNodesManager.nativeProps.contains(key)){
+            hasNativeProps = true;
+            dest = nativeProps;
           } else {
             hasJSProps = true;
             dest = jsProps;
@@ -81,21 +86,24 @@ public class PropsNode extends Node<Double> implements FinalNode {
         }
       } else {
         String key = entry.getKey();
-        if (mNodesManager.nativeProps.contains(key)) {
-          hasNativeProps = true;
+        if (mNodesManager.uiProps.contains(key)) {
+          hasUIProps = true;
           mPropMap.putDouble(key, node.doubleValue());
         } else {
-          hasJSProps = true;
-          jsProps.putDouble(key, node.doubleValue());
+          hasNativeProps = true;
+          nativeProps.putDouble(key, node.doubleValue());
         }
       }
     }
 
     if (mConnectedViewTag != View.NO_ID) {
-      if (hasNativeProps) {
+      if (hasUIProps) {
         mUIImplementation.synchronouslyUpdateViewOnUIThread(
                 mConnectedViewTag,
                 mDiffMap);
+      }
+      if (hasNativeProps) {
+        mNodesManager.enqueueUpdateViewOnNativeThread(mConnectedViewTag, nativeProps);
       }
       if (hasJSProps) {
         WritableMap evt = Arguments.createMap();

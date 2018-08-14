@@ -12,7 +12,7 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
-import { addWhitelistedNativeProps } from './ConfigHelper';
+import { addWhitelistedNativeProps, addWhitelistedUIProps } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
 
 const Animated = {
@@ -38,6 +38,7 @@ const Animated = {
 
   // configuration
   addWhitelistedNativeProps,
+  addWhitelistedUIProps,
 };
 
 export default Animated;
