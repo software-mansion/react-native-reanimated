@@ -12,12 +12,16 @@ public class OperatorNode extends Node {
   }
 
   private interface Operator {
-    Object evaluate(Node[] input);
+    double evaluate(Node[] input);
+  }
+
+  private interface DefinedOperator extends Operator {
+    Object evaluateDefined(Node[] input);
   }
 
   private static abstract class ReduceOperator implements Operator {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       double acc = input[0].doubleValue();
       for (int i = 1; i < input.length; i++) {
         acc = reduce(acc, input[i].doubleValue());
@@ -30,7 +34,7 @@ public class OperatorNode extends Node {
 
   private static abstract class SingleOperator implements Operator {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       return eval((Double) input[0].value());
     }
 
@@ -39,7 +43,7 @@ public class OperatorNode extends Node {
 
   private static abstract class CompOperator implements Operator {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       return eval((Double) input[0].value(), (Double) input[1].value()) ? 1. : 0.;
     }
 
@@ -117,7 +121,7 @@ public class OperatorNode extends Node {
   // logical
   private static final Operator AND = new Operator() {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       boolean res = truthy(input[0].value());
       for (int i = 1; i < input.length && res; i++) {
         res = res && truthy(input[i].value());
@@ -127,7 +131,7 @@ public class OperatorNode extends Node {
   };
   private static final Operator OR = new Operator() {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       boolean res = truthy(input[0].value());
       for (int i = 1; i < input.length && !res; i++) {
         res = res || truthy(input[i].value());
@@ -137,13 +141,17 @@ public class OperatorNode extends Node {
   };
   private static final Operator NOT = new Operator() {
     @Override
-    public Double evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
       return truthy(input[0].value()) ? 0. : 1.;
     }
   };
   private static final Operator DEFINED = new Operator() {
     @Override
-    public Object evaluate(Node[] input) {
+    public double evaluate(Node[] input) {
+      return 0;
+    }
+    @Override
+    public Object evaluateDefined(Node[] input) {
       Object res = input[0].value();
       return (res != null && !(res instanceof Double && ((Double) res).isNaN())) ? 1. : 0.;
     }
@@ -248,6 +256,9 @@ public class OperatorNode extends Node {
   protected Object evaluate() {
     for (int i = 0; i < mInputIDs.length; i++) {
       mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
+    }
+    if (mOperator instanceof DefinedOperator) {
+      return ((DefinedOperator)mOperator).evaluateDefined(mInputNodes);
     }
     return mOperator.evaluate(mInputNodes);
   }
