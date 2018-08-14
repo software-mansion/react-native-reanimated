@@ -45,7 +45,7 @@ declare module 'react-native-reanimated' {
     extrapolateLeft?: Extrapolate;
     extrapolateRight?: Extrapolate;
   }
-  type Value = string | number;
+  type Value = string | number | boolean;
   class AnimatedValue<T extends Value> extends AnimatedNode<T> {
     constructor(value?: T);
 
