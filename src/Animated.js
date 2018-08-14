@@ -14,6 +14,7 @@ import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
 import { addWhitelistedNativeProps } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
+import AnimatedCode from './AnimatedCode';
 
 const Animated = {
   // components
@@ -21,6 +22,7 @@ const Animated = {
   Text: createAnimatedComponent(Text),
   Image: createAnimatedComponent(Image),
   ScrollView: createAnimatedComponent(ScrollView),
+  Code: AnimatedCode,
 
   // classes
   Clock: AnimatedClock,

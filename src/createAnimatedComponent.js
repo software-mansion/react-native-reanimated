@@ -54,7 +54,7 @@ export default function createAnimatedComponent(Component) {
     _getEventViewRef() {
       // Make sure to get the scrollable node for components that implement
       // `ScrollResponder.Mixin`.
-      return this._component.getScrollableNode
+      return this._component && this._component.getScrollableNode
         ? this._component.getScrollableNode()
         : this._component;
     }
@@ -180,6 +180,7 @@ export default function createAnimatedComponent(Component) {
     }
 
     render() {
+      if (Component === null) return null;
       const props = this._propsAnimated.__getProps();
       return (
         <Component
@@ -197,7 +198,7 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  const propTypes = Component.propTypes;
+  const propTypes = Component && Component.propTypes;
 
   AnimatedComponent.propTypes = {
     style: function(props, propName, componentName) {
