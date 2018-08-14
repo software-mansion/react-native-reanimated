@@ -36,14 +36,17 @@ class DecayAnimation extends Animation {
   stop() {
     // not implemented yet
   }
-  static getDefaultState() {
-    return {
-      position: new AnimatedValue(0),
-      finished: new AnimatedValue(0),
-      time: new AnimatedValue(0),
-      velocity: new AnimatedValue(0),
-    };
-  }
+
+  static defaultState = {
+    position: 0,
+    finished: 0,
+    velocity: 0,
+    time: 0,
+  };
+
+  static defaultConfig = {
+    deceleration: 0.997,
+  };
 }
 
 export default DecayAnimation;

@@ -34,17 +34,11 @@ function runSpring(clock, value, dest) {
   const config = {
     toValue: new Value(0),
     damping: 7,
-    mass: 1,
     stiffness: 121.6,
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001,
   };
 
   return block([
     cond(clockRunning(clock), 0, [
-      set(state.finished, 0),
-      set(state.time, 0),
       set(state.position, value),
       set(state.velocity, -2500),
       set(config.toValue, dest),

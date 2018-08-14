@@ -16,3 +16,12 @@ export function adapt(v) {
 export function val(v) {
   return v && v.__getValue ? v.__getValue() : v || 0;
 }
+
+export function completeWithDefaultValues(obj, defaultVals) {
+  console.log(defaultVals);
+  Object.keys(defaultVals).forEach(f => {
+    if (obj[f] === undefined) {
+      obj[f] = new AnimatedValue(defaultVals[f]);
+    }
+  });
+}
