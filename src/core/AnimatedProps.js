@@ -75,6 +75,7 @@ class AnimatedProps extends AnimatedNode {
 
   __detach() {
     if (this._animatedView === undefined) {
+      this._disconnectAnimatedView(-1997);
       return;
     }
     const nativeViewTag = findNodeHandle(this._animatedView);
@@ -93,7 +94,8 @@ class AnimatedProps extends AnimatedNode {
   setNativeView(animatedView) {
     if (animatedView === undefined) {
       // TODO
-      this._connectAnimatedView(-13);
+      this._connectAnimatedView(-1997);
+      return;
     }
     if (this._animatedView === animatedView) {
       return;

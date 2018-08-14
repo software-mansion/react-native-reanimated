@@ -48,6 +48,12 @@ public class PropsNode extends Node<Double> implements FinalNode {
 
   @Override
   protected Double evaluate() {
+    if (mConnectedViewTag == -1997) {
+      for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
+        mNodesManager.findNodeById(entry.getValue(), Node.class).value();
+      }
+      return ZERO;
+    }
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
