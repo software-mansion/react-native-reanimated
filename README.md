@@ -498,6 +498,13 @@ Creates a color node in RGBA format. Where first three input nodes should have i
 
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
+---
+### `delay`
+```js
+dalay(clock,{ finished }, { node, nodeBefore, time} )
+```
+On attaching it returns `nodeBefore` before given `time` pass and `node` after.
+
 <!-- Anims -->
 ## Animations
 
