@@ -18,6 +18,7 @@
     "android/src/main/java/",
     "android/build.gradle",
     "ios/",
+    "RNReanimated.podspec",
     "README.md"
   ],
   "repository": {

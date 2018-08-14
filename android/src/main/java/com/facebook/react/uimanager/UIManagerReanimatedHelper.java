@@ -1,12 +1,11 @@
 package com.facebook.react.uimanager;
 
 /**
- * This class provides a workaround that makes it possible to access UIViewOperationQueue.
- * In react-native core UIViewOperationQueue#getUIViewOperationQueue has limited visibility
- * to package only. We rely on that method to check if queue is empty or not. If the queue is
- * empty we want to trigger "dispatchViewUpdates" in the code responsible for updating native props.
- * Otherwise, if it is not empty it means that there is an active batch and so we can rely on
- * "dispatchViewUpdates" being triggered once the active batch is finished.
+ * This class provides a way to workaround limited visibility of UIViewOperationQueue#getUIViewOperationQueue.
+ * We rely on accessing that method to check if operation queue is empty or not. This in turn indicates if
+ * we are in a middle of processing batch of operations from JS. In such a case we can rely on the enqueued update
+ * operations to be flushed onto the shadow view hierarchy. Otherwise we want to trigger "dispatchViewUpdates" and
+ * enforce flush immediately.
  */
 public class UIManagerReanimatedHelper {
   public static boolean isOperationQueueEmpty(UIImplementation uiImplementation) {

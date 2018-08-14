@@ -94,13 +94,13 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         applicationId "com.swmansion.reanimated.example"
         minSdkVersion 16
-        targetSdkVersion 22
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         ndk {
@@ -140,7 +140,7 @@ dependencies {
     compile project(':react-native-reanimated')
     compile project(':react-native-gesture-handler')
     compile fileTree(dir: "libs", include: ["*.jar"])
-    compile "com.android.support:appcompat-v7:26.1.0"
+    compile "com.android.support:appcompat-v7:27.0.0"
     compile "com.facebook.react:react-native:+"  // From node_modules
 }
 

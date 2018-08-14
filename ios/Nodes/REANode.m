@@ -130,12 +130,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [self findAndUpdateNodes:context.updatedNodes[i]
               withVisitedSet:visitedNodes
               withFinalNodes:finalNodes];
+    if (i == context.updatedNodes.count - 1) {
+      while (finalNodes.count > 0) {
+        // NSMutableArray used for stack implementation
+        [[finalNodes lastObject] update];
+        [finalNodes removeLastObject];
+      }
+    }
   }
-  while (finalNodes.count > 0) {
-    // NSMutableArray used for stack implementation
-    [[finalNodes lastObject] update];
-    [finalNodes removeLastObject];
-  }
+
   [context.updatedNodes removeAllObjects];
   context.loopID++;
 }
