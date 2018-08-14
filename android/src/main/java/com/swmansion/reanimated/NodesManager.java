@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import android.util.SparseArray;
 
+import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -10,8 +11,10 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
+import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
@@ -35,13 +38,13 @@ import com.swmansion.reanimated.nodes.ValueNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
 
@@ -60,6 +63,8 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
+  private final ReactContext mContext;
+  private final UIManagerModule mUIManager;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -67,14 +72,26 @@ public class NodesManager implements EventDispatcherListener {
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
+  public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
 
+  private final class NativeUpdateOperation {
+    public int mViewTag;
+    public WritableMap mNativeProps;
+    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
+      mViewTag = viewTag;
+      mNativeProps = nativeProps;
+    }
+  }
+  private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
+
   public NodesManager(ReactContext context) {
-    UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
+    mContext = context;
+    mUIManager = context.getNativeModule(UIManagerModule.class);
     updateContext = new UpdateContext();
-    mUIImplementation = uiManager.getUIImplementation();
-    mCustomEventNamesResolver = uiManager.getDirectEventNamesResolver();
-    uiManager.getEventDispatcher().addListener(this);
+    mUIImplementation = mUIManager.getUIImplementation();
+    mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
+    mUIManager.getEventDispatcher().addListener(this);
 
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
@@ -135,6 +152,28 @@ public class NodesManager implements EventDispatcherListener {
 
     if (mWantRunUpdates) {
       Node.runUpdates(updateContext);
+    }
+
+    if (!mOperationsInBatch.isEmpty()) {
+      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      mOperationsInBatch = new LinkedList<>();
+      mContext.runOnNativeModulesQueueThread(
+              new GuardedRunnable(mContext) {
+                @Override
+                public void runGuarded() {
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  while (!copiedOperationsQueue.isEmpty()) {
+                    NativeUpdateOperation op = copiedOperationsQueue.remove();
+                    ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                    if (shadowNode != null) {
+                      mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                    }
+                  }
+                  if (shouldDispatchUpdates) {
+                    mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  }
+                }
+              });
     }
 
     mCallbackPosted.set(false);
@@ -284,6 +323,10 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
+  public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps) {
+    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
+  }
+
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
     String key = viewTag + eventName;
 
@@ -303,8 +346,9 @@ public class NodesManager implements EventDispatcherListener {
     mEventMapping.remove(key);
   }
 
-  public void configureNativeProps(Set<String> nativePropsSet) {
+  public void configureProps(Set<String> nativePropsSet, Set<String> uiPropsSet) {
     nativeProps = nativePropsSet;
+    uiProps = uiPropsSet;
   }
 
   public void postRunUpdatesAfterAnimation() {
