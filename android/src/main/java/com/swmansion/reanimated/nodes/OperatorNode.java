@@ -15,10 +15,6 @@ public class OperatorNode extends Node {
     double evaluate(Node[] input);
   }
 
-  private interface DefinedOperator extends Operator {
-    Object evaluateDefined(Node[] input);
-  }
-
   private static abstract class ReduceOperator implements Operator {
     @Override
     public double evaluate(Node[] input) {
@@ -148,10 +144,6 @@ public class OperatorNode extends Node {
   private static final Operator DEFINED = new Operator() {
     @Override
     public double evaluate(Node[] input) {
-      return 0;
-    }
-    @Override
-    public Object evaluateDefined(Node[] input) {
       Object res = input[0].value();
       return (res != null && !(res instanceof Double && ((Double) res).isNaN())) ? 1. : 0.;
     }
@@ -256,9 +248,6 @@ public class OperatorNode extends Node {
   protected Object evaluate() {
     for (int i = 0; i < mInputIDs.length; i++) {
       mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
-    }
-    if (mOperator instanceof DefinedOperator) {
-      return ((DefinedOperator)mOperator).evaluateDefined(mInputNodes);
     }
     return mOperator.evaluate(mInputNodes);
   }
