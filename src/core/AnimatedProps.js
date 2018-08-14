@@ -7,6 +7,8 @@ import AnimatedStyle, { createOrReuseStyleNode } from './AnimatedStyle';
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
 
+const AnimatedCodeViewFakeID = -1997;
+
 function sanitizeProps(inputProps) {
   const props = {};
   for (const key in inputProps) {
@@ -75,7 +77,8 @@ class AnimatedProps extends AnimatedNode {
 
   __detach() {
     if (this._animatedView === undefined) {
-      this._disconnectAnimatedView(-1997);
+      // refers to Animated.Code case
+      this._disconnectAnimatedView(AnimatedCodeViewFakeID);
       return;
     }
     const nativeViewTag = findNodeHandle(this._animatedView);
@@ -93,8 +96,8 @@ class AnimatedProps extends AnimatedNode {
 
   setNativeView(animatedView) {
     if (animatedView === undefined) {
-      // TODO
-      this._connectAnimatedView(-1997);
+      // refers to Animated.Code case
+      this._connectAnimatedView(AnimatedCodeViewFakeID);
       return;
     }
     if (this._animatedView === animatedView) {

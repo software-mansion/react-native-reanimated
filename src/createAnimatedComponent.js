@@ -180,7 +180,10 @@ export default function createAnimatedComponent(Component) {
     }
 
     render() {
-      if (Component === null) return null;
+      if (Component === null) {
+        // refers to Animated.Code case
+        return null;
+      }
       const props = this._propsAnimated.__getProps();
       return (
         <Component
