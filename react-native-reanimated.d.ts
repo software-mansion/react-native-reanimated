@@ -49,15 +49,16 @@ declare module 'react-native-reanimated' {
     extrapolateLeft?: Extrapolate;
     extrapolateRight?: Extrapolate;
   }
-  class AnimatedValue extends AnimatedNode<number> {
-    constructor(value: number);
+  type Value = string | number;
+  class AnimatedValue<T extends Value> extends AnimatedNode<T> {
+    constructor(value?: T);
 
-    setValue(value: number): void;
+    setValue(value: T): void;
 
     interpolate(config: InterpolationConfig): AnimatedNode<number>;
   }
 
-  export type Mapping = { [key: string]: Mapping } | AnimatedValue;
+  export type Mapping = { [key: string]: Mapping } | AnimatedValue<any>;
   export type Adaptable<T> =
     | T
     | AnimatedNode<T>
@@ -73,20 +74,20 @@ declare module 'react-native-reanimated' {
   ) => AnimatedNode<number>;
 
   export interface DecayState {
-    finished: AnimatedValue;
-    velocity: AnimatedValue;
-    position: AnimatedValue;
-    time: AnimatedValue;
+    finished: AnimatedValue<number>;
+    velocity: AnimatedValue<number>;
+    position: AnimatedValue<number>;
+    time: AnimatedValue<number>;
   }
   export interface DecayConfig {
     deceleration: Adaptable<number>;
   }
 
   export interface TimingState {
-    finished: AnimatedValue;
-    velocity: AnimatedValue;
-    position: AnimatedValue;
-    time: AnimatedValue;
+    finished: AnimatedValue<number>;
+    velocity: AnimatedValue<number>;
+    position: AnimatedValue<number>;
+    time: AnimatedValue<number>;
   }
   type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
   export interface TimingConfig {
@@ -96,10 +97,10 @@ declare module 'react-native-reanimated' {
   }
 
   export interface SpringState {
-    finished?: AnimatedValue;
-    velocity?: AnimatedValue;
-    position?: AnimatedValue;
-    time?: AnimatedValue;
+    finished?: AnimatedValue<number>;
+    velocity?: AnimatedValue<number>;
+    position?: AnimatedValue<number>;
+    time?: AnimatedValue<number>;
   }
   export interface SpringConfig {
     damping: Adaptable<number>;
@@ -169,15 +170,15 @@ declare module 'react-native-reanimated' {
     or: LogicalOperator;
     defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     not(value: Adaptable<any>): AnimatedNode<0 | 1>;
-    set(
-      valueToBeUpdated: AnimatedValue,
-      sourceNode: Adaptable<number>
-    ): AnimatedNode<number>;
-    cond(
+    set<T extends Value>(
+      valueToBeUpdated: AnimatedValue<T>,
+      sourceNode: Adaptable<T>
+    ): AnimatedNode<T>;
+    cond<T>(
       conditionNode: Adaptable<number>,
-      ifNode: Adaptable<number>,
-      elseNode?: Adaptable<number>
-    ): AnimatedNode<number>;
+      ifNode: Adaptable<T>,
+      elseNode?: Adaptable<T>
+    ): AnimatedNode<T>;
     block<T>(items: ReadonlyArray<Adaptable<T>>): AnimatedNode<T>;
     call<T>(
       nodes: ReadonlyArray<AnimatedNode<T>>,
