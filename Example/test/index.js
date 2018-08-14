@@ -109,7 +109,6 @@ export default class Example extends Component {
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
         />
-        <Animated.Code exec={call([this._transX], t => console.log(t))} />
       </View>
     );
   }
