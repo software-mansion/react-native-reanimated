@@ -1,7 +1,6 @@
 import AnimatedCond from './core/AnimatedCond';
 import AnimatedSet from './core/AnimatedSet';
 import AnimatedOperator from './core/AnimatedOperator';
-import AnimatedOnChange from './core/AnimatedOnChange';
 import AnimatedStartClock from './core/AnimatedStartClock';
 import AnimatedStopClock from './core/AnimatedStopClock';
 import AnimatedClockTest from './core/AnimatedClockTest';
@@ -60,10 +59,6 @@ export const call = function(args, func) {
 
 export const debug = function(message, value) {
   return new AnimatedDebug(message, adapt(value));
-};
-
-export const onChange = function(value, action) {
-  return new AnimatedOnChange(adapt(value), adapt(action));
 };
 
 export const startClock = function(clock) {
