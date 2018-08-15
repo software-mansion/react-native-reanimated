@@ -71,14 +71,14 @@ export default class Example extends Component {
             ])
           }
         </Animated.Code>
-        <Animated.Code>
-          {() =>
+        <Animated.Code
+          exec={() =>
             block([
               set(this.transX1, add(multiply(-1, this._transX))),
               set(this.transX2, add(multiply(-2, this._transX), 120)),
             ])
           }
-        </Animated.Code>
+        />
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this.transX1 }] }]}
         />

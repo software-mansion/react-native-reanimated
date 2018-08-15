@@ -12,9 +12,12 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
-import { addWhitelistedNativeProps, addWhitelistedUIProps } from './ConfigHelper';
+import {
+  addWhitelistedNativeProps,
+  addWhitelistedUIProps,
+} from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
-import AnimatedCode from './AnimatedCode';
+import AnimatedCode from './core/AnimatedCode';
 
 const Animated = {
   // components
