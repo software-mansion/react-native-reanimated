@@ -66,10 +66,16 @@ export default class Example extends Component {
         <Animated.Code>
           {() =>
             block([
-              set(this.transX1, add(multiply(-1, this._transX))),
-              set(this.transX2, add(multiply(-2, this._transX), 120)),
               set(this.transX3, sub(multiply(2, this._transX), 120)),
               set(this.transX4, add(multiply(1, this._transX))),
+            ])
+          }
+        </Animated.Code>
+        <Animated.Code>
+          {() =>
+            block([
+              set(this.transX1, add(multiply(-1, this._transX))),
+              set(this.transX2, add(multiply(-2, this._transX), 120)),
             ])
           }
         </Animated.Code>

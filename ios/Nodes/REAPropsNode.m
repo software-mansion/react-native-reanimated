@@ -41,7 +41,7 @@
 - (id)evaluate
 {
   // Animated.Code fake ID
-  if ([_connectedViewTag longValue] == -1997){
+  if ([_connectedViewTag longValue] == -0xC0DE){
     for (NSString *prop in _propsConfig) {
       REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
       [propNode value];

@@ -7,7 +7,10 @@ import AnimatedStyle, { createOrReuseStyleNode } from './AnimatedStyle';
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
 
-const AnimatedCodeViewFakeID = -1997;
+// this fake id is make to imitate that props are being connected to normal view
+// in fact on native site this value is special one are implies that input of this view
+// is being evaluated on request but it's not connected with any layout changes
+const AnimatedCodeViewFakeID = -0xc0de;
 
 function sanitizeProps(inputProps) {
   const props = {};
