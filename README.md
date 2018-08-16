@@ -151,7 +151,7 @@ When evaluated it will assign the value of `sourceNode` to the `Animated.Value` 
 ### `cond`
 
 ```js
-set(conditionNode, ifNode, [elseNode])
+cond(conditionNode, ifNode, [elseNode])
 ```
 
 If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node and returns its value, otherwise it evaluates `elseNode` and returns its value. `elseNode` is optional.
@@ -294,6 +294,7 @@ exp(node)
 
 Returns an exponent of the value of the given node.
 
+---
 ### `round`
 
 ```js
@@ -301,6 +302,24 @@ round(node)
 ```
 
 Returns node that rounds input value to the nearest integer.
+
+---
+### `floor`
+
+```js
+floor(node)
+```
+
+Returns node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
+
+---
+### `ceil`
+
+```js
+ceil(node)
+```
+
+Returns node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `lessThan`
@@ -478,6 +497,15 @@ color(red, green, blue, alpha)
 Creates a color node in RGBA format. Where first three input nodes should have integer values in range 0-255 and corresponds to color components Red, Green and Blue respectively. Last input node should have value between 0 and 1 and represents alpha channel (value `1` means fully opaque and `0` completely transparent). Alpha parameter can be ommited, then `1` (fully opaque) is used as a default.
 
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
+
+---
+### `onChange`
+
+```js
+onChange(value, action)
+```
+
+When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 <!-- Anims -->
 ## Animations

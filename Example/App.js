@@ -11,6 +11,7 @@ import Colors from './colors';
 import StartAPI from './startAPI';
 import ChatHeads from './chatHeads';
 import ProceduralOptimization from './proceduralOptimization';
+import WidthAndHeight from './widthAndHeight';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -31,6 +32,7 @@ const SCREENS = {
     screen: ProceduralOptimization,
     title: 'Optimization of amount of nodes',
   },
+  width: { screen: WidthAndHeight, title: 'width & height & more' },
 };
 
 class MainScreen extends React.Component {

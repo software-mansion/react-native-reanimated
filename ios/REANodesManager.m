@@ -16,8 +16,26 @@
 #import "Nodes/REAJSCallNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REAEventNode.h"
+#import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
 #import "Nodes/REAProceduralNode.h"
+
+// Interface below has been added in order to use private methods of RCTUIManager,
+// RCTUIManager#UpdateView is a React Method which is exported to JS but in 
+// Objective-C it stays private
+// RCTUIManager#setNeedsLayout is a method which updated layout only which
+// in its turn will trigger relayout if no batch has been activated
+
+@interface RCTUIManager ()
+
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *)viewName
+             props:(NSDictionary *)props;
+
+- (void)setNeedsLayout;
+
+@end
+
 
 @implementation REANodesManager
 {
@@ -27,6 +45,7 @@
   CADisplayLink *_displayLink;
   BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
+  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -42,6 +61,7 @@
     _loopID = [NSNumber numberWithInt:1];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
+    _operationsInBatch = [NSMutableArray new];
   }
   return self;
 }
@@ -110,11 +130,29 @@
   }
 
   [REANode runPropUpdates:self];
+  if (_operationsInBatch.count != 0) {
+    NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
+    _operationsInBatch = [NSMutableArray new];
+    RCTExecuteOnUIManagerQueue(^{
+      for (int i = 0; i < copiedOperationsQueue.count; i++) {
+        copiedOperationsQueue[i](self.uiManager);
+      }
+      [self.uiManager setNeedsLayout];
+    });
+  }
   _wantRunUpdates = NO;
 
   if (_onAnimationCallbacks.count == 0) {
     [self stopUpdatingOnAnimationFrame];
   }
+}
+
+- (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
+                               viewName:(NSString *) viewName
+                            nativeProps:(NSMutableDictionary *)nativeProps {
+  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
+  }];
 }
 
 #pragma mark -- Graph
@@ -265,8 +303,10 @@
   }
 }
 
-- (void)configureNativeProps:(NSSet<NSString *> *)nativeProps
+- (void)configureProps:(NSSet<NSString *> *)nativeProps
+               uiProps:(NSSet<NSString *> *)uiProps
 {
+  _uiProps = uiProps;
   _nativeProps = nativeProps;
 }
 
