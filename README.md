@@ -136,7 +136,7 @@ import Animated from 'react-native-reanimated';
 
 ## `Animated.Code`
 
-Oparations with nodes do not have to be strictly related with view. It could be also executed in independent was with `Animated.Code`, which behaves like View but do not render anything. Nodes to be executed could be passed via `exec` prop or as render prop:
+Oparations with nodes do not have to be strictly related with any view. It could be also executed in an independent way with `Animated.Code`, which behaves like View but do not render anything. Nodes to be executed could be passed via `exec` prop or as render prop:
 
 ```js
 <Animated.Code>
