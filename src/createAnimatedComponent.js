@@ -92,24 +92,26 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          nextEvts.add(prop);
+          // need to use prop.__nodeID instead of simply node because of error in JSC
+          // because freezen objects connot be used in Set fom some reason.
+          nextEvts.add(prop.__nodeID);
         }
       }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop)) {
+          if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
           } else {
             // event was in prev and is still in current props
-            attached.add(prop);
+            attached.add(prop.__nodeID);
           }
         }
       }
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop)) {
+        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
         }
@@ -183,10 +185,7 @@ export default function createAnimatedComponent(Component) {
       if (this._component !== this._prevComponent) {
         this._propsAnimated.setNativeView(this._component);
       }
-    }
-
-    componentDidUpdate(prevProps) {
-      this._reattachNativeEvents(prevProps);
+      this._reattachNativeEvents(this.props);
     }
 
     _setComponentRef(c) {
