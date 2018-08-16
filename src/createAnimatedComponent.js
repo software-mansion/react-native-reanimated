@@ -92,8 +92,8 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          // need to use prop.__nodeID instead of simply node because of error in JSC
-          // because frozen objects cannot be used in Set fom some reason.
+          // need to use `prop.__nodeID` instead of simply `prop` because of a limitation in JSC.
+          // frozen objects cannot be used in Set fom some reason.
           nextEvts.add(prop.__nodeID);
         }
       }
