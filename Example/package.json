@@ -5,20 +5,21 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
-    "postinstall": "rm -rf node_modules/react-native-reanimated/{.git,node_modules,Example}"
+    "postinstall":
+      "rm -rf node_modules/react-native-reanimated/{.git,node_modules,Example}"
   },
   "dependencies": {
-    "react": "16.3.2",
-    "react-native": "0.55.3",
-    "react-native-gesture-handler": "^1.0.0",
-    "react-native-reanimated": "file:../",
-    "react-navigation": "^2.0.4"
+    "react": "16.4.1",
+    "react-native": "0.56.0",
+    "react-native-gesture-handler": "^1.0.5",
+    "react-native-reanimated": "file:..",
+    "react-navigation": "^2.6.2"
   },
   "devDependencies": {
-    "babel-jest": "22.4.3",
-    "babel-preset-react-native": "4.0.0",
-    "jest": "22.4.3",
-    "react-test-renderer": "16.3.1"
+    "babel-jest": "23.2.0",
+    "babel-preset-react-native": "^5",
+    "jest": "23.3.0",
+    "react-test-renderer": "16.4.1"
   },
   "jest": {
     "preset": "react-native"
