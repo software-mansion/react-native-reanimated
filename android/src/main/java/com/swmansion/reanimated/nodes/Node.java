@@ -113,9 +113,10 @@ public abstract class Node<T> {
   public static void runUpdates(UpdateContext updateContext) {
     UiThreadUtil.assertOnUiThread();
     ArrayList<Node> updatedNodes = updateContext.updatedNodes;
+    Set<Node> visitedNodes = new HashSet<>();
     Stack<FinalNode> finalNodes = new Stack<>();
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes);
+      findAndUpdateNodes(updatedNodes.get(i), visitedNodes, finalNodes);
       if (i == updatedNodes.size() - 1) {
         while (!finalNodes.isEmpty()) {
           finalNodes.pop().update();
