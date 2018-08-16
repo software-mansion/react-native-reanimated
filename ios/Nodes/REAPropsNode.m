@@ -40,6 +40,14 @@
 
 - (id)evaluate
 {
+  // Animated.Code fake ID
+  if ([_connectedViewTag longValue] == -0xC0DE){
+    for (NSString *prop in _propsConfig) {
+      REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
+      [propNode value];
+    }
+    return @(0);
+  }
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
   NSMutableDictionary *jsProps = [NSMutableDictionary new];

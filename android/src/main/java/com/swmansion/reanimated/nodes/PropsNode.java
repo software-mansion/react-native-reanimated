@@ -48,6 +48,13 @@ public class PropsNode extends Node implements FinalNode {
 
   @Override
   protected Double evaluate() {
+    // Animated.Code fake ID
+    if (mConnectedViewTag == -0xC0DE) {
+      for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
+        mNodesManager.findNodeById(entry.getValue(), Node.class).value();
+      }
+      return ZERO;
+    }
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;

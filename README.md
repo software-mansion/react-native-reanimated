@@ -134,6 +134,37 @@ import Animated from 'react-native-reanimated';
 <View/>
 ```
 
+## `Animated.Code`
+
+Oparations with nodes do not have to be strictly related with any view. It could be also executed in an independent way with `Animated.Code`, which behaves like View but do not render anything. Nodes to be executed could be passed via `exec` prop or as render prop:
+
+```js
+<Animated.Code>
+  {() =>
+    block([
+      set(this.transX1, add(multiply(-1, this._transX))),
+      set(this.transX2, add(multiply(-2, this._transX), 120)),
+      set(this.transX3, sub(multiply(2, this._transX), 120)),
+      set(this.transX4, add(multiply(1, this._transX))),
+    ])
+  }
+</Animated.Code>
+```
+
+or:
+
+```js
+<Animated.Code exec={
+  () =>
+    block([
+      set(this.transX1, add(multiply(-1, this._transX))),
+      set(this.transX2, add(multiply(-2, this._transX), 120)),
+      set(this.transX3, sub(multiply(2, this._transX), 120)),
+      set(this.transX4, add(multiply(1, this._transX))),
+    ])
+}/>
+```
+
 ## Available nodes
 
 <!-- Base  -->
