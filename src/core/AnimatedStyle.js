@@ -6,14 +6,17 @@ import { createOrReuseTransformNode } from './AnimatedTransform';
 import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeStyle(inputStyle) {
-  const style = {};
+  const sanitized = {};
+  const notSanitized = {};
   for (const key in inputStyle) {
     const value = inputStyle[key];
     if (value instanceof AnimatedNode) {
-      style[key] = value.__nodeID;
+      sanitized[key] = value.__nodeID;
+    } else {
+      notSanitized[key] = value;
     }
   }
-  return style;
+  return { sanitized, notSanitized };
 }
 
 export function createOrReuseStyleNode(style, oldNode) {
@@ -27,11 +30,16 @@ export function createOrReuseStyleNode(style, oldNode) {
       ),
     };
   }
-  const config = sanitizeStyle(style);
-  if (oldNode && deepEqual(config, oldNode._config)) {
+  const { sanitized: config, notSanitized } = sanitizeStyle(style);
+
+  if (
+    oldNode &&
+    deepEqual(config, oldNode._config) &&
+    deepEqual(notSanitized, oldNode._notSanitizedStyle)
+  ) {
     return oldNode;
   }
-  return new AnimatedStyle(style, config);
+  return new AnimatedStyle(style, config, notSanitized);
 }
 
 /**
@@ -39,10 +47,11 @@ export function createOrReuseStyleNode(style, oldNode) {
  * in order to make a new instance of this node.
  */
 export default class AnimatedStyle extends AnimatedNode {
-  constructor(style, config) {
+  constructor(style, config, notSanitizedStyle) {
     super({ type: 'style', style: config }, Object.values(style));
     this._config = config;
     this._style = style;
+    this._notSanitizedStyle = notSanitizedStyle;
   }
 
   // Recursively get values for nested styles (like iOS's shadowOffset)

@@ -24,6 +24,10 @@ export default function createAnimatedComponent(Component) {
   );
 
   class AnimatedComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this._setComponentRef = this._setComponentRef.bind(this);
+    }
     _invokeAnimatedPropsCallbackOnMount = false;
 
     componentWillUnmount() {
@@ -174,19 +178,26 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
+    componentWillReceiveProps(newProps) {
+      this._attachProps(newProps);
+      if (this._component !== this._prevComponent) {
+        this._propsAnimated.setNativeView(this._component);
+      }
+    }
+
     componentDidUpdate(prevProps) {
-      this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
+    }
+
+    _setComponentRef(c) {
+      this._prevComponent = this._component;
+      this._component = c;
     }
 
     render() {
       const props = this._propsAnimated.__getProps();
       return (
-        <Component
-          {...props}
-          ref={ref => (this._component = ref)}
-          collapsable={false}
-        />
+        <Component {...props} ref={this._setComponentRef} collapsable={false} />
       );
     }
 

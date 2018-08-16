@@ -8,14 +8,17 @@ import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeProps(inputProps) {
-  const props = {};
+  const sanitized = {};
+  const notSanitized = {};
   for (const key in inputProps) {
     const value = inputProps[key];
     if (value instanceof AnimatedNode && !(value instanceof AnimatedEvent)) {
-      props[key] = value.__nodeID;
+      sanitized[key] = value.__nodeID;
+    } else {
+      notSanitized[key] = value;
     }
   }
-  return props;
+  return { sanitized, notSanitized };
 }
 
 export function createOrReusePropsNode(props, callback, oldNode) {
@@ -28,19 +31,24 @@ export function createOrReusePropsNode(props, callback, oldNode) {
       ),
     };
   }
-  const config = sanitizeProps(props);
-  if (oldNode && deepEqual(config, oldNode._config)) {
+  const { sanitized: config, notSanitized } = sanitizeProps(props);
+  if (
+    oldNode &&
+    deepEqual(config, oldNode._config) &&
+    deepEqual(notSanitized, oldNode._notSanitizedProps)
+  ) {
     return oldNode;
   }
-  return new AnimatedProps(props, config, callback);
+  return new AnimatedProps(props, config, callback, notSanitized);
 }
 
 class AnimatedProps extends AnimatedNode {
-  constructor(props, config, callback) {
+  constructor(props, config, callback, notSanitizedProps) {
     super(
       { type: 'props', props: config },
       Object.values(props).filter(n => !(n instanceof AnimatedEvent))
     );
+    this._notSanitizedProps = notSanitizedProps;
     this._config = config;
     this._props = props;
     this._callback = callback;
