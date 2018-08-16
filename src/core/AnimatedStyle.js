@@ -6,17 +6,14 @@ import { createOrReuseTransformNode } from './AnimatedTransform';
 import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeStyle(inputStyle) {
-  const sanitized = {};
-  const notSanitized = {};
+  const style = {};
   for (const key in inputStyle) {
     const value = inputStyle[key];
     if (value instanceof AnimatedNode) {
-      sanitized[key] = value.__nodeID;
-    } else {
-      notSanitized[key] = value;
+      style[key] = value.__nodeID;
     }
   }
-  return { sanitized, notSanitized };
+  return style;
 }
 
 export function createOrReuseStyleNode(style, oldNode) {
@@ -30,16 +27,12 @@ export function createOrReuseStyleNode(style, oldNode) {
       ),
     };
   }
-  const { sanitized: config, notSanitized } = sanitizeStyle(style);
-
-  if (
-    oldNode &&
-    deepEqual(config, oldNode._config) &&
-    deepEqual(notSanitized, oldNode._notSanitizedStyle)
-  ) {
+  const config = sanitizeStyle(style);
+  if (oldNode && deepEqual(config, oldNode._config)) {
+    oldNode.__setNewStyle(style);
     return oldNode;
   }
-  return new AnimatedStyle(style, config, notSanitized);
+  return new AnimatedStyle(style, config);
 }
 
 /**
@@ -47,11 +40,14 @@ export function createOrReuseStyleNode(style, oldNode) {
  * in order to make a new instance of this node.
  */
 export default class AnimatedStyle extends AnimatedNode {
-  constructor(style, config, notSanitizedStyle) {
+  constructor(style, config) {
     super({ type: 'style', style: config }, Object.values(style));
     this._config = config;
     this._style = style;
-    this._notSanitizedStyle = notSanitizedStyle;
+  }
+
+  __setNewStyle(newStyle) {
+    this._style = newStyle;
   }
 
   // Recursively get values for nested styles (like iOS's shadowOffset)

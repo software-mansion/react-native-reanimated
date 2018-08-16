@@ -18,16 +18,12 @@ function listener(data) {
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
+    (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
-    constructor(props) {
-      super(props);
-      this._setComponentRef = this._setComponentRef.bind(this);
-    }
     _invokeAnimatedPropsCallbackOnMount = false;
 
     componentWillUnmount() {
@@ -92,26 +88,24 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          // need to use `prop.__nodeID` instead of simply `prop` because of a limitation in JSC.
-          // frozen objects cannot be used in Set fom some reason.
-          nextEvts.add(prop.__nodeID);
+          nextEvts.add(prop);
         }
       }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop.__nodeID)) {
+          if (!nextEvts.has(prop)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
           } else {
             // event was in prev and is still in current props
-            attached.add(prop.__nodeID);
+            attached.add(prop);
           }
         }
       }
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
+        if (prop instanceof AnimatedEvent && !attached.has(prop)) {
           // not yet attached
           prop.attachEvent(node, key);
         }
@@ -180,23 +174,22 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    componentWillReceiveProps(newProps) {
-      this._attachProps(newProps);
-      if (this._component !== this._prevComponent) {
-        this._propsAnimated.setNativeView(this._component);
-      }
-      this._reattachNativeEvents(this.props);
+    shouldComponentUpdate(nextProps) {
+      this._attachProps(nextProps);
+      return true;
     }
-
-    _setComponentRef(c) {
-      this._prevComponent = this._component;
-      this._component = c;
+    componentDidUpdate(prevProps) {
+      this._reattachNativeEvents(prevProps);
     }
 
     render() {
       const props = this._propsAnimated.__getProps();
       return (
-        <Component {...props} ref={this._setComponentRef} collapsable={false} />
+        <Component
+          {...props}
+          ref={ref => (this._component = ref)}
+          collapsable={false}
+        />
       );
     }
 
@@ -219,12 +212,12 @@ export default function createAnimatedComponent(Component) {
         if (!propTypes[key] && props[key] !== undefined) {
           console.warn(
             'You are setting the style `{ ' +
-              key +
-              ': ... }` as a prop. You ' +
-              'should nest it in a style object. ' +
-              'E.g. `{ style: { ' +
-              key +
-              ': ... } }`'
+            key +
+            ': ... }` as a prop. You ' +
+            'should nest it in a style object. ' +
+            'E.g. `{ style: { ' +
+            key +
+            ': ... } }`'
           );
         }
       }
