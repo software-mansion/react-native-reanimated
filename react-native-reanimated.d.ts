@@ -195,7 +195,6 @@ declare module 'react-native-reanimated' {
       action: Adaptable<any>,
     ): AnimatedNode<undefined>;
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
-    export function always(item: AnimatedNode<any>): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
     // the return type for `event` is a lie, but it's the same lie that
