@@ -13,7 +13,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-public abstract class Node<T> {
+public abstract class Node {
 
   public static final Double ZERO = Double.valueOf(0);
   public static final Double ONE = Double.valueOf(1);
@@ -24,8 +24,8 @@ public abstract class Node<T> {
   private final UpdateContext mUpdateContext;
 
   private long mLastLoopID = -1;
-  private @Nullable T mMemoizedValue;
-  private @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
+  private @Nullable Object mMemoizedValue;
+  private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
@@ -33,9 +33,9 @@ public abstract class Node<T> {
     mUpdateContext = nodesManager.updateContext;
   }
 
-  protected abstract @Nullable T evaluate();
+  protected abstract @Nullable Object evaluate();
 
-  public final @Nullable T value() {
+  public final @Nullable Object value() {
     if (mLastLoopID < mUpdateContext.updateLoopID) {
       mLastLoopID = mUpdateContext.updateLoopID;
       return (mMemoizedValue = evaluate());
@@ -49,7 +49,7 @@ public abstract class Node<T> {
    * would not throw even if the value was not set.
    */
   public final Double doubleValue() {
-    T value = value();
+    Object value = value();
     if (value == null) {
       return ZERO;
     } else if (value instanceof Double) {
@@ -87,7 +87,7 @@ public abstract class Node<T> {
     markUpdated();
   }
 
-  protected final void forceUpdateMemoizedValue(T value) {
+  protected final void forceUpdateMemoizedValue(Object value) {
     mMemoizedValue = value;
     markUpdated();
   }

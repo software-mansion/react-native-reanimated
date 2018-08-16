@@ -18,6 +18,19 @@
 #import "Nodes/REAEventNode.h"
 #import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
+#import "Nodes/REAConcatNode.h"
+#import "REAModule.h"
+
+@interface RCTUIManager ()
+
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *)viewName
+             props:(NSDictionary *)props;
+
+- (void)setNeedsLayout;
+
+@end
+
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in 
@@ -175,6 +188,7 @@
             @"bezier": [REABezierNode class],
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
+            @"concat": [REAConcatNode class],
 //            @"listener": nil,
             };
   });

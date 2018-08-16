@@ -499,12 +499,18 @@ Creates a color node in RGBA format. Where first three input nodes should have i
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
 ---
+### `concat`
+```js
+concat(nodeOrValue1, ...)
+```
+Returns concatanation of given nodes (number or string) as string
+
+---
 ### `onChange`
 
 ```js
 onChange(value, action)
 ```
-
 When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 <!-- Anims -->

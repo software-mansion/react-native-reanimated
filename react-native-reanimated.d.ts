@@ -38,76 +38,75 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
-    export interface InterpolationConfig {
-      inputRange: ReadonlyArray<Adaptable<number>>;
-      outputRange: ReadonlyArray<Adaptable<number>>;
-      extrapolate?: Extrapolate;
-      extrapolateLeft?: Extrapolate;
-      extrapolateRight?: Extrapolate;
-    }
-    class AnimatedValue extends AnimatedNode<number> {
-      constructor(value: number);
+  interface InterpolationConfig {
+    inputRange: ReadonlyArray<Adaptable<number>>;
+    outputRange: ReadonlyArray<Adaptable<number>>;
+    extrapolate?: Extrapolate;
+    extrapolateLeft?: Extrapolate;
+    extrapolateRight?: Extrapolate;
+  }
+  type Value = string | number | boolean;
+  class AnimatedValue<T extends Value> extends AnimatedNode<T> {
+    constructor(value?: T);
 
-      setValue(value: number): void;
+    setValue(value: T): void;
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    export type Mapping = { [key: string]: Mapping } | AnimatedValue;
-    export type Adaptable<T> =
-      | T
-      | AnimatedNode<T>
-      | ReadonlyArray<T | AnimatedNode<T>>;
-    type BinaryOperator = (
-      left: Adaptable<number>,
-      right: Adaptable<number>,
-    ) => AnimatedNode<number>;
-    type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
-    type LogicalOperator = (
-      value: Adaptable<number>,
-      ...others: Adaptable<number>[]
-    ) => AnimatedNode<number>;
+  export type Mapping = { [key: string]: Mapping } | AnimatedValue<any>;
+  export type Adaptable<T> =
+    | T
+    | AnimatedNode<T>
+    | ReadonlyArray<T | AnimatedNode<T>>;
+  type BinaryOperator = (
+    left: Adaptable<number>,
+    right: Adaptable<number>
+  ) => AnimatedNode<number>;
+  type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
+  type LogicalOperator = (
+    value: Adaptable<number>,
+    ...others: Adaptable<number>[]
+  ) => AnimatedNode<number>;
 
-    export interface DecayState {
-      finished: AnimatedValue;
-      velocity: AnimatedValue;
-      position: AnimatedValue;
-      time: AnimatedValue;
-    }
-    export interface DecayConfig {
-      deceleration: Adaptable<number>;
-    }
+  export interface DecayState {
+    finished: AnimatedValue<number>;
+    velocity: AnimatedValue<number>;
+    position: AnimatedValue<number>;
+    time: AnimatedValue<number>;
+  }
+  export interface DecayConfig {
+    deceleration: Adaptable<number>;
+  }
 
-    export interface TimingState {
-      finished: AnimatedValue;
-      velocity: AnimatedValue;
-      position: AnimatedValue;
-      time: AnimatedValue;
-    }
-    export type EasingFunction = (
-      value: Adaptable<number>,
-    ) => AnimatedNode<number>;
-    export interface TimingConfig {
-      toValue: Adaptable<number>;
-      duration: Adaptable<number>;
-      easing: EasingFunction;
-    }
+  export interface TimingState {
+    finished: AnimatedValue<number>;
+    velocity: AnimatedValue<number>;
+    position: AnimatedValue<number>;
+    time: AnimatedValue<number>;
+  }
+  type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+  export interface TimingConfig {
+    toValue: Adaptable<number>;
+    duration: Adaptable<number>;
+    easing: EasingFunction;
+  }
 
-    export interface SpringState {
-      finished?: AnimatedValue;
-      velocity?: AnimatedValue;
-      position?: AnimatedValue;
-      time?: AnimatedValue;
-    }
-    export interface SpringConfig {
-      damping: Adaptable<number>;
-      mass: Adaptable<number>;
-      stiffness: Adaptable<number>;
-      overshootClamping: Adaptable<number> | boolean;
-      restSpeedThreshold: Adaptable<number>;
-      restDisplacementThreshold: Adaptable<number>;
-      toValue: Adaptable<number>;
-    }
+  export interface SpringState {
+    finished?: AnimatedValue<number>;
+    velocity?: AnimatedValue<number>;
+    position?: AnimatedValue<number>;
+    time?: AnimatedValue<number>;
+  }
+  export interface SpringConfig {
+    damping: Adaptable<number>;
+    mass: Adaptable<number>;
+    stiffness: Adaptable<number>;
+    overshootClamping: Adaptable<number> | boolean;
+    restSpeedThreshold: Adaptable<number>;
+    restDisplacementThreshold: Adaptable<number>;
+    toValue: Adaptable<number>;
+  }
 
     type AnimateStyle<S extends object> = {
       [K in keyof S]: S[K] extends ReadonlyArray<any>

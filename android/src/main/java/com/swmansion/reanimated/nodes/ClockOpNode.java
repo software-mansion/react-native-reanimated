@@ -3,7 +3,7 @@ package com.swmansion.reanimated.nodes;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public abstract class ClockOpNode extends Node<Double> {
+public abstract class ClockOpNode extends Node {
 
   public static class ClockStartNode extends ClockOpNode {
     public ClockStartNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
