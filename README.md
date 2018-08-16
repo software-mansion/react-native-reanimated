@@ -151,7 +151,7 @@ When evaluated it will assign the value of `sourceNode` to the `Animated.Value` 
 ### `cond`
 
 ```js
-set(conditionNode, ifNode, [elseNode])
+cond(conditionNode, ifNode, [elseNode])
 ```
 
 If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node and returns its value, otherwise it evaluates `elseNode` and returns its value. `elseNode` is optional.
@@ -504,6 +504,14 @@ The returned node can be mapped to view properties that represents color (e.g. [
 concat(nodeOrValue1, ...)
 ```
 Returns concatanation of given nodes (number or string) as string
+
+---
+### `onChange`
+
+```js
+onChange(value, action)
+```
+When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 <!-- Anims -->
 ## Animations
