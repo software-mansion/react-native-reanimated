@@ -15,11 +15,13 @@ class Code extends React.Component {
 
   shouldComponentUpdate(props) {
     if (!deepEqual(props, this.props)) {
-      this.always.__detach();
-      this.always = new AnimatedAlways(
+      // Firstly attach new alwaysNode in order to prevent reattaching of input nodes
+      const newAlways = new AnimatedAlways(
         props.exec ? props.exec : props.children()
       );
-      this.always.__attach();
+      newAlways.__attach();
+      this.always.__detach();
+      this.always = newAlways;
     }
     return true;
   }
