@@ -29,7 +29,7 @@ export function createOrReuseStyleNode(style, oldNode) {
   }
   const config = sanitizeStyle(style);
   if (oldNode && deepEqual(config, oldNode._config)) {
-    oldNode.__setNewStyle(style);
+    oldNode._style = style;
     return oldNode;
   }
   return new AnimatedStyle(style, config);
@@ -44,10 +44,6 @@ export default class AnimatedStyle extends AnimatedNode {
     super({ type: 'style', style: config }, Object.values(style));
     this._config = config;
     this._style = style;
-  }
-
-  __setNewStyle(newStyle) {
-    this._style = newStyle;
   }
 
   // Recursively get values for nested styles (like iOS's shadowOffset)
