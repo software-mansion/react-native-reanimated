@@ -44,7 +44,7 @@ export function createOrReuseTransformNode(transform, oldNode) {
   return new AnimatedTransform(transform, config);
 }
 
-export default class AnimatedTransform extends AnimatedNode {
+class AnimatedTransform extends AnimatedNode {
   constructor(transform, config) {
     super(
       { type: 'transform', transform: config },
