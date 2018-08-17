@@ -30,7 +30,7 @@ export function createOrReusePropsNode(props, callback, oldNode) {
   }
   const config = sanitizeProps(props);
   if (oldNode && deepEqual(config, oldNode._config)) {
-    oldNode.__setNewProps(props);
+    oldNode._props = props;
     return oldNode;
   }
   return new AnimatedProps(props, config, callback);
@@ -46,10 +46,6 @@ class AnimatedProps extends AnimatedNode {
     this._props = props;
     this._callback = callback;
     this.__attach();
-  }
-
-  __setNewProps(newProps) {
-    this._props = newProps;
   }
 
   __getProps() {
