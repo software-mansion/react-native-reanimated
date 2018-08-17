@@ -8,6 +8,7 @@ import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedAlways from './core/AnimatedAlways';
+import AnimatedConcat from './core/AnimatedConcat';
 
 import { adapt } from './utils';
 
@@ -67,6 +68,10 @@ export const startClock = function(clock) {
 
 export const always = function(item) {
   return new AnimatedAlways(item);
+};
+
+export const concat = function(...args) {
+  return new AnimatedConcat(args.map(adapt));
 };
 
 export const stopClock = function(clock) {
