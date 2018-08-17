@@ -1,7 +1,9 @@
 import { StyleSheet } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
-import { createOrReuseTransformNode } from './AnimatedTransform';
+import AnimatedTransform, {
+  createOrReuseTransformNode,
+} from './AnimatedTransform';
 
 import deepEqual from 'fbjs/lib/areEqual';
 
@@ -56,7 +58,9 @@ export default class AnimatedStyle extends AnimatedNode {
     for (const key in style) {
       const value = style[key];
       if (value instanceof AnimatedNode) {
-        // do nothing
+        if (value instanceof AnimatedTransform) {
+          updatedStyle[key] = value.__getProps();
+        }
       } else if (value && !Array.isArray(value) && typeof value === 'object') {
         // Support animating nested values (for example: shadowOffset.height)
         updatedStyle[key] = this._walkStyleAndGetValues(value);

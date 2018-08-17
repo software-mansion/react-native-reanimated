@@ -18,13 +18,14 @@ function listener(data) {
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-    (Component.prototype && Component.prototype.isReactComponent),
+      (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-    'use a class component instead.'
+      'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    _refHasChanges = false;
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -178,18 +179,26 @@ export default function createAnimatedComponent(Component) {
       this._attachProps(nextProps);
       return true;
     }
+
     componentDidUpdate(prevProps) {
       this._reattachNativeEvents(prevProps);
+      if (this._refHasChanged) {
+        this._refHasChanges = false;
+        this._propsAnimated.setNativeView(this._component);
+      }
     }
+
+    _setComponentRef = c => {
+      if (c !== this._component) {
+        this._component = c;
+        this._refHasChanged = true;
+      }
+    };
 
     render() {
       const props = this._propsAnimated.__getProps();
       return (
-        <Component
-          {...props}
-          ref={ref => (this._component = ref)}
-          collapsable={false}
-        />
+        <Component {...props} ref={this._setComponentRef} collapsable={false} />
       );
     }
 
@@ -212,12 +221,12 @@ export default function createAnimatedComponent(Component) {
         if (!propTypes[key] && props[key] !== undefined) {
           console.warn(
             'You are setting the style `{ ' +
-            key +
-            ': ... }` as a prop. You ' +
-            'should nest it in a style object. ' +
-            'E.g. `{ style: { ' +
-            key +
-            ': ... } }`'
+              key +
+              ': ... }` as a prop. You ' +
+              'should nest it in a style object. ' +
+              'E.g. `{ style: { ' +
+              key +
+              ': ... } }`'
           );
         }
       }
