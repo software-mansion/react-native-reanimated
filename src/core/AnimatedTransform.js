@@ -12,6 +12,11 @@ function sanitizeTransform(inputTransform) {
           property: key,
           nodeID: value.__nodeID,
         });
+      } else {
+        outputTransform.push({
+          property: key,
+          value,
+        });
       }
     }
   });
@@ -34,7 +39,6 @@ function extractAnimatedParentNodes(transform) {
 export function createOrReuseTransformNode(transform, oldNode) {
   const config = sanitizeTransform(transform);
   if (oldNode && deepEqual(config, oldNode._config)) {
-    oldNode.__setNewTransform(transform);
     return oldNode;
   }
   return new AnimatedTransform(transform, config);
@@ -48,25 +52,6 @@ export default class AnimatedTransform extends AnimatedNode {
     );
     this._config = config;
     this._transform = transform;
-  }
-
-  __setNewTransform(newTransform) {
-    this._transform = newTransform;
-  }
-  __getProps() {
-    const result = [];
-    for (let i = 0; i < this._transform.length; i++) {
-      const transform = this._transform[i];
-      for (const key in transform) {
-        const value = transform[key];
-        if (!(value instanceof AnimatedNode)) {
-          const singleTransform = {};
-          singleTransform[key] = value;
-          result.push(singleTransform);
-        }
-      }
-    }
-    return result;
   }
 
   __onEvaluate() {

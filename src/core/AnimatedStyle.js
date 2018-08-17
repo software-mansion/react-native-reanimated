@@ -58,9 +58,7 @@ export default class AnimatedStyle extends AnimatedNode {
     for (const key in style) {
       const value = style[key];
       if (value instanceof AnimatedNode) {
-        if (value instanceof AnimatedTransform) {
-          updatedStyle[key] = value.__getProps();
-        }
+        // no-op
       } else if (value && !Array.isArray(value) && typeof value === 'object') {
         // Support animating nested values (for example: shadowOffset.height)
         updatedStyle[key] = this._walkStyleAndGetValues(value);
