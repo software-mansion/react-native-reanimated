@@ -29,7 +29,6 @@ export function createOrReuseStyleNode(style, oldNode) {
   }
   const config = sanitizeStyle(style);
   if (oldNode && deepEqual(config, oldNode._config)) {
-    oldNode._style = style;
     return oldNode;
   }
   return new AnimatedStyle(style, config);
