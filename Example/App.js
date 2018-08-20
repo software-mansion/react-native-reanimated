@@ -10,6 +10,7 @@ import Interpolate from './src/interpolate';
 import Colors from './colors';
 import StartAPI from './startAPI';
 import ChatHeads from './chatHeads';
+import Code from './code';
 import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 
@@ -28,6 +29,7 @@ const SCREENS = {
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
+  code: { screen: Code, title: 'Animated.Code component' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
 };

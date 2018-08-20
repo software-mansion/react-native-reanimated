@@ -134,6 +134,35 @@ import Animated from 'react-native-reanimated';
 <View/>
 ```
 
+## `Animated.Code`
+
+`Animated.Code` component allows you to define reanimated nodes that you want to execute when their input nodes updates, but aren't necessarily strictly related to some view properties and hence it does not feel right to place them under `translate` or other prop of an `Animated.View`. This component renders `null`, so you can place it in any place you want in your render method. It is required that your code is put inside component as we rely on `componentDidMount` and `componentWillUnmount` callbacks to install and cleanup animated nodes. Note that the code you put is going to be executed only once. We currently have no way of telling if your code changes and so it will only be run in `componentDidMount`. If you wish for your reanimated nodes to be updated when component updates you can update `key` property of `Animated.Code` component which will effectively unmount old and mount new version of it in react tree.
+```js
+<Animated.Code>
+  { ()=>
+        block([
+          set(this.transX1, add(multiply(-1, this._transX))),
+          set(this.transX2, add(multiply(-2, this._transX), 120)),
+          set(this.transX3, sub(multiply(2, this._transX), 120)),
+          set(this.transX4, add(multiply(1, this._transX))),
+        ])
+  }
+</Animated.Code>
+```
+
+or:
+
+```js
+<Animated.Code exec={
+block([
+  set(this.transX1, add(multiply(-1, this._transX))),
+  set(this.transX2, add(multiply(-2, this._transX), 120)),
+  set(this.transX3, sub(multiply(2, this._transX), 120)),
+  set(this.transX4, add(multiply(1, this._transX))),
+])
+}/>
+```
+
 ## Available nodes
 
 <!-- Base  -->
