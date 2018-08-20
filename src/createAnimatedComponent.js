@@ -1,9 +1,10 @@
 import React from 'react';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
 
 import AnimatedEvent from './core/AnimatedEvent';
+import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 
 import invariant from 'fbjs/lib/invariant';
@@ -25,6 +26,7 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    _refHasChanges = false;
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -177,16 +179,47 @@ export default function createAnimatedComponent(Component) {
     componentDidUpdate(prevProps) {
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
+      if (this._refHasChanged) {
+        this._refHasChanges = false;
+        this._propsAnimated.setNativeView(this._component);
+      }
+    }
+
+    _setComponentRef = c => {
+      if (c !== this._component) {
+        this._component = c;
+        this._refHasChanged = true;
+      }
+    };
+
+    _filterNonAnimatedStyle(inputStyle) {
+      const style = {};
+      for (const key in inputStyle) {
+        const value = inputStyle[key];
+        if (!(value instanceof AnimatedNode) && key !== 'transform') {
+          style[key] = value;
+        }
+      }
+      return style;
+    }
+
+    _filterNonAnimatedProps(inputProps) {
+      const props = {};
+      for (const key in inputProps) {
+        const value = inputProps[key];
+        if (key === 'style') {
+          props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (!(value instanceof AnimatedNode)) {
+          props[key] = value;
+        }
+      }
+      return props;
     }
 
     render() {
-      const props = this._propsAnimated.__getProps();
+      const props = this._filterNonAnimatedProps(this.props);
       return (
-        <Component
-          {...props}
-          ref={ref => (this._component = ref)}
-          collapsable={false}
-        />
+        <Component {...props} ref={this._setComponentRef} collapsable={false} />
       );
     }
 

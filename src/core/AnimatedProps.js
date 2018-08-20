@@ -47,21 +47,6 @@ class AnimatedProps extends AnimatedNode {
     this.__attach();
   }
 
-  __getProps() {
-    const props = {};
-    for (const key in this._props) {
-      const value = this._props[key];
-      if (value instanceof AnimatedNode) {
-        if (value instanceof AnimatedStyle) {
-          props[key] = value.__getProps();
-        }
-      } else {
-        props[key] = value;
-      }
-    }
-    return props;
-  }
-
   __onEvaluate() {
     const props = {};
     for (const key in this._props) {
