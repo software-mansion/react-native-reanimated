@@ -140,13 +140,13 @@ Oparations with nodes do not have to be strictly related with view. It could be 
 
 ```js
 <Animated.Code>
-  {
-    block([
-      set(this.transX1, add(multiply(-1, this._transX))),
-      set(this.transX2, add(multiply(-2, this._transX), 120)),
-      set(this.transX3, sub(multiply(2, this._transX), 120)),
-      set(this.transX4, add(multiply(1, this._transX))),
-    ])
+  { ()=>
+        block([
+          set(this.transX1, add(multiply(-1, this._transX))),
+          set(this.transX2, add(multiply(-2, this._transX), 120)),
+          set(this.transX3, sub(multiply(2, this._transX), 120)),
+          set(this.transX4, add(multiply(1, this._transX))),
+        ])
   }
 </Animated.Code>
 ```
@@ -155,13 +155,12 @@ or:
 
 ```js
 <Animated.Code exec={
-  () =>
-    block([
-      set(this.transX1, add(multiply(-1, this._transX))),
-      set(this.transX2, add(multiply(-2, this._transX), 120)),
-      set(this.transX3, sub(multiply(2, this._transX), 120)),
-      set(this.transX4, add(multiply(1, this._transX))),
-    ])
+block([
+  set(this.transX1, add(multiply(-1, this._transX))),
+  set(this.transX2, add(multiply(-2, this._transX), 120)),
+  set(this.transX3, sub(multiply(2, this._transX), 120)),
+  set(this.transX4, add(multiply(1, this._transX))),
+])
 }/>
 ```
 
