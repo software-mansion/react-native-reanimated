@@ -31,6 +31,7 @@ class Code extends React.Component {
   componentWillUnmount() {
     this.always.__detach();
   }
+  
   render() {
     return null;
   }
