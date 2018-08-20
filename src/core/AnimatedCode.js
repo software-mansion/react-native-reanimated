@@ -3,12 +3,14 @@ import AnimatedAlways from './AnimatedAlways';
 import deepEqual from 'fbjs/lib/areEqual';
 
 class Code extends React.Component {
+  
   constructor(props) {
     super(props);
     this.always = new AnimatedAlways(
       props.exec ? props.exec : props.children()
     );
   }
+  
   componentDidMount() {
     this.always.__attach();
   }
