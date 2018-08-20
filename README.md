@@ -136,9 +136,7 @@ import Animated from 'react-native-reanimated';
 
 ## `Animated.Code`
 
-Operations with nodes do not have to be strictly related with view. It could be also executed in independent way with `Animated.Code`, which behaves like View but do not render anything. Nodes to be executed could be passed via `exec` prop or as render prop:
-Consider that `Animated.Code` could be changes only via `render`. It's not possible to manage it with props or state.
-
+`Animated.Code` component allows you to define reanimated nodes that you want to execute when their input nodes updates, but aren't necessarily strictly related to some view properties and hence it does not feel right to place them under `translate` or other prop of an `Animated.View`. This component renders `null`, so you can place it in any place you want in your render method. It is required that your code is put inside component as we rely on `componentDidMount` and `componentWillUnmount` callbacks to install and cleanup animated nodes. Note that the code you put is going to be executed only once. We currently have no way of telling if your code changes and so it will only be run in `componentDidMount`. If you wish for your reanimated nodes to be updated when component updates you can update `key` property of `Animated.Code` component which will effectively unmount old and mount new version of it in react tree.
 ```js
 <Animated.Code>
   { ()=>
