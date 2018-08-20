@@ -1,28 +1,14 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
+import { StyleSheet, View, Dimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const {
-  cond,
-  eq,
-  add,
-  call,
-  set,
-  Value,
-  event,
-  interpolate,
-  Extrapolate,
-  block,
-} = Animated;
+const { cond, eq, add, call, set, Value, event } = Animated;
 
 export default class Example extends React.Component {
   constructor(props) {
     super(props);
-
-    this.onDrop = this.onDrop.bind(this);
-
     this.dragX = new Value(0);
     this.dragY = new Value(0);
     this.offsetX = new Value(width / 2);
@@ -52,28 +38,13 @@ export default class Example extends React.Component {
     ]);
   }
 
-  onDrop([x, y]) {
-    if (
-      x >= this.left &&
-      x <= this.right &&
-      (y >= this.top && y <= this.bottom)
-    ) {
-      alert('You dropped it in the zone!');
-    }
-  }
-
-  saveDropZone = e => {
-    const { width, height, x, y } = e.nativeEvent.layout;
-    this.top = y;
-    this.bottom = y + height;
-    this.left = x;
-    this.right = x + width;
+  onDrop = ([x, y]) => {
+    alert(`You dropped in x: ${x} and y: ${y}!`);
   };
+
   render() {
     return (
       <View style={styles.container}>
-        <View style={styles.dropZone} onLayout={this.saveDropZone} />
-
         <Animated.Code>
           {() =>
             cond(
@@ -112,14 +83,6 @@ const CIRCLE_SIZE = 70;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  dropZone: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,.2)',
-    height: '50%',
   },
   box: {
     backgroundColor: 'tomato',
