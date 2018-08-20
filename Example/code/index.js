@@ -39,7 +39,7 @@ export default class Example extends React.Component {
   }
 
   onDrop = ([x, y]) => {
-    alert(`You dropped in x: ${x} and y: ${y}!`);
+    alert(`You dropped at x: ${x} and y: ${y}!`);
   };
 
   render() {
