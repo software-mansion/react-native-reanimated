@@ -38,75 +38,76 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
-  interface InterpolationConfig {
-    inputRange: ReadonlyArray<Adaptable<number>>;
-    outputRange: ReadonlyArray<Adaptable<number>>;
-    extrapolate?: Extrapolate;
-    extrapolateLeft?: Extrapolate;
-    extrapolateRight?: Extrapolate;
-  }
-  type Value = string | number | boolean;
-  class AnimatedValue<T extends Value> extends AnimatedNode<T> {
-    constructor(value?: T);
+    interface InterpolationConfig {
+      inputRange: ReadonlyArray<Adaptable<number>>;
+      outputRange: ReadonlyArray<Adaptable<number>>;
+      extrapolate?: Extrapolate;
+      extrapolateLeft?: Extrapolate;
+      extrapolateRight?: Extrapolate;
+    }
+    type Value = string | number | boolean;
+    class AnimatedValue<T extends Value> extends AnimatedNode<T> {
+      constructor(value?: T);
 
-    setValue(value: T): void;
+      setValue(value: Adaptable<T>): void;
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-  export type Mapping = { [key: string]: Mapping } | AnimatedValue<any>;
-  export type Adaptable<T> =
-    | T
-    | AnimatedNode<T>
-    | ReadonlyArray<T | AnimatedNode<T>>;
-  type BinaryOperator = (
-    left: Adaptable<number>,
-    right: Adaptable<number>
-  ) => AnimatedNode<number>;
-  type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
-  type LogicalOperator = (
-    value: Adaptable<number>,
-    ...others: Adaptable<number>[]
-  ) => AnimatedNode<number>;
+    export type Mapping = { [key: string]: Mapping } | AnimatedValue<any>;
+    export type Adaptable<T> =
+      | T
+      | AnimatedNode<T>
+      | ReadonlyArray<T | AnimatedNode<T>>;
+    type BinaryOperator = (
+      left: Adaptable<number>,
+      right: Adaptable<number>
+    ) => AnimatedNode<number>;
+    type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
+    type MultiOperator = (
+      a: Adaptable<number>,
+      b: Adaptable<number>,
+      ...others: Adaptable<number>[]
+    ) => AnimatedNode<number>;
 
-  export interface DecayState {
-    finished: AnimatedValue<number>;
-    velocity: AnimatedValue<number>;
-    position: AnimatedValue<number>;
-    time: AnimatedValue<number>;
-  }
-  export interface DecayConfig {
-    deceleration: Adaptable<number>;
-  }
+    export interface DecayState {
+      finished: AnimatedValue<number>;
+      velocity: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
+    }
+    export interface DecayConfig {
+      deceleration: Adaptable<number>;
+    }
 
-  export interface TimingState {
-    finished: AnimatedValue<number>;
-    velocity: AnimatedValue<number>;
-    position: AnimatedValue<number>;
-    time: AnimatedValue<number>;
-  }
-  type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
-  export interface TimingConfig {
-    toValue: Adaptable<number>;
-    duration: Adaptable<number>;
-    easing: EasingFunction;
-  }
+    export interface TimingState {
+      finished: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
+      frameTime: AnimatedValue<number>;
+    }
+    type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export interface TimingConfig {
+      toValue: Adaptable<number>;
+      duration: Adaptable<number>;
+      easing: EasingFunction;
+    }
 
-  export interface SpringState {
-    finished?: AnimatedValue<number>;
-    velocity?: AnimatedValue<number>;
-    position?: AnimatedValue<number>;
-    time?: AnimatedValue<number>;
-  }
-  export interface SpringConfig {
-    damping: Adaptable<number>;
-    mass: Adaptable<number>;
-    stiffness: Adaptable<number>;
-    overshootClamping: Adaptable<number> | boolean;
-    restSpeedThreshold: Adaptable<number>;
-    restDisplacementThreshold: Adaptable<number>;
-    toValue: Adaptable<number>;
-  }
+    export interface SpringState {
+      finished: AnimatedValue<number>;
+      velocity: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
+    }
+    export interface SpringConfig {
+      damping: Adaptable<number>;
+      mass: Adaptable<number>;
+      stiffness: Adaptable<number>;
+      overshootClamping: Adaptable<number> | boolean;
+      restSpeedThreshold: Adaptable<number>;
+      restDisplacementThreshold: Adaptable<number>;
+      toValue: Adaptable<number>;
+    }
 
     type AnimateStyle<S extends object> = {
       [K in keyof S]: S[K] extends ReadonlyArray<any>
@@ -148,31 +149,38 @@ declare module 'react-native-reanimated' {
     };
 
     // base operations
-    export const add: BinaryOperator;
-    export const sub: BinaryOperator;
-    export const multiply: BinaryOperator;
-    export const divide: BinaryOperator;
-    export const pow: BinaryOperator;
-    export const modulo: BinaryOperator;
+    export const add: MultiOperator;
+    export const sub: MultiOperator;
+    export const multiply: MultiOperator;
+    export const divide: MultiOperator;
+    export const pow: MultiOperator;
+    export const modulo: MultiOperator;
     export const sqrt: UnaryOperator;
     export const sin: UnaryOperator;
     export const cos: UnaryOperator;
     export const exp: UnaryOperator;
     export const round: UnaryOperator;
+    export const floor: UnaryOperator;
+    export const ceil: UnaryOperator;
     export const lessThan: BinaryOperator;
     export const eq: BinaryOperator;
     export const greaterThan: BinaryOperator;
     export const lessOrEq: BinaryOperator;
     export const greaterOrEq: BinaryOperator;
     export const neq: BinaryOperator;
-    export const and: LogicalOperator;
-    export const or: LogicalOperator;
+    export const and: MultiOperator;
+    export const or: MultiOperator;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
-      valueToBeUpdated: AnimatedValue,
+      valueToBeUpdated: AnimatedValue<number>,
       sourceNode: Adaptable<number>,
     ): AnimatedNode<number>;
+    export function concat(
+      a: AnimatedNode<string>,
+      b: AnimatedNode<string>,
+      ...others: AnimatedNode<string>[],
+    ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
       ifNode: Adaptable<number>,
@@ -182,24 +190,24 @@ declare module 'react-native-reanimated' {
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
     export function call<T>(
-      nodes: ReadonlyArray<AnimatedNode<T>>,
-      callback: (values: ReadonlyArray<T>) => void,
+      args: ReadonlyArray<T | AnimatedNode<T>>,
+      callback: (args: ReadonlyArray<T>) => void,
     ): AnimatedNode<0>;
     export function debug<T>(
       message: string,
       value: Adaptable<T>,
     ): AnimatedNode<T>;
     export function onChange(
-      value: Adaptable<any>,
-      action: Adaptable<any>,
-    ): AnimatedNode<undefined>;
+      value: Adaptable<number>,
+      action: Adaptable<number>,
+    ): AnimatedNode<number>;
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
     export function event(
-      argMapping: ReadonlyArray<Mapping | null>,
+      argMapping: ReadonlyArray<Mapping>,
       config?: {},
     ): (...args: any[]) => void;
 
@@ -267,10 +275,10 @@ declare module 'react-native-reanimated' {
     back(s?: Animated.Adaptable<number>): Animated.EasingFunction;
     bounce: Animated.EasingFunction;
     bezier(
-      x1: Animated.Adaptable<number>,
-      y1: Animated.Adaptable<number>,
-      x2: Animated.Adaptable<number>,
-      y2: Animated.Adaptable<number>,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;

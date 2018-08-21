@@ -19,7 +19,8 @@
     "android/build.gradle",
     "ios/",
     "RNReanimated.podspec",
-    "README.md"
+    "README.md",
+    "react-native-reanimated.d.ts"
   ],
   "repository": {
     "type": "git",
