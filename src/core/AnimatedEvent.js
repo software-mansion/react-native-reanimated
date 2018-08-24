@@ -8,7 +8,7 @@ import AnimatedAlways from './AnimatedAlways';
 import invariant from 'fbjs/lib/invariant';
 
 //TODO remove after update of JSC
-function androidProxyPollifil() {
+function androidProxyPolyfill() {
   const v = {
     translationX: {},
     translationY: {},
@@ -20,7 +20,6 @@ function androidProxyPollifil() {
     y: {},
     velocityX: {},
     velocityY: {},
-    velocity: {},
     scale: {},
     focalX: {},
     focalY: {},
@@ -101,7 +100,7 @@ function sanitizeArgMapping(argMapping) {
 
     const proxy =
       Platform.OS === 'android'
-        ? androidProxyPollifil()
+        ? androidProxyPolyfill()
         : new Proxy({}, proxyHandler);
     alwaysNodes.push(new AnimatedAlways(ev(proxy)));
     traverse(proxy, []);
