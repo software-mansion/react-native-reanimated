@@ -63,8 +63,7 @@ function sanitizeArgMapping(argMapping) {
       eventMappings.push(path.concat(value.val.__nodeID));
     } else if (typeof value === 'function') {
       const node = new AnimatedValue(0);
-      const code = value(node);
-      alwaysNodes.push(new AnimatedAlways(code));
+      alwaysNodes.push(new AnimatedAlways(value(node)));
       eventMappings.push(path.concat(node.__nodeID));
     } else if (typeof value === 'object') {
       for (const key in value) {
