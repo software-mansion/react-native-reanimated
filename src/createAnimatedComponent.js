@@ -32,6 +32,12 @@ export default function createAnimatedComponent(Component) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          prop.onUnmount();
+        }
+      }
     }
 
     setNativeProps(props) {
