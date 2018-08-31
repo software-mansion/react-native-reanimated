@@ -7,7 +7,8 @@ import AnimatedAlways from './AnimatedAlways';
 
 import invariant from 'fbjs/lib/invariant';
 
-//TODO remove after update of JSC
+// TODO remove after update of JSC
+// because currently JSC does not support Proxy
 function androidProxyPolyfill() {
   const v = {
     translationX: {},
@@ -47,6 +48,8 @@ function androidProxyPolyfill() {
 // TODO there's no point why not to use "alwaysNodes"
 // as a field of object except from the error
 // "Malformated call from JS: field sizes are different"
+// which occurs while attaching nodes.
+// It might be somehow related to https://github.com/kmagiera/react-native-reanimated/pull/30
 const EVENTS_TO_ALWAYS_NODES = new Map();
 
 function sanitizeArgMapping(argMapping) {
@@ -55,7 +58,7 @@ function sanitizeArgMapping(argMapping) {
   const eventMappings = [];
   const alwaysNodes = [];
 
-  const traverse = (value, path) => {
+  function traverse(value, path) {
     if (value instanceof AnimatedValue) {
       eventMappings.push(path.concat(value.__nodeID));
     } else if (typeof value === 'object' && value.val) {
