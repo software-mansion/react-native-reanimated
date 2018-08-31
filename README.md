@@ -166,7 +166,7 @@ block([
 ## NativeEvent as a function
 Using declarative `nativeEvent` it is also possible to handle syntax which seems to be quite similar to imperative function.
 Particularly, it could mean that `nativeEvent` could be used not only for setting some values but also to perform some operations 
-on each change if `nativeEvent` as well, which do not have to be directly related to any `Animated.View`.  
+on each change of `nativeEvent` as well, which do not have to be directly related to any `Animated.View`.  
 
 ```js
 export default class Example extends Component {
@@ -215,7 +215,7 @@ export default class Example extends Component {
   }
 }
 ```
-However, it is still fully "declarative" and could be describe as some kind of syntactic sugar and does not affect neither complexity nor execution time or cost of evaluation.
+However, it is still fully "declarative" and could be described as some kind of syntactic sugar and does not affect neither complexity nor execution time or cost of evaluation.
 
 It is also available to use function with single field of `nativeEvent`:
 ```js
