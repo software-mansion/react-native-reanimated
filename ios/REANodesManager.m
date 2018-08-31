@@ -163,6 +163,13 @@
   }];
 }
 
+- (void)getValue:(REANodeID)nodeID
+{
+  [self.reanimatedModule
+   sendEventWithName:@"onValueGet"
+   body:@{@"id": nodeID, @"val": _nodes[nodeID].value }];
+}
+
 #pragma mark -- Graph
 
 - (void)createNode:(REANodeID)nodeID
