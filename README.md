@@ -163,6 +163,73 @@ block([
 }/>
 ```
 
+## NativeEvent as a function
+Using declarative `nativeEvent` it is also possible to handle syntax which seems to be quite similar to imperative function.
+Particularly, it could mean that `nativeEvent` could be used not only for setting some values but also to perform some operations 
+on each change if `nativeEvent` as well, which do not have to be directly related to any `Animated.View`.  
+
+```js
+export default class Example extends Component {
+  constructor(props) {
+    super(props);
+    this._transX = new Value(0);
+    this._transY = new Value(0);
+    const offsetX = new Value(0);
+    const offsetY = new Value(0);
+
+    this._onGestureEvent = event([
+      {
+        nativeEvent: ({ translationX: x, translationY: y, state }) =>
+          block([
+            set(this._transX, add(x, offsetX)),
+            set(this._transY, add(y, offsetY)),
+            cond(eq(state, State.END), [
+              set(offsetX, add(offsetX, x)),
+              set(offsetY, add(offsetY, y)),
+            ]),
+          ]),
+      },
+    ]);
+  }
+  render() {
+    return (
+      <View style={styles.container}>
+        <PanGestureHandler
+          maxPointers={1}
+          onGestureEvent={this._onGestureEvent}
+          onHandlerStateChange={this._onGestureEvent}>
+          <Animated.View
+            onLayout={this._onLayout}
+            style={[
+              styles.box,
+              {
+                transform: [
+                  { translateX: this._transX, translateY: this._transY },
+                ],
+              },
+            ]}
+          />
+        </PanGestureHandler>
+      </View>
+    );
+  }
+}
+```
+However, it is still fully "declarative" and could be describe as some kind of syntactic sugar and does not affect neither complexity nor execution time or cost of evaluation.
+
+It is also available to use function with single field of `nativeEvent`:
+```js
+this.onGestureEvent = event([
+  {
+    nativeEvent: {
+      translationX: x => set(this._x, x)
+    },
+  },
+]);
+```
+
+
+
 ## Available nodes
 
 <!-- Base  -->
