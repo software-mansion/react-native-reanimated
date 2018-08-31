@@ -36,12 +36,12 @@ function androidProxyPolyfill() {
       height: {},
     },
   };
-  function traverse(obj) {
+  const traverse = obj => {
     for (key in obj) {
       obj[key].__isProxy = true;
       traverse(obj[key]);
     }
-  }
+  };
   traverse(nodesMap);
   return nodesMap;
 }
@@ -59,7 +59,7 @@ function sanitizeArgMapping(argMapping) {
   const eventMappings = [];
   const alwaysNodes = [];
 
-  function traverse(value, path) {
+  const traverse = (value, path) => {
     if (value instanceof AnimatedValue) {
       eventMappings.push(path.concat(value.__nodeID));
     } else if (typeof value === 'object' && value.__val) {
@@ -73,7 +73,7 @@ function sanitizeArgMapping(argMapping) {
         traverse(value[key], path.concat(key));
       }
     }
-  }
+  };
 
   invariant(
     argMapping[0] && argMapping[0].nativeEvent,
