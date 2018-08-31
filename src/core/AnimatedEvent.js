@@ -51,7 +51,7 @@ function androidProxyPolyfill() {
 // "Malformated call from JS: field sizes are different"
 // which occurs while attaching node.
 // It might be somehow related to https://github.com/kmagiera/react-native-reanimated/pull/30
-const EVENTS_TO_ALWAYS_NODES = new Map();
+const ALWAYS_NODES_BY_EVENTS = new Map();
 
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
@@ -117,11 +117,11 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({ type: 'event', argMapping: eventMappings });
-    EVENTS_TO_ALWAYS_NODES.set(this.__nodeID, alwaysNodes);
+    ALWAYS_NODES_BY_EVENTS.set(this.__nodeID, alwaysNodes);
   }
 
   attachEvent(viewRef, eventName) {
-    const alwaysNodes = EVENTS_TO_ALWAYS_NODES.get(this.__nodeID);
+    const alwaysNodes = ALWAYS_NODES_BY_EVENTS.get(this.__nodeID);
     for (let i = 0; i < alwaysNodes.length; i++) {
       alwaysNodes[i].__attach();
     }
@@ -131,7 +131,7 @@ export default class AnimatedEvent extends AnimatedNode {
   }
 
   detachEvent(viewRef, eventName) {
-    const alwaysNodes = EVENTS_TO_ALWAYS_NODES.get(this.__nodeID);
+    const alwaysNodes = ALWAYS_NODES_BY_EVENTS.get(this.__nodeID);
     for (let i = 0; i < alwaysNodes.length; i++) {
       alwaysNodes[i].isNativelyInitialized() && alwaysNodes[i].__detach();
     }
@@ -141,6 +141,6 @@ export default class AnimatedEvent extends AnimatedNode {
   }
 
   onUnmount() {
-    EVENTS_TO_ALWAYS_NODES.delete(this.__nodeID);
+    ALWAYS_NODES_BY_EVENTS.delete(this.__nodeID);
   }
 }
