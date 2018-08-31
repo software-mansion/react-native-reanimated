@@ -3,11 +3,11 @@ import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
 
 function nodify(v) {
-  if (v.isProxy) {
-    if (!v.val) {
-      v.val = new AnimatedValue(0);
+  if (v.__isProxy) {
+    if (!v.__val) {
+      v.__val = new AnimatedValue(0);
     }
-    return v.val;
+    return v.__val;
   }
   // TODO: cache some typical static values (e.g. 0, 1, -1)
   return v instanceof AnimatedNode ? v : new AnimatedValue(v);

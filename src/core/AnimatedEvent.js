@@ -10,7 +10,7 @@ import invariant from 'fbjs/lib/invariant';
 // TODO remove after update of JSC
 // because currently JSC does not support Proxy
 function androidProxyPolyfill() {
-  const v = {
+  const nodesMap = {
     translationX: {},
     translationY: {},
     state: {},
@@ -28,6 +28,7 @@ function androidProxyPolyfill() {
     anchorX: {},
     anchorY: {},
     velocity: {},
+    numberOfPointers: {},
     layout: {
       x: {},
       y: {},
@@ -37,18 +38,18 @@ function androidProxyPolyfill() {
   };
   function traverse(obj) {
     for (key in obj) {
-      obj[key].isProxy = true;
-      traverse(obj.key);
+      obj[key].__isProxy = true;
+      traverse(obj[key]);
     }
   }
-  traverse(v);
-  return v;
+  traverse(nodesMap);
+  return nodesMap;
 }
 
 // TODO there's no point why not to use "alwaysNodes"
 // as a field of object except from the error
 // "Malformated call from JS: field sizes are different"
-// which occurs while attaching nodes.
+// which occurs while attaching node.
 // It might be somehow related to https://github.com/kmagiera/react-native-reanimated/pull/30
 const EVENTS_TO_ALWAYS_NODES = new Map();
 
@@ -61,8 +62,8 @@ function sanitizeArgMapping(argMapping) {
   function traverse(value, path) {
     if (value instanceof AnimatedValue) {
       eventMappings.push(path.concat(value.__nodeID));
-    } else if (typeof value === 'object' && value.val) {
-      eventMappings.push(path.concat(value.val.__nodeID));
+    } else if (typeof value === 'object' && value.__val) {
+      eventMappings.push(path.concat(value.__val.__nodeID));
     } else if (typeof value === 'function') {
       const node = new AnimatedValue(0);
       alwaysNodes.push(new AnimatedAlways(value(node)));
@@ -72,7 +73,7 @@ function sanitizeArgMapping(argMapping) {
         traverse(value[key], path.concat(key));
       }
     }
-  };
+  }
 
   invariant(
     argMapping[0] && argMapping[0].nativeEvent,
@@ -86,16 +87,16 @@ function sanitizeArgMapping(argMapping) {
   } else if (typeof ev === 'function') {
     const proxyHandler = {
       get: function(target, name) {
-        if (name === 'isProxy') {
+        if (name === '__isProxy') {
           return true;
         }
-        if (!target[name] && name !== 'val') {
+        if (!target[name] && name !== '__val') {
           target[name] = new Proxy({}, proxyHandler);
         }
         return target[name];
       },
       set: function(target, prop, value) {
-        if (prop === 'val') {
+        if (prop === '__val') {
           target[prop] = value;
         }
       },
