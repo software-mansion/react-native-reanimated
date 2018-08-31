@@ -132,11 +132,9 @@ export default class AnimatedEvent extends AnimatedNode {
 
   detachEvent(viewRef, eventName) {
     const alwaysNodes = EVENTS_TO_ALWAYS_NODES.get(this.__nodeID);
-
     for (let i = 0; i < alwaysNodes.length; i++) {
       alwaysNodes[i].isNativelyInitialized() && alwaysNodes[i].__detach();
     }
-
     const viewTag = findNodeHandle(viewRef);
     ReanimatedModule.detachEvent(viewTag, eventName, this.__nodeID);
     this.__detach();
