@@ -26,7 +26,7 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-    _refHasChanges = false;
+    _refHasChanged = false;
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -180,7 +180,7 @@ export default function createAnimatedComponent(Component) {
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
       if (this._refHasChanged) {
-        this._refHasChanges = false;
+        this._refHasChanged = false;
         this._propsAnimated.setNativeView(this._component);
       }
     }
