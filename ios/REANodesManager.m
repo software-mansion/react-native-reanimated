@@ -83,6 +83,21 @@
   [self stopUpdatingOnAnimationFrame];
 }
 
+- (void)operationsBatchDidComplete
+{
+  if (_displayLink) {
+    // if display link is set it means some of the operations that have run as a part of the batch
+    // requested updates. We want updates to be run in the same frame as in which operations have
+    // been scheduled as it may mean the new view has just been mounted and expects its initial
+    // props to be calculated.
+    // Unfortunately if the operation has just scheduled animation callback it won't run until the
+    // next frame. So if displayLink is set we trigger onAnimationFrame callback to make sure it
+    // runs in the correct frame. Note that we can safely do that as onAnimationFrame won't run
+    // updates twice if it happen to be called twice within a frame.
+    [self onAnimationFrame:_displayLink];
+  }
+}
+
 - (REANode *)findNodeByID:(REANodeID)nodeID
 {
   return _nodes[nodeID];

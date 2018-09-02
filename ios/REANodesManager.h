@@ -25,6 +25,8 @@ typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 
 - (void)invalidate;
 
+- (void)operationsBatchDidComplete;
+
 //
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
