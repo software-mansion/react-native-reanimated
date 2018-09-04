@@ -92,9 +92,19 @@
     // props to be calculated.
     // Unfortunately if the operation has just scheduled animation callback it won't run until the
     // next frame. So if displayLink is set we trigger onAnimationFrame callback to make sure it
-    // runs in the correct frame. Note that we can safely do that as onAnimationFrame won't run
-    // updates twice if it happen to be called twice within a frame.
-    [self onAnimationFrame:_displayLink];
+    // runs in the correct frame.
+    [REANode runPropUpdates:_updateContext];
+    if (_operationsInBatch.count != 0) {
+      NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
+      _operationsInBatch = [NSMutableArray new];
+      RCTExecuteOnUIManagerQueue(^{
+        for (int i = 0; i < copiedOperationsQueue.count; i++) {
+          copiedOperationsQueue[i](self.uiManager);
+        }
+        [self.uiManager setNeedsLayout];
+      });
+    }
+    _wantRunUpdates = NO;
   }
 }
 
