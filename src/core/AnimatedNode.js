@@ -2,6 +2,8 @@ import ReanimatedModule from '../ReanimatedModule';
 
 const UPDATED_NODES = [];
 
+const INITIALIZED_NODES = new Set();
+
 let loopID = 1;
 let propUpdatesEnqueued = null;
 
@@ -44,7 +46,6 @@ export default class AnimatedNode {
   constructor(nodeConfig, inputNodes) {
     this.__nodeID = ++nodeCount;
     this.__nodeConfig = sanitizeConfig(nodeConfig);
-    this.__initialized = false;
     this.__inputNodes =
       inputNodes && inputNodes.filter(node => node instanceof AnimatedNode);
   }
@@ -92,21 +93,21 @@ export default class AnimatedNode {
   }
 
   __nativeInitialize() {
-    if (!this.__initialized) {
+    if (!INITIALIZED_NODES.has(this.__nodeID)) {
       ReanimatedModule.createNode(this.__nodeID, this.__nodeConfig);
-      this.__initialized = true;
+      INITIALIZED_NODES.add(this.__nodeID);
     }
   }
 
   __nativeTearDown() {
-    if (this.__initialized) {
+    if (INITIALIZED_NODES.has(this.__nodeID)) {
       ReanimatedModule.dropNode(this.__nodeID);
-      this.__initialized = false;
+      INITIALIZED_NODES.delete(this.__nodeID);
     }
   }
 
   isNativelyInitialized() {
-    return this.__initialized;
+    return INITIALIZED_NODES.has(this.__nodeID);
   }
 
   __onEvaluate() {
