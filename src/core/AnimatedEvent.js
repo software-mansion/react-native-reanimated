@@ -36,6 +36,7 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     super({ type: 'event', argMapping: sanitizeArgMapping(argMapping) });
   }
+  // this field has been made to be compatible with RN and is used by RNGH
   __isNative = true;
 
   attachEvent(viewRef, eventName) {
