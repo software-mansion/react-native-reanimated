@@ -46,13 +46,6 @@ function androidProxyPolyfill() {
   return nodesMap;
 }
 
-// TODO there's no point why not to use "alwaysNodes"
-// as a field of object except from the error
-// "Malformated call from JS: field sizes are different"
-// which occurs while attaching node.
-// It might be somehow related to https://github.com/kmagiera/react-native-reanimated/pull/30
-const ALWAYS_NODES_BY_EVENTS = new Map();
-
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
   // key path inside the `nativeEvent` object. Ex.: ['contentOffset', 'x'].
@@ -117,13 +110,12 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({ type: 'event', argMapping: eventMappings });
-    ALWAYS_NODES_BY_EVENTS.set(this.__nodeID, alwaysNodes);
+    this._alwaysNodes = alwaysNodes;
   }
 
   attachEvent(viewRef, eventName) {
-    const alwaysNodes = ALWAYS_NODES_BY_EVENTS.get(this.__nodeID);
-    for (let i = 0; i < alwaysNodes.length; i++) {
-      alwaysNodes[i].__attach();
+    for (let i = 0; i < this._alwaysNodes.length; i++) {
+      this._alwaysNodes[i].__attach();
     }
     this.__attach();
     const viewTag = findNodeHandle(viewRef);
@@ -131,16 +123,12 @@ export default class AnimatedEvent extends AnimatedNode {
   }
 
   detachEvent(viewRef, eventName) {
-    const alwaysNodes = ALWAYS_NODES_BY_EVENTS.get(this.__nodeID);
-    for (let i = 0; i < alwaysNodes.length; i++) {
-      alwaysNodes[i].isNativelyInitialized() && alwaysNodes[i].__detach();
+    for (let i = 0; i < this._alwaysNodes.length; i++) {
+      this._alwaysNodes[i].isNativelyInitialized() &&
+        this._alwaysNodes[i].__detach();
     }
     const viewTag = findNodeHandle(viewRef);
     ReanimatedModule.detachEvent(viewTag, eventName, this.__nodeID);
     this.__detach();
-  }
-
-  onUnmount() {
-    ALWAYS_NODES_BY_EVENTS.delete(this.__nodeID);
   }
 }
