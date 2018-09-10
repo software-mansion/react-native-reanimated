@@ -36,6 +36,7 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     super({ type: 'event', argMapping: sanitizeArgMapping(argMapping) });
   }
+  __isNative = true;
 
   attachEvent(viewRef, eventName) {
     this.__attach();
