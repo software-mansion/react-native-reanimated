@@ -36,7 +36,8 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     super({ type: 'event', argMapping: sanitizeArgMapping(argMapping) });
   }
-  // the below field is a temporary workaround to make AnimatedEvent object be recognized
+  
+  // The below field is a temporary workaround to make AnimatedEvent object be recognized
   // and filtered out by gesture handler library that relies on it being available when
   // Animated.event is used instead of a callback for processing events.
   __isNative = true;
