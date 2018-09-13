@@ -6,45 +6,7 @@ import AnimatedValue from './AnimatedValue';
 import AnimatedAlways from './AnimatedAlways';
 
 import invariant from 'fbjs/lib/invariant';
-
-// TODO remove after update of JSC
-// because currently JSC does not support Proxy
-function androidProxyPolyfill() {
-  const nodesMap = {
-    translationX: {},
-    translationY: {},
-    state: {},
-    oldState: {},
-    absoluteX: {},
-    absoluteY: {},
-    x: {},
-    y: {},
-    velocityX: {},
-    velocityY: {},
-    scale: {},
-    focalX: {},
-    focalY: {},
-    rotation: {},
-    anchorX: {},
-    anchorY: {},
-    velocity: {},
-    numberOfPointers: {},
-    layout: {
-      x: {},
-      y: {},
-      width: {},
-      height: {},
-    },
-  };
-  const traverse = obj => {
-    for (key in obj) {
-      obj[key].__isProxy = true;
-      traverse(obj[key]);
-    }
-  };
-  traverse(nodesMap);
-  return nodesMap;
-}
+import createAandroidProxyPolyfill from './AndroidProxyEventPolyfill';
 
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
@@ -97,7 +59,7 @@ function sanitizeArgMapping(argMapping) {
 
     const proxy =
       Platform.OS === 'android'
-        ? androidProxyPolyfill()
+        ? createAandroidProxyPolyfill()
         : new Proxy({}, proxyHandler);
     alwaysNodes.push(new AnimatedAlways(ev(proxy)));
     traverse(proxy, []);
@@ -112,7 +74,7 @@ export default class AnimatedEvent extends AnimatedNode {
     super({ type: 'event', argMapping: eventMappings });
     this._alwaysNodes = alwaysNodes;
   }
-  
+
   // The below field is a temporary workaround to make AnimatedEvent object be recognized
   // as Animated.event event callback and therefore filtered out from being send over the
   // bridge which was causing the object to be frozen in JS.

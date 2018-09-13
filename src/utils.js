@@ -3,7 +3,7 @@ import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
 
 function nodify(v) {
-  if (v.__isProxy) {
+  if (typeof v === 'object' && v.__isProxy) {
     if (!v.__val) {
       v.__val = new AnimatedValue(0);
     }
