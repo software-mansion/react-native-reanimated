@@ -26,7 +26,6 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-    _refHasChanges = false;
 
     componentWillUnmount() {
       this._detachPropUpdater();
@@ -90,24 +89,24 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          nextEvts.add(prop);
+          nextEvts.add(prop.__nodeID);
         }
       }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop)) {
+          if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
           } else {
             // event was in prev and is still in current props
-            attached.add(prop);
+            attached.add(prop.__nodeID);
           }
         }
       }
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop)) {
+        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
         }
@@ -179,16 +178,13 @@ export default function createAnimatedComponent(Component) {
     componentDidUpdate(prevProps) {
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
-      if (this._refHasChanged) {
-        this._refHasChanges = false;
-        this._propsAnimated.setNativeView(this._component);
-      }
+
+      this._propsAnimated.setNativeView(this._component);
     }
 
     _setComponentRef = c => {
       if (c !== this._component) {
         this._component = c;
-        this._refHasChanged = true;
       }
     };
 

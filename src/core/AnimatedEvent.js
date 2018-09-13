@@ -112,6 +112,11 @@ export default class AnimatedEvent extends AnimatedNode {
     super({ type: 'event', argMapping: eventMappings });
     this._alwaysNodes = alwaysNodes;
   }
+  
+  // The below field is a temporary workaround to make AnimatedEvent object be recognized
+  // as Animated.event event callback and therefore filtered out from being send over the
+  // bridge which was causing the object to be frozen in JS.
+  __isNative = true;
 
   attachEvent(viewRef, eventName) {
     for (let i = 0; i < this._alwaysNodes.length; i++) {
