@@ -163,57 +163,28 @@ block([
 }/>
 ```
 
-## NativeEvent as a function
-Using declarative `nativeEvent` it is also possible to handle syntax which seems to be quite similar to imperative function.
-Particularly, it could mean that `nativeEvent` could be used not only for setting some values but also to perform some operations 
-on each change of `nativeEvent` as well, which do not have to be directly related to any `Animated.View`.  
+## Event handling with reanimated nodes
 
+With reanimated new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes it is allowed to write a function that takes reanimated values map as an input and returns a block (or any other reanimated function) that will be then used to handle the event.
+
+This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
+[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
 ```js
-export default class Example extends Component {
-  constructor(props) {
-    super(props);
-    this._transX = new Value(0);
-    this._transY = new Value(0);
-    const offsetX = new Value(0);
-    const offsetY = new Value(0);
-
-    this._onGestureEvent = event([
-      {
-        nativeEvent: ({ translationX: x, translationY: y, state }) =>
-          block([
-            set(this._transX, add(x, offsetX)),
-            set(this._transY, add(y, offsetY)),
-            cond(eq(state, State.END), [
-              set(offsetX, add(offsetX, x)),
-              set(offsetY, add(offsetY, y)),
-            ]),
-          ]),
-      },
-    ]);
-  }
-  render() {
-    return (
-      <View style={styles.container}>
-        <PanGestureHandler
-          maxPointers={1}
-          onGestureEvent={this._onGestureEvent}
-          onHandlerStateChange={this._onGestureEvent}>
-          <Animated.View
-            onLayout={this._onLayout}
-            style={[
-              styles.box,
-              {
-                transform: [
-                  { translateX: this._transX, translateY: this._transY },
-                ],
-              },
-            ]}
-          />
-        </PanGestureHandler>
-      </View>
-    );
-  }
-}
+<PanGestureHandler
+  onGestureEvent={event([
+    {
+      nativeEvent: ({ translationX: x, translationY: y, state }) =>
+        block([
+          set(this._transX, add(x, offsetX)), set(this._transY, add(y, offsetY)),
+          cond(eq(state, State.END), [set(this.offsetX, add(this.offsetX, x)), set(this.offsetY, add(this.offsetY, y))]),
+        ]),
+    },
+  ])}
+>
+  <Animated.View
+    style={{ transform: [{ translateX: this._transX, translateY: this._transY }], }}
+  />
+</PanGestureHandler>
 ```
 However, it is still fully "declarative" and could be described as some kind of syntactic sugar and does not affect neither complexity nor execution time or cost of evaluation.
 
