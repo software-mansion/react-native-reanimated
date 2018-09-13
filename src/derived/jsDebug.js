@@ -1,4 +1,4 @@
-import { cond, block, defined, sub, set, call } from '../base';
+import { block, call } from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
 export default function jsDebug(message, node, type = 'log') {
