@@ -506,7 +506,7 @@ or
 ```js
 jsDebug(node, type = 'log')
 ```
-`message` cannot be `animatedNode` and could be omitted. If there's given message it will concatenated with `node`. `type` could be 'log', 'warn', 'error' of any other console log type supported by React Native.
+`message` cannot be `animatedNode` and could be omitted. If there's given message it will concatenated with `node`. `type` could be 'log', 'warn', 'error' or any other console log type supported by React Native.
 
 ---
 ### `interpolate`
