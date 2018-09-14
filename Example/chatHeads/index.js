@@ -33,6 +33,8 @@ function follow(value) {
     stiffness: 188.296,
     overshootClamping: false,
     toValue: value,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
   };
 
   const clock = new Clock();
