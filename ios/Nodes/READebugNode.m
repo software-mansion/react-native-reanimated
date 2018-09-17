@@ -13,7 +13,6 @@
   if ((self = [super initWithID:nodeID config:config])) {
     _message = config[@"message"];
     _valueNodeID = config[@"value"];
-
   }
   return self;
 }
