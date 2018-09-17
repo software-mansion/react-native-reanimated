@@ -210,7 +210,7 @@ Takes an array of nodes and evaluates all the nodes in the order they are put in
 debug(messageString, valueNode)
 ```
 
-When the node is evaluated it prints to the console (using `console.log` or other means on native) a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Note that `messageString` should be a normal string not an animated node.
+When the node is evaluated it prints to the console (via native logs) a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Note that `messageString` should be a normal string not an animated node.
 
 ---
 ### `startClock`
@@ -492,6 +492,21 @@ Returns an accumulated value of the given node. This node stores a sum of all ev
 ### `diffClamp`
 
 Works the same way as with the original Animated library.
+
+---
+### `jsDebug`
+
+When the node is evaluated it prints to the console in JavaScript debugger.
+It's helpful while debugging with Expo.
+It might be used with optional message text:
+```js
+jsDebug(message, node, type = 'log')
+```
+or
+```js
+jsDebug(node, type = 'log')
+```
+`message` cannot be `animatedNode` and could be omitted. If there's given message it will concatenated with `node`. `type` could be 'log', 'warn', 'error' or any other console log type supported by React Native.
 
 ---
 ### `interpolate`
