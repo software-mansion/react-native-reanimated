@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
@@ -57,6 +58,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       mNodesManager.onHostResume();
     }
   }
+
 
   @Override
   public void onHostDestroy() {

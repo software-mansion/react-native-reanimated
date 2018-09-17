@@ -59,7 +59,11 @@ export const call = function(args, func) {
 };
 
 export const debug = function(message, value) {
-  return new AnimatedDebug(message, adapt(value));
+  if (__DEV__) {
+    return new AnimatedDebug(message, adapt(value));
+  } else {
+    return value;
+  }
 };
 
 export const startClock = function(clock) {

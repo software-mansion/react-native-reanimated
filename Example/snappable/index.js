@@ -19,6 +19,7 @@ const {
   spring,
   startClock,
   stopClock,
+  debug,
   clockRunning,
   sub,
   defined,
@@ -55,7 +56,7 @@ function runSpring(clock, value, velocity, dest) {
     ]),
     spring(clock, state, config),
     cond(state.finished, stopClock(clock)),
-    state.position,
+    debug('X', state.position),
   ];
 }
 
