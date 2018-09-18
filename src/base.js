@@ -58,12 +58,24 @@ export const call = function(args, func) {
   return new AnimatedCall(args, func);
 };
 
+const __jsDebug = (message, node) =>
+  block([call([node], ([a]) => console.log(`${message} ${a}`)), node]);
+
 export const debug = function(message, value) {
   if (__DEV__) {
+    // Fisrt condition is a handy hack which checks wheather Chrome debugger is being used
+    // Second condition refers to Expo. If there's expo module there's no a stanalone one,
+    // logs are supposed to be seen in JS
+    if (
+      typeof atob !== 'undefined' ||
+      (global.Expo && global.Expo.Constants.appOwnership !== 'standalone')
+    ) {
+      return __jsDebug(message, value);
+    }
     return new AnimatedDebug(message, adapt(value));
-  } else {
-    return value;
   }
+  // Debugging is disabled in PROD
+  return value;
 };
 
 export const startClock = function(clock) {
