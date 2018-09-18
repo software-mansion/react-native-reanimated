@@ -60,7 +60,7 @@ export const call = function(args, func) {
 
 export const debug = function(message, value) {
   if (__DEV__) {
-    // Fisrt condition is a handy hack which checks wheather Chrome debugger is being used
+    // First condition is a handy hack which checks wheather the Chrome debugger is being used
     // Second condition refers to Expo. If there's expo module there's no a stanalone one,
     // logs are supposed to be seen in JS
     if (
