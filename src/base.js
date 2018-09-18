@@ -58,9 +58,6 @@ export const call = function(args, func) {
   return new AnimatedCall(args, func);
 };
 
-const __jsDebug = (message, node) =>
-  block([call([node], ([a]) => console.log(`${message} ${a}`)), node]);
-
 export const debug = function(message, value) {
   if (__DEV__) {
     // Fisrt condition is a handy hack which checks wheather Chrome debugger is being used
@@ -70,7 +67,7 @@ export const debug = function(message, value) {
       typeof atob !== 'undefined' ||
       (global.Expo && global.Expo.Constants.appOwnership !== 'standalone')
     ) {
-      return __jsDebug(message, value);
+      return block([call([value], ([a]) => console.log(`${message} ${a}`)), value]);
     }
     return new AnimatedDebug(message, adapt(value));
   }
