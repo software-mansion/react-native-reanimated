@@ -64,7 +64,7 @@ public class NodesManager implements EventDispatcherListener {
   private final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final NoopNode mNoopNode;
-  public final ReactContext mContext;
+  private final ReactContext mContext;
   private final UIManagerModule mUIManager;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
