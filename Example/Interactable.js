@@ -13,6 +13,7 @@ const {
   exp,
   lessThan,
   and,
+  call,
   or,
   neq,
   block,
@@ -20,6 +21,7 @@ const {
   pow,
   set,
   abs,
+  clockRunning,
   greaterOrEq,
   lessOrEq,
   sqrt,
@@ -339,12 +341,21 @@ class Interactable extends Component {
         props.horizontalOnly ? ANIMATOR_PAUSE_CONSECUTIVE_FRAMES + 1 : 0
       ),
     };
+
     const stopWhenNeeded = cond(
       and(
         greaterOrEq(noMovementFrames.x, ANIMATOR_PAUSE_CONSECUTIVE_FRAMES),
         greaterOrEq(noMovementFrames.y, ANIMATOR_PAUSE_CONSECUTIVE_FRAMES)
       ),
-      stopClock(clock),
+      [
+        props.onStop
+          ? call(
+              [clockRunning(clock), target.x, target.y],
+              ([running, x, y]) => running && props.onStop({ x, y })
+            )
+          : undefined,
+        stopClock(clock),
+      ],
       startClock(clock)
     );
 
@@ -395,12 +406,22 @@ class Interactable extends Component {
       const wrapStep = props.enabled
         ? cond(props.enabled, step, [set(dragging, 1), stopClock(clock)])
         : step;
+
+      // export some values to be available for imperative commands
+      this._dragging[axis] = dragging;
+      this._velocity[axis] = vx;
+
       return block([wrapStep, set(x, advance)]);
     };
+
+    this._dragging = {};
+    this._velocity = {};
+    this._snapAnchor = snapAnchor;
 
     this._transX = trans('x', 'vx', 'left', 'right');
     this._transY = trans('y', 'vy', 'top', 'bottom');
   }
+
   render() {
     const { children, style, horizontalOnly, verticalOnly } = this.props;
     return (
@@ -425,6 +446,30 @@ class Interactable extends Component {
         </Animated.View>
       </PanGestureHandler>
     );
+  }
+
+  // imperative commands
+  setVelocity({ x, y }) {
+    if (x !== undefined) {
+      this._dragging.x.setValue(1);
+      this._velocity.x.setValue(x);
+    }
+    if (y !== undefined) {
+      this._dragging.y.setValue(1);
+      this._velocity.y.setValue(y);
+    }
+  }
+
+  snapTo({ index }) {
+    const snapPoint = this.props.snapPoints[index];
+    this._snapAnchor.tension.setValue(
+      snapPoint.tension || DEFAULT_SNAP_TENSION
+    );
+    this._snapAnchor.damping.setValue(
+      snapPoint.damping || DEFAULT_SNAP_DAMPING
+    );
+    this._snapAnchor.x.setValue(snapPoint.x || 0);
+    this._snapAnchor.y.setValue(snapPoint.y || 0);
   }
 }
 

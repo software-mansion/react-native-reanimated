@@ -45,8 +45,8 @@ export const SCREENS = {
   //   title: 'Touches Inside (static)',
   // },
   // IHandleRelayout: { screen: HandleRelayout, title: 'Handle Relayout' },
-  // ISideMenu: { screen: SideMenu, title: 'Side Menu (imperative cmd)' },
-  // ISnapTo: { screen: SnapTo, title: 'Snap To (imperative cmd)' },
+  ISideMenu: { screen: SideMenu, title: 'Side Menu (imperative cmd)' },
+  ISnapTo: { screen: SnapTo, title: 'Snap To (imperative cmd)' },
   // IChangePosition: {
   //   screen: ChangePosition,
   //   title: 'Change Position (imperative cmd)',
