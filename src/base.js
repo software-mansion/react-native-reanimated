@@ -60,16 +60,23 @@ export const call = function(args, func) {
 
 export const debug = function(message, value) {
   if (__DEV__) {
-    // First condition is a handy hack which checks wheather the Chrome debugger is being used
-    // Second condition refers to Expo. If there's expo module there's no a stanalone one,
-    // logs are supposed to be seen in JS
-    if (
-      typeof atob !== 'undefined' ||
-      (global.Expo && global.Expo.Constants.appOwnership !== 'standalone')
-    ) {
-      return block([call([value], ([a]) => console.log(`${message} ${a}`)), value]);
+    const runningInRemoteDebugger = typeof atob !== 'undefined';
+    // hack to detect if app is running in remote debugger
+    // https://stackoverflow.com/questions/39022216
+
+    const runningInExpoShell =
+      global.Expo && global.Expo.Constants.appOwnership !== 'standalone';
+
+    if (runningInRemoteDebugger || runningInExpoShell) {
+      // When running in expo or remote debugger we use JS console.log to output variables
+      // otherwise we output to the native console using native debug node
+      return block([
+        call([value], ([a]) => console.log(`${message} ${a}`)),
+        value,
+      ]);
+    } else {
+      return new AnimatedDebug(message, adapt(value));
     }
-    return new AnimatedDebug(message, adapt(value));
   }
   // Debugging is disabled in PROD
   return value;
