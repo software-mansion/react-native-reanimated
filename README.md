@@ -210,7 +210,7 @@ Takes an array of nodes and evaluates all the nodes in the order they are put in
 debug(messageString, valueNode)
 ```
 
-When the node is evaluated it prints to the console (using `console.log` or other means on native) a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Note that `messageString` should be a normal string not an animated node.
+When the node is evaluated it prints a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Logs are printed in JS debugger if it's attached, in console if Expo client is being used or in native console otherwise. Logs are visible only in `DEV` mode and has no effect on production build. Note that `messageString` should be a normal string not an animated node.
 
 ---
 ### `startClock`
