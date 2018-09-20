@@ -43,7 +43,8 @@ export default class AnimatedValue extends AnimatedNode {
   };
 
   __detach() {
-    ReanimatedModule.getValue(this.__nodeID);
+    console.log('XX');
+    ReanimatedModule.getValue(this.__nodeID, x => console.log(x));
     this.__detachAnimation(this._animation);
     super.__detach();
   }

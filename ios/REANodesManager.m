@@ -164,10 +164,10 @@
 }
 
 - (void)getValue:(REANodeID)nodeID
+        callback:(RCTResponseSenderBlock)callback
 {
-  [self.reanimatedModule
-   sendEventWithName:@"onValueGet"
-   body:@{@"id": nodeID, @"val": _nodes[nodeID].value }];
+  NSNumber *x = _nodes[nodeID].value;
+  callback(x);
 }
 
 #pragma mark -- Graph

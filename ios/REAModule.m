@@ -56,9 +56,10 @@ RCT_EXPORT_METHOD(dropNode:(nonnull NSNumber *)nodeID)
   }];
 }
 
-RCT_EXPORT_METHOD(getValue:(nonnull NSNumber *)nodeID) {
+RCT_EXPORT_METHOD(getValue:(nonnull NSNumber *)nodeID
+                  callback:(RCTResponseSenderBlock)callback) {
   [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager getValue:nodeID];
+    [nodesManager getValue:nodeID callback:(RCTResponseSenderBlock)callback];
   }];
 }
 
