@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start --config ../../../../cli.config.js",
     "test": "jest",
-    "postinstall": "mkdir node_modules/react-native-reanimated2 && ln -s ../../../android node_modules/react-native-reanimated2/android && ln -s ../../../package.json node_modules/react-native-reanimated2/package.json"
+    "postinstall": "mkdir node_modules/react-native-reanimated && ln -s ../../../android node_modules/react-native-reanimated/android && ln -s ../../../package.json node_modules/react-native-reanimated/package.json"
   },
   "dependencies": {
     "react": "16.4.1",
