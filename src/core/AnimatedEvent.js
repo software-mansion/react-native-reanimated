@@ -36,7 +36,7 @@ export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
     super({ type: 'event', argMapping: sanitizeArgMapping(argMapping) });
   }
-
+  
   // The below field is a temporary workaround to make AnimatedEvent object be recognized
   // as Animated.event event callback and therefore filtered out from being send over the
   // bridge which was causing the object to be frozen in JS.
