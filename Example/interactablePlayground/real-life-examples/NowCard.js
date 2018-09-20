@@ -5,9 +5,9 @@ import {
   Dimensions,
   Image,
   Text,
-  Animated,
   Slider,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');

@@ -3,12 +3,12 @@ import {
   StyleSheet,
   View,
   Text,
-  Animated,
   TouchableOpacity,
   TouchableHighlight,
   Slider,
   Dimensions,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');

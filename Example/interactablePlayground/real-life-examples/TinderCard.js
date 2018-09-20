@@ -1,12 +1,6 @@
 import React, { Component } from 'react';
-import {
-  StyleSheet,
-  View,
-  Dimensions,
-  Image,
-  Text,
-  Animated,
-} from 'react-native';
+import { StyleSheet, View, Dimensions, Image, Text } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');
@@ -30,10 +24,13 @@ export default class TinderCard extends Component {
               {
                 transform: [
                   {
-                    rotate: this._deltaX.interpolate({
-                      inputRange: [-250, 0, 250],
-                      outputRange: ['10deg', '0deg', '-10deg'],
-                    }),
+                    rotate: Animated.concat(
+                      this._deltaX.interpolate({
+                        inputRange: [-250, 0, 250],
+                        outputRange: [10, 0, -10],
+                      }),
+                      'deg'
+                    ),
                   },
                 ],
               },

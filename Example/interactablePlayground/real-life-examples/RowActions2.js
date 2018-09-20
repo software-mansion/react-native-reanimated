@@ -4,11 +4,11 @@ import {
   View,
   Image,
   Text,
-  Animated,
   TouchableOpacity,
   Dimensions,
   Slider,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');

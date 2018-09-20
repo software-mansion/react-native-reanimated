@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { prototype } from 'eventemitter3';
 
 const {
   add,
@@ -52,7 +53,7 @@ function influenceAreaWithRadius(radius, anchor) {
   };
 }
 
-function snapTo(target, snapPoints, best) {
+function snapTo(target, snapPoints, best, clb, dragClb) {
   const dist = new Value(0);
   const snap = pt => [
     set(best.tension, pt.tension || DEFAULT_SNAP_TENSION),
@@ -69,6 +70,21 @@ function snapTo(target, snapPoints, best) {
       const newDist = snapDist(pt);
       return cond(lessThan(newDist, dist), [set(dist, newDist), ...snap(pt)]);
     }),
+    (clb || dragClb) &&
+      call([best.x, best.y, target.x, target.y], ([bx, by, x, y]) => {
+        snapPoints.forEach((pt, index) => {
+          if (
+            (pt.x === undefined || pt.x === bx) &&
+            (pt.y === undefined || pt.y === by)
+          ) {
+            clb && clb({ nativeEvent: { ...pt, index } });
+            dragClb &&
+              dragClb({
+                nativeEvent: { x, y, targetSnapPointId: pt.id, state: 'end' },
+              });
+          }
+        });
+      }),
   ];
 }
 
@@ -271,6 +287,12 @@ class Interactable extends Component {
       dragBuckets[0].push(anchorBehavior(dt, target, obj, dragAnchor));
     }
 
+    const handleStartDrag =
+      props.onDrag &&
+      call([target.x, target.y], ([x, y]) =>
+        props.onDrag({ nativeEvent: { x, y, state: 'start' } })
+      );
+
     const snapBuckets = [[], [], []];
     const snapAnchor = {
       x: new Value(props.initialPosition.x || 0),
@@ -278,7 +300,13 @@ class Interactable extends Component {
       tension: new Value(DEFAULT_SNAP_TENSION),
       damping: new Value(DEFAULT_SNAP_DAMPING),
     };
-    const updateSnapTo = snapTo(tossedTarget, props.snapPoints, snapAnchor);
+    const updateSnapTo = snapTo(
+      tossedTarget,
+      props.snapPoints,
+      snapAnchor,
+      props.onSnap,
+      props.onDrag
+    );
 
     addSpring(snapAnchor, snapAnchor.tension, null, snapBuckets);
     addFriction(snapAnchor.damping, null, snapBuckets);
@@ -349,9 +377,11 @@ class Interactable extends Component {
       ),
       [
         props.onStop
-          ? call(
-              [clockRunning(clock), target.x, target.y],
-              ([running, x, y]) => running && props.onStop({ x, y })
+          ? cond(
+              clockRunning(clock),
+              call([target.x, target.y], ([x, y]) =>
+                props.onStop({ nativeEvent: { x, y } })
+              )
             )
           : undefined,
         stopClock(clock),
@@ -389,6 +419,7 @@ class Interactable extends Component {
         eq(state, State.ACTIVE),
         [
           cond(dragging, 0, [
+            handleStartDrag,
             startClock(clock),
             set(dragging, 1),
             set(start, x),
@@ -472,6 +503,8 @@ class Interactable extends Component {
     );
     this._snapAnchor.x.setValue(snapPoint.x || 0);
     this._snapAnchor.y.setValue(snapPoint.y || 0);
+    this.props.onSnap &&
+      this.props.onSnap({ nativeEvent: { ...snapPoint, index } });
   }
 
   changePosition({ x, y }) {

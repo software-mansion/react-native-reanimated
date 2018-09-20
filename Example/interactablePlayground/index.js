@@ -52,14 +52,14 @@ export const SCREENS = {
     title: 'Change Position (imperative cmd)',
   },
   // IAlertAreas: { screen: AlertAreas, title: 'Alert Areas and Drag Event' },
-  // ICollapsingHeaderWithScroll: {
-  //   screen: CollapsingHeaderWithScroll,
-  //   title: 'Collapsing Header with Scroll',
-  // },
-  // IRowActions1: { screen: RowActions1, title: 'Row Actions (Google Style)' },
-  // IRowActions2: { screen: RowActions2, title: 'Row Actions (Apple Style)' },
-  // INowCard: { screen: NowCard, title: 'Google Now-Style Card' },
-  // ITinderCard: { screen: TinderCard, title: 'Tinder-Style Card' },
+  ICollapsingHeaderWithScroll: {
+    screen: CollapsingHeaderWithScroll,
+    title: 'Collapsing Header with Scroll',
+  },
+  IRowActions1: { screen: RowActions1, title: 'Row Actions (Google Style)' },
+  IRowActions2: { screen: RowActions2, title: 'Row Actions (Apple Style)' },
+  INowCard: { screen: NowCard, title: 'Google Now-Style Card' },
+  ITinderCard: { screen: TinderCard, title: 'Tinder-Style Card' },
   // INotifPanel: { screen: NotifPanel, title: 'Notification Panel' },
   // IMapPanel: { screen: MapPanel, title: 'Apple Maps-Style Panel' },
   // ICollapsibleFilter: {
