@@ -414,8 +414,10 @@ class Interactable extends Component {
       return block([wrapStep, set(x, advance)]);
     };
 
+    // variables to be used to access reanimated values from imperative commands
     this._dragging = {};
     this._velocity = {};
+    this._position = target;
     this._snapAnchor = snapAnchor;
 
     this._transX = trans('x', 'vx', 'left', 'right');
@@ -470,6 +472,17 @@ class Interactable extends Component {
     );
     this._snapAnchor.x.setValue(snapPoint.x || 0);
     this._snapAnchor.y.setValue(snapPoint.y || 0);
+  }
+
+  changePosition({ x, y }) {
+    if (x !== undefined) {
+      this._dragging.x.setValue(1);
+      this._position.x.setValue(x);
+    }
+    if (y !== undefined) {
+      this._dragging.x.setValue(1);
+      this._position.y.setValue(y);
+    }
   }
 }
 

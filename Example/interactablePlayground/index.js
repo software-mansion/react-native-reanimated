@@ -47,10 +47,10 @@ export const SCREENS = {
   // IHandleRelayout: { screen: HandleRelayout, title: 'Handle Relayout' },
   ISideMenu: { screen: SideMenu, title: 'Side Menu (imperative cmd)' },
   ISnapTo: { screen: SnapTo, title: 'Snap To (imperative cmd)' },
-  // IChangePosition: {
-  //   screen: ChangePosition,
-  //   title: 'Change Position (imperative cmd)',
-  // },
+  IChangePosition: {
+    screen: ChangePosition,
+    title: 'Change Position (imperative cmd)',
+  },
   // IAlertAreas: { screen: AlertAreas, title: 'Alert Areas and Drag Event' },
   // ICollapsingHeaderWithScroll: {
   //   screen: CollapsingHeaderWithScroll,
