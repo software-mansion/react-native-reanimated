@@ -104,6 +104,8 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   textDecorationStyle: true,
   textTransform: true,
   writingDirection: true,
+  /* text color */
+  color: true,
 };
 
 function configureProps() {

@@ -147,6 +147,7 @@ RCT_EXPORT_METHOD(configureProps:(nonnull NSArray<NSString *> *)nativeProps
     for (AnimatedOperation operation in operations) {
       operation(nodesManager);
     }
+    [nodesManager operationsBatchDidComplete];
   }];
 }
 
