@@ -191,8 +191,7 @@
 - (void)getValue:(REANodeID)nodeID
         callback:(RCTResponseSenderBlock)callback
 {
-  NSNumber *x = _nodes[nodeID].value;
-  callback(x);
+  callback(@[_nodes[nodeID].value]);
 }
 
 #pragma mark -- Graph

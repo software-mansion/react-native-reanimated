@@ -12,13 +12,6 @@ function sanitizeValue(value) {
     : Number(value);
 }
 
-const NODE_MAPPING = new Map();
-
-function listener(data) {
-  const node = NODE_MAPPING.get(data.id);
-  node && node.__detachHelper(data);
-}
-
 export default class AnimatedValue extends AnimatedNode {
   constructor(value) {
     super({ type: 'value', value: sanitizeValue(value) });
@@ -27,24 +20,14 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __attach() {
-    NODE_MAPPING.set(this.__nodeID, this);
-    if (NODE_MAPPING.size === 1) {
-      ReanimatedEventEmitter.addListener('onValueGet', listener);
-    }
     super.__attach();
   }
 
-  __detachHelper = v => {
-    NODE_MAPPING.delete(this.__nodeID);
-    if (NODE_MAPPING.size === 0) {
-      ReanimatedEventEmitter.removeAllListeners('onValueGet');
-    }
-    this.__nodeConfig.value = v.val;
-  };
-
   __detach() {
-    console.log('XX');
-    ReanimatedModule.getValue(this.__nodeID, x => console.log(x));
+    ReanimatedModule.getValue(
+      this.__nodeID,
+      x => (this.__nodeConfig.value = x)
+    );
     this.__detachAnimation(this._animation);
     super.__detach();
   }

@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import android.util.SparseArray;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
@@ -355,11 +356,8 @@ public class NodesManager implements EventDispatcherListener {
     uiProps = uiPropsSet;
   }
 
-  public void getValue(int nodeID) {
-    WritableMap eventData = Arguments.createMap();
-    eventData.putInt("id", nodeID);
-    eventData.putDouble("val", (Double) mAnimatedNodes.get(nodeID).value());
-    sendEvent("onValueGet", eventData);
+  public void getValue(int nodeID, Callback callback) {
+    callback.invoke(mAnimatedNodes.get(nodeID).value());
   }
 
   public void postRunUpdatesAfterAnimation() {
