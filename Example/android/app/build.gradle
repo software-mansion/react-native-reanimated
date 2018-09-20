@@ -137,7 +137,7 @@ android {
 }
 
 dependencies {
-    compile project(':react-native-reanimated')
+    compile project(':react-native-reanimated2')
     compile project(':react-native-gesture-handler')
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:27.0.0"
