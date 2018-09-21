@@ -14,6 +14,10 @@ import Code from './code';
 import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 
+import InteractablePlayground, {
+  SCREENS as INTERACTABLE_SCREENS,
+} from './interactablePlayground';
+
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
   'Module RCTImageLoader',
@@ -25,6 +29,7 @@ const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
@@ -75,9 +80,10 @@ const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
     ...SCREENS,
+    ...INTERACTABLE_SCREENS,
   },
   {
-    initialRouteName: 'Main',
+    initialRouteName: 'Interactable',
   }
 );
 
