@@ -220,8 +220,15 @@ class Interactable extends Component {
     ]);
 
     const target = {
-      x: props.animatedValueX || new Value(props.initialPosition.x || 0),
-      y: props.animatedValueY || new Value(props.initialPosition.y || 0),
+      // x: props.animatedValueX || new Value(props.initialPosition.x || 0),
+      // y: props.animatedValueY || new Value(props.initialPosition.y || 0),
+      x: new Value(props.initialPosition.x || 0),
+      y: new Value(props.initialPosition.y || 0),
+    };
+
+    const update = {
+      x: props.animatedValueX,
+      y: props.animatedValueY,
     };
 
     const clock = new Clock();
@@ -442,7 +449,10 @@ class Interactable extends Component {
       this._dragging[axis] = dragging;
       this._velocity[axis] = vx;
 
-      return block([wrapStep, set(x, advance)]);
+      // update animatedValueX/animatedValueY
+      const doUpdateAnReturn = update[axis] ? set(update[axis], x) : x;
+
+      return block([wrapStep, set(x, advance), doUpdateAnReturn]);
     };
 
     // variables to be used to access reanimated values from imperative commands

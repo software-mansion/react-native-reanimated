@@ -1,12 +1,6 @@
 import React, { Component } from 'react';
-import {
-  StyleSheet,
-  View,
-  Dimensions,
-  Image,
-  Text,
-  Animated,
-} from 'react-native';
+import { StyleSheet, View, Dimensions, Image, Text } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const Screen = Dimensions.get('window');

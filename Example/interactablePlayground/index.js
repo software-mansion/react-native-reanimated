@@ -60,17 +60,17 @@ export const SCREENS = {
   IRowActions2: { screen: RowActions2, title: 'Row Actions (Apple Style)' },
   INowCard: { screen: NowCard, title: 'Google Now-Style Card' },
   ITinderCard: { screen: TinderCard, title: 'Tinder-Style Card' },
-  // INotifPanel: { screen: NotifPanel, title: 'Notification Panel' },
-  // IMapPanel: { screen: MapPanel, title: 'Apple Maps-Style Panel' },
-  // ICollapsibleFilter: {
-  //   screen: CollapsibleFilter,
-  //   title: 'Collapsible Filter',
-  // },
-  // ICollapsibleCalendar: {
-  //   screen: CollapsibleCalendar,
-  //   title: 'Collapsible Calendar (Any.do-Style)',
-  // },
-  // IRealChatHeads: { screen: RealChatHeads, title: 'Real Chat Heads' },
+  INotifPanel: { screen: NotifPanel, title: 'Notification Panel' },
+  IMapPanel: { screen: MapPanel, title: 'Apple Maps-Style Panel' },
+  ICollapsibleFilter: {
+    screen: CollapsibleFilter,
+    title: 'Collapsible Filter',
+  },
+  ICollapsibleCalendar: {
+    screen: CollapsibleCalendar,
+    title: 'Collapsible Calendar (Any.do-Style)',
+  },
+  IRealChatHeads: { screen: RealChatHeads, title: 'Real Chat Heads' },
 };
 
 export default class MainScreen extends Component {

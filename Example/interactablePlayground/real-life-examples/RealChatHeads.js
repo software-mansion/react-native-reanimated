@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Image, Animated, Dimensions } from 'react-native';
+
+import { StyleSheet, View, Image, Dimensions } from 'react-native';
+import Animated, { Easing } from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const widthFactor = Dimensions.get('window').width / 375;
@@ -163,7 +165,11 @@ export default class ChatHeads extends Component {
     const x = event.nativeEvent.x;
     const y = event.nativeEvent.y;
     if (x > -10 && x < 10 && y < 210 * heightFactor && y > 190 * heightFactor) {
-      Animated.timing(scaleValue, { toValue: 0, duration: 300 }).start();
+      Animated.timing(scaleValue, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+      }).start();
     }
   }
 }
