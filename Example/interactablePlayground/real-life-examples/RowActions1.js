@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+    overflow: 'hidden',
   },
   rowContent: {
     flex: 1,

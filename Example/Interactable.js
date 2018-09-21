@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { prototype } from 'eventemitter3';
 
 const {
   add,
   cond,
-  debug,
   diff,
   divide,
   eq,
@@ -15,8 +13,6 @@ const {
   lessThan,
   and,
   call,
-  or,
-  neq,
   block,
   multiply,
   pow,
@@ -220,8 +216,6 @@ class Interactable extends Component {
     ]);
 
     const target = {
-      // x: props.animatedValueX || new Value(props.initialPosition.x || 0),
-      // y: props.animatedValueY || new Value(props.initialPosition.y || 0),
       x: new Value(props.initialPosition.x || 0),
       y: new Value(props.initialPosition.y || 0),
     };
