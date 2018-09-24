@@ -83,7 +83,7 @@ const ExampleApp = createStackNavigator(
     ...INTERACTABLE_SCREENS,
   },
   {
-    initialRouteName: 'Interactable',
+    initialRouteName: 'Main',
   }
 );
 
