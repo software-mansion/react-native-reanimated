@@ -89,6 +89,23 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   lineHeight: true,
   textShadowRadius: true,
   letterSpacing: true,
+  /* strings */
+  display: true,
+  backfaceVisibility: true,
+  overflow: true,
+  resizeMode: true,
+  fontStyle: true,
+  fontWeight: true,
+  textAlign: true,
+  textDecorationLine: true,
+  fontFamily: true,
+  textAlignVertical: true,
+  fontVariant: true,
+  textDecorationStyle: true,
+  textTransform: true,
+  writingDirection: true,
+  /* text color */
+  color: true,
 };
 
 function configureProps() {

@@ -13,7 +13,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-public abstract class Node<T> {
+public abstract class Node {
 
   public static final Double ZERO = Double.valueOf(0);
   public static final Double ONE = Double.valueOf(1);
@@ -21,24 +21,28 @@ public abstract class Node<T> {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  protected @Nullable List<Node<?>> mChildren; /* lazy-initialized when a child is added */
+  private final UpdateContext mUpdateContext;
+
+  private long mLastLoopID = -1;
+  private @Nullable Object mMemoizedValue;
+  private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
     mNodesManager = nodesManager;
   }
 
-  protected abstract @Nullable T evaluate(EvalContext evalContext);
+  protected abstract @Nullable Object evaluate(EvalContext evalContext);
 
-  public final @Nullable T value(EvalContext evalContext) {
+  public final @Nullable Object value(EvalContext evalContext) {
     long lastLoopID = evalContext.lastLoopsIDs.get(mNodeID, (long) -1);
     if (lastLoopID < mNodesManager.updateLoopID) {
       evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
       Object result = evaluate(evalContext);
       evalContext.memoizedValues.put(mNodeID,  result);
-      return (T)result;
+      return result;
     }
-    return (T) evalContext.memoizedValues.get(mNodeID);
+    return evalContext.memoizedValues.get(mNodeID);
   }
 
   /**
@@ -47,7 +51,7 @@ public abstract class Node<T> {
    * would not throw even if the value was not set.
    */
   public final Double doubleValue(EvalContext evalContext) {
-    T value = value(evalContext);
+    Object value = value(evalContext);
     if (value == null) {
       return ZERO;
     } else if (value instanceof Double) {
@@ -97,7 +101,7 @@ public abstract class Node<T> {
     markUpdated(context);
   }
 
-  protected final void forceUpdateMemoizedValue(T value, EvalContext context) {
+  protected final void forceUpdateMemoizedValue(Object value, EvalContext context) {
     context.memoizedValues.put(mNodeID, value);
     markUpdated(context);
   }
@@ -144,6 +148,7 @@ public abstract class Node<T> {
   public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
     ArrayList<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
+    Set<Node> visitedNodes = new HashSet<>();
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();
     contexts.push(nodesManager.mGlobalEvalContext);

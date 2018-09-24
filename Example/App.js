@@ -11,7 +11,13 @@ import Colors from './colors';
 import StartAPI from './startAPI';
 import ChatHeads from './chatHeads';
 import ProceduralOptimization from './proceduralOptimization';
+import Code from './code';
 import WidthAndHeight from './widthAndHeight';
+import Rotations from './rotations';
+
+import InteractablePlayground, {
+  SCREENS as INTERACTABLE_SCREENS,
+} from './interactablePlayground';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -24,6 +30,7 @@ const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
@@ -32,7 +39,9 @@ const SCREENS = {
     screen: ProceduralOptimization,
     title: 'Optimization of amount of nodes',
   },
+  code: { screen: Code, title: 'Animated.Code component' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
+  rotations: { screen: Rotations, title: 'rotations (concat node)' },
 };
 
 class MainScreen extends React.Component {
@@ -76,6 +85,7 @@ const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
     ...SCREENS,
+    ...INTERACTABLE_SCREENS,
   },
   {
     initialRouteName: 'Main',

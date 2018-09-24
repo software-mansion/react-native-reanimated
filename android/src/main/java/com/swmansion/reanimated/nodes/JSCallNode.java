@@ -8,7 +8,7 @@ import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-public class JSCallNode extends Node<Double> {
+public class JSCallNode extends Node {
 
   private final int[] mInputIDs;
 

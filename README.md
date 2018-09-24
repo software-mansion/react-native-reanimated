@@ -134,6 +134,35 @@ import Animated from 'react-native-reanimated';
 <View/>
 ```
 
+## `Animated.Code`
+
+`Animated.Code` component allows you to define reanimated nodes that you want to execute when their input nodes updates, but aren't necessarily strictly related to some view properties and hence it does not feel right to place them under `translate` or other prop of an `Animated.View`. This component renders `null`, so you can place it in any place you want in your render method. It is required that your code is put inside component as we rely on `componentDidMount` and `componentWillUnmount` callbacks to install and cleanup animated nodes. Note that the code you put is going to be executed only once. We currently have no way of telling if your code changes and so it will only be run in `componentDidMount`. If you wish for your reanimated nodes to be updated when component updates you can update `key` property of `Animated.Code` component which will effectively unmount old and mount new version of it in react tree.
+```js
+<Animated.Code>
+  { ()=>
+        block([
+          set(this.transX1, add(multiply(-1, this._transX))),
+          set(this.transX2, add(multiply(-2, this._transX), 120)),
+          set(this.transX3, sub(multiply(2, this._transX), 120)),
+          set(this.transX4, add(multiply(1, this._transX))),
+        ])
+  }
+</Animated.Code>
+```
+
+or:
+
+```js
+<Animated.Code exec={
+block([
+  set(this.transX1, add(multiply(-1, this._transX))),
+  set(this.transX2, add(multiply(-2, this._transX), 120)),
+  set(this.transX3, sub(multiply(2, this._transX), 120)),
+  set(this.transX4, add(multiply(1, this._transX))),
+])
+}/>
+```
+
 ## Available nodes
 
 <!-- Base  -->
@@ -181,7 +210,7 @@ Takes an array of nodes and evaluates all the nodes in the order they are put in
 debug(messageString, valueNode)
 ```
 
-When the node is evaluated it prints to the console (using `console.log` or other means on native) a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Note that `messageString` should be a normal string not an animated node.
+When the node is evaluated it prints a string that contains the `messageString` concatenated with the value of `valueNode`. Then returns the value of `valueNode`. Logs are printed in JS debugger if it's attached, in console if Expo client is being used or in native console otherwise. Logs are visible only in `DEV` mode and has no effect on production build. Note that `messageString` should be a normal string not an animated node.
 
 ---
 ### `startClock`
@@ -499,12 +528,18 @@ Creates a color node in RGBA format. Where first three input nodes should have i
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
 ---
+### `concat`
+```js
+concat(nodeOrValue1, ...)
+```
+Returns concatanation of given nodes (number or string) as string
+
+---
 ### `onChange`
 
 ```js
 onChange(value, action)
 ```
-
 When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 <!-- Anims -->

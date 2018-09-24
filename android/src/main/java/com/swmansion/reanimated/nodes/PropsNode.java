@@ -17,7 +17,7 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
-public class PropsNode extends Node<Double> implements FinalNode {
+public class PropsNode extends Node implements FinalNode {
 
   private final Map<String, Integer> mMapping;
   private final UIImplementation mUIImplementation;
@@ -58,7 +58,7 @@ public class PropsNode extends Node<Double> implements FinalNode {
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof StyleNode) {
-        WritableMap style = ((StyleNode) node).value(evalContext);
+        WritableMap style = (WritableMap) node.value(evalContext);
         ReadableMapKeySetIterator iter = style.keySetIterator();
         while (iter.hasNextKey()) {
           String key = iter.nextKey();
@@ -77,6 +77,9 @@ public class PropsNode extends Node<Double> implements FinalNode {
           switch (type) {
             case Number:
               dest.putDouble(key, style.getDouble(key));
+              break;
+            case String:
+              dest.putString(key, style.getString(key));
               break;
             case Array:
               dest.putArray(key, (WritableArray) style.getArray(key));

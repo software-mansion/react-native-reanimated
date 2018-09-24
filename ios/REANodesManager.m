@@ -19,6 +19,19 @@
 #import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
 #import "Nodes/REAProceduralNode.h"
+#import "Nodes/REAConcatNode.h"
+#import "REAModule.h"
+
+@interface RCTUIManager ()
+
+- (void)updateView:(nonnull NSNumber *)reactTag
+          viewName:(NSString *)viewName
+             props:(NSDictionary *)props;
+
+- (void)setNeedsLayout;
+
+@end
+
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in 
@@ -73,6 +86,30 @@
 
 - (BOOL)isNodeCreated:(NSNumber *)id {
   return [_nodes objectForKey:id];
+
+- (void)operationsBatchDidComplete
+{
+  if (_displayLink) {
+    // if display link is set it means some of the operations that have run as a part of the batch
+    // requested updates. We want updates to be run in the same frame as in which operations have
+    // been scheduled as it may mean the new view has just been mounted and expects its initial
+    // props to be calculated.
+    // Unfortunately if the operation has just scheduled animation callback it won't run until the
+    // next frame. So if displayLink is set we trigger onAnimationFrame callback to make sure it
+    // runs in the correct frame.
+    [REANode runPropUpdates:_updateContext];
+    if (_operationsInBatch.count != 0) {
+      NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
+      _operationsInBatch = [NSMutableArray new];
+      RCTExecuteOnUIManagerQueue(^{
+        for (int i = 0; i < copiedOperationsQueue.count; i++) {
+          copiedOperationsQueue[i](self.uiManager);
+        }
+        [self.uiManager setNeedsLayout];
+      });
+    }
+    _wantRunUpdates = NO;
+  }
 }
 
 - (REANode *)findNodeByID:(REANodeID)nodeID
@@ -183,6 +220,7 @@
             @"procedural": [REAProceduralNode class],
             @"perform": [REAPerformNode class],
             @"argument": [REAArgumentNode class],
+            @"concat": [REAConcatNode class],
 //            @"listener": nil,
             };
   });

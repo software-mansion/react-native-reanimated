@@ -6,7 +6,7 @@ import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-public class OperatorNode extends Node<Double> {
+public class OperatorNode extends Node {
 
   private static boolean truthy(Object value) {
     return value != null && !value.equals(0.);

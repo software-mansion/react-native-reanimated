@@ -2,6 +2,7 @@ package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
@@ -9,7 +10,8 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
-public class StyleNode extends Node<WritableMap> {
+
+public class StyleNode extends Node {
 
   private final Map<String, Integer> mMapping;
 
@@ -24,9 +26,16 @@ public class StyleNode extends Node<WritableMap> {
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof TransformNode) {
-        propMap.putArray(entry.getKey(), ((TransformNode) node).value(evalContext));
+        propMap.putArray(entry.getKey(), (WritableArray) node.value());
       } else {
-        propMap.putDouble(entry.getKey(), node.doubleValue(evalContext));
+        Object val = node.value(evalContext);
+        if (val instanceof Double) {
+          propMap.putDouble(entry.getKey(), (Double) val);
+        } else if (val instanceof String) {
+          propMap.putString(entry.getKey(), (String) val);
+        } else {
+          throw new IllegalStateException("Wrong style form");
+        }
       }
     }
     return propMap;
