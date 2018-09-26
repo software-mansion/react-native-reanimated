@@ -6,7 +6,7 @@ import AnimatedValue from './AnimatedValue';
 import AnimatedAlways from './AnimatedAlways';
 
 import invariant from 'fbjs/lib/invariant';
-import createAandroidProxyPolyfill from './AndroidProxyEventPolyfill';
+import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
 
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
@@ -59,7 +59,7 @@ function sanitizeArgMapping(argMapping) {
 
     const proxy =
       Platform.OS === 'android'
-        ? createAandroidProxyPolyfill()
+        ? createEventObjectProxyPolyfill()
         : new Proxy({}, proxyHandler);
     alwaysNodes.push(new AnimatedAlways(ev(proxy)));
     traverse(proxy, []);

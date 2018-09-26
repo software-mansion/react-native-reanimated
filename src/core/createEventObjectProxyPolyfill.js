@@ -1,6 +1,6 @@
 // TODO remove after update of JSC
 // because currently JSC does not support Proxy
-export default function createAndroidProxyPolyfill() {
+export default function createEventObjectProxyPolyfill() {
   const nodesMap = {
     // Gesture handlers-related event
     translationX: {},
