@@ -4,7 +4,6 @@ import { val } from '../utils';
 import { evaluateOnce } from '../derived/evaluateOnce';
 import interpolate from '../derived/interpolate';
 import ReanimatedModule from '../ReanimatedModule';
-import ReanimatedEventEmitter from '../ReanimatedEventEmitter';
 
 function sanitizeValue(value) {
   return value === null || value === undefined || typeof value === 'string'
