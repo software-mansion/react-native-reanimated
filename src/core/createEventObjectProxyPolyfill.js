@@ -1,5 +1,7 @@
-// TODO remove after update of JSC
-// because currently JSC does not support Proxy
+// JSC on Android does not support proxies. The below workaround provides a proxy-like
+// functionality for event data by creating an object which contains predefined fields
+// for the most commonly used event attributes. If your app uses even attribute which
+// is not listed here please submit a PR to add that and we will merge it right away
 export default function createEventObjectProxyPolyfill() {
   const nodesMap = {
     // Gesture handlers-related event

@@ -170,6 +170,17 @@ With reanimated new syntax is possible to be used with `Animated.event`. Instead
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
 [See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
 ```js
+this.onGestureEvent = event([
+  {
+    nativeEvent: {
+      translationX: x => set(this._x, x)
+    },
+  },
+]);
+```
+
+If you'd like to use more than one event attribute in your reanimated code it is also supported. Instead of defining event handler method for a single attribute you can define at the level of nativeEvent. Here is an example that takes both translation attributes and state attribute from PanGestureHandler event:
+```js
 <PanGestureHandler
   onGestureEvent={event([
     {
@@ -186,19 +197,6 @@ This syntax allows for providing some post-processing for the event data that do
   />
 </PanGestureHandler>
 ```
-However, it is still fully "declarative" and could be described as some kind of syntactic sugar and does not affect neither complexity nor execution time or cost of evaluation.
-
-It is also available to use function with single field of `nativeEvent`:
-```js
-this.onGestureEvent = event([
-  {
-    nativeEvent: {
-      translationX: x => set(this._x, x)
-    },
-  },
-]);
-```
-
 
 
 ## Available nodes
