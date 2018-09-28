@@ -14,6 +14,7 @@ import Code from './code';
 import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 import Imperative from './imperative';
+import Movable from './movable';
 
 import InteractablePlayground, {
   SCREENS as INTERACTABLE_SCREENS,
@@ -42,6 +43,7 @@ const SCREENS = {
     screen: Imperative,
     title: 'imperative (set value / toggle visibility)',
   },
+  movable: { screen: Movable, title: 'moving dot (via native event funtion)' },
 };
 
 class MainScreen extends React.Component {
