@@ -93,7 +93,7 @@ export default class AnimatedNode {
 
   __nativeInitialize() {
     if (!this.__initialized) {
-      ReanimatedModule.createNode(this.__nodeID, this.__nodeConfig);
+      ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       this.__initialized = true;
     }
   }

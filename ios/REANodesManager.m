@@ -188,6 +188,12 @@
   }];
 }
 
+- (void)getValue:(REANodeID)nodeID
+        callback:(RCTResponseSenderBlock)callback
+{
+  callback(@[_nodes[nodeID].value]);
+}
+
 #pragma mark -- Graph
 
 - (void)createNode:(REANodeID)nodeID

@@ -13,6 +13,7 @@ import ChatHeads from './chatHeads';
 import Code from './code';
 import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
+import Imperative from './imperative';
 import Movable from './movable';
 
 import InteractablePlayground, {
@@ -38,6 +39,10 @@ const SCREENS = {
   code: { screen: Code, title: 'Animated.Code component' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
+  imperative: {
+    screen: Imperative,
+    title: 'imperative (set value / toggle visibility)',
+  },
   movable: { screen: Movable, title: 'moving dot (via native event funtion)' },
 };
 
