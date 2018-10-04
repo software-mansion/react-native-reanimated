@@ -45,7 +45,7 @@ const SCREENS = {
   },
   panRotateAndZoom: {
     screen: PanRotateAndZoom,
-    title: 'Pan, rotate and zoom (via natfunctionnt function)',
+    title: 'Pan, rotate and zoom (via native event function)',
   },
 };
 
