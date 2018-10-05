@@ -3,6 +3,7 @@ import { set } from '../base';
 import { val } from '../utils';
 import { evaluateOnce } from '../derived/evaluateOnce';
 import interpolate from '../derived/interpolate';
+import ReanimatedModule from '../ReanimatedModule';
 
 function sanitizeValue(value) {
   return value === null || value === undefined || typeof value === 'string'
@@ -18,6 +19,10 @@ export default class AnimatedValue extends AnimatedNode {
   }
 
   __detach() {
+    ReanimatedModule.getValue(
+      this.__nodeID,
+      val => (this.__nodeConfig.value = val)
+    );
     this.__detachAnimation(this._animation);
     super.__detach();
   }
