@@ -26,7 +26,7 @@ public class StyleNode extends Node {
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       if (node instanceof TransformNode) {
-        propMap.putArray(entry.getKey(), (WritableArray) node.value());
+        propMap.putArray(entry.getKey(), (WritableArray) node.value(evalContext));
       } else {
         Object val = node.value(evalContext);
         if (val instanceof Double) {

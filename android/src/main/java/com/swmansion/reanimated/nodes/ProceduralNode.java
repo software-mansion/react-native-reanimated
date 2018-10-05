@@ -106,7 +106,7 @@ public class ProceduralNode extends Node {
     }
 
     @Override
-    public void setValue(Double value, EvalContext context) {
+    public void setValue(Object value, EvalContext context) {
       ((ValueNode)mValuesByContext.get(context.contextID)).setValue(value, mNodesManager.mGlobalEvalContext);
     }
 
@@ -130,9 +130,9 @@ public class ProceduralNode extends Node {
   }
 
   @Override
-  public @Nullable List<Node<?>> getChildrenInContext(EvalContext context) {
+  public @Nullable List<Node> getChildrenInContext(EvalContext context) {
     if (context.parent != null) {
-      List<Node<?>> result = new ArrayList<>();
+      List<Node> result = new ArrayList<>();
       result.add(context.parent);
       return result;
     }

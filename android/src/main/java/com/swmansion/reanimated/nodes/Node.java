@@ -21,11 +21,9 @@ public abstract class Node {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private final UpdateContext mUpdateContext;
-
   private long mLastLoopID = -1;
   private @Nullable Object mMemoizedValue;
-  private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
+  protected @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
@@ -82,7 +80,7 @@ public abstract class Node {
     // no-op
   }
 
-  public @Nullable List<Node<?>> getChildrenInContext(EvalContext context) {
+  public @Nullable List<Node> getChildrenInContext(EvalContext context) {
     return mChildren;
   }
 

@@ -165,7 +165,7 @@ public class NodesManager implements EventDispatcherListener {
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty( jImplementation);
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty( mUIImplementation);
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
@@ -370,7 +370,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    callback.invoke(mAnimatedNodes.get(nodeID).value(mGlobalEvalContext));
   }
 
   public void postRunUpdatesAfterAnimation() {

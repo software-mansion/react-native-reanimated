@@ -17,7 +17,7 @@ public class NoopNode extends ValueNode {
   }
 
   @Override
-  public void setValue(Double value, EvalContext context) {
+  public void setValue(Object value, EvalContext context) {
     // no-op
   }
 
