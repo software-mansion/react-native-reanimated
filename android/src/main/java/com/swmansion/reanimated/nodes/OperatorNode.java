@@ -146,7 +146,7 @@ public class OperatorNode extends Node {
     @Override
     public double evaluate(Node[] input, EvalContext evalContext) {
       Object res = input[0].value(evalContext);
-      return (res != null && !((Double) res).isNaN()) ? 1. : 0.;
+      return (res != null && !(res instanceof Double && ((Double) res).isNaN())) ? 1. : 0.;
     }
   };
 
