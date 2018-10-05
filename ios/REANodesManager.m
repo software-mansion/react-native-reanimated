@@ -86,6 +86,7 @@
 
 - (BOOL)isNodeCreated:(NSNumber *)id {
   return [_nodes objectForKey:id];
+}
 
 - (void)operationsBatchDidComplete
 {
@@ -97,7 +98,7 @@
     // Unfortunately if the operation has just scheduled animation callback it won't run until the
     // next frame. So if displayLink is set we trigger onAnimationFrame callback to make sure it
     // runs in the correct frame.
-    [REANode runPropUpdates:_updateContext];
+    [REANode runPropUpdates:self];
     if (_operationsInBatch.count != 0) {
       NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
       _operationsInBatch = [NSMutableArray new];
@@ -195,7 +196,7 @@
 - (void)getValue:(REANodeID)nodeID
         callback:(RCTResponseSenderBlock)callback
 {
-  callback(@[_nodes[nodeID].value]);
+  callback(@[[_nodes[nodeID] value:_globalEvalContext]]);
 }
 
 #pragma mark -- Graph

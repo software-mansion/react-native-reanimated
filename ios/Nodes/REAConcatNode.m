@@ -14,11 +14,11 @@
   return self;
 }
 
-- (id)evaluate
+- (id)evaluate:(REAEvalContext *)evalContext;
 {
   NSMutableString *result = [NSMutableString new];
   for (int i = 0; i < _input.count; i++) {
-    NSObject *val = [[self.nodesManager findNodeByID:_input[i]] value];
+    NSObject *val = [[self.nodesManager findNodeByID:_input[i]] value:evalContext];
     if ([val isKindOfClass:[NSNumber class]]) {
       [result appendString:[(NSNumber *)val stringValue]];
     }
