@@ -27,6 +27,7 @@ const {
   sub,
   Clock,
   Value,
+  ProceduralNode,
 } = Animated;
 
 const ANIMATOR_PAUSE_CONSECUTIVE_FRAMES = 10;
@@ -84,14 +85,32 @@ function snapTo(target, snapPoints, best, clb, dragClb) {
   ];
 }
 
+const springBehaviourInternal = new ProceduralNode(
+  (dt, target, v, mass, anchor, tension) => {
+    const d = sub(target, anchor);
+    const a = divide(multiply(-1, tension, d), mass);
+    return set(v, add(v, multiply(dt, a)));
+  }
+);
+
 function springBehavior(dt, target, obj, anchor, tension = 300) {
-  const dx = sub(target.x, anchor.x);
-  const ax = divide(multiply(-1, tension, dx), obj.mass);
-  const dy = sub(target.y, anchor.y);
-  const ay = divide(multiply(-1, tension, dy), obj.mass);
   return {
-    x: set(obj.vx, add(obj.vx, multiply(dt, ax))),
-    y: set(obj.vy, add(obj.vy, multiply(dt, ay))),
+    x: springBehaviourInternal.invoke(
+      dt,
+      target.x,
+      obj.vx,
+      obj.mass,
+      anchor.x,
+      tension
+    ),
+    y: springBehaviourInternal.invoke(
+      dt,
+      target.y,
+      obj.vy,
+      obj.mass,
+      anchor.y,
+      tension
+    ),
   };
 }
 

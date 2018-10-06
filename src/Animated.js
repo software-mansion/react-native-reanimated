@@ -18,6 +18,7 @@ import {
   addWhitelistedUIProps,
 } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
+import AnimatedProceduralNode from './core/AnimatedProceduralNode';
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -30,6 +31,7 @@ const Animated = {
   Clock: AnimatedClock,
   Value: AnimatedValue,
   Node: AnimatedNode,
+  ProceduralNode: AnimatedProceduralNode,
 
   // operations
   ...base,
