@@ -70,7 +70,7 @@ export default class AnimatedBounds extends Component {
 
     const dragX = new Value(0);
     const state = new Value(-1);
-    const transX = new Value();
+    const transX = new Value(0);
     const prevDragX = new Value(0);
 
     this._onGestureEvent = event([
