@@ -39,7 +39,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (id)value:(REAEvalContext *)evalContext;
 {
   NSNumber *__nullable lastLoopID = evalContext.lastLoopIDs[_nodeID];
-  if (!lastLoopID || lastLoopID < _nodesManager.loopID) {
+  if (!lastLoopID || [lastLoopID intValue] < [_nodesManager.loopID intValue]) {
     lastLoopID = _nodesManager.loopID;
     evalContext.lastLoopIDs[_nodeID] = _nodesManager.loopID;
     id result = [self evaluate:evalContext];
