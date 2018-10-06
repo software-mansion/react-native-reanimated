@@ -20,7 +20,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)dangerouslyRescheduleEvaluate:(REAEvalContext *)evalContext;
 {
-  evalContext.lastLoopIDs[_nodeID] = 0;
+  evalContext.lastLoops[_nodeID].ID = 0;
   [self markUpdated:evalContext];
 }
 
@@ -38,10 +38,17 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value:(REAEvalContext *)evalContext;
 {
-  NSNumber *__nullable lastLoopID = evalContext.lastLoopIDs[_nodeID];
-  if (!lastLoopID || [lastLoopID intValue] < [_nodesManager.loopID intValue]) {
+  REANodeLoopWrapper *__nullable lastLoop = evalContext.lastLoops[_nodeID];
+  if (!lastLoop) {
+    lastLoop = [[REANodeLoopWrapper alloc] init];
+    evalContext.lastLoops[_nodeID] = lastLoop;
+  }
+  
+  NSInteger lastLoopID = lastLoop.ID;
+  
+  if (lastLoopID < _nodesManager.loopID) {
     lastLoopID = _nodesManager.loopID;
-    evalContext.lastLoopIDs[_nodeID] = _nodesManager.loopID;
+    evalContext.lastLoops[_nodeID].ID = _nodesManager.loopID;
     id result = [self evaluate:evalContext];
     evalContext.memoizedValues[_nodeID] = result;
     return result;
@@ -167,7 +174,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     }
   }
   [nodesManager.globalEvalContext.updatedNodes removeAllObjects];
-  nodesManager.loopID = [NSNumber numberWithLong: [nodesManager.loopID longValue] + 1];
+  nodesManager.loopID++;
 }
 
 @end

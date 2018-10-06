@@ -71,7 +71,7 @@
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
     _globalEvalContext = [[REAEvalContext alloc] initWithParent: NULL];
-    _loopID = [NSNumber numberWithInt:1];
+    _loopID = 1;
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
