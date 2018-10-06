@@ -67,21 +67,22 @@ function snapTo(target, snapPoints, best, clb, dragClb) {
       const newDist = snapDist(pt);
       return cond(lessThan(newDist, dist), [set(dist, newDist), ...snap(pt)]);
     }),
-    (clb || dragClb) &&
-      call([best.x, best.y, target.x, target.y], ([bx, by, x, y]) => {
-        snapPoints.forEach((pt, index) => {
-          if (
-            (pt.x === undefined || pt.x === bx) &&
-            (pt.y === undefined || pt.y === by)
-          ) {
-            clb && clb({ nativeEvent: { ...pt, index } });
-            dragClb &&
-              dragClb({
-                nativeEvent: { x, y, targetSnapPointId: pt.id, state: 'end' },
-              });
-          }
-        });
-      }),
+    clb || dragClb
+      ? call([best.x, best.y, target.x, target.y], ([bx, by, x, y]) => {
+          snapPoints.forEach((pt, index) => {
+            if (
+              (pt.x === undefined || pt.x === bx) &&
+              (pt.y === undefined || pt.y === by)
+            ) {
+              clb && clb({ nativeEvent: { ...pt, index } });
+              dragClb &&
+                dragClb({
+                  nativeEvent: { x, y, targetSnapPointId: pt.id, state: 'end' },
+                });
+            }
+          });
+        })
+      : 0,
   ];
 }
 
@@ -94,6 +95,7 @@ const springBehaviourInternal = new ProceduralNode(
 );
 
 function springBehavior(dt, target, obj, anchor, tension = 300) {
+  console.log(dt, target, obj, anchor, tension);
   return {
     x: springBehaviourInternal.invoke(
       dt,
@@ -131,6 +133,23 @@ function anchorBehavior(dt, target, obj, anchor) {
   };
 }
 
+const gravityBehaviorInternal = new ProceduralNode(
+  (dt, d, v, mass, strength, falloff, drsq) => {
+    const dr = sqrt(drsq);
+    const a = divide(
+      multiply(
+        -1,
+        strength,
+        dr,
+        exp(divide(multiply(-0.5, drsq), sq(falloff)))
+      ),
+      mass
+    );
+    const div = divide(a, dr);
+    return cond(dr, set(v, add(v, multiply(dt, d, div))));
+  }
+);
+
 function gravityBehavior(
   dt,
   target,
@@ -142,15 +161,25 @@ function gravityBehavior(
   const dx = sub(target.x, anchor.x);
   const dy = sub(target.y, anchor.y);
   const drsq = add(sq(dx), sq(dy));
-  const dr = sqrt(drsq);
-  const a = divide(
-    multiply(-1, strength, dr, exp(divide(multiply(-0.5, drsq), sq(falloff)))),
-    obj.mass
-  );
-  const div = divide(a, dr);
   return {
-    x: cond(dr, set(obj.vx, add(obj.vx, multiply(dt, dx, div)))),
-    y: cond(dr, set(obj.vy, add(obj.vy, multiply(dt, dy, div)))),
+    x: gravityBehaviorInternal.invoke(
+      dt,
+      dx,
+      obj.vx,
+      obj.mass,
+      strength,
+      falloff,
+      drsq
+    ),
+    y: gravityBehaviorInternal.invoke(
+      dt,
+      dy,
+      obj.vy,
+      obj.mass,
+      strength,
+      falloff,
+      drsq
+    ),
   };
 }
 
@@ -307,11 +336,11 @@ class Interactable extends Component {
       dragBuckets[0].push(anchorBehavior(dt, target, obj, dragAnchor));
     }
 
-    const handleStartDrag =
-      props.onDrag &&
-      call([target.x, target.y], ([x, y]) =>
-        props.onDrag({ nativeEvent: { x, y, state: 'start' } })
-      );
+    const handleStartDrag = props.onDrag
+      ? call([target.x, target.y], ([x, y]) =>
+          props.onDrag({ nativeEvent: { x, y, state: 'start' } })
+        )
+      : 0;
 
     const snapBuckets = [[], [], []];
     const snapAnchor = {
@@ -403,9 +432,10 @@ class Interactable extends Component {
                 props.onStop({ nativeEvent: { x, y } })
               )
             )
-          : undefined,
+          : 0,
         stopClock(clock),
       ],
+      0,
       startClock(clock)
     );
 
@@ -428,7 +458,7 @@ class Interactable extends Component {
           props.boundaries[upperBound]
         );
       }
-      const last = new Value(Number.MAX_SAFE_INTEGER);
+      const last = new Value(100000);
       const noMoveFrameCount = noMovementFrames[axis];
       const testMovementFrames = cond(
         eq(advance, last),
