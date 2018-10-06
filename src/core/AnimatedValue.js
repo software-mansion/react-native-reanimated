@@ -12,7 +12,7 @@ function sanitizeValue(value) {
 }
 
 export default class AnimatedValue extends AnimatedNode {
-  constructor(value) {
+  constructor(value = 0) {
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
     this._animation = null;
