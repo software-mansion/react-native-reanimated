@@ -21,7 +21,7 @@
   return self;
 }
 
-- (NSMutableArray *)getChildenByContext:(REAEvalContext *) evalContext {
+- (NSMutableArray *)getChildrenInContext:(REAEvalContext *) evalContext {
   if (evalContext.parent != NULL) {
     NSMutableArray *result = [NSMutableArray init];
     [result addObject:evalContext.parent];

@@ -74,7 +74,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
--(NSMutableArray *)getChildenByContext:(REAEvalContext *) evalContext {
+-(NSMutableArray *)getChildrenInContext:(REAEvalContext *) evalContext {
   return _childNodes;
 }
 
@@ -117,7 +117,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
   
   REAEvalContext *currentContext = contexts.lastObject;
-  NSMutableArray *__nullable children = [node getChildenByContext:currentContext];
+  NSMutableArray *__nullable children = [node getChildrenInContext:currentContext];
   REAEvalContext *newContext = [node switchContextWhileUpdatingIfNeeded:currentContext withLastVisitedNode:lastVisited];
   BOOL pushedNewContext = false;
   REAEvalContext *__nullable contextPopped = NULL;

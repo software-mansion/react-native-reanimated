@@ -136,7 +136,7 @@ public class ProceduralNode extends Node {
       result.add(context.parent);
       return result;
     }
-    return null;
+    return mChildren;
   }
 
   @Override
