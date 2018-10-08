@@ -15,7 +15,6 @@ import javax.annotation.Nullable;
 public class ProceduralNode extends Node {
 
   static public class PerformNode extends Node {
-
     private final int mProceduralNode;
     private final int[] mArgumentsInputs;
     private EvalContext mOldContext = null;
@@ -72,7 +71,6 @@ public class ProceduralNode extends Node {
   }
 
   static public class ArgumentNode extends ValueNode {
-
     private final SparseArray<Node> mValuesByContext = new SparseArray<>();
     private final SparseArray<EvalContext> mContextsByValue = new SparseArray<>();
     private final SparseArray<EvalContext> mOldContextByValue = new SparseArray<>();
