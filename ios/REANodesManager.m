@@ -242,7 +242,6 @@
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
   node.nodesManager = self;
- // node.updateContext = _globalEvalContext;
   _nodes[nodeID] = node;
 }
 
