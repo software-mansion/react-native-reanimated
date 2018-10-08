@@ -16,7 +16,13 @@ export default class ChatHeads extends Component {
     this._deltaY = new Animated.Value(0);
     this._face1Scale = new Animated.Value(1);
     this._face2Scale = new Animated.Value(1);
+    this._face1zIndex = new Animated.Value(1);
+    this._face2zIndex = new Animated.Value(0);
   }
+  setCurrentHead = id => {
+    this._face1zIndex.setValue(1 - id);
+    this._face2zIndex.setValue(id);
+  };
   render() {
     return (
       <View style={styles.container}>
@@ -56,8 +62,11 @@ export default class ChatHeads extends Component {
             ]}
           />
         </View>
-        <View style={styles.frame} pointerEvents="box-none">
+        <Animated.View
+          style={[styles.frame, { zIndex: this._face1zIndex }]}
+          pointerEvents="box-none">
           <Interactable.View
+            onDrag={() => this.setCurrentHead(0)}
             snapPoints={[
               { x: -140 * widthFactor, y: 0 },
               { x: -140 * widthFactor, y: -140 * heightFactor },
@@ -102,13 +111,16 @@ export default class ChatHeads extends Component {
               />
             </Animated.View>
           </Interactable.View>
-        </View>
+        </Animated.View>
 
         {!showSecondFace ? (
           false
         ) : (
-          <View style={styles.frame} pointerEvents="box-none">
+          <Animated.View
+            style={[styles.frame, { zIndex: this._face2zIndex }]}
+            pointerEvents="box-none">
             <Interactable.View
+              onDrag={() => this.setCurrentHead(1)}
               snapPoints={[
                 { x: -140 * widthFactor, y: 20 * heightFactor },
                 { x: -140 * widthFactor, y: -120 * heightFactor },
@@ -156,7 +168,7 @@ export default class ChatHeads extends Component {
                 />
               </Animated.View>
             </Interactable.View>
-          </View>
+          </Animated.View>
         )}
       </View>
     );

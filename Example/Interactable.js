@@ -183,25 +183,33 @@ function gravityBehavior(
   };
 }
 
+const bounceBehaviorInternal = new ProceduralNode((target, area, v, flip) =>
+  cond(and(eq(target, area), lessThan(0, v)), flip)
+);
+
 function bounceBehavior(dt, target, obj, area, bounce = 0) {
   const xnodes = [];
   const ynodes = [];
   const flipx = set(obj.vx, multiply(-1, obj.vx, bounce));
   const flipy = set(obj.vy, multiply(-1, obj.vy, bounce));
   if (area.left !== undefined) {
-    xnodes.push(cond(and(eq(target.x, area.left), lessThan(obj.vx, 0)), flipx));
+    xnodes.push(
+      bounceBehaviorInternal.invoke(target.x, area.left, obj.vx, flipx)
+    );
   }
   if (area.right !== undefined) {
     xnodes.push(
-      cond(and(eq(target.x, area.right), lessThan(0, obj.vx)), flipx)
+      bounceBehaviorInternal.invoke(target.x, area.right, obj.vx, flipx)
     );
   }
   if (area.top !== undefined) {
-    xnodes.push(cond(and(eq(target.y, area.top), lessThan(obj.vy, 0)), flipy));
+    xnodes.push(
+      bounceBehaviorInternal.invoke(target.y, area.top, obj.vy, flipy)
+    );
   }
   if (area.bottom !== undefined) {
     xnodes.push(
-      cond(and(eq(target.y, area.bottom), lessThan(0, obj.vy)), flipy)
+      bounceBehaviorInternal.invoke(target.y, area.bottom, obj.vy, flipy)
     );
   }
   return {
