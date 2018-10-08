@@ -40,7 +40,7 @@ public class PropsNode extends Node implements FinalNode {
 
   public void connectToView(int viewTag) {
     mConnectedViewTag = viewTag;
-    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvalContext);
+    dangerouslyRescheduleEvaluate(mNodesManager.globalEvalContext);
   }
 
   public void disconnectFromView(int viewTag) {
@@ -130,6 +130,6 @@ public class PropsNode extends Node implements FinalNode {
     }
 
     // call value for side effect (diff map update via changes made to prop map)
-    value(mNodesManager.mGlobalEvalContext);
+    value(mNodesManager.globalEvalContext);
   }
 }

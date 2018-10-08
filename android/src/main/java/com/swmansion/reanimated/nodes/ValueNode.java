@@ -32,7 +32,7 @@ public class ValueNode extends Node {
 
   public void setValue(Object value, EvalContext context) {
     mValue = value;
-    forceUpdateMemoizedValue(mValue, mNodesManager.mGlobalEvalContext);
+    forceUpdateMemoizedValue(mValue, mNodesManager.globalEvalContext);
   }
 
   @Override

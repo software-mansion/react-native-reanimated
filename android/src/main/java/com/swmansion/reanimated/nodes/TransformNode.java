@@ -25,7 +25,7 @@ public class TransformNode extends Node {
 
     @Override
     public Object getValue(NodesManager nodesManager) {
-      return nodesManager.getNodeValue(nodeID, nodesManager.mGlobalEvalContext);
+      return nodesManager.getNodeValue(nodeID, nodesManager.globalEvalContext);
     }
   }
 

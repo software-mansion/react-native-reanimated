@@ -67,7 +67,7 @@ public abstract class Node {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate(mNodesManager.mGlobalEvalContext);
+    dangerouslyRescheduleEvaluate(mNodesManager.globalEvalContext);
   }
 
   public void removeChild(Node child) {
@@ -145,11 +145,11 @@ public abstract class Node {
 
   public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    ArrayList<Node> updatedNodes = nodesManager.mGlobalEvalContext.updatedNodes;
+    ArrayList<Node> updatedNodes = nodesManager.globalEvalContext.updatedNodes;
     Set<Node> visitedNodes = new HashSet<>();
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();
-    contexts.push(nodesManager.mGlobalEvalContext);
+    contexts.push(nodesManager.globalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
       findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes, contexts, null);
       if (contexts.size() != 1) {

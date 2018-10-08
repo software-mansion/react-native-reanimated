@@ -32,7 +32,7 @@ public class ClockNode extends Node implements NodesManager.OnAnimationFrame {
   @Override
   public void onAnimationFrame() {
     if (isRunning) {
-      markUpdated(mNodesManager.mGlobalEvalContext);
+      markUpdated(mNodesManager.globalEvalContext);
       mNodesManager.postOnAnimation(this);
     }
   }

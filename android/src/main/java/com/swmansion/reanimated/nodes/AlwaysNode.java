@@ -14,7 +14,7 @@ public class AlwaysNode extends Node implements FinalNode {
 
   @Override
   public void update() {
-    this.value(mNodesManager.mGlobalEvalContext);
+    this.value(mNodesManager.globalEvalContext);
   }
 
   @Override

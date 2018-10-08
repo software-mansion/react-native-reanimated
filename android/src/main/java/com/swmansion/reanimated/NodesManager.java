@@ -2,7 +2,6 @@ package com.swmansion.reanimated;
 
 import android.util.SparseArray;
 
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -58,7 +57,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame();
   }
 
-  public final EvalContext mGlobalEvalContext = new EvalContext(null);
+  public final EvalContext globalEvalContext = new EvalContext(null);
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;
@@ -370,7 +369,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value(mGlobalEvalContext));
+    callback.invoke(mAnimatedNodes.get(nodeID).value(globalEvalContext));
   }
 
   public void postRunUpdatesAfterAnimation() {

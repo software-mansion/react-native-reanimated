@@ -107,12 +107,12 @@ public class ProceduralNode extends Node {
 
     @Override
     public void setValue(Object value, EvalContext context) {
-      ((ValueNode)mValuesByContext.get(context.contextID)).setValue(value, mNodesManager.mGlobalEvalContext);
+      ((ValueNode)mValuesByContext.get(context.contextID)).setValue(value, mNodesManager.globalEvalContext);
     }
 
     @Override
     protected Double evaluate(EvalContext evalContext) {
-      if (evalContext == mNodesManager.mGlobalEvalContext) {
+      if (evalContext == mNodesManager.globalEvalContext) {
         throw new IllegalArgumentException("Tried to evaluate argumentNode in global context");
       }
       Node value = mValuesByContext.get(evalContext.contextID);
