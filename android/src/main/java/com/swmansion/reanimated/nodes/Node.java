@@ -151,7 +151,7 @@ public abstract class Node {
     Stack<EvalContext> contexts = new Stack<>();
     contexts.push(nodesManager.globalEvalContext);
     for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.get(i), new HashSet<Node>(), finalNodes, contexts, null);
+      findAndUpdateNodes(updatedNodes.get(i), visitedNodes, finalNodes, contexts, null);
       if (contexts.size() != 1) {
         throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
       }
