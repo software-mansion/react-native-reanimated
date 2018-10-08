@@ -164,7 +164,7 @@ public class NodesManager implements EventDispatcherListener {
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty( mUIImplementation);
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
