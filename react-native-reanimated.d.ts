@@ -86,7 +86,7 @@ declare module 'react-native-reanimated' {
       time: AnimatedValue<number>;
       frameTime: AnimatedValue<number>;
     }
-    type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
     export interface TimingConfig {
       toValue: Adaptable<number>;
       duration: Adaptable<number>;
