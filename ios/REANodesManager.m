@@ -56,6 +56,7 @@
   NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
   REAUpdateContext *_updateContext;
+  BOOL _wantRunUpdates;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 }
@@ -107,6 +108,7 @@
 
 - (void)postRunUpdatesAfterAnimation
 {
+  _wantRunUpdates = YES;
   [self startUpdatingOnAnimationFrame];
 }
 
@@ -166,6 +168,7 @@
       [self.uiManager setNeedsLayout];
     });
   }
+  _wantRunUpdates = NO;
 }
 
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
