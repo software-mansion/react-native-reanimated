@@ -90,18 +90,7 @@
     // props to be calculated.
     // Unfortunately if the operation has just scheduled animation callback it won't run until the
     // next frame. So if displayLink is set we trigger a view-related operations evaluation
-    _currentAnimationTimestamp = CACurrentMediaTime();
-    [REANode runPropUpdates:_updateContext];
-    if (_operationsInBatch.count != 0) {
-      NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
-      _operationsInBatch = [NSMutableArray new];
-      RCTExecuteOnUIManagerQueue(^{
-        for (int i = 0; i < copiedOperationsQueue.count; i++) {
-          copiedOperationsQueue[i](self.uiManager);
-        }
-        [self.uiManager setNeedsLayout];
-      });
-    }
+    [self performOperations];
   }
 }
 
@@ -139,8 +128,6 @@
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
-  _currentAnimationTimestamp = CACurrentMediaTime();
-
   // We process all enqueued events first
   for (NSUInteger i = 0; i < _eventQueue.count; i++) {
     id<RCTEvent> event = _eventQueue[i];
@@ -158,6 +145,16 @@
     block(displayLink);
   }
 
+  [self performOperations];
+
+  if (_onAnimationCallbacks.count == 0) {
+    [self stopUpdatingOnAnimationFrame];
+  }
+}
+
+- (void)performOperations
+{
+  _currentAnimationTimestamp = CACurrentMediaTime();
   [REANode runPropUpdates:_updateContext];
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
@@ -168,10 +165,6 @@
       }
       [self.uiManager setNeedsLayout];
     });
-  }
-
-  if (_onAnimationCallbacks.count == 0) {
-    [self stopUpdatingOnAnimationFrame];
   }
 }
 
