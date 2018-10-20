@@ -157,8 +157,9 @@
 
 - (void)performOperations
 {
-  _currentAnimationTimestamp = CACurrentMediaTime();
-  [REANode runPropUpdates:_updateContext];
+  if (_wantRunUpdates) {
+    [REANode runPropUpdates:_updateContext];
+  }
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
