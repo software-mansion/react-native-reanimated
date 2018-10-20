@@ -71,6 +71,7 @@
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
     _updateContext = [REAUpdateContext new];
+    _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
   }
