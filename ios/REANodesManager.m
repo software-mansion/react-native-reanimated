@@ -157,6 +157,7 @@
 
 - (void)performOperations
 {
+  _currentAnimationTimestamp = CACurrentMediaTime();
   if (_wantRunUpdates) {
     [REANode runPropUpdates:_updateContext];
   }
