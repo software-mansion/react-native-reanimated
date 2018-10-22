@@ -194,6 +194,9 @@
   id val = _nodes[nodeID].value;
   if (val) {
     callback(@[_nodes[nodeID].value]);
+  } else {
+    // NULL is not an object and it's not possible to pass it as callback's argument
+    callback(@[[NSNull null]]);
   }
 }
 #pragma mark -- Graph
