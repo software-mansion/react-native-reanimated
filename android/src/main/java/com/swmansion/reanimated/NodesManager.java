@@ -357,7 +357,10 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    Object val = mAnimatedNodes.get(nodeID).value();
+    if (val != null) {
+      callback.invoke(val);
+    }
   }
 
   public void postRunUpdatesAfterAnimation() {
