@@ -7,6 +7,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@babel/runtime": "^7.1.2",
     "react": "16.5.0",
     "react-native": "0.57.2",
     "react-native-gesture-handler": "1.0.7",
@@ -16,9 +17,9 @@
     "@babel/core": "7.1.2",
     "babel-core": "7.0.0-bridge.0",
     "babel-plugin-module-resolver": "^3.1.1",
-    "metro-react-native-babel-preset": "^0.48.0",
     "glob-to-regexp": "^0.4.0",
     "jest": "23.6.0",
+    "metro-react-native-babel-preset": "^0.48.0",
     "react-test-renderer": "16.5.0"
   },
   "jest": {
