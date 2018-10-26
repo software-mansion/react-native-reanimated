@@ -196,7 +196,7 @@
     callback(val);
   } else {
     // NULL is not an object and it's not possible to pass it as callback's argument
-    callback([NSNull null]);
+    callback(@[[NSNull null]]);
   }
 }
 
