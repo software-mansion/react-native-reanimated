@@ -728,7 +728,7 @@ You will need to have an Android or iOS device or emulator connected as well as 
 
 ## License
 
-Gesture handler library is licensed under [The MIT License](LICENSE).
+React native reanimated library is licensed under [The MIT License](LICENSE).
 
 ## Credits
 

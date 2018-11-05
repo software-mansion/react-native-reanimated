@@ -26,6 +26,7 @@ const Animated = {
   Image: createAnimatedComponent(Image),
   ScrollView: createAnimatedComponent(ScrollView),
   Code: AnimatedCode,
+  createAnimatedComponent,
 
   // classes
   Clock: AnimatedClock,

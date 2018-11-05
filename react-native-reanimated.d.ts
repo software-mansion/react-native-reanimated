@@ -86,7 +86,7 @@ declare module 'react-native-reanimated' {
       time: AnimatedValue<number>;
       frameTime: AnimatedValue<number>;
     }
-    type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
     export interface TimingConfig {
       toValue: Adaptable<number>;
       duration: Adaptable<number>;
@@ -133,6 +133,11 @@ declare module 'react-native-reanimated' {
         : P[K] | AnimatedNode<P[K]>
     };
 
+    type CodeProps = {
+      exec?: AnimatedNode<number>
+      children?: () => AnimatedNode<number>
+    };
+    
     // components
     export const View: ComponentClass<AnimateProps<ViewStyle, ViewProps>>;
     export const Text: ComponentClass<AnimateProps<TextStyle, TextProps>>;
@@ -140,6 +145,7 @@ declare module 'react-native-reanimated' {
     export const ScrollView: ComponentClass<
       AnimateProps<ViewStyle, ScrollViewProps>
     >;
+    export const Code: ComponentClass<CodeProps>;
 
     // classes
     export {
