@@ -37,7 +37,7 @@ public abstract class Node {
     if (lastLoopID < mNodesManager.updateLoopID) {
       evalContext.lastLoopsIDs.put(mNodeID, mNodesManager.updateLoopID);
       Object result = evaluate(evalContext);
-      evalContext.memoizedValues.put(mNodeID,  result);
+      evalContext.memoizedValues.put(mNodeID, result);
       return result;
     }
     return evalContext.memoizedValues.get(mNodeID);
@@ -80,11 +80,16 @@ public abstract class Node {
     // no-op
   }
 
-  public @Nullable List<Node> getChildrenInContext(EvalContext context) {
+  /**
+   * filterChildrenByContext is being overridden in ProceduralNode
+   * While switching context there's no need to evaluate children which
+   * are not present in new context
+   */
+  public @Nullable List<Node> filterChildrenByContext(EvalContext context) {
     return mChildren;
   }
 
-  public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext context, Node lastVisited) {
+  public EvalContext contextForUpdatingChildren(EvalContext context, Node lastVisited) {
     return context;
   }
 
@@ -111,18 +116,22 @@ public abstract class Node {
     visitedNodes.add(node);
 
     EvalContext currentContext = contexts.peek();
-    List<Node> children = node.getChildrenInContext(currentContext);
-    EvalContext newContext = node.switchContextWhileUpdatingIfNeeded(currentContext, lastVisited);
+    List<Node> children = node.filterChildrenByContext(currentContext);
+    EvalContext newContext = node.contextForUpdatingChildren(currentContext, lastVisited);
     boolean pushedNewContext = false;
-    EvalContext contextPopped = null;
+    EvalContext poppedContext = null;
 
     if (newContext != currentContext && newContext != null) {
       contexts.push(newContext);
       pushedNewContext = true;
     }
 
+    // The second condition is done because of extra evaluation (dangerouslyRescheduleEvaluate)
+    // which is done on each connecting node to view. If there's a noe which should be evaluated
+    // in some context, we firstly evaluate it global context, which cannot be popped because
+    // it's the only one context on the stack
     if (node instanceof ProceduralNode.PerformNode && contexts.size() > 1) {
-      contextPopped = contexts.pop();
+      poppedContext = contexts.pop();
     }
 
     if (children != null) {
@@ -138,8 +147,8 @@ public abstract class Node {
       contexts.pop();
     }
 
-    if (contextPopped != null) {
-      contexts.push(contextPopped);
+    if (poppedContext != null) {
+      contexts.push(poppedContext);
     }
   }
 

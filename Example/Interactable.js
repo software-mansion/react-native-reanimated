@@ -27,7 +27,7 @@ const {
   sub,
   Clock,
   Value,
-  ProceduralNode,
+  proc,
 } = Animated;
 
 const ANIMATOR_PAUSE_CONSECUTIVE_FRAMES = 10;
@@ -86,18 +86,15 @@ function snapTo(target, snapPoints, best, clb, dragClb) {
   ];
 }
 
-const springBehaviourInternal = new ProceduralNode(
-  (dt, target, v, mass, anchor, tension) => {
-    const d = sub(target, anchor);
-    const a = divide(multiply(-1, tension, d), mass);
-    return set(v, add(v, multiply(dt, a)));
-  }
-);
+const springBehaviourInternal = proc((dt, target, v, mass, anchor, tension) => {
+  const d = sub(target, anchor);
+  const a = divide(multiply(-1, tension, d), mass);
+  return set(v, add(v, multiply(dt, a)));
+});
 
 function springBehavior(dt, target, obj, anchor, tension = 300) {
-  console.log(dt, target, obj, anchor, tension);
   return {
-    x: springBehaviourInternal.invoke(
+    x: springBehaviourInternal(
       dt,
       target.x,
       obj.vx,
@@ -105,7 +102,7 @@ function springBehavior(dt, target, obj, anchor, tension = 300) {
       anchor.x,
       tension
     ),
-    y: springBehaviourInternal.invoke(
+    y: springBehaviourInternal(
       dt,
       target.y,
       obj.vy,
@@ -133,7 +130,7 @@ function anchorBehavior(dt, target, obj, anchor) {
   };
 }
 
-const gravityBehaviorInternal = new ProceduralNode(
+const gravityBehaviorInternal = proc(
   (dt, d, v, mass, strength, falloff, drsq) => {
     const dr = sqrt(drsq);
     const a = divide(
@@ -162,7 +159,7 @@ function gravityBehavior(
   const dy = sub(target.y, anchor.y);
   const drsq = add(sq(dx), sq(dy));
   return {
-    x: gravityBehaviorInternal.invoke(
+    x: gravityBehaviorInternal(
       dt,
       dx,
       obj.vx,
@@ -171,7 +168,7 @@ function gravityBehavior(
       falloff,
       drsq
     ),
-    y: gravityBehaviorInternal.invoke(
+    y: gravityBehaviorInternal(
       dt,
       dy,
       obj.vy,
@@ -183,7 +180,7 @@ function gravityBehavior(
   };
 }
 
-const bounceBehaviorInternal = new ProceduralNode((target, area, v, flip) =>
+const bounceBehaviorInternal = proc((target, area, v, flip) =>
   cond(and(eq(target, area), lessThan(0, v)), flip)
 );
 
@@ -193,24 +190,16 @@ function bounceBehavior(dt, target, obj, area, bounce = 0) {
   const flipx = set(obj.vx, multiply(-1, obj.vx, bounce));
   const flipy = set(obj.vy, multiply(-1, obj.vy, bounce));
   if (area.left !== undefined) {
-    xnodes.push(
-      bounceBehaviorInternal.invoke(target.x, area.left, obj.vx, flipx)
-    );
+    xnodes.push(bounceBehaviorInternal(target.x, area.left, obj.vx, flipx));
   }
   if (area.right !== undefined) {
-    xnodes.push(
-      bounceBehaviorInternal.invoke(target.x, area.right, obj.vx, flipx)
-    );
+    xnodes.push(bounceBehaviorInternal(target.x, area.right, obj.vx, flipx));
   }
   if (area.top !== undefined) {
-    xnodes.push(
-      bounceBehaviorInternal.invoke(target.y, area.top, obj.vy, flipy)
-    );
+    xnodes.push(bounceBehaviorInternal(target.y, area.top, obj.vy, flipy));
   }
   if (area.bottom !== undefined) {
-    xnodes.push(
-      bounceBehaviorInternal.invoke(target.y, area.bottom, obj.vy, flipy)
-    );
+    xnodes.push(bounceBehaviorInternal(target.y, area.bottom, obj.vy, flipy));
   }
   return {
     x: xnodes,
@@ -466,7 +455,7 @@ class Interactable extends Component {
           props.boundaries[upperBound]
         );
       }
-      const last = new Value(100000);
+      const last = new Value(Number.MAX_SAFE_INTEGER);
       const noMoveFrameCount = noMovementFrames[axis];
       const testMovementFrames = cond(
         eq(advance, last),

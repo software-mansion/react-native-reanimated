@@ -44,10 +44,10 @@ public class ProceduralNode extends Node {
     }
 
     @Override
-    protected Object evaluate(EvalContext oldEvalContext) {
+    protected Object evaluate(EvalContext previousEvalContext) {
       if (mOldContext == null) {
         ProceduralNode proceduralNode =  mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class);
-        mOldContext = oldEvalContext;
+        mOldContext = previousEvalContext;
         for (int i = 0; i < mArgumentsInputs.length; i++) {
           int argumentID = proceduralNode.mProceduralArguments[i];
           ArgumentNode arg = mNodesManager.findNodeById(argumentID, ArgumentNode.class);
@@ -58,10 +58,10 @@ public class ProceduralNode extends Node {
           );
           arg.matchNodeWithOldContext(
                   inputNode,
-                  oldEvalContext
+                  previousEvalContext
           );
         }
-      } else if (mOldContext != oldEvalContext) {
+      } else if (mOldContext != previousEvalContext) {
         throw new IllegalArgumentException("Tried to evaluate perform node in more than one contexts");
       }
 
@@ -96,7 +96,7 @@ public class ProceduralNode extends Node {
     }
 
     @Override
-    public EvalContext switchContextWhileUpdatingIfNeeded(EvalContext evalContext, Node lastVisited) {
+    public EvalContext contextForUpdatingChildren(EvalContext evalContext, Node lastVisited) {
       if (lastVisited == null) {
         return evalContext;
       }
@@ -109,7 +109,7 @@ public class ProceduralNode extends Node {
     }
 
     @Override
-    protected Double evaluate(EvalContext evalContext) {
+    protected Object evaluate(EvalContext evalContext) {
       if (evalContext == mNodesManager.globalEvalContext) {
         throw new IllegalArgumentException("Tried to evaluate argumentNode in global context");
       }
@@ -128,7 +128,7 @@ public class ProceduralNode extends Node {
   }
 
   @Override
-  public @Nullable List<Node> getChildrenInContext(EvalContext context) {
+  public @Nullable List<Node> filterChildrenByContext(EvalContext context) {
     if (context.parent != null) {
       List<Node> result = new ArrayList<>();
       result.add(context.parent);

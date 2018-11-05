@@ -200,16 +200,15 @@ public class NodesManager implements EventDispatcherListener {
     return ZERO;
   }
 
+  public boolean isNodeCreated(int id) {
+    return mAnimatedNodes.indexOfKey(id) >= 0;
+  }
+
   /**
    * Null-safe way of getting node reference. This method always returns non-null instance. If the
    * node is not present we try to return a "no-op" node that allows for "set" calls and always
    * returns 0 as a value.
    */
-
-  public boolean isNodeCreated(int id) {
-    return mAnimatedNodes.indexOfKey(id) >= 0;
-  }
-
   public <T extends Node> T findNodeById(int id, Class<T> type) {
     Node node = mAnimatedNodes.get(id);
     if (node == null) {
