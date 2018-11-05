@@ -91,7 +91,8 @@
     // been scheduled as it may mean the new view has just been mounted and expects its initial
     // props to be calculated.
     // Unfortunately if the operation has just scheduled animation callback it won't run until the
-    // next frame. So if displayLink is set we trigger a view-related operations evaluation
+    // next frame, so it's being triggered manually.
+    _wantRunUpdates = YES;
     [self performOperations];
   }
 }
@@ -116,6 +117,12 @@
 - (void)startUpdatingOnAnimationFrame
 {
   if (!_displayLink) {
+    // Setting _currentAnimationTimestamp here is connected with manual triggering of performOperations
+    // in operationsBatchDidComplete. If component is being mount _displayLink.timestamp will be equal to zero and then
+    // evaluation won't be performed correctly. However, CADisplayLink is using CACurrentMediaTime so if there's need
+    // to perform one more evaluation, it could used it here. In general case, CACurrentMediaTime is not being used in
+    // favour of setting it with _displayLink.timestamp in onAnimationFrame method.
+    _currentAnimationTimestamp = CACurrentMediaTime();
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
@@ -132,6 +139,8 @@
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
   // We process all enqueued events first
+  _displayLink = displayLink;
+  _currentAnimationTimestamp = _displayLink.timestamp;
   for (NSUInteger i = 0; i < _eventQueue.count; i++) {
     id<RCTEvent> event = _eventQueue[i];
     [self processEvent:event];
@@ -157,7 +166,6 @@
 
 - (void)performOperations
 {
-  _currentAnimationTimestamp = CACurrentMediaTime();
   if (_wantRunUpdates) {
     [REANode runPropUpdates:_updateContext];
   }
