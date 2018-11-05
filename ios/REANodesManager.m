@@ -118,10 +118,11 @@
 {
   if (!_displayLink) {
     // Setting _currentAnimationTimestamp here is connected with manual triggering of performOperations
-    // in operationsBatchDidComplete. If component is being mount _displayLink.timestamp will be equal to zero and then
-    // evaluation won't be performed correctly. However, CADisplayLink is using CACurrentMediaTime so if there's need
-    // to perform one more evaluation, it could used it here. In general case, CACurrentMediaTime is not being used in
-    // favour of setting it with _displayLink.timestamp in onAnimationFrame method.
+    // in operationsBatchDidComplete. If new node has been created and clock has not been started,
+    // _displayLink won't be initialized soon enough and _displayLink.timestamp will be 0.
+    // However, CADisplayLink is using CACurrentMediaTime so if there's need to perform one more
+    // evaluation, it could be used it here. In usual case, CACurrentMediaTime is not being used in
+    // favor of setting it with _displayLink.timestamp in onAnimationFrame method.
     _currentAnimationTimestamp = CACurrentMediaTime();
     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
@@ -139,7 +140,6 @@
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
   // We process all enqueued events first
-  _displayLink = displayLink;
   _currentAnimationTimestamp = _displayLink.timestamp;
   for (NSUInteger i = 0; i < _eventQueue.count; i++) {
     id<RCTEvent> event = _eventQueue[i];
