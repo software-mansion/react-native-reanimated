@@ -74,6 +74,7 @@ public class NodesManager implements EventDispatcherListener {
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
   private boolean mWantRunUpdates;
+  public final ArrayList<Node> updatedNodes = new ArrayList<>();
 
   public double currentFrameTimeMs;
   public Set<String> uiProps = Collections.emptySet();

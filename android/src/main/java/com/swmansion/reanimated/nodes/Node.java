@@ -80,22 +80,19 @@ public abstract class Node {
     // no-op
   }
 
-  /**
-   * filterChildrenByContext is being overridden in ProceduralNode
-   * While switching context there's no need to evaluate children which
-   * are not present in new context
-   */
-  public @Nullable List<Node> filterChildrenByContext(EvalContext context) {
-    return mChildren;
-  }
-
   public EvalContext contextForUpdatingChildren(EvalContext context, Node lastVisited) {
     return context;
   }
 
   protected void markUpdated(EvalContext context) {
+    // It's unnecessary to mark as updated nodes in non-global context, because each change
+    // of node -in  non-global context has to be triggered in
+    // global context (e.g. by change of value or clock)
+    if (context != mNodesManager.globalEvalContext) {
+      return;
+    }
     UiThreadUtil.assertOnUiThread();
-    context.updatedNodes.add(this);
+    mNodesManager.updatedNodes.add(this);
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
@@ -116,7 +113,7 @@ public abstract class Node {
     visitedNodes.add(node);
 
     EvalContext currentContext = contexts.peek();
-    List<Node> children = node.filterChildrenByContext(currentContext);
+    List<Node> children = node.mChildren;
     EvalContext newContext = node.contextForUpdatingChildren(currentContext, lastVisited);
     boolean pushedNewContext = false;
     EvalContext poppedContext = null;
@@ -134,11 +131,18 @@ public abstract class Node {
       poppedContext = contexts.pop();
     }
 
-    if (children != null) {
+    if (node instanceof ProceduralNode && currentContext.root != null) {
+      // If evaluation algorithm encounter Procedural node, there's no need tio
+      // evaluate each children, because only one on them is a perform node related to context.
+      // Therefore it's being extracted from context if context is not global
+      // (if context is global,  there's no root set and condition above is false)
+      findAndUpdateNodes(currentContext.root, visitedNodes, finalNodes, contexts, node);
+    } else if (children != null) {
       for (Node child : children) {
         findAndUpdateNodes(child, visitedNodes, finalNodes, contexts, node);
       }
     }
+
     if (node instanceof FinalNode) {
       finalNodes.push((FinalNode) node);
     }
@@ -154,7 +158,7 @@ public abstract class Node {
 
   public static void runUpdates(NodesManager nodesManager) {
     UiThreadUtil.assertOnUiThread();
-    ArrayList<Node> updatedNodes = nodesManager.globalEvalContext.updatedNodes;
+    ArrayList<Node> updatedNodes = nodesManager.updatedNodes;
     Set<Node> visitedNodes = new HashSet<>();
     Stack<FinalNode> finalNodes = new Stack<>();
     Stack<EvalContext> contexts = new Stack<>();

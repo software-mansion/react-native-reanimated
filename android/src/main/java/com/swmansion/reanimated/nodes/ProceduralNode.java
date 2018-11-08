@@ -128,16 +128,6 @@ public class ProceduralNode extends Node {
   }
 
   @Override
-  public @Nullable List<Node> filterChildrenByContext(EvalContext context) {
-    if (context.parent != null) {
-      List<Node> result = new ArrayList<>();
-      result.add(context.parent);
-      return result;
-    }
-    return mChildren;
-  }
-
-  @Override
   protected Object evaluate(EvalContext evalContext) {
     return mNodesManager.findNodeById(mResultNode, Node.class).value(evalContext);
   }
