@@ -172,7 +172,7 @@
 - (void)performOperations
 {
   if (_wantRunUpdates) {
-    [REANode runPropUpdates:_updateContext];
+    [REANode runPropUpdates:self];
   }
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
