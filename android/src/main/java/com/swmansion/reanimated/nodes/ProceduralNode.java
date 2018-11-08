@@ -7,6 +7,12 @@ import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
+/**
+ * ProceduralNode and related nodes are necessary in order to handle
+ * context switch during evaluation
+ *
+ * ProceduralNode stores all results of evaluation in each contexts
+ */
 public class ProceduralNode extends Node {
   static private class BidirectionalContextNodeMap {
     private final SparseArray<Node> mNodesByContext = new SparseArray<>();
@@ -32,6 +38,11 @@ public class ProceduralNode extends Node {
     }
   }
 
+  /**
+   * PerformNode provides the result of evaluation in new context to previous.
+   * E.g. if procedural node has been defined in global context, the evaluation of nodes are
+   * performed in new context, but the result is visible in global context because of this node
+   */
   static public class PerformNode extends Node {
     private final int mProceduralNode;
     private final int[] mArgumentsInputs;
@@ -88,9 +99,14 @@ public class ProceduralNode extends Node {
     }
   }
 
+  /**
+   * ArgumentNode has been made in order to manage input of ProceduralNode.
+   * Arguments are defined in previous context but has to be accessible in context
+   * of procedural node related
+   */
   static public class ArgumentNode extends ValueNode {
     private final BidirectionalContextNodeMap mNodeContextMap = new BidirectionalContextNodeMap();
-    private final SparseArray<EvalContext> mOldContextByValue = new SparseArray<>();
+    private final SparseArray<EvalContext> mOldContextByNode = new SparseArray<>();
 
     public ArgumentNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
       super(nodeID, config, nodesManager);
@@ -101,13 +117,13 @@ public class ProceduralNode extends Node {
     }
 
     public void dropContext(EvalContext evalContext) {
-        mOldContextByValue.remove(mNodeContextMap.getNode(evalContext).mNodeID);
+        mOldContextByNode.remove(mNodeContextMap.getNode(evalContext).mNodeID);
 
       mNodeContextMap.dropByContext(evalContext);
     }
 
     public void matchNodeWithOldContext(Node node, EvalContext evalContext) {
-      mOldContextByValue.put(node.mNodeID, evalContext);
+      mOldContextByNode.put(node.mNodeID, evalContext);
     }
 
     @Override
@@ -118,6 +134,10 @@ public class ProceduralNode extends Node {
       return mNodeContextMap.getContext(lastVisited);
     }
 
+    /**
+     * If input node is a value, there's need to allow setting value from new context.
+     * Because every ValueNodes are defined in global context, their value is set in global context
+     */
     @Override
     public void setValue(Object value, EvalContext context) {
       ((ValueNode)mNodeContextMap.getNode(context)).setValue(value, mNodesManager.globalEvalContext);
@@ -129,7 +149,7 @@ public class ProceduralNode extends Node {
         throw new IllegalArgumentException("Tried to evaluate argumentNode in global context");
       }
       Node value = mNodeContextMap.getNode(evalContext);
-      return value.doubleValue(mOldContextByValue.get(value.mNodeID));
+      return value.value(mOldContextByNode.get(value.mNodeID));
     }
   }
 
