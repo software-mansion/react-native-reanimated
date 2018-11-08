@@ -127,7 +127,7 @@ public abstract class Node {
     }
 
     // The second condition is done because of extra evaluation (dangerouslyRescheduleEvaluate)
-    // which is done on each connecting node to view. If there's a noe which should be evaluated
+    // which is done on each connecting node to view. If there's a node which should be evaluated
     // in some context, we firstly evaluate it global context, which cannot be popped because
     // it's the only one context on the stack
     if (node instanceof ProceduralNode.PerformNode && contexts.size() > 1) {

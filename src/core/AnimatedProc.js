@@ -2,7 +2,7 @@ import AnimatedNode from './AnimatedNode';
 import invariant from 'fbjs/lib/invariant';
 import AnimatedValue from './AnimatedValue';
 
-export default class AnimatedProcedural extends AnimatedNode {
+export default class AnimatedProc extends AnimatedNode {
   numberOfArgs;
   constructor(method) {
     const inputNodes = [];
@@ -19,7 +19,6 @@ export default class AnimatedProcedural extends AnimatedNode {
       [anchorNode, ...inputNodes]
     );
     this.numberOfArgs = inputNodes.length;
-    this.inputNodes = inputNodes;
   }
   invoke = (...args) => {
     invariant(
@@ -29,7 +28,7 @@ export default class AnimatedProcedural extends AnimatedNode {
     const flattenArgs = args.map(
       n => (typeof n === 'object' ? n : new AnimatedValue(n))
     );
-    return new AnimatedProceduralPerformNode(this, flattenArgs);
+    return new AnimatedProcPerform(this, flattenArgs);
   };
 }
 
@@ -39,7 +38,7 @@ class AnimatedArgument extends AnimatedNode {
   }
 }
 
-class AnimatedProceduralPerformNode extends AnimatedNode {
+class AnimatedProcPerform extends AnimatedNode {
   constructor(proceduralNode, args) {
     super(
       {

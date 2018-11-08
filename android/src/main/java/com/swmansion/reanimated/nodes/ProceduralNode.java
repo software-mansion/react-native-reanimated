@@ -17,7 +17,7 @@ public class ProceduralNode extends Node {
   static public class PerformNode extends Node {
     private final int mProceduralNode;
     private final int[] mArgumentsInputs;
-    private EvalContext mOldContext = null;
+    private EvalContext mPreviousContext = null;
     private final EvalContext mEvalContext = new EvalContext(this);
 
     public PerformNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
@@ -33,7 +33,7 @@ public class ProceduralNode extends Node {
         return;
       }
       ProceduralNode proceduralNode = mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class);
-      if (mOldContext != null) {
+      if (mPreviousContext != null) {
         for (int i = 0; i < mArgumentsInputs.length; i++) {
           if (mNodesManager.isNodeCreated(proceduralNode.mProceduralArguments[i])) {
             ArgumentNode arg = mNodesManager.findNodeById(proceduralNode.mProceduralArguments[i], ArgumentNode.class);
@@ -45,9 +45,9 @@ public class ProceduralNode extends Node {
 
     @Override
     protected Object evaluate(EvalContext previousEvalContext) {
-      if (mOldContext == null) {
+      if (mPreviousContext == null) {
         ProceduralNode proceduralNode =  mNodesManager.findNodeById(mProceduralNode, ProceduralNode.class);
-        mOldContext = previousEvalContext;
+        mPreviousContext = previousEvalContext;
         for (int i = 0; i < mArgumentsInputs.length; i++) {
           int argumentID = proceduralNode.mProceduralArguments[i];
           ArgumentNode arg = mNodesManager.findNodeById(argumentID, ArgumentNode.class);
@@ -61,7 +61,7 @@ public class ProceduralNode extends Node {
                   previousEvalContext
           );
         }
-      } else if (mOldContext != previousEvalContext) {
+      } else if (mPreviousContext != previousEvalContext) {
         throw new IllegalArgumentException("Tried to evaluate perform node in more than one contexts");
       }
 

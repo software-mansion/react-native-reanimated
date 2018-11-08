@@ -19,7 +19,7 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
-import AnimatedProceduralNode from '../core/AnimatedProcedural';
+import AnimatedProc from '../core/AnimatedProc';
 
 const MAX_STEPS_MS = 64;
 
@@ -129,7 +129,7 @@ const springInternal = (
   ]);
 };
 
-const springStatic = new AnimatedProceduralNode(springInternal);
+const springStatic = new AnimatedProc(springInternal);
 
 export default function spring(clock, state, config) {
   // conditions for stopping the spring animations

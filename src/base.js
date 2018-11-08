@@ -8,7 +8,7 @@ import AnimatedDebug from './core/AnimatedDebug';
 import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedAlways from './core/AnimatedAlways';
-import AnimatedProcedular from './core/AnimatedProcedural';
+import AnimatedProc from './core/AnimatedProc';
 import AnimatedConcat from './core/AnimatedConcat';
 
 import { adapt } from './utils';
@@ -108,5 +108,5 @@ export const event = function(argMapping, config) {
 };
 
 export const proc = function(fun) {
-  return new AnimatedProcedular(fun).invoke;
+  return new AnimatedProc(fun).invoke;
 };
