@@ -7,12 +7,30 @@ import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 public class ProceduralNode extends Node {
+  static private class BidirectionalContextNodeMap {
+    private final SparseArray<Node> mNodesByContext = new SparseArray<>();
+    private final SparseArray<EvalContext> mContextsByNode = new SparseArray<>();
+
+    private EvalContext getContext(Node node) {
+      return mContextsByNode.get(node.mNodeID);
+    }
+
+    private Node getNode(EvalContext context) {
+      return mNodesByContext.get(context.contextID);
+    }
+
+    private void dropByContext(EvalContext context) {
+      Node relatedNode = mNodesByContext.get(context.contextID);
+      mContextsByNode.remove(relatedNode.mNodeID);
+      mNodesByContext.remove(context.contextID);
+    }
+
+    private void put(EvalContext context, Node node) {
+      mNodesByContext.put(context.contextID, node);
+      mContextsByNode.put(node.mNodeID, context);
+    }
+  }
 
   static public class PerformNode extends Node {
     private final int mProceduralNode;
@@ -71,8 +89,7 @@ public class ProceduralNode extends Node {
   }
 
   static public class ArgumentNode extends ValueNode {
-    private final SparseArray<Node> mValuesByContext = new SparseArray<>();
-    private final SparseArray<EvalContext> mContextsByValue = new SparseArray<>();
+    private final BidirectionalContextNodeMap mNodeContextMap = new BidirectionalContextNodeMap();
     private final SparseArray<EvalContext> mOldContextByValue = new SparseArray<>();
 
     public ArgumentNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
@@ -80,15 +97,13 @@ public class ProceduralNode extends Node {
     }
 
     public void matchContextWithNode(EvalContext context, Node node) {
-      mValuesByContext.put(context.contextID, node);
-      mContextsByValue.put(node.mNodeID, context);
+      mNodeContextMap.put(context, node);
     }
 
     public void dropContext(EvalContext evalContext) {
-      Node relatedNode = mValuesByContext.get(evalContext.contextID);
-      mContextsByValue.remove(relatedNode.mNodeID);
-      mValuesByContext.remove(evalContext.contextID);
-      mOldContextByValue.remove(relatedNode.mNodeID);
+        mOldContextByValue.remove(mNodeContextMap.getNode(evalContext).mNodeID);
+
+      mNodeContextMap.dropByContext(evalContext);
     }
 
     public void matchNodeWithOldContext(Node node, EvalContext evalContext) {
@@ -100,12 +115,12 @@ public class ProceduralNode extends Node {
       if (lastVisited == null) {
         return evalContext;
       }
-      return mContextsByValue.get(lastVisited.mNodeID);
+      return mNodeContextMap.getContext(lastVisited);
     }
 
     @Override
     public void setValue(Object value, EvalContext context) {
-      ((ValueNode)mValuesByContext.get(context.contextID)).setValue(value, mNodesManager.globalEvalContext);
+      ((ValueNode)mNodeContextMap.getNode(context)).setValue(value, mNodesManager.globalEvalContext);
     }
 
     @Override
@@ -113,7 +128,7 @@ public class ProceduralNode extends Node {
       if (evalContext == mNodesManager.globalEvalContext) {
         throw new IllegalArgumentException("Tried to evaluate argumentNode in global context");
       }
-      Node value = mValuesByContext.get(evalContext.contextID);
+      Node value = mNodeContextMap.getNode(evalContext);
       return value.doubleValue(mOldContextByValue.get(value.mNodeID));
     }
   }
