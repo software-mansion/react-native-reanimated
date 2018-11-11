@@ -339,7 +339,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 sin(node)
 ```
 
-Returns a sine of the value of the given node.
+Returns a sine of the value in radians of the given node.
 
 ---
 ### `cos`
@@ -348,7 +348,7 @@ Returns a sine of the value of the given node.
 cos(node)
 ```
 
-Returns a cosine of the value of the given node.
+Returns a cosine of the value in radians of the given node
 
 ---
 ### `exp`
