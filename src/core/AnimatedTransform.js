@@ -1,4 +1,5 @@
 import AnimatedNode from './AnimatedNode';
+import animatedArrayFromNode from './AnimatedArrayFrom';
 
 import deepEqual from 'fbjs/lib/areEqual';
 
@@ -23,6 +24,21 @@ function sanitizeTransform(inputTransform) {
   return outputTransform;
 }
 
+function mapMatrixArrays(inputTransform) {
+  return inputTransform.map(transform => {
+    const obj = {};
+    for (const key in transform) {
+      const value = transform[key];
+
+      obj[key] =
+        key === 'matrix' && Array.isArray(value)
+          ? animatedArrayFromNode(value)
+          : value;
+    }
+    return obj;
+  });
+}
+
 function extractAnimatedParentNodes(transform) {
   const parents = [];
   transform.forEach(transform => {
@@ -37,11 +53,12 @@ function extractAnimatedParentNodes(transform) {
 }
 
 export function createOrReuseTransformNode(transform, oldNode) {
-  const config = sanitizeTransform(transform);
+  const mappedTransform = mapMatrixArrays(transform);
+  const config = sanitizeTransform(mappedTransform);
   if (oldNode && deepEqual(config, oldNode._config)) {
     return oldNode;
   }
-  return new AnimatedTransform(transform, config);
+  return new AnimatedTransform(mappedTransform, config);
 }
 
 class AnimatedTransform extends AnimatedNode {
