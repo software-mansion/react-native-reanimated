@@ -1,5 +1,3 @@
-import invariant from 'fbjs/lib/invariant';
-
 import AnimatedCond from './core/AnimatedCond';
 import AnimatedSet from './core/AnimatedSet';
 import AnimatedOperator from './core/AnimatedOperator';
@@ -11,7 +9,7 @@ import AnimatedCall from './core/AnimatedCall';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedAlways from './core/AnimatedAlways';
 import AnimatedConcat from './core/AnimatedConcat';
-import AnimatedArrayFrom from './core/AnimatedArrayFrom';
+import animatedArrayFrom from './core/AnimatedArrayFrom';
 
 import { adapt } from './utils';
 
@@ -97,13 +95,7 @@ export const concat = function(...args) {
   return new AnimatedConcat(args.map(adapt));
 };
 
-export const arrayFrom = function(...args) {
-  invariant(
-    args.length === 1 && Array.isArray(args[0]),
-    'node arrayFrom expect single array as argument'
-  );
-  return new AnimatedArrayFrom(args[0].map(adapt));
-};
+export const arrayFrom = animatedArrayFrom;
 
 export const stopClock = function(clock) {
   return new AnimatedStopClock(clock);
