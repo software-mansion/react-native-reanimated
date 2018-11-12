@@ -5,19 +5,19 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-public class ArrayNode extends Node {
+public class ArrayFromNode extends Node {
 
-    private final int[] mArray;
+    private final int[] mArrayFrom;
 
-    public ArrayNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
+    public ArrayFromNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
-        mArray = Utils.processIntArray(config.getArray("array"));
+        mArrayFrom = Utils.processIntArray(config.getArray("arrayFrom"));
     }
 
     @Override
     protected Object evaluate() {
         JavaOnlyArray res = new JavaOnlyArray();
-        for (int el: mArray) {
+        for (int el: mArrayFrom) {
             res.pushDouble((Double) mNodesManager.findNodeById(el, Node.class).value());
         }
         return res;

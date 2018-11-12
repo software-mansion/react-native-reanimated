@@ -195,6 +195,9 @@ declare module 'react-native-reanimated' {
     export function block<T>(
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
+    export function arrayFrom<T>(
+      items: ReadonlyArray<Adaptable<T>>,
+    ): ReadonlyArray<T | AnimatedNode<T>>;
     export function call<T>(
       args: ReadonlyArray<T | AnimatedNode<T>>,
       callback: (args: ReadonlyArray<T>) => void,

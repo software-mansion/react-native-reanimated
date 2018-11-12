@@ -15,7 +15,7 @@ import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 import Imperative from './imperative';
 import PanRotateAndZoom from './PanRotateAndZoom';
-import Array from './array';
+import ArrayFrom from './arrayFrom';
 
 import InteractablePlayground, {
   SCREENS as INTERACTABLE_SCREENS,
@@ -48,7 +48,10 @@ const SCREENS = {
     screen: PanRotateAndZoom,
     title: 'Pan, rotate and zoom (via native event function)',
   },
-  array: { screen: Array, title: 'matrix transform with array node' },
+  arrayFrom: {
+    screen: ArrayFrom,
+    title: 'matrix transform with arrayFrom node',
+  },
 };
 
 class MainScreen extends React.Component {

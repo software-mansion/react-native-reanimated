@@ -37,7 +37,7 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-import com.swmansion.reanimated.nodes.ArrayNode;
+import com.swmansion.reanimated.nodes.ArrayFromNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -265,8 +265,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
       node = new ConcatNode(nodeID, config, this);
-    } else if ("array".equals(type)) {
-      node = new ArrayNode(nodeID, config, this);
+    } else if ("arrayFrom".equals(type)) {
+      node = new ArrayFromNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }

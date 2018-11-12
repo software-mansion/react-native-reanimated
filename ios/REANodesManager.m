@@ -19,7 +19,7 @@
 #import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
 #import "Nodes/REAConcatNode.h"
-#import "Nodes/REAArrayNode.h"
+#import "Nodes/REAArrayFromNode.h"
 #import "REAModule.h"
 
 @interface RCTUIManager ()
@@ -229,7 +229,7 @@
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
             @"concat": [REAConcatNode class],
-            @"array": [REAArrayNode class],
+            @"arrayFrom": [REAArrayFromNode class],
 //            @"listener": nil,
             };
   });

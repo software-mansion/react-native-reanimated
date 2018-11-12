@@ -4,7 +4,7 @@ import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
 const {
-  array,
+  arrayFrom,
   Clock,
   clockRunning,
   cond,
@@ -119,12 +119,12 @@ export default class Example extends Component {
                 transform: [
                   {
                     // prettier-ignore
-                    matrix: array(
+                    matrix: arrayFrom([
                       1, 0, 0, this._x,
                       0, 1, 0, this._y,
                       0, 0, 1, 0,
                       0, 0, 0, 1,
-                    )
+                    ])
                   },
                 ],
               },
