@@ -15,6 +15,7 @@ import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 import Imperative from './imperative';
 import PanRotateAndZoom from './PanRotateAndZoom';
+import Printing from './printing';
 
 import InteractablePlayground, {
   SCREENS as INTERACTABLE_SCREENS,
@@ -46,6 +47,10 @@ const SCREENS = {
   panRotateAndZoom: {
     screen: PanRotateAndZoom,
     title: 'Pan, rotate and zoom (via native event function)',
+  },
+  printing: {
+    screen: Printing,
+    title: 'Animated Value printing for debugging',
   },
 };
 
