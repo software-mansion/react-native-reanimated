@@ -89,12 +89,32 @@ public class PropsNode extends Node implements FinalNode {
         }
       } else {
         String key = entry.getKey();
+        Object value = node.value();
+        WritableMap dest;
+
         if (mNodesManager.uiProps.contains(key)) {
           hasUIProps = true;
-          mPropMap.putDouble(key, node.doubleValue());
-        } else {
+          dest = mPropMap;
+        } else if (mNodesManager.nativeProps.contains(key)){
           hasNativeProps = true;
-          nativeProps.putDouble(key, node.doubleValue());
+          dest = nativeProps;
+        } else {
+          hasJSProps = true;
+          dest = jsProps;
+        }
+
+        if (value == null) {
+          dest.putNull(key);
+        } else if (value instanceof Number) {
+          dest.putDouble(key, (Double) value);
+        } else if (value instanceof String) {
+          dest.putString(key, (String) value);
+        } else if (value instanceof Boolean) {
+          dest.putBoolean(key, (Boolean) value);
+        } else if (value.getClass().isArray()) {
+          dest.putArray(key, (WritableArray) value);
+        } else {
+          throw new IllegalArgumentException("Unexpected type " + value.getClass().getName() + " inside props node");
         }
       }
     }
