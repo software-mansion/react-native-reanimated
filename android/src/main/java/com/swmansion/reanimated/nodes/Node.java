@@ -55,9 +55,9 @@ public abstract class Node {
     } else if (value instanceof Double) {
       return (Double) value;
     } else if (value instanceof Number) {
-      return Double.valueOf(((Number) value).doubleValue());
+      return ((Number) value).doubleValue();
     } else if (value instanceof Boolean) {
-      return ((Boolean) value).booleanValue() ? ONE : ZERO;
+      return (Boolean) value ? ONE : ZERO;
     }
     throw new IllegalStateException("Value of node " + this + " cannot be cast to a number");
   }
@@ -85,9 +85,7 @@ public abstract class Node {
   }
 
   protected void markUpdated(EvalContext context) {
-    // It's unnecessary to mark as updated nodes in non-global context, because each change
-    // of node -in  non-global context has to be triggered in
-    // global context (e.g. by change of value or clock)
+    // It's only relevant to mark nodes as updated in global context
     if (context != mNodesManager.globalEvalContext) {
       return;
     }

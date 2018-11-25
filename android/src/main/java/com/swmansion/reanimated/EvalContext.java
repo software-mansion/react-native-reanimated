@@ -6,6 +6,7 @@ import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ProceduralNode;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * EvalContext is a context of evaluation which could be used in order to
@@ -22,7 +23,7 @@ public class EvalContext {
    */
   public final SparseArray<Object> memoizedValues = new SparseArray<>();
   /**
-   * updatedNodes is a list of updated nodes during the last evaluation
+   * lastLoopsIDs are ids of last loop when given node has been evaluated.
    */
   public final SparseArray<Long> lastLoopsIDs = new SparseArray<>();
   /**
@@ -30,6 +31,7 @@ public class EvalContext {
    * in order to switch evaluation context
    */
   public final ProceduralNode.PerformNode root;
+  public Set<Node> visitedNodes;
   public EvalContext(ProceduralNode.PerformNode root) {
     this.root = root;
   }
