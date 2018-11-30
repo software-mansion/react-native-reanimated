@@ -21,16 +21,6 @@
   return self;
 }
 
-- (NSMutableArray *)getChildrenInContext:(REAEvalContext *) evalContext {
-  if (evalContext.parent != NULL) {
-    NSMutableArray *result = [NSMutableArray init];
-    [result addObject:evalContext.parent];
-    return result;
-    
-  }
-  return self.childNodes;
-}
-
 - (id)evaluate:(REAEvalContext *)evalContext;
 {
   return [[self.nodesManager findNodeByID:_resultNode] value:evalContext];

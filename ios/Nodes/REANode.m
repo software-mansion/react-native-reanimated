@@ -74,10 +74,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 }
 
--(NSMutableArray *)getChildrenInContext:(REAEvalContext *) evalContext {
-  return _childNodes;
-}
-
 - (void)markUpdated:(REAEvalContext *)evalContext;
 {
   [evalContext.updatedNodes addObject:self];
@@ -105,19 +101,21 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 }
 
 + (void)findAndUpdateNodes:(nonnull REANode *)node
-            withVisitedSet:(NSMutableSet<REANode *> *)visitedNodes
+            withVisitedSet:(NSMutableDictionary<NSNumber*, NSMutableSet<REANode*>*> *)visitedNodes
             withFinalNodes:(NSMutableArray<id<REAFinalNode>> *)finalNodes
         withStackedContext:(NSMutableArray<REAEvalContext *> *)contexts
        withLastVisitedNode:(REANode *)lastVisited
 {
-  if ([visitedNodes containsObject:node]) {
-    return;
-  } else {
-    [visitedNodes addObject:node];
-  }
-  
   REAEvalContext *currentContext = contexts.lastObject;
-  NSMutableArray *__nullable children = [node getChildrenInContext:currentContext];
+  if (visitedNodes[currentContext.contextID]) {
+    if ([visitedNodes[currentContext.contextID] containsObject:node]) {
+      return;
+    }
+  } else {
+    visitedNodes[currentContext.contextID] = [NSMutableSet new];
+  }
+  [visitedNodes[currentContext.contextID] addObject:node];
+  NSMutableArray* children = node.childNodes;
   REAEvalContext *newContext = [node switchContextWhileUpdatingIfNeeded:currentContext withLastVisitedNode:lastVisited];
   BOOL pushedNewContext = false;
   REAEvalContext *__nullable contextPopped = NULL;
@@ -131,8 +129,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     contextPopped = [contexts lastObject];
     [contexts removeLastObject];
   }
-  
-  if (children) {
+  if ([node isKindOfClass:[REAProceduralNode class]] && currentContext.parent) {
+    [self findAndUpdateNodes:currentContext.parent withVisitedSet:visitedNodes withFinalNodes:finalNodes withStackedContext:contexts withLastVisitedNode:node];
+  } else if (children) {
     for (REANode *child in children) {
       [self findAndUpdateNodes:child withVisitedSet:visitedNodes withFinalNodes:finalNodes withStackedContext:contexts withLastVisitedNode:node];
     }
@@ -153,7 +152,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 + (void)runPropUpdates:(REANodesManager *)nodesManager
 {
-  NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
+  NSMutableDictionary<NSNumber*, NSMutableSet<REANode*>*> *visitedNodes = [NSMutableDictionary new];
   NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
   NSMutableArray<REAEvalContext *> *contexts = [NSMutableArray new];
   [contexts addObject:nodesManager.globalEvalContext];
