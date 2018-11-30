@@ -109,7 +109,7 @@ public class Utils {
   }
 
   /**
-   * Trigger evaluation algorithm which calculate nodes
+   * Triggers an evaluation algorithm which calculate nodes
    * which has to be updated in current animation frame
    * @param nodesManager NodesManager which provides main context of evaluation
    */
