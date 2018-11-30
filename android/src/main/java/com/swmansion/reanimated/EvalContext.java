@@ -5,7 +5,6 @@ import android.util.SparseArray;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ProceduralNode;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 /**
@@ -30,9 +29,9 @@ public class EvalContext {
    * Root is one of the children of ProceduralNode which is used
    * in order to switch evaluation context
    */
-  public final ProceduralNode.PerformNode root;
+  public final ProceduralNode.PerformNode parent;
   public Set<Node> visitedNodes;
-  public EvalContext(ProceduralNode.PerformNode root) {
-    this.root = root;
+  public EvalContext(ProceduralNode.PerformNode parent) {
+    this.parent = parent;
   }
 }

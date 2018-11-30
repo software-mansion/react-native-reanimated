@@ -4,6 +4,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.EvalContext;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.Utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,7 +24,7 @@ public abstract class Node {
 
   private long mLastLoopID = -1;
   private @Nullable Object mMemoizedValue;
-  protected @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
+  public @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mNodeID = nodeID;
@@ -104,75 +105,4 @@ public abstract class Node {
     markUpdated(context);
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes, Stack<EvalContext> contexts, Node lastVisited) {
-    if (visitedNodes.contains(node)) {
-      return;
-    }
-    visitedNodes.add(node);
-
-    EvalContext currentContext = contexts.peek();
-    List<Node> children = node.mChildren;
-    EvalContext newContext = node.contextForUpdatingChildren(currentContext, lastVisited);
-    boolean pushedNewContext = false;
-    EvalContext poppedContext = null;
-
-    if (newContext != currentContext && newContext != null) {
-      contexts.push(newContext);
-      pushedNewContext = true;
-    }
-
-    // The second condition is done because of extra evaluation (dangerouslyRescheduleEvaluate)
-    // which is done on each connecting node to view. If there's a node which should be evaluated
-    // in some context, we firstly evaluate it global context, which cannot be popped because
-    // it's the only one context on the stack
-    if (node instanceof ProceduralNode.PerformNode && contexts.size() > 1) {
-      poppedContext = contexts.pop();
-    }
-
-    if (node instanceof ProceduralNode && currentContext.root != null) {
-      // If evaluation algorithm encounter Procedural node, there's no need tio
-      // evaluate each children, because only one on them is a perform node related to context.
-      // Therefore it's being extracted from context if context is not global
-      // (if context is global,  there's no root set and condition above is false)
-      findAndUpdateNodes(currentContext.root, visitedNodes, finalNodes, contexts, node);
-    } else if (children != null) {
-      for (Node child : children) {
-        findAndUpdateNodes(child, visitedNodes, finalNodes, contexts, node);
-      }
-    }
-
-    if (node instanceof FinalNode) {
-      finalNodes.push((FinalNode) node);
-    }
-
-    if (pushedNewContext) {
-      contexts.pop();
-    }
-
-    if (poppedContext != null) {
-      contexts.push(poppedContext);
-    }
-  }
-
-  public static void runUpdates(NodesManager nodesManager) {
-    UiThreadUtil.assertOnUiThread();
-    ArrayList<Node> updatedNodes = nodesManager.updatedNodes;
-    Set<Node> visitedNodes = new HashSet<>();
-    Stack<FinalNode> finalNodes = new Stack<>();
-    Stack<EvalContext> contexts = new Stack<>();
-    contexts.push(nodesManager.globalEvalContext);
-    for (int i = 0; i < updatedNodes.size(); i++) {
-      findAndUpdateNodes(updatedNodes.get(i), visitedNodes, finalNodes, contexts, null);
-      if (contexts.size() != 1) {
-        throw new IllegalArgumentException("Stacking of contexts was not performed correctly");
-      }
-      if (i == updatedNodes.size() - 1) {
-        while (!finalNodes.isEmpty()) {
-          finalNodes.pop().update();
-        }
-      }
-    }
-    updatedNodes.clear();
-    nodesManager.updateLoopID++;
-  }
 }

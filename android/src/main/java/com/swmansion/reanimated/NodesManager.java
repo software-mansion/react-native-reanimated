@@ -155,7 +155,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      Node.runUpdates(this);
+      Utils.runUpdates(this);
     }
 
     if (!mOperationsInBatch.isEmpty()) {
