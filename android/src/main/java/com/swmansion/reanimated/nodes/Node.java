@@ -104,5 +104,4 @@ public abstract class Node {
     context.memoizedValues.put(mNodeID, value);
     markUpdated(context);
   }
-
 }
