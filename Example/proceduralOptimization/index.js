@@ -6,11 +6,16 @@ import Animated, { Easing } from 'react-native-reanimated';
 const {
   set,
   cond,
+  sub,
+  pow,
   add,
   multiply,
   startClock,
   stopClock,
   debug,
+  sqrt,
+  sin,
+  cos,
   clockRunning,
   block,
   timing,
@@ -51,92 +56,77 @@ function runTiming(clock, value, dest, time) {
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this.reverse = proc(x => multiply(x, -1));
-    this.add50 = proc(x => add(x, 50));
-    this.transX = runTiming(new Clock(), new Value(0), 120, 5000);
+    const trans = runTiming(new Clock(), new Value(0), 120, 5000);
+    const xCircle = proc((progress, speed, radius) =>
+      multiply(add(sin(multiply(progress, speed)), 1), radius)
+    );
+    const yCircle = proc((progress, speed, radius) =>
+      multiply(add(cos(multiply(progress, speed)), 1), radius)
+    );
+    const asCircle = (progress, speed, radius) => [
+      xCircle(progress, speed, radius),
+      yCircle(progress, speed, radius),
+    ];
+    const [XA, YA] = asCircle(trans, 2, 10);
+    this.XA = XA;
+    this.YA = YA;
+    const [XB, YB] = asCircle(trans, 1.2, 20);
+    this.XB = XB;
+    this.YB = YB;
+    const [XC, YC] = asCircle(trans, 0.3, 40);
+    this.XC = XC;
+    this.YC = YC;
   }
   render() {
     return (
       <ScrollView contentContainerStyle={styles.container}>
-        <Text> timing to 120 </Text>
-        <Animated.View
-          style={[
-            styles.box,
-            {
-              transform: [{ translateX: this.transX }],
-            },
-          ]}
-        />
-        <Text> timing and add 50 </Text>
-        <Animated.View
-          style={[
-            styles.box,
-            {
-              transform: [{ translateX: this.add50(this.transX) }],
-            },
-          ]}
-        />
-        <Text> timing and reverse </Text>
-        <Animated.View
-          style={[
-            styles.box,
-            {
-              transform: [{ translateX: this.reverse(this.transX) }],
-            },
-          ]}
-        />
-        <Text> timing, reverse and add 50 </Text>
         <Animated.View
           style={[
             styles.box,
             {
               transform: [
                 {
-                  translateX: this.add50(this.reverse(this.transX)),
+                  translateX: this.XA,
+                  translateY: this.YA,
                 },
               ],
             },
           ]}
         />
-        <Text> timing, add 50 and reverse </Text>
         <Animated.View
           style={[
             styles.box,
             {
               transform: [
                 {
-                  translateX: this.reverse(this.add50(this.transX)),
+                  translateX: this.XB,
+                  translateY: this.YB,
                 },
               ],
             },
           ]}
         />
-        <Text> timing, reverse, add 50 and reverse </Text>
         <Animated.View
           style={[
             styles.box,
             {
               transform: [
                 {
-                  translateX: this.reverse(
-                    this.add50(this.reverse(this.transX))
-                  ),
+                  translateX: this.XC,
+                  translateY: this.YC,
                 },
               ],
             },
           ]}
         />
-
-        <Text> timing, reverse, add 50, reverse and add 50 (no-op) </Text>
         <Animated.View
           style={[
             styles.box,
             {
               transform: [
                 {
-                  translateX: this.add50(
-                    this.reverse(this.add50(this.reverse(this.transX)))
-                  ),
+                  translateX: add(this.XC, this.XB, this.XC),
+                  translateY: add(this.YC, this.YB, this.Y),
                 },
               ],
             },
@@ -152,16 +142,14 @@ const BOX_SIZE = 20;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
   box: {
     width: BOX_SIZE,
     height: BOX_SIZE,
     borderColor: '#F5FCFF',
-    alignSelf: 'center',
     backgroundColor: 'plum',
     margin: BOX_SIZE / 2,
+    borderRadius: BOX_SIZE / 2,
   },
 });
