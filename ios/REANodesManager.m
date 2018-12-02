@@ -21,6 +21,7 @@
 #import "Nodes/REAProceduralNode.h"
 #import "Nodes/REAConcatNode.h"
 #import "REAModule.h"
+#import "REAFrameEvaluation.h"
 
 @interface RCTUIManager ()
 
@@ -172,7 +173,8 @@
 - (void)performOperations
 {
   if (_wantRunUpdates) {
-    [REANode runPropUpdates:self];
+    REAFrameEvaluation *frameEvaluation = [[REAFrameEvaluation alloc] initWithNodesManager:self];
+    [frameEvaluation runPropUpdates];
   }
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;

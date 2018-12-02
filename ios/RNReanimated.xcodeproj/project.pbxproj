@@ -25,6 +25,7 @@
 		440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2B209062F100EEC73A /* REANodesManager.m */; };
 		660A44292119B821006BFD5E /* REAConcatNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 660A44282119B820006BFD5E /* REAConcatNode.m */; };
 		66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 66240C6820C68DEA00648F55 /* REAAlwaysNode.m */; };
+		665C6D3721B34FBE00E1DD2E /* REAFrameEvaluation.m in Sources */ = {isa = PBXBuildFile; fileRef = 665C6D3521B34FBE00E1DD2E /* REAFrameEvaluation.m */; };
 		667B710321216E760025ED30 /* REAProceduralNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 667B710221216E760025ED30 /* REAProceduralNode.m */; };
 		667B71092121A3690025ED30 /* REAEvalContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 667B71082121A3680025ED30 /* REAEvalContext.m */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,8 @@
 		660A442A2119B83E006BFD5E /* REAConcatNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAConcatNode.h; sourceTree = "<group>"; };
 		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
 		66240C6820C68DEA00648F55 /* REAAlwaysNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAAlwaysNode.m; sourceTree = "<group>"; };
+		665C6D3521B34FBE00E1DD2E /* REAFrameEvaluation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAFrameEvaluation.m; sourceTree = "<group>"; };
+		665C6D3621B34FBE00E1DD2E /* REAFrameEvaluation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAFrameEvaluation.h; sourceTree = "<group>"; };
 		667B710221216E760025ED30 /* REAProceduralNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REAProceduralNode.m; sourceTree = "<group>"; };
 		667B710421216E990025ED30 /* REAProceduralNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAProceduralNode.h; sourceTree = "<group>"; };
 		667B710521217E930025ED30 /* REAEvalContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAEvalContext.h; sourceTree = "<group>"; };
@@ -148,6 +151,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				665C6D3621B34FBE00E1DD2E /* REAFrameEvaluation.h */,
+				665C6D3521B34FBE00E1DD2E /* REAFrameEvaluation.m */,
 				667B71082121A3680025ED30 /* REAEvalContext.m */,
 				667B710521217E930025ED30 /* REAEvalContext.h */,
 				440FEC0C209062F100EEC73A /* Nodes */,
@@ -230,6 +235,7 @@
 				66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */,
 				440FEC2F209062F100EEC73A /* REAClockNodes.m in Sources */,
 				660A44292119B821006BFD5E /* REAConcatNode.m in Sources */,
+				665C6D3721B34FBE00E1DD2E /* REAFrameEvaluation.m in Sources */,
 				440FEC38209062F100EEC73A /* REAOperatorNode.m in Sources */,
 				440FEC34209062F100EEC73A /* REANode.m in Sources */,
 				440FEC30209062F100EEC73A /* REAValueNode.m in Sources */,

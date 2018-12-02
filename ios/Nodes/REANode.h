@@ -15,8 +15,6 @@ typedef NSNumber* REANodeID;
 
 @interface REANode : NSObject
 
-+ (void)runPropUpdates:(nonnull REANodesManager *)nodesManager;
-
 - (instancetype)initWithID:(REANodeID)nodeID
                     config:(NSDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
 
