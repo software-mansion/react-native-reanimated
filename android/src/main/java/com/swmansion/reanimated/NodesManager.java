@@ -284,6 +284,8 @@ public class NodesManager implements EventDispatcherListener {
   public void dropNode(int tag) {
     Node node = findNodeById(tag, Node.class);
     if (node instanceof ProceduralNode.PerformNode) {
+      // This method is required for preventing memory leaks
+      // because each context's context is stored in related ProceduralNode
       ((ProceduralNode.PerformNode) node).onDrop();
     }
     mAnimatedNodes.remove(tag);
