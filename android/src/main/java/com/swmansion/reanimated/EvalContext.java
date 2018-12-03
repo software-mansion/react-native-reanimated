@@ -30,7 +30,6 @@ public class EvalContext {
    * to switch evaluation context
    */
   public final ProceduralNode.PerformNode parent;
-  public Set<Node> visitedNodes;
   public EvalContext(ProceduralNode.PerformNode parent) {
     this.parent = parent;
   }
