@@ -1,6 +1,5 @@
 import AnimatedNode from './AnimatedNode';
 import invariant from 'fbjs/lib/invariant';
-import AnimatedValue from './AnimatedValue';
 import { adapt } from '../utils';
 
 export default class AnimatedProceduralNode extends AnimatedNode {
@@ -26,9 +25,7 @@ export default class AnimatedProceduralNode extends AnimatedNode {
       args.length === this.numberOfArgs,
       'number of arguments to reusable node does not match'
     );
-    const flattenArgs = args
-      .map(a => adapt(a))
-      .map(n => (typeof n === 'object' ? n : new AnimatedValue(n)));
+    const flattenArgs = args.map(a => adapt(a));
     return new AnimatedProcPerform(this, flattenArgs);
   };
 }
