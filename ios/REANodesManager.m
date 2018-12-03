@@ -173,8 +173,7 @@
 - (void)performOperations
 {
   if (_wantRunUpdates) {
-    REAFrameEvaluation *frameEvaluation = [[REAFrameEvaluation alloc] initWithNodesManager:self];
-    [frameEvaluation runPropUpdates];
+    [[[REAFrameEvaluation alloc] initWithNodesManager:self] runPropUpdates];
   }
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
