@@ -33,7 +33,8 @@
   }
   [_visitedNodes[currentContext.contextID] addObject:node];
   NSMutableArray* children = node.childNodes;
-  REAEvalContext *newContext = [node switchContextWhileUpdatingIfNeeded:currentContext withLastVisitedNode:lastVisited];
+  REAEvalContext *newContext = [node isKindOfClass:[REAArgumentNode class]] ?
+    [(REAArgumentNode *) node contextForUpdatingChildren:currentContext withLastVisitedNode:lastVisited] : currentContext;
   BOOL pushedNewContext = false;
   REAEvalContext *__nullable contextPopped = NULL;
   

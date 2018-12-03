@@ -63,7 +63,11 @@ public class FrameEvaluation {
     visitedNodes.get(currentContext.contextID).add(node);
 
     List<Node> children = node.mChildren;
-    EvalContext newContext = node.contextForUpdatingChildren(currentContext, lastVisited);
+    EvalContext newContext =
+            node instanceof ProceduralNode.ArgumentNode ?
+                    ((ProceduralNode.ArgumentNode)node)
+                            .contextForUpdatingChildren(currentContext, lastVisited)
+                    :currentContext;
     boolean pushedNewContext = false;
     EvalContext poppedContext = null;
 

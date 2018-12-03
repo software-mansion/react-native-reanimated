@@ -80,12 +80,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   [self.nodesManager postRunUpdatesAfterAnimation];
 }
 
-- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
-                                   withLastVisitedNode:(REANode *) lastVisited
-{
-  return evalContext;
-}
-
 - (void)onDrop {
   // no-op
 }

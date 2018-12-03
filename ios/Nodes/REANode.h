@@ -26,8 +26,6 @@ typedef NSNumber* REANodeID;
 - (_Nullable id)value:(REAEvalContext *)evalContext;
 - (void)markUpdated:(REAEvalContext *)evalContext;
 - (void)onDrop;
-- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
-                                   withLastVisitedNode:(REANode *) lastVisited;
 
 - (void)addChild:(REANode *)child NS_REQUIRES_SUPER;
 - (void)removeChild:(REANode *)child NS_REQUIRES_SUPER;

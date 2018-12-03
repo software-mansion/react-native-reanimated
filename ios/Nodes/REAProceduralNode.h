@@ -20,5 +20,7 @@
 - (void)matchNodeWithOldContext:(REANode *) node
                     withContext:(REAEvalContext *) evalContext;
 - (void)dropContext:(REAEvalContext *)evalContext;
+- (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)evalContext
+                           withLastVisitedNode:(REANode *) lastVisited;
 
 @end

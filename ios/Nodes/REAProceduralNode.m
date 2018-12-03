@@ -118,11 +118,11 @@
   REANode *relatedNode = [_valuesByContext objectForKey:evalContext.contextID];
   [_contextsByValue removeObjectForKey:relatedNode.nodeID];
   [_valuesByContext removeObjectForKey:evalContext.contextID];
-  [_valuesByContext removeObjectForKey:relatedNode.nodeID];
+  [_oldContextsByValue removeObjectForKey:relatedNode.nodeID];
 }
 
-- (REAEvalContext *)switchContextWhileUpdatingIfNeeded:(REAEvalContext *)evalContext
-                                   withLastVisitedNode:(REANode *) lastVisited
+- (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)evalContext
+                           withLastVisitedNode:(REANode *) lastVisited
 {
   if (lastVisited == NULL) {
     return evalContext;

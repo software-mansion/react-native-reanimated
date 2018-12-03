@@ -129,7 +129,6 @@ public class ProceduralNode extends Node {
       mOldContextByNode.put(node.mNodeID, evalContext);
     }
 
-    @Override
     public EvalContext contextForUpdatingChildren(EvalContext evalContext, Node lastVisited) {
       if (lastVisited == null) {
         return evalContext;

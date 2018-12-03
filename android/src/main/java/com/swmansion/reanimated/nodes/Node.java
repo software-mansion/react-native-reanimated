@@ -81,10 +81,6 @@ public abstract class Node {
     // no-op
   }
 
-  public EvalContext contextForUpdatingChildren(EvalContext context, Node lastVisited) {
-    return context;
-  }
-
   protected void markUpdated(EvalContext context) {
     // It's only relevant to mark nodes as updated in global context
     // because every change in non-global context is a result of some
