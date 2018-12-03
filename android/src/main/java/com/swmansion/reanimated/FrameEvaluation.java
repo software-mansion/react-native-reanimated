@@ -23,8 +23,8 @@ public class FrameEvaluation {
   }
 
   /**
-   * Visited nodes stores information about node which has been traversed
-   * by the BFS-search algorithm
+   * visitedNodes' set stores information about node which has been traversed
+   * by the BFS-search algorithm in given context
    */
   private SparseArray<Set<Node>> visitedNodes = new SparseArray<>();
   /**
