@@ -137,7 +137,7 @@ declare module 'react-native-reanimated' {
       exec?: AnimatedNode<number>
       children?: () => AnimatedNode<number>
     };
-    
+
     // components
     export const View: ComponentClass<AnimateProps<ViewStyle, ViewProps>>;
     export const Text: ComponentClass<AnimateProps<TextStyle, TextProps>>;
@@ -192,6 +192,9 @@ declare module 'react-native-reanimated' {
       ifNode: Adaptable<number>,
       elseNode?: Adaptable<number>,
     ): AnimatedNode<number>;
+    export function proc<T>(
+      fun: (args: ReadonlyArray<Adaptable<any>>) => any):
+        (args: ReadonlyArray<AnimatedNode<any>>) => any;
     export function block<T>(
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
