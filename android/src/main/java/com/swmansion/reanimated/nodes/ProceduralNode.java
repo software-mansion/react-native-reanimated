@@ -8,7 +8,7 @@ import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
 /**
- * ProceduralNode and related nodes are necessary in order to handle
+ * ProceduralNode and related nodes have been made for handling
  * contexts' switch during an evaluation.
  *
  * ProceduralNode stores all results of evaluation in each contexts.

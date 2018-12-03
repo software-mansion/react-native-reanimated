@@ -14,6 +14,9 @@ import java.util.Set;
  * member of NodesManager.
  */
 public class EvalContext {
+  /**
+   * Each context is identified via unique id
+   */
   private static int nextContextID = 0;
   public final int contextID = EvalContext.nextContextID++;
   /**

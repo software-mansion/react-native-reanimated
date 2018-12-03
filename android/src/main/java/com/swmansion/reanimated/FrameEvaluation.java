@@ -24,12 +24,12 @@ public class FrameEvaluation {
 
   /**
    * visitedNodes' set stores information about node which has been traversed
-   * by the BFS-search algorithm in given context
+   * by the BFS-search algorithm in given context.
    */
   private SparseArray<Set<Node>> visitedNodes = new SparseArray<>();
   /**
    *  finalNodes are nodes which has no parent, so they has to be memoized
-   *  and will be used for triggering updates
+   *  and will be used for triggering updates.
    */
   private Stack<FinalNode> finalNodes = new Stack<>();
   /**
@@ -97,6 +97,7 @@ public class FrameEvaluation {
       finalNodes.push((FinalNode) node);
     }
 
+    // Cleaning-up after BFS-search iteration.
     if (pushedNewContext) {
       contexts.pop();
     }
