@@ -86,7 +86,7 @@ function snapTo(target, snapPoints, best, clb, dragClb) {
   ];
 }
 
-const springBehaviourInternal = proc((dt, target, v, mass, anchor, tension) => {
+const springBehaviorInternal = proc((dt, target, v, mass, anchor, tension) => {
   const d = sub(target, anchor);
   const a = divide(multiply(-1, tension, d), mass);
   return set(v, add(v, multiply(dt, a)));
@@ -94,7 +94,7 @@ const springBehaviourInternal = proc((dt, target, v, mass, anchor, tension) => {
 
 function springBehavior(dt, target, obj, anchor, tension = 300) {
   return {
-    x: springBehaviourInternal(
+    x: springBehaviorInternal(
       dt,
       target.x,
       obj.vx,
@@ -102,7 +102,7 @@ function springBehavior(dt, target, obj, anchor, tension = 300) {
       anchor.x,
       tension
     ),
-    y: springBehaviourInternal(
+    y: springBehaviorInternal(
       dt,
       target.y,
       obj.vy,
