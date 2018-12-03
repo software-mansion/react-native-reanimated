@@ -36,10 +36,10 @@ const SCREENS = {
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
-  chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
+  chatHeads: { screen: ChatHeads, title: 'Chat heads' },
   proceduralOptimization: {
     screen: ProceduralOptimization,
-    title: 'Optimization of amount of nodes',
+    title: 'Native solar system (proc nodes)',
   },
   code: { screen: Code, title: 'Animated.Code component' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
