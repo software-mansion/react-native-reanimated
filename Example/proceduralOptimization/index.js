@@ -5,52 +5,59 @@ import Animated, { Easing } from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 const {
-  set,
-  cond,
-  multiply,
-  startClock,
-  stopClock,
-  event,
   debug,
   sin,
   add,
-  eq,
   cos,
-  clockRunning,
   block,
   timing,
+  set,
+  cond,
+  eq,
+  multiply,
+  lessThan,
+  spring,
+  startClock,
+  stopClock,
+  clockRunning,
+  sub,
+  defined,
   Value,
   Clock,
+  event,
   proc,
 } = Animated;
 
-function runTiming(clock, value, dest, time) {
+function runSpring(clock, value, velocity, dest) {
   const state = {
     finished: new Value(0),
+    velocity: new Value(0),
     position: new Value(0),
     time: new Value(0),
-    frameTime: new Value(0),
   };
 
   const config = {
-    duration: time,
+    damping: 30,
+    mass: 3,
+    stiffness: 21.6,
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
   };
 
-  return block([
+  return [
     cond(clockRunning(clock), 0, [
       set(state.finished, 0),
-      set(state.time, 0),
+      set(state.velocity, velocity),
       set(state.position, value),
-      set(state.frameTime, 0),
       set(config.toValue, dest),
       startClock(clock),
     ]),
-    timing(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
+    spring(clock, state, config),
+    cond(state.finished, stopClock(clock)),
     state.position,
-  ]);
+  ];
 }
 
 export default class Example extends Component {
@@ -79,23 +86,61 @@ export default class Example extends Component {
         satellites: p.satellites && this.traversePlanets(p.satellites),
       }));
 
-    const offset = new Value(0);
-    const drag = new Value(0);
+    this.planets = this.traversePlanets(PLANETS);
 
-    this.handlePan = event([
+    const TOSS_SEC = 0.2;
+
+    const dragX = new Value(0);
+    const dragY = new Value(0);
+    const state = new Value(-1);
+    const dragVX = new Value(0);
+    const dragVY = new Value(0);
+
+    this._onGestureEvent = event([
       {
-        nativeEvent: ({ translationX: x, translationY: y, state }) =>
-          block([
-            set(drag, add(x, y, offset)),
-            cond(eq(state, State.END), [set(offset, add(offset, x, y))]),
-          ]),
+        nativeEvent: {
+          translationX: dragX,
+          velocityX: dragVX,
+          translationY: dragY,
+          velocityY: dragVY,
+          state: state,
+        },
       },
     ]);
-    this.trans = add(
-      runTiming(new Clock(), new Value(0), 10, 6000),
-      multiply(drag, 0.1)
+
+    const drag = multiply(add(dragX, dragY), 0.05);
+    const dragV = multiply(add(dragVX, dragVY), 0.1);
+
+    const trans = new Value();
+    const prevDrag = new Value(0);
+
+    const clock = new Clock();
+    this._transX = cond(
+      eq(state, State.ACTIVE),
+      [
+        stopClock(clock),
+        set(trans, add(trans, sub(drag, prevDrag))),
+        set(prevDrag, drag),
+        trans,
+      ],
+      [
+        set(prevDrag, 0),
+        set(
+          trans,
+          cond(
+            defined(trans),
+            runSpring(
+              clock,
+              trans,
+              dragV,
+              add(trans, multiply(TOSS_SEC, dragV)),
+              0
+            ),
+            0
+          )
+        ),
+      ]
     );
-    this.planets = this.traversePlanets(PLANETS);
   }
   renderPlanets = planets => (
     <React.Fragment>
@@ -103,7 +148,7 @@ export default class Example extends Component {
         <React.Fragment key={`planet ${k}`}>
           <Animated.Code
             exec={this.ellipsis(
-              this.trans,
+              this._transX,
               p.speed,
               p.radius,
               p.ratio,
@@ -138,8 +183,8 @@ export default class Example extends Component {
   render() {
     return (
       <PanGestureHandler
-        onGestureEvent={this.handlePan}
-        onHandlerStateChange={this.handlePan}>
+        onGestureEvent={this._onGestureEvent}
+        onHandlerStateChange={this._onGestureEvent}>
         <Animated.View style={styles.container}>
           {this.renderPlanets(this.planets)}
         </Animated.View>
