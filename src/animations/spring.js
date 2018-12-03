@@ -16,10 +16,10 @@ import {
   and,
   lessThan,
   greaterThan,
+  proc,
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/AnimatedValue';
-import AnimatedProc from '../core/AnimatedProc';
 
 const MAX_STEPS_MS = 64;
 
@@ -129,12 +129,12 @@ const springInternal = (
   ]);
 };
 
-const springStatic = new AnimatedProc(springInternal);
+const springStatic = proc(springInternal);
 
 export default function spring(clock, state, config) {
   // conditions for stopping the spring animations
   const prevPosition = new AnimatedValue(0);
-  return springStatic.invoke(
+  return springStatic(
     clock,
     state.position,
     state.velocity,
