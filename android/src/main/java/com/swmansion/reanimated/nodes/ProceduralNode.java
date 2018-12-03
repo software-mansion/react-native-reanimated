@@ -115,16 +115,16 @@ public class ProceduralNode extends Node {
       super(nodeID, config, nodesManager);
     }
 
-    public void matchContextWithNode(EvalContext context, Node node) {
+    /*package*/ void matchContextWithNode(EvalContext context, Node node) {
       mNodeContextMap.put(context, node);
     }
 
-    public void dropContext(EvalContext evalContext) {
+    /*package*/ void dropContext(EvalContext evalContext) {
       mOldContextByNode.remove(mNodeContextMap.getNode(evalContext).mNodeID);
       mNodeContextMap.dropByContext(evalContext);
     }
 
-    public void matchNodeWithOldContext(Node node, EvalContext evalContext) {
+    /*package*/ void matchNodeWithOldContext(Node node, EvalContext evalContext) {
       mOldContextByNode.put(node.mNodeID, evalContext);
     }
 
