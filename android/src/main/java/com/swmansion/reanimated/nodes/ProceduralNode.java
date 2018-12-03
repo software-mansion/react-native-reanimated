@@ -59,7 +59,6 @@ public class ProceduralNode extends Node {
       mArgumentsInputs = Utils.processIntArray(config.getArray("args"));
     }
 
-    @Override
     public void onDrop(){
       if (!mNodesManager.isNodeCreated(mProceduralNode)) {
         return;

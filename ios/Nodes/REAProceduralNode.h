@@ -9,6 +9,7 @@
 
 
 @interface REAPerformNode : REANode
+- (void)onDrop;
 
 @end
 

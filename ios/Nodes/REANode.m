@@ -80,10 +80,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   [self.nodesManager postRunUpdatesAfterAnimation];
 }
 
-- (void)onDrop {
-  // no-op
-}
-
 + (NSMutableArray<REANode *> *)updatedNodes
 {
   static NSMutableArray<REANode *> *updatedNodes;

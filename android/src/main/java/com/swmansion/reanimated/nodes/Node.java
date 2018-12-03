@@ -77,10 +77,6 @@ public abstract class Node {
     }
   }
 
-  public void onDrop() {
-    // no-op
-  }
-
   protected void markUpdated(EvalContext context) {
     // It's only relevant to mark nodes as updated in global context
     // because every change in non-global context is a result of some

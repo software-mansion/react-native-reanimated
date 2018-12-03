@@ -261,7 +261,9 @@
 - (void)dropNode:(REANodeID)nodeID
 {
   REANode *node = _nodes[nodeID];
-  [node onDrop];
+  if ([node isKindOfClass:[REAPerformNode class]]) {
+    [(REAPerformNode *) node onDrop];
+  }
   if (node) {
     [_nodes removeObjectForKey:nodeID];
   }

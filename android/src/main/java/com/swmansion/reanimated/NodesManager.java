@@ -282,7 +282,10 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dropNode(int tag) {
-    findNodeById(tag, Node.class).onDrop();
+    Node node = findNodeById(tag, Node.class);
+    if (node instanceof ProceduralNode.PerformNode) {
+      ((ProceduralNode.PerformNode) node).onDrop();
+    }
     mAnimatedNodes.remove(tag);
   }
 
