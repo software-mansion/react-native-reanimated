@@ -261,15 +261,15 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<number>;
     // backward compatible API
     export function spring(
-      clock: AnimatedNode<number>,
+      node: AnimatedNode<number>,
       config: SpringConfig,
     ): backwardCompatibleWrapper;
     export function timing(
-      clock: AnimatedNode<number>,
+      node: AnimatedNode<number>,
       config: TimingConfig,
     ): backwardCompatibleWrapper;
     export function decay(
-      clock: AnimatedNode<number>,
+      node: AnimatedNode<number>,
       config: DecayConfig,
     ): backwardCompatibleWrapper;
 
