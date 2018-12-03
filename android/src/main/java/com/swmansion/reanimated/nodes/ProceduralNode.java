@@ -9,11 +9,14 @@ import com.swmansion.reanimated.Utils;
 
 /**
  * ProceduralNode and related nodes are necessary in order to handle
- * context switch during evaluation
+ * contexts' switch during an evaluation.
  *
- * ProceduralNode stores all results of evaluation in each contexts
+ * ProceduralNode stores all results of evaluation in each contexts.
  */
 public class ProceduralNode extends Node {
+  /**
+   * BidirectionalContextNodeMap is a small helper structure for managing node-contextes ralations
+   */
   static private class BidirectionalContextNodeMap {
     private final SparseArray<Node> mNodesByContext = new SparseArray<>();
     private final SparseArray<EvalContext> mContextsByNode = new SparseArray<>();
@@ -39,9 +42,9 @@ public class ProceduralNode extends Node {
   }
 
   /**
-   * PerformNode provides the result of evaluation in new context to previous.
+   * PerformNode moves the result of evaluation in new context to previous context.
    * E.g. if procedural node has been defined in global context, the evaluation of nodes are
-   * performed in new context, but the result is visible in global context because of this node
+   * performed in new context, but the result is visible in global context by reading value of this node.
    */
   static public class PerformNode extends Node {
     private final int mProceduralNode;
@@ -100,9 +103,9 @@ public class ProceduralNode extends Node {
   }
 
   /**
-   * ArgumentNode has been made in order to manage input of ProceduralNode.
-   * Arguments are defined in previous context but has to be accessible in context
-   * of procedural node related
+   * ArgumentNode manages input of ProceduralNode.
+   * Arguments of procedure are defined in previous context but has to be accessible
+   * in new context. 
    */
   static public class ArgumentNode extends ValueNode {
     private final BidirectionalContextNodeMap mNodeContextMap = new BidirectionalContextNodeMap();
@@ -135,8 +138,8 @@ public class ProceduralNode extends Node {
     }
 
     /**
-     * If input node is a value, there's need to allow setting value from new context.
-     * Because every ValueNodes are defined in global context, their value is set in global context
+     * If input node is a value, there's need to allow to set new value in old context from new context.
+     * Because every ValueNodes are defined in global context, their value is set in global context.
      */
     @Override
     public void setValue(Object value, EvalContext context) {
