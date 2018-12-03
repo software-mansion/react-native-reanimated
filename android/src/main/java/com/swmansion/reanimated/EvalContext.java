@@ -26,8 +26,8 @@ public class EvalContext {
    */
   public final SparseArray<Long> lastLoopsIDs = new SparseArray<>();
   /**
-   * Root is one of the children of ProceduralNode which is used
-   * in order to switch evaluation context
+   * Root is one of the children of ProceduralNode which is being used
+   * to switch evaluation context
    */
   public final ProceduralNode.PerformNode parent;
   public Set<Node> visitedNodes;
