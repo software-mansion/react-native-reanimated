@@ -192,9 +192,9 @@ declare module 'react-native-reanimated' {
       ifNode: Adaptable<number>,
       elseNode?: Adaptable<number>,
     ): AnimatedNode<number>;
-    export function proc<T>(
-      fun: (args: ReadonlyArray<Adaptable<any>>) => any):
-        (args: ReadonlyArray<AnimatedNode<any>>) => any;
+    export function proc<A extends ReadonlyArray<Adaptable<any>>, B>(
+      fun: (args: A) => B):
+        (args:A) => B;
     export function block<T>(
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
