@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 const {
   set,
@@ -9,8 +10,11 @@ const {
   multiply,
   startClock,
   stopClock,
+  event,
   debug,
   sin,
+  add,
+  eq,
   cos,
   clockRunning,
   block,
@@ -61,7 +65,6 @@ export default class Example extends Component {
   };
   constructor(props) {
     super(props);
-    this.trans = runTiming(new Clock(), new Value(0), 100, 50000);
     this.ellipsis = proc((progress, speed, radius, ratio, x, y) =>
       block([
         set(x, multiply(sin(multiply(progress, speed)), radius)),
@@ -75,6 +78,23 @@ export default class Example extends Component {
         y: new Value(0),
         satellites: p.satellites && this.traversePlanets(p.satellites),
       }));
+
+    const offset = new Value(0);
+    const drag = new Value(0);
+
+    this.handlePan = event([
+      {
+        nativeEvent: ({ translationX: x, translationY: y, state }) =>
+          block([
+            set(drag, add(x, y, offset)),
+            cond(eq(state, State.END), [set(offset, add(offset, x, y))]),
+          ]),
+      },
+    ]);
+    this.trans = add(
+      runTiming(new Clock(), new Value(0), 100, 50000),
+      multiply(drag, 0.1)
+    );
     this.planets = this.traversePlanets(PLANETS);
   }
   renderPlanets = planets => (
@@ -117,7 +137,13 @@ export default class Example extends Component {
   );
   render() {
     return (
-      <View style={styles.container}>{this.renderPlanets(this.planets)}</View>
+      <PanGestureHandler
+        onGestureEvent={this.handlePan}
+        onHandlerStateChange={this.handlePan}>
+        <Animated.View style={styles.container}>
+          {this.renderPlanets(this.planets)}
+        </Animated.View>
+      </PanGestureHandler>
     );
   }
 }
