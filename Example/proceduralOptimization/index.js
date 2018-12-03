@@ -186,6 +186,14 @@ const PLANETS = [
     color: '#c741a4',
   },
   {
+    radius: 200,
+    size: 12,
+    speed: 1.3,
+    ratio: 0.2,
+    rotation: '120deg',
+    color: '#c73621',
+  },
+  {
     radius: 50,
     size: 32,
     speed: 1.2,
