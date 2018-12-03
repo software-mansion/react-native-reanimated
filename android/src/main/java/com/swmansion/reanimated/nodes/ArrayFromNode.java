@@ -30,7 +30,7 @@ public class ArrayFromNode extends Node {
                 res.pushString((String) value);
             } else if (value instanceof Boolean) {
                 res.pushBoolean((Boolean) value);
-            } else if (value.getClass().isArray()) {
+            } else if (value instanceof ReadableArray) {
                 res.pushArray((WritableArray) value);
             } else {
                 throw new IllegalArgumentException("Unexpected type " + value.getClass().getName() + " inside arrayFrom node");
