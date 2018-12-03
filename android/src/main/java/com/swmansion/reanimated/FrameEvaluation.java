@@ -38,12 +38,13 @@ public class FrameEvaluation {
   private Stack<EvalContext> contexts = new Stack<>();
 
   /**
-   *  mNodesManager provides main context of evaluation
+   *  mNodesManager provides the main context of evaluation
    */
   private final NodesManager mNodesManager;
   /**
-   * Performs a BFS-search-based evaluation algorithm in order to receive finalNodes which are nodes
-   * which has to be updated. Each node could represent different values in different contexts
+   * findAndUpdateNodes performs a BFS-search-based evaluation algorithm 
+   * in order to receive finalNodes which are nodes
+   * which have to be updated. Each node could represent different values in different contexts
    * so all operations have to be context-sensitive
    * @param node is node which is being currently traversed
    * @param lastVisited is previously visited node (since findAndUpdateNodes uses recursion)
@@ -51,12 +52,11 @@ public class FrameEvaluation {
   private void findAndUpdateNodes(Node node,
                                          Node lastVisited) {
     EvalContext currentContext = contexts.peek();
-
     if (visitedNodes.get(currentContext.contextID) == null) {
       // There's need to handle the case when no set of
-      // visited nodes has been created
+      // visited nodes has been created in given context.
       visitedNodes.append(currentContext.contextID, new HashSet<Node>());
-      // There's no need to traverse twice the same node
+      // There's no need to traverse twice the same node.
     } else if (visitedNodes.get(currentContext.contextID).contains(node)) {
       return;
     }
@@ -104,7 +104,7 @@ public class FrameEvaluation {
 
   /**
    * Triggers an evaluation algorithm which calculate nodes
-   * which has to be updated in current animation frame
+   * which have to be updated in current animation's frame
    */
   public void runUpdates() {
     UiThreadUtil.assertOnUiThread();
