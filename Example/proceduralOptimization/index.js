@@ -5,17 +5,14 @@ import Animated, { Easing } from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 const {
-  debug,
   sin,
   add,
   cos,
   block,
-  timing,
   set,
   cond,
   eq,
   multiply,
-  lessThan,
   spring,
   startClock,
   stopClock,
