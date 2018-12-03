@@ -92,7 +92,7 @@ export default class Example extends Component {
       },
     ]);
     this.trans = add(
-      runTiming(new Clock(), new Value(0), 100, 50000),
+      runTiming(new Clock(), new Value(0), 10, 6000),
       multiply(drag, 0.1)
     );
     this.planets = this.traversePlanets(PLANETS);
