@@ -14,13 +14,7 @@
 
 
 @interface REAArgumentNode : REAValueNode
-
-- (void)matchContextWithNode:(REAEvalContext *) evalContext
-                    withNode:(REANode *) node;
-- (void)matchNodeWithOldContext:(REANode *) node
-                    withContext:(REAEvalContext *) evalContext;
-- (void)dropContext:(REAEvalContext *)evalContext;
-- (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)evalContext
-                           withLastVisitedNode:(REANode *) lastVisited;
+- (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)currentContext
+                           withLastVisitedNode:(REANode *)lastVisited;
 
 @end

@@ -6,6 +6,62 @@
 #import "REANodesManager.h"
 #import "REAEvalContext.h"
 
+@interface BidirectionalContextNodeMap : NSObject
+- (void)dropByContext:(REAEvalContext *) evalContext;
+- (void)put:(REAEvalContext *) evalContext
+   withNode:(REANode *) node;
+- (REANode *)getNode:(REAEvalContext *) evalContext;
+- (REAEvalContext *)getContext:(REANode *) node;
+@end
+
+@implementation BidirectionalContextNodeMap
+{
+  NSMutableDictionary<NSNumber *, REANode *> *_nodesByContext;
+  NSMutableDictionary<NSNumber *, REAEvalContext *> *_contextsByNode;
+}
+- (instancetype)init
+{
+  if ((self = [super init])) {
+    _nodesByContext = [NSMutableDictionary new];
+    _contextsByNode = [NSMutableDictionary new];
+  }
+  return self;
+}
+
+- (void)dropByContext:(REAEvalContext *) evalContext
+{
+  REANode *node = [_nodesByContext objectForKey:evalContext.contextID];
+  [_nodesByContext removeObjectForKey:evalContext.contextID];
+  [_contextsByNode removeObjectForKey:node.nodeID];
+}
+- (void)put:(REAEvalContext *) evalContext
+   withNode:(REANode *) node
+{
+  [_contextsByNode setObject:evalContext forKey:node.nodeID];
+  [_nodesByContext setObject:node forKey:evalContext.contextID];
+}
+- (REANode *)getNode:(REAEvalContext *) evalContext
+{
+  return [_nodesByContext objectForKey:evalContext.contextID];
+}
+- (REAEvalContext *)getContext:(REANode *) node
+{
+  return [_contextsByNode objectForKey:node.nodeID];
+}
+
+@end
+
+@interface REAArgumentNode ()
+
+- (void)matchContextWithNode:(REAEvalContext *) evalContext
+                    withNode:(REANode *) node;
+- (void)matchNodeWithOldContext:(REANode *) node
+                    withContext:(REAEvalContext *) evalContext;
+- (void)dropContext:(REAEvalContext *)evalContext;
+- (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)evalContext
+                           withLastVisitedNode:(REANode *) lastVisited;
+
+@end
 
 @implementation REAProceduralNode
 {
@@ -88,37 +144,32 @@
 
 @implementation REAArgumentNode
 {
-  NSMutableDictionary<NSNumber *, REANode *> *_valuesByContext;
-  NSMutableDictionary<NSNumber *, REAEvalContext *> *_contextsByValue;
-  NSMutableDictionary<NSNumber *, REAEvalContext *> *_oldContextsByValue;
+  NSMutableDictionary<NSNumber *, REAEvalContext *> *_oldContextsByNode;
+  BidirectionalContextNodeMap *_nodeContextMap;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
 {
   if ((self = [super initWithID:nodeID config:config])) {
-    _valuesByContext = [NSMutableDictionary new];
-    _contextsByValue = [NSMutableDictionary new];
-    _oldContextsByValue = [NSMutableDictionary new];
+    _oldContextsByNode = [NSMutableDictionary new];
+    _nodeContextMap = [[BidirectionalContextNodeMap alloc ] init];
   }
   return self;
 }
 
 - (void)matchContextWithNode:(REAEvalContext *) evalContext
                     withNode:(REANode *) node {
-  [_valuesByContext setObject:node forKey:evalContext.contextID];
-  [_contextsByValue setObject:evalContext forKey:node.nodeID];
+  [_nodeContextMap put:evalContext withNode:node];
 }
 
 - (void)matchNodeWithOldContext:(REANode *) node
                     withContext:(REAEvalContext *) evalContext {
-  [_oldContextsByValue setObject:evalContext forKey:node.nodeID];
+  [_oldContextsByNode setObject:evalContext forKey:node.nodeID];
 }
 
 - (void)dropContext:(REAEvalContext *)evalContext {
-  REANode *relatedNode = [_valuesByContext objectForKey:evalContext.contextID];
-  [_contextsByValue removeObjectForKey:relatedNode.nodeID];
-  [_valuesByContext removeObjectForKey:evalContext.contextID];
-  [_oldContextsByValue removeObjectForKey:relatedNode.nodeID];
+  [_oldContextsByNode removeObjectForKey:[_nodeContextMap getNode:evalContext].nodeID];
+  [_nodeContextMap dropByContext:evalContext];
 }
 
 - (REAEvalContext *)contextForUpdatingChildren:(REAEvalContext *)evalContext
@@ -127,18 +178,20 @@
   if (lastVisited == NULL) {
     return evalContext;
   }
-  return [_contextsByValue objectForKey:lastVisited.nodeID];
+  return [_nodeContextMap getContext:lastVisited];
 }
 
-- (void)setValue:(NSNumber *)value withEvalContext:(REAEvalContext *)evalContext {
-  [(REAValueNode *)[_valuesByContext objectForKey:evalContext.contextID] setValue:value withEvalContext:self.nodesManager.globalEvalContext];
+- (void)setValue:(NSNumber *)value
+ withEvalContext:(REAEvalContext *)evalContext {
+  [(REAValueNode *)[_nodeContextMap getNode:evalContext]
+   setValue:value withEvalContext:self.nodesManager.globalEvalContext];
 }
 
 - (id)evaluate:(REAEvalContext *)evalContext;
 {
   RCTAssert(evalContext != self.nodesManager.globalEvalContext, @"Tried to evaluate argumentNode in global context");
-  REANode *value = [_valuesByContext objectForKey:evalContext.contextID];
-  return [value value:[_oldContextsByValue objectForKey:value.nodeID]];
+  REANode *value = [_nodeContextMap getNode:evalContext];
+  return [value value:[_oldContextsByNode objectForKey:value.nodeID]];
 }
 
 @end

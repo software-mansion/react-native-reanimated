@@ -15,7 +15,7 @@ import com.swmansion.reanimated.Utils;
  */
 public class ProceduralNode extends Node {
   /**
-   * BidirectionalContextNodeMap is a small helper structure for managing node-contextes ralations
+   * BidirectionalContextNodeMap is a small helper structure for managing node-contexts relations
    */
   static private class BidirectionalContextNodeMap {
     private final SparseArray<Node> mNodesByContext = new SparseArray<>();
@@ -25,14 +25,14 @@ public class ProceduralNode extends Node {
       return mContextsByNode.get(node.mNodeID);
     }
 
-    private Node getNode(EvalContext context) {
-      return mNodesByContext.get(context.contextID);
+    private Node getNode(EvalContext evalContext) {
+      return mNodesByContext.get(evalContext.contextID);
     }
 
-    private void dropByContext(EvalContext context) {
-      Node relatedNode = mNodesByContext.get(context.contextID);
+    private void dropByContext(EvalContext evalContext) {
+      Node relatedNode = mNodesByContext.get(evalContext.contextID);
       mContextsByNode.remove(relatedNode.mNodeID);
-      mNodesByContext.remove(context.contextID);
+      mNodesByContext.remove(evalContext.contextID);
     }
 
     private void put(EvalContext context, Node node) {
@@ -105,7 +105,7 @@ public class ProceduralNode extends Node {
   /**
    * ArgumentNode manages input of ProceduralNode.
    * Arguments of procedure are defined in previous context but has to be accessible
-   * in new context. 
+   * in new context.
    */
   static public class ArgumentNode extends ValueNode {
     private final BidirectionalContextNodeMap mNodeContextMap = new BidirectionalContextNodeMap();
@@ -120,8 +120,7 @@ public class ProceduralNode extends Node {
     }
 
     public void dropContext(EvalContext evalContext) {
-        mOldContextByNode.remove(mNodeContextMap.getNode(evalContext).mNodeID);
-
+      mOldContextByNode.remove(mNodeContextMap.getNode(evalContext).mNodeID);
       mNodeContextMap.dropByContext(evalContext);
     }
 
@@ -141,8 +140,8 @@ public class ProceduralNode extends Node {
      * Because every ValueNodes are defined in global context, their value is set in global context.
      */
     @Override
-    public void setValue(Object value, EvalContext context) {
-      ((ValueNode)mNodeContextMap.getNode(context)).setValue(value, mNodesManager.globalEvalContext);
+    public void setValue(Object value, EvalContext evalContext) {
+      ((ValueNode)mNodeContextMap.getNode(evalContext)).setValue(value, mNodesManager.globalEvalContext);
     }
 
     @Override
