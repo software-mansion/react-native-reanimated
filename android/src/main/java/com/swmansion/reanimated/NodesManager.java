@@ -155,8 +155,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mWantRunUpdates) {
-      FrameEvaluation frameEvaluation = new FrameEvaluation(this);
-      frameEvaluation.runUpdates();
+      new FrameEvaluation(this).runUpdates();
     }
 
     if (!mOperationsInBatch.isEmpty()) {
