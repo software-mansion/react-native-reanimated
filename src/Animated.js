@@ -13,7 +13,6 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
-import arrayFrom from './core/AnimatedArrayFrom';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -46,9 +45,6 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-
-  // nodes with custom cache
-  arrayFrom,
 };
 
 export default Animated;

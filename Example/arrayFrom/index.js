@@ -4,7 +4,6 @@ import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
 const {
-  arrayFrom,
   Clock,
   clockRunning,
   cond,
@@ -106,29 +105,21 @@ export default class Example extends Component {
   }
 
   render() {
+    // prettier-ignore
+    const matrix = [
+      1, 0, 0, this._x,
+      0, 1, 0, this._y,
+      0, 0, 1, 0,
+      0, 0, 0, 1,
+    ];
+
     return (
       <View style={styles.container}>
         <PanGestureHandler
           maxPointers={1}
           onGestureEvent={this._onGestureEvent}
           onHandlerStateChange={this._onGestureEvent}>
-          <Animated.View
-            style={[
-              styles.box,
-              {
-                transform: [
-                  {
-                    // prettier-ignore
-                    matrix: arrayFrom([
-                      1, 0, 0, this._x,
-                      0, 1, 0, this._y,
-                      0, 0, 1, 0,
-                      0, 0, 0, 1,
-                    ])
-                  },
-                ],
-              },
-            ]}>
+          <Animated.View style={[styles.box, { transform: [{ matrix }] }]}>
             <Image
               style={styles.img}
               source={{
