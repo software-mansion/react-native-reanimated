@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import com.facebook.react.bridge.JavaOnlyArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.ReadableArray;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
