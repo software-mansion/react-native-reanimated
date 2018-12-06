@@ -1,4 +1,4 @@
-import { findNodeHandle, Platform } from 'react-native';
+import { findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
@@ -58,9 +58,9 @@ function sanitizeArgMapping(argMapping) {
     };
 
     const proxy =
-      Platform.OS === 'android'
-        ? createEventObjectProxyPolyfill()
-        : new Proxy({}, proxyHandler);
+      typeof Proxy === 'function'
+          ? new Proxy({}, proxyHandler)
+          : createEventObjectProxyPolyfill();
     alwaysNodes.push(new AnimatedAlways(ev(proxy)));
     traverse(proxy, []);
   }
