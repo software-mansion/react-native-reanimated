@@ -79,6 +79,10 @@ declare module 'react-native-reanimated' {
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
+    export interface BackwardCompatibleWrapper {
+      start: (callback : ({ finished: boolean }) => any) => void;
+      stop: () => void;
+    }
 
     export interface TimingState {
       finished: AnimatedValue<number>;
@@ -137,7 +141,7 @@ declare module 'react-native-reanimated' {
       exec?: AnimatedNode<number>
       children?: () => AnimatedNode<number>
     };
-    
+
     // components
     export const View: ComponentClass<AnimateProps<ViewStyle, ViewProps>>;
     export const Text: ComponentClass<AnimateProps<TextStyle, TextProps>>;
@@ -255,6 +259,19 @@ declare module 'react-native-reanimated' {
       state: SpringState,
       config: SpringConfig,
     ): AnimatedNode<number>;
+    // backward compatible API
+    export function spring(
+      node: AnimatedNode<number>,
+      config: SpringConfig,
+    ): BackwardCompatibleWrapper;
+    export function timing(
+      node: AnimatedNode<number>,
+      config: TimingConfig,
+    ): BackwardCompatibleWrapper;
+    export function decay(
+      node: AnimatedNode<number>,
+      config: DecayConfig,
+    ): BackwardCompatibleWrapper;
 
     // configuration
 
