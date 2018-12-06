@@ -79,7 +79,7 @@ declare module 'react-native-reanimated' {
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
-    export interface backwardCompatibleWrapper {
+    export interface BackwardCompatibleWrapper {
       start: (callback : ({ finished: boolean }) => any) => void;
       stop: () => void;
     }
@@ -263,15 +263,15 @@ declare module 'react-native-reanimated' {
     export function spring(
       node: AnimatedNode<number>,
       config: SpringConfig,
-    ): backwardCompatibleWrapper;
+    ): BackwardCompatibleWrapper;
     export function timing(
       node: AnimatedNode<number>,
       config: TimingConfig,
-    ): backwardCompatibleWrapper;
+    ): BackwardCompatibleWrapper;
     export function decay(
       node: AnimatedNode<number>,
       config: DecayConfig,
-    ): backwardCompatibleWrapper;
+    ): BackwardCompatibleWrapper;
 
     // configuration
 
