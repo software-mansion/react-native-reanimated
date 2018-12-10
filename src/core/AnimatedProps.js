@@ -2,7 +2,7 @@ import { findNodeHandle } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
 import AnimatedEvent from './AnimatedEvent';
-import AnimatedStyle, { createOrReuseStyleNode } from './AnimatedStyle';
+import { createOrReuseStyleNode } from './AnimatedStyle';
 
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
