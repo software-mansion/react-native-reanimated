@@ -24,15 +24,16 @@ export default class Example extends Component {
 
     this.handlePan = event([
       {
-        nativeEvent: ({ translationX: x, translationY: y, state }) =>
+        nativeEvent: ({ translationX: x, translationY: y, state }) => [
           block([
             set(this.X, add(x, offsetX)),
-            set(this.Y, add(y, offsetY)),
-            cond(eq(state, State.END), [
-              set(offsetX, add(offsetX, x)),
-              set(offsetY, add(offsetY, y)),
-            ]),
+            cond(eq(state, State.END), set(offsetX, add(offsetX, x))),
           ]),
+          block([
+            set(this.Y, add(y, offsetY)),
+            cond(eq(state, State.END), set(offsetY, add(offsetY, y))),
+          ]),
+        ],
       },
     ]);
 

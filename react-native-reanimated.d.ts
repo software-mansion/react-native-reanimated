@@ -137,9 +137,12 @@ declare module 'react-native-reanimated' {
         : P[K] | AnimatedNode<P[K]>
     };
 
+    type SingleCode = AnimatedNode<any> | ((...args: any[]) => AnimatedNode<any>);
+    type SingleCodeWrapped = ReadonlyArray<SingleCode> | SingleCode;
+
     type CodeProps = {
-      exec?: AnimatedNode<number>
-      children?: () => AnimatedNode<number>
+      exec?: (...args: any[]) => SingleCodeWrapped | SingleCodeWrapped
+      children?: (...args: any[]) => SingleCodeWrapped | SingleCodeWrapped
     };
 
     // components

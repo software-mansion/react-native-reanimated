@@ -36,32 +36,38 @@ function sanitizeArgMapping(argMapping) {
   );
 
   // Assume that the event containing `nativeEvent` is always the first argument.
+  const proxyHandler = {
+    get: function(target, name) {
+      if (name === '__isProxy') {
+        return true;
+      }
+      if (!target[name] && name !== '__val') {
+        target[name] = new Proxy({}, proxyHandler);
+      }
+      return target[name];
+    },
+    set: function(target, prop, value) {
+      if (prop === '__val') {
+        target[prop] = value;
+      }
+    },
+  };
+
   const ev = argMapping[0].nativeEvent;
   if (typeof ev === 'object') {
     traverse(ev, []);
   } else if (typeof ev === 'function') {
-    const proxyHandler = {
-      get: function(target, name) {
-        if (name === '__isProxy') {
-          return true;
-        }
-        if (!target[name] && name !== '__val') {
-          target[name] = new Proxy({}, proxyHandler);
-        }
-        return target[name];
-      },
-      set: function(target, prop, value) {
-        if (prop === '__val') {
-          target[prop] = value;
-        }
-      },
-    };
-
     const proxy =
       typeof Proxy === 'function'
         ? new Proxy({}, proxyHandler)
         : createEventObjectProxyPolyfill();
-    alwaysNodes.push(new AnimatedAlways(ev(proxy)));
+
+    const functionResult = ev(proxy);
+    if (Array.isArray(functionResult)) {
+      alwaysNodes.push(...functionResult.map(e => new AnimatedAlways(e)));
+    } else {
+      alwaysNodes.push(new AnimatedAlways(functionResult));
+    }
     traverse(proxy, []);
   }
 

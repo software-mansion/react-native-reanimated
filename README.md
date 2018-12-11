@@ -165,7 +165,7 @@ block([
 
 ## Event handling with reanimated nodes
 
-With reanimated new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes it is allowed to write a function that takes reanimated values map as an input and returns a block (or any other reanimated function) that will be then used to handle the event.
+With reanimated new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes it is allowed to write a function that takes reanimated values map as an input and returns a block or any other reanimated function (on even array of them) that will be then used to handle the event.
 
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
 [See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
@@ -185,10 +185,16 @@ If you'd like to use more than one event attribute in your reanimated code it is
   onGestureEvent={event([
     {
       nativeEvent: ({ translationX: x, translationY: y, state }) =>
-        block([
-          set(this._transX, add(x, offsetX)), set(this._transY, add(y, offsetY)),
-          cond(eq(state, State.END), [set(this.offsetX, add(this.offsetX, x)), set(this.offsetY, add(this.offsetY, y))]),
-        ]),
+        [
+          block([
+            set(this.X, add(x, offsetX)),
+            cond(eq(state, State.END), set(offsetX, add(offsetX, x))),
+          ]),
+          block([
+            set(this.Y, add(y, offsetY)),
+            cond(eq(state, State.END), set(offsetY, add(offsetY, y))),
+          ])
+        ],
     },
   ])}
 >
