@@ -63,6 +63,7 @@ function sanitizeArgMapping(argMapping) {
         : createEventObjectProxyPolyfill();
 
     const result = ev(proxy);
+    // result could be either array of node or single node.
     if (Array.isArray(result)) {
       alwaysNodes.push(...result.map(e => new AnimatedAlways(e)));
     } else {
