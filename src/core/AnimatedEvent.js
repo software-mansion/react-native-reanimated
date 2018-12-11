@@ -52,7 +52,7 @@ function sanitizeArgMapping(argMapping) {
     'Native driven events only support animated values contained inside `nativeEvent`.'
   );
 
-  // Assume that the event containing `nativeEvent` is always the first argument
+  // Assume that the event containing `nativeEvent` is always the first argument.
   const ev = argMapping[0].nativeEvent;
   if (typeof ev === 'object') {
     traverse(ev, []);
