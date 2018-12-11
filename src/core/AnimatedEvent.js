@@ -8,6 +8,23 @@ import AnimatedAlways from './AnimatedAlways';
 import invariant from 'fbjs/lib/invariant';
 import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
 
+const proxyHandler = {
+  get: function(target, name) {
+    if (name === '__isProxy') {
+      return true;
+    }
+    if (!target[name] && name !== '__val') {
+      target[name] = new Proxy({}, proxyHandler);
+    }
+    return target[name];
+  },
+  set: function(target, prop, value) {
+    if (prop === '__val') {
+      target[prop] = value;
+    }
+  },
+};
+
 function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their
   // key path inside the `nativeEvent` object. Ex.: ['contentOffset', 'x'].
@@ -35,24 +52,7 @@ function sanitizeArgMapping(argMapping) {
     'Native driven events only support animated values contained inside `nativeEvent`.'
   );
 
-  // Assume that the event containing `nativeEvent` is always the first argument.
-  const proxyHandler = {
-    get: function(target, name) {
-      if (name === '__isProxy') {
-        return true;
-      }
-      if (!target[name] && name !== '__val') {
-        target[name] = new Proxy({}, proxyHandler);
-      }
-      return target[name];
-    },
-    set: function(target, prop, value) {
-      if (prop === '__val') {
-        target[prop] = value;
-      }
-    },
-  };
-
+  // Assume that the event containing `nativeEvent` is always the first argument
   const ev = argMapping[0].nativeEvent;
   if (typeof ev === 'object') {
     traverse(ev, []);
