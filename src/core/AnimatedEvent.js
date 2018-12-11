@@ -62,11 +62,11 @@ function sanitizeArgMapping(argMapping) {
         ? new Proxy({}, proxyHandler)
         : createEventObjectProxyPolyfill();
 
-    const functionResult = ev(proxy);
-    if (Array.isArray(functionResult)) {
-      alwaysNodes.push(...functionResult.map(e => new AnimatedAlways(e)));
+    const result = ev(proxy);
+    if (Array.isArray(result)) {
+      alwaysNodes.push(...result.map(e => new AnimatedAlways(e)));
     } else {
-      alwaysNodes.push(new AnimatedAlways(functionResult));
+      alwaysNodes.push(new AnimatedAlways(result));
     }
     traverse(proxy, []);
   }
