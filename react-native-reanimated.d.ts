@@ -54,7 +54,7 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    export type Mapping = { [key: string]: Mapping } | AnimatedValue<any>;
+    export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
