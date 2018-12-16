@@ -621,6 +621,8 @@ The example below shows a component that renders:
 ```js
 import Animated, { Easing } from 'react-native-reanimated';
 
+const { Clock, Value, set, cond, startClock, clockRunning, timing, debug, stopClock, block } = Animated
+
 function runTiming(clock, value, dest) {
   const state = {
     finished: new Value(0),
@@ -635,7 +637,7 @@ function runTiming(clock, value, dest) {
     easing: Easing.inOut(Easing.ease),
   };
 
-  return [
+  return block([
     cond(clockRunning(clock), 0, [
       // If the clock isn't running we reset all the animation params and start the clock
       set(state.finished, 0),
@@ -651,7 +653,7 @@ function runTiming(clock, value, dest) {
     cond(state.finished, debug('stop clock', stopClock(clock))),
     // we made the block return the updated position
     state.position,
-  ];
+  ]);
 }
 
 export class AnimatedBox extends Component {
