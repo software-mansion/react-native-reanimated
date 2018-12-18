@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, Button } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
-import ProgressBar from './ProgressBar';
 
 // setInterval(() => {
 //   let iters = 1e8,
@@ -132,39 +131,12 @@ export default class Example extends Component {
   static navigationOptions = {
     title: 'Snappable Example',
   };
-  state = {
-    progress: 0,
-    vis: true,
-  };
-
-  componentDidMount() {
-    let pg = 0;
-    if (this.d) {
-      clearTimeout(this.d);
-    }
-    this.d = setInterval(() => {
-      this.setState({
-        progress: pg,
-      });
-      pg += 0.01;
-    }, 100);
-  }
-
   render() {
     return (
       <View style={styles.container}>
-        {this.state.vis && <ProgressBar progress={this.state.progress} />}
-        <Button
-          onPress={() => {
-            this.setState({ progress: 0 });
-            this.componentDidMount();
-          }}
-          title="RESET"
-        />
-        <Button
-          onPress={() => this.setState(prev => ({ visible: !prev.visible }))}
-          title="HIDE"
-        />
+        <Snappable>
+          <View style={styles.box} />
+        </Snappable>
       </View>
     );
   }
