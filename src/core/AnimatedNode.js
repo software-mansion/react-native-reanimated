@@ -137,9 +137,7 @@ export default class AnimatedNode {
       console.warn("Trying to remove a child that doesn't exist");
       return;
     }
-    if (child.__initialized) {
-      ReanimatedModule.disconnectNodes(this.__nodeID, child.__nodeID);
-    }
+    ReanimatedModule.disconnectNodes(this.__nodeID, child.__nodeID);
 
     this.__children.splice(index, 1);
     if (this.__children.length === 0) {
