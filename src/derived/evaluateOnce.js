@@ -18,7 +18,9 @@ export function evaluateOnce(node, children = [], callback) {
     call([node, set(done, 1)], () => {
       callback && callback();
       for (let i = 0; i < children.length; i++) {
-        alwaysNode.__removeChild(children[i]);
+        if (children[i].__initialized) {
+          alwaysNode.__removeChild(children[i]);
+        }
       }
     })
   );
