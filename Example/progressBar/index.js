@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 
 export default class Progressable extends Component {
   static navigationOptions = {
-    title: 'Snappable Example',
+    title: 'ProgressBar Example',
   };
   state = {
     progress: 0,
