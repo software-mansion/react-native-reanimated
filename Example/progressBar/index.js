@@ -43,7 +43,7 @@ export default class Progressable extends Component {
         />
         <Button
           onPress={() => this.setState(prev => ({ visible: !prev.visible }))}
-          title="HIDE"
+          title="TOGGLE VISIBILITY"
         />
       </View>
     );
