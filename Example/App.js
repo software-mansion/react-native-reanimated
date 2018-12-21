@@ -15,6 +15,7 @@ import WidthAndHeight from './widthAndHeight';
 import Rotations from './rotations';
 import Imperative from './imperative';
 import PanRotateAndZoom from './PanRotateAndZoom';
+import ProgressBar from './progressBar';
 
 import InteractablePlayground, {
   SCREENS as INTERACTABLE_SCREENS,
@@ -46,6 +47,10 @@ const SCREENS = {
   panRotateAndZoom: {
     screen: PanRotateAndZoom,
     title: 'Pan, rotate and zoom (via native event function)',
+  },
+  progressBar: {
+    screen: ProgressBar,
+    title: 'Progress bar',
   },
 };
 
