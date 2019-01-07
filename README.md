@@ -1,6 +1,6 @@
 # react-native-reanimated
 
-Reimplementation of React Native's Animated library.
+React Native's Animated library reimplemented.
 
 It provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
 
