@@ -80,7 +80,7 @@ declare module 'react-native-reanimated' {
       deceleration: Adaptable<number>;
     }
     export interface BackwardCompatibleWrapper {
-      start: (callback : ({ finished: boolean }) => any) => void;
+      start: (callback : (data: { finished: boolean }) => any) => void;
       stop: () => void;
     }
 
