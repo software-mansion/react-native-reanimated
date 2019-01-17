@@ -228,7 +228,7 @@ If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node 
 call(argsNodes, callback)
 ```
 
-If one of the nodes from `argsNodes` array updates, `callback` method will be run in Javascript provided with a list of current values of nodes from `argsNodes` array as the first argument.
+If one of the nodes from `argsNodes` array updates, `callback` will be called in JavaScript with a list of current values of nodes from `argsNodes` array as the first argument.
 
 ---
 ### `block`
@@ -237,7 +237,7 @@ If one of the nodes from `argsNodes` array updates, `callback` method will be ru
 block([node1, ...])
 ```
 
-Takes an array of nodes and evaluates all the nodes in the order they are put in the array. Then return the value of the last node.
+Takes an array of nodes and evaluates all of them in the order they are put in the array. It then returns the value of the last node.
 
 ---
 ### `debug`
@@ -246,7 +246,7 @@ Takes an array of nodes and evaluates all the nodes in the order they are put in
 debug(messageString, valueNode)
 ```
 
-When the node is evaluated it prints a string that contains the `messageString` concatenated with the value of `valueNode`. This then returns the value of `valueNode`. Logs are printed in the JS debugger if it's attached, in console if Expo client is being used, or else in the native console. Logs are visible only in `DEV` mode and have no effect on production builds. Note that `messageString` should be a normal string, not an animated node.
+When the node is evaluated, it prints a string that contains the `messageString` concatenated with the value of `valueNode`. This then returns the value of `valueNode`. Logs are printed in the JS debugger if it's attached, in console if Expo client is being used, or else in the native console. Logs are visible only in `DEV` mode and have no effect on production builds. Note that `messageString` should be a normal string, not an animated node.
 
 ---
 ### `startClock`
@@ -255,7 +255,7 @@ When the node is evaluated it prints a string that contains the `messageString` 
 startClock(clockNode)
 ```
 
-When evaluated it will make `Clock` node pass as an argument to start updating its value each frame. Then return `0`.
+When evaluated, it will make `Clock` node passed as an argument start updating its value each frame. Then returns `0`.
 
 ---
 ### `stopClock`
@@ -264,7 +264,7 @@ When evaluated it will make `Clock` node pass as an argument to start updating i
 stopClock(clockNode)
 ```
 
-When evaluated it will make `Clock` node pass as an argument to stop updating its value if it has been doing that. Then return `0`.
+When evaluated, it will make `Clock` node passed as an argument stop updating its value (if it has been doing that). Then returns `0`.
 
 ---
 ### `clockRunning`
@@ -273,7 +273,7 @@ When evaluated it will make `Clock` node pass as an argument to stop updating it
 clockRunning(clockNode)
 ```
 
-For a given `Clock` node it returns `1` if the clock is updating each frame (it has been [started](#startClock)) or return `0` otherwise.
+For a given `Clock` node, it returns `1` if the clock [has been started](#startClock) (if it's updating each frame) or returns `0` otherwise.
 
 ---
 ### `event`
@@ -287,7 +287,7 @@ Works the same way as with the original `Animated` library.
 add(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns their sum.
+Takes two or more animated nodes or values, and when evaluated, returns their sum.
 
 ---
 ### `sub`
@@ -296,7 +296,7 @@ Takes two or more animated nodes or values, and when evaluated returns their sum
 sub(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns the result of subtracting their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated, returns the result of subtracting their values in the exact order.
 
 ---
 ### `multiply`
@@ -305,7 +305,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 multiply(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns the result of multiplying their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated, returns the result of multiplying their values in the exact order.
 
 ---
 ### `divide`
@@ -314,7 +314,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 divide(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns the result of dividing their values in the exact order.
+Takes two or more animated nodes or values, and when evaluated, returns the result of dividing their values in the exact order.
 
 
 ---
@@ -324,7 +324,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 pow(nodeOrNumber1, nodeOrNumber2, ...)
 ```
 
-Takes two or more animated nodes or values, and when evaluated returns the result of first node to the second node power. If more than two nodes are present the result from the previous step is used as a base and the third node as exponent. This process continues onward for the following nodes if these are present.
+Takes two or more animated nodes or values, and when evaluated, returns the result of first node to the second node power. If more than two nodes are present, the result from the previous step is used as a base and the third node as exponent. This process continues onward for the following nodes if these are present.
 
 ---
 ### `modulo`
@@ -339,7 +339,7 @@ Takes two or more animated nodes or values, and when evaluated returns the resul
 sin(node)
 ```
 
-Returns a sine of the value in radians of the given node.
+Returns a sine of the value (in radians) of the given node.
 
 ---
 ### `cos`
@@ -348,7 +348,7 @@ Returns a sine of the value in radians of the given node.
 cos(node)
 ```
 
-Returns a cosine of the value in radians of the given node
+Returns a cosine of the value (in radians) of the given node
 
 ---
 ### `exp`
@@ -366,7 +366,7 @@ Returns an exponent of the value of the given node.
 round(node)
 ```
 
-Returns node that rounds input value to the nearest integer.
+Returns a node that rounds input value to the nearest integer.
 
 ---
 ### `floor`
@@ -375,7 +375,7 @@ Returns node that rounds input value to the nearest integer.
 floor(node)
 ```
 
-Returns node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
+Returns a node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `ceil`
@@ -384,7 +384,7 @@ Returns node that rounds a number downward to its nearest integer. If the passed
 ceil(node)
 ```
 
-Returns node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
+Returns a node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `lessThan`
