@@ -87,6 +87,11 @@ public class PropsNode extends Node implements FinalNode {
               throw new IllegalArgumentException("Unexpected type " + type);
           }
         }
+      } else if (node instanceof ConcatNode) {
+        String key = entry.getKey();
+        String value = (String) node.value();
+        mPropMap.putString(key, value);
+        hasUIProps = true;
       } else {
         String key = entry.getKey();
         if (mNodesManager.uiProps.contains(key)) {
