@@ -1,7 +1,7 @@
 import React from 'react';
 import { findNodeHandle, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
-import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
+import ViewStylePropTypes from 'react-native/Libraries/DeprecatedPropTypes/DeprecatedViewStylePropTypes';
 
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
