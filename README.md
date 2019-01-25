@@ -2,16 +2,22 @@
 
 React Native's Animated library reimplemented.
 
-It provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
+- **Native Performance**: Declare your animations in JS, but have them run on the native thread! 🧙‍♂️
+- **Precise Animations**: The API affords new levels of precision and detailed control of your animations. 🕹
+- **Backwards Compatible**: Use the same Animated library API from React Native that you've been using. You don't _need_ to change anything. 👍
+
+Reanimated provides a more comprehensive, low level abstraction for the Animated library API, giving you much greater flexibility, control and performance. Combine it with [react-native-gesture-handler](https://github.com/kmagiera/react-native-gesture-handler) for performant gesture-based interactions.
 
 ![](/assets/meme.png)
 
 ## OMG, why would you build this? (motivation)
 
-`Animated` library has several limitations that become troubling when it comes to gesture based interactions.
-I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
-The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
-This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
+React Native's `Animated` library has several limitations that become troubling when it comes to gesture based interactions.
+
+I started this project initially to resolve problems with pan gestures. Specifically, a simple dragging interaction, when an object (let's say a box) can be dragged and released and snap to some location on the screen.
+
+The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on the native UI thread (utilizing the `useNativeDriver` flag), we still had to call back into JavaScript at the end of the gesture for us to start "snap" animation.
+This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner. That's because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
 Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
 We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
 
@@ -26,16 +32,17 @@ On a similar topic, I come across React Native's PR [#18029](https://github.com/
 You can watch my [React Europe talk](https://www.youtube.com/watch?v=kdq4z2708VM) where I explain the motivation.
 
 The goals:
- - More generic primitive node types leading to more code reuse for the library internals therefore making it easier to add new features and fix bugs.
- - The new set of base nodes can be used to implement `Animated` compatible API including:
-  - Complex nodes such as “diffClamp”.
-  - Interactions such as animated value tracking or animation staggering.
- - Conditional evaluation & nodes with side effects (`set`, `startClock`, `stopClock`).
- - No more “useNativeDriver” – all animations runs on the UI thread by default
+
+- More generic primitive node types leading to more code reuse for the library internals therefore making it easier to add new features and fix bugs.
+- The new set of base nodes can be used to implement `Animated` compatible API including:
+- Complex nodes such as “diffClamp”.
+- Interactions such as animated value tracking or animation staggering.
+- Conditional evaluation & nodes with side effects (`set`, `startClock`, `stopClock`).
+- No more “useNativeDriver” – all animations runs on the UI thread by default
 
 ## Getting started
 
-Before you get started you should definitely familiarize yourself with the original Animated API first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
+Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html) first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
 
 Throughout this document when we refer to classes or methods prefixed with `Animated` we usually refer to them being imported from `react-native-reanimated` package instead of plain `react-native`.
 
