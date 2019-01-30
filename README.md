@@ -8,21 +8,56 @@ React Native's Animated library reimplemented.
 
 Reanimated provides a more comprehensive, low level abstraction for the Animated library API, giving you much greater flexibility, control and performance. Combine it with [react-native-gesture-handler](https://github.com/kmagiera/react-native-gesture-handler) for performant gesture-based interactions.
 
-![](/assets/meme.png)
+## Getting started
 
-## OMG, why would you build this? (motivation)
+Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html) first. It will do you well to be comfortable with how animations are generally done in `Animated`. (Reanimated is also backwards compatible with the `Animated API`.)
+
+- Read through the [Fundamental Concepts in Reanimated](#Fundamental-Concepts-in-Reanimated) to understand some of the Reanimated-specific basics.
+- Refer to the [API documentation](#API-Reference) below and to the [Examples](#examples) section to learn how to use this library.
+- Refer to the [Motivation](#Motivation---OMG,-why-would-you-build-this?) section to understand why this library exists
+- Refer to the [Reanimated vs. Animated](#Reanimated-vs.-Animated) to understand the differences between the old `Animated` API and Reanimated.
+
+NOTE: Throughout this document when we refer to classes or methods prefixed with `Animated` we usually refer to them being imported from `react-native-reanimated` package instead of plain `react-native`.
+
+### Installation
+
+I. First install the library from npm repository using `yarn`:
+
+```bash
+  yarn add react-native-reanimated
+```
+
+II. Link native code with `react-native` cli:
+
+```bash
+  react-native link react-native-reanimated
+```
+
+III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
+
+```js
+import Animated from 'react-native-reanimated';
+```
+
+Similarly when you need `Easing` import it from `react-native-reanimated` package instead of `react-native`:
+
+```js
+import Animated, { Easing } from 'react-native-reanimated';
+```
+
+## Motivation - OMG, why would you build this?
 
 React Native's `Animated` library has several limitations that become troubling when it comes to gesture based interactions.
 
 I started this project initially to resolve problems with pan gestures. Specifically, a simple dragging interaction, when an object (let's say a box) can be dragged and released and snap to some location on the screen.
 
-The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on the native UI thread (utilizing the `useNativeDriver` flag), we still had to call back into JavaScript at the end of the gesture for us to start "snap" animation.
-This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner. That's because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
-Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
+The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on the native UI thread (utilizing the `useNativeDriver` flag), we still had to call back into JavaScript at the end of the gesture for us to start "snap" animation. This is not optimal.
+The reason we have to call back into JavaScript is because `Animated.spring({}).start()` cannot be used in a "declarative" manner. When it gets executed it has a "side effect" of starting a process (an animation) that updates the value over time.
+Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task since the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
 We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
 
 Another reason why I started rethinking how the internals of `Animated` can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
-Apparently, even though the native driver is out for quite a while, it still does not support all the things non-native `Animated` lib can do.
+Apparently, even though the native driver has been out for a while, it still does not support all the things non-native `Animated` lib can do.
 Obviously, it is far more difficult to build three versions of each feature (JS, Android and iOS) instead of one, and the same applies for fixing bugs.
 One of the goals of `react-native-reanimated` was to provide a more generic building block for the API that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
 Taking "diffClamp" node as an example, it is currently implemented in three different places in `Animated` core and even though it is pretty useful it actually only has one use case (collapsible scrollview header).
@@ -40,33 +75,7 @@ The goals:
 - Conditional evaluation & nodes with side effects (`set`, `startClock`, `stopClock`).
 - No more “useNativeDriver” – all animations runs on the UI thread by default
 
-## Getting started
-
-Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html) first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
-
-Throughout this document when we refer to classes or methods prefixed with `Animated` we usually refer to them being imported from `react-native-reanimated` package instead of plain `react-native`.
-
-### Installation
-
-I. First install the library from npm repository using `yarn`:
-```bash
-  yarn add react-native-reanimated
-```
-
-II. Link native code with `react-native` cli:
-```bash
-  react-native link react-native-reanimated
-```
-
-III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
-```js
-import Animated from 'react-native-reanimated';
-```
-
-Similarly when you need `Easing` import it from `react-native-reanimated` package instead of `react-native`:
-```js
-import Animated, { Easing } from 'react-native-reanimated';
-```
+![progress in animations, from setTimeout, to requestAnimationFrame, to Animated and finally Reanimated](/assets/meme.png)
 
 ## Reanimated vs Animated
 
@@ -77,7 +86,10 @@ All the functionality that missing elements provide in `Animated` can already be
  - [ ] animation staggering
  - [ ] animation delays
 
+# Fundamental Concepts in Reanimated
+
 ## Value
+
 `Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
 ```js
 const v = new Value(0);
@@ -95,19 +107,6 @@ In `react-native-reanimated`, clocks aim to replace that by providing more of a 
 
 Because `Animated.Clock` just extends the `Animated.Value` you can use it in the same places (operations) where you can pass any type of animated node.
 
-## At most once evaluation (the algorithm)
-
-Unlike the original `Animated` library where each node could have been evaluated many times within a single frame, `react-native-reanimated` restricts each node to be evaluated at most once in a frame.
-This restriction is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
-When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
-This notion also helps with performance as we can try to evaluate as few nodes as expected.
-The current algorithm for making decisions of which nodes to evaluate works as follows:
- 1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
- 2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
- 3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
- 5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
-
 ## Blocks
 
 Blocks are just an arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
@@ -124,6 +123,19 @@ cond(
 ```
 
 Passing array directly is equivalent to wrapping it with the [`block`](#block) command.
+
+## At most once evaluation (the algorithm)
+
+Unlike the original `Animated` library where each node could have been evaluated many times within a single frame, `react-native-reanimated` restricts each node to be evaluated at most once in a frame.
+This restriction is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
+When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
+This notion also helps with performance as we can try to evaluate as few nodes as expected.
+The current algorithm for making decisions of which nodes to evaluate works as follows:
+ 1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
+ 2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
+ 3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
+ 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
+ 5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 # API reference
 
