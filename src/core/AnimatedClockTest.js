@@ -18,3 +18,7 @@ export default class AnimatedClockTest extends AnimatedNode {
     return this._clockNode.isStarted() ? 1 : 0;
   }
 }
+
+export function createAnimatedClockTest(clock) {
+  return new AnimatedClockTest(clock);
+}

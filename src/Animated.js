@@ -18,7 +18,6 @@ import {
   addWhitelistedUIProps,
 } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
-
 const Animated = {
   // components
   View: createAnimatedComponent(View),

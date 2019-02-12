@@ -12,3 +12,7 @@ export default class AnimatedAlways extends AnimatedNode {
     return 0;
   }
 }
+
+export function createAnimatedAlways(item) {
+  return new AnimatedAlways(item);
+}

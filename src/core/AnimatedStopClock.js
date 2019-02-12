@@ -19,3 +19,7 @@ export default class AnimatedStopClock extends AnimatedNode {
     return 0;
   }
 }
+
+export function createAnimatedStopClock(clock) {
+  return new AnimatedStopClock(clock);
+}

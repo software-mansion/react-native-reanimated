@@ -19,3 +19,7 @@ export default class AnimatedStartClock extends AnimatedNode {
     return 0;
   }
 }
+
+export function createAnimatedStartClock(clock) {
+  return new AnimatedStartClock(clock);
+}

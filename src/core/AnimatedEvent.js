@@ -2,7 +2,7 @@ import { findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
-import AnimatedValue from './AnimatedValue';
+import InternalAnimatedValue from './AnimatedValue';
 import AnimatedAlways from './AnimatedAlways';
 
 import invariant from 'fbjs/lib/invariant';
@@ -15,12 +15,12 @@ function sanitizeArgMapping(argMapping) {
   const alwaysNodes = [];
 
   const traverse = (value, path) => {
-    if (value instanceof AnimatedValue) {
+    if (value instanceof InternalAnimatedValue) {
       eventMappings.push(path.concat(value.__nodeID));
     } else if (typeof value === 'object' && value.__val) {
       eventMappings.push(path.concat(value.__val.__nodeID));
     } else if (typeof value === 'function') {
-      const node = new AnimatedValue(0);
+      const node = new InternalAnimatedValue(0);
       alwaysNodes.push(new AnimatedAlways(value(node)));
       eventMappings.push(path.concat(node.__nodeID));
     } else if (typeof value === 'object') {
@@ -98,4 +98,8 @@ export default class AnimatedEvent extends AnimatedNode {
     ReanimatedModule.detachEvent(viewTag, eventName, this.__nodeID);
     this.__detach();
   }
+}
+
+export function createAnimatedEvent(argMapping, config) {
+  return new AnimatedEvent(argMapping, config);
 }
