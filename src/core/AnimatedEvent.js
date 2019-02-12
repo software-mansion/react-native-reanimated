@@ -3,7 +3,7 @@ import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';
-import AnimatedAlways from './AnimatedAlways';
+import { createAnimatedAlways } from './AnimatedAlways';
 
 import invariant from 'fbjs/lib/invariant';
 import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
@@ -21,7 +21,7 @@ function sanitizeArgMapping(argMapping) {
       eventMappings.push(path.concat(value.__val.__nodeID));
     } else if (typeof value === 'function') {
       const node = new InternalAnimatedValue(0);
-      alwaysNodes.push(new AnimatedAlways(value(node)));
+      alwaysNodes.push(createAnimatedAlways(value(node)));
       eventMappings.push(path.concat(node.__nodeID));
     } else if (typeof value === 'object') {
       for (const key in value) {

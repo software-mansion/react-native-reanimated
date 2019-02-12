@@ -2,7 +2,7 @@ import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 import { adapt } from '../core/AnimatedBlock';
 
-export default class AnimatedSet extends AnimatedNode {
+class AnimatedSet extends AnimatedNode {
   _what;
   _value;
 

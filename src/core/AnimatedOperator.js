@@ -50,7 +50,7 @@ const OPERATIONS = {
   neq: infix((a, b) => a != b),
 };
 
-export default class AnimatedOperator extends AnimatedNode {
+class AnimatedOperator extends AnimatedNode {
   _input;
   _op;
   _operation;

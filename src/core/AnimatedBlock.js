@@ -2,7 +2,7 @@ import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 import InternalAnimatedValue from './InternalAnimatedValue';
 
-export default class AnimatedBlock extends AnimatedNode {
+class AnimatedBlock extends AnimatedNode {
   _array;
 
   constructor(array) {

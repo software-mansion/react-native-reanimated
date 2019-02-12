@@ -3,7 +3,7 @@ import AnimatedNode from './AnimatedNode';
 import { createAnimatedBlock as block, adapt } from './AnimatedBlock';
 import { createAnimatedCall as call } from './AnimatedCall';
 
-export default class AnimatedDebug extends AnimatedNode {
+class AnimatedDebug extends AnimatedNode {
   _message;
   _value;
 

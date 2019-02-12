@@ -1,9 +1,9 @@
 import React from 'react';
-import AnimatedAlways from './AnimatedAlways';
+import { createAnimatedAlways } from './AnimatedAlways';
 
 class Code extends React.Component {
   componentDidMount() {
-    this.always = new AnimatedAlways(
+    this.always = createAnimatedAlways(
       this.props.exec ? this.props.exec : this.props.children()
     );
     this.always.__attach();

@@ -2,7 +2,7 @@ import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
 import { adapt } from '../core/AnimatedBlock';
 
-export default class AnimatedCond extends AnimatedNode {
+class AnimatedCond extends AnimatedNode {
   _condition;
   _ifBlock;
   _elseBlock;

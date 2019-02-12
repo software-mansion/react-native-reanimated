@@ -9,7 +9,7 @@ function listener(data) {
   node && node._callback(data.args);
 }
 
-export default class AnimatedCall extends AnimatedNode {
+class AnimatedCall extends AnimatedNode {
   _callback;
   _args;
 
