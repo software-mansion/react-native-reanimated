@@ -1,7 +1,6 @@
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
-import { adapt } from '../core/AnimatedBlock';
-import { createAnimatedBlock as block } from './AnimatedBlock';
+import { createAnimatedBlock as block, adapt } from './AnimatedBlock';
 import { createAnimatedCall as call } from './AnimatedCall';
 
 export default class AnimatedDebug extends AnimatedNode {
