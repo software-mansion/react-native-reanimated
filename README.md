@@ -638,8 +638,11 @@ function runTiming(clock, value, dest) {
   };
 
   return block([
-    cond(clockRunning(clock), 0, [
-      // If the clock isn't running we reset all the animation params and start the clock
+    cond(clockRunning(clock), [
+      // if the clock is already running we update the toValue, in case a new dest has been passed in
+        set(config.toValue, dest),
+    ], [
+      // if the clock isn't running we reset all the animation params and start the clock
       set(state.finished, 0),
       set(state.time, 0),
       set(state.position, value),
