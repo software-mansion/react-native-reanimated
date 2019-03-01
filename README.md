@@ -33,13 +33,13 @@ II. Link native code with `react-native` cli:
   react-native link react-native-reanimated
 ```
 
-III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
+III. When you want to use "reanimated" in your project import it from the `react-native-reanimated` package:
 
 ```js
 import Animated from 'react-native-reanimated';
 ```
 
-Similarly when you need `Easing` import it from `react-native-reanimated` package instead of `react-native`:
+Similarly when you need `Easing` import it from the `react-native-reanimated` package instead of `react-native`:
 
 ```js
 import Animated, { Easing } from 'react-native-reanimated';
@@ -60,6 +60,7 @@ All the functionality that missing elements provide in `Animated` can already be
 ### Value
 
 `Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+
 ```js
 const v = new Value(0);
 /// ...
@@ -100,11 +101,12 @@ This restriction is required for nodes that have side-effects to be used (e.g. [
 When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
 This notion also helps with performance as we can try to evaluate as few nodes as expected.
 The current algorithm for making decisions of which nodes to evaluate works as follows:
- 1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
- 2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
- 3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
- 5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
+
+1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
+2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
+3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
+4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
+5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 ## API reference
 
@@ -125,6 +127,7 @@ import Animated from 'react-native-reanimated';
 ### `Animated.Code`
 
 `Animated.Code` component allows you to define reanimated nodes that you want to execute when their input nodes updates, but aren't necessarily strictly related to some view properties and hence it does not feel right to place them under `translate` or other prop of an `Animated.View`. This component renders `null`, so you can place it in any place you want in your render method. It is required that your code is put inside component as we rely on `componentDidMount` and `componentWillUnmount` callbacks to install and cleanup animated nodes. Note that the code you put is going to be executed only once. We currently have no way of telling if your code changes and so it will only be run in `componentDidMount`. If you wish for your reanimated nodes to be updated when the component updates, you can update the `key` property of the `Animated.Code` component, which will effectively unmount old and mount new versions of it in the React tree.
+
 ```js
 <Animated.Code>
   { ()=>
@@ -157,6 +160,7 @@ block([
 
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
 [See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
+
 ```js
 this.onGestureEvent = event([
   {
@@ -168,6 +172,7 @@ this.onGestureEvent = event([
 ```
 
 If you'd like to use more than one event attribute in your reanimated code, this is also supported. Instead of defining event handler methods for a single attribute you can define at the level of `nativeEvent`. Here is an example that takes both translation attributes and state attribute from `PanGestureHandler` event:
+
 ```js
 <PanGestureHandler
   onGestureEvent={event([
@@ -186,12 +191,12 @@ If you'd like to use more than one event attribute in your reanimated code, this
 </PanGestureHandler>
 ```
 
-
 ### Available nodes
 
 <!-- Base  -->
 
 ---
+
 #### `set`
 
 ```js
@@ -201,6 +206,7 @@ set(valueToBeUpdated, sourceNode)
 When evaluated, it will assign the value of `sourceNode` to the `Animated.Value` passed as a first argument. In other words, it performs an assignment operation from the `sourceNode` to `valueToBeUpdated` value node.
 
 ---
+
 #### `cond`
 
 ```js
@@ -210,6 +216,7 @@ cond(conditionNode, ifNode, [elseNode])
 If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node and returns its value, otherwise it evaluates `elseNode` and returns its value. `elseNode` is optional.
 
 ---
+
 #### `call`
 
 ```js
@@ -219,6 +226,7 @@ call(argsNodes, callback)
 If one of the nodes from `argsNodes` array updates, `callback` will be called in JavaScript with a list of current values of nodes from `argsNodes` array as the first argument.
 
 ---
+
 #### `block`
 
 ```js
@@ -228,6 +236,7 @@ block([node1, ...])
 Takes an array of nodes and evaluates all of them in the order they are put in the array. It then returns the value of the last node.
 
 ---
+
 #### `debug`
 
 ```js
@@ -237,6 +246,7 @@ debug(messageString, valueNode)
 When the node is evaluated, it prints a string that contains the `messageString` concatenated with the value of `valueNode`. This then returns the value of `valueNode`. Logs are printed in the JS debugger if it's attached, in console if Expo client is being used, or else in the native console. Logs are visible only in `DEV` mode and have no effect on production builds. Note that `messageString` should be a normal string, not an animated node.
 
 ---
+
 #### `startClock`
 
 ```js
@@ -246,6 +256,7 @@ startClock(clockNode)
 When evaluated, it will make `Clock` node passed as an argument start updating its value each frame. Then returns `0`.
 
 ---
+
 #### `stopClock`
 
 ```js
@@ -255,6 +266,7 @@ stopClock(clockNode)
 When evaluated, it will make `Clock` node passed as an argument stop updating its value (if it has been doing that). Then returns `0`.
 
 ---
+
 #### `clockRunning`
 
 ```js
@@ -264,11 +276,13 @@ clockRunning(clockNode)
 For a given `Clock` node, it returns `1` if the clock [has been started](#startClock) (if it's updating each frame) or returns `0` otherwise.
 
 ---
+
 #### `event`
 
 Works the same way as with the original `Animated` library.
 
 ---
+
 #### `add`
 
 ```js
@@ -278,6 +292,7 @@ add(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns their sum.
 
 ---
+
 #### `sub`
 
 ```js
@@ -287,6 +302,7 @@ sub(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of subtracting their values in the exact order.
 
 ---
+
 #### `multiply`
 
 ```js
@@ -296,6 +312,7 @@ multiply(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of multiplying their values in the exact order.
 
 ---
+
 #### `divide`
 
 ```js
@@ -304,8 +321,8 @@ divide(nodeOrNumber1, nodeOrNumber2, ...)
 
 Takes two or more animated nodes or values, and when evaluated, returns the result of dividing their values in the exact order.
 
-
 ---
+
 #### `pow`
 
 ```js
@@ -315,12 +332,16 @@ pow(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of first node to the second node power. If more than two nodes are present, the result from the previous step is used as a base and the third node as exponent. This process continues onward for the following nodes if these are present.
 
 ---
+
+<!-- TODO - need to explain -->
 #### `modulo`
 
 ---
+<!-- TODO - need to explain -->
 #### `sqrt`
 
 ---
+
 #### `sin`
 
 ```js
@@ -330,6 +351,7 @@ sin(node)
 Returns a sine of the value (in radians) of the given node.
 
 ---
+
 #### `cos`
 
 ```js
@@ -339,6 +361,7 @@ cos(node)
 Returns a cosine of the value (in radians) of the given node
 
 ---
+
 #### `exp`
 
 ```js
@@ -348,6 +371,7 @@ exp(node)
 Returns an exponent of the value of the given node.
 
 ---
+
 #### `round`
 
 ```js
@@ -357,6 +381,7 @@ round(node)
 Returns a node that rounds input value to the nearest integer.
 
 ---
+
 #### `floor`
 
 ```js
@@ -366,6 +391,7 @@ floor(node)
 Returns a node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
+
 #### `ceil`
 
 ```js
@@ -375,6 +401,7 @@ ceil(node)
 Returns a node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
+
 #### `lessThan`
 
 ```js
@@ -384,6 +411,7 @@ lessThan(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is less than the value of the second node. Otherwise returns `0`.
 
 ---
+
 #### `eq`
 
 ```js
@@ -393,8 +421,8 @@ eq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of both nodes are equal. Otherwise returns `0`.
 
 ---
-#### `greaterThan`
 
+#### `greaterThan`
 
 ```js
 greaterThan(nodeOrValueA, nodeOrValueB)
@@ -403,6 +431,7 @@ greaterThan(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is greater than the value of the second node. Otherwise returns `0`.
 
 ---
+
 #### `lessOrEq`
 
 ```js
@@ -412,6 +441,7 @@ lessOrEq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is less or equal to the value of the second node. Otherwise returns `0`.
 
 ---
+
 #### `greaterOrEq`
 
 ```js
@@ -421,6 +451,7 @@ greaterOrEq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is greater or equal to the value of the second node. Otherwise returns `0`.
 
 ---
+
 #### `neq`
 
 ```js
@@ -430,6 +461,7 @@ neq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is not equal to the value of the second node. Otherwise returns `0`.
 
 ---
+
 #### `and`
 
 ```js
@@ -439,6 +471,7 @@ and(nodeOrValue1, ...)
 Acts as a logical `AND` operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "falsy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "truthy" it returns the last node's value.
 
 ---
+
 #### `or`
 
 ```js
@@ -448,6 +481,7 @@ or(nodeOrValue1, ...)
 Acts as a logical `OR` operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "truthy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "falsy" value it returns the last node's value.
 
 ---
+
 #### `defined`
 
 ```js
@@ -457,6 +491,7 @@ defined(node)
 Returns `1` if the given node evaluates to a "defined" value (that is to something that is non-null, non-undefined and non-NaN). Returns `0` otherwise.
 
 ---
+
 #### `not`
 
 ```js
@@ -468,6 +503,7 @@ Returns `1` if the given node evaluates to a "falsy" value and `0` otherwise.
 <!-- Derived -->
 
 ---
+
 #### `abs`
 
 ```js
@@ -477,6 +513,7 @@ abs(node)
 Evaluates the given node and returns an absolute value of the node's value.
 
 ---
+
 #### `min`
 
 ```js
@@ -486,6 +523,7 @@ min(nodeOrValue1, ...)
 Takes one or more nodes as an input and returns a minimum of all the node's values.
 
 ---
+
 #### `max`
 
 ```js
@@ -495,6 +533,7 @@ max(nodeOrValue1, ...)
 Takes one or more nodes as an input and returns a maximum of all the node's values.
 
 ---
+
 #### `diff`
 
 ```js
@@ -504,6 +543,7 @@ diff(node)
 Evaluates node and returns a difference between value returned at the last time it was evaluated and its value at the current time. When evaluating for the first time it returns the node's value.
 
 ---
+
 #### `acc`
 
 ```js
@@ -513,12 +553,15 @@ acc(node)
 Returns an accumulated value of the given node. This node stores a sum of all evaluations of the given node and each time it gets evaluated it would add current node's value to that sum and return it.
 
 ---
+
 #### `diffClamp`
 
 Works the same way as with the original `Animated` library.
 
 ---
+
 #### `interpolate`
+
 ```js
 interpolate(node, {
   // Input range for the interpolation. Should be monotonically increasing.
@@ -541,6 +584,7 @@ Extrapolate.IDENTITY; // Will return the input value if the input value is out o
 Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range.
 
 ---
+
 #### `color`
 
 ```js
@@ -552,13 +596,17 @@ Creates a color node in RGBA format, where the first three input nodes should ha
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
 ---
+
 #### `concat`
+
 ```js
 concat(nodeOrValue1, ...)
 ```
+
 Returns concatanation of given nodes (number or string) as string
 
 ---
+
 #### `onChange`
 
 ```js
@@ -571,6 +619,7 @@ When evaluated, it will compare `value` to its previous value. If it has changed
 ### Animations
 
 ---
+
 #### `decay`
 
 ```js
@@ -580,6 +629,7 @@ decay(clock, { finished, velocity, position, time }, { deceleration })
 Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` will yield meaningful results.
 
 ---
+
 #### `timing`
 
 ```js
@@ -590,6 +640,7 @@ Updates `position` node by running timing based animation from a given position 
 The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far), similar to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
 
 ---
+
 #### `spring`
 
 ```js
