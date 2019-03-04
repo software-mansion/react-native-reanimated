@@ -10,7 +10,7 @@
     "@babel/runtime": "^7.1.2",
     "react": "16.5.0",
     "react-native": "0.57.2",
-    "react-native-gesture-handler": "1.0.7",
+    "react-native-gesture-handler": "1.0.15",
     "react-navigation": "2.17.0"
   },
   "devDependencies": {
