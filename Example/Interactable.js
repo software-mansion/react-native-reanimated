@@ -429,6 +429,7 @@ class Interactable extends Component {
           cond(dt, dragBehaviors[axis]),
         ],
         [
+          cond(clockRunning(clock), 0, startClock(clock)),
           cond(dragging, [updateSnapTo, set(dragging, 0)]),
           cond(dt, snapBehaviors[axis]),
           testMovementFrames,
