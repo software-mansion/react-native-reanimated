@@ -19,8 +19,8 @@ public class JSCallNode extends Node {
   @Override
   protected Double evaluate() {
     WritableArray args = Arguments.createArray();
-    for (int mInputID : mInputIDs) {
-      Node node = mNodesManager.findNodeById(mInputID, Node.class);
+    for (int i = 0; i < mInputIDs.length; i++) {
+      Node node = mNodesManager.findNodeById(mInputIDs[i], Node.class);
       if (node.value() == null) {
         args.pushNull();
       } else {
