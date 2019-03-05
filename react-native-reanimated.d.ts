@@ -150,6 +150,7 @@ declare module 'react-native-reanimated' {
       AnimateProps<ViewStyle, ScrollViewProps>
     >;
     export const Code: ComponentClass<CodeProps>;
+    export function createAnimatedComponent(component: any): any;
 
     // classes
     export {
