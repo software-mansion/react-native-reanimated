@@ -590,6 +590,19 @@ decay(clock, { finished, velocity, position, time }, { deceleration })
 
 Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` will yield meaningful results.
 
+| name         | value |
+| ------------ | ----- |
+| deceleration | 0.997 | 
+
+Default initial state:
+
+| name     |  value |
+| -------- | ------- |
+| position | 0       | 
+| finished | 0       | 
+| velocity | 0       | 
+| time     | 0       | 
+
 ---
 ### `timing`
 
@@ -600,6 +613,22 @@ timing(clock, { finished, position, frameTime, time }, { toValue, duration, easi
 Updates `position` node by running timing based animation from a given position to a destination determined by `toValue`. The animation is expected to last `duration` milliseconds and use `easing` function that could be set to one of the nodes exported by the `Easing` object.
 The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far), similar to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
 
+Default config:
+
+| name     |            value             |
+| -------- | ---------------------------- |
+| easing   | `Easing.inOut(Easing.ease)`  | 
+| duration | 500                          |
+
+Default initial state:
+
+| name      |  value |
+| --------- | ------- |
+| position  | 0       | 
+| finished  | 0       | 
+| frameTime | 0       | 
+| time      | 0       | 
+
 ---
 ### `spring`
 
@@ -608,6 +637,27 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 ```
 
 When evaluated, updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original `Animated` API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
+
+Default config:
+
+| name                       |  value |
+| -------------------------- | ------- |
+| stiffness                  | 100     | 
+| damping                    | 10      |
+| mass                       | 1       |
+| overshootClamping          | `false` |
+| restSpeedThreshold         | 0.001   |
+| restDisplacementThreshold  | 0.001   |
+
+
+Default initial state:
+
+| name     |  value |
+| -------- | ------- |
+| position | 0       | 
+| finished | 0       | 
+| velocity | 0       | 
+| time     | 0       | 
 
 
 ## Running animations

@@ -57,6 +57,7 @@ export default class TimingAnimation extends Animation {
   };
 
   static defaultConfig = {
+    duration: 500,
     easing: Easing.inOut(Easing.ease),
   };
 }
