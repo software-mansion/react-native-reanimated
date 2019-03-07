@@ -19,7 +19,7 @@ export function val(v) {
 
 export function completeWithDefaultValues(obj, defaultVals) {
   Object.keys(defaultVals).forEach(v => {
-    if (obj[v] === undefined) {
+    if (obj.hasOwnProperty(v)) {
       obj[v] = new AnimatedValue(defaultVals[v]);
     }
   });
