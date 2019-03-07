@@ -10,13 +10,13 @@ import {
 } from '../base';
 import { default as Clock } from '../core/AnimatedClock';
 import { evaluateOnce } from '../derived/evaluateOnce';
-import { completeWithDefaultValues } from '../utils';
+import { fillWithAnimatedDefaultValues } from '../utils';
 
 function createOldAnimationObject(node, AnimationClass, value, config) {
   const newClock = new Clock();
   const currentState = {};
-  completeWithDefaultValues(currentState, AnimationClass.defaultState);
-  completeWithDefaultValues(config, AnimationClass.defaultConfig);
+  fillWithAnimatedDefaultValues(currentState, AnimationClass.defaultState);
+  fillWithAnimatedDefaultValues(config, AnimationClass.defaultConfig);
   let alwaysNode;
   let isStarted = false;
   let isDone = false;
@@ -110,8 +110,8 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
 export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
   return (clock, state, config) => {
     if (config !== undefined) {
-      completeWithDefaultValues(state, AnimationClass.defaultState);
-      completeWithDefaultValues(config, AnimationClass.defaultConfig);
+      fillWithAnimatedDefaultValues(state, AnimationClass.defaultState);
+      fillWithAnimatedDefaultValues(config, AnimationClass.defaultConfig);
       return node(clock, state, config);
     }
     return createOldAnimationObject(node, AnimationClass, clock, state);

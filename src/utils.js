@@ -23,9 +23,9 @@ export function val(v) {
   return v && v.__getValue ? v.__getValue() : v || 0;
 }
 
-export function completeWithDefaultValues(obj, defaultVals) {
+export function fillWithAnimatedDefaultValues(obj, defaultVals) {
   Object.keys(defaultVals).forEach(v => {
-    if (obj.hasOwnProperty(v)) {
+    if (!obj.hasOwnProperty(v)) {
       obj[v] = new AnimatedValue(defaultVals[v]);
     }
   });
