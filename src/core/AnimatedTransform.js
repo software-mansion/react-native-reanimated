@@ -54,21 +54,6 @@ class AnimatedTransform extends AnimatedNode {
     this._transform = transform;
   }
 
-  __getProps() {
-    return this._transform.map(transform => {
-      const result = {};
-      for (const key in transform) {
-        const value = transform[key];
-        if (value instanceof AnimatedNode) {
-          result[key] = value.__getProps();
-        } else {
-          result[key] = value;
-        }
-      }
-      return result;
-    });
-  }
-
   __onEvaluate() {
     return this._transform.map(transform => {
       const result = {};

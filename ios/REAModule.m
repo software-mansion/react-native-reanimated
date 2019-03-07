@@ -56,6 +56,13 @@ RCT_EXPORT_METHOD(dropNode:(nonnull NSNumber *)nodeID)
   }];
 }
 
+RCT_EXPORT_METHOD(getValue:(nonnull NSNumber *)nodeID
+                  callback:(RCTResponseSenderBlock)callback) {
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager getValue:nodeID callback:(RCTResponseSenderBlock)callback];
+  }];
+}
+
 RCT_EXPORT_METHOD(connectNodes:(nonnull NSNumber *)parentID
                   childTag:(nonnull NSNumber *)childID)
 {
@@ -107,12 +114,14 @@ RCT_EXPORT_METHOD(detachEvent:(nonnull NSNumber *)viewTag
   }];
 }
 
-RCT_EXPORT_METHOD(configureNativeProps:(nonnull NSArray<NSString *> *)nativeProps)
+RCT_EXPORT_METHOD(configureProps:(nonnull NSArray<NSString *> *)nativeProps
+                         uiProps:(nonnull NSArray<NSString *> *)uiProps)
 {
-    [self addOperationBlock:^(REANodesManager *nodesManager) {
-        [nodesManager configureNativeProps:[NSSet setWithArray:nativeProps]];
-    }];
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];
+  }];
 }
+
 
 #pragma mark -- Batch handling
 
@@ -138,6 +147,7 @@ RCT_EXPORT_METHOD(configureNativeProps:(nonnull NSArray<NSString *> *)nativeProp
     for (AnimatedOperation operation in operations) {
       operation(nodesManager);
     }
+    [nodesManager operationsBatchDidComplete];
   }];
 }
 

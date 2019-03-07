@@ -2,7 +2,7 @@ import { findNodeHandle } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
 import AnimatedEvent from './AnimatedEvent';
-import AnimatedStyle, { createOrReuseStyleNode } from './AnimatedStyle';
+import { createOrReuseStyleNode } from './AnimatedStyle';
 
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
@@ -45,21 +45,6 @@ class AnimatedProps extends AnimatedNode {
     this._props = props;
     this._callback = callback;
     this.__attach();
-  }
-
-  __getProps() {
-    const props = {};
-    for (const key in this._props) {
-      const value = this._props[key];
-      if (value instanceof AnimatedNode) {
-        if (value instanceof AnimatedStyle) {
-          props[key] = value.__getProps();
-        }
-      } else {
-        props[key] = value;
-      }
-    }
-    return props;
   }
 
   __onEvaluate() {

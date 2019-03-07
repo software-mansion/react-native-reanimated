@@ -38,55 +38,59 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
-    export interface InterpolationConfig {
+    interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
       outputRange: ReadonlyArray<Adaptable<number>>;
       extrapolate?: Extrapolate;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
     }
-    class AnimatedValue extends AnimatedNode<number> {
-      constructor(value: number);
+    type Value = string | number | boolean;
+    class AnimatedValue<T extends Value> extends AnimatedNode<T> {
+      constructor(value?: T);
 
-      setValue(value: number): void;
+      setValue(value: Adaptable<T>): void;
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    export type Mapping = { [key: string]: Mapping } | AnimatedValue;
+    export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
       | ReadonlyArray<T | AnimatedNode<T>>;
     type BinaryOperator = (
       left: Adaptable<number>,
-      right: Adaptable<number>,
+      right: Adaptable<number>
     ) => AnimatedNode<number>;
     type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
-    type LogicalOperator = (
-      value: Adaptable<number>,
+    type MultiOperator = (
+      a: Adaptable<number>,
+      b: Adaptable<number>,
       ...others: Adaptable<number>[]
     ) => AnimatedNode<number>;
 
     export interface DecayState {
-      finished: AnimatedValue;
-      velocity: AnimatedValue;
-      position: AnimatedValue;
-      time: AnimatedValue;
+      finished: AnimatedValue<number>;
+      velocity: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
     }
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
+    export interface BackwardCompatibleWrapper {
+      start: (callback : (data: { finished: boolean }) => any) => void;
+      stop: () => void;
+    }
 
     export interface TimingState {
-      finished: AnimatedValue;
-      velocity: AnimatedValue;
-      position: AnimatedValue;
-      time: AnimatedValue;
+      finished: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
+      frameTime: AnimatedValue<number>;
     }
-    export type EasingFunction = (
-      value: Adaptable<number>,
-    ) => AnimatedNode<number>;
+    export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
     export interface TimingConfig {
       toValue: Adaptable<number>;
       duration: Adaptable<number>;
@@ -94,10 +98,10 @@ declare module 'react-native-reanimated' {
     }
 
     export interface SpringState {
-      finished?: AnimatedValue;
-      velocity?: AnimatedValue;
-      position?: AnimatedValue;
-      time?: AnimatedValue;
+      finished: AnimatedValue<number>;
+      velocity: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
     }
     export interface SpringConfig {
       damping: Adaptable<number>;
@@ -133,6 +137,11 @@ declare module 'react-native-reanimated' {
         : P[K] | AnimatedNode<P[K]>
     };
 
+    type CodeProps = {
+      exec?: AnimatedNode<number>
+      children?: () => AnimatedNode<number>
+    };
+
     // components
     export const View: ComponentClass<AnimateProps<ViewStyle, ViewProps>>;
     export const Text: ComponentClass<AnimateProps<TextStyle, TextProps>>;
@@ -140,6 +149,7 @@ declare module 'react-native-reanimated' {
     export const ScrollView: ComponentClass<
       AnimateProps<ViewStyle, ScrollViewProps>
     >;
+    export const Code: ComponentClass<CodeProps>;
 
     // classes
     export {
@@ -149,31 +159,38 @@ declare module 'react-native-reanimated' {
     };
 
     // base operations
-    export const add: BinaryOperator;
-    export const sub: BinaryOperator;
-    export const multiply: BinaryOperator;
-    export const divide: BinaryOperator;
-    export const pow: BinaryOperator;
-    export const modulo: BinaryOperator;
+    export const add: MultiOperator;
+    export const sub: MultiOperator;
+    export const multiply: MultiOperator;
+    export const divide: MultiOperator;
+    export const pow: MultiOperator;
+    export const modulo: MultiOperator;
     export const sqrt: UnaryOperator;
     export const sin: UnaryOperator;
     export const cos: UnaryOperator;
     export const exp: UnaryOperator;
     export const round: UnaryOperator;
+    export const floor: UnaryOperator;
+    export const ceil: UnaryOperator;
     export const lessThan: BinaryOperator;
     export const eq: BinaryOperator;
     export const greaterThan: BinaryOperator;
     export const lessOrEq: BinaryOperator;
     export const greaterOrEq: BinaryOperator;
     export const neq: BinaryOperator;
-    export const and: LogicalOperator;
-    export const or: LogicalOperator;
+    export const and: MultiOperator;
+    export const or: MultiOperator;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
-      valueToBeUpdated: AnimatedValue,
+      valueToBeUpdated: AnimatedValue<number>,
       sourceNode: Adaptable<number>,
     ): AnimatedNode<number>;
+    export function concat(
+      a: AnimatedNode<string>,
+      b: AnimatedNode<string>,
+      ...others: AnimatedNode<string>[],
+    ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
       ifNode: Adaptable<number>,
@@ -183,25 +200,24 @@ declare module 'react-native-reanimated' {
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
     export function call<T>(
-      nodes: ReadonlyArray<AnimatedNode<T>>,
-      callback: (values: ReadonlyArray<T>) => void,
+      args: ReadonlyArray<T | AnimatedNode<T>>,
+      callback: (args: ReadonlyArray<T>) => void,
     ): AnimatedNode<0>;
     export function debug<T>(
       message: string,
       value: Adaptable<T>,
     ): AnimatedNode<T>;
     export function onChange(
-      value: Adaptable<any>,
-      action: Adaptable<any>,
-    ): AnimatedNode<undefined>;
+      value: Adaptable<number>,
+      action: Adaptable<number>,
+    ): AnimatedNode<number>;
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
-    export function always(item: AnimatedNode<any>): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
     export function event(
-      argMapping: ReadonlyArray<Mapping | null>,
+      argMapping: ReadonlyArray<Mapping>,
       config?: {},
     ): (...args: any[]) => void;
 
@@ -243,6 +259,19 @@ declare module 'react-native-reanimated' {
       state: SpringState,
       config: SpringConfig,
     ): AnimatedNode<number>;
+    // backward compatible API
+    export function spring(
+      node: AnimatedNode<number>,
+      config: SpringConfig,
+    ): BackwardCompatibleWrapper;
+    export function timing(
+      node: AnimatedNode<number>,
+      config: TimingConfig,
+    ): BackwardCompatibleWrapper;
+    export function decay(
+      node: AnimatedNode<number>,
+      config: DecayConfig,
+    ): BackwardCompatibleWrapper;
 
     // configuration
 
@@ -269,10 +298,10 @@ declare module 'react-native-reanimated' {
     back(s?: Animated.Adaptable<number>): Animated.EasingFunction;
     bounce: Animated.EasingFunction;
     bezier(
-      x1: Animated.Adaptable<number>,
-      y1: Animated.Adaptable<number>,
-      x2: Animated.Adaptable<number>,
-      y2: Animated.Adaptable<number>,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
