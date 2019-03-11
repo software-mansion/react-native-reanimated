@@ -351,6 +351,42 @@ cos(node)
 Returns a cosine of the value (in radians) of the given node
 
 ---
+### `tan`
+
+```js
+tan(node)
+```
+
+Returns a tangent of the value in radians of the given node
+
+---
+### `acos`
+
+```js
+acos(node)
+```
+
+Returns a arc-cosine of the value in radians of the given node
+
+---
+### `asin`
+
+```js
+asin(node)
+```
+
+Returns a arc-sine of the value in radians of the given node
+
+---
+### `atan`
+
+```js
+atan(node)
+```
+
+Returns a arc-tangent of the value in radians of the given node
+
+---
 ### `exp`
 
 ```js
