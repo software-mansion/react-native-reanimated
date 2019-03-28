@@ -501,7 +501,7 @@ The returned node can be mapped to view properties that represents color (e.g. [
 ---
 ### `delay`
 ```js
-dalay(clock,{ finished }, { node, nodeBefore, time} )
+delay(clock,{ finished }, { node, nodeBefore, time} )
 ```
 On attaching it returns `nodeBefore` before given `time` pass and `node` after.
 
