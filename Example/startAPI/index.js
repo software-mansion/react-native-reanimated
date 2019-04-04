@@ -3,14 +3,14 @@ import { Button, StyleSheet, View, Alert } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
-const { timing, spring, Value } = Animated;
+const { timing, spring, color, multiply, round, Value } = Animated;
 
 export default class Example extends Component {
   constructor(props) {
     super(props);
-    this._transX = new Value(100);
+    this._transX = new Value(0);
     this._config = {
-      toValue: -60,
+      toValue: 1,
       damping: 2,
       mass: 1,
       stiffness: 121.6,
@@ -20,7 +20,7 @@ export default class Example extends Component {
     };
     this._config2 = {
       duration: 5000,
-      toValue: -120,
+      toValue: 1,
       easing: Easing.inOut(Easing.ease),
     };
     this._anim2 = spring(this._transX, this._config);
@@ -31,7 +31,12 @@ export default class Example extends Component {
     return (
       <View style={styles.container}>
         <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
+          style={[
+            styles.box,
+            {
+              backgroundColor: color(round(multiply(this._transX, 255)), 0, 0),
+            },
+          ]}
         />
         <Button
           onPress={() => {
@@ -74,7 +79,6 @@ const styles = StyleSheet.create({
     height: BOX_SIZE,
     borderColor: '#F5FCFF',
     alignSelf: 'center',
-    backgroundColor: 'plum',
     margin: BOX_SIZE / 2,
   },
 });

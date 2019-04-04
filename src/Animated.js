@@ -1,4 +1,13 @@
-import { Image, ScrollView, Text, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  Text,
+  View,
+  UIManager,
+  requireNativeComponent,
+  findNodeHandle,
+} from 'react-native';
+import React from 'react';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
@@ -18,6 +27,11 @@ import {
   addWhitelistedUIProps,
 } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
+import {
+  Transition,
+  Transitioning,
+  createTransitioningComponent,
+} from './Transitioning';
 
 const Animated = {
   // components
@@ -49,4 +63,4 @@ const Animated = {
 
 export default Animated;
 
-export { Easing };
+export { Easing, Transitioning, Transition, createTransitioningComponent };
