@@ -1,6 +1,7 @@
 import {
   Image,
   ScrollView,
+  FlatList,
   Text,
   View,
   UIManager,
@@ -39,6 +40,7 @@ const Animated = {
   Text: createAnimatedComponent(Text),
   Image: createAnimatedComponent(Image),
   ScrollView: createAnimatedComponent(ScrollView),
+  FlatList: createAnimatedComponent(FlatList),
   Code: AnimatedCode,
   createAnimatedComponent,
 
