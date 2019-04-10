@@ -1,13 +1,4 @@
-import {
-  Image,
-  ScrollView,
-  Text,
-  View,
-  UIManager,
-  requireNativeComponent,
-  findNodeHandle,
-} from 'react-native';
-import React from 'react';
+import { Image, ScrollView, Text, View } from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
