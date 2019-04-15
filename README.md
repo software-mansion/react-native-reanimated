@@ -220,6 +220,21 @@ block([
 }/>
 ```
 
+## `Animated.useCode`
+
+The `useCode` hook acts as an alternative to the `Animated.Code` component.
+```js
+Animated.useCode(node, deps)
+```
+It's passed an animated node and an array of dependencies, and updates that node both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (<0.59).
+```js
+const [offset, setOffset] = React.useState(20);
+Animated.useCode(
+  set(transX1, add(_transX, offset)),
+  [offset]
+);
+```
+
 ## Event handling with reanimated nodes
 
 `react-native-reanimated`'s new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.

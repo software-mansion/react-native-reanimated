@@ -278,6 +278,12 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
+    // hooks
+    export function useCode(
+      exec: AnimatedNode<number>,
+      deps: Array<any>,
+    ): void
+
     // configuration
 
     // `addWhitelistedNativeProps` will likely be removed soon, and so is
