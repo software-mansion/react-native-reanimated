@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass } from 'react';
+  import { ComponentClass, ReactNode, Component } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -313,4 +313,36 @@ declare module 'react-native-reanimated' {
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
   export const Easing: EasingStatic;
+
+  export interface TransitioningViewProps extends ViewProps {
+    transition: ReactNode;
+  }
+
+  export class TransitioningView extends Component<TransitioningViewProps> {
+    animateNextTransition(): void;
+  }
+
+  export class Transitioning extends Component {
+    static View: typeof TransitioningView;
+  }
+
+  export interface TransitionProps {
+    delayMs?: number;
+    durationMs?: number;
+    interpolation?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+    propagation?: 'top' | 'bottom' | 'left' | 'right';
+  }
+
+  export interface TransitionInOutProps extends TransitionProps {
+    type?: 'fade' | 'scale' | 'slide-top' | 'slide-bottom' | 'slide-right' | 'slide-left';
+  }
+
+  export class Transition extends Component {
+    static In: ComponentClass<TransitionInOutProps>;
+    static Out: ComponentClass<TransitionInOutProps>;
+    static Change: ComponentClass<TransitionProps>;
+    static Together: ComponentClass<{}>;
+    static Sequence: ComponentClass<{}>;
+  }
+
 }
