@@ -58,7 +58,7 @@ declare module 'react-native-reanimated' {
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
-      | ReadonlyArray<Adaptable<T>>;
+      | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>;
     type BinaryOperator = (
       left: Adaptable<number>,
       right: Adaptable<number>
