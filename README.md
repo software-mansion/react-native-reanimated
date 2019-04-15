@@ -65,7 +65,7 @@ import Animated, { Easing } from 'react-native-reanimated';
 
 Transitions is an experimental API distributed as a part of reanimated which serves the purpose of animating between two states of view hierarchy. It is conceptually similar to `LayoutAnimation` concept from react native but gives much better control of what and how is going to be animated.
 
-Transitions API consists of tywo main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
+Transitions API consists of two main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
 
 The second main bulding block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
 
