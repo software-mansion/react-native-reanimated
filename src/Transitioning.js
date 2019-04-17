@@ -24,10 +24,25 @@ function configFromProps(type, props) {
   return config;
 }
 
+/**
+ * The below wrapper is used to support legacy context API with Context.Consumer
+ * render prop. We need it as we want to access `context` from within
+ * `componentDidMount` callback. If we decided to drop support for older
+ * react native we could rewrite it using hooks or `static contextType` API.
+ */
+function wrapTransitioningContext(Comp) {
+  return props => {
+    return (
+      <TransitioningContext.Consumer>
+        {context => <Comp context={context} {...props} />}
+      </TransitioningContext.Consumer>
+    );
+  };
+}
+
 class In extends React.Component {
-  static contextType = TransitioningContext;
   componentDidMount() {
-    this.context.push(configFromProps('in', this.props));
+    this.props.context.push(configFromProps('in', this.props));
   }
   render() {
     return this.props.children || null;
@@ -35,9 +50,8 @@ class In extends React.Component {
 }
 
 class Change extends React.Component {
-  static contextType = TransitioningContext;
   componentDidMount() {
-    this.context.push(configFromProps('change', this.props));
+    this.props.context.push(configFromProps('change', this.props));
   }
   render() {
     return this.props.children || null;
@@ -45,9 +59,8 @@ class Change extends React.Component {
 }
 
 class Out extends React.Component {
-  static contextType = TransitioningContext;
   componentDidMount() {
-    this.context.push(configFromProps('out', this.props));
+    this.props.context.push(configFromProps('out', this.props));
   }
   render() {
     return this.props.children || null;
@@ -55,12 +68,11 @@ class Out extends React.Component {
 }
 
 class Together extends React.Component {
-  static contextType = TransitioningContext;
   transitions = [];
   componentDidMount() {
     const config = configFromProps('group', this.props);
     config.transitions = this.transitions;
-    this.context.push(config);
+    this.props.context.push(config);
   }
   render() {
     return (
@@ -72,13 +84,12 @@ class Together extends React.Component {
 }
 
 class Sequence extends React.Component {
-  static contextType = TransitioningContext;
   transitions = [];
   componentDidMount() {
     const config = configFromProps('group', this.props);
     config.sequence = true;
     config.transitions = this.transitions;
-    this.context.push(config);
+    this.props.context.push(config);
   }
   render() {
     return (
@@ -132,11 +143,11 @@ const Transitioning = {
 };
 
 const Transition = {
-  Sequence,
-  Together,
-  In,
-  Out,
-  Change,
+  Sequence: wrapTransitioningContext(Sequence),
+  Together: wrapTransitioningContext(Together),
+  In: wrapTransitioningContext(In),
+  Out: wrapTransitioningContext(Out),
+  Change: wrapTransitioningContext(Change),
 };
 
 export { Transitioning, Transition, createTransitioningComponent };
