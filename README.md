@@ -12,7 +12,7 @@ Reanimated provides a more comprehensive, low level abstraction for the Animated
 
 Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html). It will do you well to be comfortable with how animations are generally done in `Animated`. (Fun Fact: Reanimated is also backwards compatible with the `Animated API`. 🙌)
 
-- Refer to the [Reanimated vs. Animated](#Reanimated-vs.-Animated) to understand the differences between the old `Animated` API and Reanimated.
+- Refer to the [Reanimated vs. Animated](#Reanimated-vs.-Animated) to understand the differences between the React Native‘s `Animated` API and Reanimated.
 - Read through the [Fundamental Concepts in Reanimated](#Fundamental-Concepts-in-Reanimated) to understand some of the Reanimated-specific basics.
 - Refer to the [API documentation](#API-Reference) below and to the [Examples](#examples) section to learn how to use this library.
 - Refer to the [Motivation](#Motivation---OMG,-why-would-you-build-this?) section to understand why this library exists
