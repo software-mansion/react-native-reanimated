@@ -192,9 +192,9 @@ declare module 'react-native-reanimated' {
       sourceNode: Adaptable<number>,
     ): AnimatedNode<number>;
     export function concat(
-      a: AnimatedNode<string>,
-      b: AnimatedNode<string>,
-      ...others: AnimatedNode<string>[],
+      a: Adaptable<string> | Adaptable<number>,
+      b: Adaptable<string> | Adaptable<number>,
+      ...others: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
