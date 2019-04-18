@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public class DebugNode extends Node {
@@ -12,8 +13,8 @@ public class DebugNode extends Node {
 
   public DebugNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    mMessage = config.getString("message");
-    mValueID = config.getInt("value");
+    mMessage = MapUtils.getString(config, "message", "'message' argument passed to debug node might be of wrong type. NodeID: " + nodeID );
+    mValueID = MapUtils.getInt(config, "value", "'value' argument passed to debug node might be of wrong type. NodeID: " + nodeID );
   }
 
   @Override

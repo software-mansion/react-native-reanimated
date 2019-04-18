@@ -10,7 +10,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class MapUtils {
-
   public static boolean getBoolean(ReadableMap map,  @Nonnull String name, String errorMsg) {
     try {
       return map.getBoolean(name);
