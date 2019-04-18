@@ -102,7 +102,7 @@ When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a s
 This notion also helps with performance as we can try to evaluate as few nodes as expected.
 The current algorithm for making decisions of which nodes to evaluate works as follows:
 
-1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
+1. For each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
 2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
 3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
