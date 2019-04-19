@@ -7,7 +7,7 @@ import com.swmansion.reanimated.NodesManager;
 public class AlwaysNode extends Node implements FinalNode {
   public AlwaysNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    mNodeToBeEvaluated = MapUtils.getInt(config, "what", "Argument passed to always node might be of wrong type. NodeID: " + nodeID );
+    mNodeToBeEvaluated = MapUtils.getInt(config, "what", "Argument passed to always node is either of wrong type or is missing. NodeID: " + nodeID );
   }
 
   private int mNodeToBeEvaluated;
