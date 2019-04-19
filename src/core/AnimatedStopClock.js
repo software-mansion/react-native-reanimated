@@ -9,10 +9,13 @@ export default class AnimatedStopClock extends AnimatedNode {
     super({ type: 'clockStop', clock: clockNode.__nodeID });
     invariant(
       clockNode instanceof AnimatedClock,
-      'Reanimated: Animated.stopClock argument should be of type AnimatedClock. NodeID: %s',
-      clockNode.__nodeID
+      `Reanimated: Animated.stopClock argument should be of type AnimatedClock but got ${clockNode}`
     );
     this._clockNode = clockNode;
+  }
+
+  toString() {
+    return `AnimatedStopClock, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

@@ -141,6 +141,10 @@ export default class AnimatedBezier extends AnimatedNode {
     this._bezier = bezier(mX1, mY1, mX2, mY2);
   }
 
+  toString() {
+    return `AnimatedBezier, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     return this._bezier(val(this._value));
   }

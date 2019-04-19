@@ -9,6 +9,10 @@ export default class AnimatedBlock extends AnimatedNode {
     this._array = array;
   }
 
+  toString() {
+    return `AnimatedBlock, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     let result;
     this._array.forEach(node => {

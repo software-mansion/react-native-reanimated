@@ -10,12 +10,14 @@ export default class AnimatedSet extends AnimatedNode {
     super({ type: 'set', what: what.__nodeID, value: value.__nodeID }, [value]);
     invariant(
       what instanceof AnimatedNode,
-      'Reanimated: Animated.set first argument should be of type AnimatedNode but got %s, NodeID: %s',
-      typeof what,
-      what.__nodeID
+      `Reanimated: Animated.set first argument should be of type AnimatedNode but got ${what}`
     );
     this._what = what;
     this._value = value;
+  }
+
+  toString() {
+    return `AnimatedSet, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

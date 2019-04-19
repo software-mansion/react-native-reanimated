@@ -19,6 +19,10 @@ export default class AnimatedCall extends AnimatedNode {
     this._args = args;
   }
 
+  toString() {
+    return `AnimatedCall, id: ${this.__nodeID}`;
+  }
+
   __attach() {
     super.__attach();
     NODE_MAPPING.set(this.__nodeID, this);

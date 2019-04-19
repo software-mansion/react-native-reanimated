@@ -11,6 +11,10 @@ export default class AnimatedDebug extends AnimatedNode {
     this._value = value;
   }
 
+  toString() {
+    return `AnimatedDebug, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     const value = val(this._value);
     console.log(this._message, value);

@@ -18,6 +18,10 @@ export default class AnimatedValue extends AnimatedNode {
     this._animation = null;
   }
 
+  toString() {
+    return `AnimatedValue, id: ${this.__nodeID}`;
+  }
+
   __detach() {
     ReanimatedModule.getValue(
       this.__nodeID,

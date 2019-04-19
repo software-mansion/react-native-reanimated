@@ -67,6 +67,10 @@ export default class AnimatedOperator extends AnimatedNode {
     this._input = input;
   }
 
+  toString() {
+    return `AnimatedOperator, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     if (!this._operation) {
       this._operation = OPERATIONS[this._op];

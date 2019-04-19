@@ -21,6 +21,10 @@ export default class AnimatedCond extends AnimatedNode {
     this._elseBlock = elseBlock;
   }
 
+  toString() {
+    return `AnimatedCond, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     if (val(this._condition)) {
       return val(this._ifBlock);

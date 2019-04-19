@@ -46,6 +46,10 @@ export default class AnimatedClock extends AnimatedNode {
     super({ type: 'clock' });
   }
 
+  toString() {
+    return `AnimatedClock, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     return val(mainClock);
   }

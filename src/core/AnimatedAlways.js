@@ -8,11 +8,13 @@ export default class AnimatedAlways extends AnimatedNode {
     super({ type: 'always', what: what.__nodeID }, [what]);
     invariant(
       what instanceof AnimatedNode,
-      'Reanimated: Animated.always node argument should be of type AnimatedNode but got %s. NodeID: %s',
-      typeof what,
-      what.__nodeID
+      `Reanimated: Animated.always node argument should be of type AnimatedNode but got ${what}`
     );
     this._what = what;
+  }
+
+  toString() {
+    return `AnimatedAlways, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {
