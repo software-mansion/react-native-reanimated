@@ -9,7 +9,9 @@ export default class AnimatedStartClock extends AnimatedNode {
     super({ type: 'clockStart', clock: clockNode.__nodeID });
     invariant(
       clockNode instanceof AnimatedClock,
-      'Node is not of an AnimatedClock type'
+      'Reanimated: Animated.startClock argument should be of type AnimatedClock but got %s, NodeID: %s',
+      typeof clockNode,
+      clockNode.__nodeID
     );
     this._clockNode = clockNode;
   }

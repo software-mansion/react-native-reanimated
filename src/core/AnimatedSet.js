@@ -7,11 +7,13 @@ export default class AnimatedSet extends AnimatedNode {
   _value;
 
   constructor(what, value) {
+    super({ type: 'set', what: what.__nodeID, value: value.__nodeID }, [value]);
     invariant(
       what instanceof AnimatedNode,
-      `Animated.set target should be of type AnimatedNode but got ${typeof what}`
+      'Reanimated: Animated.set first argument should be of type AnimatedNode but got %s, NodeID: %s',
+      typeof what,
+      what.__nodeID
     );
-    super({ type: 'set', what: what.__nodeID, value: value.__nodeID }, [value]);
     this._what = what;
     this._value = value;
   }
