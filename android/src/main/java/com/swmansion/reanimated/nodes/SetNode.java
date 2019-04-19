@@ -13,8 +13,8 @@ public class SetNode extends Node {
 
   public SetNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    mWhatNodeID = MapUtils.getInt(config, "what", "'what' argument passed to set node might be of wrong type. NodeID: " + nodeID);
-    mValueNodeID = MapUtils.getInt(config, "value", "'value' argument passed to set node might be of wrong type. NodeID: " + nodeID);
+    mWhatNodeID = MapUtils.getInt(config, "what", "First argument passed to set node might be of wrong type. NodeID: " + nodeID);
+    mValueNodeID = MapUtils.getInt(config, "value", "Second argument passed to set node might be of wrong type. NodeID: " + nodeID);
   }
 
   @Override

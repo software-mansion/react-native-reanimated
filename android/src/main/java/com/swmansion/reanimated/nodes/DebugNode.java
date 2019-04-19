@@ -13,8 +13,8 @@ public class DebugNode extends Node {
 
   public DebugNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    mMessage = MapUtils.getString(config, "message", "'message' argument passed to debug node might be of wrong type. NodeID: " + nodeID );
-    mValueID = MapUtils.getInt(config, "value", "'value' argument passed to debug node might be of wrong type. NodeID: " + nodeID );
+    mMessage = MapUtils.getString(config, "message", "First argument passed to debug node might be of wrong type. NodeID: " + nodeID );
+    mValueID = MapUtils.getInt(config, "value", "Second argument passed to debug node might be of wrong type. NodeID: " + nodeID );
   }
 
   @Override
