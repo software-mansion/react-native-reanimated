@@ -9,8 +9,7 @@ export default class AnimatedStopClock extends AnimatedNode {
     super({ type: 'clockStop', clock: clockNode.__nodeID });
     invariant(
       clockNode instanceof AnimatedClock,
-      'Reanimated: Animated.stopClock argument should be of type AnimatedClock but got %s, NodeID: %s',
-      typeof clockNode,
+      'Reanimated: Animated.stopClock argument should be of type AnimatedClock. NodeID: %s',
       clockNode.__nodeID
     );
     this._clockNode = clockNode;
