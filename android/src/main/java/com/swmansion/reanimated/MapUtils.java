@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.NoSuchKeyException;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,7 +22,7 @@ public class MapUtils {
     try {
       return map.getString(name);
     } catch (NoSuchKeyException e) {
-      throw new JSApplicationCausedNativeException("Reanimated: " + errorMsg);
+      throw new JSApplicationCausedNativeException(errorMsg);
     }
   }
 }
