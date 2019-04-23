@@ -1,5 +1,6 @@
 #import "REAClockNodes.h"
 #import "REANodesManager.h"
+#import <React/RCTConvert.h>
 
 @interface REAClockNode ()
 
@@ -55,7 +56,13 @@
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
 {
   if ((self = [super initWithID:nodeID config:config])) {
-    _clockNodeID = config[@"clock"];
+    _clockNodeID = [RCTConvert NSNumber:config[@"clock"]];
+    if (_clockNodeID == nil) {
+      RCTLogError(
+        @"Reanimated: First argument passed to clock node is either of wrong type or is missing. NodeID: %@",
+        self.nodeID
+      );
+    }
   }
   return self;
 }
