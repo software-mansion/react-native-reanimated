@@ -1,5 +1,5 @@
 import { cond, block, defined, sub, set } from '../base';
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedValue from '../core/InternalAnimatedValue';
 
 export default function diff(v) {
   const stash = new AnimatedValue(0);

@@ -1,7 +1,8 @@
 import AnimatedNode from './AnimatedNode';
-import { val } from '../utils';
+import { val } from '../val';
 
 import invariant from 'fbjs/lib/invariant';
+import { adapt } from '../core/AnimatedBlock';
 
 function reduce(fn) {
   return input => input.reduce((a, b) => fn(val(a), val(b)));
@@ -53,7 +54,7 @@ const OPERATIONS = {
   neq: infix((a, b) => a != b),
 };
 
-export default class AnimatedOperator extends AnimatedNode {
+class AnimatedOperator extends AnimatedNode {
   _input;
   _op;
   _operation;
@@ -74,4 +75,8 @@ export default class AnimatedOperator extends AnimatedNode {
     }
     return this._operation(this._input);
   }
+}
+
+export function createAnimatedOperator(name) {
+  return (...args) => new AnimatedOperator(name, args.map(adapt));
 }

@@ -1,5 +1,5 @@
 import { cond, defined, set, add } from '../base';
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedValue from '../core/InternalAnimatedValue';
 import min from './min';
 import max from './max';
 import diff from './diff';
