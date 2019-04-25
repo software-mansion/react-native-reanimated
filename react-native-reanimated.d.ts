@@ -133,13 +133,13 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SprintUtils =  {
+    type SpringUtils =  {
       makeDefaultConfig: () => SpringConfig;
       makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
       makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
     }
 
-    export const SprintUtils: SprintUtils
+    export const SpringUtils: SpringUtils
 
     type AnimateStyle<S extends object> = {
       [K in keyof S]: S[K] extends ReadonlyArray<any>
