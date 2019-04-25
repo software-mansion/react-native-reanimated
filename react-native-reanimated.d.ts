@@ -1,8 +1,6 @@
 // Project: https://github.com/kmagiera/react-native-reanimated
 // TypeScript Version: 2.8
 
-import {SpringConfigWithBouncinessAndSpeed} from "react-native-reanimated";
-
 declare module 'react-native-reanimated' {
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
@@ -143,7 +141,7 @@ declare module 'react-native-reanimated' {
 
     export const SprintUtils: SprintUtils
 
-      type AnimateStyle<S extends object> = {
+    type AnimateStyle<S extends object> = {
       [K in keyof S]: S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
