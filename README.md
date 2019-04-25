@@ -752,7 +752,7 @@ Transforms an object with `bounciness` and `speed` params into config expected b
 #### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(prevConfig)`
 Transforms an object with `tension` and `friction` params into config expected by the `spring` node. `tension` and `friction` might be nodes or numbers.
 
-See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/colors/differentSpringConfigs.js).
+See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/differentSpringConfigs/index.js).
 
 
 ## Running animations
