@@ -56,7 +56,7 @@ export default class SpringAnimation extends Animation {
           config.mass === undefined,
         'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
       );
-      const springConfig = SpringConfig.fromBouncinessAndSpeed(
+      const springConfig = SpringConfig.makeConfigBouncinessAndSpeed(
         withDefault(config.bounciness, 8),
         withDefault(config.speed, 12)
       );
@@ -115,6 +115,14 @@ export default class SpringAnimation extends Animation {
       finished: new AnimatedValue(0),
       velocity: new AnimatedValue(0),
       time: new AnimatedValue(0),
+    };
+  }
+
+  static getDefaultConfig() {
+    return {
+      stiffness: new AnimatedValue(100),
+      mass: new AnimatedValue(1),
+      damping: new AnimatedValue(10),
     };
   }
 }

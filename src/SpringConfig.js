@@ -9,6 +9,7 @@ import {
   and,
   greaterThan,
 } from './base';
+import AnimatedValue from './core/InternalAnimatedValue';
 
 function stiffnessFromOrigamiValue(oValue) {
   return (oValue - 30) * 3.62 + 194;
@@ -26,7 +27,7 @@ function dampingFromOrigamiNode(oValue) {
   return add(multiply(sub(oValue, 8), 3), 25);
 }
 
-function fromOrigamiTensionAndFriction(tension, friction) {
+function makeConfigFromOrigamiTensionAndFriction(tension, friction) {
   return {
     stiffness:
       typeof tension === 'number'
@@ -39,7 +40,7 @@ function fromOrigamiTensionAndFriction(tension, friction) {
   };
 }
 
-function fromBouncinessAndSpeed(bounciness, speed) {
+function makeConfigFromBouncinessAndSpeed(bounciness, speed) {
   if (typeof bounciness === 'number' && typeof speed === 'number') {
     return fromBouncinessAndSpeedNumbers(bounciness, speed);
   }
@@ -174,7 +175,26 @@ function fromBouncinessAndSpeedNumbers(bounciness, speed) {
   };
 }
 
-module.exports = {
-  fromOrigamiTensionAndFriction,
-  fromBouncinessAndSpeed,
+function makeDefaultState() {
+  return {
+    position: new AnimatedValue(0),
+    finished: new AnimatedValue(0),
+    velocity: new AnimatedValue(0),
+    time: new AnimatedValue(0),
+  };
+}
+
+function makeDefaultConfig() {
+  return {
+    stiffness: new AnimatedValue(100),
+    mass: new AnimatedValue(1),
+    damping: new AnimatedValue(10),
+  };
+}
+
+export default {
+  makeDefaultConfig,
+  makeDefaultState,
+  makeConfigFromBouncinessAndSpeed,
+  makeConfigFromOrigamiTensionAndFriction,
 };
