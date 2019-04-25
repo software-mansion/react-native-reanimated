@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass } from 'react';
+  import { ComponentClass, ReactNode, Component } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -58,7 +58,7 @@ declare module 'react-native-reanimated' {
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
-      | ReadonlyArray<T | AnimatedNode<T>>;
+      | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>;
     type BinaryOperator = (
       left: Adaptable<number>,
       right: Adaptable<number>
@@ -80,7 +80,7 @@ declare module 'react-native-reanimated' {
       deceleration: Adaptable<number>;
     }
     export interface BackwardCompatibleWrapper {
-      start: (callback : (data: { finished: boolean }) => any) => void;
+      start: (callback?: (data: { finished: boolean }) => any) => void;
       stop: () => void;
     }
 
@@ -150,6 +150,7 @@ declare module 'react-native-reanimated' {
       AnimateProps<ViewStyle, ScrollViewProps>
     >;
     export const Code: ComponentClass<CodeProps>;
+    export function createAnimatedComponent(component: any): any;
 
     // classes
     export {
@@ -168,6 +169,10 @@ declare module 'react-native-reanimated' {
     export const sqrt: UnaryOperator;
     export const sin: UnaryOperator;
     export const cos: UnaryOperator;
+    export const tan: UnaryOperator;
+    export const acos: UnaryOperator;
+    export const asin: UnaryOperator;
+    export const atan: UnaryOperator;
     export const exp: UnaryOperator;
     export const round: UnaryOperator;
     export const floor: UnaryOperator;
@@ -187,9 +192,9 @@ declare module 'react-native-reanimated' {
       sourceNode: Adaptable<number>,
     ): AnimatedNode<number>;
     export function concat(
-      a: AnimatedNode<string>,
-      b: AnimatedNode<string>,
-      ...others: AnimatedNode<string>[],
+      a: Adaptable<string> | Adaptable<number>,
+      b: Adaptable<string> | Adaptable<number>,
+      ...others: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
@@ -273,6 +278,12 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
+    // hooks
+    export function useCode(
+      exec: AnimatedNode<number>,
+      deps: Array<any>,
+    ): void
+
     // configuration
 
     // `addWhitelistedNativeProps` will likely be removed soon, and so is
@@ -308,4 +319,36 @@ declare module 'react-native-reanimated' {
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
   export const Easing: EasingStatic;
+
+  export interface TransitioningViewProps extends ViewProps {
+    transition: ReactNode;
+  }
+
+  export class TransitioningView extends Component<TransitioningViewProps> {
+    animateNextTransition(): void;
+  }
+
+  export class Transitioning extends Component {
+    static View: typeof TransitioningView;
+  }
+
+  export interface TransitionProps {
+    delayMs?: number;
+    durationMs?: number;
+    interpolation?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut';
+    propagation?: 'top' | 'bottom' | 'left' | 'right';
+  }
+
+  export interface TransitionInOutProps extends TransitionProps {
+    type?: 'fade' | 'scale' | 'slide-top' | 'slide-bottom' | 'slide-right' | 'slide-left';
+  }
+
+  export class Transition extends Component {
+    static In: ComponentClass<TransitionInOutProps>;
+    static Out: ComponentClass<TransitionInOutProps>;
+    static Change: ComponentClass<TransitionProps>;
+    static Together: ComponentClass<{}>;
+    static Sequence: ComponentClass<{}>;
+  }
+
 }

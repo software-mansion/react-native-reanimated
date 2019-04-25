@@ -18,6 +18,12 @@ import {
   addWhitelistedUIProps,
 } from './ConfigHelper';
 import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
+import {
+  Transition,
+  Transitioning,
+  createTransitioningComponent,
+} from './Transitioning';
+
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -48,4 +54,4 @@ const Animated = {
 
 export default Animated;
 
-export { Easing };
+export { Easing, Transitioning, Transition, createTransitioningComponent };

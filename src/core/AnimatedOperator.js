@@ -31,6 +31,10 @@ const OPERATIONS = {
   sqrt: single(a => Math.sqrt(a)),
   sin: single(a => Math.sin(a)),
   cos: single(a => Math.cos(a)),
+  tan: single(a => Math.tan(a)),
+  acos: single(a => Math.acos(a)),
+  asin: single(a => Math.asin(a)),
+  atan: single(a => Math.atan(a)),
   exp: single(a => Math.exp(a)),
 
   // logical

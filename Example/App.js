@@ -16,6 +16,10 @@ import Rotations from './rotations';
 import Imperative from './imperative';
 import PanRotateAndZoom from './PanRotateAndZoom';
 import ProgressBar from './progressBar';
+import TransitionsSequence from './transitions/sequence';
+import TransitionsShuffle from './transitions/shuffle';
+import TransitionsProgress from './transitions/progress';
+import TransitionsTicket from './transitions/ticket';
 
 import InteractablePlayground, {
   SCREENS as INTERACTABLE_SCREENS,
@@ -51,6 +55,22 @@ const SCREENS = {
   progressBar: {
     screen: ProgressBar,
     title: 'Progress bar',
+  },
+  transitionsSequence: {
+    screen: TransitionsSequence,
+    title: 'Transitions sequence',
+  },
+  transitionsShuffle: {
+    screen: TransitionsShuffle,
+    title: 'Transitions shuffle',
+  },
+  transitionsProgress: {
+    screen: TransitionsProgress,
+    title: 'Transitions progress bar',
+  },
+  transitionsTicket: {
+    screen: TransitionsTicket,
+    title: 'Transitions – flight ticket demo',
   },
 };
 

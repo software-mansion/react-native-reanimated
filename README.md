@@ -61,7 +61,64 @@ Similarly when you need `Easing` import it from `react-native-reanimated` packag
 import Animated, { Easing } from 'react-native-reanimated';
 ```
 
-## Reanimated vs Animated
+# Transitions 🆕
+
+Transitions is an experimental API distributed as a part of reanimated which serves the purpose of animating between two states of view hierarchy. It is conceptually similar to `LayoutAnimation` concept from react native but gives much better control of what and how is going to be animated.
+
+Transitions API consists of two main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
+
+The second main bulding block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
+
+## Transition groups
+
+The below set of components can be used to group one or more transitions. You can also nest transition groups in order to achieve desirable effects.
+
+### `<Transition.Together>`
+
+Transitions nested under this component will run in parallel when the animation starts.
+
+### `<Transition.Sequence>`
+
+Transitions nested under this component will run in sequence in the order at which they are listed
+
+## Transitions
+
+Transition components can be used separately or as a part of a group. Each transition component has the following common properties you can use to configure the animation:
+
+#### `durationMs`
+
+The time animation takes to execute in milliseconds
+
+#### `delayMs`
+
+Use this is you want the animation to start delayed (value in milliseconds)
+
+#### `interpolation`
+
+Specify the transition timing curve. Possible values are: `linear`, `easeIn`, `easeOut`, `easeInOut`
+
+#### `propagation`
+
+Allows for the framework to automatically delay beggining of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
+
+### `<Transition.In>`
+
+Allows to specify how views that get mounted durion animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+
+### `<Transition.Out>`
+
+Allows to specify how the framework should animate views that are being removed during transition. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+
+### `<Transition.Change>`
+
+Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports animating position, bounds and transforms.
+
+## How to use it
+
+This API is still experimental and is a subject to change. Please refer to our [Example app](https://github.com/kmagiera/react-native-reanimated/tree/master/Example/transitions) to see how it can be used in practice in the current shape.
+
+
+# Reanimated overview
 
 We aim to bring this project to be fully compatible with `Animated` API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that haven't yet been ported from the original version of `Animated` library.
 All the functionality that missing elements provide in `Animated` can already be achieved with `react-native-reanimated` although a different methodology for implementing those may be required (e.g. check ["Running animations" section](#running-animations) to see how the implementation may differ).
@@ -161,6 +218,21 @@ block([
   set(this.transX4, add(multiply(1, this._transX))),
 ])
 }/>
+```
+
+## `Animated.useCode`
+
+The `useCode` hook acts as an alternative to the `Animated.Code` component.
+```js
+Animated.useCode(node, deps)
+```
+It's passed an animated node and an array of dependencies, and updates that node both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (<0.59).
+```js
+const [offset, setOffset] = React.useState(20);
+Animated.useCode(
+  set(transX1, add(_transX, offset)),
+  [offset]
+);
 ```
 
 ## Event handling with reanimated nodes
@@ -349,6 +421,42 @@ cos(node)
 ```
 
 Returns a cosine of the value (in radians) of the given node
+
+---
+### `tan`
+
+```js
+tan(node)
+```
+
+Returns a tangent of the value in radians of the given node
+
+---
+### `acos`
+
+```js
+acos(node)
+```
+
+Returns a arc-cosine of the value in radians of the given node
+
+---
+### `asin`
+
+```js
+asin(node)
+```
+
+Returns a arc-sine of the value in radians of the given node
+
+---
+### `atan`
+
+```js
+atan(node)
+```
+
+Returns a arc-tangent of the value in radians of the given node
 
 ---
 ### `exp`
@@ -559,7 +667,7 @@ Maps an input value within a range to an output value within a range. Also suppo
 color(red, green, blue, alpha)
 ```
 
-Creates a color node in RGBA format, where the first three input nodes should have integer values in the range 0-255 and correspond to color components Red, Green and Blue respectively. Last input node should have a value between 0 and 1 and represents alpha channel (value `1` means fully opaque and `0` completely transparent). Alpha parameter can be ommited, then `1` (fully opaque) is used as a default.
+Creates a color node in RGBA format, where the first three input nodes should have *integer* values in the range 0-255 (consider using `round` node if needed) and correspond to color components Red, Green and Blue respectively. Last input node should have a value between 0 and 1 and represents alpha channel (value `1` means fully opaque and `0` completely transparent). Alpha parameter can be ommited, then `1` (fully opaque) is used as a default.
 
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
@@ -638,8 +746,11 @@ function runTiming(clock, value, dest) {
   };
 
   return block([
-    cond(clockRunning(clock), 0, [
-      // If the clock isn't running we reset all the animation params and start the clock
+    cond(clockRunning(clock), [
+      // if the clock is already running we update the toValue, in case a new dest has been passed in
+        set(config.toValue, dest),
+    ], [
+      // if the clock isn't running we reset all the animation params and start the clock
       set(state.finished, 0),
       set(state.time, 0),
       set(state.position, value),
