@@ -6,7 +6,7 @@ import Interactable from '../../Interactable';
 const Screen = Dimensions.get('window');
 const Calendar = {
   width: Screen.width - 16,
-  height: ((Screen.width - 16) / 944) * 793,
+  height: (Screen.width - 16) / 944 * 793,
 };
 
 export default class CollapsibleFilter extends Component {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   days: {
     width: Screen.width - 16,
-    height: ((Screen.width - 16) / 944) * 65,
+    height: (Screen.width - 16) / 944 * 65,
   },
   calendar: {
     width: Calendar.width,
