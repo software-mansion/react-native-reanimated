@@ -401,8 +401,20 @@ Takes two or more animated nodes or values, and when evaluated, returns the resu
 ---
 ### `modulo`
 
+```js
+modulo(nodeOrNumber, nodeOrNumber)
+```
+
+Remainder after division of the first argument by the second one. modulo(a,0) will throw an error.
+
 ---
 ### `sqrt`
+
+```js
+sqrt(nodeOrNumber)
+```
+
+The square root of the given node. If the number is negative, an error is thrown.
 
 ---
 ### `sin`
