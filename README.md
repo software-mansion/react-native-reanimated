@@ -13,7 +13,7 @@ I started this project initially to resolve the issue of pan interaction when th
 The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
 This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
 Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
-We don't want to run "side effects" more often than nece    ssary as it would, for example, result in the animation starting multiple times.
+We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
 
 Another reason why I started rethinking how the internals of `Animated` can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
 Apparently, even though the native driver is out for quite a while, it still does not support all the things non-native `Animated` lib can do.
