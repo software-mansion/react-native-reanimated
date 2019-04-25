@@ -23,3 +23,7 @@ export const and = operator('and');
 export const or = operator('or');
 export const defined = operator('defined');
 export const not = operator('not');
+export const tan = operator('tan');
+export const acos = operator('acos');
+export const asin = operator('asin');
+export const atan = operator('atan');
