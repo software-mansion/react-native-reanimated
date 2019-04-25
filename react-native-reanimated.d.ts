@@ -378,4 +378,5 @@ declare module 'react-native-reanimated' {
     static Together: ComponentClass<{}>;
     static Sequence: ComponentClass<{}>;
   }
+  
 }
