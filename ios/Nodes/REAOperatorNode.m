@@ -47,6 +47,10 @@ return @(OP); \
             @"sqrt": REA_SINGLE(sqrt(a)),
             @"sin": REA_SINGLE(sin(a)),
             @"cos": REA_SINGLE(cos(a)),
+            @"tan": REA_SINGLE(tan(a)),
+            @"acos": REA_SINGLE(acos(a)),
+            @"asin": REA_SINGLE(asin(a)),
+            @"atan": REA_SINGLE(atan(a)),
             @"exp": REA_SINGLE(exp(a)),
             @"round": REA_SINGLE(round(a)),
 
@@ -68,7 +72,7 @@ return @(OP); \
             @"not": REA_SINGLE(!a),
             @"defined": ^(NSArray<REANode *> *inputNodes) {
               id val = [inputNodes[0] value];
-              id res = @(val != nil && !isnan([val doubleValue]));
+              id res = @(val != nil && !([val isKindOfClass:[NSNumber class]] && isnan([val doubleValue])));
               return res;
             },
 

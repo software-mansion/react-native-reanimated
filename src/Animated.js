@@ -1,8 +1,9 @@
-import { Image, Text, View, ScrollView } from 'react-native';
+import { Image, ScrollView, Text, View } from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
 import AnimatedNode from './core/AnimatedNode';
+import AnimatedCode from './core/AnimatedCode';
 import * as base from './base';
 import * as derived from './derived';
 import createAnimatedComponent from './createAnimatedComponent';
@@ -12,24 +13,16 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
-import { addWhitelistedNativeProps } from './ConfigHelper';
-
-function backwardsCompatibleAnim(node, AnimationClass) {
-  return (clock, state, config) => {
-    if (config !== undefined) {
-      return node(clock, state, config);
-    }
-    // reassign to match spec of old Animated lib where first arg was value
-    // and second arg was animation config
-    const value = clock;
-    config = state;
-    return {
-      start: () => {
-        value.animate(new AnimationClass(config));
-      },
-    };
-  };
-}
+import {
+  addWhitelistedNativeProps,
+  addWhitelistedUIProps,
+} from './ConfigHelper';
+import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
+import {
+  Transition,
+  Transitioning,
+  createTransitioningComponent,
+} from './Transitioning';
 
 const Animated = {
   // components
@@ -37,6 +30,8 @@ const Animated = {
   Text: createAnimatedComponent(Text),
   Image: createAnimatedComponent(Image),
   ScrollView: createAnimatedComponent(ScrollView),
+  Code: AnimatedCode,
+  createAnimatedComponent,
 
   // classes
   Clock: AnimatedClock,
@@ -48,14 +43,15 @@ const Animated = {
   ...derived,
 
   // animations
-  decay: backwardsCompatibleAnim(decay, DecayAnimation),
-  timing: backwardsCompatibleAnim(timing, TimingAnimation),
-  spring: backwardsCompatibleAnim(spring, SpringAnimation),
+  decay: backwardCompatibleAnimWrapper(decay, DecayAnimation),
+  timing: backwardCompatibleAnimWrapper(timing, TimingAnimation),
+  spring: backwardCompatibleAnimWrapper(spring, SpringAnimation),
 
   // configuration
   addWhitelistedNativeProps,
+  addWhitelistedUIProps,
 };
 
 export default Animated;
 
-export { Easing };
+export { Easing, Transitioning, Transition, createTransitioningComponent };

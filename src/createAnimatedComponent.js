@@ -1,9 +1,9 @@
 import React from 'react';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
-import ViewStylePropTypes from 'react-native/Libraries/Components/View/ViewStylePropTypes';
 
 import AnimatedEvent from './core/AnimatedEvent';
+import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 
 import invariant from 'fbjs/lib/invariant';
@@ -17,7 +17,7 @@ function listener(data) {
 
 export default function createAnimatedComponent(Component) {
   invariant(
-    typeof Component === 'string' ||
+    typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
       'use a class component instead.'
@@ -88,24 +88,24 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          nextEvts.add(prop);
+          nextEvts.add(prop.__nodeID);
         }
       }
       for (const key in prevProps) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop)) {
+          if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
           } else {
             // event was in prev and is still in current props
-            attached.add(prop);
+            attached.add(prop.__nodeID);
           }
         }
       }
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop)) {
+        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
         }
@@ -177,16 +177,44 @@ export default function createAnimatedComponent(Component) {
     componentDidUpdate(prevProps) {
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
+
+      this._propsAnimated.setNativeView(this._component);
+    }
+
+    _setComponentRef = c => {
+      if (c !== this._component) {
+        this._component = c;
+      }
+    };
+
+    _filterNonAnimatedStyle(inputStyle) {
+      const style = {};
+      for (const key in inputStyle) {
+        const value = inputStyle[key];
+        if (!(value instanceof AnimatedNode) && key !== 'transform') {
+          style[key] = value;
+        }
+      }
+      return style;
+    }
+
+    _filterNonAnimatedProps(inputProps) {
+      const props = {};
+      for (const key in inputProps) {
+        const value = inputProps[key];
+        if (key === 'style') {
+          props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (!(value instanceof AnimatedNode)) {
+          props[key] = value;
+        }
+      }
+      return props;
     }
 
     render() {
-      const props = this._propsAnimated.__getProps();
+      const props = this._filterNonAnimatedProps(this.props);
       return (
-        <Component
-          {...props}
-          ref={ref => (this._component = ref)}
-          collapsable={false}
-        />
+        <Component {...props} ref={this._setComponentRef} collapsable={false} />
       );
     }
 
@@ -196,30 +224,6 @@ export default function createAnimatedComponent(Component) {
       return this._component;
     }
   }
-
-  const propTypes = Component.propTypes;
-
-  AnimatedComponent.propTypes = {
-    style: function(props, propName, componentName) {
-      if (!propTypes) {
-        return;
-      }
-
-      for (const key in ViewStylePropTypes) {
-        if (!propTypes[key] && props[key] !== undefined) {
-          console.warn(
-            'You are setting the style `{ ' +
-              key +
-              ': ... }` as a prop. You ' +
-              'should nest it in a style object. ' +
-              'E.g. `{ style: { ' +
-              key +
-              ': ... } }`'
-          );
-        }
-      }
-    },
-  };
 
   return AnimatedComponent;
 }

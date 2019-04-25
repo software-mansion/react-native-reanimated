@@ -1,4 +1,4 @@
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedValue from '../core/InternalAnimatedValue';
 import timing from './timing';
 import { block, clockRunning, startClock, stopClock, cond } from '../base';
 import Clock from '../core/AnimatedClock';
@@ -47,5 +47,13 @@ export default class TimingAnimation extends Animation {
 
   stop() {
     // this._finished && this._finished.setValue(1);
+  }
+  static getDefaultState() {
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+      frameTime: new AnimatedValue(0),
+    };
   }
 }

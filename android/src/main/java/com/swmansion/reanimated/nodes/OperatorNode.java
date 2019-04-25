@@ -5,7 +5,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-public class OperatorNode extends Node<Double> {
+public class OperatorNode extends Node {
 
   private static boolean truthy(Object value) {
     return value != null && !value.equals(0.);
@@ -101,6 +101,30 @@ public class OperatorNode extends Node<Double> {
       return Math.cos(x);
     }
   };
+  private static final Operator TAN = new SingleOperator() {
+    @Override
+    public double eval(Double x) {
+      return Math.tan(x);
+    }
+  };
+  private static final Operator ACOS = new SingleOperator() {
+    @Override
+    public double eval(Double x) {
+      return Math.acos(x);
+    }
+  };
+  private static final Operator ASIN = new SingleOperator() {
+    @Override
+    public double eval(Double x) {
+      return Math.asin(x);
+    }
+  };
+  private static final Operator ATAN = new SingleOperator() {
+    @Override
+    public double eval(Double x) {
+      return Math.atan(x);
+    }
+  };
   private static final Operator EXP = new SingleOperator() {
     @Override
     public double eval(Double x) {
@@ -145,7 +169,7 @@ public class OperatorNode extends Node<Double> {
     @Override
     public double evaluate(Node[] input) {
       Object res = input[0].value();
-      return (res != null && !((Double) res).isNaN()) ? 1. : 0.;
+      return (res != null && !(res instanceof Double && ((Double) res).isNaN())) ? 1. : 0.;
     }
   };
 
@@ -215,6 +239,14 @@ public class OperatorNode extends Node<Double> {
       mOperator = SIN;
     } else if ("cos".equals(op)) {
       mOperator = COS;
+    } else if ("tan".equals(op)) {
+      mOperator = TAN;
+    } else if ("acos".equals(op)) {
+      mOperator = ACOS;
+    } else if ("asin".equals(op)) {
+      mOperator = ASIN;
+    } else if ("atan".equals(op)) {
+      mOperator = ATAN;
     } else if ("exp".equals(op)) {
       mOperator = EXP;
     } else if ("round".equals(op)) {
@@ -245,7 +277,7 @@ public class OperatorNode extends Node<Double> {
   }
 
   @Override
-  protected Double evaluate() {
+  protected Object evaluate() {
     for (int i = 0; i < mInputIDs.length; i++) {
       mInputNodes[i] = mNodesManager.findNodeById(mInputIDs[i], Node.class);
     }

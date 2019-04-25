@@ -1,4 +1,4 @@
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedValue from '../core/InternalAnimatedValue';
 import Animation from './Animation';
 import SpringConfig from '../SpringConfig';
 import spring from './spring';
@@ -108,5 +108,13 @@ export default class SpringAnimation extends Animation {
 
   stop() {
     // this._finished && this._finished.setValue(1);
+  }
+  static getDefaultState() {
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      velocity: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+    };
   }
 }

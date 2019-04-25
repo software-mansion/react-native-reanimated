@@ -1,9 +1,9 @@
 import { cond, lessThan, multiply, round, add, sub } from '../base';
 import { Platform } from 'react-native';
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedNode from '../core/AnimatedNode';
 
 export default function color(r, g, b, a = 1) {
-  if (a instanceof AnimatedValue) {
+  if (a instanceof AnimatedNode) {
     a = round(multiply(a, 255));
   } else {
     a = Math.round(a * 255);

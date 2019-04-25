@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -11,6 +12,7 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.swmansion.reanimated.transitions.TransitionModule;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,6 +33,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
 
   private @Nullable NodesManager mNodesManager;
+  private @Nullable TransitionModule mTransitionManager;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -42,6 +45,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
+    mTransitionManager = new TransitionModule(uiManager);
   }
 
   @Override
@@ -92,6 +96,11 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     }
 
     return mNodesManager;
+  }
+
+  @ReactMethod
+  public void animateNextTransition(int tag, ReadableMap config) {
+    mTransitionManager.animateNextTransition(tag, config);
   }
 
   @ReactMethod
@@ -175,16 +184,32 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
-  public void configureNativeProps(ReadableArray nativePropsArray) {
+  public void configureProps(ReadableArray nativePropsArray, ReadableArray uiPropsArray) {
     int size = nativePropsArray.size();
     final Set<String> nativeProps = new HashSet<>(size);
     for (int i = 0; i < size; i++) {
       nativeProps.add(nativePropsArray.getString(i));
     }
+
+    size = uiPropsArray.size();
+    final Set<String> uiProps = new HashSet<>(size);
+    for (int i = 0; i < size; i++) {
+      uiProps.add(uiPropsArray.getString(i));
+    }
     mOperations.add(new UIThreadOperation() {
       @Override
       public void execute(NodesManager nodesManager) {
-        nodesManager.configureNativeProps(nativeProps);
+        nodesManager.configureProps(nativeProps, uiProps);
+      }
+    });
+  }
+
+  @ReactMethod
+  public void getValue(final int nodeID, final Callback callback) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.getValue(nodeID, callback);
       }
     });
   }

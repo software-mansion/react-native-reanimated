@@ -45,27 +45,6 @@ export default class AnimatedStyle extends AnimatedNode {
     this._style = style;
   }
 
-  // Recursively get values for nested styles (like iOS's shadowOffset)
-  _walkStyleAndGetValues(style) {
-    const updatedStyle = {};
-    for (const key in style) {
-      const value = style[key];
-      if (value instanceof AnimatedNode) {
-        // do nothing
-      } else if (value && !Array.isArray(value) && typeof value === 'object') {
-        // Support animating nested values (for example: shadowOffset.height)
-        updatedStyle[key] = this._walkStyleAndGetValues(value);
-      } else {
-        updatedStyle[key] = value;
-      }
-    }
-    return updatedStyle;
-  }
-
-  __getProps() {
-    return this._walkStyleAndGetValues(this._style);
-  }
-
   _walkStyleAndGetAnimatedValues(style) {
     const updatedStyle = {};
     for (const key in style) {
