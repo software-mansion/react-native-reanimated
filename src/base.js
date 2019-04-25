@@ -13,5 +13,4 @@ export { createAnimatedEvent as event } from './core/AnimatedEvent';
 export { createAnimatedAlways as always } from './core/AnimatedAlways';
 export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
-export { default as SpringConfig } from './SpringConfig';
 export * from './operators';

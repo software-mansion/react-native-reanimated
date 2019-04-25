@@ -1,6 +1,8 @@
 // Project: https://github.com/kmagiera/react-native-reanimated
 // TypeScript Version: 2.8
 
+import {SpringConfigWithBouncinessAndSpeed} from "react-native-reanimated";
+
 declare module 'react-native-reanimated' {
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
@@ -113,7 +115,35 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type AnimateStyle<S extends object> = {
+    interface SpringConfigWithOrigamiTensionAndFriction {
+      tension: Adaptable<number>;
+      mass: Adaptable<number>;
+      friction: Adaptable<number>;
+      overshootClamping: Adaptable<number> | boolean;
+      restSpeedThreshold: Adaptable<number>;
+      restDisplacementThreshold: Adaptable<number>;
+      toValue: Adaptable<number>;
+    }
+
+    interface SpringConfigWithBouncinessAndSpeed {
+      bounciness: Adaptable<number>;
+      mass: Adaptable<number>;
+      speed: Adaptable<number>;
+      overshootClamping: Adaptable<number> | boolean;
+      restSpeedThreshold: Adaptable<number>;
+      restDisplacementThreshold: Adaptable<number>;
+      toValue: Adaptable<number>;
+    }
+
+    type SprintUtils =  {
+      makeDefaultConfig: () => SpringConfig;
+      makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
+      makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
+    }
+
+    export const SprintUtils: SprintUtils
+
+      type AnimateStyle<S extends object> = {
       [K in keyof S]: S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
@@ -350,5 +380,4 @@ declare module 'react-native-reanimated' {
     static Together: ComponentClass<{}>;
     static Sequence: ComponentClass<{}>;
   }
-
 }

@@ -13,7 +13,7 @@ I started this project initially to resolve the issue of pan interaction when th
 The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
 This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
 Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
-We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
+We don't want to run "side effects" more often than nece    ssary as it would, for example, result in the animation starting multiple times.
 
 Another reason why I started rethinking how the internals of `Animated` can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
 Apparently, even though the native driver is out for quite a while, it still does not support all the things non-native `Animated` lib can do.
@@ -728,6 +728,32 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 ```
 
 When evaluated, updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original `Animated` API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
+
+
+### `SpringUtils`
+For developers convenience it's possible to use different way of configuring `spring` animation which follow behavior known from React Native core.
+ 
+### `SpringUtils.makeDefaultConfig()`
+ Returns an object filled with default config of animation:
+ ```js
+  {
+    stiffness: new Value(100),
+    mass: new Value(1),
+    damping: new Value(10),
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
+    toValue: new Value(0),
+  }
+```
+
+### `SpringUtils.makeConfigFromBouncinessAndSpeed(tension` and `friction` )`
+Transforms an object with `bounciness` and `speed` params into config acceptable by `spring` node. `bounciness` and `speed` might be nodes or numbers and are transformed in runtime.
+
+### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(tension` and `friction` )`
+Transforms an object with `tension` and `friction` params into config acceptable by `spring` node. `tension` and `friction` might be nodes or numbers and are transformed in runtime.
+
+See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/colors/differentSpringConfigs.js).
 
 
 ## Running animations
