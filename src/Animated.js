@@ -23,6 +23,7 @@ import {
   Transitioning,
   createTransitioningComponent,
 } from './Transitioning';
+import SpringUtils from './animations/SpringUtils';
 
 const Animated = {
   // components
@@ -46,6 +47,7 @@ const Animated = {
   decay: backwardCompatibleAnimWrapper(decay, DecayAnimation),
   timing: backwardCompatibleAnimWrapper(timing, TimingAnimation),
   spring: backwardCompatibleAnimWrapper(spring, SpringAnimation),
+  SpringUtils,
 
   // configuration
   addWhitelistedNativeProps,
