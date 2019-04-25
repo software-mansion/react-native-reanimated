@@ -19,6 +19,7 @@ import {
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/InternalAnimatedValue';
+
 const MAX_STEPS_MS = 64;
 
 export default function spring(clock, state, config) {
