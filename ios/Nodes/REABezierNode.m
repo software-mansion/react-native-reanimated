@@ -1,8 +1,10 @@
 #include <tgmath.h>
 
 #import "REABezierNode.h"
+#import "REAUtils.h"
 #import "REANodesManager.h"
 #import <React/RCTConvert.h>
+#import <React/RCTLog.h>
 
 #define EPS 1e-5
 
@@ -15,12 +17,7 @@
 {
   if ((self = [super initWithID:nodeID config:config])) {
     _inputNodeID = [RCTConvert NSNumber:config[@"input"]];
-    if (_inputNodeID == nil) {
-      RCTLogError(
-        @"Reanimated: First argument passed to bezier node is either of wrong type or is missing. NodeID: %@",
-        self.nodeID
-      );
-    }
+    REA_LOG_ERROR_IF_NIL(_inputNodeID, @"Reanimated: First argument passed to bezier node is either of wrong type or is missing. NodeID: %@", self.nodeID);
 
     CGFloat mX1 = [config[@"mX1"] doubleValue];
     CGFloat mY1 = [config[@"mY1"] doubleValue];

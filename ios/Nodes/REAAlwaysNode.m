@@ -1,4 +1,5 @@
 #import "REAAlwaysNode.h"
+#import "REAUtils.h"
 #import "REANodesManager.h"
 #import "REAStyleNode.h"
 #import "REAModule.h"
@@ -15,12 +16,7 @@
 {
     if ((self = [super initWithID:nodeID config:config])) {
       _nodeToBeEvaluated = [RCTConvert NSNumber:config[@"what"]];
-      if (_nodeToBeEvaluated == nil) {
-        RCTLogError(
-          @"Reanimated: First argument passed to always node is either of wrong type or is missing. NodeID: %@",
-          self.nodeID
-        );
-      }
+      REA_LOG_ERROR_IF_NIL(_nodeToBeEvaluated, @"Reanimated: First argument passed to always node is either of wrong type or is missing. NodeID: %@", self.nodeID);
     }
     return self;
 }

@@ -1,8 +1,10 @@
 #import "REASetNode.h"
+#import "REAUtils.h"
 #import <React/RCTConvert.h>
 #import <React/RCTLog.h>
 #import "REAValueNode.h"
 #import "REANodesManager.h"
+
 
 @implementation REASetNode {
   NSNumber *_whatNodeID;
@@ -13,19 +15,9 @@
 {
   if ((self = [super initWithID:nodeID config:config])) {
     _whatNodeID = [RCTConvert NSNumber:config[@"what"]];
-    if (_whatNodeID == nil) {
-      RCTLogError(
-        @"Reanimated: First argument passed to set node is either of wrong type or is missing. NodeID: %@",
-        self.nodeID
-      );
-    }
+    REA_LOG_ERROR_IF_NIL(_whatNodeID, @"Reanimated: First argument passed to set node is either of wrong type or is missing. NodeID: %@", self.nodeID);
     _valueNodeID = [RCTConvert NSNumber:config[@"value"]];
-    if (_valueNodeID == nil) {
-      RCTLogError(
-        @"Reanimated: Second argument passed to set node is either of wrong type or is missing. NodeID: %@",
-        self.nodeID
-      );
-    }
+    REA_LOG_ERROR_IF_NIL(_valueNodeID, @"Reanimated: Second argument passed to set node is either of wrong type or is missing. NodeID: %@", self.nodeID);
   }
   return self;
 }
