@@ -747,10 +747,10 @@ For developers convenience it's possible to use different way of configuring `sp
   }
 ```
 
-### `SpringUtils.makeConfigFromBouncinessAndSpeed(tension` and `friction` )`
+### `SpringUtils.makeConfigFromBouncinessAndSpeed(prevConfig)`
 Transforms an object with `bounciness` and `speed` params into config acceptable by `spring` node. `bounciness` and `speed` might be nodes or numbers and are transformed in runtime.
 
-### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(tension` and `friction` )`
+### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(prevConfig)`
 Transforms an object with `tension` and `friction` params into config acceptable by `spring` node. `tension` and `friction` might be nodes or numbers and are transformed in runtime.
 
 See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/colors/differentSpringConfigs.js).
