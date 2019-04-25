@@ -5,7 +5,6 @@
 #import "REAValueNode.h"
 #import "REANodesManager.h"
 
-
 @implementation REASetNode {
   NSNumber *_whatNodeID;
   NSNumber *_valueNodeID;
