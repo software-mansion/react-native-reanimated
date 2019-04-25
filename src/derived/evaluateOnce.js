@@ -1,5 +1,8 @@
-import AnimatedValue from '../core/AnimatedValue';
-import { call, always, cond, set } from '../base';
+import AnimatedValue from '../core/InternalAnimatedValue';
+import { createAnimatedSet as set } from '../core/AnimatedSet';
+import { createAnimatedCall as call } from '../core/AnimatedCall';
+import { createAnimatedAlways as always } from '../core/AnimatedAlways';
+import { createAnimatedCond as cond } from '../core/AnimatedCond';
 
 /**
  * evaluate given node and notify children
@@ -7,6 +10,7 @@ import { call, always, cond, set } from '../base';
  * @param input - nodes (or one node) representing values which states input for node.
  * @param callback - after callback
  */
+
 export function evaluateOnce(node, input = [], callback) {
   if (!Array.isArray(input)) {
     input = [input];

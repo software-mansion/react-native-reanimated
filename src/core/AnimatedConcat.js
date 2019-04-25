@@ -1,6 +1,7 @@
 import AnimatedNode from './AnimatedNode';
+import { adapt } from '../core/AnimatedBlock';
 
-export default class AnimatedConcat extends AnimatedNode {
+class AnimatedConcat extends AnimatedNode {
   constructor(input) {
     super({ type: 'concat', input: input.map(n => n.__nodeID) }, input);
   }
@@ -8,4 +9,8 @@ export default class AnimatedConcat extends AnimatedNode {
   toString() {
     return `AnimatedConcat, id: ${this.__nodeID}`;
   }
+}
+
+export function createAnimatedConcat(...args) {
+  return new AnimatedConcat(args.map(adapt));
 }

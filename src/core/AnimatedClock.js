@@ -1,8 +1,8 @@
-import AnimatedValue from './AnimatedValue';
+import InternalAnimatedValue from './AnimatedValue';
 import AnimatedNode from './AnimatedNode';
-import { val } from '../utils';
+import { val } from '../val';
 
-class AnimatedMainClock extends AnimatedValue {
+class AnimatedMainClock extends InternalAnimatedValue {
   _frameCallback;
 
   constructor() {
