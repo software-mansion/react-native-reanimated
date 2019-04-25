@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.graphics.PointF;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public class BezierNode extends Node {
