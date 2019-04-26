@@ -2,6 +2,7 @@ import invariant from 'fbjs/lib/invariant';
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './InternalAnimatedValue';
+
 class AnimatedBlock extends AnimatedNode {
   _array;
 
