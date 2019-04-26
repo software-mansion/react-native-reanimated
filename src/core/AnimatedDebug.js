@@ -11,7 +11,7 @@ class AnimatedDebug extends AnimatedNode {
   constructor(message, value) {
     super({ type: 'debug', message, value: value.__nodeID }, [value]);
     invariant(
-      message instanceof String || typeof message === 'string',
+      typeof message === 'string',
       `Reanimated: Animated.debug node first argument should be of type string but got ${message}`
     );
     invariant(

@@ -65,16 +65,14 @@ class AnimatedOperator extends AnimatedNode {
       input
     );
     invariant(
-      operator instanceof String || typeof operator === 'string',
+      typeof operator === 'string',
       `Reanimated: Animated.operator node first argument should be of type String, but got: ${operator}`
     );
     invariant(
       input.every(
         el =>
           el instanceof AnimatedNode ||
-          el instanceof String ||
           typeof el === 'string' ||
-          el instanceof Number ||
           typeof el === 'number'
       ),
       `Reanimated: Animated.operator node second argument should be one or more of type AnimatedNode, String or Number but got ${input}`

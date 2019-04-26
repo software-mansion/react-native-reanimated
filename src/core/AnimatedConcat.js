@@ -10,9 +10,7 @@ class AnimatedConcat extends AnimatedNode {
         el =>
           el instanceof AnimatedNode ||
           typeof el === 'number' ||
-          el instanceof Number ||
-          typeof el === 'string' ||
-          el instanceof String
+          typeof el === 'string'
       ),
       `Reanimated: Animated.concat node arguments should be of type AnimatedNode or String or Number. One or more of them are not of that type. Node: ${input}`
     );
