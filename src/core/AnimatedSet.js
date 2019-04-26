@@ -13,6 +13,10 @@ class AnimatedSet extends AnimatedNode {
       what instanceof AnimatedNode,
       `Reanimated: Animated.set first argument should be of type AnimatedNode but got ${what}`
     );
+    invariant(
+      value instanceof AnimatedNode,
+      `Reanimated: Animated.set second argument should be of type AnimatedNode, String or Number but got ${value}`
+    );
     this._what = what;
     this._value = value;
   }

@@ -1,3 +1,4 @@
+import invariant from 'fbjs/lib/invariant';
 import ReanimatedEventEmitter from '../ReanimatedEventEmitter';
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
@@ -15,6 +16,10 @@ class AnimatedCall extends AnimatedNode {
 
   constructor(args, jsFunction) {
     super({ type: 'call', input: args.map(n => n.__nodeID) }, args);
+    invariant(
+      args.every(el => el instanceof AnimatedNode),
+      `Reanimated: Animated.call node args should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
+    );
     this._callback = jsFunction;
     this._args = args;
   }

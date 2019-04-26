@@ -1,5 +1,6 @@
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
+import invariant from 'fbjs/lib/invariant';
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
 var NEWTON_ITERATIONS = 4;
@@ -137,6 +138,10 @@ export default class AnimatedBezier extends AnimatedNode {
     super({ type: 'bezier', mX1, mY1, mX2, mY2, input: value.__nodeID }, [
       value,
     ]);
+    invariant(
+      value instanceof AnimatedNode,
+      `Reanimated: Bezier node argument should be of type AnimatedNode but got ${value}`
+    );
     this._value = value;
     this._bezier = bezier(mX1, mY1, mX2, mY2);
   }
