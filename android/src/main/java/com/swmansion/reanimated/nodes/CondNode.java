@@ -12,7 +12,9 @@ public class CondNode extends Node {
     super(nodeID, config, nodesManager);
     mCondID = MapUtils.getInt(config, "cond", "Reanimated: First argument passed to cond node is either of wrong type or is missing. NodeID: " + nodeID);
     mIfBlockID = MapUtils.getInt(config, "ifBlock", "Reanimated: Second argument passed to cond node is either of wrong type or is missing. NodeID: " + nodeID);
-    mElseBlockID = config.hasKey("elseBlock") ? config.getInt("elseBlock") : -1;
+    mElseBlockID = config.hasKey("elseBlock")
+            ? MapUtils.getInt(config, "elseBlock", "Reanimated: Second argument passed to cond node is either of wrong type or is missing. NodeID: " + nodeID)
+            : -1;
   }
 
   @Override
