@@ -612,19 +612,19 @@ Evaluates the given node and returns an absolute value of the node's value.
 ### `min`
 
 ```js
-min(nodeOrValue1, ...)
+min(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a minimum of all the node's values.
+Takes two nodes as an input and returns a minimum of all the node's values.
 
 ---
 ### `max`
 
 ```js
-max(nodeOrValue1, ...)
+max(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a maximum of all the node's values.
+Takes two nodes as an input and returns a maximum of all the node's values.
 
 ---
 ### `diff`
