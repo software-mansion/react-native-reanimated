@@ -6,8 +6,8 @@ const glob = require('glob-to-regexp');
 
 function getBlacklist() {
   const nodeModuleDirs = [
-    glob(`${path.resolve(__dirname, '..')}/node_modules/*`),
-    glob(`${path.resolve(__dirname)}/node_modules/metro/node_modules/fbjs/*`),
+    glob(`${process.platform === 'win32' ? path.resolve(__dirname, '..').replace(/\\/g, '/') : path.resolve(__dirname, '..')}/node_modules/*`),
+    glob(`${process.platform === 'win32' ? path.resolve(__dirname).replace(/\\/g, '/') : path.resolve(__dirname)}/node_modules/metro/node_modules/fbjs/*`),
   ];
   return blacklist(nodeModuleDirs);
 }
