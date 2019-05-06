@@ -436,8 +436,8 @@ class Interactable extends Component {
           stopWhenNeeded,
         ]
       );
-      const wrapStep = props.enabled
-        ? cond(props.enabled, step, [set(dragging, 1), stopClock(clock)])
+      const wrapStep = props.dragEnabled
+        ? cond(props.dragEnabled, step, [set(dragging, 1), stopClock(clock)])
         : step;
 
       // export some values to be available for imperative commands
