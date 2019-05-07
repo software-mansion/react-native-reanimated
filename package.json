@@ -7,7 +7,7 @@
     "test": "npm run format && npm run lint && npm run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint --fix './src/**/*.js'",
+    "lint": "eslint --ext .js,.ts,.tsx --fix './src/**/*.js'",
     "precommit": "lint-staged"
   },
   "main": "src/Animated.js",
@@ -42,15 +42,18 @@
     "react-native": "^0.44.1"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^1.7.0",
+    "@typescript-eslint/parser": "^1.7.0",
     "babel-eslint": "^8.2.3",
     "babel-jest": "23.0.1",
     "babel-preset-react-native": "4.0.0",
-    "eslint": "^4.19.1",
-    "eslint-config-prettier": "^2.9.0",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^4.2.0",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-jest": "^21.17.0",
     "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-react": "^7.9.1",
     "eslint-plugin-react-native": "^3.2.1",
@@ -59,11 +62,12 @@
     "jest": "23.1.0",
     "jest-react-native": "18.0.0",
     "lint-staged": "^8.0.0-beta.1",
-    "prettier": "^1.13.4",
+    "prettier": "^1.17.0",
     "react": "16.4.1",
     "react-dom": "^16.0.0-beta.5",
     "react-native": "^0.56.0",
-    "react-test-renderer": "^16.0.0-alpha.12"
+    "react-test-renderer": "^16.0.0-alpha.12",
+    "typescript": "^3.4.5"
   },
   "lint-staged": {
     "*.js": [
