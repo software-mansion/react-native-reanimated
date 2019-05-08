@@ -39,7 +39,7 @@ const docs = fs
 
 module.exports = {
   root,
-  // logo: 'images/sidebar-logo.svg',
+  logo: 'images/logo.svg',
   assets,
   styles,
   scripts,
