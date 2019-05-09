@@ -12,7 +12,6 @@ const assets = [
   path.join(__dirname, 'assets', 'images'),
 ];
 const styles = [path.join(__dirname, 'assets', 'styles.css')];
-const scripts = [path.join(__dirname, 'assets', 'snack.js')];
 const github =
   'https://github.com/kmagiera/react-native-reanimated/edit/master/';
 
@@ -42,7 +41,6 @@ module.exports = {
   logo: 'images/logo.svg',
   assets,
   styles,
-  scripts,
   pages: docs,
   output: dist,
   github,
