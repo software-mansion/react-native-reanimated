@@ -639,20 +639,20 @@ Evaluates the given node and returns an absolute value of the node's value.
 #### `min`
 
 ```js
-min(nodeOrValue1, ...)
+min(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a minimum of all the node's values.
+Takes two nodes as an input and returns a minimum of all the node's values.
 
 ---
 
 #### `max`
 
 ```js
-max(nodeOrValue1, ...)
+max(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a maximum of all the node's values.
+Takes two nodes as an input and returns a maximum of all the node's values.
 
 ---
 
@@ -770,6 +770,32 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 ```
 
 When evaluated, updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original `Animated` API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
+
+### `SpringUtils`
+For developers' convenience, it's possible to use a different way of configuring `spring` animation which follows behavior known from React Native core.
+
+#### `SpringUtils.makeDefaultConfig()`
+ Returns an object filled with default config of animation:
+ ```js
+  {
+    stiffness: new Value(100),
+    mass: new Value(1),
+    damping: new Value(10),
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
+    toValue: new Value(0),
+  }
+```
+
+#### `SpringUtils.makeConfigFromBouncinessAndSpeed(prevConfig)`
+Transforms an object with `bounciness` and `speed` params into config expected by the `spring` node. `bounciness` and `speed` might be nodes or numbers.
+
+#### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(prevConfig)`
+Transforms an object with `tension` and `friction` params into config expected by the `spring` node. `tension` and `friction` might be nodes or numbers.
+
+See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/differentSpringConfigs/index.js).
+
 
 ## Running animations
 
