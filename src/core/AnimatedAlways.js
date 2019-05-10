@@ -1,6 +1,6 @@
 import AnimatedNode from './AnimatedNode';
 
-export default class AnimatedAlways extends AnimatedNode {
+class AnimatedAlways extends AnimatedNode {
   _what;
 
   constructor(what) {
@@ -11,4 +11,8 @@ export default class AnimatedAlways extends AnimatedNode {
   __onEvaluate() {
     return 0;
   }
+}
+
+export function createAnimatedAlways(item) {
+  return new AnimatedAlways(item);
 }

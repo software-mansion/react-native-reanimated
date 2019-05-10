@@ -32,6 +32,7 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
+    implementation "com.android.support:transition:${rootProject.ext.supportLibVersion}"
 }
 
 def configureReactNativePom(def pom) {
@@ -84,8 +85,8 @@ afterEvaluate { project ->
 
     android.libraryVariants.all { variant ->
         def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
-            from variant.javaCompile.destinationDir
+        task "jar${name}"(type: Jar, dependsOn: variant.javaCompileProvider.get()) {
+            from variant.javaCompileProvider.get().destinationDir
         }
     }
 

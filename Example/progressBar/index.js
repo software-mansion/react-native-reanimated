@@ -20,8 +20,11 @@ export default class Progressable extends Component {
       this.setState({
         progress,
       });
-      progress += 0.01;
-    }, 100);
+      progress += 0.1;
+      if (progress > 1) {
+        clearInterval(this.timeout);
+      }
+    }, 1000);
   };
 
   componentDidMount() {

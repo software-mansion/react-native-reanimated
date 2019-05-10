@@ -1,5 +1,6 @@
 export default {
-  configureNativeProps: () => {},
+  configureProps: () => {},
   connectNodes: () => {},
+  getValue: () => 0,
   disconnectNodes: () => {},
 };

@@ -3,14 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start --config ../../../../metro.config.js",
+    "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
     "test": "jest"
   },
   "dependencies": {
     "@babel/runtime": "^7.1.2",
-    "react": "16.5.0",
-    "react-native": "0.57.2",
-    "react-native-gesture-handler": "1.0.7",
+    "react": "16.8.6",
+    "react-native": "0.59.3",
+    "react-native-gesture-handler": "1.0.15",
     "react-navigation": "2.17.0"
   },
   "devDependencies": {
