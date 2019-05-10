@@ -59,5 +59,5 @@ matrix:
     - export PRODUCT_BUNDLE_IDENTIFIER="org.reactjs.native.example.ReanimatedExample"
 
     script:
-    - xcodebuild -project ./ios/ReanimatedExample.xcodeproj -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build
+    - xcodebuild -project ./ios/ReanimatedExample.xcodeproj -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
 
