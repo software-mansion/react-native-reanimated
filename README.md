@@ -2,61 +2,45 @@
 
 React Native's Animated library reimplemented.
 
-It provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
+- **Native Performance**: Declare your animations in JS, but have them run on the native thread! 🧙‍♂️
+- **Precise Animations**: The API affords new levels of precision and detailed control of your animations. 🕹
+- **(mostly) Backwards Compatible**: Use the same Animated API from React Native that you've been using. You generally don't _need_ to change anything to get started. 👍
 
-![](/assets/meme.png)
-
-## OMG, why would you build this? (motivation)
-
-`Animated` library has several limitations that become troubling when it comes to gesture based interactions.
-I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
-The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on UI thread with `useNativeDriver` flag, we still had to call back into JS at the end of the gesture for us to start "snap" animation.
-This is because `Animated.spring({}).start()` cannot be used in a "declarative" manner, because when it gets executed it has a "side effect" of starting a process (an animation) that updates the value for some time.
-Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task as the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
-We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
-
-Another reason why I started rethinking how the internals of `Animated` can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
-Apparently, even though the native driver is out for quite a while, it still does not support all the things non-native `Animated` lib can do.
-Obviously, it is far more difficult to build three versions of each feature (JS, Android and iOS) instead of one, and the same applies for fixing bugs.
-One of the goals of `react-native-reanimated` was to provide a more generic building block for the API that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
-Taking "diffClamp" node as an example, it is currently implemented in three different places in `Animated` core and even though it is pretty useful it actually only has one use case (collapsible scrollview header).
-
-On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even though it provides a legitimate use case, I understand the maintainers being hesitant about merging it. The `Animated` API shouldn't block people from building things like this and the goal of `react-native-reanimated` is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
-
-You can watch my [React Europe talk](https://www.youtube.com/watch?v=kdq4z2708VM) where I explain the motivation.
-
-The goals:
- - More generic primitive node types leading to more code reuse for the library internals therefore making it easier to add new features and fix bugs.
- - The new set of base nodes can be used to implement `Animated` compatible API including:
-  - Complex nodes such as “diffClamp”.
-  - Interactions such as animated value tracking or animation staggering.
- - Conditional evaluation & nodes with side effects (`set`, `startClock`, `stopClock`).
- - No more “useNativeDriver” – all animations runs on the UI thread by default
+Reanimated provides a more comprehensive, low level abstraction for the Animated library API, giving you much greater flexibility, control and performance. Combine it with [react-native-gesture-handler](https://github.com/kmagiera/react-native-gesture-handler) for performant gesture-based interactions.
 
 ## Getting started
 
-Before you get started you should definitely familiarize yourself with the original Animated API first. Refer to the API description below and to the [Examples](#examples) section to learn how to use this library.
+Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html). It will do you well to be comfortable with how animations are generally done in `Animated`. (Fun Fact: Reanimated is also backwards compatible with the `Animated API`. 🙌)
 
-Throughout this document when we refer to classes or methods prefixed with `Animated` we usually refer to them being imported from `react-native-reanimated` package instead of plain `react-native`.
+- Refer to the [Reanimated vs. Animated](#Reanimated-vs.-Animated) to understand the differences between React Native‘s `Animated` API and Reanimated.
+- Read through the [Fundamental Concepts in Reanimated](#Fundamental-Concepts-in-Reanimated) to understand some of the Reanimated-specific basics.
+- Refer to the [API documentation](#API-Reference) below and to the [Examples](#examples) section to learn how to use this library.
+- Refer to the [Motivation](#Motivation---OMG,-why-would-you-build-this?) section to understand why this library exists
+
+NOTE: Throughout this document when we refer to classes or methods prefixed with `Animated` we are referring to them being imported from `react-native-reanimated` package instead of plain `react-native`, unless otherwise stated.
 
 ### Installation
 
 I. First install the library from npm repository using `yarn`:
+
 ```bash
   yarn add react-native-reanimated
 ```
 
 II. Link native code with `react-native` cli:
+
 ```bash
   react-native link react-native-reanimated
 ```
 
-III. When you want to use "reanimated" in your project import it from `react-native-reanimated` package:
+III. When you want to use "reanimated" in your project import it from the `react-native-reanimated` package:
+
 ```js
 import Animated from 'react-native-reanimated';
 ```
 
-Similarly when you need `Easing` import it from `react-native-reanimated` package instead of `react-native`:
+Similarly when you need `Easing` import it from the `react-native-reanimated` package instead of `react-native`:
+
 ```js
 import Animated, { Easing } from 'react-native-reanimated';
 ```
@@ -120,22 +104,29 @@ This API is still experimental and is a subject to change. Please refer to our [
 
 # Reanimated overview
 
-We aim to bring this project to be fully compatible with `Animated` API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases. Here is a list of things that haven't yet been ported from the original version of `Animated` library.
+We aim to bring this project to be fully compatible with `Animated` API. We believe that the set of base nodes we have selected should make this possible to be done only by writing JS code and does not require significant changes in the native codebases.
 All the functionality that missing elements provide in `Animated` can already be achieved with `react-native-reanimated` although a different methodology for implementing those may be required (e.g. check ["Running animations" section](#running-animations) to see how the implementation may differ).
- - [ ] using value offsets
- - [ ] value tracking (can be achieved in different way, `react-native-reanimated` also allows for tracking all the animation parameters not only destination params)
- - [ ] animation staggering
- - [ ] animation delays
 
-## Value
-`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there are provided API for setting value after it has been initialized:
+Here is a list of things that haven't yet been ported from the original version of `Animated` library:
+
+- [ ] using value offsets
+- [ ] value tracking (can be achieved in different way, `react-native-reanimated` also allows for tracking all the animation parameters not only destination params)
+- [ ] animation staggering
+- [ ] animation delays
+
+## Fundamental Concepts in Reanimated
+
+### Value
+
+`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+
 ```js
 const v = new Value(0);
 /// ...
 v.setValue(100);
 ```
 
-## Clocks
+### Clocks
 
 Original `Animated` API makes an "animation" object a first class citizen.
 `Animation` object has many features and therefore requires quite a few JS<>Native bridge methods to be managed properly.
@@ -145,20 +136,7 @@ In `react-native-reanimated`, clocks aim to replace that by providing more of a 
 
 Because `Animated.Clock` just extends the `Animated.Value` you can use it in the same places (operations) where you can pass any type of animated node.
 
-## At most once evaluation (the algorithm)
-
-Unlike the original `Animated` library where each node could have been evaluated many times within a single frame, `react-native-reanimated` restricts each node to be evaluated at most once in a frame.
-This restriction is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
-When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
-This notion also helps with performance as we can try to evaluate as few nodes as expected.
-The current algorithm for making decisions of which nodes to evaluate works as follows:
- 1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
- 2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
- 3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.
- 5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
-
-## Blocks
+### Blocks
 
 Blocks are just arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
 
@@ -175,9 +153,23 @@ cond(
 
 Passing array directly is equivalent to wrapping it with the [`block`](#block) command.
 
-# API reference
+### At most once evaluation (the algorithm)
 
-## Views, props, etc
+Unlike the original `Animated` library where each node could have been evaluated many times within a single frame, `react-native-reanimated` restricts each node to be evaluated at most once in a frame.
+This restriction is required for nodes that have side-effects to be used (e.g. [`set`](#set) or [`startClock`](#startClock)).
+When node is evaluated (e.g. in case of an [`add`](#add) node we want to get a sum of the input nodes) its value is cached. If within the next frame there are other nodes that want to use the output of that node instead of evaluating we return cached value.
+This notion also helps with performance as we can try to evaluate as few nodes as expected.
+The current algorithm for making decisions of which nodes to evaluate works as follows:
+
+1. For each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
+2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
+3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
+4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
+5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
+
+## API reference
+
+### Views, props, etc
 
 Follow the original `Animated` library guides to learn how values can be connected to View attributes.
 Similarly with `react-native-reanimated` you need to use components prefixed with `Animated.` (remember to [import](#getting-started) `Animated` from reanimated package). For example:
@@ -191,9 +183,10 @@ import Animated from 'react-native-reanimated';
 <View/>
 ```
 
-## `Animated.Code`
+### `Animated.Code`
 
 `Animated.Code` component allows you to define reanimated nodes that you want to execute when their input nodes updates, but aren't necessarily strictly related to some view properties and hence it does not feel right to place them under `translate` or other prop of an `Animated.View`. This component renders `null`, so you can place it in any place you want in your render method. It is required that your code is put inside component as we rely on `componentDidMount` and `componentWillUnmount` callbacks to install and cleanup animated nodes. Note that the code you put is going to be executed only once. We currently have no way of telling if your code changes and so it will only be run in `componentDidMount`. If you wish for your reanimated nodes to be updated when the component updates, you can update the `key` property of the `Animated.Code` component, which will effectively unmount old and mount new versions of it in the React tree.
+
 ```js
 <Animated.Code>
   { ()=>
@@ -220,7 +213,7 @@ block([
 }/>
 ```
 
-## `Animated.useCode`
+### `Animated.useCode`
 
 The `useCode` hook acts as an alternative to the `Animated.Code` component.
 ```js
@@ -235,14 +228,13 @@ Animated.useCode(
 );
 ```
 
-We recommend to use `useCode()` with the `react-hooks/exhaustive-deps` [eslint rule](https://www.npmjs.com/package/eslint-plugin-react-hooks).
-
-## Event handling with reanimated nodes
+### Event handling with reanimated nodes
 
 `react-native-reanimated`'s new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.
 
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
-[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/PanRotateAndZoom/index.js)
+[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
+
 ```js
 this.onGestureEvent = event([
   {
@@ -254,6 +246,7 @@ this.onGestureEvent = event([
 ```
 
 If you'd like to use more than one event attribute in your reanimated code, this is also supported. Instead of defining event handler methods for a single attribute you can define at the level of `nativeEvent`. Here is an example that takes both translation attributes and state attribute from `PanGestureHandler` event:
+
 ```js
 <PanGestureHandler
   onGestureEvent={event([
@@ -272,13 +265,13 @@ If you'd like to use more than one event attribute in your reanimated code, this
 </PanGestureHandler>
 ```
 
-
-## Available nodes
+### Available nodes
 
 <!-- Base  -->
 
 ---
-### `set`
+
+#### `set`
 
 ```js
 set(valueToBeUpdated, sourceNode)
@@ -287,7 +280,8 @@ set(valueToBeUpdated, sourceNode)
 When evaluated, it will assign the value of `sourceNode` to the `Animated.Value` passed as a first argument. In other words, it performs an assignment operation from the `sourceNode` to `valueToBeUpdated` value node and also returns a node that represents this value.
 
 ---
-### `cond`
+
+#### `cond`
 
 ```js
 cond(conditionNode, ifNode, [elseNode])
@@ -296,7 +290,8 @@ cond(conditionNode, ifNode, [elseNode])
 If `conditionNode` evaluates to "truthy" value the node evaluates `ifNode` node and returns its value, otherwise it evaluates `elseNode` and returns its value. `elseNode` is optional.
 
 ---
-### `call`
+
+#### `call`
 
 ```js
 call(argsNodes, callback)
@@ -305,7 +300,8 @@ call(argsNodes, callback)
 If one of the nodes from `argsNodes` array updates, `callback` will be called in JavaScript with a list of current values of nodes from `argsNodes` array as the first argument.
 
 ---
-### `block`
+
+#### `block`
 
 ```js
 block([node1, ...])
@@ -314,7 +310,8 @@ block([node1, ...])
 Takes an array of nodes and evaluates all of them in the order they are put in the array. It then returns the value of the last node.
 
 ---
-### `debug`
+
+#### `debug`
 
 ```js
 debug(messageString, valueNode)
@@ -323,7 +320,8 @@ debug(messageString, valueNode)
 When the node is evaluated, it prints a string that contains the `messageString` concatenated with the value of `valueNode`. This then returns the value of `valueNode`. Logs are printed in the JS debugger if it's attached, in console if Expo client is being used, or else in the native console. Logs are visible only in `DEV` mode and have no effect on production builds. Note that `messageString` should be a normal string, not an animated node.
 
 ---
-### `startClock`
+
+#### `startClock`
 
 ```js
 startClock(clockNode)
@@ -332,7 +330,8 @@ startClock(clockNode)
 When evaluated, it will make `Clock` node passed as an argument start updating its value each frame. Then returns `0`.
 
 ---
-### `stopClock`
+
+#### `stopClock`
 
 ```js
 stopClock(clockNode)
@@ -341,7 +340,8 @@ stopClock(clockNode)
 When evaluated, it will make `Clock` node passed as an argument stop updating its value (if it has been doing that). Then returns `0`.
 
 ---
-### `clockRunning`
+
+#### `clockRunning`
 
 ```js
 clockRunning(clockNode)
@@ -350,12 +350,14 @@ clockRunning(clockNode)
 For a given `Clock` node, it returns `1` if the clock [has been started](#startClock) (if it's updating each frame) or returns `0` otherwise.
 
 ---
-### `event`
+
+#### `event`
 
 Works the same way as with the original `Animated` library.
 
 ---
-### `add`
+
+#### `add`
 
 ```js
 add(nodeOrNumber1, nodeOrNumber2, ...)
@@ -364,7 +366,8 @@ add(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns their sum.
 
 ---
-### `sub`
+
+#### `sub`
 
 ```js
 sub(nodeOrNumber1, nodeOrNumber2, ...)
@@ -373,7 +376,8 @@ sub(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of subtracting their values in the exact order.
 
 ---
-### `multiply`
+
+#### `multiply`
 
 ```js
 multiply(nodeOrNumber1, nodeOrNumber2, ...)
@@ -382,7 +386,8 @@ multiply(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of multiplying their values in the exact order.
 
 ---
-### `divide`
+
+#### `divide`
 
 ```js
 divide(nodeOrNumber1, nodeOrNumber2, ...)
@@ -390,9 +395,9 @@ divide(nodeOrNumber1, nodeOrNumber2, ...)
 
 Takes two or more animated nodes or values, and when evaluated, returns the result of dividing their values in the exact order.
 
-
 ---
-### `pow`
+
+#### `pow`
 
 ```js
 pow(nodeOrNumber1, nodeOrNumber2, ...)
@@ -401,7 +406,9 @@ pow(nodeOrNumber1, nodeOrNumber2, ...)
 Takes two or more animated nodes or values, and when evaluated, returns the result of first node to the second node power. If more than two nodes are present, the result from the previous step is used as a base and the third node as exponent. This process continues onward for the following nodes if these are present.
 
 ---
-### `modulo`
+
+<!-- TODO - need to explain -->
+#### `modulo`
 
 ```js
 modulo(nodeOrNumber, nodeOrNumber)
@@ -410,7 +417,8 @@ modulo(nodeOrNumber, nodeOrNumber)
 Remainder after division of the first argument by the second one. modulo(a,0) will throw an error.
 
 ---
-### `sqrt`
+<!-- TODO - need to explain -->
+#### `sqrt`
 
 ```js
 sqrt(nodeOrNumber)
@@ -419,16 +427,8 @@ sqrt(nodeOrNumber)
 The square root of the given node. If the number is negative, an error is thrown.
 
 ---
-### `log`
 
-```js
-log(nodeOrNumber)
-```
-
-The log of the given node.
-
----
-### `sin`
+#### `sin`
 
 ```js
 sin(node)
@@ -437,7 +437,8 @@ sin(node)
 Returns a sine of the value (in radians) of the given node.
 
 ---
-### `cos`
+
+#### `cos`
 
 ```js
 cos(node)
@@ -446,7 +447,8 @@ cos(node)
 Returns a cosine of the value (in radians) of the given node
 
 ---
-### `tan`
+
+#### `tan`
 
 ```js
 tan(node)
@@ -455,7 +457,7 @@ tan(node)
 Returns a tangent of the value in radians of the given node
 
 ---
-### `acos`
+#### `acos`
 
 ```js
 acos(node)
@@ -464,7 +466,7 @@ acos(node)
 Returns a arc-cosine of the value in radians of the given node
 
 ---
-### `asin`
+#### `asin`
 
 ```js
 asin(node)
@@ -473,7 +475,7 @@ asin(node)
 Returns a arc-sine of the value in radians of the given node
 
 ---
-### `atan`
+#### `atan`
 
 ```js
 atan(node)
@@ -482,7 +484,7 @@ atan(node)
 Returns a arc-tangent of the value in radians of the given node
 
 ---
-### `exp`
+#### `exp`
 
 ```js
 exp(node)
@@ -491,7 +493,8 @@ exp(node)
 Returns an exponent of the value of the given node.
 
 ---
-### `round`
+
+#### `round`
 
 ```js
 round(node)
@@ -500,7 +503,8 @@ round(node)
 Returns a node that rounds input value to the nearest integer.
 
 ---
-### `floor`
+
+#### `floor`
 
 ```js
 floor(node)
@@ -509,7 +513,8 @@ floor(node)
 Returns a node that rounds a number down to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
-### `ceil`
+
+#### `ceil`
 
 ```js
 ceil(node)
@@ -518,7 +523,8 @@ ceil(node)
 Returns a node that rounds a number upward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
-### `lessThan`
+
+#### `lessThan`
 
 ```js
 lessThan(nodeOrValueA, nodeOrValueB)
@@ -527,7 +533,8 @@ lessThan(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is less than the value of the second node. Otherwise returns `0`.
 
 ---
-### `eq`
+
+#### `eq`
 
 ```js
 eq(nodeOrValueA, nodeOrValueB)
@@ -536,8 +543,8 @@ eq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of both nodes are equal. Otherwise returns `0`.
 
 ---
-### `greaterThan`
 
+#### `greaterThan`
 
 ```js
 greaterThan(nodeOrValueA, nodeOrValueB)
@@ -546,7 +553,8 @@ greaterThan(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is greater than the value of the second node. Otherwise returns `0`.
 
 ---
-### `lessOrEq`
+
+#### `lessOrEq`
 
 ```js
 lessOrEq(nodeOrValueA, nodeOrValueB)
@@ -555,7 +563,8 @@ lessOrEq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is less or equal to the value of the second node. Otherwise returns `0`.
 
 ---
-### `greaterOrEq`
+
+#### `greaterOrEq`
 
 ```js
 greaterOrEq(nodeOrValueA, nodeOrValueB)
@@ -564,7 +573,8 @@ greaterOrEq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is greater or equal to the value of the second node. Otherwise returns `0`.
 
 ---
-### `neq`
+
+#### `neq`
 
 ```js
 neq(nodeOrValueA, nodeOrValueB)
@@ -573,7 +583,8 @@ neq(nodeOrValueA, nodeOrValueB)
 Returns `1` if the value of the first node is not equal to the value of the second node. Otherwise returns `0`.
 
 ---
-### `and`
+
+#### `and`
 
 ```js
 and(nodeOrValue1, ...)
@@ -582,7 +593,8 @@ and(nodeOrValue1, ...)
 Acts as a logical `AND` operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "falsy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "truthy" it returns the last node's value.
 
 ---
-### `or`
+
+#### `or`
 
 ```js
 or(nodeOrValue1, ...)
@@ -591,7 +603,8 @@ or(nodeOrValue1, ...)
 Acts as a logical `OR` operator. Takes one or more nodes as an input and evaluates them in sequence until some node evaluates to a "truthy" value. Then returns that value and stops evaluating further nodes. If all nodes evaluate to a "falsy" value it returns the last node's value.
 
 ---
-### `defined`
+
+#### `defined`
 
 ```js
 defined(node)
@@ -600,7 +613,8 @@ defined(node)
 Returns `1` if the given node evaluates to a "defined" value (that is to something that is non-null, non-undefined and non-NaN). Returns `0` otherwise.
 
 ---
-### `not`
+
+#### `not`
 
 ```js
 not(node)
@@ -611,7 +625,8 @@ Returns `1` if the given node evaluates to a "falsy" value and `0` otherwise.
 <!-- Derived -->
 
 ---
-### `abs`
+
+#### `abs`
 
 ```js
 abs(node)
@@ -620,7 +635,8 @@ abs(node)
 Evaluates the given node and returns an absolute value of the node's value.
 
 ---
-### `min`
+
+#### `min`
 
 ```js
 min(nodeOrValue1, nodeOrValue2)
@@ -629,7 +645,8 @@ min(nodeOrValue1, nodeOrValue2)
 Takes two nodes as an input and returns a minimum of all the node's values.
 
 ---
-### `max`
+
+#### `max`
 
 ```js
 max(nodeOrValue1, nodeOrValue2)
@@ -638,7 +655,8 @@ max(nodeOrValue1, nodeOrValue2)
 Takes two nodes as an input and returns a maximum of all the node's values.
 
 ---
-### `diff`
+
+#### `diff`
 
 ```js
 diff(node)
@@ -647,7 +665,8 @@ diff(node)
 Evaluates node and returns a difference between value returned at the last time it was evaluated and its value at the current time. When evaluating for the first time it returns the node's value.
 
 ---
-### `acc`
+
+#### `acc`
 
 ```js
 acc(node)
@@ -656,31 +675,15 @@ acc(node)
 Returns an accumulated value of the given node. This node stores a sum of all evaluations of the given node and each time it gets evaluated it would add current node's value to that sum and return it.
 
 ---
-### `diffClamp`
+
+#### `diffClamp`
 
 Works the same way as with the original `Animated` library.
 
 ---
-### `proc`
 
-Returns a callable function node that can be used to define expressions that can be called from other nodes. 
+#### `interpolate`
 
-Example:
-
-```js
-// Global constant
-const myProc = proc((a, b) => multiply(a,b));
-
-// In your component
-const style = { width: proc(10, 10 )};
-```
-
-A proc node should be declared as a global constant in your code and not recreated from inside components.
-
-It is not possible to reference nodes that are not passed as parameters.
-
----
-### `interpolate`
 ```js
 interpolate(node, {
   // Input range for the interpolation. Should be monotonically increasing.
@@ -703,7 +706,8 @@ Extrapolate.IDENTITY; // Will return the input value if the input value is out o
 Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range.
 
 ---
-### `color`
+
+#### `color`
 
 ```js
 color(red, green, blue, alpha)
@@ -714,25 +718,31 @@ Creates a color node in RGBA format, where the first three input nodes should ha
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
 ---
-### `concat`
+
+#### `concat`
+
 ```js
 concat(nodeOrValue1, ...)
 ```
+
 Returns concatanation of given nodes (number or string) as string
 
 ---
-### `onChange`
+
+#### `onChange`
 
 ```js
 onChange(value, action)
 ```
+
 When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 <!-- Anims -->
-## Animations
+### Animations
 
 ---
-### `decay`
+
+#### `decay`
 
 ```js
 decay(clock, { finished, velocity, position, time }, { deceleration })
@@ -741,7 +751,8 @@ decay(clock, { finished, velocity, position, time }, { deceleration })
 Updates `position` and `velocity` nodes by running a single step of animation each time this node evaluates. State variable `finished` is set to `1` when the animation gets to the final point (that is the velocity drops under the level of significance). The `time` state node is populated automatically by this node and refers to the last clock time this node got evaluated. It is expected to be reset each time we want to restart the animation. Decay animation can be configured using `deceleration` config param and it controls how fast the animation decelerates. The value should be between `0` and `1` but only values that are close to `1` will yield meaningful results.
 
 ---
-### `timing`
+
+#### `timing`
 
 ```js
 timing(clock, { finished, position, frameTime, time }, { toValue, duration, easing })
@@ -751,7 +762,8 @@ Updates `position` node by running timing based animation from a given position 
 The `frameTime` node will also get updated and represents the progress of animation in milliseconds (how long the animation has lasted so far), similar to the `time` node that just indicates the last clock time the animation node has been evaluated. Both of these variables are expected to be reset before restarting the animation. Finally `finished` node will be set to `1` when the position reaches the final value or when `frameTime` exceeds `duration`.
 
 ---
-### `spring`
+
+#### `spring`
 
 ```js
 spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness, overshootClamping, restSpeedThreshold, restDisplacementThreshold, toValue })
@@ -759,34 +771,10 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 
 When evaluated, updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original `Animated` API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
 
-### `SpringUtils`
-For developers' convenience, it's possible to use a different way of configuring `spring` animation which follows behavior known from React Native core.
-
-#### `SpringUtils.makeDefaultConfig()`
- Returns an object filled with default config of animation:
- ```js
-  {
-    stiffness: new Value(100),
-    mass: new Value(1),
-    damping: new Value(10),
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001,
-    toValue: new Value(0),
-  }
-```
-
-#### `SpringUtils.makeConfigFromBouncinessAndSpeed(prevConfig)`
-Transforms an object with `bounciness` and `speed` params into config expected by the `spring` node. `bounciness` and `speed` might be nodes or numbers.
-
-#### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(prevConfig)`
-Transforms an object with `tension` and `friction` params into config expected by the `spring` node. `tension` and `friction` might be nodes or numbers.
-
-See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/differentSpringConfigs/index.js).
-
-
 ## Running animations
+
 ### Declarative API
+
 Invoking animation differs from the way it is done when using the original `Animated` API.
 Here, instead of having animation objects we operate on nodes that can perform single animation steps.
 In order to map an animation into a value, we will make the value to be assigned to a node that among few other things will call into the animation step node. Check [`timing`](#timing), [`decay`](#decay) and [`spring`](#spring) nodes documentation for some details about how animation step nodes can be configured.
@@ -854,7 +842,9 @@ export class AnimatedBox extends Component {
 ```
 
 ### Backward compatible API
+
 As it might sometimes be impractical to use the API above, there's an alternative way of invoking animation, which is similar to the original `Animated` API.
+
 ```js
 class Example extends Component {
   constructor(props) {
@@ -885,7 +875,66 @@ class Example extends Component {
   }
 }
 ```
+
 This API gives the possibility to use animation with original `Animated` API. It's also a way of running animation on some interaction without necessity or rerendering view.
+
+## Transitions 🆕
+
+Transitions is an experimental API distributed as a part of reanimated which serves the purpose of animating between two states of view hierarchy. It is conceptually similar to `LayoutAnimation` concept from react native but gives much better control of what and how is going to be animated.
+
+Transitions API consists of two main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
+
+The second main bulding block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
+
+### Transition groups
+
+The below set of components can be used to group one or more transitions. You can also nest transition groups in order to achieve desirable effects.
+
+#### `<Transition.Together>`
+
+Transitions nested under this component will run in parallel when the animation starts.
+
+####`<Transition.Sequence>`
+
+Transitions nested under this component will run in sequence in the order at which they are listed
+
+### Transitions
+
+Transition components can be used separately or as a part of a group. Each transition component has the following common properties you can use to configure the animation:
+
+#### `durationMs`
+
+The time animation takes to execute in milliseconds
+
+#### `delayMs`
+
+Use this is you want the animation to start delayed (value in milliseconds)
+
+#### `interpolation`
+
+Specify the transition timing curve. Possible values are: `linear`, `easeIn`, `easeOut`, `easeInOut`
+
+#### `propagation`
+
+Allows for the framework to automatically delay beggining of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
+
+### `<Transition.In>`
+
+Allows to specify how views that get mounted durion animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+
+### `<Transition.Out>`
+
+Allows to specify how the framework should animate views that are being removed during transition. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+
+### `<Transition.Change>`
+
+Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports animating position, bounds and transforms.
+
+### How to use it
+
+This API is still experimental and is a subject to change. Please refer to our [Example app](https://github.com/kmagiera/react-native-reanimated/tree/master/Example/transitions) to see how it can be used in practice in the current shape.
+
+---
 
 ## 100% declarative gesture interactions
 
@@ -893,11 +942,44 @@ This API gives the possibility to use animation with original `Animated` API. It
 
 ![](/assets/imagepreview.gif)
 
+## Motivation - OMG, why would you build this?
+
+React Native's `Animated` library has several limitations that become troubling when it comes to gesture based interactions.
+
+I started this project initially to resolve problems with pan gestures. Specifically, a simple dragging interaction, when an object (let's say a box) can be dragged and released and snap to some location on the screen.
+
+The problem was that despite using `Animated.event` and mapping gesture state to the position of the box, and making this whole interaction run on the native UI thread (utilizing the `useNativeDriver` flag), we still had to call back into JavaScript at the end of the gesture for us to start "snap" animation. This is not optimal.
+The reason we have to call back into JavaScript is because `Animated.spring({}).start()` cannot be used in a "declarative" manner. When it gets executed it has a "side effect" of starting a process (an animation) that updates the value over time.
+Adding "side effect" nodes into the current Animated implementation turned out to be a pretty difficult task since the execution model of the Animated API runs all the dependent nodes of each frame for the views that need to update.
+We don't want to run "side effects" more often than necessary as it would, for example, result in the animation starting multiple times.
+
+Another reason why I started rethinking how the internals of `Animated` can be redesigned was my recent work on porting "Animated Tracking" functionality to the native driver.
+Apparently, even though the native driver has been out for a while, it still does not support all the things non-native `Animated` lib can do.
+Obviously, it is far more difficult to build three versions of each feature (JS, Android and iOS) instead of one, and the same applies for fixing bugs.
+One of the goals of `react-native-reanimated` was to provide a more generic building block for the API that would allow for building more complex features only in JS and make the native codebase as minimal as possible.
+Taking "diffClamp" node as an example, it is currently implemented in three different places in `Animated` core and even though it is pretty useful it actually only has one use case (collapsible scrollview header).
+
+On a similar topic, I come across React Native's PR [#18029](https://github.com/facebook/react-native/pull/18029) and even though it provides a legitimate use case, I understand the maintainers being hesitant about merging it. The `Animated` API shouldn't block people from building things like this and the goal of `react-native-reanimated` is to provide lower level access that would allow for implementing that and many more features with no necessary changes to the core of the library.
+
+You can watch my [React Europe talk](https://www.youtube.com/watch?v=kdq4z2708VM) where I explain the motivation.
+
+The goals:
+
+- More generic primitive node types leading to more code reuse for the library internals therefore making it easier to add new features and fix bugs.
+- The new set of base nodes can be used to implement `Animated` compatible API including:
+- Complex nodes such as “diffClamp”.
+- Interactions such as animated value tracking or animation staggering.
+- Conditional evaluation & nodes with side effects (`set`, `startClock`, `stopClock`).
+- No more “useNativeDriver” – all animations runs on the UI thread by default
+
+![progress in animations, from setTimeout, to requestAnimationFrame, to Animated and finally Reanimated](/assets/meme.png)
+
 ## Examples
 
 The source code for the example (showcase) app is under the [`Example/`](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/) directory.
 
 In order to run it you need to pull in the repository, enter `Example/` folder and run:
+
 ```bash
   yarn install
 ```
