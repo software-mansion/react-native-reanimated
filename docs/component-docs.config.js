@@ -67,7 +67,6 @@ const getPages = () => {
 
 module.exports = {
   root,
-  logo: 'images/logo.svg',
   assets,
   styles,
   pages: getPages(),
