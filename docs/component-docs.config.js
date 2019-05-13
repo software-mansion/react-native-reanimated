@@ -28,20 +28,49 @@ function getType(file: string) {
   return 'md';
 }
 
-const docs = fs
-  .readdirSync(path.join(__dirname, 'pages'))
-  .filter(file => file.includes('.'))
-  .map(file => ({
-    file: path.join(__dirname, 'pages', file),
-    type: getType(file),
-  }));
+const nameToGroupTitle = (name: string) => {
+  return name
+    .split('.')[1]
+    .split(/(?=[A-Z])/)
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(' ');
+};
+
+const mapToObject = (filePath, group) =>
+  fs
+    .readdirSync(filePath, { withFileTypes: true })
+    .map(file => {
+      if (file.isDirectory()) {
+        return mapToObject(
+          path.join(filePath, file.name),
+          nameToGroupTitle(file.name)
+        );
+      } else {
+        let result = {
+          file: path.join(filePath, file.name),
+          type: getType(file.name),
+        };
+        if (!!group) {
+          result['group'] = group;
+        }
+        return result;
+      }
+    })
+    .flat();
+
+const docs = mapToObject(path.join(__dirname, 'pages'));
+
+const getPages = () => {
+  console.log(docs);
+  return docs;
+};
 
 module.exports = {
   root,
   logo: 'images/logo.svg',
   assets,
   styles,
-  pages: docs,
+  pages: getPages(),
   output: dist,
   github,
 };
