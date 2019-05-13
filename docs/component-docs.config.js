@@ -1,5 +1,6 @@
 /* @flow */
 
+import '@babel/polyfill';
 import path from 'path';
 import fs from 'fs';
 
@@ -56,20 +57,15 @@ const mapToObject = (filePath, group) =>
         return result;
       }
     })
-    .flat();
+    .flatMap(el => el);
 
 const docs = mapToObject(path.join(__dirname, 'pages'));
-
-const getPages = () => {
-  console.log(docs);
-  return docs;
-};
 
 module.exports = {
   root,
   assets,
   styles,
-  pages: getPages(),
+  pages: docs,
   output: dist,
   github,
 };
