@@ -38,7 +38,6 @@ const docs = fs
 
 module.exports = {
   root,
-  logo: 'images/logo.svg',
   assets,
   styles,
   pages: docs,
