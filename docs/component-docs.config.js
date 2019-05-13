@@ -1,8 +1,19 @@
 /* @flow */
 
-import '@babel/polyfill';
 import path from 'path';
 import fs from 'fs';
+
+Object.defineProperty(Array.prototype, 'flat', {
+  value: function(depth = 1) {
+    return this.reduce(function(flat, toFlatten) {
+      return flat.concat(
+        Array.isArray(toFlatten) && depth > 1
+          ? toFlatten.flat(depth - 1)
+          : toFlatten
+      );
+    }, []);
+  },
+});
 
 const root = path.join(__dirname, '..');
 const dist = path.join(__dirname, 'dist');
@@ -57,7 +68,7 @@ const mapToObject = (filePath, group) =>
         return result;
       }
     })
-    .flatMap(el => el);
+    .flat();
 
 const docs = mapToObject(path.join(__dirname, 'pages'));
 
