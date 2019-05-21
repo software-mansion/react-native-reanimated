@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, findNodeHandle } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
+import { createAnimatedAlways } from './core/AnimatedAlways';
 
 const TransitioningContext = React.createContext();
 
@@ -20,6 +21,12 @@ function configFromProps(type, props) {
   }
   if ('propagation' in props) {
     config.propagation = props.propagation;
+  }
+  if ('interpolationInput' in props) {
+    config.interpolationInput = props.interpolationInput.__nodeID;
+  }
+  if ('interpolationOutput' in props) {
+    config.interpolationOutput = props.interpolationOutput.__nodeID;
   }
   return config;
 }
@@ -51,7 +58,17 @@ class In extends React.Component {
 
 class Change extends React.Component {
   componentDidMount() {
+    if (this.props.interpolationOutput) {
+      this.always = createAnimatedAlways(this.props.interpolationOutput);
+      this.always.__attach();
+    }
     this.props.context.push(configFromProps('change', this.props));
+  }
+
+  componentWillUnmount() {
+    if (this.props.interpolationOutput) {
+      this.always.__detach();
+    }
   }
   render() {
     return this.props.children || null;

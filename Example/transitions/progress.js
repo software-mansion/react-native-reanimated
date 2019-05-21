@@ -1,9 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Text, View, StyleSheet, Button, StatusBar } from 'react-native';
-import { Transitioning, Transition } from 'react-native-reanimated';
-
+import Animated, { Transitioning, Transition } from 'react-native-reanimated';
+const { cond, pow } = Animated;
 function Progress() {
-  const transition = <Transition.Change interpolation="easeInOut" />;
+  const input = useMemo(() => new Animated.Value(0), []);
+  const output = useMemo(() => new Animated.Value(0), []);
+
+  //output.__nativeInitialize()
+  console.warn(output.__nodeID);
+
+  const transition = (
+    <Transition.Change
+      interpolation="easeInOut"
+      interpolationInput={input}
+      interpolationOutput={pow(input, 3)}
+    />
+  );
 
   let [perc, setPerc] = useState(20);
   const ref = useRef();
@@ -12,6 +24,7 @@ function Progress() {
     <Transitioning.View
       ref={ref}
       style={styles.centerAll}
+      durationMs={10}
       transition={transition}>
       <Button
         title={perc + 20 <= 100 ? '+20%' : '-80%'}
@@ -22,6 +35,7 @@ function Progress() {
         }}
       />
       <View style={styles.bar}>
+        <Animated.Code exec={Animated.set(output, input)} />
         <View
           style={{ height: 5, width: `${perc}%`, backgroundColor: '#FF5252' }}
         />

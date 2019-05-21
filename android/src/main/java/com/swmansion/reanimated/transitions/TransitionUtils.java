@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.transitions;
 
+import android.animation.TimeInterpolator;
 import android.support.transition.Fade;
 import android.support.transition.SidePropagation;
 import android.support.transition.Slide;
@@ -15,12 +16,21 @@ import android.view.animation.LinearInterpolator;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.nodes.Node;
+import com.swmansion.reanimated.nodes.ValueNode;
 
 import javax.annotation.Nullable;
 
 class TransitionUtils {
 
-  static @Nullable Transition inflate(ReadableMap config) {
+  final NodesManager mNodeManages;
+
+  public TransitionUtils (NodesManager nodesManager) {
+    mNodeManages = nodesManager;
+  }
+
+  @Nullable Transition inflate(ReadableMap config) {
     String type = config.getString("type");
     if ("group".equals(type)) {
       return inflateGroup(config);
@@ -34,7 +44,7 @@ class TransitionUtils {
     throw new JSApplicationIllegalArgumentException("Unrecognized transition type " + type);
   }
 
-  private static @Nullable Transition inflateGroup(ReadableMap config) {
+  private @Nullable Transition inflateGroup(ReadableMap config) {
     TransitionSet set = new TransitionSet();
     if (config.hasKey("sequence") && config.getBoolean("sequence")) {
       set.setOrdering(TransitionSet.ORDERING_SEQUENTIAL);
@@ -70,7 +80,7 @@ class TransitionUtils {
     throw new JSApplicationIllegalArgumentException("Invalid transition type " + type);
   }
 
-  private static Transition inflateIn(ReadableMap config) {
+  private Transition inflateIn(ReadableMap config) {
     Visibility transition = createTransition(config.getString("animation"));
     if (transition == null) {
       return null;
@@ -80,7 +90,7 @@ class TransitionUtils {
     return transition;
   }
 
-  private static Transition inflateOut(ReadableMap config) {
+  private Transition inflateOut(ReadableMap config) {
     Visibility transition = createTransition(config.getString("animation"));
     if (transition == null) {
       return null;
@@ -90,7 +100,7 @@ class TransitionUtils {
     return transition;
   }
 
-  private static Transition inflateChange(ReadableMap config) {
+  private Transition inflateChange(final ReadableMap config) {
     ChangeTransition transition = new ChangeTransition();
     configureTransition(transition, config);
     return transition;
@@ -115,7 +125,7 @@ class TransitionUtils {
     throw new JSApplicationIllegalArgumentException("Invalid transition type " + type);
   }
 
-  private static void configureTransition(Transition transition, ReadableMap params) {
+  private void configureTransition(Transition transition, final ReadableMap params) {
     if (params.hasKey("durationMs")) {
       int durationMs = params.getInt("durationMs");
       transition.setDuration(durationMs);
@@ -154,5 +164,17 @@ class TransitionUtils {
       int delayMs = params.getInt("delayMs");
       transition.setStartDelay(delayMs);
     }
+    if (params.hasKey("interpolationOutput"))
+      transition.setInterpolator(new TimeInterpolator() {
+        @Override
+        public float getInterpolation(float input) {
+          if (params.hasKey("interpolationInput")) {
+            ValueNode output = mNodeManages.findNodeById(params.getInt("interpolationInput"), ValueNode.class);
+            output.setValue(input);
+          }
+          Node output = mNodeManages.findNodeById(params.getInt("interpolationOutput"), Node.class);
+          return output.doubleValue().floatValue();
+        }
+      });
   }
 }

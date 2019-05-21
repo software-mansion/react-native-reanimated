@@ -10,13 +10,16 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.swmansion.reanimated.NodesManager;
 
 public class TransitionModule {
 
   private final UIManagerModule mUIManager;
+  private final TransitionUtils mTransitionUtils;
 
-  public TransitionModule(UIManagerModule uiManager) {
+  public TransitionModule(UIManagerModule uiManager, NodesManager nodesManager) {
     mUIManager = uiManager;
+    mTransitionUtils = new TransitionUtils(nodesManager);
   }
 
   public void animateNextTransition(final int rootTag, final ReadableMap config) {
@@ -30,7 +33,7 @@ public class TransitionModule {
             for (int i = 0, size = transitions.size(); i < size; i++) {
               TransitionManager.beginDelayedTransition(
                       (ViewGroup) rootView,
-                      TransitionUtils.inflate(transitions.getMap(i)));
+                        mTransitionUtils.inflate(transitions.getMap(i)));
             }
           }
         } catch (IllegalViewOperationException ex) {
