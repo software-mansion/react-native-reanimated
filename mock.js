@@ -14,8 +14,6 @@ const { View, Text, Image, ScrollView } = require('react-native');
 const NOOP = () => undefined;
 
 class Code extends React.Component {
-  static resolveNode = () => null;
-
   render() {
     return null;
   }
