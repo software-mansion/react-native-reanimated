@@ -39,6 +39,22 @@
 		FDBB177C229BF0E700D1E455 /* REATransitionAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DCA22539177003C1762 /* REATransitionAnimation.m */; };
 		FDBB177D229BF0E700D1E455 /* REATransitionValues.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DCD2253A038003C1762 /* REATransitionValues.m */; };
 		FDBB177E229BF0E700D1E455 /* RCTConvert+REATransition.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DD02253A3C0003C1762 /* RCTConvert+REATransition.m */; };
+		FDE6D933229BF70F007F6716 /* REAConcatNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 660A44282119B820006BFD5E /* REAConcatNode.m */; };
+		FDE6D934229BF70F007F6716 /* REAAlwaysNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 66240C6820C68DEA00648F55 /* REAAlwaysNode.m */; };
+		FDE6D935229BF70F007F6716 /* REANode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1F209062F100EEC73A /* REANode.m */; };
+		FDE6D936229BF70F007F6716 /* REAValueNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC19209062F100EEC73A /* REAValueNode.m */; };
+		FDE6D937229BF70F007F6716 /* REAStyleNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC13209062F100EEC73A /* REAStyleNode.m */; };
+		FDE6D938229BF70F007F6716 /* REATransformNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC20209062F100EEC73A /* REATransformNode.m */; };
+		FDE6D939229BF70F007F6716 /* REAPropsNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC0D209062F100EEC73A /* REAPropsNode.m */; };
+		FDE6D93A229BF70F007F6716 /* REABlockNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC25209062F100EEC73A /* REABlockNode.m */; };
+		FDE6D93B229BF70F007F6716 /* REACondNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1A209062F100EEC73A /* REACondNode.m */; };
+		FDE6D93C229BF70F007F6716 /* REAOperatorNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC24209062F100EEC73A /* REAOperatorNode.m */; };
+		FDE6D93D229BF70F007F6716 /* REASetNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC23209062F100EEC73A /* REASetNode.m */; };
+		FDE6D93E229BF70F007F6716 /* READebugNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC14209062F100EEC73A /* READebugNode.m */; };
+		FDE6D93F229BF70F007F6716 /* REAClockNodes.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC18209062F100EEC73A /* REAClockNodes.m */; };
+		FDE6D940229BF70F007F6716 /* REAJSCallNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1B209062F100EEC73A /* REAJSCallNode.m */; };
+		FDE6D941229BF70F007F6716 /* REABezierNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1C209062F100EEC73A /* REABezierNode.m */; };
+		FDE6D942229BF70F007F6716 /* REAEventNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC21209062F100EEC73A /* REAEventNode.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -324,10 +340,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDE6D93C229BF70F007F6716 /* REAOperatorNode.m in Sources */,
+				FDE6D93F229BF70F007F6716 /* REAClockNodes.m in Sources */,
+				FDE6D936229BF70F007F6716 /* REAValueNode.m in Sources */,
+				FDE6D941229BF70F007F6716 /* REABezierNode.m in Sources */,
 				FDBB177B229BF0E700D1E455 /* REAAllTransitions.m in Sources */,
+				FDE6D93D229BF70F007F6716 /* REASetNode.m in Sources */,
+				FDE6D93A229BF70F007F6716 /* REABlockNode.m in Sources */,
+				FDE6D939229BF70F007F6716 /* REAPropsNode.m in Sources */,
 				FDBB1778229BF0DE00D1E455 /* REANodesManager.m in Sources */,
+				FDE6D937229BF70F007F6716 /* REAStyleNode.m in Sources */,
+				FDE6D940229BF70F007F6716 /* REAJSCallNode.m in Sources */,
+				FDE6D935229BF70F007F6716 /* REANode.m in Sources */,
+				FDE6D93B229BF70F007F6716 /* REACondNode.m in Sources */,
 				FDBB177C229BF0E700D1E455 /* REATransitionAnimation.m in Sources */,
+				FDE6D934229BF70F007F6716 /* REAAlwaysNode.m in Sources */,
+				FDE6D933229BF70F007F6716 /* REAConcatNode.m in Sources */,
 				FDBB177D229BF0E700D1E455 /* REATransitionValues.m in Sources */,
+				FDE6D942229BF70F007F6716 /* REAEventNode.m in Sources */,
+				FDE6D93E229BF70F007F6716 /* READebugNode.m in Sources */,
+				FDE6D938229BF70F007F6716 /* REATransformNode.m in Sources */,
 				FDBB177A229BF0E700D1E455 /* REATransition.m in Sources */,
 				FDBB177E229BF0E700D1E455 /* RCTConvert+REATransition.m in Sources */,
 				FDBB1777229BF0DE00D1E455 /* REAModule.m in Sources */,
