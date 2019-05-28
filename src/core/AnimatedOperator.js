@@ -60,10 +60,6 @@ class AnimatedOperator extends AnimatedNode {
   _operation;
 
   constructor(operator, input) {
-    super(
-      { type: 'op', op: operator, input: input.map(n => n.__nodeID) },
-      input
-    );
     invariant(
       typeof operator === 'string',
       `Reanimated: Animated.operator node first argument should be of type String, but got: ${operator}`
@@ -76,6 +72,10 @@ class AnimatedOperator extends AnimatedNode {
           typeof el === 'number'
       ),
       `Reanimated: Animated.operator node second argument should be one or more of type AnimatedNode, String or Number but got ${input}`
+    );
+    super(
+      { type: 'op', op: operator, input: input.map(n => n.__nodeID) },
+      input
     );
     this._op = operator;
     this._input = input;

@@ -8,7 +8,6 @@ class AnimatedSet extends AnimatedNode {
   _value;
 
   constructor(what, value) {
-    super({ type: 'set', what: what.__nodeID, value: value.__nodeID }, [value]);
     invariant(
       what instanceof AnimatedNode,
       `Reanimated: Animated.set first argument should be of type AnimatedNode but got ${what}`
@@ -17,6 +16,7 @@ class AnimatedSet extends AnimatedNode {
       value instanceof AnimatedNode,
       `Reanimated: Animated.set second argument should be of type AnimatedNode, String or Number but got ${value}`
     );
+    super({ type: 'set', what: what.__nodeID, value: value.__nodeID }, [value]);
     this._what = what;
     this._value = value;
   }

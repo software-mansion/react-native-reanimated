@@ -9,7 +9,6 @@ class AnimatedDebug extends AnimatedNode {
   _value;
 
   constructor(message, value) {
-    super({ type: 'debug', message, value: value.__nodeID }, [value]);
     invariant(
       typeof message === 'string',
       `Reanimated: Animated.debug node first argument should be of type string but got ${message}`
@@ -18,6 +17,7 @@ class AnimatedDebug extends AnimatedNode {
       value instanceof AnimatedNode,
       `Reanimated: Animated.debug node second argument should be of type AnimatedNode but got ${value}`
     );
+    super({ type: 'debug', message, value: value.__nodeID }, [value]);
     this._message = message;
     this._value = value;
   }

@@ -9,15 +9,6 @@ class AnimatedCond extends AnimatedNode {
   _elseBlock;
 
   constructor(condition, ifBlock, elseBlock) {
-    super(
-      {
-        type: 'cond',
-        cond: condition.__nodeID,
-        ifBlock: ifBlock.__nodeID,
-        elseBlock: elseBlock ? elseBlock.__nodeID : undefined,
-      },
-      [condition, ifBlock, elseBlock]
-    );
     invariant(
       condition instanceof AnimatedNode,
       `Reanimated: Animated.cond node first argument should be of type AnimatedNode but got ${condition}`
@@ -29,6 +20,15 @@ class AnimatedCond extends AnimatedNode {
     invariant(
       elseBlock instanceof AnimatedNode || elseBlock === undefined,
       `Reanimated: Animated.cond node third argument should be of type AnimatedNode or should be undefined but got ${elseBlock}`
+    );
+    super(
+      {
+        type: 'cond',
+        cond: condition.__nodeID,
+        ifBlock: ifBlock.__nodeID,
+        elseBlock: elseBlock ? elseBlock.__nodeID : undefined,
+      },
+      [condition, ifBlock, elseBlock]
     );
     this._condition = condition;
     this._ifBlock = ifBlock;

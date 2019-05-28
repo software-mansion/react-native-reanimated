@@ -5,11 +5,11 @@ class AnimatedAlways extends AnimatedNode {
   _what;
 
   constructor(what) {
-    super({ type: 'always', what: what.__nodeID }, [what]);
     invariant(
       what instanceof AnimatedNode,
       `Reanimated: Animated.always node argument should be of type AnimatedNode but got ${what}`
     );
+    super({ type: 'always', what: what.__nodeID }, [what]);
     this._what = what;
   }
 

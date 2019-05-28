@@ -6,11 +6,11 @@ class AnimatedStartClock extends AnimatedNode {
   _clockNode;
 
   constructor(clockNode) {
-    super({ type: 'clockStart', clock: clockNode.__nodeID });
     invariant(
       clockNode instanceof AnimatedClock,
       `Reanimated: Animated.startClock argument should be of type AnimatedClock but got ${clockNode}`
     );
+    super({ type: 'clockStart', clock: clockNode.__nodeID });
     this._clockNode = clockNode;
   }
 

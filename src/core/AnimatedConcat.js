@@ -4,7 +4,6 @@ import AnimatedNode from './AnimatedNode';
 
 class AnimatedConcat extends AnimatedNode {
   constructor(input) {
-    super({ type: 'concat', input: input.map(n => n.__nodeID) }, input);
     invariant(
       input.every(
         el =>
@@ -14,6 +13,7 @@ class AnimatedConcat extends AnimatedNode {
       ),
       `Reanimated: Animated.concat node arguments should be of type AnimatedNode or String or Number. One or more of them are not of that type. Node: ${input}`
     );
+    super({ type: 'concat', input: input.map(n => n.__nodeID) }, input);
   }
 
   toString() {
