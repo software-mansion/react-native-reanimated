@@ -67,7 +67,7 @@ Transitions is an experimental API distributed as a part of reanimated which ser
 
 Transitions API consists of two main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
 
-The second main bulding block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
+The second main building block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
 
 ## Transition groups
 
@@ -91,7 +91,7 @@ The time animation takes to execute in milliseconds
 
 #### `delayMs`
 
-Use this is you want the animation to start delayed (value in milliseconds)
+Use this if you want the animation to start delayed (value in milliseconds)
 
 #### `interpolation`
 
@@ -99,7 +99,7 @@ Specify the transition timing curve. Possible values are: `linear`, `easeIn`, `e
 
 #### `propagation`
 
-Allows for the framework to automatically delay beggining of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
+Allows for the framework to automatically delay beginning of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
 
 ### `<Transition.In>`
 
@@ -111,7 +111,7 @@ Allows to specify how the framework should animate views that are being removed 
 
 ### `<Transition.Change>`
 
-Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports animating position, bounds and transforms.
+Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports an animating position, bounds and transforms.
 
 ## How to use it
 
@@ -128,7 +128,7 @@ All the functionality that missing elements provide in `Animated` can already be
  - [ ] animation delays
 
 ## Value
-`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there are provided API for setting value after it has been initialized:
 ```js
 const v = new Value(0);
 /// ...
@@ -155,12 +155,12 @@ The current algorithm for making decisions of which nodes to evaluate works as f
  1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
  2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
  3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
+ 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.
  5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 ## Blocks
 
-Blocks are just an arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
+Blocks are just arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
 
 ```js
 cond(
@@ -495,7 +495,7 @@ Returns a node that rounds input value to the nearest integer.
 floor(node)
 ```
 
-Returns a node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
+Returns a node that rounds a number down to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `ceil`
