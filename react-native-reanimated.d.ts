@@ -207,7 +207,7 @@ declare module 'react-native-reanimated' {
     export const ceil: UnaryOperator;
     export const lessThan: BinaryOperator<0 | 1>;
     export const eq: BinaryOperator<0 | 1>;
-    export const greaterThan: BinaryOperator;
+    export const greaterThan: BinaryOperator<0 | 1>;
     export const lessOrEq: BinaryOperator<0 | 1>;
     export const greaterOrEq: BinaryOperator<0 | 1>;
     export const neq: BinaryOperator<0 | 1>;
