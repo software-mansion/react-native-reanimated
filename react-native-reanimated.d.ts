@@ -59,10 +59,10 @@ declare module 'react-native-reanimated' {
       | T
       | AnimatedNode<T>
       | ReadonlyArray<T | AnimatedNode<T> | ReadonlyArray<T | AnimatedNode<T>>>;
-    type BinaryOperator = (
+    type BinaryOperator<T = number> = (
       left: Adaptable<number>,
       right: Adaptable<number>
-    ) => AnimatedNode<number>;
+    ) => AnimatedNode<T>;
     type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
     type MultiOperator = (
       a: Adaptable<number>,
@@ -205,14 +205,14 @@ declare module 'react-native-reanimated' {
     export const round: UnaryOperator;
     export const floor: UnaryOperator;
     export const ceil: UnaryOperator;
-    export const lessThan: BinaryOperator;
-    export const eq: BinaryOperator;
-    export const greaterThan: BinaryOperator;
-    export const lessOrEq: BinaryOperator;
-    export const greaterOrEq: BinaryOperator;
-    export const neq: BinaryOperator;
-    export const and: MultiOperator;
-    export const or: MultiOperator;
+    export const lessThan: BinaryOperator<0 | 1>;
+    export const eq: BinaryOperator<0 | 1>;
+    export const greaterThan: BinaryOperator<0 | 1>;
+    export const lessOrEq: BinaryOperator<0 | 1>;
+    export const greaterOrEq: BinaryOperator<0 | 1>;
+    export const neq: BinaryOperator<0 | 1>;
+    export const and: MultiOperator<0 | 1>;
+    export const or: MultiOperator<0 | 1>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
