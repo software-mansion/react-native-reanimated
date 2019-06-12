@@ -16,7 +16,7 @@
 {
     if ((self = [super initWithID:nodeID config:config])) {
       _nodeToBeEvaluated = [RCTConvert NSNumber:config[@"what"]];
-      REA_LOG_ERROR_IF_NIL(_nodeToBeEvaluated, @"Reanimated: First argument passed to always node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+      REA_LOG_ERROR_IF_NIL(_nodeToBeEvaluated, @"Reanimated: First argument passed to always node is either of wrong type or is missing.");
     }
     return self;
 }

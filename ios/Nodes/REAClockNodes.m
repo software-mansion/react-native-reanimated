@@ -59,7 +59,7 @@
 {
   if ((self = [super initWithID:nodeID config:config])) {
     _clockNodeID = [RCTConvert NSNumber:config[@"clock"]];
-    REA_LOG_ERROR_IF_NIL(_clockNodeID, @"Reanimated: First argument passed to clock node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+    REA_LOG_ERROR_IF_NIL(_clockNodeID, @"Reanimated: First argument passed to clock node is either of wrong type or is missing.");
   }
   return self;
 }

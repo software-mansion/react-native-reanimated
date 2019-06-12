@@ -17,7 +17,7 @@
 {
   if ((self = [super initWithID:nodeID config:config])) {
     _inputNodeID = [RCTConvert NSNumber:config[@"input"]];
-    REA_LOG_ERROR_IF_NIL(_inputNodeID, @"Reanimated: First argument passed to bezier node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+    REA_LOG_ERROR_IF_NIL(_inputNodeID, @"Reanimated: First argument passed to bezier node is either of wrong type or is missing.");
 
     CGFloat mX1 = [config[@"mX1"] doubleValue];
     CGFloat mY1 = [config[@"mY1"] doubleValue];

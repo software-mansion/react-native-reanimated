@@ -14,7 +14,7 @@
   if ((self = [super initWithID:nodeID config:config])) {
     _message = [RCTConvert NSString:config[@"message"]];
     _valueNodeID = [RCTConvert NSNumber:config[@"value"]];
-    REA_LOG_ERROR_IF_NIL(_valueNodeID, @"Reanimated: Second argument passed to debug node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+    REA_LOG_ERROR_IF_NIL(_valueNodeID, @"Reanimated: Second argument passed to debug node is either of wrong type or is missing.");
   }
   return self;
 }

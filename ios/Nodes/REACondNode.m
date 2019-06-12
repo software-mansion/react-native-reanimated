@@ -14,9 +14,9 @@
 {
   if ((self = [super initWithID:nodeID config:config])) {
     _condNodeID = [RCTConvert NSNumber:config[@"cond"]];
-    REA_LOG_ERROR_IF_NIL(_condNodeID, @"Reanimated: First argument passed to cond node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+    REA_LOG_ERROR_IF_NIL(_condNodeID, @"Reanimated: First argument passed to cond node is either of wrong type or is missing.");
     _ifBlockID = [RCTConvert NSNumber:config[@"ifBlock"]];
-    REA_LOG_ERROR_IF_NIL(_ifBlockID, @"Reanimated: Second argument passed to cond node is either of wrong type or is missing. NodeID: %@", self.nodeID);
+    REA_LOG_ERROR_IF_NIL(_ifBlockID, @"Reanimated: Second argument passed to cond node is either of wrong type or is missing.");
     _elseBlockID = [RCTConvert NSNumber:config[@"elseBlock"]];
   }
   return self;

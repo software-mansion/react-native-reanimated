@@ -45,7 +45,7 @@ public abstract class ClockOpNode extends Node {
 
   public ClockOpNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    clockID = MapUtils.getInt(config, "clock", "Reanimated: Argument passed to clock node is either of wrong type or is missing. NodeID: " + nodeID);
+    clockID = MapUtils.getInt(config, "clock", "Reanimated: Argument passed to clock node is either of wrong type or is missing.");
   }
 
   @Override
