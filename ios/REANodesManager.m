@@ -57,6 +57,7 @@
   CADisplayLink *_displayLink;
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
+  BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 }
@@ -111,7 +112,9 @@
 - (void)postRunUpdatesAfterAnimation
 {
   _wantRunUpdates = YES;
-  [self startUpdatingOnAnimationFrame];
+  if (!_processingDirectEvent) {
+    [self startUpdatingOnAnimationFrame];
+  }
 }
 
 - (void)startUpdatingOnAnimationFrame
@@ -335,15 +338,38 @@
   [eventNode processEvent:event];
 }
 
+- (void)processDirectEvent:(id<RCTEvent>)event
+{
+  _processingDirectEvent = YES;
+  [self processEvent:event];
+  [self performOperations];
+  _processingDirectEvent = NO;
+}
+
+- (BOOL)isDirectEvent:(id<RCTEvent>)event
+{
+  static NSArray<NSString *> *directEventNames;
+  static dispatch_once_t directEventNamesToken;
+  dispatch_once(&directEventNamesToken, ^{
+    directEventNames = @[@"onScroll"];
+  });
+  
+  return [directEventNames containsObject:event.eventName];
+}
+
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
   NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, event.eventName];
   REANode *eventNode = [_eventMapping objectForKey:key];
 
   if (eventNode != nil) {
-    // enqueue node to be processed
-    [_eventQueue addObject:event];
-    [self startUpdatingOnAnimationFrame];
+    if ([self isDirectEvent:event]) {
+      [self processDirectEvent:event];
+    } else {
+      // enqueue node to be processed
+      [_eventQueue addObject:event];
+      [self startUpdatingOnAnimationFrame];
+    }
   }
 }
 
