@@ -3,7 +3,10 @@ matrix:
   - language: android
     sudo: required
     jdk: oraclejdk8
-    env: NODE_VERSION=10.15.3
+    env:
+      - NODE_VERSION=10.15.3
+      - ANDROID_API=28
+      - ANDROID_BUILD_TOOLS=28.0.3
     before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
     - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
@@ -16,10 +19,10 @@ matrix:
       components:
       - tools
       - platform-tools
-      - build-tools-27.0.3
+      - android-${ANDROID_API}
+      - build-tools-${ANDROID_BUILD_TOOLS}
 
     install:
-    - yes | sdkmanager "platforms;android-27"
     - nvm install $NODE_VERSION
     - nvm use $NODE_VERSION
     - nvm alias default $NODE_VERSION
