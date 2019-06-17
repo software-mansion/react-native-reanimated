@@ -351,7 +351,14 @@
   static NSArray<NSString *> *directEventNames;
   static dispatch_once_t directEventNamesToken;
   dispatch_once(&directEventNamesToken, ^{
-    directEventNames = @[@"onScroll"];
+    directEventNames = @[
+      @"onContentSizeChange",
+      @"onMomentumScrollBegin",
+      @"onMomentumScrollEnd",
+      @"onScroll",
+      @"onScrollBeginDrag",
+      @"onScrollEndDrag"
+    ];
   });
   
   return [directEventNames containsObject:event.eventName];
