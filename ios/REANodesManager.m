@@ -5,6 +5,7 @@
 #import "Nodes/REANode.h"
 #import "Nodes/REAPropsNode.h"
 #import "Nodes/REAStyleNode.h"
+#import "Nodes/REAMapNode.h"
 #import "Nodes/REATransformNode.h"
 #import "Nodes/REAValueNode.h"
 #import "Nodes/REABlockNode.h"
@@ -212,6 +213,7 @@
   dispatch_once(&mapToken, ^{
     map = @{@"props": [REAPropsNode class],
             @"style": [REAStyleNode class],
+            @"map": [REAMapNode class],
             @"transform": [REATransformNode class],
             @"value": [REAValueNode class],
             @"block": [REABlockNode class],

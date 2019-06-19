@@ -55,6 +55,7 @@
 		FDE6D940229BF70F007F6716 /* REAJSCallNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1B209062F100EEC73A /* REAJSCallNode.m */; };
 		FDE6D941229BF70F007F6716 /* REABezierNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC1C209062F100EEC73A /* REABezierNode.m */; };
 		FDE6D942229BF70F007F6716 /* REAEventNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC21209062F100EEC73A /* REAEventNode.m */; };
+		C0ADE00D22BAB514004B1A98 /* REAMapNode.m in Sources */ = {isa = PBXBuildFile; fileRef = C0ADE00C22BAB514004B1A98 /* REAMapNode.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -129,6 +130,8 @@
 		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
 		66240C6820C68DEA00648F55 /* REAAlwaysNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAAlwaysNode.m; sourceTree = "<group>"; };
 		FDBB176E229BF04900D1E455 /* libRNReanimated-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libRNReanimated-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0ADE00B22BAB506004B1A98 /* REAMapNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAMapNode.h; sourceTree = "<group>"; };
+		C0ADE00C22BAB514004B1A98 /* REAMapNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REAMapNode.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +173,8 @@
 				440FEC19209062F100EEC73A /* REAValueNode.m */,
 				440FEC1E209062F100EEC73A /* REAStyleNode.h */,
 				440FEC13209062F100EEC73A /* REAStyleNode.m */,
+				C0ADE00B22BAB506004B1A98 /* REAMapNode.h */,
+				C0ADE00C22BAB514004B1A98 /* REAMapNode.m */,
 				440FEC12209062F100EEC73A /* REATransformNode.h */,
 				440FEC20209062F100EEC73A /* REATransformNode.m */,
 				440FEC1D209062F100EEC73A /* REAPropsNode.h */,
@@ -314,6 +319,7 @@
 				440FEC3A209062F100EEC73A /* REAModule.m in Sources */,
 				44125DCE2253A038003C1762 /* REATransitionValues.m in Sources */,
 				44125DC82253906B003C1762 /* REAAllTransitions.m in Sources */,
+				C0ADE00D22BAB514004B1A98 /* REAMapNode.m in Sources */,
 				44125DC022538E6D003C1762 /* REATransitionManager.m in Sources */,
 				440FEC39209062F100EEC73A /* REABlockNode.m in Sources */,
 				440FEC33209062F100EEC73A /* REABezierNode.m in Sources */,
