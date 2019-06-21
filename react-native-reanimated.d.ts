@@ -195,6 +195,7 @@ declare module 'react-native-reanimated' {
     export const pow: MultiOperator;
     export const modulo: MultiOperator;
     export const sqrt: UnaryOperator;
+    export const log: UnaryOperator;
     export const sin: UnaryOperator;
     export const cos: UnaryOperator;
     export const tan: UnaryOperator;

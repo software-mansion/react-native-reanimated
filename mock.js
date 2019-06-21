@@ -52,6 +52,7 @@ module.exports = {
     pow: NOOP,
     modulo: NOOP,
     sqrt: NOOP,
+    log: NOOP,
     sin: NOOP,
     cos: NOOP,
     tan: NOOP,
