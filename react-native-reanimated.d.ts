@@ -64,11 +64,11 @@ declare module 'react-native-reanimated' {
       right: Adaptable<number>
     ) => AnimatedNode<T>;
     type UnaryOperator = (value: Adaptable<number>) => AnimatedNode<number>;
-    type MultiOperator = (
+    type MultiOperator<T = number> = (
       a: Adaptable<number>,
       b: Adaptable<number>,
       ...others: Adaptable<number>[]
-    ) => AnimatedNode<number>;
+    ) => AnimatedNode<T>;
 
     export interface DecayState {
       finished: AnimatedValue<number>;
@@ -141,8 +141,10 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils
 
+    type AnimatedTransform = { [P in keyof TransformStyle["transform"]]: Animated.Adaptable<TransformStyle["transform"][P]> };
+
     type AnimateStyle<S extends object> = {
-      [K in keyof S]: S[K] extends ReadonlyArray<any>
+      [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
           ? AnimateStyle<S[K]>
@@ -151,7 +153,7 @@ declare module 'react-native-reanimated' {
               | AnimatedNode<
                   // allow `number` where `string` normally is to support colors
                   S[K] extends string ? S[K] | number : S[K]
-                >
+                >)
     };
 
     type AnimateProps<
@@ -195,6 +197,7 @@ declare module 'react-native-reanimated' {
     export const pow: MultiOperator;
     export const modulo: MultiOperator;
     export const sqrt: UnaryOperator;
+    export const log: UnaryOperator;
     export const sin: UnaryOperator;
     export const cos: UnaryOperator;
     export const tan: UnaryOperator;
