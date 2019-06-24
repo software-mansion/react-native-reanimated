@@ -371,6 +371,8 @@
 
   if (eventNode != nil) {
     if ([self isDirectEvent:event]) {
+      // Bypass the event queue/animation frames and process scroll events
+      // immediately to avoid getting out of sync with the scroll position
       [self processDirectEvent:event];
     } else {
       // enqueue node to be processed
