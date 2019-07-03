@@ -40,6 +40,8 @@ public class PropsNode extends Node implements FinalNode {
       propMap.putString(key, (String) value);
     } else if (value instanceof WritableArray) {
       propMap.putArray(key, (WritableArray)value);
+    } else if (value instanceof WritableMap) {
+      propMap.putMap(key, (WritableMap)value);
     } else {
       throw new IllegalStateException("Unknown type of animated value");
     }
@@ -93,7 +95,19 @@ public class PropsNode extends Node implements FinalNode {
             dest = jsProps;
           }
           ReadableType type = style.getType(key);
-          addProp(dest, key, node.value());
+          switch (type) {
+            case Number:
+              dest.putDouble(key, style.getDouble(key));
+              break;
+            case String:
+              dest.putString(key, style.getString(key));
+              break;
+            case Array:
+              dest.putArray(key, (WritableArray) style.getArray(key));
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected type " + type);
+          }
         }
       } else {
         String key = entry.getKey();
