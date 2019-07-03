@@ -25,20 +25,25 @@ public class PropsNode extends Node implements FinalNode {
   private final JavaOnlyMap mPropMap;
   private final ReactStylesDiffMap mDiffMap;
 
-  private void addProp(WritableMap propMap, String key, WritableMap value) {
-    ReadableType type = value.getType(key);
-    switch (type) {
-      case Number:
-        propMap.putDouble(key, value.getDouble(key));
-        break;
-      case String:
-        propMap.putString(key, value.getString(key));
-        break;
-      case Array:
-        propMap.putArray(key, (WritableArray) value.getArray(key));
-        break;
-      default:
-        throw new IllegalArgumentException("Unexpected type " + type);
+  private void addProp(WritableMap propMap, String key, Object value) {
+    if (value == null) {
+      propMap.putNull(key);
+    } else if (value instanceof Double) {
+      propMap.putDouble(key, (Double) value);
+    } else if (value instanceof Integer) {
+      propMap.putInt(key, (Integer) value);
+    } else if (value instanceof Number) {
+      propMap.putDouble(key, ((Number) value).doubleValue());
+    } else if (value instanceof Boolean) {
+      propMap.putBoolean(key, (Boolean) value);
+    } else if (value instanceof String) {
+      propMap.putString(key, (String) value);
+    } else if (value instanceof WritableArray) {
+      propMap.putArray(key, (WritableArray)value);
+    } else if (value instanceof WritableMap) {
+      propMap.putMap(key, (WritableMap)value);
+    } else {
+      throw new IllegalStateException("Unknown type of animated value");
     }
   }
 
@@ -89,11 +94,24 @@ public class PropsNode extends Node implements FinalNode {
             hasJSProps = true;
             dest = jsProps;
           }
-          addProp(dest, key, style);
+          ReadableType type = style.getType(key);
+          switch (type) {
+            case Number:
+              dest.putDouble(key, style.getDouble(key));
+              break;
+            case String:
+              dest.putString(key, style.getString(key));
+              break;
+            case Array:
+              dest.putArray(key, (WritableArray) style.getArray(key));
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected type " + type);
+          }
         }
       } else {
         String key = entry.getKey();
-        WritableMap value = (WritableMap)node.value();
+        Object value = node.value();
         if (mNodesManager.uiProps.contains(key)) {
           hasUIProps = true;
           addProp(mPropMap, key, value);
