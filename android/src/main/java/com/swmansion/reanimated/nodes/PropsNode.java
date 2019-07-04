@@ -62,7 +62,7 @@ public class PropsNode extends Node implements FinalNode {
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
-      Object val = node.value();
+      Object value = node.value();
       String key = entry.getKey();
       WritableMap dest;
       if (mNodesManager.uiProps.contains(key)) {
@@ -76,14 +76,20 @@ public class PropsNode extends Node implements FinalNode {
         dest = jsProps;
       }
       if (node instanceof TransformNode) {
-        dest.putArray(key, (WritableArray) val);
+        dest.putArray(key, (WritableArray) value);
       } else {
-        if (val instanceof Double) {
-          dest.putDouble(key, (Double) val);
-        } else if (val instanceof String) {
-          dest.putString(key, (String) val);
+        if (value == null) {
+          dest.putNull(key);
+        } else if (value instanceof Double) {
+          dest.putDouble(key, (Double) value);
+        } else if (value instanceof Boolean) {
+          dest.putBoolean(key, (Boolean) value);
+        } else if (value instanceof String) {
+          dest.putString(key, (String) value);
+        } else if (value instanceof WritableArray) {
+          dest.putArray(key, (WritableArray) value);
         } else {
-          throw new IllegalStateException("Unexpected value for prop `" + key + "` : \n\n" + val.toString());
+          throw new IllegalStateException("Unexpected value for prop `" + key + "` : \n\n" + value.toString());
         }
       }
     }
