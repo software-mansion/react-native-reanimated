@@ -5,8 +5,6 @@ import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
@@ -52,49 +50,40 @@ public class PropsNode extends Node implements FinalNode {
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
+    Map useMapping = mMapping;
     final WritableMap nativeProps = Arguments.createMap();
+
+    if (mMapping.containsKey("style")) {
+      Node styleNode = mNodesManager.findNodeById(mMapping.get("style"), Node.class);
+      Map styleMapping = (Map) styleNode.value();
+      useMapping.putAll(styleMapping);
+      useMapping.remove("style");
+    }
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
-      if (node instanceof StyleNode) {
-        WritableMap style = (WritableMap) node.value();
-        ReadableMapKeySetIterator iter = style.keySetIterator();
-        while (iter.hasNextKey()) {
-          String key = iter.nextKey();
-          WritableMap dest;
-          if (mNodesManager.uiProps.contains(key)) {
-            hasUIProps = true;
-            dest = mPropMap;
-          } else if (mNodesManager.nativeProps.contains(key)){
-            hasNativeProps = true;
-            dest = nativeProps;
-          } else {
-            hasJSProps = true;
-            dest = jsProps;
-          }
-          ReadableType type = style.getType(key);
-          switch (type) {
-            case Number:
-              dest.putDouble(key, style.getDouble(key));
-              break;
-            case String:
-              dest.putString(key, style.getString(key));
-              break;
-            case Array:
-              dest.putArray(key, (WritableArray) style.getArray(key));
-              break;
-            default:
-              throw new IllegalArgumentException("Unexpected type " + type);
-          }
-        }
+      Object val = node.value();
+      String key = entry.getKey();
+      WritableMap dest;
+      if (mNodesManager.uiProps.contains(key)) {
+        hasUIProps = true;
+        dest = mPropMap;
+      } else if (mNodesManager.nativeProps.contains(key)){
+        hasNativeProps = true;
+        dest = nativeProps;
       } else {
-        String key = entry.getKey();
-        if (mNodesManager.uiProps.contains(key)) {
-          hasUIProps = true;
-          mPropMap.putDouble(key, node.doubleValue());
+        hasJSProps = true;
+        dest = jsProps;
+      }
+      if (node instanceof TransformNode) {
+        dest.putArray(key, (WritableArray) val);
+      } else {
+        if (val instanceof Double) {
+          dest.putDouble(key, (Double) val);
+        } else if (val instanceof String) {
+          dest.putString(key, (String) val);
         } else {
-          hasNativeProps = true;
-          nativeProps.putDouble(key, node.doubleValue());
+          throw new IllegalStateException("Unexpected value for prop `" + key + "` : \n\n" + val.toString());
         }
       }
     }

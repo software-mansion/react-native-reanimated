@@ -21,23 +21,7 @@ public class StyleNode extends Node {
   }
 
   @Override
-  protected WritableMap evaluate() {
-    JavaOnlyMap propMap = new JavaOnlyMap();
-    for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
-      Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
-      if (node instanceof TransformNode) {
-        propMap.putArray(entry.getKey(), (WritableArray) node.value());
-      } else {
-        Object val = node.value();
-        if (val instanceof Double) {
-          propMap.putDouble(entry.getKey(), (Double) val);
-        } else if (val instanceof String) {
-          propMap.putString(entry.getKey(), (String) val);
-        } else {
-          throw new IllegalStateException("Wrong style form");
-        }
-      }
-    }
-    return propMap;
+  protected Map evaluate() {
+    return mMapping;
   }
 }
