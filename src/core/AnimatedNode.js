@@ -26,7 +26,13 @@ function runPropUpdates() {
     if (typeof node.update === 'function') {
       node.update();
     } else {
-      node.__getChildren().forEach(findAndUpdateNodes);
+      const nodes = node.__getChildren();
+
+      if (nodes) {
+        for (let i = 0, l = nodes.length; i < l; i++) {
+          findAndUpdateNodes(nodes[i]);
+        }
+      }
     }
   };
   for (let i = 0; i < UPDATED_NODES.length; i++) {
@@ -51,13 +57,25 @@ export default class AnimatedNode {
 
   __attach() {
     this.__nativeInitialize();
-    this.__inputNodes &&
-      this.__inputNodes.forEach(node => node.__addChild(this));
+
+    const nodes = this.__inputNodes;
+
+    if (nodes) {
+      for (let i = 0, l = nodes.length; i < l; i++) {
+        nodes[i].__addChild(this);
+      }
+    }
   }
 
   __detach() {
-    this.__inputNodes &&
-      this.__inputNodes.forEach(node => node.__removeChild(this));
+    const nodes = this.__inputNodes;
+
+    if (nodes) {
+      for (let i = 0, l = nodes.length; i < l; i++) {
+        nodes[i].__removeChild(this);
+      }
+    }
+
     this.__nativeTearDown();
   }
 
