@@ -25,6 +25,7 @@ import com.swmansion.reanimated.nodes.BlockNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
 import com.swmansion.reanimated.nodes.ConcatNode;
+import com.swmansion.reanimated.nodes.FormatNode;
 import com.swmansion.reanimated.nodes.CondNode;
 import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
@@ -264,6 +265,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
       node = new ConcatNode(nodeID, config, this);
+    } else if ("format".equals(type)) {
+      node = new FormatNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }

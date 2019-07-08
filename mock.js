@@ -75,6 +75,7 @@ module.exports = {
     not: NOOP,
     set: NOOP,
     concat: NOOP,
+    format: NOOP,
     cond: NOOP,
     block: NOOP,
     call: NOOP,

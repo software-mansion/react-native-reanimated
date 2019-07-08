@@ -225,6 +225,10 @@ declare module 'react-native-reanimated' {
     export function concat(
       ...args: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
+    export function format(
+      value: Adaptable<number>,
+      format: Adaptable<string>
+    ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
       ifNode: Adaptable<number>,
