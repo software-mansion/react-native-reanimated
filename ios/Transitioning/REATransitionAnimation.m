@@ -42,8 +42,10 @@ CGFloat SimAnimationDragCoefficient()
 
 - (void)play
 {
+  if (_delay > 0){
+    _animation.beginTime = CACurrentMediaTime() + _delay * SimAnimationDragCoefficient();
+  }
   _animation.duration = self.duration * SimAnimationDragCoefficient();
-  _animation.beginTime = CACurrentMediaTime() + _delay * SimAnimationDragCoefficient();
   [_layer addAnimation:_animation forKey:_keyPath];
 }
 
