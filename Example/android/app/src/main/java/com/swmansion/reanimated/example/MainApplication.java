@@ -2,6 +2,7 @@ package com.swmansion.reanimated.example;
 
 import android.app.Application;
 
+import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.swmansion.reanimated.ReanimatedPackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
@@ -23,11 +24,12 @@ public class MainApplication extends Application implements ReactApplication {
 
     @Override
     protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-          new MainReactPackage(),
-          new ReanimatedPackage(),
-          new RNGestureHandlerPackage()
-      );
+      @SuppressWarnings("UnnecessaryLocalVariable")
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      packages.add(new MainReactPackage());
+      packages.add(new ReanimatedPackage());
+      packages.add(new RNGestureHandlerPackage());
+      return packages;
     }
 
     @Override

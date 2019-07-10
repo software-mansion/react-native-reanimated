@@ -1,4 +1,6 @@
 rootProject.name = 'ReanimatedExample'
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+
 include ':react-native-reanimated'
 project(':react-native-reanimated').projectDir = new File(rootProject.projectDir, '../../android')
 include ':react-native-gesture-handler'
