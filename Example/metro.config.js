@@ -35,4 +35,12 @@ module.exports = {
     ],
   },
   watchFolders: [path.resolve(__dirname, '..')],
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: true,
+        inlineRequires: true,
+      },
+    }),
+  },
 };
