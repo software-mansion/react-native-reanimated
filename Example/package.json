@@ -3,24 +3,25 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
+    "start": "react-native start",
     "test": "jest"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.2",
     "react": "16.8.6",
-    "react-native": "0.59.3",
+    "react-native": "0.60.0",
     "react-native-gesture-handler": "1.0.15",
+    "react-native-webview": "^5.12.1",
     "react-navigation": "2.17.0"
   },
   "devDependencies": {
-    "@babel/core": "7.1.2",
-    "babel-core": "7.0.0-bridge.0",
+    "@babel/core": "^7.4.5",
+    "@babel/runtime": "^7.4.5",
+    "babel-jest": "^24.8.0",
     "babel-plugin-module-resolver": "^3.1.1",
     "glob-to-regexp": "^0.4.0",
-    "jest": "23.6.0",
-    "metro-react-native-babel-preset": "^0.48.0",
-    "react-test-renderer": "16.5.0"
+    "jest": "^24.8.0",
+    "metro-react-native-babel-preset": "^0.54.1",
+    "react-test-renderer": "16.8.6"
   },
   "jest": {
     "preset": "react-native"

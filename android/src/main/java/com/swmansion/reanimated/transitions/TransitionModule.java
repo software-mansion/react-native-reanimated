@@ -1,8 +1,9 @@
 package com.swmansion.reanimated.transitions;
 
-import android.support.transition.TransitionManager;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.transition.TransitionManager;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;

@@ -1,16 +1,17 @@
 package com.swmansion.reanimated.transitions;
 
-import android.support.transition.Fade;
-import android.support.transition.SidePropagation;
-import android.support.transition.Slide;
-import android.support.transition.Transition;
-import android.support.transition.TransitionSet;
-import android.support.transition.Visibility;
 import android.view.Gravity;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
+
+import androidx.transition.Fade;
+import androidx.transition.SidePropagation;
+import androidx.transition.Slide;
+import androidx.transition.Transition;
+import androidx.transition.TransitionSet;
+import androidx.transition.Visibility;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
@@ -20,7 +21,8 @@ import javax.annotation.Nullable;
 
 class TransitionUtils {
 
-  static @Nullable Transition inflate(ReadableMap config) {
+  static @Nullable
+  Transition inflate(ReadableMap config) {
     String type = config.getString("type");
     if ("group".equals(type)) {
       return inflateGroup(config);

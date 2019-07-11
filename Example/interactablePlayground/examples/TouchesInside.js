@@ -7,8 +7,8 @@ import {
   Button,
   Picker,
   Slider,
-  WebView,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import Interactable from '../../Interactable';
 
 export default class TouchesInside extends Component {
