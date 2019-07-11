@@ -1,10 +1,11 @@
 package com.swmansion.reanimated.transitions;
 
-import android.support.transition.SidePropagation;
-import android.support.transition.Transition;
-import android.support.transition.TransitionValues;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.transition.SidePropagation;
+import androidx.transition.Transition;
+import androidx.transition.TransitionValues;
 
 public class SaneSidePropagation extends SidePropagation {
 

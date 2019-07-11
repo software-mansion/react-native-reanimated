@@ -4,14 +4,13 @@ import android.app.Application;
 
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
-import com.swmansion.reanimated.ReanimatedPackage;
-import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
+
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
+import com.reactnativecommunity.webview.RNCWebViewPackage;
+import com.swmansion.reanimated.ReanimatedPackage;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -26,12 +25,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       @SuppressWarnings("UnnecessaryLocalVariable")
       List<ReactPackage> packages = new PackageList(this).getPackages();
-      packages.add(
-        new MainReactPackage(),
-        new RNCWebViewPackage(),
-        new ReanimatedPackage(),
-        new RNGestureHandlerPackage()
-      );
+      packages.add(new ReanimatedPackage());
+//      packages.add(new RNCWebViewPackage());
       return packages;
     }
 
