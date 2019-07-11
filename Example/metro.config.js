@@ -1,6 +1,5 @@
 const blacklist = require('metro-config/src/defaults/blacklist');
 const path = require('path');
-// const cwd = path.resolve(__dirname);
 
 const glob = require('glob-to-regexp');
 

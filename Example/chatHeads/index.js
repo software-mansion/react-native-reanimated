@@ -215,8 +215,7 @@ class Tracking extends Component {
               },
             ]}
             source={{
-              uri:
-                'https://avatars0.githubusercontent.com/u/18573330?s=400&u=f5921fb0aca0388c7a1e8e08d4b3d3466035d113&v=4',
+              uri: 'https://avatars3.githubusercontent.com/u/726445?v=4&s=460',
             }}
           />
         </PanGestureHandler>
