@@ -83,7 +83,7 @@ PODS:
   - React-RCTWebSocket (0.60.0):
     - React-Core (= 0.60.0)
     - React-fishhook (= 0.60.0)
-  - RNGestureHandler (1.0.15):
+  - RNGestureHandler (1.3.0):
     - React
   - RNReanimated (1.1.0):
     - React
@@ -196,10 +196,10 @@ SPEC CHECKSUMS:
   React-RCTText: 685fca2e13b024271048e7e247ef24476f28a41e
   React-RCTVibration: 4ee1cf208ab17a50fafb1c16ffe28fe594a64e4f
   React-RCTWebSocket: fca087d583724aa0e5fef7d911f0f2a28d0f2736
-  RNGestureHandler: 14c09a7361c272efea8f7f3799142c893a6a4485
+  RNGestureHandler: 5329a942fce3d41c68b84c2c2276ce06a696d8b0
   RNReanimated: 7a52c90473b5e81c13408d40d797b98387eaddde
   yoga: 616fde658be980aa60a2158835170f3f9c2d04b4
 
-PODFILE CHECKSUM: 3b220c24bd87b04e3c22e21d925e2ed981de98d3
+PODFILE CHECKSUM: 72cd7a8bd7cbf16806e440cf18dee1d7b82bc58b
 
 COCOAPODS: 1.6.1
