@@ -85,6 +85,8 @@ PODS:
     - React-fishhook (= 0.60.0)
   - RNGestureHandler (1.0.15):
     - React
+  - RNReanimated (1.1.0):
+    - React
   - yoga (0.60.0.React)
 
 DEPENDENCIES:
@@ -111,6 +113,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - React-RCTWebSocket (from `../node_modules/react-native/Libraries/WebSocket`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNReanimated (from `../../RNReanimated.podspec`)
   - yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -164,6 +167,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/WebSocket"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNReanimated:
+    :podspec: "../../RNReanimated.podspec"
   yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -192,8 +197,9 @@ SPEC CHECKSUMS:
   React-RCTVibration: 4ee1cf208ab17a50fafb1c16ffe28fe594a64e4f
   React-RCTWebSocket: fca087d583724aa0e5fef7d911f0f2a28d0f2736
   RNGestureHandler: 14c09a7361c272efea8f7f3799142c893a6a4485
+  RNReanimated: 7a52c90473b5e81c13408d40d797b98387eaddde
   yoga: 616fde658be980aa60a2158835170f3f9c2d04b4
 
-PODFILE CHECKSUM: 7cc9595638ebd2d27af99ad3332ab1995ce6ea7c
+PODFILE CHECKSUM: 3b220c24bd87b04e3c22e21d925e2ed981de98d3
 
 COCOAPODS: 1.6.1
