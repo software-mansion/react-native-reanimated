@@ -12,6 +12,7 @@ declare module 'react-native-reanimated' {
     ViewStyle,
     TextStyle,
     ImageStyle,
+    TransformsStyle
   } from 'react-native';
   namespace Animated {
     class AnimatedNode<T> {
@@ -141,7 +142,7 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils
 
-    type AnimatedTransform = { [P in keyof TransformStyle["transform"]]: Animated.Adaptable<TransformStyle["transform"][P]> };
+    type AnimatedTransform = { [P in keyof TransformsStyle["transform"]]: Animated.Adaptable<TransformsStyle["transform"][P]> };
 
     type AnimateStyle<S extends object> = {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
