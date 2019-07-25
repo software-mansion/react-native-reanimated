@@ -153,7 +153,7 @@ declare module 'react-native-reanimated' {
               | S[K]
               | AnimatedNode<
                   // allow `number` where `string` normally is to support colors
-                  S[K] extends string ? S[K] | number : S[K]
+                  S[K] extends (string | undefined) ? S[K] | number : S[K]
                 >)
     };
 
