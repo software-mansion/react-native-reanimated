@@ -93,7 +93,7 @@ export default class Example extends Component {
 
     // const transX = new Value(0);
     const clock = new Clock();
-    const twenty = new Value(20);
+    // const twenty = new Value(20);
     const a = param("a");
     const b = param("b");
     const calc = funcdef(multiply(a, b), a, b);
