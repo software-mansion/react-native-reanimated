@@ -7,6 +7,7 @@
 
 @property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
 @property (nonatomic) NSUInteger loopID;
+@property (nonatomic) NSUInteger updateCount;
 
 @end
 
@@ -64,10 +65,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value
 {
-  if (_lastLoopID < _updateContext.loopID) {
+  if (_lastLoopID < _updateContext.loopID || _updateContext.updateCount > 0) {
     _lastLoopID = _updateContext.loopID;
     return (_memoizedValue = [self evaluate]);
-  }
+  }    
   return _memoizedValue;
 }
 
