@@ -1,6 +1,6 @@
-#import "REANode.h"
+#import "REAValueNode.h"
 
-@interface REAParamNode : REANode
+@interface REAParamNode : REAValueNode
 
 -(void) beginContext:(NSNumber*) ref;
 -(void) endContext;

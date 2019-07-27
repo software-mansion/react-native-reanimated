@@ -17,6 +17,13 @@
     return self;
 }
 
+-(void) setValue:(NSNumber *)value {
+    REANode *node = [self.nodesManager findNodeByID:_refNode];
+    if([node respondsToSelector:@selector(setValue:)]) {
+        [(REAValueNode*)node setValue:value];
+    }
+}
+
 -(void) beginContext:(NSNumber*) ref {
     _refNode = ref;
     REANode *node = [self.nodesManager findNodeByID:_refNode];
