@@ -100,6 +100,7 @@ export default class Example extends Component {
     const calc = funcdef(multiply(a, b), a, b);
     this._first = calc(10, 10);
     this._second = calc(20, 20);
+    this._third = calc(this._first, this._second);
     
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
@@ -117,8 +118,8 @@ export default class Example extends Component {
       <View style={styles.container}>
         <Animated.Code>
           { ()=> 
-            call([this._first, this._second], ([first, second]) => {
-              console.log(first, second);
+            call([this._first, this._second, this._third], ([first, second, third]) => {
+              console.log(first, second, third);
             })
           }
         </Animated.Code>
