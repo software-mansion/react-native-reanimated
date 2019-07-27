@@ -1,5 +1,4 @@
 import AnimatedNode from './AnimatedNode';
-import { val } from '../val';
 import { adapt } from './AnimatedBlock';
 
 class AnimatedCallFunc extends AnimatedNode {
@@ -11,11 +10,8 @@ class AnimatedCallFunc extends AnimatedNode {
       what: funcdef.__nodeID, 
       args: args.map(n => n.__nodeID),
       params: params.map(n => n.__nodeID),
-    }, []);  
+    }, [...args]);  
     this._value = -1;
-    this.__addChild(funcdef);
-    args.map(a => this.__addChild(a));
-    this.__attach();
   }
 }
 
