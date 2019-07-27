@@ -20,7 +20,8 @@ export function createAnimatedFunction(what, ...params) {
   const func = new AnimatedFunction(what, ...params);  
   return (...args) => {
     if(args.length !== params.length) {
-      throw new Error("Parameter mismatch when calling function.");
+      throw new Error("Parameter mismatch when calling function. Expected " + 
+        params.length + " parameters, got " + args.length + ".");
     }
     return createAnimatedCallFunc(func, args, params);
   }
