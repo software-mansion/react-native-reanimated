@@ -68,7 +68,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   if (_lastLoopID < _updateContext.loopID || _updateContext.updateCount > 0) {
     _lastLoopID = _updateContext.loopID;
     return (_memoizedValue = [self evaluate]);
-  }    
+  }
   return _memoizedValue;
 }
 

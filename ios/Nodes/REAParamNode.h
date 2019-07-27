@@ -2,7 +2,8 @@
 
 @interface REAParamNode : REANode
 
--(void) setRefNode:(NSNumber*) ref;
+-(void) beginContext:(NSNumber*) ref;
+-(void) endContext;
 
 @end
 
