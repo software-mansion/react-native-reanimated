@@ -7,7 +7,7 @@
 
 @interface REAUpdateContext ()
 
-@property (nonatomic) NSUInteger updateCount;
+@property (nonatomic) NSUInteger contextCount;
 
 @end
 
@@ -28,7 +28,7 @@
 }
 
 -(void) beginContext {
-    self.updateContext.updateCount++;
+    self.updateContext.contextCount++;
     for (NSUInteger i = 0; i < _params.count; i++) {
         NSNumber *paramID = [_params objectAtIndex:i];
         REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
@@ -42,7 +42,7 @@
         REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
         [param endContext];
     }
-    self.updateContext.updateCount--;
+    self.updateContext.contextCount--;
 }
 
 - (id)evaluate
