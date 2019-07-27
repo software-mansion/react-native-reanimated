@@ -36,7 +36,7 @@ public abstract class Node {
   protected abstract @Nullable Object evaluate();
 
   public final @Nullable Object value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID) {
+    if (mLastLoopID < mUpdateContext.updateLoopID || mUpdateContext.contextCount > 0) {
       mLastLoopID = mUpdateContext.updateLoopID;
       return (mMemoizedValue = evaluate());
     }
