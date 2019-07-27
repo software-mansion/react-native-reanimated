@@ -23,7 +23,6 @@ const {
   event,
   param,
   funcdef,
-  always,
 } = Animated;
 
 function runSpring(clock, value, dest) {
