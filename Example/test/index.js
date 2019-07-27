@@ -21,6 +21,9 @@ const {
   Value,
   Clock,
   event,
+  param,
+  funcdef,
+  always,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -91,7 +94,13 @@ export default class Example extends Component {
 
     // const transX = new Value(0);
     const clock = new Clock();
-    // const twenty = new Value(20);
+    const twenty = new Value(20);
+    const a = param("a");
+    const b = param("b");
+    const calc = funcdef(multiply(a, b), a, b);
+    this._first = calc(10, 10);
+    this._second = calc(20, 20);
+    
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
     this._transX = runTiming(clock, -120, 120);
@@ -106,6 +115,13 @@ export default class Example extends Component {
   render() {
     return (
       <View style={styles.container}>
+        <Animated.Code>
+          { ()=> 
+            call([this._first, this._second], ([first, second]) => {
+              console.log(first, second);
+            })
+          }
+        </Animated.Code>
         <Animated.View
           style={[styles.box, { transform: [{ translateX: this._transX }] }]}
         />
