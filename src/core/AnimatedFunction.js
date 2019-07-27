@@ -19,6 +19,9 @@ class AnimatedFunction extends AnimatedNode {
 export function createAnimatedFunction(what, ...params) {
   const func = new AnimatedFunction(what, ...params);  
   return (...args) => {
+    if(args.length !== params.length) {
+      throw new Error("Parameter mismatch when calling function.");
+    }
     return createAnimatedCallFunc(func, args, params);
   }
 }
