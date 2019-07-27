@@ -35,11 +35,6 @@
     [self forceUpdateMemoizedValue:[_stack lastObject]];
 }
 
--(id) value {
-    id val = [_stack lastObject];
-    //NSLog(@"Param %@ returning %@", _name, val);
-    return val;
-}
 
 -(id) evaluate {
     return [_stack lastObject];
