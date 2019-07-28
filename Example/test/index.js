@@ -1,3 +1,4 @@
+import MessageQueue from "react-native/Libraries/BatchedBridge/MessageQueue.js";
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -22,7 +23,7 @@ const {
   Clock,
   event,
   param,
-  funcdef,
+  proc,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -69,7 +70,7 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 5000,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
+    easing: Easing.bounce(1.8),
   };
 
   return block([
@@ -96,7 +97,7 @@ export default class Example extends Component {
     // const twenty = new Value(20);
     const a = param("a");
     const b = param("b");
-    const calc = funcdef(add(multiply(a, b), 333), a, b);
+    const calc = proc(add(multiply(a, b), 333), a, b);
     this._first = calc(10, 10);
     this._second = calc(20, 20);
     this._third = calc(this._first, this._second);
@@ -149,3 +150,24 @@ const styles = StyleSheet.create({
     margin: BOX_SIZE / 2,
   },
 });
+
+let nodeCallCount = 0
+const spyFunction = (data) => {
+  const m = data.method;
+  if (
+    m
+      .toString()
+      .toLowerCase()
+      .includes("node") &&
+    !m.toString().includes("createAnimatedNode")
+  ) {
+    if (data.args.length === 2 && data.args[1].hasOwnProperty("type")) {
+      console.log(nodeCallCount++, m, data.args[1].type);
+      nodeCallCount.current++;
+    } else {
+      //console.log(m);
+    }
+  }
+};
+MessageQueue.spy(spyFunction);
+

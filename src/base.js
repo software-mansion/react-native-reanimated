@@ -14,5 +14,5 @@ export { createAnimatedAlways as always } from './core/AnimatedAlways';
 export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
 export { createAnimatedParam as param} from './core/AnimatedParam'; 
-export { createAnimatedFunction as funcdef} from './core/AnimatedFunction'; 
+export { createAnimatedFunction as proc} from './core/AnimatedFunction'; 
 export * from './operators';
