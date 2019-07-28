@@ -1,4 +1,3 @@
-import MessageQueue from "react-native/Libraries/BatchedBridge/MessageQueue.js";
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -70,7 +69,7 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 5000,
     toValue: new Value(0),
-    easing: Easing.bounce(1.8),
+    easing: Easing.inOut(Easing.ease),
   };
 
   return block([
