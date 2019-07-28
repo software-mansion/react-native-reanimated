@@ -149,24 +149,3 @@ const styles = StyleSheet.create({
     margin: BOX_SIZE / 2,
   },
 });
-
-let nodeCallCount = 0
-const spyFunction = (data) => {
-  const m = data.method;
-  if (
-    m
-      .toString()
-      .toLowerCase()
-      .includes("node") &&
-    !m.toString().includes("createAnimatedNode")
-  ) {
-    if (data.args.length === 2 && data.args[1].hasOwnProperty("type")) {
-      console.log(nodeCallCount++, m, data.args[1].type);
-      nodeCallCount.current++;
-    } else {
-      //console.log(m);
-    }
-  }
-};
-MessageQueue.spy(spyFunction);
-
