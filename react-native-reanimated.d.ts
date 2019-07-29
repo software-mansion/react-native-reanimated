@@ -318,7 +318,7 @@ declare module 'react-native-reanimated' {
 
     export function useProc(
       cb:(...params: Array<Adaptable<number>>) => Adaptable<number>      
-    ): AnimatedNode<number>
+    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>
 
     // configuration
 
