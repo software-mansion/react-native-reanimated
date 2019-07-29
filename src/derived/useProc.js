@@ -1,7 +1,7 @@
 import React from 'react';
 import { createAnimatedFunction } from '../core/AnimatedFunction';
 
-function useProc(cb, deps) {
+function useProc(cb) {
   if (typeof React.useEffect === 'function') {
     const proc = React.useState(() => createAnimatedFunction(cb));
     React.useEffect(() => {
@@ -9,7 +9,7 @@ function useProc(cb, deps) {
       return () => {
         proc.__detach();
       };
-    }, deps);
+    }, []);
     return proc;
   }
   return undefined;

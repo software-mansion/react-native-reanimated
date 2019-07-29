@@ -218,9 +218,7 @@ declare module 'react-native-reanimated' {
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
     export function proc(
-      cb:(...params: Array<Adaptable<string> | Adaptable<number>>) => 
-      AnimatedNode<number> | AnimatedNode<string>
-      ):AnimatedNode<number> | AnimatedNode<string>;
+      cb:(...params: Array<Adaptable<number>>) => Adaptable<number>): AnimatedNode<number>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
@@ -319,9 +317,8 @@ declare module 'react-native-reanimated' {
     ): void
 
     export function useProc(
-      cb:(...params: Array<Adaptable<string> | Adaptable<number>>) => AnimatedNode<number> | AnimatedNode<value>,
-      deps: Array<any>,
-    ):AnimatedNode<number> | AnimatedNode<string>
+      cb:(...params: Array<Adaptable<number>>) => Adaptable<number>      
+    ): AnimatedNode<number>
 
     // configuration
 
