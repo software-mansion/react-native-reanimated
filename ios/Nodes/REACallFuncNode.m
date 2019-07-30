@@ -5,16 +5,12 @@
 #import "REAParamNode.h"
 #import "REANodesManager.h"
 
-@interface REAUpdateContext ()
-
-@property (nonatomic) NSUInteger contextCount;
-
-@end
 
 @implementation REACallFuncNode {
     NSNumber *_whatNodeID;
     NSArray<NSNumber *> *_args;
     NSArray<NSNumber *> *_params;
+    REANodeID _prevCallID;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
@@ -23,12 +19,14 @@
         _whatNodeID = config[@"what"];
         _args = config[@"args"];
         _params = config[@"params"];
+        _prevCallID = NULL;
     }
     return self;
 }
 
 -(void) beginContext {
-    self.updateContext.contextCount++;
+    _prevCallID = self.updateContext.callID;
+    self.updateContext.callID = self.nodeID;
     for (NSUInteger i = 0; i < _params.count; i++) {
         NSNumber *paramID = [_params objectAtIndex:i];
         REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
@@ -42,7 +40,7 @@
         REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
         [param endContext];
     }
-    self.updateContext.contextCount--;
+    self.updateContext.callID = _prevCallID;
 }
 
 - (id)evaluate
