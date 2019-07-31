@@ -18,7 +18,7 @@
 
 -(void) setValue:(NSNumber *)value {
     REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-    [(REAValueNode*)node setValue:value];    
+    [(REAValueNode*)node setValue:value];
 }
 
 -(void) beginContext:(NSNumber*) ref {
@@ -32,7 +32,7 @@
 
 -(id) evaluate {
     REANode * node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-    return [node evaluate];
+    return [node value];
 }
 
 
