@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.SparseArray;
+
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.NodesManager;
@@ -23,11 +25,12 @@ public abstract class Node {
 
   private final UpdateContext mUpdateContext;
 
-  private long mLastLoopID = -1;
-  private @Nullable Object mMemoizedValue;
+  private SparseArray<Long> mLastLoopID = new SparseArray<>();
+  private SparseArray<Object> mMemoizedValue = new SparseArray<>();
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
+    mLastLoopID.put(-1, 1L);
     mNodeID = nodeID;
     mNodesManager = nodesManager;
     mUpdateContext = nodesManager.updateContext;
@@ -36,11 +39,14 @@ public abstract class Node {
   protected abstract @Nullable Object evaluate();
 
   public final @Nullable Object value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID || mUpdateContext.contextCount > 0) {
-      mLastLoopID = mUpdateContext.updateLoopID;
-      return (mMemoizedValue = evaluate());
+    if (mLastLoopID.get(mUpdateContext.callId, -1L) < mUpdateContext.updateLoopID) {
+      mLastLoopID.put(mUpdateContext.callId, mUpdateContext.updateLoopID);
+      Object result = evaluate();
+      mMemoizedValue.put(mUpdateContext.callId, result);
+
+      return result;
     }
-    return mMemoizedValue;
+    return mMemoizedValue.get(mUpdateContext.callId);
   }
 
   /**
@@ -83,12 +89,12 @@ public abstract class Node {
   }
 
   protected final void dangerouslyRescheduleEvaluate() {
-    mLastLoopID = -1;
+    mLastLoopID.put(mUpdateContext.callId, -1L);
     markUpdated();
   }
 
   protected final void forceUpdateMemoizedValue(Object value) {
-    mMemoizedValue = value;
+    mMemoizedValue.put(mUpdateContext.callId, value);;
     markUpdated();
   }
 

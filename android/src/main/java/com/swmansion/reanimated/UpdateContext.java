@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class UpdateContext {
 
   public long updateLoopID = 0;
-  public long contextCount = 0;
+  public int callId = -1;
   public final ArrayList<Node> updatedNodes = new ArrayList<>();
 
 }

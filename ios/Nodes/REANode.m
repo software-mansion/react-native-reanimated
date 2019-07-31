@@ -50,7 +50,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)dangerouslyRescheduleEvaluate
 {
-  _lastLoopID = 0;
+  _lastLoopID[self.updateContext.callID] = 0;
   [self markUpdated];
 }
 
@@ -74,7 +74,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
       val = [[NSNumber alloc] initWithInt:0];
     }
     [_memoizedValue setObject:val forKey:self.updateContext.callID];
-    return [_memoizedValue objectForKey:self.updateContext.callID];
+    return val;
   }
   return [_memoizedValue objectForKey:self.updateContext.callID];
 }
