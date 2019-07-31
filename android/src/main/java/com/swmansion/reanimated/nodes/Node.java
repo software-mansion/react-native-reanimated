@@ -94,7 +94,7 @@ public abstract class Node {
   }
 
   protected final void forceUpdateMemoizedValue(Object value) {
-    mMemoizedValue.put(mUpdateContext.callID, value);;
+    mMemoizedValue.put(mUpdateContext.callID, value);
     markUpdated();
   }
 
