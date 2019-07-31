@@ -20,8 +20,7 @@ const {
   spring,
   Value,
   Clock,
-  event,
-  param,
+  event,  
   proc,
 } = Animated;
 
@@ -87,6 +86,8 @@ function runTiming(clock, value, dest) {
   ]);
 }
 
+const calc = proc((a, b) => add(multiply(a, b), 5));
+
 export default class Example extends Component {
   constructor(props) {
     super(props);
@@ -94,14 +95,11 @@ export default class Example extends Component {
     // const transX = new Value(0);
     const clock = new Clock();
     // const twenty = new Value(20);
-    const a = param("a");
-    const b = param("b");
-    const calc = proc(add(multiply(a, b), 333), a, b);
     this._first = calc(10, 10);
     this._second = calc(20, 20);
     this._third = calc(this._first, this._second);
     this._fourth = calc(this._third, 2);
-    
+
     // const thirty = new Value(30);
     // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
     this._transX = runTiming(clock, -120, 120);
@@ -117,10 +115,14 @@ export default class Example extends Component {
     return (
       <View style={styles.container}>
         <Animated.Code>
-          { ()=> 
-            call([this._first, this._second, this._third, this._fourth], ([first, second, third, fourth]) => {
-              console.log(first, second, third, fourth);
-            })
+          {() =>
+            // Write output from function/procs
+            call(
+              [this._first, this._second, this._third, this._fourth],
+              ([first, second, third, fourth]) => {
+                console.log(first, second, third, fourth);
+              }
+            )
           }
         </Animated.Code>
         <Animated.View

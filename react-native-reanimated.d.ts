@@ -217,11 +217,9 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function param(name:string): AnimatedNode<any>;
     export function proc(
-      expr: AnimatedNode<any>,
-      ...params: Array<AnimatedValue<any>>
-    ): (...args: any[]) => any;
+      cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
+    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
@@ -318,6 +316,10 @@ declare module 'react-native-reanimated' {
       exec: AnimatedNode<number>,
       deps: Array<any>,
     ): void
+
+    export function useProc(
+      cb:(...params: Array<Adaptable<number>>) => Adaptable<number>      
+    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>
 
     // configuration
 

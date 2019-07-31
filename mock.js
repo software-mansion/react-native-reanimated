@@ -98,6 +98,7 @@ module.exports = {
     spring: NOOP,
 
     useCode: NOOP,
+    useProc: NOOP,
   },
 
   Easing: {
