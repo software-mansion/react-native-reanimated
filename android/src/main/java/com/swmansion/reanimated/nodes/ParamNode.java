@@ -21,10 +21,7 @@ public class ParamNode extends ValueNode {
     public void setValue(Object value) {
         Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
         if(node != null) {
-            // Check instance
-            if(node instanceof ValueNode) {
-                ((ValueNode)node).setValue(value);
-            }
+            ((ValueNode)node).setValue(value);
         }
     }
 

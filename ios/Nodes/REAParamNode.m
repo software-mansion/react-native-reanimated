@@ -18,9 +18,7 @@
 
 -(void) setValue:(NSNumber *)value {
     REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-    if([node respondsToSelector:@selector(setValue:)]) {
-        [(REAValueNode*)node setValue:value];
-    }
+    [(REAValueNode*)node setValue:value];    
 }
 
 -(void) beginContext:(NSNumber*) ref {
