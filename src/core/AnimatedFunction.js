@@ -29,10 +29,7 @@ export function createAnimatedFunction(cb) {
 }
 
 function internal_createAnimatedFunction(attach, cb) {
-  const params = new Array(cb.length);
-  for (let i = 0; i < params.length; i++) {
-    params[i] = createAnimatedParam();
-  }
+  const params = params.map(createAnimatedParam);
   const what = cb(...params);
   const func = new AnimatedFunction(attach, what, ...params);
   return (...args) => {
