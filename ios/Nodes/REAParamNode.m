@@ -4,47 +4,37 @@
 
 @implementation REAParamNode {
     NSString *_name;
-    NSNumber *_refNode;
-    NSMutableArray *_stack;
+    NSMutableArray<REANodeID> *_argstack;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
 {
     if ((self = [super initWithID:nodeID config:config])) {
         _name = config[@"name"];
-        _stack = [NSMutableArray arrayWithCapacity:0];
+        _argstack = [NSMutableArray<REANodeID> arrayWithCapacity:0];
     }
     return self;
 }
 
 -(void) setValue:(NSNumber *)value {
-    REANode *node = [self.nodesManager findNodeByID:_refNode];
+    REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
     if([node respondsToSelector:@selector(setValue:)]) {
         [(REAValueNode*)node setValue:value];
     }
 }
 
 -(void) beginContext:(NSNumber*) ref {
-    _refNode = ref;
-    REANode *node = [self.nodesManager findNodeByID:_refNode];
-    if(node) {
-        [_stack addObject:[node evaluate]];
-        //NSLog(@"Updating param %@ with value %@", _name, [_stack lastObject]);
-    } else {
-        [_stack addObject: [NSNumber numberWithInt:0]];
-    }
-    
-    [self forceUpdateMemoizedValue:[_stack lastObject]];
+    [_argstack addObject:ref];
 }
 
 -(void) endContext {
-    [_stack removeLastObject];
-    [self forceUpdateMemoizedValue:[_stack lastObject]];
+    [_argstack removeLastObject];
 }
 
 
 -(id) evaluate {
-    return [_stack lastObject];
+    REANode * node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+    return [node evaluate];
 }
 
 
