@@ -20,8 +20,7 @@ const {
   spring,
   Value,
   Clock,
-  event,
-  param,
+  event,  
   proc,
 } = Animated;
 
