@@ -19,8 +19,8 @@ public class CallFuncNode extends Node {
   }
 
   private void beginContext() {
-    mPreviousNodeID = mNodesManager.updateContext.callId;
-    mNodesManager.updateContext.callId = mWhatNodeID;
+    mPreviousNodeID = mNodesManager.updateContext.callID;
+    mNodesManager.updateContext.callID = mWhatNodeID;
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
       ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
@@ -34,7 +34,7 @@ public class CallFuncNode extends Node {
       ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
       paramNode.endContext();
     }
-    mNodesManager.updateContext.callId = mPreviousNodeID;
+    mNodesManager.updateContext.callID = mPreviousNodeID;
   }
 
   @Override

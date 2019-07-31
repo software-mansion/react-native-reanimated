@@ -39,14 +39,14 @@ public abstract class Node {
   protected abstract @Nullable Object evaluate();
 
   public final @Nullable Object value() {
-    if (mLastLoopID.get(mUpdateContext.callId, -1L) < mUpdateContext.updateLoopID) {
-      mLastLoopID.put(mUpdateContext.callId, mUpdateContext.updateLoopID);
+    if (mLastLoopID.get(mUpdateContext.callID, -1L) < mUpdateContext.updateLoopID) {
+      mLastLoopID.put(mUpdateContext.callID, mUpdateContext.updateLoopID);
       Object result = evaluate();
-      mMemoizedValue.put(mUpdateContext.callId, result);
+      mMemoizedValue.put(mUpdateContext.callID, result);
 
       return result;
     }
-    return mMemoizedValue.get(mUpdateContext.callId);
+    return mMemoizedValue.get(mUpdateContext.callID);
   }
 
   /**
@@ -89,12 +89,12 @@ public abstract class Node {
   }
 
   protected final void dangerouslyRescheduleEvaluate() {
-    mLastLoopID.put(mUpdateContext.callId, -1L);
+    mLastLoopID.put(mUpdateContext.callID, -1L);
     markUpdated();
   }
 
   protected final void forceUpdateMemoizedValue(Object value) {
-    mMemoizedValue.put(mUpdateContext.callId, value);;
+    mMemoizedValue.put(mUpdateContext.callID, value);;
     markUpdated();
   }
 
