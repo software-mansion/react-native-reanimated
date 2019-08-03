@@ -8,6 +8,7 @@ import java.util.Stack;
 public class ParamNode extends ValueNode {
 
   private Stack<Integer> mArgsStack;
+  private int mPrevCallID;
 
   public ParamNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
@@ -22,7 +23,8 @@ public class ParamNode extends ValueNode {
     }
   }
 
-  public void beginContext(Integer ref) {
+  public void beginContext(Integer ref, int prevCallID) {
+    mPrevCallID = prevCallID;
     mArgsStack.push(ref);
   }
 
@@ -34,7 +36,11 @@ public class ParamNode extends ValueNode {
 
   @Override
   protected Object evaluate() {
+    int callID = mUpdateContext.callID;
+    mUpdateContext.callID = mPrevCallID;
     Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    return node.value();
+    Object val = node.value();
+    mUpdateContext.callID = callID;
+    return val;
   }
 }
