@@ -23,7 +23,7 @@ public abstract class Node {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private final UpdateContext mUpdateContext;
+  protected final UpdateContext mUpdateContext;
 
   private SparseArray<Long> mLastLoopID = new SparseArray<>();
   private SparseArray<Object> mMemoizedValue = new SparseArray<>();

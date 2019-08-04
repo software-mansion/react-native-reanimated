@@ -31,7 +31,7 @@
   for (NSUInteger i = 0; i < _params.count; i++) {
     NSNumber *paramID = [_params objectAtIndex:i];
     REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
-    [param beginContext:_args[i]];
+    [param beginContext:_args[i] prevCallID:_prevCallID];
   }
 }
 

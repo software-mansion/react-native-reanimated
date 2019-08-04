@@ -6,7 +6,7 @@ import com.swmansion.reanimated.Utils;
 
 public class CallFuncNode extends Node {
 
-  private int mPreviousNodeID;
+  private int mPreviousCallID;
   private int mWhatNodeID;
   private int[] mArgs;
   private int[] mParams;
@@ -19,12 +19,12 @@ public class CallFuncNode extends Node {
   }
 
   private void beginContext() {
-    mPreviousNodeID = mNodesManager.updateContext.callID;
+    mPreviousCallID = mNodesManager.updateContext.callID;
     mNodesManager.updateContext.callID = mWhatNodeID;
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
       ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
-      paramNode.beginContext(mArgs[i]);
+      paramNode.beginContext(mArgs[i], mPreviousCallID);
     }
   }
 
@@ -34,7 +34,7 @@ public class CallFuncNode extends Node {
       ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
       paramNode.endContext();
     }
-    mNodesManager.updateContext.callID = mPreviousNodeID;
+    mNodesManager.updateContext.callID = mPreviousCallID;
   }
 
   @Override
