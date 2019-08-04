@@ -18,7 +18,10 @@
 - (void)setValue:(NSNumber *)value
 {
   REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
+  NSNumber *callID = self.updateContext.callID;
+  self.updateContext.callID = _prevCallID;
   [(REAValueNode*)node setValue:value];
+  self.updateContext.callID = callID;
 }
 
 - (void)beginContext:(NSNumber*) ref

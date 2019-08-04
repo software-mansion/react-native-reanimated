@@ -19,7 +19,10 @@ public class ParamNode extends ValueNode {
   public void setValue(Object value) {
     Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
     if (node != null) {
+      int callID = mUpdateContext.callID;
+      mUpdateContext.callID = mPrevCallID;
       ((ValueNode) node).setValue(value);
+      mUpdateContext.callID = callID;
     }
   }
 
