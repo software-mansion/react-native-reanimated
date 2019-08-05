@@ -317,10 +317,6 @@ declare module 'react-native-reanimated' {
       deps: Array<any>,
     ): void
 
-    export function useProc(
-      cb:(...params: Array<Adaptable<number>>) => Adaptable<number>      
-    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>
-
     // configuration
 
     // `addWhitelistedNativeProps` will likely be removed soon, and so is

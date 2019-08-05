@@ -10,4 +10,3 @@ export { default as onChange } from './onChange';
 export { default as floor } from './floor';
 export { default as ceil } from './ceil';
 export { default as useCode } from './useCode';
-export { default as useProc } from './useProc';
