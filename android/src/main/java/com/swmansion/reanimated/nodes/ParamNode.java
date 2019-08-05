@@ -18,12 +18,10 @@ public class ParamNode extends ValueNode {
   @Override
   public void setValue(Object value) {
     Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    if (node != null) {
-      int callID = mUpdateContext.callID;
-      mUpdateContext.callID = mPrevCallID;
-      ((ValueNode) node).setValue(value);
-      mUpdateContext.callID = callID;
-    }
+    int callID = mUpdateContext.callID;
+    mUpdateContext.callID = mPrevCallID;
+    ((ValueNode) node).setValue(value);
+    mUpdateContext.callID = callID;
   }
 
   public void beginContext(Integer ref, int prevCallID) {
