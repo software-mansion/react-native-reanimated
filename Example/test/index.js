@@ -20,9 +20,64 @@ const {
   spring,
   Value,
   Clock,
-  event,  
+  event,
   proc,
 } = Animated;
+
+const betterSpring = proc(
+  (
+    finished,
+    velocity,
+    position,
+    time,
+    prevPosition,
+    toValue,
+    damping,
+    mass,
+    stiffness,
+    overshootClamping,
+    restSpeedThreshold,
+    restDisplacementThreshold,
+    clock
+  ) =>
+    spring(
+      clock,
+      {
+        finished,
+        velocity,
+        position,
+        time,
+        prevPosition,
+      },
+      {
+        toValue,
+        damping,
+        mass,
+        stiffness,
+        overshootClamping,
+        restDisplacementThreshold,
+        restSpeedThreshold,
+      }
+    )
+);
+
+function springFill(clock, state, config) {
+  return betterSpring(
+    state.finished,
+    state.velocity,
+    state.position,
+    state.time,
+    new Value(0),
+    config.toValue,
+    config.damping,
+    config.mass,
+    config.stiffness,
+    config.overshootClamping,
+    config.restSpeedThreshold,
+    config.restDisplacementThreshold,
+    clock
+  );
+}
 
 function runSpring(clock, value, dest) {
   const state = {
@@ -35,7 +90,7 @@ function runSpring(clock, value, dest) {
   const config = {
     toValue: new Value(0),
     damping: 7,
-    mass: 1,
+    mass: 5,
     stiffness: 121.6,
     overshootClamping: false,
     restSpeedThreshold: 0.001,
@@ -51,7 +106,7 @@ function runSpring(clock, value, dest) {
       set(config.toValue, dest),
       startClock(clock),
     ]),
-    spring(clock, state, config),
+    springFill(clock, state, config),
     cond(state.finished, debug('stop clock', stopClock(clock))),
     state.position,
   ]);
@@ -87,6 +142,7 @@ function runTiming(clock, value, dest) {
 }
 
 const calc = proc((a, b) => add(multiply(a, b), 5));
+const calc2 = proc((a, b, c) => set(c, add(multiply(a, b), 5)));
 
 export default class Example extends Component {
   constructor(props) {
@@ -99,11 +155,11 @@ export default class Example extends Component {
     this._second = calc(20, 20);
     this._third = calc(this._first, this._second);
     this._fourth = calc(this._third, 2);
-
-    // const thirty = new Value(30);
-    // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock, -120, 120);
+    this.t = Array.from(Array(40)).map(() =>
+      runSpring(new Clock(), Math.random() * -200, Math.random() * 200)
+    );
   }
+
   componentDidMount() {
     // Animated.spring(this._transX, {
     //   duration: 300,
@@ -111,6 +167,7 @@ export default class Example extends Component {
     //   toValue: 150,
     // }).start();
   }
+
   render() {
     return (
       <View style={styles.container}>
@@ -125,15 +182,17 @@ export default class Example extends Component {
             )
           }
         </Animated.Code>
-        <Animated.View
-          style={[styles.box, { transform: [{ translateX: this._transX }] }]}
-        />
+        {Array.from(Array(40)).map((_, i) => (
+          <Animated.View
+            style={[styles.box, { transform: [{ translateX: this.t[i] }] }]}
+          />
+        ))}
       </View>
     );
   }
 }
 
-const BOX_SIZE = 100;
+const BOX_SIZE = 10;
 
 const styles = StyleSheet.create({
   container: {
@@ -148,6 +207,6 @@ const styles = StyleSheet.create({
     borderColor: '#F5FCFF',
     alignSelf: 'center',
     backgroundColor: 'plum',
-    margin: BOX_SIZE / 2,
+    margin: 2,
   },
 });

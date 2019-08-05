@@ -6,8 +6,7 @@
 @interface REAUpdateContext ()
 
 @property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
-@property (nonatomic) NSUInteger loopID;
-@property (nonatomic) NSUInteger contextCount;
+@property (nonatomic) NSNumber* loopID;
 
 @end
 
@@ -16,8 +15,9 @@
 - (instancetype)init
 {
   if ((self = [super init])) {
-    _loopID = 1;
+    _loopID = [[NSNumber alloc] initWithInt:1];
     _updatedNodes = [NSMutableArray new];
+    _callID = [[NSNumber alloc] initWithInt:-1];
   }
   return self;
 }
@@ -27,8 +27,8 @@
 
 @interface REANode ()
 
-@property (nonatomic) NSUInteger lastLoopID;
-@property (nonatomic) id memoizedValue;
+@property (nonatomic) NSMutableDictionary<REANodeID, NSNumber*>* lastLoopID;
+@property (nonatomic) NSMutableDictionary<REANodeID, id>* memoizedValue;
 @property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
 
 @end
@@ -39,7 +39,9 @@
 {
   if ((self = [super init])) {
     _nodeID = nodeID;
-    _lastLoopID = 0;
+    _lastLoopID = [NSMutableDictionary dictionary];
+    _memoizedValue = [NSMutableDictionary dictionary];
+    _lastLoopID[@-1] = @1;
   }
   return self;
 }
@@ -48,13 +50,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)dangerouslyRescheduleEvaluate
 {
-  _lastLoopID = 0;
+  _lastLoopID[self.updateContext.callID] = 0;
   [self markUpdated];
 }
 
 - (void)forceUpdateMemoizedValue:(id)value
 {
-  _memoizedValue = value;
+  _memoizedValue[self.updateContext.callID] = value;
   [self markUpdated];
 }
 
@@ -65,11 +67,16 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value
 {
-  if (_lastLoopID < _updateContext.loopID || _updateContext.contextCount > 0) {
-    _lastLoopID = _updateContext.loopID;
-    return (_memoizedValue = [self evaluate]);
+  if (![_lastLoopID objectForKey:_updateContext.callID] || [[_lastLoopID objectForKey:_updateContext.callID] longValue] < [_updateContext.loopID longValue]) {
+    [_lastLoopID setObject:_updateContext.loopID forKey:_updateContext.callID];
+    id val = [self evaluate];
+    if (val == 0) {
+      val = [[NSNumber alloc] initWithInt:0];
+    }
+    [_memoizedValue setObject:val forKey:self.updateContext.callID];
+    return val;
   }
-  return _memoizedValue;
+  return [_memoizedValue objectForKey:self.updateContext.callID];
 }
 
 - (void)addChild:(REANode *)child
@@ -141,7 +148,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 
   [context.updatedNodes removeAllObjects];
-  context.loopID++;
+  context.loopID = [[NSNumber alloc] initWithLong:context.loopID.longValue + 1];
 }
 
 @end

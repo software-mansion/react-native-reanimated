@@ -7,36 +7,43 @@ import java.util.Stack;
 
 public class ParamNode extends ValueNode {
 
-    private int mRefNode;
-    private String mName;
-    private Stack<Integer> mArgsStack;
+  private Stack<Integer> mArgsStack;
+  private int mPrevCallID;
 
-    public ParamNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-        super(nodeID, config, nodesManager);
-        mName = config.getString("name");
-        mArgsStack = new Stack<Integer>();
+  public ParamNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
+    super(nodeID, config, nodesManager);
+    mArgsStack = new Stack<>();
+  }
+
+  @Override
+  public void setValue(Object value) {
+    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
+    if (node != null) {
+      int callID = mUpdateContext.callID;
+      mUpdateContext.callID = mPrevCallID;
+      ((ValueNode) node).setValue(value);
+      mUpdateContext.callID = callID;
     }
+  }
 
-    @Override
-    public void setValue(Object value) {
-        Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-        if(node != null) {
-            ((ValueNode)node).setValue(value);
-        }
-    }
-
-    public void beginContext(Integer ref) {
-        mArgsStack.push(ref);
-    }
-
-    public void endContext() {
-        mArgsStack.pop();
-    }
+  public void beginContext(Integer ref, int prevCallID) {
+    mPrevCallID = prevCallID;
+    mArgsStack.push(ref);
+  }
 
 
-    @Override
-    protected Object evaluate() {
-        Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-        return node.value();
-    }
+  public void endContext() {
+    mArgsStack.pop();
+  }
+
+
+  @Override
+  protected Object evaluate() {
+    int callID = mUpdateContext.callID;
+    mUpdateContext.callID = mPrevCallID;
+    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
+    Object val = node.value();
+    mUpdateContext.callID = callID;
+    return val;
+  }
 }
