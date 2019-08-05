@@ -166,6 +166,7 @@ export default class Example extends Component {
       <View style={styles.container}>        
         {Array.from(Array(40)).map((_, i) => (
           <Animated.View
+            key={i}
             style={[styles.box, { transform: [{ translateX: this.t[i] }] }]}
           />
         ))}
