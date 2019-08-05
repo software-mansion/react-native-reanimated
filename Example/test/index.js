@@ -141,9 +141,6 @@ function runTiming(clock, value, dest) {
   ]);
 }
 
-const calc = proc((a, b) => add(multiply(a, b), 5));
-const calc2 = proc((a, b, c) => set(c, add(multiply(a, b), 5)));
-
 export default class Example extends Component {
   constructor(props) {
     super(props);
@@ -151,10 +148,6 @@ export default class Example extends Component {
     // const transX = new Value(0);
     const clock = new Clock();
     // const twenty = new Value(20);
-    this._first = calc(10, 10);
-    this._second = calc(20, 20);
-    this._third = calc(this._first, this._second);
-    this._fourth = calc(this._third, 2);
     this.t = Array.from(Array(40)).map(() =>
       runSpring(new Clock(), Math.random() * -200, Math.random() * 200)
     );
@@ -170,18 +163,7 @@ export default class Example extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <Animated.Code>
-          {() =>
-            // Write output from function/procs
-            call(
-              [this._first, this._second, this._third, this._fourth],
-              ([first, second, third, fourth]) => {
-                console.log(first, second, third, fourth);
-              }
-            )
-          }
-        </Animated.Code>
+      <View style={styles.container}>        
         {Array.from(Array(40)).map((_, i) => (
           <Animated.View
             style={[styles.box, { transform: [{ translateX: this.t[i] }] }]}
