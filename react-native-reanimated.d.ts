@@ -227,7 +227,7 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<string>;
     export function format(
       value: Adaptable<number>,
-      format: Adaptable<string>
+      format?: Adaptable<string>
     ): AnimatedNode<string>;
     export function cond(
       conditionNode: Adaptable<number>,
