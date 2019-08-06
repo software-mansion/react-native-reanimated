@@ -8,8 +8,10 @@ import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.UpdateContext;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -25,12 +27,12 @@ public abstract class Node {
 
   protected final UpdateContext mUpdateContext;
 
-  private SparseArray<Long> mLastLoopID = new SparseArray<>();
-  private SparseArray<Object> mMemoizedValue = new SparseArray<>();
+  private Map<String, Long> mLastLoopID = new HashMap<>();
+  private Map<String, Object> mMemoizedValue = new HashMap<>();
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
-    mLastLoopID.put(-1, 1L);
+    mLastLoopID.put("", 1L);
     mNodeID = nodeID;
     mNodesManager = nodesManager;
     mUpdateContext = nodesManager.updateContext;
@@ -39,7 +41,7 @@ public abstract class Node {
   protected abstract @Nullable Object evaluate();
 
   public final @Nullable Object value() {
-    if (mLastLoopID.get(mUpdateContext.callID, -1L) < mUpdateContext.updateLoopID) {
+    if (!mLastLoopID.containsKey(mUpdateContext.callID) || mLastLoopID.get(mUpdateContext.callID) < mUpdateContext.updateLoopID) {
       mLastLoopID.put(mUpdateContext.callID, mUpdateContext.updateLoopID);
       Object result = evaluate();
       mMemoizedValue.put(mUpdateContext.callID, result);
