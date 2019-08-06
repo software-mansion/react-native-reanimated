@@ -711,8 +711,8 @@ Format string will default to `##.###`, which is simply a standard decimal forma
 Number format patterns are as per the Unicode TR35 spec https://www.unicode.org/reports/tr35/tr35-31/tr35-numbers.html#Number_Format_Patterns
 
 Examples:
-`format(1234567, '$#,###') //$1,234,567 (localized)`
-`format(1234.1, '$#,##0.00') //$1,234.10 (localized)`
+`format(1234567, '$#,###') // $1,234,567 (localized)`
+`format(1234.1, '$#,##0.00') // $1,234.10 (localized)`
 
 ---
 ### `onChange`
