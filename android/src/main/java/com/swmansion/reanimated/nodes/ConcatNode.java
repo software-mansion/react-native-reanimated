@@ -5,15 +5,21 @@ import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 public class ConcatNode extends Node {
-  private NumberFormat nf = new DecimalFormat("##.###");
+  private final DecimalFormatSymbols symbols;
+  private final NumberFormat nf;
 
   private final int[] mInputIDs;
 
   public ConcatNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mInputIDs = Utils.processIntArray(config.getArray("input"));
+    symbols = new DecimalFormatSymbols(Locale.getDefault());
+    symbols.setDecimalSeparator('.');
+    nf = new DecimalFormat("##.###", symbols);
   }
 
   @Override

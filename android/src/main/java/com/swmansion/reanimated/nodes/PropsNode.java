@@ -50,14 +50,13 @@ public class PropsNode extends Node implements FinalNode {
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     WritableMap jsProps = Arguments.createMap();
-    Map useMapping = mMapping;
     final WritableMap nativeProps = Arguments.createMap();
 
     if (mMapping.containsKey("style")) {
       Node styleNode = mNodesManager.findNodeById(mMapping.get("style"), Node.class);
       Map styleMapping = (Map) styleNode.value();
-      useMapping.putAll(styleMapping);
-      useMapping.remove("style");
+      mMapping.putAll(styleMapping);
+      mMapping.remove("style");
     }
 
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
