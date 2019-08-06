@@ -4,7 +4,7 @@
 
 @implementation REAParamNode {
   NSMutableArray<REANodeID> *_argstack;
-  NSNumber *_prevCallID;
+  NSString *_prevCallID;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
@@ -18,14 +18,14 @@
 - (void)setValue:(NSNumber *)value
 {
   REANode *node = [self.nodesManager findNodeByID:[_argstack lastObject]];
-  NSNumber *callID = self.updateContext.callID;
+  NSString *callID = self.updateContext.callID;
   self.updateContext.callID = _prevCallID;
   [(REAValueNode*)node setValue:value];
   self.updateContext.callID = callID;
 }
 
 - (void)beginContext:(NSNumber*) ref
-          prevCallID:(NSNumber*) prevCallID
+          prevCallID:(NSString*) prevCallID
 {
   _prevCallID = prevCallID;
   [_argstack addObject:ref];
@@ -39,7 +39,7 @@
 
 - (id)evaluate
 {
-  NSNumber *callID = self.updateContext.callID;
+  NSString *callID = self.updateContext.callID;
   self.updateContext.callID = _prevCallID;
   REANode * node = [self.nodesManager findNodeByID:[_argstack lastObject]];
   id val = [node value];

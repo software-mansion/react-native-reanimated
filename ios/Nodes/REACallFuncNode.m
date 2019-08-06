@@ -10,7 +10,7 @@
   NSNumber *_whatNodeID;
   NSArray<NSNumber *> *_args;
   NSArray<NSNumber *> *_params;
-  REANodeID _prevCallID;
+  NSString* _prevCallID;
 }
 
 - (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
@@ -27,7 +27,7 @@
 - (void)beginContext
 {
   _prevCallID = self.updateContext.callID;
-  self.updateContext.callID = self.nodeID;
+  self.updateContext.callID = [NSString stringWithFormat:@"%@/%@", self.updateContext.callID, [self.nodeID stringValue]];
   for (NSUInteger i = 0; i < _params.count; i++) {
     NSNumber *paramID = [_params objectAtIndex:i];
     REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];

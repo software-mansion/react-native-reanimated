@@ -17,7 +17,7 @@
   if ((self = [super init])) {
     _loopID = [[NSNumber alloc] initWithInt:1];
     _updatedNodes = [NSMutableArray new];
-    _callID = [[NSNumber alloc] initWithInt:-1];
+    _callID = @"";
   }
   return self;
 }
@@ -41,7 +41,7 @@
     _nodeID = nodeID;
     _lastLoopID = [NSMutableDictionary dictionary];
     _memoizedValue = [NSMutableDictionary dictionary];
-    _lastLoopID[@-1] = @1;
+    _lastLoopID[@""] = @1;
   }
   return self;
 }
@@ -73,10 +73,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     if (val == 0) {
       val = [[NSNumber alloc] initWithInt:0];
     }
-    [_memoizedValue setObject:val forKey:self.updateContext.callID];
+    [_memoizedValue setObject:val forKey:_updateContext.callID];
     return val;
   }
-  return [_memoizedValue objectForKey:self.updateContext.callID];
+  return [_memoizedValue objectForKey:_updateContext.callID];
 }
 
 - (void)addChild:(REANode *)child
