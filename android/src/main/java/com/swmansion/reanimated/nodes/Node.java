@@ -27,8 +27,8 @@ public abstract class Node {
 
   protected final UpdateContext mUpdateContext;
 
-  private Map<String, Long> mLastLoopID = new HashMap<>();
-  private Map<String, Object> mMemoizedValue = new HashMap<>();
+  private final Map<String, Long> mLastLoopID = new HashMap<>();
+  private final Map<String, Object> mMemoizedValue = new HashMap<>();
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
