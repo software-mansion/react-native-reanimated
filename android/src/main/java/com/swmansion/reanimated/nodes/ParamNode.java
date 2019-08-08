@@ -7,7 +7,7 @@ import java.util.Stack;
 
 public class ParamNode extends ValueNode {
 
-  private Stack<Integer> mArgsStack;
+  private final Stack<Integer> mArgsStack;
   private String mPrevCallID;
 
   public ParamNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
