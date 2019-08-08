@@ -5,7 +5,7 @@ import com.swmansion.reanimated.NodesManager;
 
 public class FunctionNode extends Node {
 
-  private int mWhatNodeID;
+  private final int mWhatNodeID;
 
   public FunctionNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
