@@ -230,11 +230,11 @@ declare module 'react-native-reanimated' {
     export function concat(
       ...args: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
-    export function cond(
+    export function cond<T extends Value = number>(
       conditionNode: Adaptable<number>,
-      ifNode: Adaptable<number>,
-      elseNode?: Adaptable<number>,
-    ): AnimatedNode<number>;
+      ifNode: Adaptable<T>,
+      elseNode?: Adaptable<T>,
+    ): AnimatedNode<T>;
     export function block<T>(
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
