@@ -97,7 +97,7 @@ module.exports = {
     timing: NOOP,
     spring: NOOP,
 
-    useCode: NOOP,    
+    useCode: NOOP,
   },
 
   Easing: {
