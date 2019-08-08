@@ -102,6 +102,7 @@ declare module 'react-native-reanimated' {
       finished: AnimatedValue<number>;
       velocity: AnimatedValue<number>;
       position: AnimatedValue<number>;
+      prevPosition?: AnimatedValue<number>;
       time: AnimatedValue<number>;
     }
     export interface SpringConfig {
@@ -217,6 +218,9 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
+    export function proc(
+      cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
+    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(

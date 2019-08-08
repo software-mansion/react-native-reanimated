@@ -31,6 +31,12 @@
 		44125DD12253A3C0003C1762 /* RCTConvert+REATransition.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DD02253A3C0003C1762 /* RCTConvert+REATransition.m */; };
 		660A44292119B821006BFD5E /* REAConcatNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 660A44282119B820006BFD5E /* REAConcatNode.m */; };
 		66240C6920C68DEA00648F55 /* REAAlwaysNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 66240C6820C68DEA00648F55 /* REAAlwaysNode.m */; };
+		A12DA6B722EC228D00E8271A /* REAParamNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6B622EC228D00E8271A /* REAParamNode.m */; };
+		A12DA6B822EC228D00E8271A /* REAParamNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6B622EC228D00E8271A /* REAParamNode.m */; };
+		A12DA6BE22EC22E400E8271A /* REAFunctionNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BA22EC22E300E8271A /* REAFunctionNode.m */; };
+		A12DA6BF22EC22E400E8271A /* REAFunctionNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BA22EC22E300E8271A /* REAFunctionNode.m */; };
+		A12DA6C022EC22E400E8271A /* REACallFuncNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */; };
+		A12DA6C122EC22E400E8271A /* REACallFuncNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */; };
 		FDBB1777229BF0DE00D1E455 /* REAModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2A209062F100EEC73A /* REAModule.m */; };
 		FDBB1778229BF0DE00D1E455 /* REANodesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2B209062F100EEC73A /* REANodesManager.m */; };
 		FDBB1779229BF0E700D1E455 /* REATransitionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DBF22538E6D003C1762 /* REATransitionManager.m */; };
@@ -128,6 +134,12 @@
 		660A442A2119B83E006BFD5E /* REAConcatNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAConcatNode.h; sourceTree = "<group>"; };
 		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
 		66240C6820C68DEA00648F55 /* REAAlwaysNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAAlwaysNode.m; sourceTree = "<group>"; };
+		A12DA6B622EC228D00E8271A /* REAParamNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REAParamNode.m; sourceTree = "<group>"; };
+		A12DA6B922EC22A900E8271A /* REAParamNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAParamNode.h; sourceTree = "<group>"; };
+		A12DA6BA22EC22E300E8271A /* REAFunctionNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAFunctionNode.m; sourceTree = "<group>"; };
+		A12DA6BB22EC22E300E8271A /* REACallFuncNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REACallFuncNode.h; sourceTree = "<group>"; };
+		A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REACallFuncNode.m; sourceTree = "<group>"; };
+		A12DA6BD22EC22E300E8271A /* REAFunctionNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAFunctionNode.h; sourceTree = "<group>"; };
 		FDBB176E229BF04900D1E455 /* libRNReanimated-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libRNReanimated-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -160,6 +172,12 @@
 		440FEC0C209062F100EEC73A /* Nodes */ = {
 			isa = PBXGroup;
 			children = (
+				A12DA6B922EC22A900E8271A /* REAParamNode.h */,
+				A12DA6B622EC228D00E8271A /* REAParamNode.m */,
+				A12DA6BB22EC22E300E8271A /* REACallFuncNode.h */,
+				A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */,
+				A12DA6BD22EC22E300E8271A /* REAFunctionNode.h */,
+				A12DA6BA22EC22E300E8271A /* REAFunctionNode.m */,
 				660A442A2119B83E006BFD5E /* REAConcatNode.h */,
 				660A44282119B820006BFD5E /* REAConcatNode.m */,
 				66240C6720C68DEA00648F55 /* REAAlwaysNode.h */,
@@ -314,14 +332,17 @@
 				440FEC3A209062F100EEC73A /* REAModule.m in Sources */,
 				44125DCE2253A038003C1762 /* REATransitionValues.m in Sources */,
 				44125DC82253906B003C1762 /* REAAllTransitions.m in Sources */,
+				A12DA6B722EC228D00E8271A /* REAParamNode.m in Sources */,
 				44125DC022538E6D003C1762 /* REATransitionManager.m in Sources */,
 				440FEC39209062F100EEC73A /* REABlockNode.m in Sources */,
+				A12DA6C022EC22E400E8271A /* REACallFuncNode.m in Sources */,
 				440FEC33209062F100EEC73A /* REABezierNode.m in Sources */,
 				44125DC322538F68003C1762 /* REATransition.m in Sources */,
 				440FEC2D209062F100EEC73A /* REAStyleNode.m in Sources */,
 				440FEC31209062F100EEC73A /* REACondNode.m in Sources */,
 				44125DD12253A3C0003C1762 /* RCTConvert+REATransition.m in Sources */,
 				440FEC2C209062F100EEC73A /* REAPropsNode.m in Sources */,
+				A12DA6BE22EC22E400E8271A /* REAFunctionNode.m in Sources */,
 				440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */,
 				440FEC36209062F100EEC73A /* REAEventNode.m in Sources */,
 				44125DCB22539177003C1762 /* REATransitionAnimation.m in Sources */,
@@ -345,14 +366,17 @@
 				FDE6D936229BF70F007F6716 /* REAValueNode.m in Sources */,
 				FDE6D941229BF70F007F6716 /* REABezierNode.m in Sources */,
 				FDBB177B229BF0E700D1E455 /* REAAllTransitions.m in Sources */,
+				A12DA6B822EC228D00E8271A /* REAParamNode.m in Sources */,
 				FDE6D93D229BF70F007F6716 /* REASetNode.m in Sources */,
 				FDE6D93A229BF70F007F6716 /* REABlockNode.m in Sources */,
+				A12DA6C122EC22E400E8271A /* REACallFuncNode.m in Sources */,
 				FDE6D939229BF70F007F6716 /* REAPropsNode.m in Sources */,
 				FDBB1778229BF0DE00D1E455 /* REANodesManager.m in Sources */,
 				FDE6D937229BF70F007F6716 /* REAStyleNode.m in Sources */,
 				FDE6D940229BF70F007F6716 /* REAJSCallNode.m in Sources */,
 				FDE6D935229BF70F007F6716 /* REANode.m in Sources */,
 				FDE6D93B229BF70F007F6716 /* REACondNode.m in Sources */,
+				A12DA6BF22EC22E400E8271A /* REAFunctionNode.m in Sources */,
 				FDBB177C229BF0E700D1E455 /* REATransitionAnimation.m in Sources */,
 				FDE6D934229BF70F007F6716 /* REAAlwaysNode.m in Sources */,
 				FDE6D933229BF70F007F6716 /* REAConcatNode.m in Sources */,
