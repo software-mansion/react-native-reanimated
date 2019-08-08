@@ -18,8 +18,7 @@
 - (id)evaluate
 {
   REANode *node = [self.nodesManager findNodeByID:_nodeToBeEvaluated];
-  id retVal = [node value];
-  return retVal;
+  return [node value];
 }
 
 @end
