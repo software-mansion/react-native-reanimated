@@ -7,9 +7,9 @@ import com.swmansion.reanimated.Utils;
 public class CallFuncNode extends Node {
 
   private String mPreviousCallID;
-  private int mWhatNodeID;
-  private int[] mArgs;
-  private int[] mParams;
+  private final int mWhatNodeID;
+  private final int[] mArgs;
+  private final int[] mParams;
 
   public CallFuncNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
