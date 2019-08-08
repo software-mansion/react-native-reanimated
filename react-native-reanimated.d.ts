@@ -102,6 +102,7 @@ declare module 'react-native-reanimated' {
       finished: AnimatedValue<number>;
       velocity: AnimatedValue<number>;
       position: AnimatedValue<number>;
+      prevPosition?: AnimatedValue<number>;
       time: AnimatedValue<number>;
     }
     export interface SpringConfig {
