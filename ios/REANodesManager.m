@@ -4,7 +4,6 @@
 
 #import "Nodes/REANode.h"
 #import "Nodes/REAPropsNode.h"
-#import "Nodes/REAStyleNode.h"
 #import "Nodes/REATransformNode.h"
 #import "Nodes/REAValueNode.h"
 #import "Nodes/REABlockNode.h"
@@ -33,7 +32,7 @@
 
 
 // Interface below has been added in order to use private methods of RCTUIManager,
-// RCTUIManager#UpdateView is a React Method which is exported to JS but in 
+// RCTUIManager#UpdateView is a React Method which is exported to JS but in
 // Objective-C it stays private
 // RCTUIManager#setNeedsLayout is a method which updated layout only which
 // in its turn will trigger relayout if no batch has been activated
@@ -211,7 +210,6 @@
   static dispatch_once_t mapToken;
   dispatch_once(&mapToken, ^{
     map = @{@"props": [REAPropsNode class],
-            @"style": [REAStyleNode class],
             @"transform": [REATransformNode class],
             @"value": [REAValueNode class],
             @"block": [REABlockNode class],

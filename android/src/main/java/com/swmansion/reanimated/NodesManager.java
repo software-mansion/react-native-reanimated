@@ -34,7 +34,6 @@ import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
 import com.swmansion.reanimated.nodes.SetNode;
-import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
 
@@ -230,8 +229,6 @@ public class NodesManager implements EventDispatcherListener {
     final Node node;
     if ("props".equals(type)) {
       node = new PropsNode(nodeID, config, this, mUIImplementation);
-    } else if ("style".equals(type)) {
-      node = new StyleNode(nodeID, config, this);
     } else if ("transform".equals(type)) {
       node = new TransformNode(nodeID, config, this);
     } else if ("value".equals(type)) {

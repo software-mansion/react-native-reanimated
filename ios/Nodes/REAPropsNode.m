@@ -1,7 +1,6 @@
 #import "REAPropsNode.h"
 
 #import "REANodesManager.h"
-#import "REAStyleNode.h"
 #import "REAModule.h"
 
 #import <React/RCTLog.h>
@@ -43,7 +42,7 @@
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
   NSMutableDictionary *jsProps = [NSMutableDictionary new];
-  
+
   void (^addBlock)(NSString *key, id obj, BOOL * stop) = ^(NSString *key, id obj, BOOL * stop){
     if ([self.nodesManager.uiProps containsObject:key]) {
       uiProps[key] = obj;
@@ -53,17 +52,13 @@
       jsProps[key] = obj;
     }
   };
-  
+
   for (NSString *prop in _propsConfig) {
     REANode *propNode = [self.nodesManager findNodeByID:_propsConfig[prop]];
-    
-    if ([propNode isKindOfClass:[REAStyleNode class]]) {
-      [[propNode value] enumerateKeysAndObjectsUsingBlock:addBlock];
-    } else {
-      addBlock(prop, [propNode value], nil);
-    }
+
+    addBlock(prop, [propNode value], nil);
   }
-  
+
   if (_connectedViewTag != nil) {
     if (uiProps.count > 0) {
       [self.nodesManager.uiManager
@@ -80,7 +75,7 @@
        body:@{@"viewTag": _connectedViewTag, @"props": jsProps }];
     }
   }
-  
+
   return @(0);
 }
 

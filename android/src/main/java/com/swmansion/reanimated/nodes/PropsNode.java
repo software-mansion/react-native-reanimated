@@ -52,13 +52,6 @@ public class PropsNode extends Node implements FinalNode {
     WritableMap jsProps = Arguments.createMap();
     final WritableMap nativeProps = Arguments.createMap();
 
-    if (mMapping.containsKey("style")) {
-      Node styleNode = mNodesManager.findNodeById(mMapping.get("style"), Node.class);
-      Map styleMapping = (Map) styleNode.value();
-      mMapping.putAll(styleMapping);
-      mMapping.remove("style");
-    }
-
     for (Map.Entry<String, Integer> entry : mMapping.entrySet()) {
       Node node = mNodesManager.findNodeById(entry.getValue(), Node.class);
       Object value = node.value();
@@ -74,22 +67,18 @@ public class PropsNode extends Node implements FinalNode {
         hasJSProps = true;
         dest = jsProps;
       }
-      if (node instanceof TransformNode) {
+      if (value == null) {
+        dest.putNull(key);
+      } else if (value instanceof Double) {
+        dest.putDouble(key, (Double) value);
+      } else if (value instanceof Boolean) {
+        dest.putBoolean(key, (Boolean) value);
+      } else if (value instanceof String) {
+        dest.putString(key, (String) value);
+      } else if (value instanceof WritableArray) {
         dest.putArray(key, (WritableArray) value);
       } else {
-        if (value == null) {
-          dest.putNull(key);
-        } else if (value instanceof Double) {
-          dest.putDouble(key, (Double) value);
-        } else if (value instanceof Boolean) {
-          dest.putBoolean(key, (Boolean) value);
-        } else if (value instanceof String) {
-          dest.putString(key, (String) value);
-        } else if (value instanceof WritableArray) {
-          dest.putArray(key, (WritableArray) value);
-        } else {
-          throw new IllegalStateException("Unexpected value for prop `" + key + "` : \n\n" + value.toString());
-        }
+        throw new IllegalStateException("Unexpected value for prop `" + key + "` : \n\n" + value.toString());
       }
     }
 

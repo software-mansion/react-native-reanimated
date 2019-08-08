@@ -1,8 +1,8 @@
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, StyleSheet } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
 import AnimatedEvent from './AnimatedEvent';
-import { createOrReuseStyleNode } from './AnimatedStyle';
+import { createOrReuseTransformNode } from './AnimatedTransform';
 
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
@@ -20,12 +20,20 @@ function sanitizeProps(inputProps) {
 
 export function createOrReusePropsNode(props, callback, oldNode) {
   if (props.style) {
+    let { style, ...rest } = props;
+    style = StyleSheet.flatten(style) || {};
+    if (style.transform) {
+      style = {
+        ...style,
+        transform: createOrReuseTransformNode(
+          style.transform,
+          oldNode && oldNode._props.transform
+        ),
+      };
+    }
     props = {
-      ...props,
-      style: createOrReuseStyleNode(
-        props.style,
-        oldNode && oldNode._props.style
-      ),
+      ...rest,
+      ...style,
     };
   }
   const config = sanitizeProps(props);
@@ -47,15 +55,22 @@ class AnimatedProps extends AnimatedNode {
     this.__attach();
   }
 
-  __onEvaluate() {
-    const props = {};
-    for (const key in this._props) {
-      const value = this._props[key];
+  _walkPropsAndGetAnimatedValues(props) {
+    const updatedProps = {};
+    for (const key in props) {
+      const value = props[key];
       if (value instanceof AnimatedNode) {
-        props[key] = value.__getValue();
+        updatedProps[key] = value.__getValue();
+      } else if (value && !Array.isArray(value) && typeof value === 'object') {
+        // Support animating nested values (for example: shadowOffset.height)
+        updatedProps[key] = this._walkPropsAndGetAnimatedValues(value);
       }
     }
-    return props;
+    return updatedProps;
+  }
+
+  __onEvaluate() {
+    return this._walkPropsAndGetAnimatedValues(this._props);
   }
 
   __detach() {
