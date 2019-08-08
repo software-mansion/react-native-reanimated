@@ -5,7 +5,6 @@
 #import "REAParamNode.h"
 #import "REANodesManager.h"
 
-
 @implementation REACallFuncNode {
   NSNumber *_whatNodeID;
   NSArray<NSNumber *> *_args;
@@ -26,8 +25,17 @@
 
 - (void)beginContext
 {
+  // To ensure that functions can be called multiple times in the same animation frame 
+  // (functions might have different parameters and might be called multiple times)
+  // we inform the current update context about where we are called from by setting the
+  // current call id - this will ensure that memoization is correct for function nodes.
   _prevCallID = self.updateContext.callID;
   self.updateContext.callID = [NSString stringWithFormat:@"%@/%@", self.updateContext.callID, [self.nodeID stringValue]];
+  
+  // A CallFuncNode has a reference to a function node which holds the node graph that should
+  // be updated. A Function node has a list of ParamNodes which are basically nodes that can
+  // reference other nodes. When we start a new function call we update the parameter nodes
+  // with the current arguments:
   for (NSUInteger i = 0; i < _params.count; i++) {
     NSNumber *paramID = [_params objectAtIndex:i];
     REAParamNode *param = (REAParamNode *)[self.nodesManager findNodeByID:paramID];
