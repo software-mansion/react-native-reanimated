@@ -2,7 +2,6 @@ import AnimatedNode from './AnimatedNode';
 import { adapt } from './AnimatedBlock';
 
 class AnimatedCallFunc extends AnimatedNode {
-  _value;
 
   constructor(proc, args, params) {
     super({ 
@@ -11,7 +10,6 @@ class AnimatedCallFunc extends AnimatedNode {
       args: args.map(n => n.__nodeID),
       params: params.map(n => n.__nodeID),
     }, [...args]);  
-    this._value = -1;
   }
 }
 
