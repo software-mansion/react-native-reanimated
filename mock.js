@@ -9,7 +9,7 @@
  */
 
 const React = require('react');
-const { View, Text, Image, ScrollView } = require('react-native');
+const { View, Text, Image, Animated } = require('react-native');
 
 const NOOP = () => undefined;
 
@@ -32,7 +32,7 @@ module.exports = {
     View,
     Text,
     Image,
-    ScrollView,
+    ScrollView: Animated.ScrollView,
     Code,
 
     Clock: NOOP,
