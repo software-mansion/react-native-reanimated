@@ -1,7 +1,7 @@
 import { findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
-import AnimatedNode from './AnimatedNode';
+import AnimatedNode, { batch } from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';
 import { createAnimatedAlways } from './AnimatedAlways';
 
@@ -86,7 +86,12 @@ export default class AnimatedEvent extends AnimatedNode {
     }
     this.__attach();
     const viewTag = findNodeHandle(viewRef);
-    ReanimatedModule.attachEvent(viewTag, eventName, this.__nodeID);
+    batch.push({
+      type: 'attach',
+      viewTag,
+      eventName,
+      eventNodeID: this.__nodeID,
+    });
   }
 
   detachEvent(viewRef, eventName) {

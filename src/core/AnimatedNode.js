@@ -45,6 +45,8 @@ function runPropUpdates() {
 }
 
 let nodeCount = 0;
+let isInBatch = false;
+export let batch = [];
 
 export default class AnimatedNode {
   constructor(nodeConfig, inputNodes) {
@@ -56,6 +58,12 @@ export default class AnimatedNode {
   }
 
   __attach() {
+    let ifWeEnteteredBatch = false;
+    if (!isInBatch) {
+      ifWeEnteteredBatch = true;
+      isInBatch = true;
+    }
+
     this.__nativeInitialize();
 
     const nodes = this.__inputNodes;
@@ -64,6 +72,13 @@ export default class AnimatedNode {
       for (let i = 0, l = nodes.length; i < l; i++) {
         nodes[i].__addChild(this);
       }
+    }
+
+    if (!ifWeEnteteredBatch) {
+      isInBatch = false;
+      console.log(batch);
+      ReanimatedModule.sendBatch(batch);
+      batch = [];
     }
   }
 
@@ -111,7 +126,11 @@ export default class AnimatedNode {
 
   __nativeInitialize() {
     if (!this.__initialized) {
-      ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
+      batch.push({
+        type: 'create',
+        tag: this.__nodeID,
+        config: { ...this.__nodeConfig },
+      });
       this.__initialized = true;
     }
   }
@@ -146,7 +165,11 @@ export default class AnimatedNode {
     this.__children.push(child);
     child.__nativeInitialize();
 
-    ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
+    batch.push({
+      type: 'connect',
+      parent: this.__nodeID,
+      child: child.__nodeID,
+    });
   }
 
   __removeChild(child) {
@@ -164,7 +187,11 @@ export default class AnimatedNode {
   }
 
   _connectAnimatedView(nativeViewTag) {
-    ReanimatedModule.connectNodeToView(this.__nodeID, nativeViewTag);
+    batch.push({
+      type: 'toView',
+      nodeID: this.__nodeID,
+      viewTag: nativeViewTag,
+    });
   }
 
   _disconnectAnimatedView(nativeViewTag) {

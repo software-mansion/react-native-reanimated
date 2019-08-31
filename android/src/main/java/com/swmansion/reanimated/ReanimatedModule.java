@@ -99,6 +99,50 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+  public void sendBatch(final ReadableArray batch) {
+    for (int i = 0; i < batch.size(); i++) {
+      final ReadableMap action = batch.getMap(i);
+      String type = action.getString("type");
+      if (type.equals("create")) {
+        mOperations.add(new UIThreadOperation() {
+          @Override
+          public void execute(NodesManager nodesManager) {
+            nodesManager.createNode(action.getInt("tag"), action.getMap("config"));
+          }
+        });
+      } else if (type.equals("connect")) {
+        mOperations.add(new UIThreadOperation() {
+          @Override
+          public void execute(NodesManager nodesManager) {
+            nodesManager.connectNodes(action.getInt("parent"), action.getInt("child"));
+          }
+        });
+      } else if (type.equals("attach")) {
+        mOperations.add(new UIThreadOperation() {
+          @Override
+          public void execute(NodesManager nodesManager) {
+            nodesManager.attachEvent(
+              action.getInt("viewTag"),
+              action.getString("eventName"),
+              action.getInt("eventNodeID")
+            );
+          }
+        });
+      } else if (type.equals("toView")) {
+        mOperations.add(new UIThreadOperation() {
+          @Override
+          public void execute(NodesManager nodesManager) {
+            nodesManager.connectNodeToView(
+              action.getInt("nodeID"),
+              action.getInt("viewTag")
+            );
+          }
+        });
+      }
+    }
+  }
+
+  @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config) {
     mTransitionManager.animateNextTransition(tag, config);
   }
