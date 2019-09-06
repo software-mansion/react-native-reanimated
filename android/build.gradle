@@ -8,12 +8,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 25)
-    buildToolsVersion safeExtGet('buildToolsVersion', '25.0.2')
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 22)
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
     }
@@ -22,6 +22,19 @@ android {
     }
 }
 
+buildscript {
+
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.0'
+    }
+}
+
+
 repositories {
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -29,11 +42,8 @@ repositories {
         // https://github.com/facebook/react-native/blob/1e8f3b11027fe0a7514b4fc97d0798d3c64bc895/local-cli/templates/HelloWorld/android/build.gradle#L21
         url "$projectDir/../node_modules/react-native/android"
     }
-    mavenCentral()
-    maven {
-        url 'https://maven.google.com/'
-        name 'Google'
-    }
+    google()
+    jcenter()
 }
 
 dependencies {
