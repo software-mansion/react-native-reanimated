@@ -1,5 +1,5 @@
 import { cond, lessThan } from '../base';
-import { adapt } from '../utils';
+import { adapt } from '../core/AnimatedBlock';
 
 export default function max(a, b) {
   a = adapt(a);

@@ -16,6 +16,7 @@ import Rotations from './rotations';
 import Imperative from './imperative';
 import PanRotateAndZoom from './PanRotateAndZoom';
 import ProgressBar from './progressBar';
+import DifferentSpringConfigs from './differentSpringConfigs';
 import TransitionsSequence from './transitions/sequence';
 import TransitionsShuffle from './transitions/shuffle';
 import TransitionsProgress from './transitions/progress';
@@ -55,6 +56,10 @@ const SCREENS = {
   progressBar: {
     screen: ProgressBar,
     title: 'Progress bar',
+  },
+  differentSpringConfigs: {
+    screen: DifferentSpringConfigs,
+    title: 'Different Spring Configs',
   },
   transitionsSequence: {
     screen: TransitionsSequence,

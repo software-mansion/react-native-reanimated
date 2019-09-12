@@ -65,9 +65,9 @@ import Animated, { Easing } from 'react-native-reanimated';
 
 Transitions is an experimental API distributed as a part of reanimated which serves the purpose of animating between two states of view hierarchy. It is conceptually similar to `LayoutAnimation` concept from react native but gives much better control of what and how is going to be animated.
 
-Transitions API consists of tywo main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
+Transitions API consists of two main building blocks. First one being `Transitioning.View` which is an extension of regular react-native view, so you can use any `View` props you'd like. The `Transitioning.View` is a root of all the transition animations that will be happening and is used to scope the changes to its children. In order to have next transition animated you'd need to call `animateNextTransition()` on the `Transitioning.View` instance.
 
-The second main bulding block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
+The second main building block is transition definition. Transitioning API uses JSX syntax that allows you to define how the transition animation should perform. You can use all the components from `Transition` object to combine the animation you want. Please see the below list for the documentation of transition components.
 
 ## Transition groups
 
@@ -91,7 +91,7 @@ The time animation takes to execute in milliseconds
 
 #### `delayMs`
 
-Use this is you want the animation to start delayed (value in milliseconds)
+Use this if you want the animation to start delayed (value in milliseconds)
 
 #### `interpolation`
 
@@ -99,7 +99,7 @@ Specify the transition timing curve. Possible values are: `linear`, `easeIn`, `e
 
 #### `propagation`
 
-Allows for the framework to automatically delay beggining of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
+Allows for the framework to automatically delay beginning of transitions across a set of different views depending on their position. The possible values are `top`, `bottom`, `left` and `right`. When `propagation="top"` it means that the first element that will start animating is the one that is closest to the top of `Transitioning.View` container, then the other views will be delayed by the amount which depends on their distance from the top edge.
 
 ### `<Transition.In>`
 
@@ -111,7 +111,7 @@ Allows to specify how the framework should animate views that are being removed 
 
 ### `<Transition.Change>`
 
-Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports animating position, bounds and transforms.
+Use `Transition.Change` component to specify how components' which properties get changed during transition should be animated. The framework currently supports an animating position, bounds and transforms.
 
 ## How to use it
 
@@ -128,7 +128,7 @@ All the functionality that missing elements provide in `Animated` can already be
  - [ ] animation delays
 
 ## Value
-`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there's provided API for setting value after it has been initialized:
+`Animated.Value` is a container for storing values. It's is initialized with `new Value(0)` constructor. For backward compatibility there are provided API for setting value after it has been initialized:
 ```js
 const v = new Value(0);
 /// ...
@@ -155,12 +155,12 @@ The current algorithm for making decisions of which nodes to evaluate works as f
  1. for each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
  2. Then we update values that correspond to [clock](#clocks) nodes that are "running".
  3. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
- 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger evaluation for their input nodes etc.
+ 4. If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.
  5. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 ## Blocks
 
-Blocks are just an arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
+Blocks are just arrays of nodes that are being evaluated in a particular order and return the value of the last node. It can be created using [`block`](#block) command but also when passed as an argument to other nodes the [`block`](#block) command can be omitted and we can just pass a nodes array directly. See an example below:
 
 ```js
 cond(
@@ -220,6 +220,21 @@ block([
 }/>
 ```
 
+## `Animated.useCode`
+
+The `useCode` hook acts as an alternative to the `Animated.Code` component.
+```js
+Animated.useCode(node, deps)
+```
+It's passed an animated node and an array of dependencies, and updates that node both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (<0.59).
+```js
+const [offset, setOffset] = React.useState(20);
+Animated.useCode(
+  set(transX1, add(_transX, offset)),
+  [offset]
+);
+```
+
 ## Event handling with reanimated nodes
 
 `react-native-reanimated`'s new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.
@@ -267,7 +282,7 @@ If you'd like to use more than one event attribute in your reanimated code, this
 set(valueToBeUpdated, sourceNode)
 ```
 
-When evaluated, it will assign the value of `sourceNode` to the `Animated.Value` passed as a first argument. In other words, it performs an assignment operation from the `sourceNode` to `valueToBeUpdated` value node.
+When evaluated, it will assign the value of `sourceNode` to the `Animated.Value` passed as a first argument. In other words, it performs an assignment operation from the `sourceNode` to `valueToBeUpdated` value node and also returns a node that represents this value.
 
 ---
 ### `cond`
@@ -386,8 +401,29 @@ Takes two or more animated nodes or values, and when evaluated, returns the resu
 ---
 ### `modulo`
 
+```js
+modulo(nodeOrNumber, nodeOrNumber)
+```
+
+Remainder after division of the first argument by the second one. modulo(a,0) will throw an error.
+
 ---
 ### `sqrt`
+
+```js
+sqrt(nodeOrNumber)
+```
+
+The square root of the given node. If the number is negative, an error is thrown.
+
+---
+### `log`
+
+```js
+log(nodeOrNumber)
+```
+
+The log of the given node.
 
 ---
 ### `sin`
@@ -468,7 +504,7 @@ Returns a node that rounds input value to the nearest integer.
 floor(node)
 ```
 
-Returns a node that rounds a number downward to its nearest integer. If the passed argument is an integer, the value will not be rounded.
+Returns a node that rounds a number down to its nearest integer. If the passed argument is an integer, the value will not be rounded.
 
 ---
 ### `ceil`
@@ -585,19 +621,19 @@ Evaluates the given node and returns an absolute value of the node's value.
 ### `min`
 
 ```js
-min(nodeOrValue1, ...)
+min(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a minimum of all the node's values.
+Takes two nodes as an input and returns a minimum of all the node's values.
 
 ---
 ### `max`
 
 ```js
-max(nodeOrValue1, ...)
+max(nodeOrValue1, nodeOrValue2)
 ```
 
-Takes one or more nodes as an input and returns a maximum of all the node's values.
+Takes two nodes as an input and returns a maximum of all the node's values.
 
 ---
 ### `diff`
@@ -621,6 +657,25 @@ Returns an accumulated value of the given node. This node stores a sum of all ev
 ### `diffClamp`
 
 Works the same way as with the original `Animated` library.
+
+---
+### `proc`
+
+Returns a callable function node that can be used to define expressions that can be called from other nodes. 
+
+Example:
+
+```js
+// Global constant
+const myProc = proc((a, b) => multiply(a,b));
+
+// In your component
+const style = { width: proc(10, 10 )};
+```
+
+A proc node should be declared as a global constant in your code and not recreated from inside components.
+
+It is not possible to reference nodes that are not passed as parameters.
 
 ---
 ### `interpolate`
@@ -701,6 +756,31 @@ spring(clock, { finished, position, velocity, time }, { damping, mass, stiffness
 ```
 
 When evaluated, updates `position` and `velocity` nodes by running a single step of spring based animation. Check the original `Animated` API docs to learn about the config parameters like `damping`, `mass`, `stiffness`, `overshootClamping`, `restSpeedThreshold` and `restDisplacementThreshold`. The `finished` state updates to `1` when the `position` reaches the destination set by `toValue`. The `time` state variable also updates when the node evaluates and it represents the clock value at the time when the node got evaluated for the last time. It is expected that `time` variable is reset before spring animation can be restarted.
+
+### `SpringUtils`
+For developers' convenience, it's possible to use a different way of configuring `spring` animation which follows behavior known from React Native core.
+
+#### `SpringUtils.makeDefaultConfig()`
+ Returns an object filled with default config of animation:
+ ```js
+  {
+    stiffness: new Value(100),
+    mass: new Value(1),
+    damping: new Value(10),
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
+    toValue: new Value(0),
+  }
+```
+
+#### `SpringUtils.makeConfigFromBouncinessAndSpeed(prevConfig)`
+Transforms an object with `bounciness` and `speed` params into config expected by the `spring` node. `bounciness` and `speed` might be nodes or numbers.
+
+#### `SpringUtils.makeConfigFromOrigamiTensionAndFriction(prevConfig)`
+Transforms an object with `tension` and `friction` params into config expected by the `spring` node. `tension` and `friction` might be nodes or numbers.
+
+See an [Example of different configs](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/differentSpringConfigs/index.js).
 
 
 ## Running animations

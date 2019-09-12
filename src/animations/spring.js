@@ -18,7 +18,7 @@ import {
   greaterThan,
 } from '../base';
 import { min, abs } from '../derived';
-import AnimatedValue from '../core/AnimatedValue';
+import AnimatedValue from '../core/InternalAnimatedValue';
 
 const MAX_STEPS_MS = 64;
 
@@ -83,7 +83,9 @@ export default function spring(clock, state, config) {
   );
 
   // conditions for stopping the spring animations
-  const prevPosition = new AnimatedValue(0);
+  const prevPosition = state.prevPosition
+    ? state.prevPosition
+    : new AnimatedValue(0);
 
   const isOvershooting = cond(
     and(config.overshootClamping, neq(config.stiffness, 0)),

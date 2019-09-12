@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -20,7 +20,8 @@
     "ios/",
     "RNReanimated.podspec",
     "README.md",
-    "react-native-reanimated.d.ts"
+    "react-native-reanimated.d.ts",
+    "mock.js"
   ],
   "repository": {
     "type": "git",
@@ -37,10 +38,6 @@
   },
   "homepage": "https://github.com/kmagiera/react-native-reanimated#readme",
   "dependencies": {},
-  "peerDependencies": {
-    "react": "16.0.0-alpha.6",
-    "react-native": "^0.44.1"
-  },
   "devDependencies": {
     "babel-eslint": "^8.2.3",
     "babel-jest": "23.0.1",

@@ -1,0 +1,66 @@
+matrix:
+  include:
+  - language: android
+    sudo: required
+    jdk: oraclejdk8
+    env:
+      - NODE_VERSION=10.15.3
+      - ANDROID_API=28
+      - ANDROID_BUILD_TOOLS=28.0.3
+    before_cache:
+    - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+    - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
+    cache:
+      directories:
+      - $HOME/.yarn-cache
+      - $HOME/.gradle/caches/
+      - $HOME/.gradle/wrapper/
+    android:
+      components:
+      - tools
+      - platform-tools
+      - android-${ANDROID_API}
+      - build-tools-${ANDROID_BUILD_TOOLS}
+
+    install:
+    - nvm install $NODE_VERSION
+    - nvm use $NODE_VERSION
+    - nvm alias default $NODE_VERSION
+    - node --version
+    - npm install -g yarn --ignore-dependencies
+    - npm install -g react-native-cli
+    - cd Example
+    - yarn
+
+    script:
+    - cd ./android && ./gradlew assembleDebug
+
+  - language: objective-c
+    osx_image: xcode10.2
+    xcode_sdk: iphonesimulator12.2
+    xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
+    env: NODE_VERSION=10.15.3
+
+    branches:
+      only:
+      - master
+
+    cache: yarn
+
+    install:
+    - nvm --version
+    - echo $NODE_VERSION
+    - sudo launchctl limit maxfiles 2048 unlimited
+    - sudo ulimit -n 10000
+    - nvm install $NODE_VERSION
+    - nvm use $NODE_VERSION
+    - nvm alias default $NODE_VERSION
+    - brew install yarn --ignore-dependencies
+    - npm install -g react-native-cli
+    - cd Example
+    - yarn
+    - export PRODUCT_BUNDLE_IDENTIFIER="org.reactjs.native.example.ReanimatedExample"
+
+    script:
+    - xcodebuild -project ./ios/ReanimatedExample.xcodeproj -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
+

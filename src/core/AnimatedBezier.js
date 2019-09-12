@@ -1,4 +1,4 @@
-import { val } from '../utils';
+import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
@@ -64,10 +64,6 @@ function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
 }
 
 function bezier(mX1, mY1, mX2, mY2) {
-  if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
-    throw new Error('bezier x values must be in [0, 1] range');
-  }
-
   // Precompute samples table
   var sampleValues = float32ArraySupported
     ? new Float32Array(kSplineTableSize)
