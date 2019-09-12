@@ -1,30 +1,43 @@
+import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import { Text, View, FlatList, StyleSheet, YellowBox } from 'react-native';
-import { createStackNavigator } from 'react-navigation';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  YellowBox,
+} from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
-import Snappable from './snappable';
-import ImageViewer from './imageViewer';
-import Test from './test';
-import Interpolate from './src/interpolate';
-import Colors from './colors';
-import StartAPI from './startAPI';
-import ChatHeads from './chatHeads';
-import Code from './code';
-import WidthAndHeight from './widthAndHeight';
-import Rotations from './rotations';
-import Imperative from './imperative';
-import PanRotateAndZoom from './PanRotateAndZoom';
-import ProgressBar from './progressBar';
-import DifferentSpringConfigs from './differentSpringConfigs';
-import TransitionsSequence from './transitions/sequence';
-import TransitionsShuffle from './transitions/shuffle';
-import TransitionsProgress from './transitions/progress';
-import TransitionsTicket from './transitions/ticket';
+// TODO(Bacon): Make imports from outside the root work
+// import 'react-native-reanimated';
 
-import InteractablePlayground, {
-  SCREENS as INTERACTABLE_SCREENS,
-} from './interactablePlayground';
+const Snappable = View;
+// import Snappable from './snappable';
+// import ImageViewer from './imageViewer';
+// import Test from './test';
+// import Interpolate from './src/interpolate';
+// import Colors from './colors';
+// import StartAPI from './startAPI';
+// import ChatHeads from './chatHeads';
+// import Code from './code';
+// import WidthAndHeight from './widthAndHeight';
+// import Rotations from './rotations';
+// import Imperative from './imperative';
+// import PanRotateAndZoom from './PanRotateAndZoom';
+// import ProgressBar from './progressBar';
+// import DifferentSpringConfigs from './differentSpringConfigs';
+// import TransitionsSequence from './transitions/sequence';
+// import TransitionsShuffle from './transitions/shuffle';
+// import TransitionsProgress from './transitions/progress';
+// import TransitionsTicket from './transitions/ticket';
+
+// import InteractablePlayground, {
+//   SCREENS as INTERACTABLE_SCREENS,
+// } from './interactablePlayground';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -35,48 +48,47 @@ YellowBox.ignoreWarnings([
 
 const SCREENS = {
   Snappable: { screen: Snappable, title: 'Snappable' },
-  Test: { screen: Test, title: 'Test' },
-  ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
-  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
-  Interpolate: { screen: Interpolate, title: 'Interpolate' },
-  Colors: { screen: Colors, title: 'Colors' },
-  StartAPI: { screen: StartAPI, title: 'Start API' },
-  chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  code: { screen: Code, title: 'Animated.Code component' },
-  width: { screen: WidthAndHeight, title: 'width & height & more' },
-  rotations: { screen: Rotations, title: 'rotations (concat node)' },
-  imperative: {
-    screen: Imperative,
-    title: 'imperative (set value / toggle visibility)',
-  },
-  panRotateAndZoom: {
-    screen: PanRotateAndZoom,
-    title: 'Pan, rotate and zoom (via native event function)',
-  },
-  progressBar: {
-    screen: ProgressBar,
-    title: 'Progress bar',
-  },
-  differentSpringConfigs: {
-    screen: DifferentSpringConfigs,
-    title: 'Different Spring Configs',
-  },
-  transitionsSequence: {
-    screen: TransitionsSequence,
-    title: 'Transitions sequence',
-  },
-  transitionsShuffle: {
-    screen: TransitionsShuffle,
-    title: 'Transitions shuffle',
-  },
-  transitionsProgress: {
-    screen: TransitionsProgress,
-    title: 'Transitions progress bar',
-  },
-  transitionsTicket: {
-    screen: TransitionsTicket,
-    title: 'Transitions – flight ticket demo',
-  },
+  // ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
+  // Interactable: { screen: InteractablePlayground, title: 'Interactable' },
+  // Interpolate: { screen: Interpolate, title: 'Interpolate' },
+  // Colors: { screen: Colors, title: 'Colors' },
+  // StartAPI: { screen: StartAPI, title: 'Start API' },
+  // chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
+  // code: { screen: Code, title: 'Animated.Code component' },
+  // width: { screen: WidthAndHeight, title: 'width & height & more' },
+  // rotations: { screen: Rotations, title: 'rotations (concat node)' },
+  // imperative: {
+  //   screen: Imperative,
+  //   title: 'imperative (set value / toggle visibility)',
+  // },
+  // panRotateAndZoom: {
+  //   screen: PanRotateAndZoom,
+  //   title: 'Pan, rotate and zoom (via native event function)',
+  // },
+  // progressBar: {
+  //   screen: ProgressBar,
+  //   title: 'Progress bar',
+  // },
+  // differentSpringConfigs: {
+  //   screen: DifferentSpringConfigs,
+  //   title: 'Different Spring Configs',
+  // },
+  // transitionsSequence: {
+  //   screen: TransitionsSequence,
+  //   title: 'Transitions sequence',
+  // },
+  // transitionsShuffle: {
+  //   screen: TransitionsShuffle,
+  //   title: 'Transitions shuffle',
+  // },
+  // transitionsProgress: {
+  //   screen: TransitionsProgress,
+  //   title: 'Transitions progress bar',
+  // },
+  // transitionsTicket: {
+  //   screen: TransitionsTicket,
+  //   title: 'Transitions – flight ticket demo',
+  // },
 };
 
 class MainScreen extends React.Component {
@@ -120,7 +132,7 @@ const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
     ...SCREENS,
-    ...INTERACTABLE_SCREENS,
+    // ...INTERACTABLE_SCREENS,
   },
   {
     initialRouteName: 'Main',
@@ -148,4 +160,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExampleApp;
+const createApp = Platform.select({
+  web: input => createBrowserApp(input, { history: 'hash' }),
+  default: input => createAppContainer(input),
+});
+
+export default createApp(ExampleApp);

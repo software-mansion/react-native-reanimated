@@ -4,17 +4,24 @@
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
-    "test": "jest"
+    "test": "jest",
+    "web": "expo start --web-only --web"
   },
   "dependencies": {
     "@babel/runtime": "^7.1.2",
+    "@react-navigation/web": "^1.0.0-alpha.9",
+    "expo": "^34.0.4",
     "react": "16.8.6",
+    "react-dom": "^16.9.0",
     "react-native": "0.59.3",
-    "react-native-gesture-handler": "1.0.15",
-    "react-navigation": "2.17.0"
+    "react-native-gesture-handler": "1.4.1",
+    "react-native-web": "^0.11.7",
+    "react-navigation": "4.0.3",
+    "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
     "@babel/core": "7.1.2",
+    "@expo/webpack-config": "^0.7.4",
     "babel-core": "7.0.0-bridge.0",
     "babel-plugin-module-resolver": "^3.1.1",
     "glob-to-regexp": "^0.4.0",
