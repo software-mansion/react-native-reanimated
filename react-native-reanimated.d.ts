@@ -101,10 +101,8 @@ declare module 'react-native-reanimated' {
       easing: EasingFunction;
     }
 
-    export interface SpringState extends PhysicsAnimationState {
-      prevPosition?: AnimatedValue<number>;
-    }
-                      
+    export type SpringState = PhysicsAnimationState;
+
     export interface SpringConfig {
       damping: Adaptable<number>;
       mass: Adaptable<number>;
