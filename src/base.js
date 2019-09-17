@@ -10,10 +10,9 @@ export {
 export { createAnimatedDebug as debug } from './core/AnimatedDebug';
 export { createAnimatedCall as call } from './core/AnimatedCall';
 export { createAnimatedEvent as event } from './core/AnimatedEvent';
+export { createAnimatedReformat as reformat } from './core/AnimatedReformat';
 export { createAnimatedAlways as always } from './core/AnimatedAlways';
 export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
-export {
-  createAnimatedFunction as proc,
-} from './core/AnimatedFunction';
+export { createAnimatedFunction as proc } from './core/AnimatedFunction';
 export * from './operators';

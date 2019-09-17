@@ -18,6 +18,11 @@ function sanitizeConfig(config) {
 function runPropUpdates() {
   const visitedNodes = new Set();
   const findAndUpdateNodes = node => {
+    if (!node) {
+      console.warn('findAndUpdateNodes was passed a nullish node');
+      return;
+    }
+
     if (visitedNodes.has(node)) {
       return;
     } else {
@@ -27,7 +32,6 @@ function runPropUpdates() {
       node.update();
     } else {
       const nodes = node.__getChildren();
-
       if (nodes) {
         for (let i = 0, l = nodes.length; i < l; i++) {
           findAndUpdateNodes(nodes[i]);
