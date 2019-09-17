@@ -13,6 +13,7 @@ function sanitizeValue(value) {
  * were caused by imperative setValue and interpolate – they are currently exposed with AnimatedValue.js
  */
 export default class InternalAnimatedValue extends AnimatedNode {
+  _offset = 0;
   constructor(value) {
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
@@ -20,10 +21,16 @@ export default class InternalAnimatedValue extends AnimatedNode {
   }
 
   __detach() {
-    ReanimatedModule.getValue(
-      this.__nodeID,
-      val => (this.__nodeConfig.value = val)
-    );
+    if (ReanimatedModule.getValue) {
+      ReanimatedModule.getValue(
+        this.__nodeID,
+        val => (this.__nodeConfig.value = val)
+      );
+    } else {
+      setTimeout(() => {
+        this.__nodeConfig.value = this.__getValue();
+      });
+    }
     this.__detachAnimation(this._animation);
     super.__detach();
   }

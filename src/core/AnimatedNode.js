@@ -146,7 +146,11 @@ export default class AnimatedNode {
     this.__children.push(child);
     child.__nativeInitialize();
 
-    ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
+    if (ReanimatedModule.connectNodes) {
+      ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
+    } else {
+      this.__dangerouslyRescheduleEvaluate();
+    }
   }
 
   __removeChild(child) {
@@ -164,7 +168,11 @@ export default class AnimatedNode {
   }
 
   _connectAnimatedView(nativeViewTag) {
-    ReanimatedModule.connectNodeToView(this.__nodeID, nativeViewTag);
+    if (ReanimatedModule.connectNodeToView) {
+      ReanimatedModule.connectNodeToView(this.__nodeID, nativeViewTag);
+    } else {
+      this.__dangerouslyRescheduleEvaluate();
+    }
   }
 
   _disconnectAnimatedView(nativeViewTag) {

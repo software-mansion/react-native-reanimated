@@ -1,8 +1,11 @@
 import AnimatedNode from './AnimatedNode';
 import { createAnimatedCallFunc } from './AnimatedCallFunc';
 import { createAnimatedParam } from './AnimatedParam';
+import { val } from '../val';
 
 class AnimatedFunction extends AnimatedNode {
+  _what;
+
   constructor(what, ...params) {
     super(
       {
@@ -11,7 +14,12 @@ class AnimatedFunction extends AnimatedNode {
       },
       [what, ...params]
     );
-    this.__attach();    
+    this._what = what;
+    this.__attach();
+  }
+
+  __onEvaluate() {
+    return val(this._what);
   }
 }
 

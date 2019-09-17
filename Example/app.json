@@ -6,13 +6,6 @@
     "privacy": "unlisted",
     "sdkVersion": "34.0.0",
     "version": "1.0.0",
-    "platforms": ["ios", "android", "web"],
-    "web": {
-      "build": {
-        "babel": {
-          "root": "./"
-        }
-      }
-    }
+    "platforms": ["ios", "android", "web"]
   }
 }

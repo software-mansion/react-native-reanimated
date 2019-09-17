@@ -15,10 +15,9 @@ import { createStackNavigator } from 'react-navigation-stack';
 // TODO(Bacon): Make imports from outside the root work
 // import 'react-native-reanimated';
 
-const Snappable = View;
 // import Snappable from './snappable';
 // import ImageViewer from './imageViewer';
-// import Test from './test';
+import Test from './test';
 // import Interpolate from './src/interpolate';
 // import Colors from './colors';
 // import StartAPI from './startAPI';
@@ -47,7 +46,7 @@ YellowBox.ignoreWarnings([
 // https://github.com/react-navigation/react-navigation/issues/3956
 
 const SCREENS = {
-  Snappable: { screen: Snappable, title: 'Snappable' },
+  // Snappable: { screen: Snappable, title: 'Snappable' },
   // ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
   // Interactable: { screen: InteractablePlayground, title: 'Interactable' },
   // Interpolate: { screen: Interpolate, title: 'Interpolate' },
@@ -165,4 +164,4 @@ const createApp = Platform.select({
   default: input => createAppContainer(input),
 });
 
-export default createApp(ExampleApp);
+export default Test; // createApp(ExampleApp);
