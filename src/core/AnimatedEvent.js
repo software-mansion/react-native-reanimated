@@ -89,6 +89,10 @@ export default class AnimatedEvent extends AnimatedNode {
     ReanimatedModule.attachEvent(viewTag, eventName, this.__nodeID);
   }
 
+  __onEvaluate() {
+    return 0;
+  }
+
   detachEvent(viewRef, eventName) {
     for (let i = 0; i < this._alwaysNodes.length; i++) {
       this._alwaysNodes[i].isNativelyInitialized() &&

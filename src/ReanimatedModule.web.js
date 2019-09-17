@@ -1,12 +1,12 @@
 export default {
+  async disconnectNodeFromView() {
+    // noop
+  },
   async attachEvent(viewTag, eventName, nodeID) {
-    console.warn('Reanimated: attachEvent is unimplemented on web');
+    // noop
   },
   async detachEvent(viewTag, eventName, nodeID) {
-    console.warn('Reanimated: detachEvent is unimplemented on web');
-  },
-  async disconnectNodeFromView(nodeID, nativeViewTag) {
-    console.warn('Reanimated: disconnectNodeFromView is unimplemented on web');
+    // noop
   },
   async createNode(nodeID, config) {
     // noop
@@ -19,5 +19,8 @@ export default {
   },
   async disconnectNodes() {
     // noop
+  },
+  async animateNextTransition() {
+    console.warn('Reanimated: animateNextTransition is unimplemented on web');
   },
 };

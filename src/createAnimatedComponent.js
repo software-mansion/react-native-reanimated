@@ -1,5 +1,5 @@
 import React from 'react';
-import { findNodeHandle, StyleSheet } from 'react-native';
+import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
@@ -30,7 +30,7 @@ export default function createAnimatedComponent(Component) {
       super(props);
       this._attachProps(this.props);
     }
-  
+
     componentWillUnmount() {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
@@ -214,8 +214,12 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      const platformProps = Platform.select({
+        web: {},
+        default: { collapsable: false },
+      });
       return (
-        <Component {...props} ref={this._setComponentRef} collapsable={false} />
+        <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
 

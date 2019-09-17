@@ -37,6 +37,7 @@ const OPERATIONS = {
   asin: single(a => Math.asin(a)),
   atan: single(a => Math.atan(a)),
   exp: single(a => Math.exp(a)),
+  round: single(a => Math.round(a)),
 
   // logical
   and: reduceFrom((a, b) => a && b, true),
