@@ -66,6 +66,7 @@ export default class Example extends Component {
       <View style={styles.container}>
         <PanGestureHandler
           ref={this.panRef}
+          minDist={10}
           simultaneousHandlers={[this.rotationRef, this.pinchRef]}
           onGestureEvent={this.handlePan}
           onHandlerStateChange={this.handlePan}>

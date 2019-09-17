@@ -1,16 +1,21 @@
 module.exports = api => {
-  api.cache(false);
+  const isWeb = api.caller(isTargetWeb);
+
   return {
-    presets: ['module:metro-react-native-babel-preset'],
+    presets: ['babel-preset-expo'],
     plugins: [
-      // [
-      //   'module-resolver',
-      //   {
-      //     alias: {
-      //       'react-native-reanimated': '../src/Animated',
-      //     },
-      //   },
-      // ],
-    ],
+      !isWeb && [
+        'module-resolver',
+        {
+          alias: {
+            'react-native-reanimated': '../src/Animated',
+          },
+        },
+      ],
+    ].filter(Boolean),
   };
 };
+
+function isTargetWeb(caller) {
+  return caller && caller.name === 'babel-loader';
+}

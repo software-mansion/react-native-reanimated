@@ -5,12 +5,11 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
     "test": "jest",
+    "postinstall": "npm link react-native-reanimated",
     "web": "expo start --web-only --web"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.2",
     "@react-navigation/web": "^1.0.0-alpha.9",
-    "expo": "^34.0.4",
     "react": "16.8.6",
     "react-dom": "^16.9.0",
     "react-native": "0.59.3",
@@ -20,14 +19,11 @@
     "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
-    "@babel/core": "7.1.2",
-    "@expo/webpack-config": "^0.7.4",
-    "babel-core": "7.0.0-bridge.0",
+    "@babel/plugin-proposal-decorators": "^7.6.0",
     "babel-plugin-module-resolver": "^3.1.1",
+    "babel-preset-expo": "^6.0.0",
     "glob-to-regexp": "^0.4.0",
-    "jest": "23.6.0",
-    "metro-react-native-babel-preset": "^0.48.0",
-    "react-test-renderer": "16.5.0"
+    "jest": "23.6.0"
   },
   "jest": {
     "preset": "react-native"
