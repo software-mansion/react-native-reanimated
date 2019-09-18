@@ -11,9 +11,9 @@ export default function color(r, g, b, a = 1) {
 
   if (Platform.OS === 'web') {
     const color = add(
-      multiply(b, 1 << 24),
+      multiply(r, 1 << 24),
       multiply(g, 1 << 16),
-      multiply(r, 1 << 8),
+      multiply(b, 1 << 8),
       a
     );
     return reformat(
