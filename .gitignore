@@ -48,4 +48,4 @@ android/app/libs
 android/keystores/debug.keystore
 
 # CocoaPods
-59	/ios/Pods/
+ios/Pods/
