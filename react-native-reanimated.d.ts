@@ -12,7 +12,11 @@ declare module 'react-native-reanimated' {
     ViewStyle,
     TextStyle,
     ImageStyle,
-    TransformsStyle
+    TransformsStyle,
+    View as ReactNativeView,
+    Text as ReactNativeText,
+    Image as ReactNativeImage,
+    ScrollView as ReactNativeScrollView
   } from 'react-native';
   namespace Animated {
     class AnimatedNode<T> {
@@ -173,13 +177,23 @@ declare module 'react-native-reanimated' {
     };
 
     // components
-    export const View: ComponentClass<AnimateProps<ViewStyle, ViewProps>>;
-    export const Text: ComponentClass<AnimateProps<TextStyle, TextProps>>;
-    export const Image: ComponentClass<AnimateProps<ImageStyle, ImageProps>>;
-    export const ScrollView: ComponentClass<
+    export class View extends Component<AnimateProps<ViewStyle, ViewProps>> {
+      getNode(): ReactNativeView;
+    }
+    export class Text extends Component<AnimateProps<TextStyle, TextProps>> {
+      getNode(): ReactNativeText;
+    }
+    export class Image extends Component<
+      AnimateProps<ImageStyle, ImageProps>
+    > {
+      getNode(): ReactNativeImage;
+    }
+    export class ScrollView extends Component<
       AnimateProps<ViewStyle, ScrollViewProps>
-    >;
-    export const Code: ComponentClass<CodeProps>;
+    > {
+      getNode(): ReactNativeScrollView;
+    }
+    export class Code extends Component<CodeProps> {}
     export function createAnimatedComponent(component: any): any;
 
     // classes
