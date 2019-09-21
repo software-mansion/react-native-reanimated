@@ -71,12 +71,18 @@ declare module 'react-native-reanimated' {
       ...others: Adaptable<number>[]
     ) => AnimatedNode<T>;
 
-    export interface DecayState {
+    export interface AnimationState {                  
       finished: AnimatedValue<number>;
-      velocity: AnimatedValue<number>;
       position: AnimatedValue<number>;
       time: AnimatedValue<number>;
     }
+    
+    export interface PhysicsAnimationState extends AnimationState {            
+      velocity: AnimatedValue<number>;
+    }
+    
+    export type DecayState = PhysicsAnimationState;
+
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
@@ -85,10 +91,7 @@ declare module 'react-native-reanimated' {
       stop: () => void;
     }
 
-    export interface TimingState {
-      finished: AnimatedValue<number>;
-      position: AnimatedValue<number>;
-      time: AnimatedValue<number>;
+    export interface TimingState extends AnimationState {
       frameTime: AnimatedValue<number>;
     }
     export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
@@ -98,13 +101,8 @@ declare module 'react-native-reanimated' {
       easing: EasingFunction;
     }
 
-    export interface SpringState {
-      finished: AnimatedValue<number>;
-      velocity: AnimatedValue<number>;
-      position: AnimatedValue<number>;
-      prevPosition?: AnimatedValue<number>;
-      time: AnimatedValue<number>;
-    }
+    export type SpringState = PhysicsAnimationState;
+
     export interface SpringConfig {
       damping: Adaptable<number>;
       mass: Adaptable<number>;
