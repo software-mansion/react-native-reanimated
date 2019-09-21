@@ -84,9 +84,16 @@ afterEvaluate { project ->
     }
 
     android.libraryVariants.all { variant ->
+        def compileTask
+        if (variant.hasProperty('javaCompileProvider')){
+            compileTask = variant.javaCompileProvider.get()
+        }else{
+            compileTask = variant.javaCompile
+        }
+
         def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompileProvider.get()) {
-            from variant.javaCompileProvider.get().destinationDir
+        task "jar${name}"(type: Jar, dependsOn: compileTask) {
+            from compileTask.destinationDir
         }
     }
 
