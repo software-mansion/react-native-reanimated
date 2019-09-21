@@ -103,7 +103,7 @@ Allows for the framework to automatically delay beginning of transitions across 
 
 ### `<Transition.In>`
 
-Allows to specify how views that get mounted durion animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+Allows to specify how views that get mounted during animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
 
 ### `<Transition.Out>`
 
