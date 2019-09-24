@@ -1,7 +1,9 @@
 package com.swmansion.reanimated.nodes;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 
 import javax.annotation.Nullable;
@@ -36,5 +38,19 @@ public class ValueNode extends Node {
   @Override
   protected Object evaluate() {
     return mValue;
+  }
+
+  @Override
+  public void onDrop() {
+    WritableMap eventData = Arguments.createMap();
+    eventData.putInt("id", mNodeID);
+   if (mValue instanceof String) {
+      eventData.putString("value", (String) mValue);
+    } else if (mValue instanceof Double) {
+      eventData.putDouble("value", (Double) mValue);
+    } else {
+      eventData.putNull("value");
+    }
+    mNodesManager.sendEvent("onReanimatedValueDropped", eventData);
   }
 }

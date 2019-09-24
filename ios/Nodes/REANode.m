@@ -65,6 +65,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   return 0;
 }
 
+- (void)drop
+{
+  // no-op
+}
+
 - (id)value
 {
   if (![_lastLoopID objectForKey:_updateContext.callID] || [[_lastLoopID objectForKey:_updateContext.callID] longValue] < [_updateContext.loopID longValue]) {

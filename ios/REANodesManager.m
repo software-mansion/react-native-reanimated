@@ -258,6 +258,7 @@
 {
   REANode *node = _nodes[nodeID];
   if (node) {
+    [node drop];
     [_nodes removeObjectForKey:nodeID];
   }
 }

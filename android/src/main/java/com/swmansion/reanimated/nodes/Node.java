@@ -100,6 +100,9 @@ public abstract class Node {
     markUpdated();
   }
 
+  public void onDrop() {
+  }
+
   private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
     if (visitedNodes.contains(node)) {
       return;

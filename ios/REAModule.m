@@ -167,7 +167,7 @@ RCT_EXPORT_METHOD(configureProps:(nonnull NSArray<NSString *> *)nativeProps
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[@"onReanimatedCall", @"onReanimatedPropsChange"];
+  return @[@"onReanimatedCall", @"onReanimatedPropsChange", @"onReanimatedValueDropped"];
 }
 
 - (void)eventDispatcherWillDispatchEvent:(id<RCTEvent>)event

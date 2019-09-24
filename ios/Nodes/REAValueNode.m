@@ -1,4 +1,6 @@
 #import "REAValueNode.h"
+#import "REANodesManager.h"
+#import "REAModule.h"
 
 @implementation REAValueNode {
   NSNumber *_value;
@@ -22,6 +24,18 @@
 - (id)evaluate
 {
   return _value;
+}
+
+- (void)drop
+{
+  NSObject *value = self.value;
+  if (!value) {
+    value = [NSNull null];
+  }
+
+  [self.nodesManager.reanimatedModule
+   sendEventWithName:@"onReanimatedValueDropped"
+   body:@{@"id": self.nodeID, @"value": value }];
 }
 
 @end
