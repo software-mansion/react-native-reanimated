@@ -59,6 +59,7 @@ matrix:
     - npm install -g react-native-cli
     - cd Example
     - yarn
+    - cd ios && pod install && cd ..
     - export PRODUCT_BUNDLE_IDENTIFIER="org.reactjs.native.example.ReanimatedExample"
 
     script:
