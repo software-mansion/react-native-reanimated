@@ -13,6 +13,11 @@ function getBlacklist() {
         __dirname
       )}/node_modules/*/node_modules/hoist-non-react-statics/*`
     ),
+    glob(
+      `${path.resolve(
+        __dirname
+      )}/node_modules/react-native/node_modules/@babel/*`
+    ),
   ];
   return blacklist(nodeModuleDirs);
 }
@@ -22,4 +27,12 @@ module.exports = {
     blacklistRE: getBlacklist(),
   },
   watchFolders: [path.resolve(__dirname, '..')],
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: false,
+        inlineRequires: false,
+      },
+    }),
+  },
 };
