@@ -8,23 +8,27 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "react": "16.8.6",
-    "react-native": "0.60.5",
+    "react": "16.9.0",
+    "react-native": "0.61.1",
     "react-native-gesture-handler": "1.4.1",
     "react-navigation": "2.17.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/runtime": "^7.5.5",
+    "@babel/core": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
     "@react-native-community/eslint-config": "^0.0.5",
-    "babel-jest": "^24.8.0",
+    "babel-jest": "^24.9.0",
     "babel-plugin-module-resolver": "^3.2.0",
+    "eslint": "^6.4.0",
     "glob-to-regexp": "^0.4.0",
-    "jest": "^24.8.0",
+    "jest": "^24.9.0",
     "metro-react-native-babel-preset": "^0.56.0",
-    "react-test-renderer": "16.8.6"
+    "react-test-renderer": "16.9.0"
   },
   "jest": {
     "preset": "react-native"
+  },
+  "resolutions": {
+    "@babel/runtime": "7.6.0"
   }
 }
