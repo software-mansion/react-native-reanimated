@@ -14,7 +14,7 @@ function initializeConstantValues() {
   if (CONSTANT_VALUES.size != 0) {
     return;
   }
-  [0, -1, 1].forEach(v =>
+  [0, -1, 1, -2, 2].forEach(v =>
     CONSTANT_VALUES.set(v, new InternalAnimatedValue(v, true))
   );
 }
