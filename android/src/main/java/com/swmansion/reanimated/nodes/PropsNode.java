@@ -25,7 +25,7 @@ public class PropsNode extends Node implements FinalNode {
   private final JavaOnlyMap mPropMap;
   private final ReactStylesDiffMap mDiffMap;
 
-  private void addProp(WritableMap propMap, String key, Object value) {
+  private static void addProp(WritableMap propMap, String key, Object value) {
     if (value == null) {
       propMap.putNull(key);
     } else if (value instanceof Double) {
