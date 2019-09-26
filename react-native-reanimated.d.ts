@@ -334,13 +334,7 @@ declare module 'react-native-reanimated' {
     ): void
 
     // configuration
-
-    // `addWhitelistedNativeProps` will likely be removed soon, and so is
-    // intentionally not exposed to TypeScript. If it is needed, it could be
-    // uncommented here, or just use
-    // `(Animated as any).addWhitelistedNativeProps({ myProp: true });`
-
-    // addWhitelistedNativeProps(props: { [key: string]: true }): void;
+    export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
   }
 
   export default Animated;
