@@ -719,6 +719,16 @@ concat(nodeOrValue1, ...)
 Returns concatanation of given nodes (number or string) as string
 
 ---
+### `reformat`
+
+> Web only for the moment
+
+```js
+reformat(nodeOrValue1, (value) => `random-${value}`)
+```
+Returns a value that is mutated with a JS callback. This can be used to reformat an animated color value for instance.
+
+---
 ### `onChange`
 
 ```js
