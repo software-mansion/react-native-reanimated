@@ -5,7 +5,7 @@
   "scripts": {
     "start": "react-native start",
     "test": "jest",
-    "postinstall": "npm link react-native-reanimated",
+    "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
     "lint": "eslint ."
   },
@@ -25,7 +25,7 @@
     "@react-native-community/eslint-config": "^0.0.5",
     "babel-jest": "^24.9.0",
     "babel-plugin-module-resolver": "^3.2.0",
-    "babel-preset-expo": "^6.0.0",
+    "babel-preset-expo": "^7.0.0",
     "eslint": "^6.4.0",
     "glob-to-regexp": "^0.4.0",
     "jest": "^24.9.0",
