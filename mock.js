@@ -98,6 +98,7 @@ module.exports = {
     spring: NOOP,
 
     useCode: NOOP,
+    createAnimatedComponent: Component => Component,
   },
 
   Easing: {

@@ -59,8 +59,9 @@ matrix:
     - npm install -g react-native-cli
     - cd Example
     - yarn
+    - cd ios && pod install && cd ..
     - export PRODUCT_BUNDLE_IDENTIFIER="org.reactjs.native.example.ReanimatedExample"
 
     script:
-    - xcodebuild -project ./ios/ReanimatedExample.xcodeproj -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
+    - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
 
