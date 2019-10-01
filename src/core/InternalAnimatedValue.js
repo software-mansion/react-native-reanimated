@@ -27,9 +27,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
         val => (this.__nodeConfig.value = val)
       );
     } else {
-      setTimeout(() => {
-        this.__nodeConfig.value = this.__getValue();
-      });
+      this.__nodeConfig.value = this.__getValue();
     }
     this.__detachAnimation(this._animation);
     super.__detach();
