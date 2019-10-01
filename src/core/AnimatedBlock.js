@@ -31,7 +31,9 @@ function nodify(v) {
     return v.__val;
   }
   // TODO: cache some typical static values (e.g. 0, 1, -1)
-  return v instanceof AnimatedNode ? v : new InternalAnimatedValue(v);
+  return v instanceof AnimatedNode
+    ? v
+    : InternalAnimatedValue.valueForConstant(v);
 }
 
 export function adapt(v) {

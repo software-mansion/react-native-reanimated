@@ -3,29 +3,38 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
+    "start": "react-native start",
     "test": "jest",
     "postinstall": "npm link react-native-reanimated",
-    "web": "expo start --web-only --web"
+    "web": "expo start --web-only --web",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@react-navigation/web": "^1.0.0-alpha.9",
-    "react": "16.8.6",
-    "react-dom": "^16.9.0",
-    "react-native": "0.59.3",
+    "react": "16.9.0",
+    "react-dom": "16.9.0",
+    "react-native": "0.61.1",
     "react-native-gesture-handler": "1.4.1",
     "react-native-web": "^0.11.7",
     "react-navigation": "4.0.3",
     "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-decorators": "^7.6.0",
-    "babel-plugin-module-resolver": "^3.1.1",
+    "@babel/core": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
+    "@react-native-community/eslint-config": "^0.0.5",
+    "babel-jest": "^24.9.0",
+    "babel-plugin-module-resolver": "^3.2.0",
     "babel-preset-expo": "^6.0.0",
+    "eslint": "^6.4.0",
     "glob-to-regexp": "^0.4.0",
-    "jest": "23.6.0"
+    "jest": "^24.9.0",
+    "react-test-renderer": "16.9.0"
   },
   "jest": {
     "preset": "react-native"
+  },
+  "resolutions": {
+    "@babel/runtime": "7.6.0"
   }
 }
