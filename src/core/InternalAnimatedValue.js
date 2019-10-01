@@ -51,7 +51,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
     if (this.__inputNodes && this.__inputNodes.length) {
       this.__inputNodes.forEach(val);
     }
-    if (this._offset && typeof this.value === 'number') {
+    if (this._offset && typeof this._value === 'number') {
       return this._value + this._offset;
     }
     return this._value;
