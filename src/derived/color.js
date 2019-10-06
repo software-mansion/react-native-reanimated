@@ -1,5 +1,6 @@
-import { cond, lessThan, multiply, round, add, reformat, sub } from '../base';
 import { Platform } from 'react-native';
+
+import { add, cond, lessThan, multiply, round, sub } from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
 export default function color(r, g, b, a = 1) {
@@ -10,16 +11,7 @@ export default function color(r, g, b, a = 1) {
   }
 
   if (Platform.OS === 'web') {
-    const color = add(
-      multiply(r, 1 << 24),
-      multiply(g, 1 << 16),
-      multiply(b, 1 << 8),
-      a
-    );
-    return reformat(
-      color,
-      require('react-native-web/src/modules/normalizeColor').default
-    );
+    throw new Error('color is not implemented on web yet');
   }
 
   const color = add(
