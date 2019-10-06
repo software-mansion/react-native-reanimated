@@ -31,8 +31,6 @@ export default class InternalAnimatedValue extends AnimatedNode {
     );
   }
 
-  _offset = 0;
-
   constructor(value, constant = false) {
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
@@ -70,9 +68,6 @@ export default class InternalAnimatedValue extends AnimatedNode {
   __onEvaluate() {
     if (this.__inputNodes && this.__inputNodes.length) {
       this.__inputNodes.forEach(val);
-    }
-    if (this._offset && typeof this._value === 'number') {
-      return this._value + this._offset;
     }
     return this._value;
   }
