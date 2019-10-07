@@ -40,10 +40,14 @@ export default class InternalAnimatedValue extends AnimatedNode {
 
   __detach() {
     if (!this._constant) {
-      ReanimatedModule.getValue(
-        this.__nodeID,
-        val => (this.__nodeConfig.value = val)
-      );
+      if (ReanimatedModule.getValue) {
+        ReanimatedModule.getValue(
+          this.__nodeID,
+          val => (this.__nodeConfig.value = val)
+        );
+      } else {
+        this.__nodeConfig.value = this.__getValue();
+      }
     }
     this.__detachAnimation(this._animation);
     super.__detach();
@@ -65,7 +69,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
     if (this.__inputNodes && this.__inputNodes.length) {
       this.__inputNodes.forEach(val);
     }
-    return this._value + this._offset;
+    return this._value;
   }
 
   _updateValue(value) {

@@ -13,7 +13,5 @@ export { createAnimatedEvent as event } from './core/AnimatedEvent';
 export { createAnimatedAlways as always } from './core/AnimatedAlways';
 export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
-export {
-  createAnimatedFunction as proc,
-} from './core/AnimatedFunction';
+export { createAnimatedFunction as proc } from './core/AnimatedFunction';
 export * from './operators';

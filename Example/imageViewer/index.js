@@ -389,6 +389,7 @@ class Viewer extends Component {
           <Animated.View>
             <PanGestureHandler
               ref={this.panRef}
+              minDist={10}
               avgTouches
               simultaneousHandlers={this.pinchRef}
               onGestureEvent={this._onPanEvent}

@@ -465,6 +465,7 @@ class Interactable extends Component {
     return (
       <PanGestureHandler
         maxPointers={1}
+        minDist={10}
         enabled={this.props.dragEnabled}
         onGestureEvent={this._onGestureEvent}
         onHandlerStateChange={this._onGestureEvent}>
