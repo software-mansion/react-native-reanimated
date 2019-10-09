@@ -44,6 +44,7 @@ class In extends React.Component {
   componentDidMount() {
     this.props.context.push(configFromProps('in', this.props));
   }
+
   render() {
     return this.props.children || null;
   }
@@ -53,6 +54,7 @@ class Change extends React.Component {
   componentDidMount() {
     this.props.context.push(configFromProps('change', this.props));
   }
+
   render() {
     return this.props.children || null;
   }
@@ -62,6 +64,7 @@ class Out extends React.Component {
   componentDidMount() {
     this.props.context.push(configFromProps('out', this.props));
   }
+
   render() {
     return this.props.children || null;
   }
@@ -74,6 +77,7 @@ class Together extends React.Component {
     config.transitions = this.transitions;
     this.props.context.push(config);
   }
+
   render() {
     return (
       <TransitioningContext.Provider value={this.transitions}>
@@ -91,6 +95,7 @@ class Sequence extends React.Component {
     config.transitions = this.transitions;
     this.props.context.push(config);
   }
+
   render() {
     return (
       <TransitioningContext.Provider value={this.transitions}>
