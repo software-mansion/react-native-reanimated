@@ -267,7 +267,7 @@ declare module 'react-native-reanimated' {
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
-    type EventArgFunc<T> = (arg: T) => Node<number>;
+    type EventArgFunc<T> = (arg: T) => AnimatedNode<number>;
     type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
     type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
     export function event<T>(
