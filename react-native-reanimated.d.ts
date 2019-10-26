@@ -256,7 +256,7 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<0>;
     export function debug<T>(
       message: string,
-      value: Adaptable<T>,
+      value: AnimatedNode<T>,
     ): AnimatedNode<T>;
     export function onChange(
       value: Adaptable<number>,
