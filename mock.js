@@ -101,6 +101,8 @@ module.exports = {
     timing: NOOP,
     spring: NOOP,
 
+    proc: () => NOOP,
+
     useCode: NOOP,
     createAnimatedComponent: Component => Component,
   },
