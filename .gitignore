@@ -46,3 +46,6 @@ bin/
 \.buckd/
 android/app/libs
 android/keystores/debug.keystore
+
+# CocoaPods
+ios/Pods/

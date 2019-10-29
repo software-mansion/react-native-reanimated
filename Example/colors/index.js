@@ -123,6 +123,7 @@ export default class Example extends Component {
       <View style={styles.container}>
         <PanGestureHandler
           maxPointers={1}
+          minDist={10}
           onGestureEvent={this._onGestureEvent}
           onHandlerStateChange={this._onGestureEvent}>
           <Animated.View

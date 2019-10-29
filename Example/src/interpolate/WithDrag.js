@@ -62,6 +62,7 @@ export default class WithDrag extends Component {
         <Row>
           <PanGestureHandler
             maxPointers={1}
+            minDist={10}
             onGestureEvent={this._onGestureEvent}
             onHandlerStateChange={this._onGestureEvent}>
             <Box style={{ transform: [{ translateX: this._transX }] }} />

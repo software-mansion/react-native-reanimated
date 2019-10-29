@@ -103,7 +103,7 @@ Allows for the framework to automatically delay beginning of transitions across 
 
 ### `<Transition.In>`
 
-Allows to specify how views that get mounted durion animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
+Allows to specify how views that get mounted during animation transition get animated. In addition to the above parameters you can specify the type of animation using `type` prop. The possible values are: `fade`, `scale`, `slide-top`, `slide-bottom`, `slide-left`, `slide-right`.
 
 ### `<Transition.Out>`
 
@@ -240,7 +240,7 @@ Animated.useCode(
 `react-native-reanimated`'s new syntax is possible to be used with `Animated.event`. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.
 
 This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to `Animated.View` component props.
-[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/movable/index.js)
+[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/PanRotateAndZoom/index.js)
 ```js
 this.onGestureEvent = event([
   {
