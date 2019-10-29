@@ -11,7 +11,7 @@
 const React = require('react');
 const { View, Text, Image, Animated } = require('react-native');
 
-const NOOP = () => undefined;
+function NOOP() {}
 
 class Code extends React.Component {
   render() {
