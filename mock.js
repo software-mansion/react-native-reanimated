@@ -37,7 +37,11 @@ module.exports = {
 
     Clock: NOOP,
     Node: NOOP,
-    Value: NOOP,
+    Value: function() {
+      return {
+        setValue: NOOP,
+      };
+    },
 
     Extrapolate: {
       EXTEND: 'extend',
