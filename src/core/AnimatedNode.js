@@ -122,7 +122,7 @@ export default class AnimatedNode {
           this.__nodeConfig.input
         );
       } else if (this.__nodeConfig.type === 'callfunc') {
-        ReanimatedModule.createNodeOperator(
+        ReanimatedModule.createNodeCallFunc(
           this.__nodeID,
           this.__nodeConfig.what,
           this.__nodeConfig.args,
