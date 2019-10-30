@@ -219,7 +219,7 @@ PODS:
     - ReactCommon/jscallinvoker (= 0.61.1)
   - RNGestureHandler (1.4.1):
     - React
-  - RNReanimated (1.2.0):
+  - RNReanimated (1.3.1):
     - React
   - Yoga (1.14.0)
 
@@ -256,7 +256,7 @@ DEPENDENCIES:
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  https://github.com/CocoaPods/Specs.git:
     - boost-for-react-native
 
 EXTERNAL SOURCES:
@@ -342,9 +342,9 @@ SPEC CHECKSUMS:
   React-RCTVibration: 8be61459e3749d1fb02cf414edd05b3007622882
   ReactCommon: 4fba5be89efdf0b5720e0adb3d8d7edf6e532db0
   RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
-  RNReanimated: 1b52415c4302f198cb581282a0166690bad62c43
+  RNReanimated: 6c221ff761a9dc6ba8f94e9d61738b7006b076da
   Yoga: d8c572ddec8d05b7dba08e4e5f1924004a177078
 
 PODFILE CHECKSUM: 5d33b226bedcf33a9eaa74f8b42fbef1a3877e59
 
-COCOAPODS: 1.7.3
+COCOAPODS: 1.8.4
