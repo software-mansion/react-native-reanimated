@@ -717,5 +717,33 @@ jsi::Value ReanimatedJSI::get(
     return jsi::Function::createFromHostFunction(runtime, name, 3, callback);
   }
 
+  if (methodName == "configureProps") {
+    auto &moduleObject = _moduleObject;
+
+    auto callback = [moduleObject](
+      jsi::Runtime &runtime,
+      const jsi::Value &thisValue,
+      const jsi::Value *arguments,
+      size_t count
+    ) -> jsi::Value {
+      auto env = Environment::current();
+
+      auto dynamicArray1 = jsi::dynamicFromValue(runtime, arguments[0]);
+      local_ref<ReadableArray::javaobject> nativePropsArray =
+        castReadableMap(ReadableNativeArray::newObjectCxxArgs(dynamicArray1));
+      auto dynamicArray2 = jsi::dynamicFromValue(runtime, arguments[0]);
+      local_ref<ReadableArray::javaobject> uiPropsArray =
+        castReadableMap(ReadableNativeArray::newObjectCxxArgs(dynamicArray2));
+
+      auto method = env->GetMethodID(clazz, "configureProps", "(Lcom/facebook/react/bridge/ReadableArray;Lcom/facebook/react/bridge/ReadableArray;)V")
+
+      env->CallVoidMethod(moduleObject, method, nativePropsArray.get(), uiPropsArray.get());
+
+      return jsi::Value::undefined();
+    };
+
+    return jsi::Function::createFromHostFunction(runtime, name, 3, callback);
+  }
+
   return jsi::Value::undefined();
 }
