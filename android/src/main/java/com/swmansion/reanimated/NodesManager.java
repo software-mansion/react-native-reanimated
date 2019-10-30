@@ -285,6 +285,10 @@ public class NodesManager implements EventDispatcherListener {
     mAnimatedNodes.put(nodeId, new ParamNode(nodeId, this));
   }
 
+  public void createNodeConcat(final int nodeId, final int[] input) {
+    mAnimatedNodes.put(nodeId, new ConcatNode(nodeId, input, this));
+  }
+
   public void dropNode(int tag) {
     mAnimatedNodes.remove(tag);
   }

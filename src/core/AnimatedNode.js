@@ -135,6 +135,11 @@ export default class AnimatedNode {
         );
       } else if (this.__nodeConfig.type === 'param') {
         ReanimatedModule.createNodeParam(this.__nodeID);
+      } else if (this.__nodeConfig.type === 'concat') {
+        ReanimatedModule.createNodeConcat(
+          this.__nodeID,
+          this.__nodeConfig.input
+        );
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       }

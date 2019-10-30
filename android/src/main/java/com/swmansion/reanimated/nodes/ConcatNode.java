@@ -7,9 +7,9 @@ import com.swmansion.reanimated.Utils;
 public class ConcatNode extends Node {
   private final int[] mInputIDs;
 
-  public ConcatNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mInputIDs = Utils.processIntArray(config.getArray("input"));
+  public ConcatNode(int nodeID, int[] input, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mInputIDs = input;
   }
 
   @Override
