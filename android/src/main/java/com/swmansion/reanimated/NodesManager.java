@@ -269,8 +269,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new ParamNode(nodeID, config, this);
     } else if ("func".equals(type)) {
       node = new FunctionNode(nodeID, config, this);
-    } else if ("callfunc".equals(type)) {
-      node = new CallFuncNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
@@ -279,6 +277,9 @@ public class NodesManager implements EventDispatcherListener {
 
   public void createNodeOperator(final int nodeId, final String op, final int[] input) {
     mAnimatedNodes.put(nodeId, new OperatorNode(nodeId, op, input, this));
+  }
+  public void createNodeCallFunc(final int nodeId, final int what, final int[] args, final int[] params) {
+    mAnimatedNodes.put(nodeId, new CallFuncNode(nodeId, what, args, params, this));
   }
 
   public void dropNode(int tag) {
