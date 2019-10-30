@@ -140,6 +140,11 @@ export default class AnimatedNode {
           this.__nodeID,
           this.__nodeConfig.input
         );
+      } else if (this.__nodeConfig.type === 'always') {
+        ReanimatedModule.createNodeConcat(
+          this.__nodeID,
+          this.__nodeConfig.what
+        );
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       }

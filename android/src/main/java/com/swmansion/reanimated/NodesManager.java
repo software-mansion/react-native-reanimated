@@ -261,8 +261,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new BezierNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
-    } else if ("always".equals(type)) {
-      node = new AlwaysNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
@@ -285,6 +283,10 @@ public class NodesManager implements EventDispatcherListener {
 
   public void createNodeConcat(final int nodeId, final int[] input) {
     mAnimatedNodes.put(nodeId, new ConcatNode(nodeId, input, this));
+  }
+
+  public void createNodeAlways(final int nodeId, final int what) {
+    mAnimatedNodes.put(nodeId, new AlwaysNode(nodeId, what, this));
   }
 
   public void dropNode(int tag) {
