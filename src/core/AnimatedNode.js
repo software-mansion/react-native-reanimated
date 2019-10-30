@@ -176,7 +176,31 @@ export default class AnimatedNode {
           this.__nodeConfig.mX1,
           this.__nodeConfig.mY1,
           this.__nodeConfig.mX2,
-          this.__nodeConfig.mY2
+          this.__nodeConfig.mY2,
+        );
+      } else if (this.__nodeConfig.type === 'callfunc') {
+        ReanimatedModule.createNodeCallFunc(
+          this.__nodeID,
+          this.__nodeConfig.what,
+          this.__nodeConfig.args,
+          this.__nodeConfig.params
+        );
+      } else if (this.__nodeConfig.type === 'func') {
+        ReanimatedModule.createNodeFunction(
+          this.__nodeID,
+          this.__nodeConfig.what
+        );
+      } else if (this.__nodeConfig.type === 'param') {
+        ReanimatedModule.createNodeParam(this.__nodeID);
+      } else if (this.__nodeConfig.type === 'concat') {
+        ReanimatedModule.createNodeConcat(
+          this.__nodeID,
+          this.__nodeConfig.input
+        );
+      } else if (this.__nodeConfig.type === 'always') {
+        ReanimatedModule.createNodeConcat(
+          this.__nodeID,
+          this.__nodeConfig.what
         );
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });

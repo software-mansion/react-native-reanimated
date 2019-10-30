@@ -10,8 +10,8 @@ public class ParamNode extends ValueNode {
   private final Stack<Integer> mArgsStack;
   private String mPrevCallID;
 
-  public ParamNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
+  public ParamNode(int nodeID, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
     mArgsStack = new Stack<>();
   }
 

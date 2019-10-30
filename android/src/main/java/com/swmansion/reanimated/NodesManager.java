@@ -241,16 +241,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new ValueNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
-    } else if ("always".equals(type)) {
-      node = new AlwaysNode(nodeID, config, this);
-    } else if ("concat".equals(type)) {
-      node = new ConcatNode(nodeID, config, this);
-    } else if ("param".equals(type)) {
-      node = new ParamNode(nodeID, config, this);
-    } else if ("func".equals(type)) {
-      node = new FunctionNode(nodeID, config, this);
-    } else if ("callfunc".equals(type)) {
-      node = new CallFuncNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
@@ -259,6 +249,24 @@ public class NodesManager implements EventDispatcherListener {
 
   public void createNodeOperator(final int nodeId, final String op, final int[] input) {
     mAnimatedNodes.put(nodeId, new OperatorNode(nodeId, op, input, this));
+  }
+  public void createNodeCallFunc(final int nodeId, final int what, final int[] args, final int[] params) {
+    mAnimatedNodes.put(nodeId, new CallFuncNode(nodeId, what, args, params, this));
+  }
+  public void createNodeFunction(final int nodeId, final int what) {
+    mAnimatedNodes.put(nodeId, new FunctionNode(nodeId, what, this));
+  }
+
+  public void createNodeParam(final int nodeId) {
+    mAnimatedNodes.put(nodeId, new ParamNode(nodeId, this));
+  }
+
+  public void createNodeConcat(final int nodeId, final int[] input) {
+    mAnimatedNodes.put(nodeId, new ConcatNode(nodeId, input, this));
+  }
+
+  public void createNodeAlways(final int nodeId, final int what) {
+    mAnimatedNodes.put(nodeId, new AlwaysNode(nodeId, what, this));
   }
 
   public void createBlockNode(final int nodeId, final int[] block) {

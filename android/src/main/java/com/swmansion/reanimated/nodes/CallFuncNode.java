@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
@@ -11,11 +10,11 @@ public class CallFuncNode extends Node {
   private final int[] mArgs;
   private final int[] mParams;
 
-  public CallFuncNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mWhatNodeID = config.getInt("what");
-    mParams = Utils.processIntArray(config.getArray("params"));
-    mArgs = Utils.processIntArray(config.getArray("args"));
+  public CallFuncNode(final int nodeId, final int what, final int[] args, final int[] params, NodesManager nodesManager) {
+    super(nodeId, null, nodesManager);
+    mWhatNodeID = what;
+    mParams = params;
+    mArgs = args;
   }
 
   private void beginContext() {

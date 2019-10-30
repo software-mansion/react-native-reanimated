@@ -121,6 +121,49 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       }
     });
   }
+  public void createNodeCallFunc(final int nodeId, final int what, final int[] args, final int[] params) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeCallFunc(nodeId, what, args, params);
+      }
+    });
+  }
+  public void createNodeFunction(final int nodeId, final int what) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeFunction(nodeId, what);
+      }
+    });
+  }
+
+  public void createNodeParam(final int nodeId) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeParam(nodeId);
+      }
+    });
+  }
+
+  public void createNodeConcat(final int nodeId, final int[] input) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeConcat(nodeId, input);
+      }
+    });
+  }
+
+  public void createNodeAlways(final int nodeId, final int what) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeAlways(nodeId, what);
+      }
+    });
+  }
 
   public void createBlockNode(final int nodeId, final int[] block) {
     mOperations.add(new UIThreadOperation() {

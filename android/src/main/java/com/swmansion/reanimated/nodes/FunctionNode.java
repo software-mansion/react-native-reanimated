@@ -7,9 +7,9 @@ public class FunctionNode extends Node {
 
   private final int mWhatNodeID;
 
-  public FunctionNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mWhatNodeID = config.getInt("what");
+  public FunctionNode(int nodeID, int what, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mWhatNodeID = what;
   }
 
   @Override
