@@ -239,26 +239,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new TransformNode(nodeID, config, this);
     } else if ("value".equals(type)) {
       node = new ValueNode(nodeID, config, this);
-    } else if ("block".equals(type)) {
-      node = new BlockNode(nodeID, config, this);
-    } else if ("cond".equals(type)) {
-      node = new CondNode(nodeID, config, this);
-    } else if ("set".equals(type)) {
-      node = new SetNode(nodeID, config, this);
-    } else if ("debug".equals(type)) {
-      node = new DebugNode(nodeID, config, this);
-    } else if ("clock".equals(type)) {
-      node = new ClockNode(nodeID, config, this);
-    } else if ("clockStart".equals(type)) {
-      node = new ClockOpNode.ClockStartNode(nodeID, config, this);
-    } else if ("clockStop".equals(type)) {
-      node = new ClockOpNode.ClockStopNode(nodeID, config, this);
-    } else if ("clockTest".equals(type)) {
-      node = new ClockOpNode.ClockTestNode(nodeID, config, this);
-    } else if ("call".equals(type)) {
-      node = new JSCallNode(nodeID, config, this);
-    } else if ("bezier".equals(type)) {
-      node = new BezierNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
     } else {
@@ -287,6 +267,52 @@ public class NodesManager implements EventDispatcherListener {
 
   public void createNodeAlways(final int nodeId, final int what) {
     mAnimatedNodes.put(nodeId, new AlwaysNode(nodeId, what, this));
+  }
+
+  public void createBlockNode(final int nodeId, final int[] block) {
+    mAnimatedNodes.put(nodeId, new BlockNode(nodeId, block, this));
+  }
+
+  public void createCondNode(final int nodeId, final int cond, final int ifBlock, final int elseBlock) {
+    mAnimatedNodes.put(nodeId, new CondNode(nodeId, cond, ifBlock, elseBlock, this));
+  }
+
+  public void createSetNode(final int nodeId, final int what, final int value) {
+    mAnimatedNodes.put(nodeId, new SetNode(nodeId, what, value, this));
+  }
+
+  public void createDebugNode(final int nodeId, final String message, final int value) {
+    mAnimatedNodes.put(nodeId, new DebugNode(nodeId, message, value, this));
+  }
+
+  public void createClockNode(final int nodeId) {
+    mAnimatedNodes.put(nodeId, new ClockNode(nodeId, this));
+  }
+
+  public void createClockStartNode(final int nodeId, final int clock) {
+    mAnimatedNodes.put(nodeId, new ClockOpNode.ClockStartNode(nodeId, clock, this));
+  }
+
+  public void createClockStopNode(final int nodeId, final int clock) {
+    mAnimatedNodes.put(nodeId, new ClockOpNode.ClockStopNode(nodeId, clock, this));
+  }
+
+  public void createClockTestNode(final int nodeId, final int clock) {
+    mAnimatedNodes.put(nodeId, new ClockOpNode.ClockTestNode(nodeId, clock, this));
+  }
+
+  public void createJSCallNode(final int nodeId, final int[] input) {
+    mAnimatedNodes.put(nodeId, new JSCallNode(nodeId, input, this));
+  }
+
+  public void createBezierNode(
+          final int nodeId,
+          int input,
+          double mX1,
+          double mY1,
+          double mX2,
+          double mY2) {
+    mAnimatedNodes.put(nodeId, new BezierNode(nodeId, input, mX1, mY1, mX2, mY2, this));
   }
 
   public void dropNode(int tag) {

@@ -11,9 +11,9 @@ public class JSCallNode extends Node {
 
   private final int[] mInputIDs;
 
-  public JSCallNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mInputIDs = Utils.processIntArray(config.getArray("input"));
+  public JSCallNode(int nodeID, final int[] input, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mInputIDs = input;
   }
 
   @Override

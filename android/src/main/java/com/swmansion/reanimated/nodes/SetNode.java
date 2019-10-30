@@ -8,10 +8,10 @@ public class SetNode extends Node {
 
   private int mWhatNodeID, mValueNodeID;
 
-  public SetNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mWhatNodeID = config.getInt("what");
-    mValueNodeID = config.getInt("value");
+  public SetNode(int nodeID, int what, int value, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mWhatNodeID = what;
+    mValueNodeID = value;
   }
 
   @Override

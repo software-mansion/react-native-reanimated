@@ -10,10 +10,10 @@ public class DebugNode extends Node {
   private final String mMessage;
   private final int mValueID;
 
-  public DebugNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mMessage = config.getString("message");
-    mValueID = config.getInt("value");
+  public DebugNode(int nodeID, final String message, final int value, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mMessage = message;
+    mValueID = value;
   }
 
   @Override

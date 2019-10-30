@@ -7,11 +7,16 @@ public class CondNode extends Node {
 
   private final int mCondID, mIfBlockID, mElseBlockID;
 
-  public CondNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mCondID = config.getInt("cond");
-    mIfBlockID = config.hasKey("ifBlock") ? config.getInt("ifBlock") : -1;
-    mElseBlockID = config.hasKey("elseBlock") ? config.getInt("elseBlock") : -1;
+  public CondNode(
+          int nodeID,
+          final int cond,
+          final int ifBlock,
+          final int elseBlock,
+          NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mCondID = cond;
+    mIfBlockID = ifBlock != null ? ifBlock : -1;
+    mElseBlockID = elseBlock != null ? elseBlock : -1;
   }
 
   @Override
