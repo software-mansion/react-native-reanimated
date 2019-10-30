@@ -1,7 +1,7 @@
-import AnimatedValue from './AnimatedValue';
+import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
-class AnimatedParam extends AnimatedValue {
+class AnimatedParam extends AnimatedNode {
   argsStack = [];
 
   constructor() {

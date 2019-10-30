@@ -5,7 +5,14 @@ module.exports = api => {
     presets: ['babel-preset-expo'],
     plugins: [
       '@babel/plugin-transform-modules-commonjs',
-      !isWeb && [
+      isWeb ? [
+        'module-resolver',
+        {
+          alias: {
+            'react-native-reanimated': './Animated/Animated.js',
+          },
+        },
+      ] : [
         'module-resolver',
         {
           alias: {
