@@ -267,8 +267,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new ConcatNode(nodeID, config, this);
     } else if ("param".equals(type)) {
       node = new ParamNode(nodeID, config, this);
-    } else if ("func".equals(type)) {
-      node = new FunctionNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
