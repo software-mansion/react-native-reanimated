@@ -265,8 +265,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
       node = new ConcatNode(nodeID, config, this);
-    } else if ("param".equals(type)) {
-      node = new ParamNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
@@ -281,6 +279,10 @@ public class NodesManager implements EventDispatcherListener {
   }
   public void createNodeFunction(final int nodeId, final int what) {
     mAnimatedNodes.put(nodeId, new FunctionNode(nodeId, what, this));
+  }
+
+  public void createNodeParam(final int nodeId) {
+    mAnimatedNodes.put(nodeId, new ParamNode(nodeId, this));
   }
 
   public void dropNode(int tag) {

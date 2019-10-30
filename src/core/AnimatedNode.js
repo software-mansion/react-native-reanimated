@@ -133,6 +133,8 @@ export default class AnimatedNode {
           this.__nodeID,
           this.__nodeConfig.what
         );
+      } else if (this.__nodeConfig.type === 'param') {
+        ReanimatedModule.createNodeParam(this.__nodeID);
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       }
