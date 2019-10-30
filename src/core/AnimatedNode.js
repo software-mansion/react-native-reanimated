@@ -128,6 +128,11 @@ export default class AnimatedNode {
           this.__nodeConfig.args,
           this.__nodeConfig.params
         );
+      } else if (this.__nodeConfig.type === 'func') {
+        ReanimatedModule.createNodeFunction(
+          this.__nodeID,
+          this.__nodeConfig.what
+        );
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       }

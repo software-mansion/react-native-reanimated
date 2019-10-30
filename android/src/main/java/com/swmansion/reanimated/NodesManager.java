@@ -281,6 +281,9 @@ public class NodesManager implements EventDispatcherListener {
   public void createNodeCallFunc(final int nodeId, final int what, final int[] args, final int[] params) {
     mAnimatedNodes.put(nodeId, new CallFuncNode(nodeId, what, args, params, this));
   }
+  public void createNodeFunction(final int nodeId, final int what) {
+    mAnimatedNodes.put(nodeId, new FunctionNode(nodeId, what, this));
+  }
 
   public void dropNode(int tag) {
     mAnimatedNodes.remove(tag);
