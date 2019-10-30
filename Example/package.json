@@ -7,13 +7,16 @@
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "clean:android": "cd android && ./gradlew clean && cd ../",
+    "android": "npm run jsi:update && npx react-native run-android",
+    "jsi:update": "cp -fr ../jsi/android/* ./node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/jscexecutor/"
   },
   "dependencies": {
     "@react-navigation/web": "^1.0.0-alpha.9",
     "react": "16.9.0",
     "react-dom": "16.9.0",
-    "react-native": "0.61.1",
+    "react-native": "github:facebook/react-native#0.61-stable",
     "react-native-gesture-handler": "1.4.1",
     "react-native-web": "^0.11.7",
     "react-navigation": "4.0.3",
