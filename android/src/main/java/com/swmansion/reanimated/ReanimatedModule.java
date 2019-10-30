@@ -25,6 +25,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
   public static final String NAME = "ReanimatedModule";
 
+  public native void installJSI(long javaScriptContextHolder);
+
   private interface UIThreadOperation {
     void execute(NodesManager nodesManager);
   }
