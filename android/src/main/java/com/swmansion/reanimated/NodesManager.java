@@ -243,8 +243,6 @@ public class NodesManager implements EventDispatcherListener {
       node = new BlockNode(nodeID, config, this);
     } else if ("cond".equals(type)) {
       node = new CondNode(nodeID, config, this);
-    } else if ("op".equals(type)) {
-      node = new OperatorNode(nodeID, config, this);
     } else if ("set".equals(type)) {
       node = new SetNode(nodeID, config, this);
     } else if ("debug".equals(type)) {
@@ -277,6 +275,10 @@ public class NodesManager implements EventDispatcherListener {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
     mAnimatedNodes.put(nodeID, node);
+  }
+
+  public void createNodeOperator(final int nodeId, final String op, final int[] input) {
+    mAnimatedNodes.put(nodeId, new OperatorNode(nodeId, op, input, this));
   }
 
   public void dropNode(int tag) {

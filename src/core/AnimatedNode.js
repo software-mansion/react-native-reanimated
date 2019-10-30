@@ -115,7 +115,16 @@ export default class AnimatedNode {
 
   __nativeInitialize() {
     if (!this.__initialized) {
-      ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
+      if (this.__nodeConfig.type === 'op') {
+        ReanimatedModule.createNodeOperator(
+          this.__nodeID,
+          this.__nodeConfig.op,
+          this.__nodeConfig.input
+        );
+      } else {
+        ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
+      }
+
       this.__initialized = true;
     }
   }

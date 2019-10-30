@@ -113,6 +113,15 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     });
   }
 
+  public void createNodeOperator(final int nodeId, final String op, final int[] input) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createNodeOperator(nodeId, op, input);
+      }
+    });
+  }
+
   @ReactMethod
   public void dropNode(final int tag) {
     mOperations.add(new UIThreadOperation() {
