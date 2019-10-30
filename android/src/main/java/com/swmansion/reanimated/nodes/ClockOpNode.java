@@ -6,8 +6,8 @@ import com.swmansion.reanimated.NodesManager;
 public abstract class ClockOpNode extends Node {
 
   public static class ClockStartNode extends ClockOpNode {
-    public ClockStartNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-      super(nodeID, config, nodesManager);
+    public ClockStartNode(int nodeID, int clock, NodesManager nodesManager) {
+      super(nodeID, clock, nodesManager);
     }
 
     @Override
@@ -18,8 +18,8 @@ public abstract class ClockOpNode extends Node {
   }
 
   public static class ClockStopNode extends ClockOpNode {
-    public ClockStopNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-      super(nodeID, config, nodesManager);
+    public ClockStopNode(int nodeID, int clock, NodesManager nodesManager) {
+      super(nodeID, clock, nodesManager);
     }
 
     @Override
@@ -30,8 +30,8 @@ public abstract class ClockOpNode extends Node {
   }
 
   public static class ClockTestNode extends ClockOpNode {
-    public ClockTestNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-      super(nodeID, config, nodesManager);
+    public ClockTestNode(int nodeID, int clock, NodesManager nodesManager) {
+      super(nodeID, clock, nodesManager);
     }
 
     @Override
@@ -42,9 +42,9 @@ public abstract class ClockOpNode extends Node {
 
   private int clockID;
 
-  public ClockOpNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    clockID = config.getInt("clock");
+  public ClockOpNode(int nodeID, int clock, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    clockID = clock;
   }
 
   @Override

@@ -8,9 +8,9 @@ public class BlockNode extends Node {
 
   private final int[] mBlock;
 
-  public BlockNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
-    mBlock = Utils.processIntArray(config.getArray("block"));
+  public BlockNode(int nodeID, final int[] block, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
+    mBlock = block;
   }
 
   @Override

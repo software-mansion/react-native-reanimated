@@ -121,6 +121,63 @@ export default class AnimatedNode {
           this.__nodeConfig.op,
           this.__nodeConfig.input
         );
+      } else if (this.__nodeConfig.type === 'block') {
+        ReanimatedModule.createBlockNode(
+          this.__nodeID,
+          this.__nodeConfig.block
+        );
+      } else if (this.__nodeConfig.type === 'cond') {
+        ReanimatedModule.createCondNode(
+          this.__nodeID,
+          this.__nodeConfig.cond,
+          this.__nodeConfig.ifBlock,
+          this.__nodeConfig.elseBlock,
+        );
+      } else if (this.__nodeConfig.type === 'set') {
+        ReanimatedModule.createSetNode(
+          this.__nodeID,
+          this.__nodeConfig.what,
+          this.__nodeConfig.value,
+        );
+      } else if (this.__nodeConfig.type === 'debug') {
+        ReanimatedModule.createDebugNode(
+          this.__nodeID,
+          this.__nodeConfig.message,
+          this.__nodeConfig.value,
+        );
+      } else if (this.__nodeConfig.type === 'clock') {
+        ReanimatedModule.createClockNode(
+          this.__nodeID,
+        );
+      } else if (this.__nodeConfig.type === 'clockStart') {
+        ReanimatedModule.createClockStartNode(
+          this.__nodeID,
+          this.__nodeConfig.clock,
+        );
+      } else if (this.__nodeConfig.type === 'clockStop') {
+        ReanimatedModule.createClockStopNode(
+          this.__nodeID,
+          this.__nodeConfig.clock,
+        );
+      } else if (this.__nodeConfig.type === 'clockTest') {
+        ReanimatedModule.createClockTestNode(
+          this.__nodeID,
+          this.__nodeConfig.clock,
+        );
+      } else if (this.__nodeConfig.type === 'call') {
+        ReanimatedModule.createJSCallNode(
+          this.__nodeID,
+          this.__nodeConfig.input,
+        );
+      } else if (this.__nodeConfig.type === 'bezier') {
+        ReanimatedModule.createBezierNode(
+          this.__nodeID,
+          this.__nodeConfig.input,
+          this.__nodeConfig.mX1,
+          this.__nodeConfig.mY1,
+          this.__nodeConfig.mX2,
+          this.__nodeConfig.mY2
+        );
       } else {
         ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
       }

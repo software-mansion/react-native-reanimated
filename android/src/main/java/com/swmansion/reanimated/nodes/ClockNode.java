@@ -9,8 +9,8 @@ public class ClockNode extends Node implements NodesManager.OnAnimationFrame {
 
   public boolean isRunning;
 
-  public ClockNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
+  public ClockNode(int nodeID, NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
   }
 
   public void start() {

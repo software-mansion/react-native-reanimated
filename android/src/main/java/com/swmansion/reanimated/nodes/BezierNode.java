@@ -63,15 +63,22 @@ public class BezierNode extends Node {
   private final int mInputID;
   private final CubicBezierInterpolator mInterpolator;
 
-  public BezierNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
-    super(nodeID, config, nodesManager);
+  public BezierNode(
+          int nodeID,
+          int input,
+          double mX1,
+          double mY1,
+          double mX2,
+          double mY2,
+          NodesManager nodesManager) {
+    super(nodeID, null, nodesManager);
 
-    mInputID = config.getInt("input");
+    mInputID = input;
 
-    float startX = (float) config.getDouble("mX1");
-    float startY = (float) config.getDouble("mY1");
-    float endX = (float) config.getDouble("mX2");
-    float endY = (float) config.getDouble("mY2");
+    float startX = (float) mX1;
+    float startY = (float) mY1;
+    float endX = (float) mX2;
+    float endY = (float) mY2;
     mInterpolator = new CubicBezierInterpolator(startX, startY, endX, endY);
   }
 

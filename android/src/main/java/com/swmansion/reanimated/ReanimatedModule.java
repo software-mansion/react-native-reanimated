@@ -122,6 +122,102 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     });
   }
 
+  public void createBlockNode(final int nodeId, final int[] block) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createBlockNode(nodeId, block);
+      }
+    });
+  }
+
+  public void createCondNode(final int nodeId, final int cond, final int ifBlock, final int elseBlock) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createCondNode(nodeId, cond, ifBlock, elseBlock);
+      }
+    });
+  }
+
+  public void createSetNode(final int nodeId, final int what, final int value) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createSetNode(nodeId, what, value);
+      }
+    });
+  }
+
+  public void createDebugNode(final int nodeId, final String message, final int value) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createDebugNode(nodeId, message, value);
+      }
+    });
+  }
+
+  public void createClockNode(final int nodeId) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createClockNode(nodeId);
+      }
+    });
+  }
+
+  public void createClockStartNode(final int nodeId, final int clock) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createClockStartNode(nodeId, clock);
+      }
+    });
+  }
+
+  public void createClockStopNode(final int nodeId, final int clock) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createClockStopNode(nodeId, clock);
+      }
+    });
+  }
+
+  public void createClockTestNode(final int nodeId, final int clock) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createClockTestNode(nodeId, clock);
+      }
+    });
+  }
+
+  public void createJSCallNode(final int nodeId, final int[] input) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createJSCallNode(nodeId, input);
+      }
+    });
+  }
+
+  public void createBezierNode(
+          final int nodeId,
+          int input,
+          double mX1,
+          double mY1,
+          double mX2,
+          double mY2) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.createBezierNode(nodeId, input, mX1, mY1, mX2, mY2);
+      }
+    });
+  }
+
   @ReactMethod
   public void dropNode(final int tag) {
     mOperations.add(new UIThreadOperation() {
