@@ -112,6 +112,10 @@ public class NodesManager implements EventDispatcherListener {
     mNoopNode = new NoopNode(this);
   }
 
+  public ReactContext getContext(){
+    return mContext;
+  }
+
   public void onHostPause() {
     if (mCallbackPosted.get()) {
       stopUpdatingOnAnimationFrame();
