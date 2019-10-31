@@ -1,4 +1,5 @@
 import AnimatedNode from './AnimatedNode';
+import { val } from '../val';
 
 class AnimatedAlways extends AnimatedNode {
   _what;
@@ -8,7 +9,12 @@ class AnimatedAlways extends AnimatedNode {
     this._what = what;
   }
 
+  update() {
+    this.__getValue();
+  }
+
   __onEvaluate() {
+    val(this._what);
     return 0;
   }
 }
