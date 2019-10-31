@@ -11,7 +11,7 @@
 const React = require('react');
 const { View, Text, Image, Animated } = require('react-native');
 
-const NOOP = () => undefined;
+function NOOP() {}
 
 class Code extends React.Component {
   render() {
@@ -37,7 +37,11 @@ module.exports = {
 
     Clock: NOOP,
     Node: NOOP,
-    Value: NOOP,
+    Value: function() {
+      return {
+        setValue: NOOP,
+      };
+    },
 
     Extrapolate: {
       EXTEND: 'extend',
@@ -96,6 +100,8 @@ module.exports = {
     decay: NOOP,
     timing: NOOP,
     spring: NOOP,
+
+    proc: () => NOOP,
 
     useCode: NOOP,
     createAnimatedComponent: Component => Component,
