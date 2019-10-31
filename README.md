@@ -906,6 +906,14 @@ Then run `react-native run-android` or `react-native run-ios` (depending on whic
 
 You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
 
+## Jest
+
+In order to use `react-native-reanimated` with Jest, you need to add the following mock implementation at the top of your test:
+
+```js
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+```
+
 ## License
 
 React native reanimated library is licensed under [The MIT License](LICENSE).
