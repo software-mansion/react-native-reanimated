@@ -7,8 +7,7 @@
     "test": "npm run format && npm run lint && npm run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint --fix './src/**/*.js'",
-    "precommit": "lint-staged"
+    "lint": "eslint './src/**/*.js'"
   },
   "main": "src/Animated.js",
   "types": "react-native-reanimated.d.ts",
@@ -39,12 +38,21 @@
   "homepage": "https://github.com/kmagiera/react-native-reanimated#readme",
   "dependencies": {},
   "devDependencies": {
+    "@react-native-community/eslint-config": "^0.0.5",
     "@types/react": "^16.9.0",
-    "@types/react-native": "^0.61.0",
+    "@types/react-native": "0.60.19",
+    "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
-    "husky": "^0.14.3",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "husky": "^3.0.9",
     "jest": "^24.9.0",
-    "lint-staged": "^8.0.0-beta.1",
+    "lint-staged": "^9.4.2",
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
@@ -52,8 +60,13 @@
   },
   "lint-staged": {
     "*.js": [
-      "prettier --write",
+      "eslint",
       "git add"
     ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }

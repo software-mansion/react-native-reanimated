@@ -11,7 +11,7 @@ function sanitizeValue(value) {
 const CONSTANT_VALUES = new Map();
 
 function initializeConstantValues() {
-  if (CONSTANT_VALUES.size != 0) {
+  if (CONSTANT_VALUES.size !== 0) {
     return;
   }
   [0, -1, 1, -2, 2].forEach(v =>
