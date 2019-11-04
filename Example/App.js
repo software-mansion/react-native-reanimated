@@ -14,6 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import ChatHeads from './chatHeads';
 import Code from './code';
+import Invoke from './invoke';
 import Colors from './colors';
 import DifferentSpringConfigs from './differentSpringConfigs';
 import ImageViewer from './imageViewer';
@@ -51,6 +52,7 @@ const SCREENS = {
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
   code: { screen: Code, title: 'Animated.Code component' },
+  code: { screen: Invoke, title: 'Animated.invoke' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
   imperative: {
