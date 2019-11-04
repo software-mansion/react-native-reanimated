@@ -1,8 +1,12 @@
 package com.swmansion.reanimated;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,5 +31,99 @@ public class Utils {
       res[i] = ary.getInt(i);
     }
     return res;
+  }
+
+  private static Boolean isNumber(Object o){
+    return o instanceof Number;
+  }
+
+  private static Boolean isString(Object o){
+    return o instanceof String;
+  }
+
+  private static Boolean isBoolean(Object o){
+    return o instanceof Boolean;
+  }
+
+  private static Boolean isNull(Object o){
+    return o == null;
+  }
+
+  private static Boolean isArray(Object o){
+    return o.getClass().isArray();
+  }
+
+  public static ReadableType inferType(Object o){
+    if(isNull(o)){
+      return ReadableType.Null;
+    } else if(isNumber(o)){
+      return ReadableType.Number;
+    } else if(isString(o)){
+      return ReadableType.String;
+    } else if(isBoolean(o)){
+      return ReadableType.Boolean;
+    } else if(isArray(o)){
+      return ReadableType.Array;
+    } else {
+      return ReadableType.Map;
+    }
+  }
+
+  public static WritableMap putVariant(WritableMap map, String key, Object o){
+    switch(inferType(o)){
+      case Array:
+        map.putArray(key, ((WritableArray) o));
+        break;
+      case Map:
+        map.putMap(key, ((WritableMap) o));
+        break;
+      case Null:
+        map.putNull(key);
+        break;
+      case Number:
+        map.putDouble(key, ((Double) o));
+        break;
+      case String:
+        map.putString(key, ((String) o));
+        break;
+      case Boolean:
+        map.putBoolean(key, ((Boolean) o));
+        break;
+    }
+
+    return map;
+  }
+
+  public static WritableArray pushVariant(WritableArray arr, Object o){
+    switch(inferType(o)){
+      case Array:
+        arr.pushArray(((WritableArray) o));
+        break;
+      case Map:
+        arr.pushMap(((WritableMap) o));
+        break;
+      case Null:
+        arr.pushNull();
+        break;
+      case Number:
+        arr.pushDouble(((Double) o));
+        break;
+      case String:
+        arr.pushString(((String) o));
+        break;
+      case Boolean:
+        arr.pushBoolean(((Boolean) o));
+        break;
+    }
+
+    return arr;
+  }
+
+  public static WritableArray toWritableArray(Object... params){
+    WritableArray arr = Arguments.createArray();
+    for (int i = 0; i < params.length; i++) {
+      pushVariant(arr, params[i]);
+    }
+    return arr;
   }
 }
