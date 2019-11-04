@@ -230,9 +230,14 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
+
     export function proc(
       cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
     ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
+
+    type AnimatedInvokeConfig = { module: string } & ({ method: string } | { command: string | number });
+    export function invoke(config: AnimatedInvokeConfig, ...params: Array<Animated.Value<number> /*| Animated.Ma*/>) => Adaptable<number>;
+
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
@@ -273,6 +278,10 @@ declare module 'react-native-reanimated' {
     export function event<T>(
         argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
         config?: {},
+    ): (...args: any[]) => void;
+    export function map<T>(
+      argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
+      config?: {},
     ): (...args: any[]) => void;
 
     // derived operations
