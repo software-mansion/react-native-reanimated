@@ -28,6 +28,11 @@ public class ValueNode extends Node {
     }
   }
 
+  public ValueNode(int nodeID, double value, NodesManager nodesManager) {
+    super(nodeID, nodesManager);
+    mValue = value;
+  }
+
   public void setValue(Object value) {
     mValue = value;
     forceUpdateMemoizedValue(mValue);

@@ -279,6 +279,11 @@ public class NodesManager implements EventDispatcherListener {
     mAnimatedNodes.put(nodeID, node);
   }
 
+  public void putIntoNodes(int nodeID, Node node) {
+    mAnimatedNodes.put(nodeID, node);
+  }
+
+
   public void dropNode(int tag) {
     mAnimatedNodes.remove(tag);
   }

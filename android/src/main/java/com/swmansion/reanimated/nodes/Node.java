@@ -32,6 +32,10 @@ public abstract class Node {
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
+    this(nodeID, nodesManager);
+  }
+
+  public Node(int nodeID, NodesManager nodesManager) {
     mLastLoopID.put("", -1L);
     mNodeID = nodeID;
     mNodesManager = nodesManager;

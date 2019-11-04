@@ -113,9 +113,13 @@ export default class AnimatedNode {
     }
   }
 
+  __sendNativeConfig() {
+    ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
+  }
+
   __nativeInitialize() {
     if (!this.__initialized) {
-      ReanimatedModule.createNode(this.__nodeID, { ...this.__nodeConfig });
+      this.__sendNativeConfig()
       this.__initialized = true;
     }
   }

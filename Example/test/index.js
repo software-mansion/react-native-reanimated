@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 
 import Animated, { Easing } from 'react-native-reanimated';
 
@@ -145,11 +145,15 @@ export default class Example extends Component {
   constructor(props) {
     super(props);
 
+    this.state = { enabled: false }
+
     // const transX = new Value(0);
     const clock = new Clock();
     // const twenty = new Value(20);
     this.t = Array.from(Array(40)).map(() =>
-      runSpring(new Clock(), Math.random() * -200, Math.random() * 200)
+      add(...Array.from(Array(300)).map(() =>
+          new Value(0, false, false)
+      ))
     );
   }
 
@@ -163,8 +167,13 @@ export default class Example extends Component {
 
   render() {
     return (
-      <View style={styles.container}>        
-        {Array.from(Array(40)).map((_, i) => (
+      <View style={styles.container}>
+        <TouchableOpacity onPress={() => this.setState(prev => ({ enabled: !prev.enabled }))}>
+          <Text>
+            Switch
+          </Text>
+        </TouchableOpacity>
+        {this.state.enabled && Array.from(Array(40)).map((_, i) => (
           <Animated.View
             key={i}
             style={[styles.box, { transform: [{ translateX: this.t[i] }] }]}

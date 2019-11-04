@@ -131,7 +131,7 @@ const ExampleApp = createStackNavigator(
     ...INTERACTABLE_SCREENS,
   },
   {
-    initialRouteName: 'Main',
+    initialRouteName: 'Test',
     headerMode: 'screen',
   }
 );

@@ -31,16 +31,26 @@ export default class InternalAnimatedValue extends AnimatedNode {
     );
   }
 
-  constructor(value, constant = false) {
+  constructor(value, constant = false, optimised = true) {
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
     this._animation = null;
     this._constant = constant;
+    this._optimised = optimised;
+  }
+
+  __sendNativeConfig() {
+    const value = sanitizeValue(this._value);
+    if (typeof value === 'number' && ReanimatedModule.createValueDoubleNode && this._optimised) {
+      ReanimatedModule.createValueDoubleNode(this.__nodeID, sanitizeValue(this._value) );
+    } else {
+      super.__sendNativeConfig()
+    }
   }
 
   __detach() {
     if (!this._constant) {
-      if (ReanimatedModule.getValue) {
+      if (ReanimatedModule.getValue && false) {
         ReanimatedModule.getValue(
           this.__nodeID,
           val => (this.__nodeConfig.value = val)

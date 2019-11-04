@@ -12,6 +12,7 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.swmansion.reanimated.nodes.ValueNode;
 import com.swmansion.reanimated.transitions.TransitionModule;
 
 import java.util.ArrayList;
@@ -109,6 +110,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       @Override
       public void execute(NodesManager nodesManager) {
         nodesManager.createNode(tag, config);
+      }
+    });
+  }
+
+  @ReactMethod
+  public void createValueDoubleNode(final int tag, final double value) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.putIntoNodes(tag, new ValueNode(tag, value, nodesManager));
       }
     });
   }
