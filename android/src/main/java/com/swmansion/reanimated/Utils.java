@@ -1,12 +1,19 @@
 package com.swmansion.reanimated;
 
+import androidx.annotation.NonNull;
+
+import com.facebook.jni.HybridData;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -125,5 +132,41 @@ public class Utils {
       pushVariant(arr, params[i]);
     }
     return arr;
+  }
+
+  public static class ReanimatedReadableNativeMap extends ReadableNativeMap {
+    ReanimatedReadableNativeMap(HybridData hybridData){
+      super(hybridData);
+    }
+
+    @Override
+    public boolean getBoolean(@NonNull String name) {
+      return super.getDouble(name) == 1;
+    }
+  }
+
+  public static class ReanimatedWritableNativeMap extends WritableNativeMap {
+    @Override
+    public boolean getBoolean(@NonNull String name) {
+      return super.getDouble(name) == 1;
+    }
+  }
+
+  public static class ReanimatedReadableNativeArray extends ReadableNativeArray {
+    ReanimatedReadableNativeArray(HybridData hybridData){
+      super(hybridData);
+    }
+
+    @Override
+    public boolean getBoolean(int index) {
+      return super.getDouble(index) == 1;
+    }
+  }
+
+  public static class ReanimatedWritableNativeArray extends WritableNativeArray {
+    @Override
+    public boolean getBoolean(int index) {
+      return super.getDouble(index) == 1;
+    }
   }
 }
