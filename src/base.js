@@ -15,4 +15,6 @@ export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
 export { createAnimatedFunction as proc } from './core/AnimatedFunction';
 export { createAnimatedInvoke as invoke } from './core/AnimatedInvoke';
+export { createAnimatedCallback as callback } from './core/AnimatedCallback';
+export { createAnimatedMap as map } from './core/AnimatedMap';
 export * from './operators';
