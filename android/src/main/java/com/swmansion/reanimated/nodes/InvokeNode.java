@@ -1,25 +1,38 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.DynamicFromArray;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
+import com.facebook.react.bridge.NativeArray;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.UIManagerReanimatedHelper;
+import com.facebook.react.uimanager.ViewManager;
+import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class InvokeNode extends Node implements ConnectedNode {
     EvaluationHelper.MethodInvoker mEvalHelper;
@@ -34,10 +47,6 @@ public class InvokeNode extends Node implements ConnectedNode {
 
     @Override
     protected Object evaluate() {
-        //  this methods should evaluate nodes
-        //  create Callbacks that set corresponding event value nodes to their new value
-        //  then pass it to invoke
-
         mEvalHelper.call(mParams, mNodesManager);
 
         invocationId++;
@@ -73,29 +82,80 @@ public class InvokeNode extends Node implements ConnectedNode {
 
         }
 
-        private static class ViewManagerCaller extends MethodReflector implements MethodInvoker {
+        private static class ViewManagerCaller implements MethodInvoker {
             private UIManagerModule mUIManager;
             private String mModuleName;
             private final String mMethodName = "receiveCommand";
             private Dynamic mCommandId;
             private int mConnectedViewTag;
             private Boolean mAttachedToAnimatedView = false;
+            private ViewManager mViewManager;
+            private View mView;
 
-            ViewManagerCaller(ReactContext context, String moduleName, Dynamic commandId){
-                super(context);
-                mUIManager = mContext.getNativeModule(UIManagerModule.class);
-                setCaller(moduleName, commandId);
+            ViewManagerCaller(ReactContext context, String viewManagerName, Dynamic commandId){
+                mUIManager = context.getNativeModule(UIManagerModule.class);
+                setCaller(viewManagerName, commandId);
             }
 
-            public void setCaller(String moduleName, Dynamic commandId) {
-                mModuleName = moduleName;
+            public void setCaller(String viewManagerName, Dynamic commandId) {
+                mModuleName = viewManagerName;
                 mCommandId = commandId;
-                super.setCaller(mModuleName, mMethodName);
+                Map commandsMap;
+                try {
+                    mViewManager = UIManagerReanimatedHelper
+                            .resolveViewManager(mUIManager.getUIImplementation(), viewManagerName);
+                    commandsMap = mViewManager.getCommandsMap();
+                } catch (Throwable err){
+                    throw new JSApplicationIllegalArgumentException(
+                            "Animated invoke: View manager with name " + viewManagerName + " was not found."
+                    );
+                }
+
+
+                /**
+                 * validate {@link commandId} against the {@link commandsMap} of the {@link com.facebook.react.uimanager.ViewManager}
+                 */
+                 if (commandsMap != null && commandsMap.size() > 0){
+                     if(commandsMap.containsValue(commandId.getType() == ReadableType.String ? commandId.asString(): commandId.asInt())){
+                         // all is good
+                     } else if (commandsMap.containsKey(commandId.asString())){
+                         WritableArray temp = new WritableNativeArray();
+                         temp.pushString(commandId.asString());
+                         commandId.recycle();
+                         mCommandId = DynamicFromArray.create(temp, 0);
+                     }
+                     else {
+                         // View manager command was not found
+                         // inform with meaningful error
+                         throw new JSApplicationIllegalArgumentException(
+                                 "Animated invoke: View manager command " + commandId.toString() + " was not found. Expected one of:\n" +
+                                         commandsMap.entrySet().toString()
+                         );
+                     }
+                 } else {
+                     throw new JSApplicationIllegalArgumentException(
+                             "Animated invoke: could not find commands map of View manager " + mViewManager
+                     );
+                 }
+
+                //resolveViewManager
+                //super.setCaller(mModuleName, mMethodName);
+            }
+
+            @Override
+            public void connectToView(int viewTag) {
+                mAttachedToAnimatedView = true;
+                setViewTag(viewTag);
+            }
+
+            protected void setViewTag(int viewTag) {
+                mConnectedViewTag = viewTag;
+                mView = mUIManager.resolveView(mConnectedViewTag);
             }
 
             @Override
             public void call(int[] params, NodesManager nodesManager) {
-                WritableArray args = Arguments.createArray();
+                Utils.ReanimatedWritableNativeArray args = new Utils.ReanimatedWritableNativeArray();
                 Node n;
                 int paramStart;
 
@@ -103,8 +163,8 @@ public class InvokeNode extends Node implements ConnectedNode {
                     paramStart = 0;
                 } else {
                     paramStart = 1;
-                    ParamNode paramNode = nodesManager.findNodeById(params[0], ParamNode.class);
-                    setViewTag(((int) paramNode.value()));
+                    ValueNode tagValueNode = nodesManager.findNodeById(params[0], ValueNode.class);
+                    setViewTag(tagValueNode.doubleValue().intValue());
                 }
 
                 for (int i = paramStart; i < params.length; i++) {
@@ -121,21 +181,25 @@ public class InvokeNode extends Node implements ConnectedNode {
                         Utils.pushVariant(args, n.value());
                     }
                 }
-            }
+                
+                //call(((WritableNativeArray) args));
 
-            @Override
-            public void connectToView(int viewTag) {
-                mAttachedToAnimatedView = true;
-                setViewTag(viewTag);
-            }
-
-            protected void setViewTag(int viewTag) {
-                mConnectedViewTag = viewTag;
+                mViewManager.receiveCommand(mView, mCommandId.asString(), args);
+                Log.d("InvokeR", "called view manager: " + args.toString());
             }
 
             @Override
             public void call(final ReadableNativeArray arr){
-                mUIManager.dispatchViewManagerCommand(mConnectedViewTag, mCommandId, arr);
+                try {
+                    mUIManager.dispatchViewManagerCommand(mConnectedViewTag, mCommandId, arr);
+                    Log.d("InvokeR", "called view manager: " + arr.toString());
+                } catch (Throwable err){
+                    throw new JSApplicationIllegalArgumentException(
+                            "Animated invoke: " + err.getMessage()
+                    );
+                }
+
+
                 //  is this the correct approach??
 /*
                 mUIManager.prependUIBlock(new UIBlock() {
@@ -175,7 +239,7 @@ public class InvokeNode extends Node implements ConnectedNode {
 
             @Override
             public void call(int[] params, NodesManager nodesManager) {
-                WritableArray args = Arguments.createArray();
+                Utils.ReanimatedWritableNativeArray args = new Utils.ReanimatedWritableNativeArray();
                 Node n;
 
                 for (int i = 0; i < params.length; i++) {
@@ -215,8 +279,32 @@ public class InvokeNode extends Node implements ConnectedNode {
                 mContext = context;
             }
 
+
+
             public void setCaller(String moduleName, String methodName) {
-                NativeModule module = mContext.getCatalystInstance().getNativeModule(moduleName);
+                //mContext.getCatalystInstance().hasNativeModule()
+                NativeModule module;
+
+                try {
+                    module = mContext.getCatalystInstance().getNativeModule(moduleName);
+                } catch (Throwable err) {
+                    //  module was not found
+                    //  create meaningful error
+
+                    String m = "";
+                    Collection<NativeModule> modules = mContext.getCatalystInstance().getNativeModules();
+                    Iterator<NativeModule> moduleIterator = modules.iterator();
+                    while (moduleIterator.hasNext()){
+                        module = moduleIterator.next();
+                        m += module.getName();
+                        if(moduleIterator.hasNext()) m += ",\n";
+                    }
+
+                    throw new JSApplicationIllegalArgumentException(
+                            "Reanimated invoke:\n" + err.getMessage() + "\nnative module " + moduleName + " was not found. Expected one of:\n" + m
+                    );
+                }
+
                 setCaller(module, methodName);
             }
 
@@ -235,18 +323,22 @@ public class InvokeNode extends Node implements ConnectedNode {
 
                 String m = "";
                 for (int i = 0; i < methods.length; i++) {
-                    m += methods[i].getName();
-                    if(i < methods.length - 1) m += ", ";
+                    Boolean isReactMethod = methods[i].getAnnotation(ReactMethod.class) != null;
+                    if(isReactMethod){
+                        m += methods[i].getName();
+                        if(i < methods.length - 1) m += ",\n";
+                    }
                 }
 
                 throw new JSApplicationIllegalArgumentException(
-                        "Reanimated Callback: method name " + methodName + " was not found in class " + module.getName() +
-                                ". Expected one of " + m
+                        "Reanimated invoke: method name " + methodName + " was not found in class " + module.getName() +
+                                ". Expected one of:\n" + m
                 );
             }
 
             public void setCaller(Method method) {
                 mMethod = method;
+                //mMethod.getParameterAnnotations()[1][0].annotationType().
                 mParamTypes = mMethod.getParameterTypes();
                 mTypes = new ReadableType[mParamTypes.length];
                 for (int i = 0; i < mParamTypes.length; i++) {
@@ -265,7 +357,7 @@ public class InvokeNode extends Node implements ConnectedNode {
                         out[i] = mParamTypes[i].cast(params[i]);
                     }
                 }
-                catch (Exception e){
+                catch (Throwable e){
                     if(e instanceof ArrayIndexOutOfBoundsException){
                         throw new JSApplicationIllegalArgumentException(
                                 "Parameter mismatch when calling reanimated invoke function. Expected " +
@@ -281,6 +373,29 @@ public class InvokeNode extends Node implements ConnectedNode {
                 }
                 return out;
             }
+        }
+
+        public static class NativeModuleAccessor {
+            protected final ReactContext mContext;
+            
+            public NativeModuleAccessor(ReactContext context){
+                mContext = context;
+            }
+            
+            public Map<String, NativeModule> getNativeModules(){
+                Collection<NativeModule> modules = mContext.getCatalystInstance().getNativeModules();
+                Iterator<NativeModule> moduleIterator = modules.iterator();
+                Map<String, NativeModule> moduleMap = new HashMap();
+                NativeModule module;
+                
+                while (moduleIterator.hasNext()){
+                    module = moduleIterator.next();
+                    moduleMap.put(module.getName(), module);
+                }
+
+                return moduleMap;
+            }
+
         }
 
     }
