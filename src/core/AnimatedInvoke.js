@@ -3,6 +3,8 @@ import Value from './AnimatedValue';
 import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
 import AnimatedMap, { createAnimatedMap } from './AnimatedMap';
+import { adapt } from './AnimatedBlock';
+import { createAnimatedAlways } from './AnimatedAlways';
 
 class AnimatedInvoke extends AnimatedNode {
   constructor(invokeConfig, ...params) {
@@ -22,35 +24,15 @@ class AnimatedInvoke extends AnimatedNode {
   }
 }
 
-function createFinalParamNode(arg) {
-  if (arg instanceof AnimatedMap) {
-    return arg;
-  }
-  else if (typeof arg === 'object') {
-    return createAnimatedMap(arg);
-  }
-  else {
-    return createAnimatedParam();
-  }
-}
-
 export function createAnimatedInvoke(config, ...params) {
   const inputNodes = params.map((value) => {
-    if (value instanceof AnimatedNode) {
-      return value;
-    }
-    if (typeof value === 'object') {
+    if (typeof value === 'object' && value instanceof AnimatedNode === false) {
       return createAnimatedMap(value);
     }
-    else if (typeof value === 'number') {
-      return new Value(value);
-    }
     else {
-      throw new Error('prip');
+      return adapt(value);
     }
   });
-
-  console.log(inputNodes.map(n => n.__nodeID))
   
   return new AnimatedInvoke(config, ...inputNodes);
 }
