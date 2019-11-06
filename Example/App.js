@@ -52,7 +52,7 @@ const SCREENS = {
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
   code: { screen: Code, title: 'Animated.Code component' },
-  code: { screen: Invoke, title: 'Animated.invoke' },
+  invoke: { screen: Invoke, title: 'Animated.invoke' },
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
   imperative: {
