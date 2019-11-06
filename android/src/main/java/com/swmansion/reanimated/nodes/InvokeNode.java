@@ -368,17 +368,17 @@ public class InvokeNode extends Node implements ConnectedNode {
                     }
                 }
                 catch (Throwable err){
+                    String outOfBoundsMessage = "";
+                    String typeDetails = "Expected " + concat(mParamTypes) + ",\nGot " + concat(params);
                     if(err instanceof ArrayIndexOutOfBoundsException){
-                        throw new JSApplicationIllegalArgumentException(
-                                "Parameter mismatch when calling reanimated invoke. Expected " +
-                                        mParamTypes.length + " parameters, got " + params.length + ".\n" +
-                                        "Details: " + err.getMessage()
-                        );
+                        outOfBoundsMessage= "Expected " + mParamTypes.length + " parameters, got " + params.length;
                     }
                     else {
                         throw new JSApplicationIllegalArgumentException(
-                                "Parameter mismatch when calling reanimated invoke.\nExpected " +
-                                        concat(mParamTypes) + ",\nGot " + concat(params) + ".\n" +
+                                "Parameter mismatch when calling reanimated invoke for " +
+                                        mCallee.getClass().getSimpleName() + "." + mMethod.getName() +"()\n" +
+                                        outOfBoundsMessage + ".\n" +
+                                        typeDetails + ".\n" +
                                         "Details: " + err.getMessage()
                         );
                     }
