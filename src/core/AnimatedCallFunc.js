@@ -2,7 +2,7 @@ import AnimatedNode from './AnimatedNode';
 import { adapt } from './AnimatedBlock';
 import { val } from '../val';
 
-class AnimatedCallFunc extends AnimatedNode {
+export default class AnimatedCallFunc extends AnimatedNode {
   _what;
   _args;
   _params;
@@ -38,6 +38,10 @@ class AnimatedCallFunc extends AnimatedNode {
     const value = val(this._what);
     this.endContext();
     return value;
+  }
+
+  getSource() {
+    return this._what;
   }
 }
 

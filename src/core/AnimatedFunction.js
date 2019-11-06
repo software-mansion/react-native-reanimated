@@ -3,7 +3,7 @@ import { createAnimatedCallFunc } from './AnimatedCallFunc';
 import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
 
-class AnimatedFunction extends AnimatedNode {
+export default class AnimatedFunction extends AnimatedNode {
   _what;
 
   constructor(what, ...params) {
@@ -20,6 +20,10 @@ class AnimatedFunction extends AnimatedNode {
 
   __onEvaluate() {
     return val(this._what);
+  }
+
+  getSource() {
+    return this._what;
   }
 }
 
