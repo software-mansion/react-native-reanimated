@@ -10,11 +10,13 @@ import com.facebook.react.bridge.DynamicFromArray;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeArray;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableNativeArray;
@@ -27,12 +29,15 @@ import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import static com.swmansion.reanimated.Utils.concat;
 
 public class InvokeNode extends Node implements ConnectedNode {
     EvaluationHelper.MethodInvoker mEvalHelper;
@@ -61,7 +66,6 @@ public class InvokeNode extends Node implements ConnectedNode {
     private static class EvaluationHelper {
         interface MethodInvoker {
             public void call(int[] params, NodesManager nodesManager);
-            public void call(ReadableNativeArray array);
             public void connectToView(int viewTag);
         }
 
@@ -159,6 +163,9 @@ public class InvokeNode extends Node implements ConnectedNode {
                 Node n;
                 int paramStart;
 
+                /**
+                 * If this node isn't attached to a view the first node must be the view's tag
+                 */
                 if(mAttachedToAnimatedView) {
                     paramStart = 0;
                 } else {
@@ -169,55 +176,26 @@ public class InvokeNode extends Node implements ConnectedNode {
 
                 for (int i = paramStart; i < params.length; i++) {
                     n = nodesManager.findNodeById(params[i], Node.class);
-                    if(n instanceof CallbackNode){
-                        // misuse, there are no callbacks from "receiveCommand"
-                        // inform with meaningful error
-                        throw new JSApplicationIllegalArgumentException(
-                                "Animated invoke: view manager commands do not have callbacks, did you mean to invoke a module method?"
-                        );
-                    } else if(n instanceof MapNode) {
+                    /**
+                     * {@link CallbackNode is used for consuming/stubbing
+                     *      {@link ReadableNativeArray},
+                     *      {@link ReadableNativeMap},
+                     *      {@link Callback},
+                     *      {@link Promise}
+                     * {@link ViewManager} has no {@link Callback} args,
+                     * therefore we use the map's value
+                     */
+                    if(n instanceof MapNode) {
                         args.pushMap(((MapNode) n).getValue());
                     } else {
                         Utils.pushVariant(args, n.value());
                     }
                 }
-                
-                //call(((WritableNativeArray) args));
 
                 mViewManager.receiveCommand(mView, mCommandId.asString(), args);
                 Log.d("InvokeR", "called view manager: " + args.toString());
             }
 
-            @Override
-            public void call(final ReadableNativeArray arr){
-                try {
-                    mUIManager.dispatchViewManagerCommand(mConnectedViewTag, mCommandId, arr);
-                    Log.d("InvokeR", "called view manager: " + arr.toString());
-                } catch (Throwable err){
-                    throw new JSApplicationIllegalArgumentException(
-                            "Animated invoke: " + err.getMessage()
-                    );
-                }
-
-
-                //  is this the correct approach??
-/*
-                mUIManager.prependUIBlock(new UIBlock() {
-                    @Override
-                    public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-                        View view = nativeViewHierarchyManager.resolveView(mConnectedViewTag);
-                        nativeViewHierarchyManager
-                                .resolveViewManager(mConnectedViewTag)
-                                .receiveCommand(view, mCommandId, arr);
-                    }
-                });
-            /*
-            UIManagerReanimatedHelper
-                    .resolveViewManager(mUIManager.getUIImplementation(), mModuleName)
-                    .receiveCommand(mUIManager.resolveView(mConnectedViewTag), mCommandId, arr);
-
-             */
-            }
         }
 
         private static class NativeModuleCaller extends MethodReflector implements MethodInvoker {
@@ -238,32 +216,8 @@ public class InvokeNode extends Node implements ConnectedNode {
             }
 
             @Override
-            public void call(int[] params, NodesManager nodesManager) {
-                Utils.ReanimatedWritableNativeArray args = new Utils.ReanimatedWritableNativeArray();
-                Node n;
-
-                for (int i = 0; i < params.length; i++) {
-                    n = nodesManager.findNodeById(params[i], Node.class);
-                    if(n instanceof CallbackNode){
-                        //args.pushArray(n.);
-                    } else if(n instanceof MapNode) {
-                        args.pushMap(((MapNode) n).getValue());
-                    } else {
-                        Utils.pushVariant(args, n.value());
-                    }
-                }
-
-                //mContext.getCatalystInstance().getNativeModule(mModuleName).getClass().
-            }
-
-            @Override
-            public void call(ReadableNativeArray arr){
-                mContext.getCatalystInstance().callFunction(mModuleName, mMethodName, arr);
-            }
-
-            @Override
             public void connectToView(int viewTag) {
-                //  stubbing
+                //  noop
                 //  this is used for invoking a view manager command only
                 return;
             }
@@ -271,6 +225,7 @@ public class InvokeNode extends Node implements ConnectedNode {
 
         private static class MethodReflector {
             protected final ReactContext mContext;
+            private Object mCallee;
             private Method mMethod;
             private Class<?>[] mParamTypes;
             private ReadableType[] mTypes;
@@ -279,7 +234,9 @@ public class InvokeNode extends Node implements ConnectedNode {
                 mContext = context;
             }
 
-
+            public static Boolean isReactMethod(Method method) {
+                return method.getAnnotation(ReactMethod.class) != null;
+            }
 
             public void setCaller(String moduleName, String methodName) {
                 //mContext.getCatalystInstance().hasNativeModule()
@@ -301,7 +258,7 @@ public class InvokeNode extends Node implements ConnectedNode {
                     }
 
                     throw new JSApplicationIllegalArgumentException(
-                            "Reanimated invoke:\n" + err.getMessage() + "\nnative module " + moduleName + " was not found. Expected one of:\n" + m
+                            "Reanimated invoke:\n" + err.getMessage() + ".\nNative module " + moduleName + " was not found. Expected one of:\n" + m
                     );
                 }
 
@@ -313,7 +270,13 @@ public class InvokeNode extends Node implements ConnectedNode {
 
                 for (Method method: methods) {
                     if (method.getName().equals(methodName)) {
-                        setCaller(method);
+
+                        /**
+                         * allow only {@link ReactMethod}??
+                         */
+                        //if(isReactMethod(method))
+
+                        setCaller(module, method);
                         return;
                     }
                 }
@@ -323,8 +286,7 @@ public class InvokeNode extends Node implements ConnectedNode {
 
                 String m = "";
                 for (int i = 0; i < methods.length; i++) {
-                    Boolean isReactMethod = methods[i].getAnnotation(ReactMethod.class) != null;
-                    if(isReactMethod){
+                    if(isReactMethod(methods[i])){
                         m += methods[i].getName();
                         if(i < methods.length - 1) m += ",\n";
                     }
@@ -336,41 +298,92 @@ public class InvokeNode extends Node implements ConnectedNode {
                 );
             }
 
-            public void setCaller(Method method) {
+            protected void setCaller(Object callee, Method method) {
+                mCallee = callee;
                 mMethod = method;
+                mMethod.setAccessible(true);
                 //mMethod.getParameterAnnotations()[1][0].annotationType().
                 mParamTypes = mMethod.getParameterTypes();
                 mTypes = new ReadableType[mParamTypes.length];
                 for (int i = 0; i < mParamTypes.length; i++) {
                     mTypes[i] = Utils.inferType(mParamTypes[i]);
                 }
+                Log.d("InvokeR", "setCaller: " + concat(mParamTypes));
             }
 
-            public void call(Object... params) {
-                //mMethod.invoke()
+            public void call(int[] params, NodesManager nodesManager){
+                invoke(cast(params, nodesManager));
             }
 
-            public Object[] cast(Object... params) {
+            protected void invoke(Object[] params) {
+                try {
+                    mMethod.invoke(mCallee, params);
+                } catch (Throwable err) {
+                    String errorMessage;
+                    if(err instanceof InvocationTargetException){
+                        err.getCause().printStackTrace();
+                        errorMessage = err.getCause().getMessage();
+                    } else {
+                        err.printStackTrace();
+                        errorMessage = err.getMessage();
+                    }
+
+                    throw new JSApplicationIllegalArgumentException(
+                            "Reanimated invoke: Failed to invoke " + mCallee.getClass().getSimpleName() + "." +
+                                    mMethod.getName() + "(" + concat(params) + ")" + "\n" +
+                                    "Details: " + errorMessage
+                    );
+                }
+            }
+
+            public Object[] cast(int[] params, NodesManager nodesManager) {
                 Object[] out = new Object[params.length];
+                Node n;
+                Object value;
+                Log.d("InvokeR", "cast: " + concat(params));
                 try {
                     for (int i = 0; i < params.length; i++) {
-                        out[i] = mParamTypes[i].cast(params[i]);
+                        n = nodesManager.findNodeById(params[i], Node.class);
+                        /**
+                         * {@link CallbackNode is used for consuming/stubbing
+                         *      {@link ReadableNativeArray},
+                         *      {@link ReadableNativeMap},
+                         *      {@link Callback},
+                         *      {@link Promise}
+                         */
+                        if (n instanceof CallbackNode){
+                            if (mParamTypes[i] == Callback.class || mParamTypes[i] == Promise.class) {
+                                out[i] = n;
+                            } else {
+                                out[i] = ((CallbackNode) n).getValue();
+                            }
+                        } else {
+                            value = n.value();
+                            if(value instanceof Double) {
+                                out[i] = Utils.castFromDouble(((Double) value), mParamTypes[i]);
+                            } else {
+                                out[i] = mParamTypes[i].cast(value);
+                            }
+                        }
                     }
                 }
-                catch (Throwable e){
-                    if(e instanceof ArrayIndexOutOfBoundsException){
+                catch (Throwable err){
+                    if(err instanceof ArrayIndexOutOfBoundsException){
                         throw new JSApplicationIllegalArgumentException(
-                                "Parameter mismatch when calling reanimated invoke function. Expected " +
-                                        mTypes.length + " parameters, got " + params.length
+                                "Parameter mismatch when calling reanimated invoke. Expected " +
+                                        mParamTypes.length + " parameters, got " + params.length + ".\n" +
+                                        "Details: " + err.getMessage()
                         );
                     }
                     else {
                         throw new JSApplicationIllegalArgumentException(
-                                "Parameter mismatch when calling reanimated invoke function. Expected " +
-                                        mTypes.toString() + " , got " + params.toString()
+                                "Parameter mismatch when calling reanimated invoke.\nExpected " +
+                                        concat(mParamTypes) + ",\nGot " + concat(params) + ".\n" +
+                                        "Details: " + err.getMessage()
                         );
                     }
                 }
+
                 return out;
             }
         }
