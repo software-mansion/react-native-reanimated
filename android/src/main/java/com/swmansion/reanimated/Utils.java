@@ -1,9 +1,12 @@
 package com.swmansion.reanimated;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.StringDef;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -15,8 +18,11 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
+import java.lang.annotation.Retention;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 public class Utils {
 
@@ -42,6 +48,10 @@ public class Utils {
 
   private static Boolean isNumber(Object o){
     return o instanceof Number;
+  }
+
+  private static Boolean isInteger(Object o){
+    return o instanceof Integer;
   }
 
   private static Boolean isString(Object o){
@@ -88,7 +98,11 @@ public class Utils {
         map.putNull(key);
         break;
       case Number:
-        map.putDouble(key, ((Double) o));
+        if (isInteger(o)){
+          map.putInt(key, ((Integer) o));
+        } else {
+          map.putDouble(key, castToDouble(o));
+        }
         break;
       case String:
         map.putString(key, ((String) o));
@@ -113,7 +127,11 @@ public class Utils {
         arr.pushNull();
         break;
       case Number:
-        arr.pushDouble(((Double) o));
+        if (isInteger(o)){
+          arr.pushInt((Integer) o);
+        } else {
+          arr.pushDouble(castToDouble(o));
+        }
         break;
       case String:
         arr.pushString(((String) o));
@@ -126,10 +144,10 @@ public class Utils {
     return arr;
   }
 
-  public static WritableArray toWritableArray(Object... params){
-    WritableArray arr = Arguments.createArray();
+  public static WritableMap toFakeWritableArray(Object... params){
+    WritableMap arr = new ReanimatedWritableNativeMap();
     for (int i = 0; i < params.length; i++) {
-      pushVariant(arr, params[i]);
+      putVariant(arr, String.valueOf(i), params[i]);
     }
     return arr;
   }
@@ -143,12 +161,26 @@ public class Utils {
     public boolean getBoolean(@NonNull String name) {
       return super.getDouble(name) == 1;
     }
+
+    @Override
+    public double getDouble(@NonNull String name) {
+      return super.getType(name) == ReadableType.Boolean ?
+              castToDouble(super.getBoolean(name)) :
+              super.getDouble(name);
+    }
   }
 
   public static class ReanimatedWritableNativeMap extends WritableNativeMap {
     @Override
     public boolean getBoolean(@NonNull String name) {
       return super.getDouble(name) == 1;
+    }
+
+    @Override
+    public double getDouble(@NonNull String name) {
+      return super.getType(name) == ReadableType.Boolean ?
+              castToDouble(super.getBoolean(name)) :
+              super.getDouble(name);
     }
   }
 
@@ -161,6 +193,13 @@ public class Utils {
     public boolean getBoolean(int index) {
       return super.getDouble(index) == 1;
     }
+
+    @Override
+    public double getDouble(int index) {
+      return super.getType(index) == ReadableType.Boolean ?
+              castToDouble(super.getBoolean(index)) :
+              super.getDouble(index);
+    }
   }
 
   public static class ReanimatedWritableNativeArray extends WritableNativeArray {
@@ -168,5 +207,106 @@ public class Utils {
     public boolean getBoolean(int index) {
       return super.getDouble(index) == 1;
     }
+
+    @Override
+    public double getDouble(int index) {
+      return super.getType(index) == ReadableType.Boolean ?
+              castToDouble(super.getBoolean(index)) :
+              super.getDouble(index);
+    }
+  }
+
+
+  @StringDef({
+          PrimitiveNumber.BYTE,
+          PrimitiveNumber.INT,
+          PrimitiveNumber.FLOAT,
+          PrimitiveNumber.LONG,
+          PrimitiveNumber.SHORT,
+          PrimitiveNumber.BOOLEAN,
+  })
+  @Retention(SOURCE)
+  public @interface PrimitiveNumber {
+    String BYTE = "byte";
+    String INT = "int";
+    String FLOAT = "float";
+    String LONG = "long";
+    String SHORT = "short";
+    String BOOLEAN = "boolean";
+  }
+
+  public static <T extends Object> T castFromDouble(Double value, Class<T> clazz){
+    switch (clazz.getName()){
+      case PrimitiveNumber.BYTE: return ((T) Byte.valueOf(value.byteValue()));
+      case PrimitiveNumber.INT: return ((T) Integer.valueOf(value.intValue()));
+      case PrimitiveNumber.FLOAT: return ((T) Float.valueOf(value.floatValue()));
+      case PrimitiveNumber.LONG: return ((T) Long.valueOf(value.longValue()));
+      case PrimitiveNumber.SHORT: return ((T) Short.valueOf(value.shortValue()));
+      case PrimitiveNumber.BOOLEAN: return ((T) Boolean.valueOf(value == 1));
+      default: return ((T) value);
+    }
+  }
+
+  public static <T> T fromDynamic(Dynamic value) {
+    switch (((Dynamic) value).getType()) {
+      case Boolean:
+        return ((T) castToDouble(value.asBoolean()));
+      case Null:
+        return ((T) castToDouble(0.));
+      case Number:
+        return ((T) castToDouble(value.asDouble()));
+      case String:
+        return ((T) value.asString());
+      default:
+        throw new JSApplicationIllegalArgumentException(
+                "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
+                        " into " + Double.class.getName()
+        );
+    }
+  }
+  
+  public static Double castToDouble(Object value) {
+    Object o = value;
+    if (value instanceof Dynamic){
+      switch (((Dynamic) value).getType()) {
+        case Boolean:
+          o = ((Dynamic) value).asBoolean();
+          break;
+        case Null:
+          o = 0;
+          break;
+        case Number:
+          o = ((Dynamic) value).asDouble();
+          break;
+          default:
+            throw new JSApplicationIllegalArgumentException(
+                    "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
+                            " into " + Double.class.getName()
+            );
+      }
+    }
+
+    if(isBoolean(o)) {
+      return Double.valueOf(((Boolean) o) ? 1 : 0);
+    } else if (o instanceof Number){
+      return Double.valueOf(((Number) o).doubleValue());
+    } else {
+      return Double.valueOf((double) o);
+    }
+  }
+
+
+
+  public static String concat(Object... args){
+    return concat(args, ", ");
+  }
+
+  public static String concat(Object[] args, String separator){
+    String concat = "";
+    for (int i = 0; i < args.length; i++) {
+      concat += args[i].toString();
+      if(i < args.length - 1) concat += separator;
+    }
+    return concat;
   }
 }
