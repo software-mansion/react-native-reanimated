@@ -1,11 +1,12 @@
 import React, { useMemo, useEffect } from 'react';
-import { StyleSheet, Dimensions, findNodeHandle, Image, NativeModules, UIManager, processColor } from 'react-native';
+import { StyleSheet, Dimensions, findNodeHandle, Image, NativeModules, UIManager, processColor, Sound } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State, RectButton, TapGestureHandler } from 'react-native-gesture-handler';
-import interpolate from '../../src/derived/interpolate';
+import AnimatedTimePicker from './TimePicker';
+import ScrollViewTest from './ScrollViewTest';
 
 
-const { cond, eq, add, call, set, Value, event, concat, color, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { interpolate, cond, eq, add, call, set, Value, event, concat, color, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 //const pipper = invoke((a, b, c)=>)
 const P = createAnimatedComponent(PanGestureHandler);
@@ -102,6 +103,7 @@ export default function E() {
   useEffect(() => {
     console.log('sdfsdf',q, h)
     q && h && UIManager.measureLayout(q, h, () => console.warn('e'), (...o) => console.log('measured', o));
+    NativeModules.SoundManager.playTouchSound();
   }, [q, h])
 
   useCode(
@@ -121,13 +123,11 @@ export default function E() {
       //call([x], a=>console.log('x?', a))
       //invoke('ToastAndroid', 'showWithGravity', concat('hello from reanimated invoke', scroll), 200, 200)
       invoke('PermissionsAndroid', 'requestPermission', 'android.permission.VIBRATE', {title: 'hello', message: 'prompting'}),
-      //invoke('Vibration', 'vibrate', 500),
+      invoke('Vibration', 'vibrate', 500),
       invoke('SoundManager', 'playTouchSound'),
       
       invoke('ImageStoreManager', 'getBase64ForTag', "https://media.mnn.com/assets/images/2018/04/sunset_through_oak_tree.jpg.653x0_q80_crop-smart.jpg", [x], [error]),
       //invoke('ShareModule', 'share', { title: 'Reanimated Share', message: 'hello from reanimated invoke' }, 'pica boo', {action: x}),
-      invoke('StatusBarManager', 'setColor', color(200, 20, 50, 0.6), 1),
-      invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, { /*action, hour, minute*/}),
       invoke('Clipboard', 'setString', concat('hello from reanimated invoke ', x)),
     ]),
     [h, q, scroll, dest, translationX, clock, finalScroll, state, scrollX, scrollY, x, error]
@@ -147,6 +147,10 @@ export default function E() {
   */
   const isInside = useMemo(() => new Value(0));
   useCode(call([isInside], a => console.log('isInside', a)), [isInside])
+
+  //return <AnimatedTimePicker />;
+
+  return <ScrollViewTest />
   return (
     <>
       <ScrollView
