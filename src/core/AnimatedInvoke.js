@@ -2,7 +2,7 @@ import AnimatedNode from './AnimatedNode';
 import Value from './AnimatedValue';
 import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
-import AnimatedMap, { createAnimatedMap } from './AnimatedMap';
+import AnimatedMap, { createAnimatedMap, createAnimatedCallback } from './AnimatedMap';
 import { adapt } from './AnimatedBlock';
 import { createAnimatedAlways } from './AnimatedAlways';
 
@@ -24,10 +24,10 @@ class AnimatedInvoke extends AnimatedNode {
   }
 }
 
-export function createAnimatedInvoke(config, ...params) {
+function createAnimatedInvokeBase(config, ...params) {
   const inputNodes = params.map((value) => {
     if (typeof value === 'object' && value instanceof AnimatedNode === false) {
-      return createAnimatedMap(value);
+      return createAnimatedCallback(value);
     }
     else {
       return adapt(value);
@@ -35,4 +35,12 @@ export function createAnimatedInvoke(config, ...params) {
   });
   
   return new AnimatedInvoke(config, ...inputNodes);
+}
+
+export function createAnimatedInvoke(module, method, ...params) {
+  return createAnimatedInvokeBase({ module, method }, ...params);
+}
+
+export function createAnimatedDispatch(module, command, ...params) {
+  return createAnimatedInvokeBase({ module, command }, ...params);
 }
