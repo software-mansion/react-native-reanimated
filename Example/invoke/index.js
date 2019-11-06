@@ -5,7 +5,7 @@ import { PanGestureHandler, State, RectButton, TapGestureHandler } from 'react-n
 import interpolate from '../../src/derived/interpolate';
 
 
-const { cond, eq, add, call, set, Value, event, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, call, set, Value, event, concat, color, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 //const pipper = invoke((a, b, c)=>)
 const P = createAnimatedComponent(PanGestureHandler);
@@ -51,9 +51,6 @@ function runSpring(clock, value, velocity, dest) {
   ];
 }
 
-
-const scrollCommand = 'scrollTo';
-
 export default function E() {
   //const ref = React.useRef();
   const [h, setH] = React.useState();
@@ -70,6 +67,7 @@ export default function E() {
     outputRange: [50, 200],
   }), []);
   const state = useMemo(() => new Value(State.UNDETERMINED), []);
+  const appState = useMemo(() => new Value("initialAppState"), []);
   const isScrolling = useMemo(() => new Value(0), []);
   const error = useMemo(() => new Value(0), []);
 
@@ -108,13 +106,31 @@ export default function E() {
 
   useCode(
     block([
-      set(scroll, runSpring(clock, scroll, 0, finalScroll)),
+      onChange(state, cond(eq(state, State.ACTIVE), invoke('AppState', 'getCurrentAppState', [{ app_state: appState }], {}))),
+      call([appState], a => console.log('appState', a))
+    ]),
+    [appState, state]
+  )
+
+  useCode(
+    block([
+      //set(scroll, runSpring(clock, scroll, 0, finalScroll)),
       //scrollTo(h, 50, scroll, 0),
       //onChange(state, cond(eq(state, State.ACTIVE), scrollBy(h, scrollX, scrollY, 50, scroll, 1)))
-      cond(and(defined(q), defined(h)), invoke('UIManager', 'measureLayout', q, h, [], [new Value(), new Value(), x])),
-      call([x], a=>console.log('x?', a))
+      //cond(and(defined(q), defined(h)), invoke('UIManager', 'measureLayout', q, h, [error], [new Value(), new Value(), x])),
+      //call([x], a=>console.log('x?', a))
+      //invoke('ToastAndroid', 'showWithGravity', concat('hello from reanimated invoke', scroll), 200, 200)
+      invoke('PermissionsAndroid', 'requestPermission', 'android.permission.VIBRATE', {title: 'hello', message: 'prompting'}),
+      //invoke('Vibration', 'vibrate', 500),
+      invoke('SoundManager', 'playTouchSound'),
+      
+      invoke('ImageStoreManager', 'getBase64ForTag', "https://media.mnn.com/assets/images/2018/04/sunset_through_oak_tree.jpg.653x0_q80_crop-smart.jpg", [x], [error]),
+      //invoke('ShareModule', 'share', { title: 'Reanimated Share', message: 'hello from reanimated invoke' }, 'pica boo', {action: x}),
+      invoke('StatusBarManager', 'setColor', color(200, 20, 50, 0.6), 1),
+      invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, { /*action, hour, minute*/}),
+      invoke('Clipboard', 'setString', concat('hello from reanimated invoke ', x)),
     ]),
-    [h, q, scroll, dest, translationX, clock, finalScroll, state, scrollX, scrollY, x]
+    [h, q, scroll, dest, translationX, clock, finalScroll, state, scrollX, scrollY, x, error]
   );
   
   useCode(call([state], a => console.log('state', a)), [state])
@@ -142,6 +158,7 @@ export default function E() {
         onGestureEvent={e => console.log(e.nativeEvent)}
         onHandlerStateChange={e => console.log(e.nativeEvent)}
       >
+        <View style={{flex:1, minHeight: 200}} />
         <Image source={require('../imageViewer/grid.png')} collapsable={false} ref={(r) => setQ(findNodeHandle(r))} />
       </ScrollView>
       <TapGestureHandler
