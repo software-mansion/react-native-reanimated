@@ -2,7 +2,9 @@ import { Platform } from 'react-native';
 
 import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';
+import AnimatedParam from './AnimatedParam';
 import { createAnimatedAlways } from './AnimatedAlways';
+//import * as _ from 'lodash';
 
 import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
 
@@ -20,7 +22,7 @@ export function sanitizeArgMapping(argMapping) {
   };
 
   const traverse = (value, path) => {
-    if (value instanceof InternalAnimatedValue) {
+    if (value instanceof InternalAnimatedValue || value instanceof AnimatedParam) {
       objectMappings.push(path.concat(getNode(value)));
     } else if (typeof value === 'object' && value.__val) {
       objectMappings.push(path.concat(getNode(value.__val)));
@@ -67,13 +69,84 @@ export function sanitizeArgMapping(argMapping) {
 }
 
 export default class AnimatedMap extends AnimatedNode {
-  constructor(argMapping, config = {}) {
-    const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
-    super({ type: 'map', argMapping: objectMappings });
+  constructor(type, argMapping, alwaysNodes, config = {}) {
+    super({ type, argMapping }, alwaysNodes);
     this._alwaysNodes = alwaysNodes;
+    console.log('bbbbb',argMapping)
   }
+
+  __attach() {
+    for (let i = 0; i < this._alwaysNodes.length; i++) {
+      this._alwaysNodes[i].__attach();
+    }
+    super.__attach();
+  }
+
+  __onEvaluate() {
+    return 0;
+  }
+
+  __detach() {
+    for (let i = 0; i < this._alwaysNodes.length; i++) {
+      this._alwaysNodes[i].isNativelyInitialized() &&
+        this._alwaysNodes[i].__detach();
+    }
+    super.__detach();
+  }
+
+  static merge(a, b) {
+    const configA = AnimatedMap.extractMapping(a);
+    const configB = AnimatedMap.extractMapping(b);
+    const type = configA.type || 'map';
+    return new AnimatedMap(
+      type,
+      [...configA.argMapping, ...configB.argMapping],
+      [...configA.alwaysNodes, ...configB.alwaysNodes],
+      config
+    );
+  }
+
+  static assign(a, b) {
+    const configA = AnimatedMap.extractMapping(a);
+    const configB = AnimatedMap.extractMapping(b);
+    const type = configA.type || 'map';
+    return new AnimatedMap(
+      type,
+      _.intersection(configA.argMapping, configB.argMapping),
+      _.intersection(configA.alwaysNodes, configB.alwaysNodes),
+      config
+    );
+  }
+
+  static extractMapping(arg) {
+    if (arg instanceof AnimatedMap) {
+      return {
+        argMapping: arg.__nodeConfig.argMapping,
+        alwaysNodes: arg._alwaysNodes,
+        type: arg.__nodeConfig.type
+      }
+    } else if (typeof arg === 'object' && arg) {
+      const { alwaysNodes, objectMappings } = sanitizeArgMapping(arg);
+      return {
+        argMapping: objectMappings,
+        alwaysNodes
+      };
+    } else {
+      return {
+        argMapping: [],
+        alwaysNodes: []
+      };
+    }
+  }
+  
 }
 
 export function createAnimatedMap(argMapping, config) {
-  return new AnimatedMap(argMapping, config);
+  const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
+  return new AnimatedMap('map', objectMappings, alwaysNodes, config);
+}
+
+export function createAnimatedCallback(argMapping, config) {
+  const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
+  return new AnimatedMap('callback', objectMappings, alwaysNodes, config);
 }
