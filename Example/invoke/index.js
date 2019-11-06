@@ -1,41 +1,124 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Dimensions, findNodeHandle, Image } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { StyleSheet, Dimensions, findNodeHandle, Image, NativeModules, UIManager, processColor } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
-const { width } = Dimensions.get('window');
+import { PanGestureHandler, State, RectButton, TapGestureHandler } from 'react-native-gesture-handler';
+import interpolate from '../../src/derived/interpolate';
 
-const { cond, eq, add, call, set, Value, event, invoke, useCode, Code, map, callback, neq, createAnimatedComponent, View, ScrollView } = Animated;
+
+const { cond, eq, add, call, set, Value, event, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 //const pipper = invoke((a, b, c)=>)
-const P = createAnimatedComponent(PanGestureHandler)
+const P = createAnimatedComponent(PanGestureHandler);
+const Button = createAnimatedComponent(RectButton);
+
+//const measureLayout = proc((tag, parentTag, x, error) => cond(defined(tag, -1), invoke('UIManager', 'measureLayout', tag, parentTag, [error], { x })));
+const scrollTo = proc((tag, scrollX, scrollY, animated) => cond(defined(tag, -1), dispatch('RCTScrollView', 'scrollTo', tag, scrollX, scrollY, animated)));
+const scrollBy = proc((tag, scrollX, scrollY, scrollByX, scrollByY, animated) => scrollTo(tag, add(scrollX, scrollByX), add(scrollY, scrollByY), animated))
+const cb = proc((x) => callback({ x }));
+const scrollEvent = proc((x, y) => event([{ nativeEvent: { contentOffset: { x, y } } }]));
+
+
+
+function runSpring(clock, value, velocity, dest) {
+  const state = {
+    finished: new Value(0),
+    velocity: new Value(0),
+    position: new Value(0),
+    time: new Value(0),
+  };
+
+  const config = {
+    damping: 7,
+    mass: 1,
+    stiffness: 121.6,
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001,
+    toValue: new Value(0),
+  };
+
+  return [
+    cond(clockRunning(clock), 0, [
+      set(state.finished, 0),
+      set(state.velocity, velocity),
+      set(state.position, value),
+      set(config.toValue, dest),
+      startClock(clock),
+    ]),
+    spring(clock, state, config),
+    cond(state.finished, stopClock(clock)),
+    state.position,
+  ];
+}
+
+
+const scrollCommand = 'scrollTo';
 
 export default function E() {
   //const ref = React.useRef();
-  const [h, setH] = React.useState(-1);
-  const x = useMemo(() => new Value(0));
-  const translationX = useMemo(() => new Value(0));
-  //useCode(pipper(findNodeHandle(h) || 1), [h]);
+  const [h, setH] = React.useState();
+  const [q, setQ] = React.useState();
+  const x = useMemo(() => new Value(0), []);
+  const scroll = useMemo(() => new Value(0), []);
+  const scrollX = useMemo(() => new Value(0), []);
+  const scrollY = useMemo(() => new Value(0), []);
+  const translationX = useMemo(() => new Value(0), []);
+  const clock = useMemo(() => new Clock(), []);
+  const dest = useMemo(() => new Value(1), []);
+  const finalScroll = useMemo(() => interpolate(dest, {
+    inputRange: [0, 1],
+    outputRange: [50, 200],
+  }), []);
+  const state = useMemo(() => new Value(State.UNDETERMINED), []);
+  const isScrolling = useMemo(() => new Value(0), []);
+  const error = useMemo(() => new Value(0), []);
+
+  const onScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { x: scrollX, y: scrollY } } }]), [scrollX, scrollY]);
+  const onScrollStateChange = useMemo(() => event([{ nativeEvent: { state: s => set(isScrolling, or(eq(s, State.BEGAN), eq(s, State.ACTIVE))) } }]), [isScrolling]);
+  //const onScroll = useMemo(() => scrollEvent(scrollX, scrollY), [scrollX, scrollY]);
+  const onButtonPress = useMemo(() => event([{ nativeEvent: { oldState: state } }]), [state]);
+  /*
+  const anmatedScroll = useMemo(() => 
+    scrollCommand === 'scrollTo' ?
+      block([
+        set(scroll, runSpring(clock, scroll, 0, finalScroll)),
+        scrollTo(h, 50, scroll, 0),
+    )
+    */
   useCode(
-    cond(
-      neq(h, -1),
-      call(
+    onChange(
+      state,
+      cond(
+        eq(state, State.ACTIVE),
         [
-          invoke({ module: 'UIManager', method: 'playTouchSound' }, findNodeHandle(h) || 1, callback([]), callback({ x })),
-          //invoke({ module: 'RCTScrollView', command: 'scrollToEnd' }, findNodeHandle(h), 1),
-          invoke({ module: 'RCTScrollView', command: 'flashScrollIndicators' }, findNodeHandle(h)),
-          invoke({ module: 'RCTScrollView', command: 'scrollTo' }, findNodeHandle(h), 50, 100, 1),
-          //invoke({ module: 'ShareModule', method: 'share' }, findNodeHandle(h)),
-          //invoke({ module: 'RCTScrollView', command: 'scrollToEnd' }, findNodeHandle(h) || 1, map({animated: 1}))
-          translationX
-        ],
-        (a) => console.log('invoke: ', a)
+          //stopClock(clock),
+          set(dest, not(dest)),
+          set(state, State.UNDETERMINED)
+        ]
       )
+      
     ),
-    [h, translationX]
+    [state, dest, clock]
   );
 
-  console.log('tag', h)
+  useEffect(() => {
+    console.log('sdfsdf',q, h)
+    q && h && UIManager.measureLayout(q, h, () => console.warn('e'), (...o) => console.log('measured', o));
+  }, [q, h])
 
+  useCode(
+    block([
+      set(scroll, runSpring(clock, scroll, 0, finalScroll)),
+      //scrollTo(h, 50, scroll, 0),
+      //onChange(state, cond(eq(state, State.ACTIVE), scrollBy(h, scrollX, scrollY, 50, scroll, 1)))
+      cond(and(defined(q), defined(h)), invoke('UIManager', 'measureLayout', q, h, [], [new Value(), new Value(), x])),
+      call([x], a=>console.log('x?', a))
+    ]),
+    [h, q, scroll, dest, translationX, clock, finalScroll, state, scrollX, scrollY, x]
+  );
+  
+  useCode(call([state], a => console.log('state', a)), [state])
+  //useCode(call([scrollY], a => console.log('scroller', a)), [scrollY])
   
   /*
   return (
@@ -46,9 +129,26 @@ export default function E() {
     </P>
   );
   */
+  const isInside = useMemo(() => new Value(0));
+  useCode(call([isInside], a => console.log('isInside', a)), [isInside])
   return (
-    <ScrollView style={{ flex: 1 }} collapsable={false} ref={(r) => setH(findNodeHandle(r))}>
-      <Image source={require('../imageViewer/grid.png')} />
-    </ScrollView>
+    <>
+      <ScrollView
+        style={{ flex: 1 }}
+        collapsable={false}
+        ref={(r) => setH(findNodeHandle(r))}
+        onScroll={onScroll}
+        //onHandlerStateChange={onScrollStateChange}
+        onGestureEvent={e => console.log(e.nativeEvent)}
+        onHandlerStateChange={e => console.log(e.nativeEvent)}
+      >
+        <Image source={require('../imageViewer/grid.png')} collapsable={false} ref={(r) => setQ(findNodeHandle(r))} />
+      </ScrollView>
+      <TapGestureHandler
+        onHandlerStateChange={onButtonPress}
+      >
+        <View style={{ flex: 1, maxHeight: 50, backgroundColor: cond(eq(state, State.ACTIVE), processColor('red'), processColor('white')) }} />
+      </TapGestureHandler>
+    </>
   );
 }
