@@ -2,41 +2,11 @@ import { Platform, findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
-import InternalAnimatedValue from './AnimatedValue';
-import { createAnimatedAlways } from './AnimatedAlways';
+import AnimatedMap, { sanitizeArgMapping } from './AnimatedMap';
 
 import invariant from 'fbjs/lib/invariant';
-import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
 
-function sanitizeArgMapping(argMapping) {
-  // Find animated values in `argMapping` and create an array representing their
-  // key path inside the `nativeEvent` object. Ex.: ['contentOffset', 'x'].
-  const eventMappings = [];
-  const alwaysNodes = [];
-
-  const getNode = node => {
-    if (Platform.OS === 'web') {
-      return node;
-    }
-    return node.__nodeID;
-  };
-
-  const traverse = (value, path) => {
-    if (value instanceof InternalAnimatedValue) {
-      eventMappings.push(path.concat(getNode(value)));
-    } else if (typeof value === 'object' && value.__val) {
-      eventMappings.push(path.concat(getNode(value.__val)));
-    } else if (typeof value === 'function') {
-      const node = new InternalAnimatedValue(0);
-      alwaysNodes.push(createAnimatedAlways(value(node)));
-      eventMappings.push(path.concat(getNode(node)));
-    } else if (typeof value === 'object') {
-      for (const key in value) {
-        traverse(value[key], path.concat(key));
-      }
-    }
-  };
-
+function sanitizeEventMapping(argMapping) {
   invariant(
     argMapping[0] && argMapping[0].nativeEvent,
     'Native driven events only support animated values contained inside `nativeEvent`.'
@@ -44,44 +14,16 @@ function sanitizeArgMapping(argMapping) {
 
   // Assume that the event containing `nativeEvent` is always the first argument.
   const ev = argMapping[0].nativeEvent;
-  if (typeof ev === 'object') {
-    traverse(ev, []);
-  } else if (typeof ev === 'function') {
-    const proxyHandler = {
-      get: function(target, name) {
-        if (name === '__isProxy') {
-          return true;
-        }
-        if (!target[name] && name !== '__val') {
-          target[name] = new Proxy({}, proxyHandler);
-        }
-        return target[name];
-      },
-      set: function(target, prop, value) {
-        if (prop === '__val') {
-          target[prop] = value;
-        }
-      },
-    };
-
-    const proxy =
-      typeof Proxy === 'function'
-        ? new Proxy({}, proxyHandler)
-        : createEventObjectProxyPolyfill();
-    alwaysNodes.push(createAnimatedAlways(ev(proxy)));
-    traverse(proxy, []);
-  }
-
-  return { eventMappings, alwaysNodes };
+  return sanitizeArgMapping(ev);
 }
 
 export default class AnimatedEvent extends AnimatedNode {
   constructor(argMapping, config = {}) {
-    const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
-    super({ type: 'event', argMapping: eventMappings });
+    const { objectMappings, alwaysNodes } = sanitizeEventMapping(argMapping);
+    super({ type: 'event', argMapping: objectMappings });
     this._alwaysNodes = alwaysNodes;
     if (Platform.OS === 'web') {
-      this._argMapping = eventMappings;
+      this._argMapping = objectMappings;
       this.__getHandler = () => {
         return ({ nativeEvent }) => {
           for (const [key, value] of this._argMapping) {
