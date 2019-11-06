@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -7,11 +9,13 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
 
 public class MapNode extends Node {
     public static class ArgMap {
@@ -27,7 +31,7 @@ public class MapNode extends Node {
             nodeID = eventPath.getInt(size - 1);
         }
 
-        public Double lookupValue(ReadableMap event) {
+        public Object lookupValue(ReadableMap event) {
             ReadableMap map = event;
             for (int i = 0; map != null && i < path.length - 1; i++) {
                 String key = path[i];
@@ -35,13 +39,9 @@ public class MapNode extends Node {
             }
             if (map != null) {
                 String key = path[path.length - 1];
-                return map.hasKey(key) ? map.getDouble(key) : null;
+                return map.hasKey(key) ? Utils.fromDynamic(map.getDynamic(key)) : null;
             }
             return null;
-        }
-
-        public Double lookupValue(ReadableArray event) {
-            return lookupValue(((ReadableMap) event));
         }
     }
 
@@ -71,19 +71,44 @@ public class MapNode extends Node {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
 
+        Log.d("InvokeR", "setValue: " + data.toString());
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
-            Double value = map.lookupValue(data);
+            Object value = map.lookupValue(data);
             if (value != null) {
                 mNodesManager.findNodeById(map.nodeID, ValueNode.class).setValue(value);
             }
+            Log.d("InvokeR", "setValue: " + Utils.concat(map.path) + ", " + map.nodeID + ", " + value
+                    + ", " + mNodesManager.findNodeById(map.nodeID, ValueNode.class).value()
+            );
         }
     }
 
     public WritableMap getValue(){
-        WritableMap map = Arguments.createMap();
-        //  build the map
-        return map;
+        Utils.ReanimatedWritableNativeMap value = new Utils.ReanimatedWritableNativeMap();
+        WritableMap argVal, accumulator;
+        String[] path;
+
+
+        for (int i = 0; i < mMapping.size(); i++) {
+            ArgMap map = mMapping.get(i);
+            path = map.path;
+            accumulator = new Utils.ReanimatedWritableNativeMap();
+            for (int j = path.length - 1; j >= 0; j--) {
+                argVal = new Utils.ReanimatedWritableNativeMap();
+                if(j == path.length - 1) {
+                    Node what = mNodesManager.findNodeById(map.nodeID, Node.class);
+                    argVal.putDouble(path[j], what.doubleValue());
+                } else {
+                    argVal.putMap(path[j], accumulator);
+                }
+                accumulator = argVal;
+            }
+            value.merge(accumulator);
+        }
+
+        Log.d("InvokeR", "getValue: " + value.toString());
+        return value;
     }
 
     @Override
