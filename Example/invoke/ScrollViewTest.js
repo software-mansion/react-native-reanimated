@@ -3,6 +3,7 @@ import { StyleSheet, Dimensions, findNodeHandle, Image, NativeModules, UIManager
 import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State, RectButton, TapGestureHandler } from 'react-native-gesture-handler';
 import AnimatedTimePicker from './TimePicker';
+import { runDecay } from '../imageViewer';
 
 
 const { interpolate, cond, eq, add, call, set, Value, event, concat, sub, color, invoke, dispatch,useCode, or,Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
@@ -25,7 +26,8 @@ export default function E() {
   const scroll = useMemo(() => new Value(0), []);
   const scrollX = useMemo(() => new Value(0), []);
   const scrollY = useMemo(() => new Value(0), []);
-  const clock = useMemo(() => new Clock(), []);
+  const clockX = useMemo(() => new Clock(), []);
+  const clockY = useMemo(() => new Clock(), []);
   const dest = useMemo(() => new Value(1), []);
   const finalScroll = useMemo(() => interpolate(dest, {
     inputRange: [0, 1],
@@ -44,32 +46,53 @@ export default function E() {
 
   const translationX = useMemo(() => new Value(0), []);
   const translationY = useMemo(() => new Value(0), []);
+  const velocityX = useMemo(() => new Value(0), []);
+  const velocityY = useMemo(() => new Value(0), []);
   const finalScrollX = useMemo(() => new Value(0), []);
   const finalScrollY = useMemo(() => new Value(0), []);
   const panState = useMemo(() => new Value(State.UNDETERMINED), []);
-  const onPan = useMemo(() => event([{
+  const onPan = useMemo(() =>
+    event([{
     nativeEvent: {
       translationX,
       translationY,
+      velocityX,
+      velocityY,
       oldState: panState
     }
-  }]), [translationX, translationY, panState]);
+    }]),
+    [
+      translationX,
+      translationY,
+      velocityX,
+      velocityY,
+      panState
+    ]
+  );
 
   useCode(
     block([
       cond(
         eq(panState, State.ACTIVE),
         [
+          set(finalScrollX, runDecay(clockX, scrollX, multiply(velocityX, -1))),
+          set(finalScrollY, runDecay(clockY, scrollY, multiply(velocityY, -1))),
           set(translationX, 0),
-          set(translationY, 0),
-          set(finalScrollX, scrollX),
-          set(finalScrollY, scrollY),
+          set(translationY, 0),          
+          cond(clockRunning(clockX), 0, set(finalScrollX, add(finalScrollX, 0))),
+          cond(clockRunning(clockY), 0, set(finalScrollY, add(finalScrollY, 0)))
+        ],
+        [
+          cond(clockRunning(clockX), set(finalScrollX, add(finalScrollX, 0))),
+          cond(clockRunning(clockY), set(finalScrollY, add(finalScrollY, 0))),
+          stopClock(clockX),
+          stopClock(clockY)
         ]
       ),
       call([scrollY, panState], console.log),
       scrollTo(h, sub(finalScrollX, translationX), sub(finalScrollY, translationY), 0)
     ]),
-    [h, translationX, scrollX, translationY, scrollY, panState, finalScrollX, scrollX, finalScrollY, scrollY]
+    [h, translationX, scrollX, translationY, scrollY, panState, finalScrollX, scrollX, finalScrollY, scrollY, clockX, clockY, velocityX, velocityY]
   );
 
   const vibrate = useMemo(() => new Value(0), []);
@@ -89,58 +112,45 @@ export default function E() {
     [vibrate]
   );
 
-  useCode(
-    block([
-      //set(scroll, runSpring(clock, scroll, 0, finalScroll)),
-      //scrollTo(h, 50, scroll, 0),
-      //onChange(state, cond(eq(state, State.ACTIVE), scrollBy(h, scrollX, scrollY, 50, scroll, 1)))
-      //cond(and(defined(q), defined(h)), invoke('UIManager', 'measureLayout', q, h, [error], [new Value(), new Value(), x])),
-      //call([x], a=>console.log('x?', a))
-      //invoke('ToastAndroid', 'showWithGravity', concat('hello from reanimated invoke', scroll), 200, 200)
-      invoke('PermissionsAndroid', 'requestPermission', 'android.permission.VIBRATE', {title: 'hello', message: 'prompting'}),
-      
-      invoke('SoundManager', 'playTouchSound'),
-      
-      invoke('ImageStoreManager', 'getBase64ForTag', "https://media.mnn.com/assets/images/2018/04/sunset_through_oak_tree.jpg.653x0_q80_crop-smart.jpg", [x], [error]),
-      //invoke('ShareModule', 'share', { title: 'Reanimated Share', message: 'hello from reanimated invoke' }, 'pica boo', {action: x}),
-      invoke('Clipboard', 'setString', concat('hello from reanimated invoke ', x)),
-    ]),
-    [h, q, scroll, dest, translationX, clock, finalScroll, state, scrollX, scrollY, x, error]
-  );
-  
-  useCode(call([state], a => console.log('state', a)), [state])
-  //useCode(call([scrollY], a => console.log('scroller', a)), [scrollY])
-  
-  /*
-  return (
-    <P
-      onHandlerStateChange={event([{ nativeEvent: { translationX } }])}
+  const baseScrollComponent = (
+    <ScrollView
+      style={styles.scrollView}
+      collapsable={false}
     >
-      <Image source={require('../imageViewer/grid.png')} ref={(r) => setH(findNodeHandle(r))} />
-    </P>
+      <Image source={require('../imageViewer/grid.png')} collapsable={false} />
+    </ScrollView>
   );
-  */
-  const isInside = useMemo(() => new Value(0));
-  useCode(call([isInside], a => console.log('isInside', a)), [isInside])
 
-  //return <AnimatedTimePicker />;
-
-
-  return (
+  const animatedScrollComponent = (
     <PanGestureHandler
       onGestureEvent={onPan}
       onHandlerStateChange={onPan}
     >
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.scrollView}
         collapsable={false}
         ref={(r) => setH(findNodeHandle(r))}
         onScroll={onScroll}
         scrollEnabled={false}
       >
-        <View style={{flex:1, minHeight: 200}} />
         <Image source={require('../imageViewer/grid.png')} collapsable={false} ref={(r) => setQ(findNodeHandle(r))} />
       </ScrollView>
     </PanGestureHandler>
   );
+
+  return (
+    <View style={{ flex: 1 }}>
+      {baseScrollComponent}
+      {animatedScrollComponent}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    borderColor: 'blue',
+    borderWidth: 2,
+    margin: 5
+  }
+})
