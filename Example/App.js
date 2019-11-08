@@ -14,7 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import ChatHeads from './chatHeads';
 import Code from './code';
-import Invoke from './invoke';
+import Invoke, { SCREENS as INVOKE_SCREENS } from './invoke';
 import Colors from './colors';
 import DifferentSpringConfigs from './differentSpringConfigs';
 import ImageViewer from './imageViewer';
@@ -131,6 +131,7 @@ const ExampleApp = createStackNavigator(
     Main: { screen: MainScreen },
     ...SCREENS,
     ...INTERACTABLE_SCREENS,
+    ...INVOKE_SCREENS
   },
   {
     initialRouteName: 'Main',
