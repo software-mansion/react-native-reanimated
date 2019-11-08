@@ -1,10 +1,8 @@
-import AnimatedNode from './AnimatedNode';
-import Value from './AnimatedValue';
-import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
-import AnimatedMap, { createAnimatedMap, createAnimatedCallback } from './AnimatedMap';
 import { adapt } from './AnimatedBlock';
-import { createAnimatedAlways } from './AnimatedAlways';
+import { createAnimatedCallback } from './AnimatedMap';
+import AnimatedNode from './AnimatedNode';
+import ReanimatedModule from '../ReanimatedModule';
 
 class AnimatedInvoke extends AnimatedNode {
   constructor(invokeConfig, ...params) {
@@ -43,4 +41,8 @@ export function createAnimatedInvoke(module, method, ...params) {
 
 export function createAnimatedDispatch(module, command, ...params) {
   return createAnimatedInvokeBase({ module, command }, ...params);
+}
+
+export function getDevUtil() {
+  return ReanimatedModule.getDevUtil();
 }

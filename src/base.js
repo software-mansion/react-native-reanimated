@@ -14,6 +14,6 @@ export { createAnimatedAlways as always } from './core/AnimatedAlways';
 export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
 export { createAnimatedFunction as proc } from './core/AnimatedFunction';
-export { createAnimatedInvoke as invoke, createAnimatedDispatch as dispatch } from './core/AnimatedInvoke';
+export { createAnimatedInvoke as invoke, createAnimatedDispatch as dispatch, getDevUtil } from './core/AnimatedInvoke';
 export { createAnimatedMap as map, createAnimatedCallback as callback } from './core/AnimatedMap';
 export * from './operators';
