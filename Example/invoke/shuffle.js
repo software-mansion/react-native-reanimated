@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Text, StyleSheet, Button, findNodeHandle, UIManager } from 'react-native';
 import Animated, { Transitioning, Transition } from 'react-native-reanimated';
 import { FlatList } from 'react-native-gesture-handler';
+import * as _ from 'lodash';
 
 const {
   useCode,
@@ -22,6 +23,8 @@ function shuffle(array) {
 }
 
 const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, [a, b, c, d, e, f])));
+
+const keys = ['x', 'y', 'width', 'height', 'screenX', 'screenY'];
 
 function Item({ item, parent }) {
   const ref = useRef();
@@ -47,7 +50,7 @@ function Item({ item, parent }) {
   );
 
   useCode(
-    call(values, v => console.log(item, v)),
+    call(values, v => console.log(item, _.zipObject(keys,v))),
     [values]
   );
 

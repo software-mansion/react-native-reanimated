@@ -1,29 +1,30 @@
-﻿import React, { useCallback, useEffect } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList, RectButton } from 'react-native-gesture-handler';
-import ScrollViewTest from './ScrollViewTest';
-import AnimatedTimePicker from './TimePicker';
-import Shuffle from './shuffle';
-import Dev from './Dev';
+import Animated from 'react-native-reanimated';
+import * as _ from 'lodash';
 
-export const SCREENS = {
-  ScrollView: { screen: ScrollViewTest, title: 'ScrollView' },
-  NativeModules: { screen: AnimatedTimePicker, title: 'NativeModules' },
-  Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
-  Dev: { screen: Dev, title: 'DEV' }
-};
+function useDevUtil() {
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    Animated.getDevUtil().then(setData);
+  }, []);
+  const { viewManagers, ...nativeModules } = data;
+  return [nativeModules, viewManagers];
+}
 
-function MainScreen(props) {
-  const data = Object.keys(SCREENS).map(key => ({ key }));
+function Dev(props) {
+  const [nativeModules, viewManagers] = useDevUtil();
+
   return (
     <FlatList
       style={styles.list}
-      data={data}
+      data={_.keys(nativeModules)}
       ItemSeparatorComponent={ItemSeparator}
       renderItem={p => (
         <MainScreenItem
           {...p}
-          onPressItem={({ key }) => props.navigation.navigate(key)}
+          onPressItem={(a) => {console.log(a) }}
         />
       )}
       renderScrollComponent={p => <ScrollView {...p} />}
@@ -31,23 +32,21 @@ function MainScreen(props) {
   );
 }
 
-MainScreen.navigationOptions = {
-  title: 'Invoke Playground',
-};
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
 function MainScreenItem({ onPressItem, item }) {
   const _onPress = useCallback(() => onPressItem(item), [onPressItem, item]);
   const { key } = item;
+  console.log(item)
   return (
     <RectButton style={styles.button} onPress={_onPress}>
-      <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
+      <Text style={styles.buttonText}>{item}</Text>
     </RectButton>
   );
 }
 
-export default MainScreen;
+export default Dev;
 
 const styles = StyleSheet.create({
   list: {
