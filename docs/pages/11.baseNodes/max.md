@@ -1,7 +1,7 @@
 ## `max`
 
 ```js
-max(nodeOrValue1, ...)
+max(nodeOrValue1, nodeOrValue2);
 ```
 
-Takes one or more nodes as an input and returns a maximum of all the node's values.
+Takes two nodes as an input and returns a maximum of all the node's values.
