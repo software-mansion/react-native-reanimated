@@ -403,4 +403,11 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
+  /**
+   * A helper for devs using invoke/dispatch
+   * This component will render only in __DEV__ mode and is safe for production
+   * */
+  export class Dev extends Component {
+
+  }
 }

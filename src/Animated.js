@@ -52,6 +52,11 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+
+  // dev
+  get Dev() {
+    return require('./dev').Dev;
+  }
 };
 
 export default Animated;
