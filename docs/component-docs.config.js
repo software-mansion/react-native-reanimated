@@ -17,10 +17,6 @@ Object.defineProperty(Array.prototype, 'flat', {
 
 const root = path.join(__dirname, '..');
 const dist = path.join(__dirname, 'dist');
-const assets = [
-  path.join(__dirname, 'assets', 'screenshots'),
-  path.join(__dirname, 'assets', 'images'),
-];
 const styles = [path.join(__dirname, 'assets', 'styles.css')];
 const github =
   'https://github.com/kmagiera/react-native-reanimated/edit/master/';
@@ -72,7 +68,6 @@ const docs = mapToObject(path.join(__dirname, 'pages'));
 
 module.exports = {
   root,
-  assets,
   styles,
   pages: docs,
   output: dist,
