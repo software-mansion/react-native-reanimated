@@ -81,9 +81,10 @@ public class NativeModuleAccessor {
             return methods.get(name);
         } else {
             //  method was not found
+            String[] keys = methods.keySet().toArray(new String[methods.size()]);
             throw new JSApplicationIllegalArgumentException(
                     "Reanimated invoke: method name " + name + " was not found in class " + nativeModule.getName() +
-                            ". Expected one of:\n" + concat(methods.keySet().toArray(new String[methods.size()]))
+                            ". Expected one of:\n" + concat(keys)
             );
         }
     }
@@ -108,7 +109,7 @@ public class NativeModuleAccessor {
 
         //  append view manager names
         try{
-            Map<String, ViewManager> viewManagers = UIManagerReanimatedHelper
+            Map<String, ViewManager> viewManagers = ReanimatedViewManagerRegistry
                     .getViewManagers(
                             mContext.getNativeModule(UIManagerModule.class)
                                     .getUIImplementation()

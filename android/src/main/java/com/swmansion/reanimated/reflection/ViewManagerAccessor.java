@@ -57,7 +57,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         } catch (Throwable err){
             String details = "";
             try{
-                Map<String, ViewManager> viewManagers = UIManagerReanimatedHelper.getViewManagers(mUIManager.getUIImplementation());
+                Map<String, ViewManager> viewManagers = ReanimatedViewManagerRegistry.getViewManagers(mUIManager.getUIImplementation());
                 String[] keys = viewManagers.keySet().toArray(new String[viewManagers.size()]);
                 details = "Expected one of:\n" + concat(keys);
             } catch (Throwable error) {
