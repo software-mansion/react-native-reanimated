@@ -1,8 +1,7 @@
-
 ## `exp`
 
 ```js
-exp(node)
+exp(node);
 ```
 
 Returns an exponent of the value of the given node.

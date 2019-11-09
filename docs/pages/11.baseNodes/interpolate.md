@@ -1,4 +1,3 @@
-
 ## `interpolate`
 
 ```js

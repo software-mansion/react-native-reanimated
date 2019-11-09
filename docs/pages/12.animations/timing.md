@@ -1,8 +1,11 @@
-
 ## `timing`
 
 ```js
-timing(clock, { finished, position, frameTime, time }, { toValue, duration, easing })
+timing(
+  clock,
+  { finished, position, frameTime, time },
+  { toValue, duration, easing }
+);
 ```
 
 Updates `position` node by running timing based animation from a given position to a destination determined by `toValue`. The animation is expected to last `duration` milliseconds and use `easing` function that could be set to one of the nodes exported by the `Easing` object.
