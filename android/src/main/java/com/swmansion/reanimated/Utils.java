@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 
@@ -47,19 +49,24 @@ public class Utils {
   }
 
   private static Boolean isNumber(Object o){
-    return o instanceof Number;
+    return o instanceof Number ||
+            o.equals(int.class) || o.equals(Integer.class) ||
+            o.equals(float.class) || o.equals(Float.class) ||
+            o.equals(double.class) || o.equals(Double.class) ||
+            o.equals(long.class) || o.equals(Long.class) ||
+            o.equals(short.class) || o.equals(Short.class);
   }
 
   private static Boolean isInteger(Object o){
-    return o instanceof Integer;
+    return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
   }
 
   private static Boolean isString(Object o){
-    return o instanceof String;
+    return o instanceof String || o.equals(String.class);
   }
 
   private static Boolean isBoolean(Object o){
-    return o instanceof Boolean;
+    return o instanceof Boolean || o.equals(boolean.class) || o.equals(Boolean.class);
   }
 
   private static Boolean isNull(Object o){
@@ -294,8 +301,6 @@ public class Utils {
       return Double.valueOf((double) o);
     }
   }
-
-
 
   public static String concat(Object... args){
     return concat(args, ", ");
