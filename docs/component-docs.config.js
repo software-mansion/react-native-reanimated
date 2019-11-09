@@ -18,8 +18,6 @@ Object.defineProperty(Array.prototype, 'flat', {
 const root = path.join(__dirname, '..');
 const dist = path.join(__dirname, 'dist');
 const assets = [
-  path.join(__dirname, 'assets', 'gallery'),
-  path.join(__dirname, 'assets', 'showcase'),
   path.join(__dirname, 'assets', 'screenshots'),
   path.join(__dirname, 'assets', 'images'),
 ];
