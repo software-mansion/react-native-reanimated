@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">React Native Reanimated</h1>
-  <h3 align="center">React Native's Animated library reimplemented..</h3>
+  <h3 align="center">React Native's Animated library reimplemented</h3>
 </p>
 
 React Native Reanimated provides a more comprehensive,
@@ -18,13 +18,15 @@ Check out our dedicated documentation page for info about this library, API refe
 
 ## Examples
 
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Clone the repo, go to the `Example/` folder and run:
+The source code for the example (showcase) app is under the [`Example/`](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/) directory.
+
+In order to run it you need to pull in the repository, enter `Example/` folder and run:
 
 ```bash
   yarn install
 ```
 
-Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the example app on).
+Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the Example app on).
 
 You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
 
