@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { StyleSheet, Button, findNodeHandle, UIManager, processColor, Platform, StatusBar } from 'react-native';
-import Animated, { Transitioning, Transition } from 'react-native-reanimated';
+import Animated, { Transitioning, Transition, TransitionState } from 'react-native-reanimated';
 import { FlatList, State, PanGestureHandler } from 'react-native-gesture-handler';
 import * as _ from 'lodash';
 
@@ -21,14 +21,19 @@ const {
   greaterOrEq,
   lessOrEq,
   add,
-  Text
+  Text,
+  neq,
+  Clock,
+  startClock,
+  clockRunning,
+  sub,
 } = Animated;
 
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, [a, b, c, d, e, f])));
+//const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, [a, b, c, d, e, f])));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -56,19 +61,40 @@ export function useStatusBarHeight() {
   }, []);
 }
 
+function useLayout() {
+  const tag = useMemo(() => new Value(0), []);
+  const onLayout = useCallback((e) => tag.setValue(e.nativeEvent.target), [tag]);
+  return [tag, onLayout];
+}
+
 const keys = ['x', 'y', 'width', 'height', 'screenX', 'screenY'];
 
-function Item({ item, parent, x, y }) {
+function delay(node, delayMs) {
+  const clock = new Clock();
+  const start = new Value();
+  
+  return block([
+    cond(clockRunning(clock), 0, [
+      set(start, clock),
+      startClock(clock)
+    ]),
+    cond(greaterOrEq(sub(clock, start), delayMs), node)
+  ]);
+}
+
+function Item({ item, parent, x, y, index }) {
   const ref = useRef();
   const values = useMemo(() => new Array(6).fill(0).map(() => new Value(0)), []);
+  const values1 = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
   const [rx, ry, width, height, ax, ay] = values;
   const statusBarHeight = useStatusBarHeight();
-  const bgc = useMemo(() =>
-    cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent')),
-    [x, y, ax, ay, width, height, statusBarHeight, item.color]
-  );
+  const bgc = useMemo(() => new Value(processColor('transparent')), []);
+  const measure = useMemo(() => new Value(0), []);
+  const [tag, onLayout] = useLayout();
+
   
 
+  /*
   const m = useCallback(() => {
     const handle = findNodeHandle(ref.current);
     const handleParent = findNodeHandle(parent.current);
@@ -79,21 +105,40 @@ function Item({ item, parent, x, y }) {
       (...o) => console.log('measured', o)
     )
   }, [ref, parent]);
-
+  */
+  useCode(
+    cond(
+      neq(tag, 0),
+      [
+        //set(measure, 0),
+        invoke('UIManager', 'measure', tag, values),
+        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, [{ a: new Value() }], values1)),
+      ]
+    ),
+    [tag, parent, index]
+  );
+  
   useCode(
     block([
-      findNodeHandle(ref.current) ? invoke('UIManager', 'measure', findNodeHandle(ref.current), values) : 0,
-      //findNodeHandle(ref.current) && findNodeHandle(parent.current) ? invoke('UIManager', 'measureLayout', findNodeHandle(ref.current), findNodeHandle(parent.current), [{ a: new Value() }], values):0,
-    ])
+      call([tag, parent], v => console.log('tags', v)),
+      //call(values, v => console.log(item, _.zipObject(keys, v))),
+      //call(values1, v => console.log(item, _.zipObject(keys, v))),
+    ]),
+    [tag, parent, ...values, ...values1]
   );
 
   useCode(
-    call(values, v => console.log(item, _.zipObject(keys,v))),
-    [values]
+    set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
+    [bgc, x, y, ax, ay, width, height, statusBarHeight, item.color, index]
   );
   
   return (
-    <Text style={[styles.text, {backgroundColor:bgc}]} ref={ref} collapsable={false} onLayout={m}>
+    <Text
+      style={[styles.text, { backgroundColor: bgc }]}
+      ref={ref}
+      collapsable={false}
+      onLayout={onLayout}
+    >
       {item.title}
     </Text>
   );
@@ -133,10 +178,12 @@ function Shuffle() {
     },
   ]);
   const ref = useRef();
+  const [tag, onLayout] = useLayout();
    
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
-  const renderItem = useCallback(({ item }) => <Item item={item} parent={ref} x={absoluteX} y={absoluteY} />, [ref, absoluteX, absoluteY]);
+  const evaluate = useMemo(() => new Value(0), []);
+  const renderItem = useCallback((props) => <Item {...props} parent={tag} x={absoluteX} y={absoluteY} />, [tag, absoluteX, absoluteY]);
   const keyExtractor = useCallback((item) => item.title, []);
 
   const onGestureEvent = useMemo(() =>
@@ -164,34 +211,55 @@ function Shuffle() {
     [absoluteX, absoluteY]
   );
 
+
+  const onTransitionEnd = useMemo(() =>
+    event([{
+      nativeEvent: ({ target, state }) => cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1)))
+    }]),
+    [evaluate]
+  );
+
+  useCode(
+    block([
+      call([evaluate], v => console.log('evaluate', v)),
+      //call(values, v => console.log(item, _.zipObject(keys, v))),
+      //call(values1, v => console.log(item, _.zipObject(keys, v))),
+    ]),
+    [evaluate]
+  );
+
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={onHandlerStateChange}
     >
-      <View collapsable={false} style={{ flex: 1 }}>
+      <View collapsable={false} style={{ flex: 1 }} onLayout={onLayout}>
         <Transitioning.View
           ref={ref}
           collapsable={false}
           transition={transition}
           style={styles.centerAll}
+          animateMount
+          onTransitionStateChange={onTransitionEnd}
         >
-          <Text style={styles.text}>Drag your finger over the list</Text>
-          <Button
-            title="shuffle"
-            color="#FF5252"
-            onPress={() => {
-              ref.current.animateNextTransition();
-              const shuffled = items.slice();
-              shuffle(shuffled);
-              setItems(shuffled);
-            }}
-          />
-          <FlatList
-            data={items}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-          />
+          <View collapsable={false} style={{ flex: 1 }}>
+            <Text style={styles.text}>Drag your finger over the list</Text>
+            <Button
+              title="shuffle"
+              color="#FF5252"
+              onPress={() => {
+                ref.current.animateNextTransition(() => console.log('animateNextTransition end'));
+                const shuffled = items.slice();
+                shuffle(shuffled);
+                setItems(shuffled);
+              }}
+            />
+            <FlatList
+              data={items}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+            />
+          </View>
         </Transitioning.View>
       </View>
     </PanGestureHandler>
