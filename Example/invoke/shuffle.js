@@ -129,7 +129,7 @@ function Shuffle() {
     },
     {
       title: '🍌 Banana',
-      color: 'yellow'
+      color: 'gold'
     },
   ]);
   const ref = useRef();
