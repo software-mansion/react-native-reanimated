@@ -32,8 +32,6 @@ async function traverse() {
   }
   const jscontent = await readFileAsync(JS_MODULE)
   
-  console.log(jscontent)
-  
   // TODO
   const { objc, js, registry, objcregistry } = inputs[0];
   
