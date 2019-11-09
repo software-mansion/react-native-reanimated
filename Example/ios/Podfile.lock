@@ -219,7 +219,7 @@ PODS:
     - ReactCommon/jscallinvoker (= 0.61.1)
   - RNGestureHandler (1.4.1):
     - React
-  - RNReanimated (1.3.1):
+  - RNReanimated (1.4.0):
     - React
   - Yoga (1.14.0)
 
@@ -320,7 +320,7 @@ SPEC CHECKSUMS:
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: 0846affdb2924b01093eb696766ecb0104e409e0
   FBReactNativeSpec: c4cf958af1b97799b524f63a26a1c509c0295b04
-  Folly: 30e7936e1c45c08d884aa59369ed951a8e68cf51
+  Folly: 529e18604ef2d2826fe1d185795332317bc32b4b
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   RCTRequired: 53825815218847d3e9c7b6d92ad2d197a926d51e
   RCTTypeSafety: d886540c518e53064dfa081bf7693fd650699b92
@@ -342,7 +342,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 8be61459e3749d1fb02cf414edd05b3007622882
   ReactCommon: 4fba5be89efdf0b5720e0adb3d8d7edf6e532db0
   RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
-  RNReanimated: 6c221ff761a9dc6ba8f94e9d61738b7006b076da
+  RNReanimated: b2ab0b693dddd2339bd2f300e770f6302d2e960c
   Yoga: d8c572ddec8d05b7dba08e4e5f1924004a177078
 
 PODFILE CHECKSUM: 5d33b226bedcf33a9eaa74f8b42fbef1a3877e59

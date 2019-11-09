@@ -15,3 +15,4 @@ export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
 export { createAnimatedFunction as proc } from './core/AnimatedFunction';
 export * from './operators';
+export { default as codegen } from './../codegen/jsModule';

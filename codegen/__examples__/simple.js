@@ -1,3 +1,5 @@
+
+const ABS = `
 import { cond, lessThan, multiply, codegen } from '../base';
 
 const abs = codegen('abs')((a) => {
@@ -5,3 +7,8 @@ const abs = codegen('abs')((a) => {
 })
 
 export default abs;
+`.trim();
+
+export default {
+  ABS
+}

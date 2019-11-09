@@ -4,11 +4,6 @@ import React from 'react';
 
 import renderer from 'react-test-renderer';
 
-jest.mock('./ReanimatedEventEmitter');
-jest.mock('./ReanimatedModule');
-jest.mock('./derived/evaluateOnce');
-jest.mock('./core/AnimatedProps');
-
 const { Value, timing, spring, decay } = Animated;
 describe('Reanimated backward compatible API', () => {
   beforeEach(() => {

@@ -23,6 +23,8 @@
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
 
+// CODEGEN CLASSES
+
 @interface RCTUIManager ()
 
 - (void)updateView:(nonnull NSNumber *)reactTag
@@ -236,6 +238,7 @@
             @"param": [REAParamNode class],
             @"func": [REAFunctionNode class],
             @"callfunc": [REACallFuncNode class],
+            // CODEGEN REGISTER
 //            @"listener": nil,
             };
   });
