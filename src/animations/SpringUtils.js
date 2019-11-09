@@ -105,9 +105,9 @@ function fromBouncinessAndSpeedNodes(bounciness, speed, rest) {
 
   let b = normalize(divide(bounciness, 1.7), 0, 20);
   b = projectNormal(b, 0, 0.8);
-  let s = normalize(divide(speed, 1.7), 0, 20);
-  let bouncyTension = projectNormal(s, 0.5, 200);
-  let bouncyFriction = quadraticOutInterpolation(
+  const s = normalize(divide(speed, 1.7), 0, 20);
+  const bouncyTension = projectNormal(s, 0.5, 200);
+  const bouncyFriction = quadraticOutInterpolation(
     b,
     b3Nobounce(bouncyTension),
     0.01

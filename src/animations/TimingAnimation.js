@@ -48,6 +48,7 @@ export default class TimingAnimation extends Animation {
   stop() {
     // this._finished && this._finished.setValue(1);
   }
+
   static getDefaultState() {
     return {
       position: new AnimatedValue(0),

@@ -34,7 +34,7 @@ export default function createEventObjectProxyPolyfill() {
     contentInset: { right: {}, top: {}, left: {}, bottom: {} },
   };
   const traverse = obj => {
-    for (let key in obj) {
+    for (const key in obj) {
       obj[key].__isProxy = true;
       traverse(obj[key]);
     }

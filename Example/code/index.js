@@ -55,6 +55,7 @@ export default class Example extends React.Component {
         </Animated.Code>
         <PanGestureHandler
           maxPointers={1}
+          minDist={10}
           onGestureEvent={this.onGestureEvent}
           onHandlerStateChange={this.onGestureEvent}>
           <Animated.View

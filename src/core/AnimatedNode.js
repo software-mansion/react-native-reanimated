@@ -18,6 +18,11 @@ function sanitizeConfig(config) {
 function runPropUpdates() {
   const visitedNodes = new Set();
   const findAndUpdateNodes = node => {
+    if (!node) {
+      console.warn('findAndUpdateNodes was passed a nullish node');
+      return;
+    }
+
     if (visitedNodes.has(node)) {
       return;
     } else {
@@ -26,7 +31,12 @@ function runPropUpdates() {
     if (typeof node.update === 'function') {
       node.update();
     } else {
-      node.__getChildren().forEach(findAndUpdateNodes);
+      const nodes = node.__getChildren();
+      if (nodes) {
+        for (let i = 0, l = nodes.length; i < l; i++) {
+          findAndUpdateNodes(nodes[i]);
+        }
+      }
     }
   };
   for (let i = 0; i < UPDATED_NODES.length; i++) {
@@ -51,13 +61,25 @@ export default class AnimatedNode {
 
   __attach() {
     this.__nativeInitialize();
-    this.__inputNodes &&
-      this.__inputNodes.forEach(node => node.__addChild(this));
+
+    const nodes = this.__inputNodes;
+
+    if (nodes) {
+      for (let i = 0, l = nodes.length; i < l; i++) {
+        nodes[i].__addChild(this);
+      }
+    }
   }
 
   __detach() {
-    this.__inputNodes &&
-      this.__inputNodes.forEach(node => node.__removeChild(this));
+    const nodes = this.__inputNodes;
+
+    if (nodes) {
+      for (let i = 0, l = nodes.length; i < l; i++) {
+        nodes[i].__removeChild(this);
+      }
+    }
+
     this.__nativeTearDown();
   }
 
@@ -128,7 +150,11 @@ export default class AnimatedNode {
     this.__children.push(child);
     child.__nativeInitialize();
 
-    ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
+    if (ReanimatedModule.connectNodes) {
+      ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
+    } else {
+      this.__dangerouslyRescheduleEvaluate();
+    }
   }
 
   __removeChild(child) {
@@ -146,7 +172,11 @@ export default class AnimatedNode {
   }
 
   _connectAnimatedView(nativeViewTag) {
-    ReanimatedModule.connectNodeToView(this.__nodeID, nativeViewTag);
+    if (ReanimatedModule.connectNodeToView) {
+      ReanimatedModule.connectNodeToView(this.__nodeID, nativeViewTag);
+    } else {
+      this.__dangerouslyRescheduleEvaluate();
+    }
   }
 
   _disconnectAnimatedView(nativeViewTag) {
