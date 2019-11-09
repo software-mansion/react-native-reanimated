@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">React Native Reanimated</h1>
-  <h3 align="center">React Native's Animated library reimplemented..</h3>
+  <h3 align="center">React Native's Animated library reimplemented</h3>
 </p>
 
 React Native Reanimated provides a more comprehensive,
@@ -26,7 +26,7 @@ In order to run it you need to pull in the repository, enter `Example/` folder a
   yarn install
 ```
 
-Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the example app on).
+Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the Example app on).
 
 You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
 
