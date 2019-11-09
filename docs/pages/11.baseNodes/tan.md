@@ -1,8 +1,7 @@
-
 ## `tan`
 
 ```js
-tan(node)
+tan(node);
 ```
 
 Returns a tangent of the value in radians of the given node

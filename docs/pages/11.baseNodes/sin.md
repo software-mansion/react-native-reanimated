@@ -1,8 +1,7 @@
-
 ## `sin`
 
 ```js
-sin(node)
+sin(node);
 ```
 
 Returns a sine of the value (in radians) of the given node.
