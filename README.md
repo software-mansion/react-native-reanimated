@@ -38,6 +38,12 @@ In order to use `react-native-reanimated` with Jest, you need to add the followi
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 ```
 
+## 100% declarative gesture interactions
+
+`react-native-reanimated` works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler) library. Currently all the examples are made using that library, including the ultimate [ImagePreview app](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/imageViewer). See it in action below:
+
+![](/assets/imagepreview.gif)
+
 ## License
 
 Gesture handler library is licensed under [The MIT License](LICENSE).
