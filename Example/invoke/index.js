@@ -1,16 +1,16 @@
 ﻿import React, { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList, RectButton } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import ScrollViewTest from './ScrollViewTest';
 import AnimatedTimePicker from './TimePicker';
 import Shuffle from './shuffle';
-import Dev from './Dev';
 
 export const SCREENS = {
   ScrollView: { screen: ScrollViewTest, title: 'ScrollView' },
   NativeModules: { screen: AnimatedTimePicker, title: 'NativeModules' },
   Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
-  Dev: { screen: Dev, title: 'DEV' }
+  Dev: { screen: Animated.Dev, title: 'DEV' }
 };
 
 function MainScreen(props) {
@@ -20,6 +20,7 @@ function MainScreen(props) {
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
+      //keyExtractor={(item, index) => }
       renderItem={p => (
         <MainScreenItem
           {...p}
