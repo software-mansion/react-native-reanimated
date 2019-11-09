@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, findNodeHandle } from 'react-native';
+import { View, findNodeHandle, requireNativeComponent } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
+import createAnimatedComponent from './createAnimatedComponent';
 
 const TransitioningContext = React.createContext();
 
@@ -100,7 +101,11 @@ class Sequence extends React.Component {
   }
 }
 
+const viewName = 'ReanimatedTransitionManager';
+const TransitioningNativeView = createAnimatedComponent(requireNativeComponent(viewName));
+
 function createTransitioningComponent(Component) {
+  const AnimatedComponent = createAnimatedComponent(Component);
   class Wrapped extends React.Component {
     propTypes = Component.propTypes;
     transitions = [];
@@ -116,11 +121,11 @@ function createTransitioningComponent(Component) {
       this.viewRef.current.setNativeProps(props);
     }
 
-    animateNextTransition() {
+    animateNextTransition(callback) {
       const viewTag = findNodeHandle(this.viewRef.current);
-      ReanimatedModule.animateNextTransition(viewTag, {
+      return ReanimatedModule.animateNextTransition(viewTag, {
         transitions: this.transitions,
-      });
+      }, callback);
     }
 
     render() {
@@ -130,7 +135,7 @@ function createTransitioningComponent(Component) {
           <TransitioningContext.Provider value={this.transitions}>
             {transition}
           </TransitioningContext.Provider>
-          <Component {...rest} ref={this.viewRef} collapsable={false} />
+          <AnimatedComponent {...rest} ref={this.viewRef} collapsable={false} />
         </React.Fragment>
       );
     }
@@ -138,8 +143,13 @@ function createTransitioningComponent(Component) {
   return Wrapped;
 }
 
+const TransitionState = {
+  BEGAN: 0,
+  END: 1
+};
+
 const Transitioning = {
-  View: createTransitioningComponent(View),
+  View: createTransitioningComponent(TransitioningNativeView),
 };
 
 const Transition = {
@@ -150,4 +160,4 @@ const Transition = {
   Change: wrapTransitioningContext(Change),
 };
 
-export { Transitioning, Transition, createTransitioningComponent };
+export { Transitioning, Transition, TransitionState, createTransitioningComponent };

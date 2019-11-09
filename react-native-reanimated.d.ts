@@ -16,7 +16,8 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    NativeSyntheticEvent
   } from 'react-native';
   namespace Animated {
     class AnimatedNode<T> {
@@ -236,7 +237,7 @@ declare module 'react-native-reanimated' {
     ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
 
     type AnimatedInvokeConfig = { module: string } & ({ method: string } | { command: string | number });
-    export function invoke(config: AnimatedInvokeConfig, ...params: Array<Animated.Value<number> /*| Animated.Ma*/>) => Adaptable<number>;
+    export function invoke(config: AnimatedInvokeConfig, ...params: Array<Animated.Value<number> /*| Animated.Ma*/>): Adaptable<number>;
 
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
@@ -372,12 +373,27 @@ declare module 'react-native-reanimated' {
   }
   export const Easing: EasingStatic;
 
+  export enum TransitionState {
+    BEGAN,
+    END
+  }
+
+  export interface TransitionStateChangeEvent {
+    target: number,
+    state: TransitionState
+  }
+
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
+    onTransitionStateChange: (e: NativeSyntheticEvent<TransitionStateChangeEvent>) => void
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
-    animateNextTransition(): void;
+    /**
+     * 
+     * @param callback invoked once transition has ended
+     */
+    animateNextTransition(callback?: () => void): void;
   }
 
   export class Transitioning extends Component {
