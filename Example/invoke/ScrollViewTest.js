@@ -72,6 +72,7 @@ export default function E() {
 
   useCode(
     block([
+      call([scrollX, scrollY], e=>console.log('scroll',e)),
       cond(
         eq(panState, State.ACTIVE),
         [
@@ -92,7 +93,7 @@ export default function E() {
       call([scrollY, panState], console.log),
       scrollTo(h, sub(finalScrollX, translationX), sub(finalScrollY, translationY), 0)
     ]),
-    [h, translationX, scrollX, translationY, scrollY, panState, finalScrollX, scrollX, finalScrollY, scrollY, clockX, clockY, velocityX, velocityY]
+    [h, panState, translationX, translationY, finalScrollX,finalScrollY, scrollX, scrollY, clockX, clockY, velocityX, velocityY]
   );
 
   const vibrate = useMemo(() => new Value(0), []);
