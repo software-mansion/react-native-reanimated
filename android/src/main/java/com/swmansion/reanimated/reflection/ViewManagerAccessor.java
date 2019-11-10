@@ -93,9 +93,8 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
                 );
             }
         } else {
-            throw new JSApplicationIllegalArgumentException(
-                    "Animated invoke: could not find commands map of View manager " + mViewManager
-            );
+            String message = "Animated invoke: could not find commands map for View manager " + mViewManager.getClass().getSimpleName();
+            Log.w(ReactConstants.TAG, message);
         }
     }
 
@@ -155,6 +154,10 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
     }
 
     public void receiveCommand(ReadableArray args) {
-        mViewManager.receiveCommand(mView, mCommandId.asString(), args);
+        if (mCommandId.getType().equals(ReadableType.Number)) {
+            mViewManager.receiveCommand(mView, mCommandId.asInt(), args);
+        } else {
+            mViewManager.receiveCommand(mView, mCommandId.asString(), args);
+        }
     }
 }
