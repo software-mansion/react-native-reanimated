@@ -2,12 +2,14 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList, RectButton } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
-import ScrollViewTest from './ScrollViewTest';
+import SyncedScrollViews from './SyncedScrollViews';
+import ControlledScrollView from './ControlledScrollView';
 import AnimatedTimePicker from './TimePicker';
 import Shuffle from './shuffle';
 
 export const SCREENS = {
-  ScrollView: { screen: ScrollViewTest, title: 'ScrollView' },
+  ScrollView: { screen: ControlledScrollView, title: 'ControlledScrollView' },
+  SyncedScrollViews: { screen: SyncedScrollViews, title: 'SyncedScrollViews' },
   NativeModules: { screen: AnimatedTimePicker, title: 'NativeModules' },
   Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
   Dev: { screen: Animated.Dev, title: 'DEV' }
