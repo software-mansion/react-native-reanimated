@@ -110,18 +110,14 @@ function Item({ item, parent, evaluate, x, y, index }) {
 
   useCode(
     cond(
-      neq(tag, 0),
-      onChange(
-        evaluate,
-        [
-          invoke('UIManager', 'measure', tag, callback(...values)),
-          //call(values, v => console.log(item, _.zipObject(keys, v)))
-          //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback{ a: new Value() }), callback(...values1))),
-        ]
-
-      )
+      and(neq(tag, 0), neq(evaluate, -1)),
+      [
+        invoke('UIManager', 'measure', tag, callback(...values)),
+        //call(values, v => console.log(item, _.zipObject(keys, v)))
+        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback{ a: new Value() }), callback(...values1))),
+      ]
     ),
-    [tag, parent, index, evaluate]
+    [tag, parent, evaluate]
   );
 
   useCode(
@@ -211,9 +207,9 @@ function Shuffle() {
   
   const onTransition = useMemo(() =>
     event([{
-      nativeEvent: ({ target, state }) => block([
+      nativeEvent: ({ state }) => block([
         set(transitionState, state),
-        cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1)))
+        onChange(state, cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1))))
       ])
     }]),
     [evaluate, transitionState]
