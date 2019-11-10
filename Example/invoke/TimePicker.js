@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
-import { processColor, ToastAndroid, TimePickerAndroid } from 'react-native';
-import { RectButton, State, TapGestureHandler } from 'react-native-gesture-handler';
+import React, { useMemo, useEffect } from 'react';
+import { processColor, ToastAndroid, TimePickerAndroid, StyleSheet, Platform } from 'react-native';
+import { RectButton, State, TapGestureHandler, PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, { Easing } from 'react-native-reanimated';
-import { runSpring } from '../test';
 import { colorHSV } from '../colors';
 
 const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
@@ -48,88 +47,113 @@ export default function AnimatedTimePicker() {
     return add(hour, m);
   }, [minute]);
 
-  const state = useMemo(() => new Value(State.UNDETERMINED), []);
+  const animState = useMemo(() => new Value(State.UNDETERMINED), []);
   const appState = useMemo(() => new Value("initialAppState"), []);
   
   const error = useMemo(() => new Value(0), []);
 
-  const onButtonPress = useMemo(() => event([{ nativeEvent: { oldState: state } }]), [state]);
-
-  useCode(
-    onChange(
-      state,
-      cond(
-        eq(state, State.ACTIVE),
-        [
-          set(state, State.UNDETERMINED)
-        ]
-      )
-      
-    ),
-    [state]
-  );
-
-  const animator = useMemo(() => new Value(0), []);
+  const onButtonPress = useMemo(() => event([{ nativeEvent: ({ state }) => cond(eq(state, State.ACTIVE), set(animState, 1)) }]), [animState]);
+  const onButtonPress1 = useMemo(() => event([{ nativeEvent: ({ state }) => cond(eq(state, State.ACTIVE), set(animState, 0)) }]), [animState]);
+  
+  
+  
+  const animator = useMemo(() => new Value(1), []);
   const colorHue = useMemo(() => new Value(0), []);
   const clock = useMemo(() => new Clock(), []);
+  const color = useMemo(() => colorHSV(colorHue, 0.9, 1), [colorHue]);
+  const inputChangeTracker = useMemo(() => or(neq(diff(hour), 0), neq(diff(minute), 0)), [hour, minute]);
+
+  useCode(
+    call([animState, animator], a => console.log('state', a)),
+    [animState]
+  );
+
+  useEffect(() => {
+    return () => colorHue.setValue(50)
+  })
 
   useCode(
     block([
       set(colorHue, runTiming(clock, colorHue, multiply(animator, 360))),
-      cond(clockRunning(clock), 0, set(animator, not(animator))),
-      invoke('StatusBarManager', 'setColor', colorHSV(colorHue, 1, 1), 0),
-      call([action, hour, minute, colorHue], a => console.log('time', a))
+      invoke('StatusBarManager', 'setColor', color, 0),
     ]),
-    [colorHue, clock, animator, action, hour, minute]
+    [colorHue, clock, animator, action, hour, minute, animState]
   );
-
+  
   useCode(
-    block([
-      onChange(state, cond(eq(state, State.ACTIVE), invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})))),
-      call([appState], a => console.log('appState', a))
-    ]),
-    [appState, state]
-  )
-
-  useCode(
-    block([
-      invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, callback({ action, hour, minute })),
+    onChange(
+      animState,
       cond(
-        and(greaterThan(hour, -1),
-          invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', timeRepresentation), 200, 200)
-        )
-      ),
-      /*
-      onChange(action,
-        cond(
-          eq(add(diff(hour), diff(minute)), 0),
-          invoke('ToastAndroid', 'showWithGravity', 'dismissed', 200, 200)
-        )
+        animState,
+        [
+          invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, callback({ action, hour, minute })),
+          invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})),
+          set(animState, 0),
+          //call([appState], a => console.log('appState', a))
+        ]
       )
-      */
-    ]),
-    [action, hour, minute]
+    ),
+    [animState, animator, appState, action, hour, minute, inputChangeTracker, timeRepresentation, clock]
   );
-  /*
+
+  const showToast = useMemo(() => {
+    const common = [
+      cond(clockRunning(clock), stopClock(clock)),
+      set(animator, not(animator))
+    ];
+    return Platform.select({
+      android: [
+        ...common,
+        invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', timeRepresentation), 200, 0)
+      ],
+      default: common
+    });
+  },
+    [clock, animator, timeRepresentation]
+  );
+  
+
   useCode(
     block([
-      invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', add(hour, multiply(minute, 0.01))), 200, 200)
+      onChange(
+        hour,
+        showToast
+      ),
+      onChange(
+        minute,
+        showToast
+      ),
     ]),
-    [action, hour, minute]
+    [animator, hour, minute, showToast]
   );
-  */
+  
   return (
-    <View style={{ flex: 1 }}>
-      <Text style={{ flex: 1 }}>{action}</Text>
-      <Text style={{ flex: 1 }}>{hour}</Text>
-      <Text style={{ flex: 1 }}>{minute}</Text>
-      <TapGestureHandler
-        onHandlerStateChange={onButtonPress}
+    <View style={[styles.default, { backgroundColor: color}]} collapsable={false}>
+      <View style={styles.default} collapsable={false} />
+      <RectButton
+        onHandlerStateChange={({ nativeEvent: { state } }) => animState.setValue(state === State.ACTIVE)}
+        style={[styles.button]}
       >
-
-        <View style={{ flex: 1, maxHeight: 50, backgroundColor: cond(eq(state, State.ACTIVE), processColor('red'), processColor('white')) }} />
-      </TapGestureHandler>
-      <Text style={{ flex: 1, backgroundColor: 'blue' }} children={appState} />
+        <Text style={[styles.button, styles.text]}>Press Me</Text>
+      </RectButton>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    flexWrap: 'wrap',
+    flexDirection:'row',
+    alignSelf: 'center'
+  },
+  text: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 48,
+    textAlign: 'center',
+    textAlignVertical: 'center'
+  },
+  default: {
+    flex: 1
+  }
+});
