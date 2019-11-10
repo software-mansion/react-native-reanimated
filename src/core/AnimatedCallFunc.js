@@ -40,8 +40,8 @@ export default class AnimatedCallFunc extends AnimatedNode {
     return value;
   }
 
-  getSource() {
-    return this._what;
+  __source() {
+    return this._what.__source();
   }
 }
 

@@ -22,7 +22,7 @@ export default class AnimatedFunction extends AnimatedNode {
     return val(this._what);
   }
 
-  getSource() {
+  __source() {
     return this._what;
   }
 }
