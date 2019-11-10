@@ -49,14 +49,7 @@ export default function AnimatedTimePicker() {
 
   const animState = useMemo(() => new Value(State.UNDETERMINED), []);
   const appState = useMemo(() => new Value("initialAppState"), []);
-  
-  const error = useMemo(() => new Value(0), []);
 
-  const onButtonPress = useMemo(() => event([{ nativeEvent: ({ state }) => cond(eq(state, State.ACTIVE), set(animState, 1)) }]), [animState]);
-  const onButtonPress1 = useMemo(() => event([{ nativeEvent: ({ state }) => cond(eq(state, State.ACTIVE), set(animState, 0)) }]), [animState]);
-  
-  
-  
   const animator = useMemo(() => new Value(1), []);
   const colorHue = useMemo(() => new Value(0), []);
   const clock = useMemo(() => new Clock(), []);
