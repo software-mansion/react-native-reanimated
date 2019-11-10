@@ -28,12 +28,12 @@ async function traverse() {
   const ioscontent = await readFileAsync(IOS)
   const inputs = [];
   for (const i of INPUT) {
-    inputs.push(codegen(await readFileAsync(i)))
+    inputs.push(i)
   }
   const jscontent = await readFileAsync(JS_MODULE)
   
   // TODO
-  const { objc, js, registry, objcregistry } = inputs[0];
+  const { objc, js, registry, objcregistry } = codegen(inputs.join('\n'));
   
   const codegenedJsModule = jscontent
     .replace(/(\/\/ REGISTRY BEGIN)[\s\S]*?(\/\/ REGISTRY END)/, `// REGISTRY BEGIN

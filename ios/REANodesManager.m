@@ -24,6 +24,29 @@
 #import "Nodes/REACallFuncNode.h"
 
 // CODEGEN CLASSES BEGIN
+@interface REACODEGENAbsNode : REANode
+@end
+
+@implementation REACODEGENAbsNode {
+  NSArray<NSNumber *> *_input;
+}
+
+- (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
+{
+  if ((self = [super initWithID:nodeID config:config])) {
+    _input = config[@"input"];
+  }
+  return self;
+}
+
+- (id)evaluate
+{
+  return ([[[self.nodesManager findNodeByID:_input[0]] value] doubleValue] < 0) ?
+    @(-1 * [[[self.nodesManager findNodeByID:_input[0]] value] doubleValue])
+    : [[self.nodesManager findNodeByID:_input[0]] value];
+}
+
+@end
 // CODEGEN CLASSES END
 
 @interface RCTUIManager ()
@@ -240,6 +263,7 @@
             @"func": [REAFunctionNode class],
             @"callfunc": [REACallFuncNode class],
             // CODEGEN REGISTER BEGIN
+            @"CODEGENAbs": [REACODEGENAbsNode class],
             // CODEGEN REGISTER END
 //            @"listener": nil,
             };
