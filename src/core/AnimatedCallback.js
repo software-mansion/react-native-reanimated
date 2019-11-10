@@ -1,14 +1,19 @@
 
 import AnimatedMap, { sanitizeArgMapping } from './AnimatedMap';
+import { val } from '../val';
 
 export default class AnimatedCallback extends AnimatedMap {
-  constructor(argMapping, config = {}) {
-    const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
-    super({ type: 'callback', argMapping: objectMappings });
-    this._alwaysNodes = alwaysNodes;
+  constructor(objectMappings, alwaysNodes) {
+    super('callback', objectMappings, alwaysNodes);
+  }
+
+  __onEvaluate() {
+    val(this);
+    return 0;
   }
 }
 
-export function createAnimatedCallback(argMapping, config) {
-  return new AnimatedCallback(argMapping, config);
+export function createAnimatedCallback(...argMapping) {
+  const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
+  return new AnimatedCallback(objectMappings, alwaysNodes);
 }

@@ -28,4 +28,9 @@ public class EventNode extends MapNode implements RCTEventEmitter {
     throw new RuntimeException("receiveTouches is not support by animated events");
   }
 
+  @Nullable
+  @Override
+  protected Object evaluate() {
+    return ZERO;
+  }
 }

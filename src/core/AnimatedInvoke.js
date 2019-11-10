@@ -1,6 +1,6 @@
 import { val } from '../val';
 import { adapt } from './AnimatedBlock';
-import { createAnimatedCallback } from './AnimatedMap';
+import { createAnimatedCallback, createAnimatedMap } from './AnimatedMap';
 import AnimatedNode from './AnimatedNode';
 import ReanimatedModule from '../ReanimatedModule';
 
@@ -25,7 +25,7 @@ class AnimatedInvoke extends AnimatedNode {
 function createAnimatedInvokeBase(config, ...params) {
   const inputNodes = params.map((value) => {
     if (typeof value === 'object' && value instanceof AnimatedNode === false) {
-      return createAnimatedCallback(value);
+      return createAnimatedMap(value);
     }
     else {
       return adapt(value);

@@ -1,12 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
@@ -71,16 +66,12 @@ public class MapNode extends Node {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
 
-        Log.d("InvokeR", "setValue: " + data.toString());
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
             Object value = map.lookupValue(data);
             if (value != null) {
                 mNodesManager.findNodeById(map.nodeID, ValueNode.class).setValue(value);
             }
-            Log.d("InvokeR", "setValue: " + Utils.concat(map.path) + ", " + map.nodeID + ", " + value
-                    + ", " + mNodesManager.findNodeById(map.nodeID, ValueNode.class).value()
-            );
         }
     }
 
@@ -88,7 +79,6 @@ public class MapNode extends Node {
         Utils.ReanimatedWritableNativeMap value = new Utils.ReanimatedWritableNativeMap();
         WritableMap argVal, accumulator;
         String[] path;
-
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
@@ -107,12 +97,12 @@ public class MapNode extends Node {
             value.merge(accumulator);
         }
 
-        Log.d("InvokeR", "getValue: " + value.toString());
         return value;
     }
 
+    @Nullable
     @Override
-    protected Double evaluate() {
-        return ((double) mNodeID);
+    protected Object evaluate() {
+        return getValue();
     }
 }

@@ -10,6 +10,7 @@ import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
@@ -137,15 +138,20 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
              * {@link ViewManager } has no {@link Callback} or {@link Promise} args,
              * therefore we use the map's value
              */
-            if(n instanceof MapNode) {
-                args.pushMap(((MapNode) n).getValue());
+
+            if (n instanceof CallbackNode) {
+                throw new JSApplicationIllegalArgumentException(
+                        "Parameter mismatch when calling reanimated invoke.\n" +
+                                "Dispatch can't receive callback params, index = " + i
+                );
+            } else if (n instanceof MapNode) {
+                args.pushMap(((ReadableMap) n.value()));
             } else {
                 Utils.pushVariant(args, n.value());
             }
         }
 
         receiveCommand(args);
-        Log.d("InvokeR", "called view manager: " + args.toString());
     }
 
     public void receiveCommand(ReadableArray args) {
