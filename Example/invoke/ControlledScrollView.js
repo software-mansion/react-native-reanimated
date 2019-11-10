@@ -1,12 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { findNodeHandle, Image, StyleSheet, UIManager } from 'react-native';
-import { PanGestureHandler, State, TapGestureHandler } from 'react-native-gesture-handler';
+import { PanGestureHandler, State, RectButton } from 'react-native-gesture-handler';
 import Animated, { Easing } from 'react-native-reanimated';
-
 
 const { interpolate, cond, eq, timing, add, call, max, set, Text, Value, event, decay, concat, divide, abs, sub, color, invoke, dispatch, useCode, or, Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 const decelerationRate = 0.995;
+
+const Button = createAnimatedComponent(RectButton);
+
+
 
 function runDecay(clock, value, velocity) {
   const state = {
@@ -52,30 +55,17 @@ const decayVelocity = proc((v) => cond(eq(v, 0), 1, multiply(v, -1)));
 const scrollEvent = proc((x, y) => event([{ nativeEvent: { contentOffset: { x, y } } }]));
 
 export default function ControlledScrollView(props) {
-  //const ref = React.useRef();
-  const [h, setH] = React.useState();
-  const [q, setQ] = React.useState();
-  const x = useMemo(() => new Value(0), []);
-  const scroll = useMemo(() => new Value(0), []);
+  const [handle, setHandle] = useState(-1);
+
   const scrollX = useMemo(() => new Value(0), []);
   const scrollY = useMemo(() => new Value(0), []);
   const scrollXBegin = useMemo(() => new Value(0), []);
   const scrollYBegin = useMemo(() => new Value(0), []);
   const clockX = useMemo(() => new Clock(), []);
   const clockY = useMemo(() => new Clock(), []);
-  const dest = useMemo(() => new Value(1), []);
-  const finalScroll = useMemo(() => interpolate(dest, {
-    inputRange: [0, 1],
-    outputRange: [50, 200],
-  }), []);
   const state = useMemo(() => new Value(State.UNDETERMINED), []);
   const isScrolling = useMemo(() => new Value(0), []);
   
-  const onScrollStateChange = useMemo(() => event([{ nativeEvent: { state: s => set(isScrolling, or(eq(s, State.BEGAN), eq(s, State.ACTIVE))) } }]), [isScrolling]);
-  //const onScroll = useMemo(() => scrollEvent(scrollX, scrollY), [scrollX, scrollY]);
-  const onButtonPress = useMemo(() => event([{ nativeEvent: { oldState: state } }]), [state]);
-
-
   const translationX = useMemo(() => new Value(0), []);
   const translationY = useMemo(() => new Value(0), []);
   const velocityX = useMemo(() => new Value(0), []);
@@ -130,7 +120,7 @@ export default function ControlledScrollView(props) {
         set(finalScrollY, runDecay(clockY, scrollY, decayVelocity(velocityY))),
         set(translationX, 0),
         set(translationY, 0),
-        scrollTo(h, max(finalScrollX, 0), max(finalScrollY, 0), 0),
+        scrollTo(handle, max(finalScrollX, 0), max(finalScrollY, 0), 0),
         set(scrollXBegin, finalScrollX),
         set(scrollYBegin, finalScrollY),
         call([scrollX, scrollY, finalScrollX, finalScrollY], e => console.log('scroll', e)),
@@ -138,75 +128,88 @@ export default function ControlledScrollView(props) {
       [
         cond(clockRunning(clockX), stopClock(clockX)),
         cond(clockRunning(clockY), stopClock(clockY)),
-        scrollBy(h, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 0)
+        scrollBy(handle, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 0)
       ]
     ),
-    [h, panOldState, translationX, translationY, finalScrollX,finalScrollY, scrollX, scrollY, clockX, clockY, velocityX, velocityY]
+    [handle, panOldState, translationX, translationY, finalScrollX,finalScrollY, scrollX, scrollY, clockX, clockY, velocityX, velocityY]
   );
 
   const vibrate = useMemo(() => new Value(0), []);
   useCode(
     block([
-      onChange(
+      call([vibrate], console.log),
+      cond(
         vibrate,
-        cond(
-          vibrate,
-          [
-            invoke('Vibration', 'vibrate', 500),
-            set(vibrate, 0)
-          ]
-        )
-      ),
+        [
+          invoke('Vibration', 'vibrate', 500),
+          set(vibrate, 0)
+        ]
+      )
     ]),
     [vibrate]
   );
 
-  const baseScrollComponent = (
-    <TapGestureHandler
+  const refA = useRef();
+  const refB = useRef();
 
+  const baseScrollComponent = (
+    <Button
+      key="______ScrollView1"
+      style={styles.default}
+      ref={refA}
+      //onPress={() => vibrate.setValue(1)}
+      onHandlerStateChange={event([{ nativeEvent: () => set(vibrate, 1) }])}
     >
       <View style={styles.default} collapsable={false}>
         <ScrollView
           style={styles.scrollView}
           collapsable={false}
           decelerationRate={decelerationRate}
+          waitFor={refA}
         >
           <Image source={require('../imageViewer/grid.png')} collapsable={false} />
         </ScrollView>
       </View>
-    </TapGestureHandler>
+    </Button>
   );
 
   const animatedScrollComponent = (
-    <TapGestureHandler
-
+    <RectButton
+      key="______ScrollView2"
+      style={styles.default}
+      ref={refB}
+      onPress={() => vibrate.setValue(1)}
     >
       <View style={styles.default} collapsable={false}>
         <PanGestureHandler
           onGestureEvent={onPan}
           onHandlerStateChange={onPan}
+          waitFor={refB}
+          enabled={false}
         >
           <ScrollView
             style={styles.scrollView}
             collapsable={false}
-            ref={(r) => setH(findNodeHandle(r))}
+            ref={(r) => setHandle(findNodeHandle(r))}
             onScroll={onScroll}
             scrollEnabled={false}
             decelerationRate={decelerationRate}
           >
-            <Image source={require('../imageViewer/grid.png')} collapsable={false} ref={(r) => setQ(findNodeHandle(r))} />
+            <Image source={require('../imageViewer/grid.png')} collapsable={false} />
           </ScrollView>
         </PanGestureHandler>
       </View>
-    </TapGestureHandler>
+    </RectButton>
   );
+
+  const randomizer = (Math.random() * 10) % 2 === 0;
 
   return (
     <View style={styles.default}>
       <Text>One ScrollView is a regular one, the other is actually controlled by a PanGestureHandler utilizing dispatch</Text>
       <Text>Tap on the one you think is the real one</Text>
-      {baseScrollComponent}
-      {animatedScrollComponent}
+      {randomizer ? baseScrollComponent : animatedScrollComponent}
+      {randomizer ? animatedScrollComponent : baseScrollComponent}
     </View>
   );
 }
