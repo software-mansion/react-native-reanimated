@@ -1,10 +1,13 @@
 import { val } from '../val';
 import { adapt } from './AnimatedBlock';
 import { createAnimatedCallback, createAnimatedMap } from './AnimatedMap';
+import AnimatedAlways, { createAnimatedAlways } from './AnimatedAlways';
 import AnimatedNode from './AnimatedNode';
 import ReanimatedModule from '../ReanimatedModule';
 
 class AnimatedInvoke extends AnimatedNode {
+  _alwaysNodes;
+
   constructor(invokeConfig, ...params) {
     super(
       {
@@ -14,7 +17,6 @@ class AnimatedInvoke extends AnimatedNode {
       },
       params
     );
-    this.__attach();
   }
 
   __onEvaluate() {
