@@ -263,7 +263,7 @@ public class Utils {
         return ((T) value.asString());
       default:
         throw new JSApplicationIllegalArgumentException(
-                "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
+                "Can not cast " + value + " of type " + value.getType() +
                         " into " + Double.class.getName()
         );
     }
