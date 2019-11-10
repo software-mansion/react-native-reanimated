@@ -48,7 +48,7 @@ const OBJC_TEMPLATE = `
 
 - (id)evaluate
 {
-  ::__CODE__::
+  return ::__CODE__::;
 }
 
 @end
@@ -95,14 +95,16 @@ function traverseNode(astNode, args) {
 }
 
 const OBJC_COND = `
-  if (::__IF__::) {
-    return ::__THEN__::;
-  }
+  (::__IF__::) ?
+    ::__THEN__::
+    : @(0)
 `.trim();
 
 const OBJC_COND_ELSE = `
-  return ::__ELSE__::;
-`
+  (::__IF__::) ?
+    ::__THEN__::
+    : ::__ELSE__::
+`.trim()
 
 const OBJC_LESS_THEN = `
   ::__A__:: < ::__B__::
@@ -141,15 +143,11 @@ function codegenNode(node, enforceNumerical = false) {
   }
   switch (node.name) {
     case 'cond':
-      const ifcode = OBJC_COND
+      const template = node.args[2] ? OBJC_COND_ELSE : OBJC_COND;
+      return template
         .replace('::__IF__::', codegenNode(node.args[0]))
-        .replace('::__THEN__::', codegenNode(node.args[1]));
-      if (!node.args[2]) {
-        return ifcode;
-      } else {
-        const elsecode =  OBJC_COND_ELSE.replace('::__ELSE__::', codegenNode(node.args[2]))
-        return ifcode + elsecode
-      }
+        .replace('::__THEN__::', codegenNode(node.args[1]))
+        .replace('::__ELSE__::', codegenNode(node.args[2]));
     case 'lessThan':
       return OBJC_LESS_THEN
         .replace('::__A__::', codegenNode(node.args[0], true))
