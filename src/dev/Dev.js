@@ -1,5 +1,5 @@
 ﻿import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 import * as _ from 'lodash';
 
@@ -83,7 +83,7 @@ function InvokeCell({ name, item }) {
 function DispatchCell({ name, item }) {
   const [display, setDisplay] = useState(false);
   const _onPress = useCallback(() => setDisplay(!display), [display]);
-  console.log(item)
+
   return (
     <RectButton style={styles.button} onPress={_onPress} >
       <Text style={[styles.buttonText]}>{item.key}</Text>
@@ -108,24 +108,39 @@ function Dev() {
       keyExtractor: (item, i) => `viewManagers:${item.key}`
     }
   ]), [nativeModules, viewManagers]);
-  /*
+  
   const [displayingSections, setDisplayedSections] = useState(sections);
+  const [input, setInput] = useState("");
 
   useEffect(() => {
     setDisplayedSections(sections)
-  }, [sections])
-  */
+  }, [sections]);
+  
   
   return (
-    <SectionList
-      style={styles.list}
-      sections={sections}
-      renderItem={(props) => <Item {...props} />}
-      ItemSeparatorComponent={ItemSeparator}
-      renderSectionHeader={(props) => <SectionHeader {...props} title={props.section.title} />}
-      stickySectionHeadersEnabled
-    //renderScrollComponent={p => <ScrollView {...p} />}
-    />
+    <>
+      <TextInput
+        style={styles.textInput}
+        onChangeText={(text) => {
+          setInput(text);
+          setDisplayedSections(text === "" ?
+            sections :
+            _.map(_.cloneDeep(sections), (s) => _.set(s, 'data', _.filter(s.data, ({ key }) => _.includes(key, text))))
+          );
+        }}
+        value={input}
+        placeholder="Type here to filter..."
+      />
+      <SectionList
+        style={styles.list}
+        sections={displayingSections}
+        renderItem={(props) => <Item {...props} />}
+        ItemSeparatorComponent={ItemSeparator}
+        renderSectionHeader={(props) => <SectionHeader {...props} title={props.section.title} />}
+        stickySectionHeadersEnabled
+      //renderScrollComponent={p => <ScrollView {...p} />}
+      />
+    </>
   );
 }
 
@@ -162,8 +177,13 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flex: 1,
     padding: 10,
+    elevation: 2,
     backgroundColor: 'pink',
     color: 'black',
     textAlignVertical: 'center'
+  },
+  textInput: {
+    elevation: 5,
+    backgroundColor: '#EFEFF4',
   }
 });
