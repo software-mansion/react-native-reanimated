@@ -2,9 +2,12 @@
 import AnimatedNode from "../src/core/AnimatedNode";
 import { Platform } from "react-native";
 
-// NODES
+// NODES BEGIN
+// NODES END
 
-// REGISTRY
+// REGISTRY BEGIN
+const registry = {};
+// REGISTRY END
 
 export default function codegen(name) {
   return function (realNode) {
@@ -12,7 +15,6 @@ export default function codegen(name) {
       return realNode
     }
     return function (...args) {
-      // eslint-disable-next-line no-undef
       return new registry[name](args.map(a => a.__nodeID))
     }
   }

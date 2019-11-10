@@ -23,7 +23,8 @@
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
 
-// CODEGEN CLASSES
+// CODEGEN CLASSES BEGIN
+// CODEGEN CLASSES END
 
 @interface RCTUIManager ()
 
@@ -238,7 +239,8 @@
             @"param": [REAParamNode class],
             @"func": [REAFunctionNode class],
             @"callfunc": [REACallFuncNode class],
-            // CODEGEN REGISTER
+            // CODEGEN REGISTER BEGIN
+            // CODEGEN REGISTER END
 //            @"listener": nil,
             };
   });

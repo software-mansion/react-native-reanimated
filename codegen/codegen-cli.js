@@ -35,15 +35,25 @@ async function traverse() {
   // TODO
   const { objc, js, registry, objcregistry } = inputs[0];
   
-  js.replace("// REGISTRY", registry)
-  
   const codegenedJsModule = jscontent
-    .replace("// REGISTRY", registry)
-    .replace("// NODES", js)
+    .replace(/(\/\/ REGISTRY BEGIN)[\s\S]*?(\/\/ REGISTRY END)/, `// REGISTRY BEGIN
+// REGISTRY-
+// REGISTRY END`)
+    .replace(/(\/\/ NODES BEGIN)[\s\S]*?(\/\/ NODES END)/, `// NODES BEGIN
+// NODES-
+// NODES END`)
+    .replace("// REGISTRY-", registry)
+    .replace("// NODES-", js)
   
   const codegenedObjcModule = ioscontent
-    .replace("// CODEGEN CLASSES", objc)
-    .replace("// CODEGEN REGISTER", objcregistry)
+    .replace(/(\/\/ CODEGEN REGISTER BEGIN)[\s\S]*?(\/\/ CODEGEN REGISTER END)/, `// CODEGEN REGISTER BEGIN
+            // CODEGEN-REGISTER
+            // CODEGEN REGISTER END`)
+    .replace(/(\/\/ CODEGEN CLASSES BEGIN)[\s\S]*?(\/\/ CODEGEN CLASSES END)/, `// CODEGEN CLASSES BEGIN
+// CODEGEN-CLASSES
+// CODEGEN CLASSES END`)
+    .replace("// CODEGEN-CLASSES", objc)
+    .replace("// CODEGEN-REGISTER", objcregistry)
   
   
   
