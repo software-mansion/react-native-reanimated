@@ -1,12 +1,9 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 
 import com.facebook.jni.HybridData;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
@@ -48,7 +45,7 @@ public class Utils {
     return res;
   }
 
-  private static Boolean isNumber(Object o){
+  public static Boolean isNumber(Object o){
     return o instanceof Number ||
             o.equals(int.class) || o.equals(Integer.class) ||
             o.equals(float.class) || o.equals(Float.class) ||
@@ -57,23 +54,23 @@ public class Utils {
             o.equals(short.class) || o.equals(Short.class);
   }
 
-  private static Boolean isInteger(Object o){
+  public static Boolean isInteger(Object o){
     return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
   }
 
-  private static Boolean isString(Object o){
+  public static Boolean isString(Object o){
     return o instanceof String || o.equals(String.class);
   }
 
-  private static Boolean isBoolean(Object o){
+  public static Boolean isBoolean(Object o){
     return o instanceof Boolean || o.equals(boolean.class) || o.equals(Boolean.class);
   }
 
-  private static Boolean isNull(Object o){
+  public static Boolean isNull(Object o){
     return o == null;
   }
 
-  private static Boolean isArray(Object o){
+  public static Boolean isArray(Object o){
     return o.getClass().isArray();
   }
 
@@ -108,7 +105,7 @@ public class Utils {
         if (isInteger(o)){
           map.putInt(key, ((Integer) o));
         } else {
-          map.putDouble(key, castToDouble(o));
+          map.putDouble(key, toDouble(o));
         }
         break;
       case String:
@@ -137,7 +134,7 @@ public class Utils {
         if (isInteger(o)){
           arr.pushInt((Integer) o);
         } else {
-          arr.pushDouble(castToDouble(o));
+          arr.pushDouble(toDouble(o));
         }
         break;
       case String:
@@ -172,7 +169,7 @@ public class Utils {
     @Override
     public double getDouble(@NonNull String name) {
       return super.getType(name) == ReadableType.Boolean ?
-              castToDouble(super.getBoolean(name)) :
+              toDouble(super.getBoolean(name)) :
               super.getDouble(name);
     }
   }
@@ -186,7 +183,7 @@ public class Utils {
     @Override
     public double getDouble(@NonNull String name) {
       return super.getType(name) == ReadableType.Boolean ?
-              castToDouble(super.getBoolean(name)) :
+              toDouble(super.getBoolean(name)) :
               super.getDouble(name);
     }
   }
@@ -204,7 +201,7 @@ public class Utils {
     @Override
     public double getDouble(int index) {
       return super.getType(index) == ReadableType.Boolean ?
-              castToDouble(super.getBoolean(index)) :
+              toDouble(super.getBoolean(index)) :
               super.getDouble(index);
     }
   }
@@ -218,7 +215,7 @@ public class Utils {
     @Override
     public double getDouble(int index) {
       return super.getType(index) == ReadableType.Boolean ?
-              castToDouble(super.getBoolean(index)) :
+              toDouble(super.getBoolean(index)) :
               super.getDouble(index);
     }
   }
@@ -242,7 +239,7 @@ public class Utils {
     String BOOLEAN = "boolean";
   }
 
-  public static <T extends Object> T castFromDouble(Double value, Class<T> clazz){
+  public static <T extends Object> T fromDouble(Double value, Class<T> clazz){
     switch (clazz.getName()){
       case PrimitiveNumber.BYTE: return ((T) Byte.valueOf(value.byteValue()));
       case PrimitiveNumber.INT: return ((T) Integer.valueOf(value.intValue()));
@@ -257,11 +254,11 @@ public class Utils {
   public static <T> T fromDynamic(Dynamic value) {
     switch (((Dynamic) value).getType()) {
       case Boolean:
-        return ((T) castToDouble(value.asBoolean()));
+        return ((T) toDouble(value.asBoolean()));
       case Null:
-        return ((T) castToDouble(0.));
+        return ((T) toDouble(0.));
       case Number:
-        return ((T) castToDouble(value.asDouble()));
+        return ((T) toDouble(value.asDouble()));
       case String:
         return ((T) value.asString());
       default:
@@ -272,7 +269,7 @@ public class Utils {
     }
   }
   
-  public static Double castToDouble(Object value) {
+  public static Double toDouble(Object value) {
     Object o = value;
     if (value instanceof Dynamic){
       switch (((Dynamic) value).getType()) {
@@ -302,7 +299,15 @@ public class Utils {
     }
   }
 
-  public static String concat(Object... args){
+  public static String concat(int[] args){
+    Object[] out = new Object[args.length];
+    for (int i = 0; i < args.length; i++) {
+      out[i] = args[i];
+    }
+    return concat(out, ", ");
+  }
+
+  public static String concat(Object[] args){
     return concat(args, ", ");
   }
 
