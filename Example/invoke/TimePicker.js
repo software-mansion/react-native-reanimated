@@ -57,7 +57,7 @@ export default function AnimatedTimePicker() {
 
   useCode(
     block([
-      onChange(state, cond(eq(state, State.ACTIVE), invoke('AppState', 'getCurrentAppState', [{ app_state: appState }], {}))),
+      onChange(state, cond(eq(state, State.ACTIVE), invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})))),
       call([appState], a => console.log('appState', a))
     ]),
     [appState, state]
@@ -65,7 +65,7 @@ export default function AnimatedTimePicker() {
 
   useCode(
     block([
-      invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, [{ action, hour, minute }]),
+      invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, callback({ action, hour, minute })),
       cond(
         and(greaterThan(hour, -1),
           invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', timeRepresentation), 200, 200)

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { StyleSheet, Button, findNodeHandle, UIManager, processColor, Platform, StatusBar } from 'react-native';
 import Animated, { Transitioning, Transition, TransitionState } from 'react-native-reanimated';
-import { FlatList, State, PanGestureHandler } from 'react-native-gesture-handler';
+import { FlatList, State, PanGestureHandler, RectButton } from 'react-native-gesture-handler';
 import * as _ from 'lodash';
 
 const {
@@ -27,13 +27,16 @@ const {
   startClock,
   clockRunning,
   sub,
+  createAnimatedComponent,
+  onChange,
+  callback
 } = Animated;
 
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-//const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, [a, b, c, d, e, f])));
+//const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, callbacka, b, c, d, e, f))));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -82,7 +85,7 @@ function delay(node, delayMs) {
   ]);
 }
 
-function Item({ item, parent, x, y, index }) {
+function Item({ item, parent, evaluate, x, y, index }) {
   const ref = useRef();
   const values = useMemo(() => new Array(6).fill(0).map(() => new Value(0)), []);
   const values1 = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
@@ -91,9 +94,7 @@ function Item({ item, parent, x, y, index }) {
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
   const measure = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
-
   
-
   /*
   const m = useCallback(() => {
     const handle = findNodeHandle(ref.current);
@@ -106,25 +107,21 @@ function Item({ item, parent, x, y, index }) {
     )
   }, [ref, parent]);
   */
+
   useCode(
     cond(
       neq(tag, 0),
-      [
-        //set(measure, 0),
-        invoke('UIManager', 'measure', tag, values),
-        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, [{ a: new Value() }], values1)),
-      ]
+      onChange(
+        evaluate,
+        [
+          invoke('UIManager', 'measure', tag, callback(...values)),
+          //call(values, v => console.log(item, _.zipObject(keys, v)))
+          //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback{ a: new Value() }), callback(...values1))),
+        ]
+
+      )
     ),
-    [tag, parent, index]
-  );
-  
-  useCode(
-    block([
-      call([tag, parent], v => console.log('tags', v)),
-      //call(values, v => console.log(item, _.zipObject(keys, v))),
-      //call(values1, v => console.log(item, _.zipObject(keys, v))),
-    ]),
-    [tag, parent, ...values, ...values1]
+    [tag, parent, index, evaluate]
   );
 
   useCode(
@@ -143,6 +140,8 @@ function Item({ item, parent, x, y, index }) {
     </Text>
   );
 }
+
+const AButton = createAnimatedComponent(Button);
 
 function Shuffle() {
   const transition = (
@@ -183,8 +182,7 @@ function Shuffle() {
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
   const evaluate = useMemo(() => new Value(0), []);
-  const renderItem = useCallback((props) => <Item {...props} parent={tag} x={absoluteX} y={absoluteY} />, [tag, absoluteX, absoluteY]);
-  const keyExtractor = useCallback((item) => item.title, []);
+  const transitionState = useMemo(() => new Value(-1), []);
 
   const onGestureEvent = useMemo(() =>
     event([{
@@ -210,50 +208,66 @@ function Shuffle() {
     }]),
     [absoluteX, absoluteY]
   );
-
-
-  const onTransitionEnd = useMemo(() =>
+  
+  const onTransition = useMemo(() =>
     event([{
-      nativeEvent: ({ target, state }) => cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1)))
+      nativeEvent: ({ target, state }) => block([
+        set(transitionState, state),
+        cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1)))
+      ])
     }]),
-    [evaluate]
+    [evaluate, transitionState]
   );
 
-  useCode(
-    block([
-      call([evaluate], v => console.log('evaluate', v)),
-      //call(values, v => console.log(item, _.zipObject(keys, v))),
-      //call(values1, v => console.log(item, _.zipObject(keys, v))),
-    ]),
-    [evaluate]
-  );
+  useCode(call([evaluate], console.log), [evaluate])
+
+  const renderItem = useCallback((props) => (
+    <Item
+      {...props}
+      parent={tag}
+      evaluate={evaluate}
+      x={absoluteX}
+      y={absoluteY}
+    />
+  ), [tag, absoluteX, absoluteY]);
+
+  const keyExtractor = useCallback((item) => item.title, []);
 
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={onHandlerStateChange}
     >
-      <View collapsable={false} style={{ flex: 1 }} onLayout={onLayout}>
+      <View collapsable={false} style={styles.default} onLayout={onLayout}>
         <Transitioning.View
           ref={ref}
           collapsable={false}
           transition={transition}
           style={styles.centerAll}
           animateMount
-          onTransitionStateChange={onTransitionEnd}
+          onTransitionStateChange={onTransition}
         >
-          <View collapsable={false} style={{ flex: 1 }}>
+          <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
-            <Button
-              title="shuffle"
-              color="#FF5252"
+            <RectButton
               onPress={() => {
                 ref.current.animateNextTransition(() => console.log('animateNextTransition end'));
                 const shuffled = items.slice();
                 shuffle(shuffled);
                 setItems(shuffled);
               }}
-            />
+            >
+              <Text
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: cond(neq(transitionState, TransitionState.BEGAN), processColor("#FF5252"), processColor("grey"))
+                  }
+                ]}
+              >
+                SHUFFLE
+                </Text>
+            </RectButton>
             <FlatList
               data={items}
               renderItem={renderItem}
@@ -275,6 +289,17 @@ const styles = StyleSheet.create({
   text: {
     marginVertical: 10,
   },
+  default: {
+    flex: 1
+  },
+  button: {
+    color: 'white',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 18,
+    padding: 20,
+    margin: 10
+  }
 });
 
 export default Shuffle;
