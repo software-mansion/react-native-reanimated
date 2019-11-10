@@ -1,12 +1,42 @@
 import React, { useMemo } from 'react';
 import { processColor, ToastAndroid, TimePickerAndroid } from 'react-native';
 import { RectButton, State, TapGestureHandler } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { Easing } from 'react-native-reanimated';
 import { runSpring } from '../test';
+import { colorHSV } from '../colors';
 
-const { cond, eq, add, call, set, Value, event, concat, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 const Button = createAnimatedComponent(RectButton);
+
+function runTiming(clock, value, dest, startStopClock = true) {
+  const state = {
+    finished: new Value(0),
+    position: new Value(0),
+    frameTime: new Value(0),
+    time: new Value(0),
+  };
+
+  const config = {
+    toValue: new Value(0),
+    duration: 2500,
+    easing: Easing.linear,
+  };
+
+  return [
+    cond(clockRunning(clock), 0, [
+      set(state.finished, 0),
+      set(state.frameTime, 0),
+      set(state.time, 0),
+      set(state.position, value),
+      set(config.toValue, dest),
+      startStopClock && startClock(clock),
+    ]),
+    timing(clock, state, config),
+    cond(state.finished, startStopClock && stopClock(clock)),
+    state.position,
+  ];
+}
 
 export default function AnimatedTimePicker() {
   //const ref = React.useRef();
@@ -40,20 +70,18 @@ export default function AnimatedTimePicker() {
   );
 
   const animator = useMemo(() => new Value(0), []);
-  const colorDest = useMemo(() => multiply(animator, 255), [animator]);
   const colorHue = useMemo(() => new Value(0), []);
   const clock = useMemo(() => new Clock(), []);
 
   useCode(
     block([
-      set(colorHue, runSpring(clock, colorHue, 0, colorDest)),
+      set(colorHue, runTiming(clock, colorHue, multiply(animator, 360))),
       cond(clockRunning(clock), 0, set(animator, not(animator))),
-      invoke('StatusBarManager', 'setColor', color(colorHue, 20, 50, 0.6), 0),
-      call([action, hour, minute], a => console.log('time', a))
+      invoke('StatusBarManager', 'setColor', colorHSV(colorHue, 1, 1), 0),
+      call([action, hour, minute, colorHue], a => console.log('time', a))
     ]),
-    [colorHue, clock, colorDest, animator, action, hour, minute]
+    [colorHue, clock, animator, action, hour, minute]
   );
-  
 
   useCode(
     block([
