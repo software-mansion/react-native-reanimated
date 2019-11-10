@@ -8,7 +8,7 @@ export default class AnimatedCallback extends AnimatedMap {
   }
 
   __onEvaluate() {
-    val(this);
+    //val(this);
     return 0;
   }
 }
