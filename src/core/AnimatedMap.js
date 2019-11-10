@@ -105,26 +105,10 @@ export function sanitizeArgMapping(argMapping) {
 export default class AnimatedMap extends AnimatedNode {
   constructor(type, argMapping, alwaysNodes, config = {}) {
     super({ type, argMapping }, alwaysNodes);
-    this._alwaysNodes = alwaysNodes;
-  }
-
-  __attach() {
-    for (let i = 0; i < this._alwaysNodes.length; i++) {
-      this._alwaysNodes[i].__attach();
-    }
-    super.__attach();
   }
 
   __onEvaluate() {
     return val(this);
-  }
-
-  __detach() {
-    for (let i = 0; i < this._alwaysNodes.length; i++) {
-      this._alwaysNodes[i].isNativelyInitialized() &&
-        this._alwaysNodes[i].__detach();
-    }
-    super.__detach();
   }
 
   static merge(a, b) {
