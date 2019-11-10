@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, findNodeHandle, requireNativeComponent } from 'react-native';
+import { View, findNodeHandle, requireNativeComponent, StyleSheet } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
 import createAnimatedComponent from './createAnimatedComponent';
 
@@ -105,7 +105,6 @@ const viewName = 'ReanimatedTransitionManager';
 const TransitioningNativeView = createAnimatedComponent(requireNativeComponent(viewName));
 
 function createTransitioningComponent(Component) {
-  const AnimatedComponent = createAnimatedComponent(Component);
   class Wrapped extends React.Component {
     propTypes = Component.propTypes;
     transitions = [];
@@ -129,13 +128,22 @@ function createTransitioningComponent(Component) {
     }
 
     render() {
-      const { transition, ...rest } = this.props;
+      const { transition, onTransitionStateChange, children, ...rest } = this.props;
       return (
         <React.Fragment>
           <TransitioningContext.Provider value={this.transitions}>
             {transition}
           </TransitioningContext.Provider>
-          <AnimatedComponent {...rest} ref={this.viewRef} collapsable={false} />
+          <Component {...rest}>
+            <TransitioningNativeView
+              collapsable={false}
+              ref={this.viewRef}
+              onTransitionStateChange={onTransitionStateChange}
+              style={styles.default}
+            >
+              {children}
+            </TransitioningNativeView>
+          </Component>
         </React.Fragment>
       );
     }
@@ -143,13 +151,19 @@ function createTransitioningComponent(Component) {
   return Wrapped;
 }
 
+const styles = StyleSheet.create({
+  default: {
+    flex: 1
+  }
+});
+
 const TransitionState = {
   BEGAN: 0,
   END: 1
 };
 
 const Transitioning = {
-  View: createTransitioningComponent(TransitioningNativeView),
+  View: createTransitioningComponent(View),
 };
 
 const Transition = {
