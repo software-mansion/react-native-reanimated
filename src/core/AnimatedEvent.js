@@ -14,6 +14,9 @@ function sanitizeEventMapping(argMapping) {
 
   // Assume that the event containing `nativeEvent` is always the first argument.
   const ev = argMapping[0].nativeEvent;
+
+  // Find animated values in `argMapping` and create an array representing their
+  // key path inside the `nativeEvent` object. Ex.: ['contentOffset', 'x'].
   return sanitizeArgMapping(ev);
 }
 
