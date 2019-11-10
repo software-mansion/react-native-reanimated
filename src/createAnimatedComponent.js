@@ -22,11 +22,7 @@ function getEventNode(node) {
     return node;
   } else if (node instanceof AnimatedCallFunc) {
     throw new Error('events nested in procs are not yet supported');
-    /*
-    const func = node.getSource();
-    const source = func instanceof AnimatedFunction && func.getSource();
-    return source instanceof AnimatedEvent && source;
-    */
+    return node.__source() instanceof AnimatedEvent && node.__source();
   } else {
     return false;
   }
