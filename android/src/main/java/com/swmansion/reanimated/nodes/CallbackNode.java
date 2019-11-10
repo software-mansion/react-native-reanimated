@@ -39,21 +39,11 @@ public class CallbackNode extends MapNode implements Callback, Promise {
     public CallbackNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
     }
-    /*
-    dou
-
-    @Override
-    protected Double d() {
-        return Utils.toDouble(mState);
-    }
-
-     */
 
     @Nullable
     @Override
     protected Object evaluate() {
-        getValue();
-        return ZERO;
+        return Utils.toDouble(mState);
     }
 
     @Override
