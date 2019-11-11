@@ -224,16 +224,18 @@ block([
 
 The `useCode` hook acts as an alternative to the `Animated.Code` component.
 ```js
-Animated.useCode(node, deps)
+Animated.useCode(() => node, deps)
 ```
 It's passed an animated node and an array of dependencies, and updates that node both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (<0.59).
 ```js
 const [offset, setOffset] = React.useState(20);
 Animated.useCode(
-  set(transX1, add(_transX, offset)),
+  () => set(transX1, add(_transX, offset)),
   [offset]
 );
 ```
+
+We recommend to use `useCode()` with the `react-hooks/exhaustive-deps` [eslint rule](https://www.npmjs.com/package/eslint-plugin-react-hooks).
 
 ## Event handling with reanimated nodes
 
@@ -903,6 +905,14 @@ In order to run it you need to pull in the repository, enter `Example/` folder a
 Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the Example app on).
 
 You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
+
+## Jest
+
+In order to use `react-native-reanimated` with Jest, you need to add the following mock implementation at the top of your test:
+
+```js
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+```
 
 ## License
 
