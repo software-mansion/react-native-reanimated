@@ -21,10 +21,12 @@ function sanitizeEventMapping(argMapping) {
 }
 
 export default class AnimatedEvent extends AnimatedNode {
+  _alwaysNodes;
   constructor(argMapping, config = {}) {
     const { objectMappings, alwaysNodes } = sanitizeEventMapping(argMapping);
     super({ type: 'event', argMapping: objectMappings });
     this._alwaysNodes = alwaysNodes;
+
     if (Platform.OS === 'web') {
       this._argMapping = objectMappings;
       this.__getHandler = () => {
