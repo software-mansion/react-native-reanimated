@@ -128,17 +128,11 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
         for (int i = paramStart; i < params.length; i++) {
             n = nodesManager.findNodeById(params[i], Node.class);
-            /**
-             * {@link CallbackNode is used for consuming/stubbing
-             *      {@link ReadableNativeArray },
-             *      {@link ReadableNativeMap },
-             *      {@link Callback },
-             *      {@link Promise }
-             * {@link ViewManager } has no {@link Callback} or {@link Promise} args,
-             * therefore we use the map's value
-             */
 
-            if (n instanceof CallbackNode) {
+            if (n instanceof CallbackNode || n.source() instanceof CallbackNode) {
+                /**
+                 * {@link ViewManager } has no {@link Callback} or {@link Promise} args
+                 */
                 throw new JSApplicationIllegalArgumentException(
                         "Parameter mismatch when calling reanimated invoke.\n" +
                                 "Dispatch can't receive callback params, index = " + i

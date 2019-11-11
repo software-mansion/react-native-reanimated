@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.reflection;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
@@ -47,17 +49,16 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         } catch (Throwable err) {
             String errorMessage;
             if(err instanceof InvocationTargetException){
-                err.getCause().printStackTrace();
                 errorMessage = err.getCause().getMessage();
             } else {
-                err.printStackTrace();
                 errorMessage = err.getMessage();
             }
 
             throw new JSApplicationIllegalArgumentException(
                     "Reanimated invoke: Failed to invoke " + mCallee.getName() + "." +
                             mMethod.getName() + "(" + concat(params) + ")" + "\n" +
-                            "Details: " + errorMessage
+                            "Details: " + errorMessage,
+                    err
             );
         }
     }
@@ -71,22 +72,16 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
 
         try {
             for (int i = 0; i < params.length; i++) {
-                n = nodesManager.findNodeById(params[i], Node.class);
                 paramType = paramTypes[i];
-                /**
-                 * {@link CallbackNode is used for consuming/stubbing
-                 *      {@link ReadableNativeArray },
-                 *      {@link ReadableNativeMap },
-                 *      {@link Callback },
-                 *      {@link Promise }
-                 */
-                value = n.value();
+                n = nodesManager.findNodeById(params[i], Node.class);
 
-                if (n instanceof CallbackNode && (paramType == Callback.class || paramType == Promise.class)){
-                    out[i] = n;
-                } else if (n instanceof MapNode){
-                    out[i] = value;
-                } else if(Utils.isNumber(value)) {
+                if (paramType == Callback.class || paramType == Promise.class) {
+                    value = n.source();
+                } else {
+                    value = n.value();
+                }
+
+                if (Utils.isNumber(value)) {
                     out[i] = Utils.fromDouble(((Double) value), paramType);
                 } else {
                     out[i] = paramType.cast(value);
@@ -95,16 +90,23 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         }
         catch (Throwable err){
             String outOfBoundsMessage = "";
-            String typeDetails = "Expected " + concat(paramTypes) + ",\nGot " + concat(params);
+            String[] inputTypes = new String[params.length];
+            for (int i = 0; i < params.length; i++) {
+                n = nodesManager.findNodeById(params[i], Node.class);
+                inputTypes[i] = "expected: " + paramTypes[i].getSimpleName() + ", got: " + n.getClass().getSimpleName() + " => " + n.value();
+            }
+            String typeDetails = "Args:\n" + concat(inputTypes, "\n");
             if(err instanceof ArrayIndexOutOfBoundsException){
                 outOfBoundsMessage = "Expected " + paramTypes.length + " parameters, got " + params.length;
             }
+
             throw new JSApplicationIllegalArgumentException(
                     "Parameter mismatch when calling reanimated invoke.\n" +
-                            mCallee.getName() + "." + mMethod +"()\n" +
+                            mCallee.getName() + "." + mMethod +"\n" +
                             outOfBoundsMessage + ".\n" +
                             typeDetails + ".\n" +
-                            "Details: " + err.getMessage()
+                            "Details: " + err.getMessage(),
+                    err
             );
         }
 
