@@ -8,7 +8,7 @@ import {
   startClock,
   stopClock,
 } from '../base';
-import { clock as Clock } from '../core/AnimatedClock';
+import { default as Clock } from '../core/AnimatedClock';
 import { evaluateOnce } from '../derived/evaluateOnce';
 
 function createOldAnimationObject(node, AnimationClass, value, config) {
