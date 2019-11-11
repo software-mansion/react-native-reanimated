@@ -109,7 +109,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
   */
 
   useCode(
-    cond(
+    () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
         measureView(tag, callback(...values)),
@@ -120,7 +120,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
   );
 
   useCode(
-    set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
+    () => set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
     [bgc, x, y, ax, ay, width, height, statusBarHeight, item.color, index]
   );
   
@@ -214,7 +214,7 @@ function Shuffle() {
     [evaluate, transitionState]
   );
 
-  useCode(call([evaluate], console.log), [evaluate])
+  useCode(() => call([evaluate], console.log), [evaluate]);
 
   const renderItem = useCallback((props) => (
     <Item

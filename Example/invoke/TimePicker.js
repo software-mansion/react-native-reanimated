@@ -58,7 +58,7 @@ export default function AnimatedTimePicker() {
   const color = useMemo(() => colorHSV(colorHue, 0.9, 1), [colorHue]);
   const inputChangeTracker = useMemo(() => or(neq(diff(hour), 0), neq(diff(minute), 0)), [hour, minute]);
 
-  useCode(
+  useCode(() =>
     call([animState, animator], a => console.log('state', a)),
     [animState]
   );
@@ -67,7 +67,7 @@ export default function AnimatedTimePicker() {
     return () => colorHue.setValue(50)
   })
 
-  useCode(
+  useCode(() =>
     block([
       set(colorHue, runTiming(clock, colorHue, multiply(animator, 360))),
       invoke('StatusBarManager', 'setColor', color, 0),
@@ -82,7 +82,7 @@ export default function AnimatedTimePicker() {
     is24Hour: false
   }), [hourIn]);
   
-  useCode(
+  useCode(() =>
     onChange(
       animState,
       cond(
@@ -116,7 +116,7 @@ export default function AnimatedTimePicker() {
   );
   
 
-  useCode(
+  useCode(() =>
     block([
       onChange(
         hour,

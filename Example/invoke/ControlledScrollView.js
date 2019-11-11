@@ -108,7 +108,7 @@ function ControlledScrollView(props) {
   );
 
 
-  useCode(
+  useCode(() =>
     cond(
       eq(panOldState, State.ACTIVE),
       [
@@ -157,7 +157,7 @@ export default function ScrollViewMock(props) {
   const vibrate = useMemo(() => new Value(0), []);
   const correct = useMemo(() => new Value(0), []);
 
-  useCode(
+  useCode(() =>
     cond(
       vibrate,
       [
@@ -169,7 +169,7 @@ export default function ScrollViewMock(props) {
     [vibrate]
   );
   /*
-  useCode(
+  useCode(() =>
     onChange(
       panState,
       cond(

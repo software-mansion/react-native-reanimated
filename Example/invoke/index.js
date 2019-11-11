@@ -12,7 +12,7 @@ export const SCREENS = {
   SyncedScrollViews: { screen: SyncedScrollViews, title: 'SyncedScrollViews' },
   NativeModules: { screen: AnimatedTimePicker, title: 'NativeModulesCombo' },
   Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
-  Dev: { screen: Animated.Dev, title: 'DEV' }
+  Dev: { screen: Animated.DirectManipulationHelper, title: 'DEV' }
 };
 
 function MainScreen(props) {
@@ -35,7 +35,7 @@ function MainScreen(props) {
 }
 
 MainScreen.navigationOptions = {
-  title: 'Invoke Playground',
+  title: 'Direct Manipulation',
 };
 
 const ItemSeparator = () => <View style={styles.separator} />;

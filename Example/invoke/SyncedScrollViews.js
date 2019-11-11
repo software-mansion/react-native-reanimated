@@ -20,7 +20,7 @@ export default function SyncedScrollViews() {
   //const otherScrollY = useMemo(() => new Value(0), []);
   //const otherOnScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { y: otherScrollY } } }]), [otherScrollY]);
 
-  useCode(
+  useCode(() =>
     block([
       scrollTo(handleA, scrollX, scrollY, 0),
       scrollTo(handleB, scrollX, scrollY, 0)
