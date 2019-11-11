@@ -8,6 +8,8 @@ const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, i
 
 const Button = createAnimatedComponent(RectButton);
 
+const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
+
 function runTiming(clock, value, dest, startStopClock = true) {
   const state = {
     finished: new Value(0),
@@ -72,6 +74,14 @@ export default function AnimatedTimePicker() {
     ]),
     [colorHue, clock, animator, action, hour, minute, animState]
   );
+
+  const hourIn = useMemo(() => new Value(15), []);
+  const minuteIn = useMemo(() => new Value(25), []);
+  const timerStartingState = useMemo(() => map({
+    hour: hourIn,
+    minute: minuteIn,
+    is24Hour: false
+  }), [hourIn, minuteIn]);
   
   useCode(
     onChange(
@@ -79,7 +89,8 @@ export default function AnimatedTimePicker() {
       cond(
         animState,
         [
-          invoke('TimePickerAndroid', 'open', { hour: 15, minute: 30, is24Hour: true }, callback({ action, hour, minute })),
+          showTimer(timerStartingState, callback({ action, hour, minute })),
+          //invoke('TimePickerAndroid', 'open', timerStartingState, callback({ action, hour, minute })),
           invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})),
           set(animState, 0),
           //call([appState], a => console.log('appState', a))
