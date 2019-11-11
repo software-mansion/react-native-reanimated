@@ -1,7 +1,7 @@
 
-import AnimatedNode from './AnimatedNode';
-import AnimatedMap, { createAnimatedMap } from './AnimatedMap';
 import { val } from '../val';
+import { createAnimatedMap } from './AnimatedMap';
+import AnimatedNode from './AnimatedNode';
 
 export default class AnimatedCallback extends AnimatedNode {
   _what;
