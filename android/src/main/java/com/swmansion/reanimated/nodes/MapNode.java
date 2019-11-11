@@ -11,8 +11,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-
-public class MapNode extends Node {
+public class MapNode extends Node implements CallbackNode.CallbackNodeChild {
     public static class ArgMap {
         private final int nodeID;
         private final String[] path;
@@ -61,7 +60,8 @@ public class MapNode extends Node {
         mMapping = newMapNode.mMapping;
     }
 
-    public void setValue(@Nullable WritableMap data){
+    @Override
+    public void setValue(@Nullable WritableMap data) {
         if (data == null) {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
@@ -75,7 +75,7 @@ public class MapNode extends Node {
         }
     }
 
-    public WritableMap getValue(){
+    protected WritableMap getValue() {
         Utils.ReanimatedWritableNativeMap value = new Utils.ReanimatedWritableNativeMap();
         WritableMap argVal, accumulator;
         String[] path;
