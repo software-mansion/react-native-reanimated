@@ -1,6 +1,6 @@
-﻿//export { default as Dev } from './Dev';
-const Dev = __DEV__ ? require('./Dev').default : () => null;
+﻿
+const DirectManipulationHelper = __DEV__ ? require('./DirectManipulationHelper').default : () => null;
 
 export {
-  Dev
+  DirectManipulationHelper
 }

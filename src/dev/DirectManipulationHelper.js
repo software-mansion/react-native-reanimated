@@ -2,6 +2,7 @@
 import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 import * as _ from 'lodash';
+import openURLInBrowser from 'react-native/Libraries/Core/Devtools/openURLInBrowser';
 
 const RectButton = TouchableOpacity
 
@@ -92,7 +93,7 @@ function DispatchCell({ name, item }) {
   );
 }
 
-function Dev() {
+function DirectManipulationHelper() {
   const [nativeModules, viewManagers] = useDevUtil();
   const sections = useMemo(() => ([
     {
@@ -144,7 +145,7 @@ function Dev() {
   );
 }
 
-const DevUtil = __DEV__ ? Dev : () => null;
+const DevUtil = __DEV__ ? DirectManipulationHelper : () => null;
 
 export default DevUtil;
 

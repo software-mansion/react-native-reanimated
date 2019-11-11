@@ -55,8 +55,8 @@ const Animated = {
   addWhitelistedUIProps,
 
   // dev
-  get Dev() {
-    return require('./dev').Dev;
+  get DirectManipulationHelper() {
+    return require('./dev').DirectManipulationHelper;
   }
 };
 
