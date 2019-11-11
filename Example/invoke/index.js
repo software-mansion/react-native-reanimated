@@ -10,7 +10,7 @@ import Shuffle from './shuffle';
 export const SCREENS = {
   ScrollView: { screen: ControlledScrollView, title: 'ControlledScrollView' },
   SyncedScrollViews: { screen: SyncedScrollViews, title: 'SyncedScrollViews' },
-  NativeModules: { screen: AnimatedTimePicker, title: 'NativeModules' },
+  NativeModules: { screen: AnimatedTimePicker, title: 'NativeModulesCombo' },
   Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
   Dev: { screen: Animated.Dev, title: 'DEV' }
 };
