@@ -45,4 +45,10 @@ public class CallFuncNode extends Node {
     endContext();
     return retVal;
   }
+
+  @Override
+  public Node source() {
+    Node n = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+    return n.source();
+  }
 }
