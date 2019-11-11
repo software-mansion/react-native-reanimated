@@ -51,7 +51,7 @@ const SCREENS = {
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  invoke: { screen: Invoke, title: 'Animated.invoke' },
+  invoke: { screen: Invoke, title: 'Invoke & Dispatch' },
   code: { screen: Code, title: 'Animated.Code component' },
   
   width: { screen: WidthAndHeight, title: 'width & height & more' },
