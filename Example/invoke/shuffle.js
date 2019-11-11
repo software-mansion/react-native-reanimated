@@ -36,7 +36,7 @@ function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-//const measurer = proc((tag, a, b, c, d, e, f) => cond(defined(), invoke('UIManager', 'measure', tag, callbacka, b, c, d, e, f))));
+const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -112,9 +112,8 @@ function Item({ item, parent, evaluate, x, y, index }) {
     cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        invoke('UIManager', 'measure', tag, callback(...values)),
-        //call(values, v => console.log(item, _.zipObject(keys, v)))
-        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback{ a: new Value() }), callback(...values1))),
+        measureView(tag, callback(...values)),
+        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),
     [tag, parent, evaluate]

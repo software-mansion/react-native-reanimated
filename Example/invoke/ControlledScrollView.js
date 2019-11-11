@@ -235,7 +235,7 @@ export default function ScrollViewMock(props) {
             }
           ]}
         >
-          <Text style={styles.text}>I'm the fake one</Text>
+          <Text style={styles.text}>I'm the controlled one</Text>
         </View>
       </View>
     </RectButton>
