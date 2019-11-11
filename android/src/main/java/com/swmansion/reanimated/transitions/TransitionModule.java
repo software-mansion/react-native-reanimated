@@ -1,15 +1,18 @@
 package com.swmansion.reanimated.transitions;
 
-import androidx.transition.TransitionManager;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
+
+import javax.annotation.Nullable;
 
 public class TransitionModule {
 
@@ -19,20 +22,18 @@ public class TransitionModule {
     mUIManager = uiManager;
   }
 
-  public void animateNextTransition(final int rootTag, final ReadableMap config) {
+  public void animateNextTransition(final ReactContext context, final int rootTag, final ReadableMap config) {
+    animateNextTransition(context, rootTag, config, null);
+  }
+
+  public void animateNextTransition(final ReactContext context, final int rootTag, final ReadableMap config, final @Nullable Callback callback) {
     mUIManager.prependUIBlock(new UIBlock() {
       @Override
-      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+      public void execute(final NativeViewHierarchyManager nativeViewHierarchyManager) {
         try {
-          View rootView = nativeViewHierarchyManager.resolveView(rootTag);
-          if (rootView instanceof ViewGroup) {
-            ReadableArray transitions = config.getArray("transitions");
-            for (int i = 0, size = transitions.size(); i < size; i++) {
-              TransitionManager.beginDelayedTransition(
-                      (ViewGroup) rootView,
-                      TransitionUtils.inflate(transitions.getMap(i)));
-            }
-          }
+          final View rootView = nativeViewHierarchyManager.resolveView(rootTag);
+          TransitionHelper transitionHelper = new TransitionHelper(context, rootView, config, callback);
+          transitionHelper.beginDelayedTransition();
         } catch (IllegalViewOperationException ex) {
           // ignore, view might have not been registered yet
         }
@@ -41,5 +42,4 @@ public class TransitionModule {
     });
 
   }
-
 }

@@ -43,7 +43,7 @@ function match(condsAndResPairs, offset = 0) {
   );
 }
 
-function colorHSV(h /* 0 - 360 */, s /* 0 - 1 */, v /* 0 - 1 */) {
+export function colorHSV(h /* 0 - 360 */, s /* 0 - 1 */, v /* 0 - 1 */) {
   // Converts color from HSV format into RGB
   // Formula explained here: https://www.rapidtables.com/convert/color/hsv-to-rgb.html
   const c = multiply(v, s);

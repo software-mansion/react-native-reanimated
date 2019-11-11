@@ -2,7 +2,6 @@ package com.swmansion.reanimated;
 
 import android.util.SparseArray;
 
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -22,13 +21,18 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
+import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
 import com.swmansion.reanimated.nodes.ConcatNode;
 import com.swmansion.reanimated.nodes.CondNode;
+import com.swmansion.reanimated.nodes.ConnectedNode;
 import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
+import com.swmansion.reanimated.nodes.FunctionNode;
 import com.swmansion.reanimated.nodes.JSCallNode;
+import com.swmansion.reanimated.nodes.InvokeNode;
+import com.swmansion.reanimated.nodes.MapNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
@@ -38,7 +42,6 @@ import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
 import com.swmansion.reanimated.nodes.ParamNode;
-import com.swmansion.reanimated.nodes.FunctionNode;
 import com.swmansion.reanimated.nodes.CallFuncNode;
 
 import java.util.ArrayList;
@@ -110,6 +113,10 @@ public class NodesManager implements EventDispatcherListener {
     };
 
     mNoopNode = new NoopNode(this);
+  }
+
+  public ReactContext getContext(){
+    return mContext;
   }
 
   public void onHostPause() {
@@ -261,8 +268,12 @@ public class NodesManager implements EventDispatcherListener {
       node = new JSCallNode(nodeID, config, this);
     } else if ("bezier".equals(type)) {
       node = new BezierNode(nodeID, config, this);
+    } else if ("map".equals(type)) {
+      node = new MapNode(nodeID, config, this);
     } else if ("event".equals(type)) {
       node = new EventNode(nodeID, config, this);
+    } else if ("callback".equals(type)) {
+      node = new CallbackNode(nodeID, config, this);
     } else if ("always".equals(type)) {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
@@ -271,6 +282,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new ParamNode(nodeID, config, this);
     } else if ("func".equals(type)) {
       node = new FunctionNode(nodeID, config, this);
+    } else if ("invoke".equals(type)) {
+      node = new InvokeNode(nodeID, config, this);
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
     } else {
@@ -317,11 +330,11 @@ public class NodesManager implements EventDispatcherListener {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
               " does not exists");
     }
-    if (!(node instanceof PropsNode)) {
+    if (!(node instanceof ConnectedNode)) {
       throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
-              "of type " + PropsNode.class.getName());
+              "of type " + PropsNode.class.getName() + " or " + InvokeNode.class.getName());
     }
-    ((PropsNode) node).connectToView(viewTag);
+    ((ConnectedNode) node).connectToView(viewTag);
   }
 
   public void disconnectNodeFromView(int nodeID, int viewTag) {

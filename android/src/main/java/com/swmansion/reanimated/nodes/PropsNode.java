@@ -16,7 +16,7 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
-public class PropsNode extends Node implements FinalNode {
+public class PropsNode extends Node implements FinalNode, ConnectedNode {
 
   private final Map<String, Integer> mMapping;
   private final UIImplementation mUIImplementation;
@@ -59,6 +59,7 @@ public class PropsNode extends Node implements FinalNode {
     mDiffMap = new ReactStylesDiffMap(mPropMap);
   }
 
+  @Override
   public void connectToView(int viewTag) {
     mConnectedViewTag = viewTag;
     dangerouslyRescheduleEvaluate();

@@ -21,6 +21,7 @@ import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWr
 import {
   Transition,
   Transitioning,
+  TransitionState,
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
@@ -52,8 +53,13 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+
+  // dev
+  get Dev() {
+    return require('./dev').Dev;
+  }
 };
 
 export default Animated;
 
-export { Easing, Transitioning, Transition, createTransitioningComponent };
+export { Easing, Transitioning, Transition, TransitionState, createTransitioningComponent };

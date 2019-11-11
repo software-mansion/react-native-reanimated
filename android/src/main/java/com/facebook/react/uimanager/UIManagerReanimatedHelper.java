@@ -11,4 +11,8 @@ public class UIManagerReanimatedHelper {
   public static boolean isOperationQueueEmpty(UIImplementation uiImplementation) {
     return uiImplementation.getUIViewOperationQueue().isEmpty();
   }
+
+  public static ViewManager resolveViewManager(UIImplementation uiImplementation, String className) {
+    return uiImplementation.resolveViewManager(className);
+  }
 }

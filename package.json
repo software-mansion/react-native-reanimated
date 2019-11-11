@@ -39,6 +39,7 @@
   "dependencies": {},
   "devDependencies": {
     "@react-native-community/eslint-config": "^0.0.5",
+    "@types/lodash": "^4.14.146",
     "@types/react": "^16.9.0",
     "@types/react-native": "0.60.19",
     "babel-eslint": "^10.0.3",
@@ -53,6 +54,7 @@
     "husky": "^3.0.9",
     "jest": "^24.9.0",
     "lint-staged": "^9.4.2",
+    "lodash": "^4.17.15",
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
