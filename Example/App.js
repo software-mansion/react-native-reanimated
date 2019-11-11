@@ -14,7 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import ChatHeads from './chatHeads';
 import Code from './code';
-import Invoke, { SCREENS as INVOKE_SCREENS } from './invoke';
+import Invoke, { SCREENS as INVOKE_SCREENS } from './directManipulation';
 import Colors from './colors';
 import DifferentSpringConfigs from './differentSpringConfigs';
 import ImageViewer from './imageViewer';
