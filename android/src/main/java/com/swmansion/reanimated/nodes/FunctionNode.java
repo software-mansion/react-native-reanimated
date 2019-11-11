@@ -17,10 +17,4 @@ public class FunctionNode extends Node {
     Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     return what.value();
   }
-
-  @Override
-  public Node source() {
-    Node n = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-    return n.source();
-  }
 }

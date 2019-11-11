@@ -134,8 +134,4 @@ public abstract class Node {
     updatedNodes.clear();
     updateContext.updateLoopID++;
   }
-
-  public Node source() {
-    return this;
-  }
 }

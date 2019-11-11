@@ -74,12 +74,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
             for (int i = 0; i < params.length; i++) {
                 paramType = paramTypes[i];
                 n = nodesManager.findNodeById(params[i], Node.class);
-
-                if (paramType == Callback.class || paramType == Promise.class) {
-                    value = n.source();
-                } else {
-                    value = n.value();
-                }
+                value = n.value();
 
                 if (Utils.isNumber(value)) {
                     out[i] = Utils.fromDouble(((Double) value), paramType);
@@ -104,8 +99,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
                     "Parameter mismatch when calling reanimated invoke.\n" +
                             mCallee.getName() + "." + mMethod +"\n" +
                             outOfBoundsMessage + ".\n" +
-                            typeDetails + ".\n" +
-                            "Details: " + err.getMessage(),
+                            typeDetails + ".\n",
                     err
             );
         }

@@ -58,7 +58,8 @@ public class CallbackNode extends Node implements Callback, Promise {
     @Nullable
     @Override
     protected Object evaluate() {
-        return Utils.toDouble(mState);
+        return this;
+        //return Utils.toDouble(mState);
     }
 
     public void setValue(@Nullable WritableMap data) {
@@ -78,7 +79,6 @@ public class CallbackNode extends Node implements Callback, Promise {
 
     private void updateState(@CallbackState int state) {
         mState = state;
-        //value();
     }
 
     @Override

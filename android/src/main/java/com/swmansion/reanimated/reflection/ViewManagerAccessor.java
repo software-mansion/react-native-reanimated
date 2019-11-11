@@ -128,8 +128,9 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
         for (int i = paramStart; i < params.length; i++) {
             n = nodesManager.findNodeById(params[i], Node.class);
+            Object value = n.value();
 
-            if (n instanceof CallbackNode || n.source() instanceof CallbackNode) {
+            if (value instanceof CallbackNode) {
                 /**
                  * {@link ViewManager } has no {@link Callback} or {@link Promise} args
                  */
@@ -138,9 +139,9 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
                                 "Dispatch can't receive callback params, index = " + i
                 );
             } else if (n instanceof MapNode) {
-                args.pushMap(((ReadableMap) n.value()));
+                args.pushMap(((ReadableMap) value));
             } else {
-                Utils.pushVariant(args, n.value());
+                Utils.pushVariant(args, value);
             }
         }
 
