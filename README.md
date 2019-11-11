@@ -782,6 +782,7 @@ scrollTo(tag, x, y, 0);
 ```
 
 Dispatches a command to the specified `ViewManager` without going through the bridge.
+The third param is reserved for the tag of the view in question.
 
 ---
 ### `callback`
