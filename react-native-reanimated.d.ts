@@ -236,9 +236,6 @@ declare module 'react-native-reanimated' {
       cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
     ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
 
-    type AnimatedInvokeConfig = { module: string } & ({ method: string } | { command: string | number });
-    export function invoke(config: AnimatedInvokeConfig, ...params: Array<Animated.Value<number> /*| Animated.Ma*/>): Adaptable<number>;
-
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
@@ -280,10 +277,7 @@ declare module 'react-native-reanimated' {
         argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
         config?: {},
     ): (...args: any[]) => void;
-    export function map<T>(
-      argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
-      config?: {},
-    ): (...args: any[]) => void;
+    export const map = event;
 
     // derived operations
     export function abs(value: Adaptable<number>): AnimatedNode<number>;
@@ -306,6 +300,38 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<number>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
+
+    //  direct manipulation
+    export const callback = event;
+    /**
+     * Invokes a method of a given ReactModule without going through the bridge.
+     * @param module
+     * @param method
+     * @param params
+     */
+    export function invoke(
+      module: string,
+      method: string,
+      ...params: Array<Animated.Adaptable | typeof map | typeof callback>
+    ): AnimatedNode<number>;
+    /**
+     * Dispatches a command to the specified ViewManager without going through the bridge.
+     * @param viewManager
+     * @param command
+     * @param params
+     */
+    export function dispatch(
+      viewManager: string,
+      command: string | number,
+      ...params: Array<Animated.Adaptable | typeof map>
+    ): AnimatedNode<number>;
+    /**
+     * A helper for devs using invoke/dispatch
+     * This component will render only in __DEV__ mode and is safe for production
+     * */
+    export class DirectManipulationHelper extends Component {
+
+    }
 
     // animations
     export function decay(
@@ -419,11 +445,4 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
-  /**
-   * A helper for devs using invoke/dispatch
-   * This component will render only in __DEV__ mode and is safe for production
-   * */
-  export class Dev extends Component {
-
-  }
 }
