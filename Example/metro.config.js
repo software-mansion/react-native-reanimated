@@ -28,6 +28,9 @@ function getBlacklist() {
 module.exports = {
   resolver: {
     blacklistRE: getBlacklist(),
+    extraNodeModules: {
+      lodash: path.resolve(__dirname, 'node_modules/lodash')
+    }
   },
   watchFolders: [path.resolve(__dirname, '..')],
   transformer: {
