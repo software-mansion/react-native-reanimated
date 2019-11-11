@@ -4,6 +4,9 @@ import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';
 import AnimatedParam from './AnimatedParam';
 import { createAnimatedAlways } from './AnimatedAlways';
+import AnimatedFunction from './AnimatedFunction';
+import AnimatedCallFunc from './AnimatedCallFunc';
+import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
 
 import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
@@ -14,40 +17,7 @@ function getNode(node) {
   }
   return node.__nodeID;
 }
-/*
-function traverse(value, path, objectMappings, alwaysNodes) {
-  if (value instanceof AnimatedNode && (value.__source() instanceof InternalAnimatedValue || value instanceof AnimatedParam)) {
-    objectMappings.push(path.concat(getNode(value)));
-  } else if (typeof value === 'object' && value.__val) {
-    objectMappings.push(path.concat(getNode(value.__val)));
-  } else if (typeof value === 'function') {
-    const node = new InternalAnimatedValue(0);
-    alwaysNodes.push(createAnimatedAlways(value(node)));
-    objectMappings.push(path.concat(getNode(node)));
-  } else if (typeof value === 'object') {
-    for (const key in value) {
-      traverse(value[key], path.concat(key), objectMappings, alwaysNodes);
-    }
-  }
-}
 
-const proxyHandler = {
-  get: function (target, name) {
-    if (name === '__isProxy') {
-      return true;
-    }
-    if (!target[name] && name !== '__val') {
-      target[name] = new Proxy({}, proxyHandler);
-    }
-    return target[name];
-  },
-  set: function (target, prop, value) {
-    if (prop === '__val') {
-      target[prop] = value;
-    }
-  },
-};
-*/
 export function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their key path inside
   const objectMappings = [];
@@ -71,7 +41,7 @@ export function sanitizeArgMapping(argMapping) {
   };
   
   if (typeof argMapping === 'object') {
-    traverse(argMapping, [], objectMappings, alwaysNodes);
+    traverse(argMapping, []);
   } else if (typeof argMapping === 'function') {
     
     const proxyHandler = {
@@ -96,15 +66,17 @@ export function sanitizeArgMapping(argMapping) {
         ? new Proxy({}, proxyHandler)
         : createEventObjectProxyPolyfill();
     alwaysNodes.push(createAnimatedAlways(argMapping(proxy)));
-    traverse(proxy, [], objectMappings, alwaysNodes);
+    traverse(proxy, []);
   }
 
   return { objectMappings, alwaysNodes };
 }
 
 export default class AnimatedMap extends AnimatedNode {
+  _alwaysNodes;
   constructor(type, argMapping, alwaysNodes, config = {}) {
     super({ type, argMapping }, alwaysNodes);
+    this._alwaysNodes = alwaysNodes;
   }
 
   __onEvaluate() {
@@ -162,3 +134,34 @@ export function createAnimatedMap(argMapping, config) {
   const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
   return new AnimatedMap('map', objectMappings, alwaysNodes, config);
 }
+
+/*
+export function createAnimatedCallMap(cb) {
+  const params = new Array(cb.length);
+  for (let i = 0; i < params.length; i++) {
+    params[i] = createAnimatedParam();
+  }
+
+  let what = cb(...params);
+  console.log(what)
+  if (typeof what === 'object' && what instanceof AnimatedNode === false) {
+    what = createAnimatedMap(what);
+  } else if (what instanceof AnimatedMap === false) {
+    throw new Error('map proc received wrong args', what);
+  }
+  const func = new AnimatedFunction(what, ...params);
+
+  return (...args) => {
+    if (args.length !== params.length) {
+      throw new Error(
+        'Parameter mismatch when calling reanimated function. Expected ' +
+        params.length +
+        ' parameters, got ' +
+        args.length +
+        '.'
+      );
+    }
+    return new AnimatedCallFunc('callfunc', func, args, params);
+  };
+}
+*/
