@@ -734,6 +734,8 @@ When evaluated, it will compare `value` to its previous value. If it has changed
 
 
 ## Direct Manipulation
+Direct manipulation allows you to interact natively with a `ReactModule` or a `ViewManager`, no bridge, no `js`.
+[See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/directManipulation)
 
 ---
 ### `invoke`
@@ -785,15 +787,13 @@ Dispatches a command to the specified `ViewManager` without going through the br
 ### `callback`
 
 A wrapper node for `map`, essentially the same as `event`.
-
 Pass as argument to `invoke` or `dispatch` in order to obtain result values.
 
 ---
 
 ### `<DirectManipulationHelper />`
 
-A conveince for developers displaying which methods are available for direct manipulation.
-
+A conveince displaying which methods are available for direct manipulation.
 You just need to render it.
 
 ---
