@@ -770,7 +770,7 @@ const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'op
 // define proc (optional)
 const scrollTo = proc((tag, scrollX, scrollY, animated) => 
                        cond(
-                         defined(tag, -1), 
+                         defined(tag), 
                          dispatch('RCTScrollView', 'scrollTo', tag, scrollX, scrollY, animated)
                        )
                      );
