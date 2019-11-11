@@ -355,6 +355,10 @@ For a given `Clock` node, it returns `1` if the clock [has been started](#startC
 Works the same way as with the original `Animated` library.
 
 ---
+### `map`
+
+Builds an animated collection just like `event`.
+
 ### `add`
 
 ```js
@@ -727,6 +731,72 @@ Returns concatanation of given nodes (number or string) as string
 onChange(value, action)
 ```
 When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
+
+
+## Direct Manipulation
+
+---
+### `invoke`
+
+Invokes a method of a given `ReactModule` without going through the bridge.
+
+```js
+
+// define proc (optional)
+const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback));
+
+// run
+  const action = new Value(0);
+  const hour = new Value(-1);
+  const minute = new Value(-1);
+
+  showTimer(
+    map({
+      hour: new Value(15),
+      minute: 32,
+      is24Hour: false
+    }),
+    callback({ action, hour, minute })
+  );
+  
+  cond(greaterThan(hour, 15), ....)
+```
+
+---
+### `dispatch`
+
+```js
+
+// define proc (optional)
+const scrollTo = proc((tag, scrollX, scrollY, animated) => 
+                       cond(
+                         defined(tag, -1), 
+                         dispatch('RCTScrollView', 'scrollTo', tag, scrollX, scrollY, animated)
+                       )
+                     );
+
+// run
+scrollTo(tag, x, y, 0);
+```
+
+Dispatches a command to the specified `ViewManager` without going through the bridge.
+
+---
+### `callback`
+
+A wrapper node for `map`, essentially the same as `event`.
+
+Pass as argument to `invoke` or `dispatch` in order to obtain result values.
+
+---
+
+### `<DirectManipulationHelper />`
+
+A conveince for developers displaying which methods are available for direct manipulation.
+
+You just need to render it.
+
+---
 
 <!-- Anims -->
 ## Animations
