@@ -76,12 +76,11 @@ export default function AnimatedTimePicker() {
   );
 
   const hourIn = useMemo(() => new Value(15), []);
-  const minuteIn = useMemo(() => new Value(25), []);
   const timerStartingState = useMemo(() => map({
     hour: hourIn,
-    minute: minuteIn,
+    minute: 32,
     is24Hour: false
-  }), [hourIn, minuteIn]);
+  }), [hourIn]);
   
   useCode(
     onChange(
