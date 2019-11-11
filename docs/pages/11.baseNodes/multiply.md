@@ -1,4 +1,3 @@
-
 ## `multiply`
 
 ```js

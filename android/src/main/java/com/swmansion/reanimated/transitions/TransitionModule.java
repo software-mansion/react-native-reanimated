@@ -1,6 +1,6 @@
 package com.swmansion.reanimated.transitions;
 
-import android.support.transition.TransitionManager;
+import androidx.transition.TransitionManager;
 import android.view.View;
 import android.view.ViewGroup;
 

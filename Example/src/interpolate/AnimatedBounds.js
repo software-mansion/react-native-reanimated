@@ -115,6 +115,7 @@ export default class AnimatedBounds extends Component {
           />
           <PanGestureHandler
             maxPointers={1}
+            minDist={10}
             onGestureEvent={this._onGestureEvent}
             onHandlerStateChange={this._onGestureEvent}>
             <Box style={{ transform: [{ translateX: this._transX }] }} />

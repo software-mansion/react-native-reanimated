@@ -29,6 +29,7 @@ const OPERATIONS = {
   pow: reduce((a, b) => Math.pow(a, b)),
   modulo: reduce((a, b) => ((a % b) + b) % b),
   sqrt: single(a => Math.sqrt(a)),
+  log: single(a => Math.log(a)),
   sin: single(a => Math.sin(a)),
   cos: single(a => Math.cos(a)),
   tan: single(a => Math.tan(a)),
@@ -36,6 +37,7 @@ const OPERATIONS = {
   asin: single(a => Math.asin(a)),
   atan: single(a => Math.atan(a)),
   exp: single(a => Math.exp(a)),
+  round: single(a => Math.round(a)),
 
   // logical
   and: reduceFrom((a, b) => a && b, true),
