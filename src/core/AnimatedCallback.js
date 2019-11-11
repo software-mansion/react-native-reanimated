@@ -1,19 +1,39 @@
 
-import AnimatedMap, { sanitizeArgMapping } from './AnimatedMap';
+import AnimatedNode from './AnimatedNode';
+import AnimatedMap, { createAnimatedMap } from './AnimatedMap';
 import { val } from '../val';
 
-export default class AnimatedCallback extends AnimatedMap {
-  constructor(objectMappings, alwaysNodes) {
-    super('callback', objectMappings, alwaysNodes);
+export default class AnimatedCallback extends AnimatedNode {
+  _what;
+
+  constructor(what) {
+    super(
+      {
+        type: 'callback',
+        what: what.__nodeID,
+      },
+      [what]
+    );
+    this._what = what;
+    this.__attach();
   }
 
   __onEvaluate() {
-    //val(this);
-    return 0;
+    return val(this._what);
+  }
+
+  __source() {
+    return this._what;
   }
 }
 
-export function createAnimatedCallback(...argMapping) {
-  const { objectMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
-  return new AnimatedCallback(objectMappings, alwaysNodes);
+export function createAnimatedCallback(...args) {
+  let what;
+  if (args.length === 1 && args[0] instanceof AnimatedNode) {
+    what = args[0];
+  } else {
+    what = createAnimatedMap(args);
+  }
+
+  return new AnimatedCallback(what);
 }

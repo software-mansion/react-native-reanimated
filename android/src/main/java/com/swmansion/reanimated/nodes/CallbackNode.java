@@ -7,7 +7,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
@@ -18,7 +20,14 @@ import com.swmansion.reanimated.Utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-public class CallbackNode extends MapNode implements Callback, Promise {
+/**
+ * {@link CallbackNode } is used for consuming/stubbing
+ *      {@link ReadableMap },
+ *      {@link ReadableArray },
+ *      {@link Callback },
+ *      {@link Promise }
+ *      */
+public class CallbackNode extends Node implements Callback, Promise {
 
     @IntDef({
             CallbackState.READY,
@@ -35,9 +44,15 @@ public class CallbackNode extends MapNode implements Callback, Promise {
     }
 
     private @CallbackState int mState = CallbackState.READY;
+    private final int mWhatNodeID;
 
     public CallbackNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
+        mWhatNodeID = config.getInt("what");
+    }
+
+    private Node what() {
+        return mNodesManager.findNodeById(mWhatNodeID, Node.class);
     }
 
     @Nullable
@@ -46,16 +61,15 @@ public class CallbackNode extends MapNode implements Callback, Promise {
         return Utils.toDouble(mState);
     }
 
-    @Override
-    public WritableMap getValue() {
-        updateState(CallbackState.PENDING);
-        return super.getValue();
-    }
-
-    @Override
     public void setValue(@Nullable WritableMap data) {
-        super.setValue(data);
-        updateState(CallbackState.RESOLVED);
+        try {
+            ((ValueManagerNode) what()).setValue(data);
+            updateState(CallbackState.RESOLVED);
+        } catch (ClassCastException e) {
+            throw new JSApplicationIllegalArgumentException(
+                    "Reanimated callback received a wrong node of " + what().getClass().getSimpleName(), e);
+        }
+
     }
 
     public void reject() {
@@ -64,7 +78,7 @@ public class CallbackNode extends MapNode implements Callback, Promise {
 
     private void updateState(@CallbackState int state) {
         mState = state;
-        value();
+        //value();
     }
 
     @Override
