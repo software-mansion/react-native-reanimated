@@ -63,7 +63,7 @@ public class CallbackNode extends Node implements Callback, Promise {
 
     public void setValue(@Nullable WritableMap data) {
         try {
-            ((ValueManagerNode) what()).setValue(data);
+            ((ValueNode) what()).setValue(data);
             updateState(CallbackState.RESOLVED);
         } catch (ClassCastException e) {
             throw new JSApplicationIllegalArgumentException(
