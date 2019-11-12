@@ -116,7 +116,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
         //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),
-    [tag, parent, evaluate]
+    [tag, parent]
   );
 
   useCode(
@@ -240,7 +240,7 @@ function Shuffle() {
           transition={transition}
           style={styles.centerAll}
           animateMount
-          onTransitionStateChange={onTransition}
+          //onTransitionStateChange={onTransition}
         >
           <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
