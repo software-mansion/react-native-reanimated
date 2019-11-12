@@ -24,7 +24,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kmagiera/react-native-reanimated.git"
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
@@ -33,9 +33,9 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/kmagiera/react-native-reanimated/issues"
+    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/kmagiera/react-native-reanimated#readme",
+  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {},
   "devDependencies": {
     "@react-native-community/eslint-config": "^0.0.5",

@@ -1,8 +1,7 @@
-/* @flow */
-
 import path from 'path';
 import fs from 'fs';
 
+// eslint-disable-next-line no-extend-native
 Object.defineProperty(Array.prototype, 'flat', {
   value: function(depth = 1) {
     return this.reduce(function(flat, toFlatten) {
@@ -19,13 +18,13 @@ const root = path.join(__dirname, '..');
 const dist = path.join(__dirname, 'dist');
 const styles = [path.join(__dirname, 'assets', 'styles.css')];
 const github =
-  'https://github.com/kmagiera/react-native-reanimated/edit/master/';
+  'https://github.com/software-mansion/react-native-reanimated/edit/master/';
 
 if (!fs.existsSync(dist)) {
   fs.mkdirSync(dist);
 }
 
-function getType(file: string) {
+function getType(file) {
   if (file.endsWith('.js')) {
     return 'custom';
   } else if (file.endsWith('.mdx')) {
@@ -52,12 +51,12 @@ const mapToObject = (filePath, group) =>
           nameToGroupTitle(file.name)
         );
       } else {
-        let result = {
+        const result = {
           file: path.join(filePath, file.name),
           type: getType(file.name),
         };
-        if (!!group) {
-          result['group'] = group;
+        if (group) {
+          result.group = group;
         }
         return result;
       }

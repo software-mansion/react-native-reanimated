@@ -10,7 +10,7 @@ comes to gesture based interactions.
 
 ## Installation
 
-Check [getting started](https://kmagiera.github.io/react-native-reanimated/getting-started.html) section of our docs for the detailed installation instructions.
+Check [getting started](https://software-mansion.github.io/react-native-reanimated/getting-started.html) section of our docs for the detailed installation instructions.
 
 ## Documentation
 
@@ -18,7 +18,7 @@ Check out our dedicated documentation page for info about this library, API refe
 
 ## Examples
 
-The source code for the example (showcase) app is under the [`Example/`](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/) directory.
+The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/) directory.
 If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Clone the repo, go to the Example/ folder and run:
 
 ```
