@@ -60,7 +60,6 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
@@ -268,16 +267,17 @@ declare module 'react-native-reanimated' {
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
+
+    
+    type MappingBasic = { [key: string]: MappingBasic } | Adaptable<any>;
+    type MappingProxy<T> = (arg: T) => AnimatedNode<number>;
+    type MappingNested<T> = T extends object ? { [K in keyof T]?: MappingNested<T[K]> | MappingProxy<T[K]> } : Adaptable<T> | MappingProxy<T>;
+    type MappingArray<T> = T extends Array<any> ? { [I in keyof T]: MappingNested<T[I]> } : [MappingNested<T>];
+    export type Mapping<T> = T extends never ? ReadonlyArray<MappingBasic> : Readonly<MappingArray<T>>;
+    export function map<T>(argMapping: Mapping<T>, config?: {}): Adaptable<Value>;
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
-    type EventArgFunc<T> = (arg: T) => AnimatedNode<number>;
-    type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
-    type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
-    export function event<T>(
-        argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
-        config?: {},
-    ): (...args: any[]) => void;
-    export const map = event;
+    export function event<T>(argMapping: Mapping<T>, config?: {}): (...args: any[]) => void;
 
     // derived operations
     export function abs(value: Adaptable<number>): AnimatedNode<number>;
@@ -302,7 +302,9 @@ declare module 'react-native-reanimated' {
     export const min: BinaryOperator;
 
     //  direct manipulation
-    export const callback = event;
+    export function callback<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
+    export function callback<T extends AnimatedNode<Value>>(map: T): AnimatedNode<number>;
+
     /**
      * Invokes a method of a given ReactModule without going through the bridge.
      * @param module
@@ -312,7 +314,7 @@ declare module 'react-native-reanimated' {
     export function invoke(
       module: string,
       method: string,
-      ...params: Array<Animated.Adaptable | typeof map | typeof callback>
+      ...params: Array<Animated.Adaptable<Value> | typeof map | typeof callback>
     ): AnimatedNode<number>;
     /**
      * Dispatches a command to the specified ViewManager without going through the bridge.
@@ -323,7 +325,7 @@ declare module 'react-native-reanimated' {
     export function dispatch(
       viewManager: string,
       command: string | number,
-      ...params: Array<Animated.Adaptable | typeof map>
+      ...params: Array<Animated.Adaptable<Value> | typeof map>
     ): AnimatedNode<number>;
     /**
      * A helper for devs using invoke/dispatch
