@@ -11,7 +11,7 @@ YellowBox.ignoreWarnings(['measureLayoutRelativeToContainingList']);
 function useDevUtil() {
   const [data, setData] = useState([]);
   useEffect(() => {
-    ReanimatedModule.getDevUtil().then(setData);
+    ReanimatedModule.getDirectManipulationUtil().then(setData);
   }, []);
 
   return useMemo(() => {
