@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, findNodeHandle, requireNativeComponent, StyleSheet } from 'react-native';
+import { View, findNodeHandle, requireNativeComponent, StyleSheet, Platform } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
 import createAnimatedComponent from './createAnimatedComponent';
 
@@ -107,7 +107,10 @@ class Sequence extends React.Component {
 }
 
 const viewName = 'ReanimatedTransitionManager';
-const TransitioningNativeView = createAnimatedComponent(requireNativeComponent(viewName));
+const TransitioningNativeView = Platform.select({
+  android: () => createAnimatedComponent(requireNativeComponent(viewName)),
+  default: () => createAnimatedComponent(View)
+})();
 
 function createTransitioningComponent(Component) {
   class Wrapped extends React.Component {
