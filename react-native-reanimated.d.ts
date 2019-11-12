@@ -1,4 +1,4 @@
-// Project: https://github.com/kmagiera/react-native-reanimated
+// Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
@@ -75,16 +75,16 @@ declare module 'react-native-reanimated' {
       ...others: Adaptable<number>[]
     ) => AnimatedNode<T>;
 
-    export interface AnimationState {                  
+    export interface AnimationState {
       finished: AnimatedValue<number>;
       position: AnimatedValue<number>;
       time: AnimatedValue<number>;
     }
-    
-    export interface PhysicsAnimationState extends AnimationState {            
+
+    export interface PhysicsAnimationState extends AnimationState {
       velocity: AnimatedValue<number>;
     }
-    
+
     export type DecayState = PhysicsAnimationState;
 
     export interface DecayConfig {

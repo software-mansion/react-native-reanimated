@@ -1,12 +1,19 @@
-# react-native-reanimated
+<p align="center">
+  <h1 align="center">React Native Reanimated</h1>
+  <h3 align="center">React Native's Animated library reimplemented</h3>
+</p>
 
-React Native's Animated library reimplemented.
+React Native Reanimated provides a more comprehensive,
+low level abstraction for the Animated library API to be built
+on top of and hence allow for much greater flexibility especially when it
+comes to gesture based interactions.
 
-It provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.
+## Installation
 
-![](/assets/meme.png)
+Check [getting started](https://software-mansion.github.io/react-native-reanimated/getting-started.html) section of our docs for the detailed installation instructions.
 
-## OMG, why would you build this? (motivation)
+## Documentation
+
 
 `Animated` library has several limitations that become troubling when it comes to gesture based interactions.
 I started this project initially to resolve the issue of pan interaction when the object can be dragged along the screen and when released it should snap to some place on the screen.
@@ -733,7 +740,7 @@ onChange(value, action)
 When evaluated, it will compare `value` to its previous value. If it has changed, `action` will be evaluated and its value will be returned.
 
 
-## Direct Manipulation
+## Direct Manipulation 🆕
 Direct manipulation allows you to interact natively with a `ReactModule` or a `ViewManager`, no bridge, no `js`.
 [See example](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/directManipulation)
 
@@ -964,34 +971,29 @@ This API gives the possibility to use animation with original `Animated` API. It
 
 ![](/assets/imagepreview.gif)
 
+Check out our dedicated documentation page for info about this library, API reference and more: [https://software-mansion.github.io/react-native-reanimated](https://software-mansion.github.io/react-native-reanimated)
+
+
 ## Examples
 
-The source code for the example (showcase) app is under the [`Example/`](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/) directory.
+The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/) directory.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Clone the repo, go to the Example/ folder and run:
 
-In order to run it you need to pull in the repository, enter `Example/` folder and run:
-```bash
-  yarn install
+```
+yarn install
 ```
 
-Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the Example app on).
+Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the example app on).
 
-You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
-
-## Jest
-
-In order to use `react-native-reanimated` with Jest, you need to add the following mock implementation at the top of your test:
-
-```js
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
-```
+You will need to have an Android or iOS device or emulator connected as well as react-native-cli package installed globally.
 
 ## License
 
-React native reanimated library is licensed under [The MIT License](LICENSE).
+Reanimated library is licensed under [The MIT License](LICENSE).
 
 ## Credits
 
 This project is supported by amazing people from [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
 
-[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3&s=100 "Expo.io")](https://expo.io)
-[![swm](https://avatars1.githubusercontent.com/u/6952717?v=3&s=100 "Software Mansion")](https://swmansion.com)
+[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3&s=100 'Expo.io')](https://expo.io)
+[![swm](https://avatars1.githubusercontent.com/u/6952717?v=3&s=100 'Software Mansion')](https://swmansion.com)

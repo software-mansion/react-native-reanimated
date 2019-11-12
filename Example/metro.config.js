@@ -9,6 +9,7 @@ function getBlacklist() {
     glob(`${path.resolve(__dirname)}/node_modules/*`),
     glob(`${path.resolve(__dirname, '..')}/android/*`),
     glob(`${path.resolve(__dirname)}/android/*`),
+    glob(`${path.resolve(__dirname, '..')}/docs/*`),
     glob(`${path.resolve(__dirname, '..')}/e2e/*`),
     glob(`${path.resolve(__dirname)}/node_modules/*/node_modules/fbjs/*`),
     glob(
