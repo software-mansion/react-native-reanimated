@@ -1,12 +1,60 @@
 ﻿import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
-import * as _ from 'lodash';
 import openURLInBrowser from 'react-native/Libraries/Core/Devtools/openURLInBrowser';
 
-const RectButton = TouchableOpacity
 
 YellowBox.ignoreWarnings(['measureLayoutRelativeToContainingList']);
+
+const RectButton = TouchableOpacity;
+
+function sanitizeIterator(collection, iterator) {
+  if (!Array.isArray(collection) && (!iterator || iterator === 'key')) {
+    return (val, key) => key;
+  } else if (typeof iterator === 'string' || typeof iterator === 'number') {
+    return (o, k) => o[k][iterator];
+  } else if (!iterator) {
+    return (a) => a;
+  } else {
+    return iterator;
+  }
+}
+
+function map(collection, iterator) {
+  if (!collection) collection = [];
+  const it = sanitizeIterator(collection, iterator);
+  if (!Array.isArray(collection)) {
+    return Object.keys(collection)
+      .map((key, index) => it(collection[key], key, collection));
+  } else {
+    return collection.map(it);
+  }
+}
+
+function compareFunc(a, b) {
+  if (a < b) {
+    return -1;
+  } else if (a > b) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+function orderBy(collection, iterator) {
+  let out = collection || [];
+  const it = sanitizeIterator(collection, iterator);
+
+  if (!Array.isArray(out)) {
+    return Object.keys(collection)
+      .sort((a, b) => compareFunc(it(collection[a], a, collection), it(collection[b], b, collection)))
+      .map((key) => collection[key])
+  } else {
+    return out.map((value, index, collection) => [value, it(value, index, collection)])
+      .sort((a, b) => compareFunc(a[1], b[1]))
+      .map(([value]) => value);
+  }
+}
 
 function useDevUtil() {
   const [data, setData] = useState([]);
@@ -17,8 +65,8 @@ function useDevUtil() {
   return useMemo(() => {
     const { viewManagers, ...nativeModules } = data;
     return [
-      _.orderBy(_.map(nativeModules, (methods, key) => ({ methods, key })), 'key'),
-      _.orderBy(_.map(viewManagers, (viewManager, index) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager).Commands })))
+      orderBy(map(nativeModules, (methods, key) => ({ methods, key }))),
+      map(orderBy(viewManagers), ((viewManager, index) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager).Commands })))
     ];
   }, [data]);
 }
@@ -27,12 +75,13 @@ const ItemSeparator = () => <View style={styles.separator} />;
 const SectionHeader = ({ title }) => <Text style={[styles.sectionHeader]}>{title}</Text>;
 
 function toFunctionAnnotation(method, params) {
-  const p = _.join(_.map(params, ({ name, type }) => `${_.lowerCase(type)} ${name}`), ', ');
+  console.log(params)
+  const p = map(params, ({ name, type }) => `${type.toLowerCase()} ${name}`).join(', ');
   return `${method}(${p})`
 }
 
 function toInvokeAnnotation(module, method, params) {
-  const p = _.join(_.map(params, 'name'), ', ');
+  const p = map(params, ({ name }) => name).join(', ');
   const pp = p !== "" ? `, ${p}` : "";
   return `invoke("${module}", "${method}"${pp})`;
 }
@@ -46,8 +95,9 @@ function Item({ item, section }) {
   const _onPress = useCallback(() => setDisplay(!display), [display]);
   const { key: title, methods } = item;
   const Cell = section.title === 'invoke' ? InvokeCell : DispatchCell;
-  const data = useMemo(() => _.orderBy(_.map(methods, (m, key) => (_.assign(m, { key }))), 'key'), [methods]);
-
+  
+  const data = useMemo(() => orderBy(map(methods, (m, key) => ({ params: m, key }))), [methods]);
+  
   return (
     <RectButton style={styles.button} onPress={_onPress} enabled={data.length > 0} disabled={data.length === 0}>
       <Text style={[styles.buttonText, data.length === 0 && styles.disabledText]}>{title}</Text>
@@ -75,8 +125,8 @@ function InvokeCell({ name, item }) {
   const _onPress = useCallback(() => setDisplay(!display), [display]);
   return (
     <RectButton style={styles.button} onPress={_onPress}>
-      <Text style={[styles.buttonText]}>{!display ? item.key : toFunctionAnnotation(item.key, item)}</Text>
-      <Text style={[styles.buttonText, !display && styles.hidden]}>{toInvokeAnnotation(name, item.key, item)}</Text>
+      <Text style={[styles.buttonText]}>{!display ? item.key : toFunctionAnnotation(item.key, item.params)}</Text>
+      <Text style={[styles.buttonText, !display && styles.hidden]}>{toInvokeAnnotation(name, item.key, item.params)}</Text>
     </RectButton>
   );
 }
@@ -126,7 +176,11 @@ function DirectManipulationHelper() {
           setInput(text);
           setDisplayedSections(text === "" ?
             sections :
-            _.map(_.cloneDeep(sections), (s) => _.set(s, 'data', _.filter(s.data, ({ key }) => _.includes(key, text))))
+            map(sections, (s) => {
+              const section = {};
+              Object.assign(section, s, { data: s.data.filter(({ key }) => key.includes(text)) });
+              return section;
+            })
           );
         }}
         value={input}
