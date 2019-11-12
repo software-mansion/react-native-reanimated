@@ -19,34 +19,19 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`Example/`](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/) directory.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Clone the repo, go to the Example/ folder and run:
 
-In order to run it you need to pull in the repository, enter `Example/` folder and run:
-
-```bash
-  yarn install
+```
+yarn install
 ```
 
-Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the Example app on).
+Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the example app on).
 
-You will need to have an Android or iOS device or emulator connected as well as `react-native-cli` package installed globally.
-
-## Jest
-
-In order to use `react-native-reanimated` with Jest, you need to add the following mock implementation at the top of your test:
-
-```js
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
-```
-
-## 100% declarative gesture interactions
-
-`react-native-reanimated` works best with the [Gesture Handler](https://kmagiera.github.io/react-native-gesture-handler) library. Currently all the examples are made using that library, including the ultimate [ImagePreview app](https://github.com/kmagiera/react-native-reanimated/blob/master/Example/imageViewer). See it in action below:
-
-![](/assets/imagepreview.gif)
+You will need to have an Android or iOS device or emulator connected as well as react-native-cli package installed globally.
 
 ## License
 
-Gesture handler library is licensed under [The MIT License](LICENSE).
+Reanimated library is licensed under [The MIT License](LICENSE).
 
 ## Credits
 
