@@ -14,7 +14,7 @@ Check [getting started](https://kmagiera.github.io/react-native-reanimated/getti
 
 ## Documentation
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://kmagiera.github.io/react-native-reanimated](https://kmagiera.github.io/react-native-reanimated)
+Check out our dedicated documentation page for info about this library, API reference and more: [https://software-mansion.github.io/react-native-reanimated](https://software-mansion.github.io/react-native-reanimated)
 
 ## Examples
 
