@@ -8,7 +8,7 @@
 <hr />
 <p><code>react-native-reanimated</code>'s new syntax is possible to be used with <code>Animated.event</code>. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.</p>
 <p>This syntax allows for providing some post-processing for the event data that does not fit well as a dependency of other nodes we connect to <code>Animated.View</code> component props.
-<a href="https://github.com/kmagiera/react-native-reanimated/blob/master/Example/PanRotateAndZoom/index.js">See example</a></p>
+<a href="https://github.com/software-mansion/react-native-reanimated/blob/master/Example/PanRotateAndZoom/index.js">See example</a></p>
 <pre><code class="language-js"><span class="token keyword">this</span><span class="token punctuation">.</span>onGestureEvent <span class="token operator">=</span> <span class="token function">event</span><span class="token punctuation">(</span><span class="token punctuation">[</span>
   <span class="token punctuation">{</span>
     nativeEvent<span class="token punctuation">:</span> <span class="token punctuation">{</span>
