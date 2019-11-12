@@ -30,7 +30,8 @@ module.exports = {
   resolver: {
     blacklistRE: getBlacklist(),
     extraNodeModules: {
-      lodash: path.resolve(__dirname, 'node_modules/lodash')
+      lodash: path.resolve(__dirname, 'node_modules/lodash'),
+      '@babel/runtime': path.resolve(__dirname, 'node_modules/@babel/runtime'),
     }
   },
   watchFolders: [path.resolve(__dirname, '..')],
