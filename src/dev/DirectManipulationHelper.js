@@ -12,7 +12,7 @@ function sanitizeIterator(collection, iterator) {
   if (!Array.isArray(collection) && (!iterator || iterator === 'key')) {
     return (val, key) => key;
   } else if (typeof iterator === 'string' || typeof iterator === 'number') {
-    return (o, k) => o[k][iterator];
+    return (o, k) => o[iterator];
   } else if (!iterator) {
     return (a) => a;
   } else {
@@ -65,8 +65,8 @@ function useDevUtil() {
   return useMemo(() => {
     const { viewManagers, ...nativeModules } = data;
     return [
-      orderBy(map(nativeModules, (methods, key) => ({ methods, key }))),
-      map(orderBy(viewManagers), ((viewManager, index) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager).Commands })))
+      orderBy(map(nativeModules, (methods, key) => ({ methods, key })), 'key'),
+      orderBy(map(viewManagers, ((viewManager) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager).Commands }))), 'key')
     ];
   }, [data]);
 }
@@ -96,7 +96,7 @@ function Item({ item, section }) {
   const { key: title, methods } = item;
   const Cell = section.title === 'invoke' ? InvokeCell : DispatchCell;
   
-  const data = useMemo(() => orderBy(map(methods, (m, key) => ({ params: m, key }))), [methods]);
+  const data = useMemo(() => orderBy(map(methods, (m, key) => ({ params: m, key })), 'key'), [methods]);
   
   return (
     <RectButton style={styles.button} onPress={_onPress} enabled={data.length > 0} disabled={data.length === 0}>
