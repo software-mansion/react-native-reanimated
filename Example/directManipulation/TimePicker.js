@@ -4,11 +4,16 @@ import { RectButton, State, TapGestureHandler, PanGestureHandler } from 'react-n
 import Animated, { Easing } from 'react-native-reanimated';
 import { colorHSV } from '../colors';
 
-const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, call, set, Value, mapBuilder, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 const Button = createAnimatedComponent(RectButton);
-
-const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
+const startStateBuilder = mapBuilder((hour, minute, is24Hour) => map({
+  hour,
+  minute,
+  is24Hour
+}))
+//const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
+const showTimer = proc((hour, minute, is24Hour, callback) => invoke('TimePickerAndroid', 'open', startStateBuilder(hour, minute, is24Hour), callback))
 
 function runTiming(clock, value, dest, startStopClock = true) {
   const state = {
@@ -88,7 +93,7 @@ export default function AnimatedTimePicker() {
       cond(
         animState,
         [
-          showTimer(timerStartingState, callback({ action, hour, minute })),
+          showTimer(hourIn, 47, 1, callback({ action, hour, minute })),
           //invoke('TimePickerAndroid', 'open', timerStartingState, callback({ action, hour, minute })),
           invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})),
           set(animState, 0),

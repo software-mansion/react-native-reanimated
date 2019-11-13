@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 public class MapNode extends ValueNode {
     public static class ArgMap {
-        private final int nodeID;
+        protected final int nodeID;
         private final String[] path;
 
         public ArgMap(ReadableArray eventPath) {

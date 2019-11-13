@@ -29,7 +29,9 @@ const {
   sub,
   createAnimatedComponent,
   onChange,
-  callback
+  callback,
+  map,
+  mapBuilder
 } = Animated;
 
 function shuffle(array) {
@@ -37,6 +39,7 @@ function shuffle(array) {
 }
 
 const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
+const cb = mapBuilder((a, b, c, d, e, f) => map(a, b, c, d, e, f));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),

@@ -5,7 +5,7 @@ import com.swmansion.reanimated.NodesManager;
 
 import java.util.Stack;
 
-public class ParamNode extends ValueNode {
+public class ParamNode extends ValueNode implements ContextNode {
 
   private final Stack<Integer> mArgsStack;
   private String mPrevCallID;
@@ -24,12 +24,13 @@ public class ParamNode extends ValueNode {
     mUpdateContext.callID = callID;
   }
 
+  @Override
   public void beginContext(Integer ref, String prevCallID) {
     mPrevCallID = prevCallID;
     mArgsStack.push(ref);
   }
 
-
+  @Override
   public void endContext() {
     mArgsStack.pop();
   }

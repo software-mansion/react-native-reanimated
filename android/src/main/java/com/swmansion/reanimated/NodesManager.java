@@ -21,6 +21,7 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
+import com.swmansion.reanimated.nodes.CallMapNode;
 import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
@@ -286,6 +287,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new InvokeNode(nodeID, config, this);
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
+    } else if ("callmap".equals(type)) {
+      node = new CallMapNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
