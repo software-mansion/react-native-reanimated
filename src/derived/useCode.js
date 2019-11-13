@@ -1,5 +1,5 @@
 import React from 'react';
-import {always, block} from '../base';
+import { always, block } from '../base';
 
 /**
  * React hook to run a node.
