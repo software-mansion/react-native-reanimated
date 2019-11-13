@@ -1,6 +1,4 @@
 import { Platform } from 'react-native';
-import { createAnimatedBlock as block } from '../core/AnimatedBlock';
-import { evaluateOnce } from '../derived/evaluateOnce';
 import { val } from '../val';
 import { createAnimatedAlways } from './AnimatedAlways';
 import AnimatedNode from './AnimatedNode';
