@@ -125,34 +125,3 @@ export default class AnimatedMap extends AnimatedNode {
 export function createAnimatedMap(argMapping, config) {
   return new AnimatedMap(argMapping, config);
 }
-
-/*
-export function createAnimatedCallMap(cb) {
-  const params = new Array(cb.length);
-  for (let i = 0; i < params.length; i++) {
-    params[i] = createAnimatedParam();
-  }
-
-  let what = cb(...params);
-  console.log(what)
-  if (typeof what === 'object' && what instanceof AnimatedNode === false) {
-    what = createAnimatedMap(what);
-  } else if (what instanceof AnimatedMap === false) {
-    throw new Error('map proc received wrong args', what);
-  }
-  const func = new AnimatedFunction(what, ...params);
-
-  return (...args) => {
-    if (args.length !== params.length) {
-      throw new Error(
-        'Parameter mismatch when calling reanimated function. Expected ' +
-        params.length +
-        ' parameters, got ' +
-        args.length +
-        '.'
-      );
-    }
-    return new AnimatedCallFunc('callfunc', func, args, params);
-  };
-}
-*/
