@@ -2,8 +2,14 @@ import React from 'react';
 import { always, block } from '../base';
 
 /**
+ * @callback NodeFactory
+ * Function to create a node or an array of nodes.
+ * @returns {(Node[] | Node | null | undefined)}
+ */
+
+/**
  * React hook to run a node.
- * @param nodeFactory Function to build the node to run.
+ * @param {NodeFactory} nodeFactory Function to build the node to run.
  * @param dependencies Array of dependencies. Refresh the node on changes.
  */
 export default function useCode(nodeFactory, dependencies) {
