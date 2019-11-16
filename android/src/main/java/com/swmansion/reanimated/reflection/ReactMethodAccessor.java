@@ -1,18 +1,10 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.ReadableNativeArray;
-import com.facebook.react.bridge.ReadableNativeMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
-import com.swmansion.reanimated.nodes.CallbackNode;
-import com.swmansion.reanimated.nodes.MapNode;
 import com.swmansion.reanimated.nodes.Node;
 
 import java.lang.reflect.InvocationTargetException;
@@ -69,17 +61,18 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         Object value;
         Class<?>[] paramTypes = mMethod.getParamTypes();
         Class<?> paramType;
+        int k = 0;
 
         try {
-            for (int i = 0; i < params.length; i++) {
-                paramType = paramTypes[i];
-                n = nodesManager.findNodeById(params[i], Node.class);
+            for (k = 0; k < params.length; k++) {
+                paramType = paramTypes[k];
+                n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
                 if (Utils.isNumber(value)) {
-                    out[i] = Utils.fromDouble(((Double) value), paramType);
+                    out[k] = Utils.fromDouble(((Double) value), paramType);
                 } else {
-                    out[i] = paramType.cast(value);
+                    out[k] = paramType.cast(value);
                 }
             }
         }
@@ -96,7 +89,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
             }
 
             throw new JSApplicationIllegalArgumentException(
-                    "Parameter mismatch when calling reanimated invoke.\n" +
+                    "Parameter mismatch when calling reanimated invoke, index=" + k + ".\n" +
                             mCallee.getName() + "." + mMethod +"\n" +
                             outOfBoundsMessage + ".\n" +
                             typeDetails + ".\n",
