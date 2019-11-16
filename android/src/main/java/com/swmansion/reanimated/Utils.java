@@ -252,7 +252,7 @@ public class Utils {
   }
 
   public static <T> T fromDynamic(Dynamic value) {
-    switch (((Dynamic) value).getType()) {
+    switch (value.getType()) {
       case Boolean:
         return ((T) toDouble(value.asBoolean()));
       case Null:
