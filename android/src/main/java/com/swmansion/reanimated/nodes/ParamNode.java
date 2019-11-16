@@ -1,8 +1,10 @@
 package com.swmansion.reanimated.nodes;
 
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
+import java.util.EmptyStackException;
 import java.util.Stack;
 
 public class ParamNode extends ValueNode implements ContextNode {
@@ -17,11 +19,15 @@ public class ParamNode extends ValueNode implements ContextNode {
 
   @Override
   public void setValue(Object value) {
-    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    String callID = mUpdateContext.callID;
-    mUpdateContext.callID = mPrevCallID;
-    ((ValueNode) node).setValue(value);
-    mUpdateContext.callID = callID;
+    try {
+      Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
+      String callID = mUpdateContext.callID;
+      mUpdateContext.callID = mPrevCallID;
+      ((ValueNode) node).setValue(value);
+      mUpdateContext.callID = callID;
+    } catch (EmptyStackException e) {
+      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to set value with no context.", e);
+    }
   }
 
   @Override
@@ -38,11 +44,15 @@ public class ParamNode extends ValueNode implements ContextNode {
 
   @Override
   protected Object evaluate() {
-    String callID = mUpdateContext.callID;
-    mUpdateContext.callID = mPrevCallID;
-    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    Object val = node.value();
-    mUpdateContext.callID = callID;
-    return val;
+    try {
+      String callID = mUpdateContext.callID;
+      mUpdateContext.callID = mPrevCallID;
+      Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
+      Object val = node.value();
+      mUpdateContext.callID = callID;
+      return val;
+    } catch (EmptyStackException e) {
+      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to evaluate with no context.", e);
+    }
   }
 }
