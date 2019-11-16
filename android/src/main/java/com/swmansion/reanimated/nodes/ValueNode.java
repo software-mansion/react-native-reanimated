@@ -6,7 +6,7 @@ import com.swmansion.reanimated.NodesManager;
 
 import javax.annotation.Nullable;
 
-public class ValueNode extends Node implements ValueManagerNode {
+public class ValueNode extends Node implements ValueManagingNode {
 
   private Object mValue;
 

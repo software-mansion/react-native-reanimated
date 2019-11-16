@@ -6,7 +6,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.CallbackWrapper;
 
-public class CallbackNode extends Node implements ValueManagerNode {
+public class CallbackNode extends Node implements ValueManagingNode {
 
     private final int mWhatNodeID;
 
@@ -18,7 +18,7 @@ public class CallbackNode extends Node implements ValueManagerNode {
     @Override
     public void setValue(Object value) {
         Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        ((ValueManagerNode) what).setValue(value);
+        ((ValueManagingNode) what).setValue(value);
     }
 
     @Nullable

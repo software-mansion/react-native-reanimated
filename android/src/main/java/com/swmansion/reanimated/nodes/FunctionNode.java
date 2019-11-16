@@ -3,7 +3,7 @@ package com.swmansion.reanimated.nodes;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class FunctionNode extends Node implements ValueManagerNode {
+public class FunctionNode extends Node implements ValueManagingNode {
 
   private final int mWhatNodeID;
 
@@ -22,7 +22,7 @@ public class FunctionNode extends Node implements ValueManagerNode {
   public void setValue(Object value) {
     Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     try {
-      ((ValueManagerNode) what).setValue(value);
+      ((ValueManagingNode) what).setValue(value);
     } catch (Throwable throwable) {
       throw new IllegalArgumentException(
               "Error while trying to set value on reanimated " + what.getClass().getSimpleName(), throwable);

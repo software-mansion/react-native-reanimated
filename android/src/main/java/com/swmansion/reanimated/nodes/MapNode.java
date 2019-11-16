@@ -11,7 +11,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class MapNode extends ValueNode implements ValueManagerNode {
+public class MapNode extends ValueNode implements ValueManagingNode {
     public static class ArgMap {
         protected final int nodeID;
         private final String[] path;

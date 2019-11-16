@@ -1,5 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-public interface ValueManagerNode {
+public interface ValueManagingNode {
     void setValue(Object value);
 }

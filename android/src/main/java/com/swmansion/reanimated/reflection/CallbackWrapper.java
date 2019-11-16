@@ -14,12 +14,9 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
 import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
-import com.swmansion.reanimated.nodes.CallFuncNode;
-import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.Node;
-import com.swmansion.reanimated.nodes.ValueManagerNode;
+import com.swmansion.reanimated.nodes.ValueManagingNode;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -65,13 +62,13 @@ public class CallbackWrapper implements Callback, Promise {
         mWhatNode = what;
     }
 
-    protected ValueManagerNode what() {
+    protected ValueManagingNode what() {
         try {
             //Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-            return ((ValueManagerNode) mWhatNode);
-        }catch (ClassCastException e) {
+            return ((ValueManagingNode) mWhatNode);
+        } catch (ClassCastException e) {
             throw new JSApplicationIllegalArgumentException(
-                    "Reanimated callback received a wrong node of " + what().getClass().getSimpleName(), e);
+                    "Reanimated callback received a wrong node of " + mWhatNode.getClass().getSimpleName(), e);
         }
     }
 
