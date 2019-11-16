@@ -20,7 +20,7 @@ export function sanitizeArgMapping(argMapping) {
   const objectMappings = [];
   const alwaysNodes = [];
 
-  
+
   const traverse = (value, path) => {
     if (value instanceof AnimatedNode && (value.__source() instanceof InternalAnimatedValue || value instanceof AnimatedParam)) {
       children.push(value);
@@ -50,19 +50,19 @@ export function sanitizeArgMapping(argMapping) {
         default:
           throw new Error('Reanimated map: bad input', value);
       }
-      
+
       const node = new InternalAnimatedValue(val, true);
       children.push(node);
       objectMappings.push(path.concat(getNode(node)));
     }
   };
-  
+
   if (typeof argMapping === 'object') {
     traverse(argMapping, []);
   } else if (typeof argMapping === 'function') {
-    
+
     const proxyHandler = {
-      get: function(target, name) {
+      get: function (target, name) {
         if (name === '__isProxy') {
           return true;
         }
@@ -71,13 +71,13 @@ export function sanitizeArgMapping(argMapping) {
         }
         return target[name];
       },
-      set: function(target, prop, value) {
+      set: function (target, prop, value) {
         if (prop === '__val') {
           target[prop] = value;
         }
       },
     };
-    
+
     const proxy =
       typeof Proxy === 'function'
         ? new Proxy({}, proxyHandler)
@@ -85,17 +85,17 @@ export function sanitizeArgMapping(argMapping) {
     alwaysNodes.push(createAnimatedAlways(argMapping(proxy)));
     traverse(proxy, []);
   }
-  
+
   return { objectMappings, children, alwaysNodes };
 }
 
 export default class AnimatedMap extends AnimatedNode {
   _alwaysNodes;
-  constructor(argMapping, config = {}) {
+  constructor(type, argMapping, config = {}) {
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
-    
+    console.log('asdk.j.bnlje;lkjksjbdvgdfn', argMapping, objectMappings)
     super({
-      type: 'map',
+      type,
       argMapping: objectMappings
     }, children);
 
@@ -105,7 +105,7 @@ export default class AnimatedMap extends AnimatedNode {
   __onEvaluate() {
     return val(this);
   }
-  
+
   __attach() {
     const deps = [...this.__inputNodes, ...this._alwaysNodes];
     deps.forEach(n => n.__attach());
@@ -117,9 +117,9 @@ export default class AnimatedMap extends AnimatedNode {
     super.__detach();
     deps.forEach(n => n.isNativelyInitialized() && n.__detach());
   }
-  
+
 }
 
 export function createAnimatedMap(argMapping, config) {
-  return new AnimatedMap(argMapping, config);
+  return new AnimatedMap('map', argMapping, config);
 }
