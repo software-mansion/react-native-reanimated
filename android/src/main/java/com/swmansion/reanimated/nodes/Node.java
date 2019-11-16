@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.SparseArray;
-
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.NodesManager;
@@ -133,14 +131,5 @@ public abstract class Node {
     }
     updatedNodes.clear();
     updateContext.updateLoopID++;
-  }
-
-  public <T extends Node> T source(Class<T> type) {
-    Node node = this;
-    if (type.isInstance(node)) {
-      return (T) node;
-    }
-    throw new IllegalArgumentException("Node with id " + mNodeID + " is of incompatible type " +
-            node.getClass() + ", requested type was " + type);
   }
 }
