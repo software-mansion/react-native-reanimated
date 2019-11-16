@@ -11,7 +11,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public class MapNode extends ValueNode {
+public class MapNode extends ValueNode implements ValueManagerNode {
     public static class ArgMap {
         protected final int nodeID;
         private final String[] path;
@@ -31,6 +31,7 @@ public class MapNode extends ValueNode {
                 String key = path[i];
                 map = map.hasKey(key) ? map.getMap(key) : null;
             }
+
             if (map != null) {
                 String key = path[path.length - 1];
                 return map.hasKey(key) ? Utils.fromDynamic(map.getDynamic(key)) : null;
