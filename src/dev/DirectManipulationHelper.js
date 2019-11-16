@@ -166,9 +166,14 @@ function DirectManipulationHelper() {
     setDisplayedSections(sections)
   }, [sections]);
 
-
   return (
     <>
+      <Text>
+        Available methods and commands to use with invoke and dispatch respectively.
+        </Text>
+      <Text>
+        The crossed fields indicate it was impossible to positively determine availability.
+        </Text>
       <TextInput
         style={styles.textInput}
         onChangeText={(text) => {
@@ -192,7 +197,6 @@ function DirectManipulationHelper() {
         ItemSeparatorComponent={ItemSeparator}
         renderSectionHeader={(props) => <SectionHeader {...props} title={props.section.title} />}
         stickySectionHeadersEnabled
-      //renderScrollComponent={p => <ScrollView {...p} />}
       />
     </>
   );
