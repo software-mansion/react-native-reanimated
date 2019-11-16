@@ -15,6 +15,7 @@ import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.common.ReactConstants;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -138,8 +139,6 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
                         "Parameter mismatch when calling reanimated invoke.\n" +
                                 "Dispatch can't receive callback params, index = " + i
                 );
-            } else if (n instanceof MapNode) {
-                args.pushMap(((ReadableMap) value));
             } else {
                 Utils.pushVariant(args, value);
             }
