@@ -37,7 +37,7 @@ function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-const cb = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
+const successMap = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
 
 const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
 
@@ -115,7 +115,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
     () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        measureView(tag, callback(cb(ax, ay, width, height))),
+        measureView(tag, callback(successMap(ax, ay, width, height))),
         //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),
