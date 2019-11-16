@@ -75,7 +75,6 @@ const ItemSeparator = () => <View style={styles.separator} />;
 const SectionHeader = ({ title }) => <Text style={[styles.sectionHeader]}>{title}</Text>;
 
 function toFunctionAnnotation(method, params) {
-  console.log(params)
   const p = map(params, ({ name, type }) => `${type.toLowerCase()} ${name}`).join(', ');
   return `${method}(${p})`
 }
@@ -95,9 +94,9 @@ function Item({ item, section }) {
   const _onPress = useCallback(() => setDisplay(!display), [display]);
   const { key: title, methods } = item;
   const Cell = section.title === 'invoke' ? InvokeCell : DispatchCell;
-  
+
   const data = useMemo(() => orderBy(map(methods, (m, key) => ({ params: m, key })), 'key'), [methods]);
-  
+
   return (
     <RectButton style={styles.button} onPress={_onPress} enabled={data.length > 0} disabled={data.length === 0}>
       <Text style={[styles.buttonText, data.length === 0 && styles.disabledText]}>{title}</Text>
@@ -159,15 +158,15 @@ function DirectManipulationHelper() {
       keyExtractor: (item, i) => `viewManagers:${item.key}`
     }
   ]), [nativeModules, viewManagers]);
-  
+
   const [displayingSections, setDisplayedSections] = useState(sections);
   const [input, setInput] = useState("");
 
   useEffect(() => {
     setDisplayedSections(sections)
   }, [sections]);
-  
-  
+
+
   return (
     <>
       <TextInput
