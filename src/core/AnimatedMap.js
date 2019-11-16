@@ -91,10 +91,10 @@ export function sanitizeArgMapping(argMapping) {
 
 export default class AnimatedMap extends AnimatedNode {
   _alwaysNodes;
-  constructor(type, argMapping, config = {}) {
+  constructor(argMapping, config = {}) {
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({
-      type,
+      type: 'map',
       argMapping: objectMappings
     }, children);
 
@@ -120,5 +120,5 @@ export default class AnimatedMap extends AnimatedNode {
 }
 
 export function createAnimatedMap(argMapping, config) {
-  return new AnimatedMap('map', argMapping, config);
+  return new AnimatedMap(argMapping, config);
 }

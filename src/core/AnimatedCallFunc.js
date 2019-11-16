@@ -1,15 +1,15 @@
-import AnimatedNode from './AnimatedNode';
-import { adapt } from './AnimatedBlock';
 import { val } from '../val';
+import { adapt } from './AnimatedBlock';
+import AnimatedNode from './AnimatedNode';
 
 export default class AnimatedCallFunc extends AnimatedNode {
   _what;
   _args;
   _params;
-  constructor(type, what, args, params, config = {}) {
+  constructor(what, args, params, config = {}) {
     super(
       {
-        type,
+        type: 'callfunc',
         what: what.__nodeID,
         args: args.map(n => n.__nodeID),
         params: params.map(n => n.__nodeID),
@@ -47,5 +47,5 @@ export default class AnimatedCallFunc extends AnimatedNode {
 }
 
 export function createAnimatedCallFunc(proc, args, params) {
-  return new AnimatedCallFunc('callfunc', proc, args.map(p => adapt(p)), params);
+  return new AnimatedCallFunc(proc, args.map(p => adapt(p)), params);
 }

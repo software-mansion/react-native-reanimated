@@ -1,4 +1,3 @@
-
 import { val } from '../val';
 import { createAnimatedMap } from './AnimatedMap';
 import AnimatedNode from './AnimatedNode';

@@ -30,27 +30,16 @@ const {
   createAnimatedComponent,
   onChange,
   callback,
-  map,
-  mapBuilder
+  map
 } = Animated;
 
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-const cb = mapBuilder((x, y, w, h, a, b) => callback(a, b, w, h, x, y));
-const measureView11 = proc((tag, cb) => {
-  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb));
-});
+const cb = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
 
-const measureView = proc((tag, x, y, w, h) => {
-  const cb = mapBuilder((x, y, w, h, a, b) => callback(a, b, w, h, x, y));
-  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb(x, y, w, h, 0, 0)));
-});
-
-const measureViewCB = proc((tag, cb) => {
-  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb));
-});
+const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -63,7 +52,7 @@ const inRect = proc((x, y, left, top, width, height, statusBarHeight) => isInRec
 
 /**
  *  android measurements of the screen seem to be affected by the StatusBar only before mounting of the component
- *  this is why this hook is a evaluate once hook
+ *  this is why this hook is an evaluate once hook
  * */
 export function useStatusBarHeight() {
   return useMemo(() => {
@@ -126,10 +115,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
     () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        //measureView11(tag, cb(...values, 0, 0)),
-        //measureView(tag, ax, ay, width, height),
-        //measureView(tag, cb(ax, ay, width, height,0,0)),
-        measureViewCB(tag, callback(0, 0, width, height, ax, ay)),
+        measureView(tag, callback(cb(ax, ay, width, height))),
         //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),

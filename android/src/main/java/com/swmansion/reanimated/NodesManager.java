@@ -21,7 +21,6 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
-import com.swmansion.reanimated.nodes.CallMapNode;
 import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
@@ -275,6 +274,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new EventNode(nodeID, config, this);
     } else if ("callback".equals(type)) {
       node = new CallbackNode(nodeID, config, this);
+    } else if ("invoke".equals(type)) {
+      node = new InvokeNode(nodeID, config, this);
     } else if ("always".equals(type)) {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
@@ -283,12 +284,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new ParamNode(nodeID, config, this);
     } else if ("func".equals(type)) {
       node = new FunctionNode(nodeID, config, this);
-    } else if ("invoke".equals(type)) {
-      node = new InvokeNode(nodeID, config, this);
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
-    } else if ("callmap".equals(type)) {
-      node = new CallMapNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
