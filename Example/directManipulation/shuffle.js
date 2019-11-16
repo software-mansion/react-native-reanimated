@@ -206,17 +206,17 @@ function Shuffle() {
     }]),
     [absoluteX, absoluteY]
   );
-
-  const onTransition = useMemo(() =>
-    event([{
-      nativeEvent: ({ state }) => block([
-        set(transitionState, state),
-        onChange(state, cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1))))
-      ])
-    }]),
-    [evaluate, transitionState]
-  );
-
+  /*
+    const onTransition = useMemo(() =>
+      event([{
+        nativeEvent: ({ state }) => block([
+          set(transitionState, state),
+          onChange(state, cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1))))
+        ])
+      }]),
+      [evaluate, transitionState]
+    );
+  */
   useCode(() => call([evaluate], console.log), [evaluate]);
 
   const renderItem = useCallback((props) => (
@@ -243,7 +243,7 @@ function Shuffle() {
           transition={transition}
           style={styles.centerAll}
           animateMount
-          onTransitionStateChange={onTransition}
+        //onTransitionStateChange={onTransition}
         >
           <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
@@ -259,7 +259,8 @@ function Shuffle() {
                 style={[
                   styles.button,
                   {
-                    backgroundColor: cond(neq(transitionState, TransitionState.BEGAN), processColor("#FF5252"), processColor("grey"))
+                    //backgroundColor: cond(neq(transitionState, TransitionState.BEGAN), processColor("#FF5252"), processColor("grey"))
+                    backgroundColor: "#FF5252"
                   }
                 ]}
               >

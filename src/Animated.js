@@ -62,4 +62,4 @@ const Animated = {
 
 export default Animated;
 
-export { Easing, Transitioning, Transition, TransitionState, createTransitioningComponent };
+export { Easing, Transitioning, Transition, createTransitioningComponent };

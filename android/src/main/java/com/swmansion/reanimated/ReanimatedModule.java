@@ -103,12 +103,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
   @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config) {
-    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, null);
-  }
-
-  @ReactMethod
-  public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
-    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, callback);
+    mTransitionManager.animateNextTransition(tag, config);
   }
 
   @ReactMethod
