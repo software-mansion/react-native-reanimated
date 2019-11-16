@@ -131,7 +131,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
             n = nodesManager.findNodeById(params[i], Node.class);
             Object value = n.value();
 
-            if (value instanceof CallbackNode) {
+            if (value instanceof CallbackWrapper) {
                 /**
                  * {@link ViewManager } has no {@link Callback} or {@link Promise} args
                  */
