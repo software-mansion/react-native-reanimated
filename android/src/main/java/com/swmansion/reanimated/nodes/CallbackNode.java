@@ -1,25 +1,10 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.common.ReactConstants;
-import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.reflection.CallbackWrapper;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 public class CallbackNode extends Node implements ValueManagerNode {
 
