@@ -1,15 +1,12 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.common.ReactConstants;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.lang.reflect.Method;
@@ -121,14 +118,13 @@ public class NativeModuleAccessor {
             }
             out.putArray("viewManagers", arr);
         } catch (Throwable error) {
-            Log.d(ReactConstants.TAG, "reanimated invoke setCaller: " + error);
+            throw new JSApplicationCausedNativeException("Reanimated failed to build reflection output", error);
         }
 
         return out;
     }
 
-    public static String getName(Object o) {
-        return o instanceof NativeModule ? ((NativeModule) o).getName() :  o.getClass().getSimpleName();
+    public static WritableNativeMap getReflectionMap(ReactContext context) {
+        return new NativeModuleAccessor(context).out();
     }
-
 }
