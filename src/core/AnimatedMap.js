@@ -93,7 +93,6 @@ export default class AnimatedMap extends AnimatedNode {
   _alwaysNodes;
   constructor(type, argMapping, config = {}) {
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
-    console.log('asdk.j.bnlje;lkjksjbdvgdfn', argMapping, objectMappings)
     super({
       type,
       argMapping: objectMappings
