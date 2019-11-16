@@ -92,7 +92,7 @@ function ControlledScrollView(props) {
       panOldState
     ]
   );
-
+  
   const onScroll = useMemo(() =>
     event([{
       nativeEvent: ({ contentOffset: { x, y } }) => cond(
@@ -106,7 +106,22 @@ function ControlledScrollView(props) {
     }]),
     [panOldState, scrollX, scrollY]
   );
+  
+  const onScroll1 = useMemo(() =>
+    event([{
+      nativeEvent: {
+        contentOffset: ({ x, y }) => cond(
+          neq(panOldState, State.ACTIVE),
+          [
+            set(scrollX, x),
+            set(scrollY, y),
+          ]
+        )
 
+      }
+    }]),
+    [panOldState, scrollX, scrollY]
+  );
 
   useCode(() =>
     cond(

@@ -4,16 +4,33 @@ import { RectButton, State, TapGestureHandler, PanGestureHandler } from 'react-n
 import Animated, { Easing } from 'react-native-reanimated';
 import { colorHSV } from '../colors';
 
-const { cond, eq, add, call, set, Value, mapBuilder, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or,Code, map, callback, round,neq, createAnimatedComponent, Text,View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, call, set, Value, mapBuilder, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or, Code, map, callback, round, neq, createAnimatedComponent, Text, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 const Button = createAnimatedComponent(RectButton);
-const startStateBuilder = mapBuilder((hour, minute, is24Hour) => map({
-  hour,
-  minute,
-  is24Hour
-}))
+
 //const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
-const showTimer = proc((hour, minute, is24Hour, callback) => invoke('TimePickerAndroid', 'open', startStateBuilder(hour, minute, is24Hour), callback))
+
+const timerCallback = mapBuilder((action, hour, minute) => map([{ action, hour, minute }]));
+
+
+const showTimer = proc((hour, minute, is24Hour, cb) => {
+  const startStateBuilder = mapBuilder((hour, minute, is24Hour) =>
+    map({
+      hour,
+      minute,
+      is24Hour
+    })
+  );
+
+  const startStart = cond(
+    or(eq(hour, -1), eq(minute, -1)),
+    map(),
+    startStateBuilder(hour, minute, is24Hour)
+  );
+
+  return invoke('TimePickerAndroid', 'open', startStart, cb);
+})
+
 
 function runTiming(clock, value, dest, startStopClock = true) {
   const state = {
@@ -80,24 +97,17 @@ export default function AnimatedTimePicker() {
     [colorHue, clock, animator, action, hour, minute, animState]
   );
 
-  const hourIn = useMemo(() => new Value(15), []);
-  const timerStartingState = useMemo(() => map({
-    hour: hourIn,
-    minute: 32,
-    is24Hour: false
-  }), [hourIn]);
-  
   useCode(() =>
     onChange(
       animState,
       cond(
         animState,
         [
-          showTimer(hourIn, 47, 1, callback({ action, hour, minute })),
-          //invoke('TimePickerAndroid', 'open', timerStartingState, callback({ action, hour, minute })),
-          invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback({})),
+          //showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
+          showTimer(hour, minute, 1, callback(timerCallback(action, hour, minute))),
+          invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback()),
           set(animState, 0),
-          //call([appState], a => console.log('appState', a))
+          call([appState], a => console.log('appState', a))
         ]
       )
     ),
@@ -119,7 +129,7 @@ export default function AnimatedTimePicker() {
   },
     [clock, animator, timeRepresentation]
   );
-  
+
 
   useCode(() =>
     block([
@@ -134,9 +144,9 @@ export default function AnimatedTimePicker() {
     ]),
     [animator, hour, minute, showToast]
   );
-  
+
   return (
-    <View style={[styles.default, { backgroundColor: color}]} collapsable={false}>
+    <View style={[styles.default, { backgroundColor: color }]} collapsable={false}>
       <View style={styles.default} collapsable={false} />
       <RectButton
         onHandlerStateChange={({ nativeEvent: { state } }) => animState.setValue(state === State.ACTIVE)}
@@ -151,7 +161,7 @@ export default function AnimatedTimePicker() {
 const styles = StyleSheet.create({
   button: {
     flexWrap: 'wrap',
-    flexDirection:'row',
+    flexDirection: 'row',
     alignSelf: 'center'
   },
   text: {

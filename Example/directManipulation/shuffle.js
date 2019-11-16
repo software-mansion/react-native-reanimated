@@ -38,8 +38,19 @@ function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
 }
 
-const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
-const cb = mapBuilder((a, b, c, d, e, f) => map(a, b, c, d, e, f));
+const cb = mapBuilder((x, y, w, h, a, b) => callback(a, b, w, h, x, y));
+const measureView11 = proc((tag, cb) => {
+  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb));
+});
+
+const measureView = proc((tag, x, y, w, h) => {
+  const cb = mapBuilder((x, y, w, h, a, b) => callback(a, b, w, h, x, y));
+  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb(x, y, w, h, 0, 0)));
+});
+
+const measureViewCB = proc((tag, cb) => {
+  return cond(defined(tag), invoke('UIManager', 'measure', tag, cb));
+});
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -78,7 +89,7 @@ const keys = ['x', 'y', 'width', 'height', 'screenX', 'screenY'];
 function delay(node, delayMs) {
   const clock = new Clock();
   const start = new Value();
-  
+
   return block([
     cond(clockRunning(clock), 0, [
       set(start, clock),
@@ -90,14 +101,14 @@ function delay(node, delayMs) {
 
 function Item({ item, parent, evaluate, x, y, index }) {
   const ref = useRef();
-  const values = useMemo(() => new Array(6).fill(0).map(() => new Value(0)), []);
+  const values = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
   const values1 = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
-  const [rx, ry, width, height, ax, ay] = values;
+  const [ax, ay, width, height] = values;
   const statusBarHeight = useStatusBarHeight();
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
   const measure = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
-  
+
   /*
   const m = useCallback(() => {
     const handle = findNodeHandle(ref.current);
@@ -115,7 +126,10 @@ function Item({ item, parent, evaluate, x, y, index }) {
     () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        measureView(tag, callback(...values)),
+        //measureView11(tag, cb(...values, 0, 0)),
+        //measureView(tag, ax, ay, width, height),
+        //measureView(tag, cb(ax, ay, width, height,0,0)),
+        measureViewCB(tag, callback(0, 0, width, height, ax, ay)),
         //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),
@@ -126,7 +140,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
     () => set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
     [bgc, x, y, ax, ay, width, height, statusBarHeight, item.color, index]
   );
-  
+
   return (
     <Text
       style={[styles.text, { backgroundColor: bgc }]}
@@ -176,7 +190,7 @@ function Shuffle() {
   ]);
   const ref = useRef();
   const [tag, onLayout] = useLayout();
-   
+
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
   const evaluate = useMemo(() => new Value(0), []);
@@ -206,7 +220,7 @@ function Shuffle() {
     }]),
     [absoluteX, absoluteY]
   );
-  
+
   const onTransition = useMemo(() =>
     event([{
       nativeEvent: ({ state }) => block([
