@@ -10,12 +10,8 @@ import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableNativeArray;
-import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.common.ReactConstants;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -24,7 +20,6 @@ import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.nodes.CallbackNode;
-import com.swmansion.reanimated.nodes.MapNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueNode;
 
@@ -57,17 +52,20 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
                     .resolveViewManager(mUIManager.getUIImplementation(), name);
             mCommandsMap = mViewManager.getCommandsMap();
         } catch (Throwable err){
-            String details = "";
-            try{
-                Map<String, ViewManager> viewManagers = ReanimatedViewManagerRegistry.getViewManagers(mUIManager.getUIImplementation());
-                String[] keys = viewManagers.keySet().toArray(new String[viewManagers.size()]);
-                details = "Expected one of:\n" + concat(keys);
-            } catch (Throwable error) {
-                Log.d(ReactConstants.TAG, "reanimated invoke setCaller: " + error);
+            Map<String, ViewManager> viewManagers = null;
+            try {
+                viewManagers = ReanimatedViewManagerRegistry.getViewManagers(mUIManager.getUIImplementation());
+            } catch (NoSuchFieldException e) {
+                //  noop
+            } catch (IllegalAccessException e) {
+                //  noop
             }
+            String[] keys = viewManagers.keySet().toArray(new String[viewManagers.size()]);
+            String details = "Expected one of:\n" + concat(keys);
 
             throw new JSApplicationIllegalArgumentException(
-                    "Animated invoke: View manager with name " + name + " was not found." + details
+                    "Animated invoke: View manager with name " + name + " was not found." + details,
+                    err
             );
         }
     }
@@ -95,6 +93,8 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
             }
         } else {
             String message = "Animated invoke: could not find commands map for View manager " + mViewManager.getClass().getSimpleName();
+
+            //  display warning as it is not fatal
             Log.w(ReactConstants.TAG, message);
         }
     }
