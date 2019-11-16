@@ -77,6 +77,10 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
+    _jsContext = [[JSContext alloc] initWithVirtualMachine:[[JSVirtualMachine alloc] init]];
+    _jsContext.exceptionHandler = ^(JSContext *context, JSValue *exception) {
+      RCTLogError(@"Error executing Reanimated JS Node: %@", exception);
+    };
   }
   return self;
 }

@@ -230,6 +230,7 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
+    export function js(code: string, ...args: Array<Adaptable<number>>): Animated.Node<any>;
     export function proc(
       cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
     ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;

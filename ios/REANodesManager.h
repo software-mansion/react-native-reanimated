@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 
 #import "REANode.h"
 #import <React/RCTBridgeModule.h>
