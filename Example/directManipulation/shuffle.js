@@ -217,7 +217,7 @@ function Shuffle() {
       [evaluate, transitionState]
     );
   */
-  useCode(() => call([evaluate], console.log), [evaluate]);
+  //useCode(() => call([evaluate], console.log), [evaluate]);
 
   const renderItem = useCallback((props) => (
     <Item
@@ -253,6 +253,9 @@ function Shuffle() {
                 const shuffled = items.slice();
                 shuffle(shuffled);
                 setItems(shuffled);
+
+                //  an ugly workaround until `onTransitionStateChange` will be available on both platforms (hopefully!)
+                setTimeout(() => evaluate.setValue(add(evaluate, 1)), 500);
               }}
             >
               <Text
