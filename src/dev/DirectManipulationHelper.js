@@ -86,7 +86,11 @@ function toInvokeAnnotation(module, method, params) {
 }
 
 function toDispatchAnnotation(module, method) {
-  return `dispatch("${module}", "${method}", map)`;
+  return `dispatch("${module}", "${method}", tag, ...args)`;
+}
+
+function toDispatchLegacyAnnotation(module, method) {
+  return `Legacy:\nUIManager.dispatchViewManagerCommand(tag, "${method}", args)`;
 }
 
 function Item({ item, section }) {
@@ -124,7 +128,7 @@ function InvokeCell({ name, item }) {
   const _onPress = useCallback(() => setDisplay(!display), [display]);
   return (
     <RectButton style={styles.button} onPress={_onPress}>
-      <Text style={[styles.buttonText]}>{!display ? item.key : toFunctionAnnotation(item.key, item.params)}</Text>
+      <Text style={[styles.buttonText, styles.methodTitle]}>{!display ? item.key : toFunctionAnnotation(item.key, item.params)}</Text>
       <Text style={[styles.buttonText, !display && styles.hidden]}>{toInvokeAnnotation(name, item.key, item.params)}</Text>
     </RectButton>
   );
@@ -136,8 +140,9 @@ function DispatchCell({ name, item }) {
 
   return (
     <RectButton style={styles.button} onPress={_onPress} >
-      <Text style={[styles.buttonText]}>{item.key}</Text>
+      <Text style={[styles.buttonText, styles.methodTitle]}>{item.key}</Text>
       <Text style={[styles.buttonText, !display && styles.hidden]}>{toDispatchAnnotation(name, item.key)}</Text>
+      <Text style={[styles.buttonText, styles.legacy, !display && styles.hidden]}>{toDispatchLegacyAnnotation(name, item.key)}</Text>
     </RectButton>
   );
 }
@@ -221,6 +226,12 @@ const styles = StyleSheet.create({
   disabledText: {
     color: 'grey',
     textDecorationLine: 'line-through'
+  },
+  methodTitle: {
+    fontWeight: 'bold'
+  },
+  legacy: {
+    opacity: 0.4
   },
   button: {
     flex: 1,
