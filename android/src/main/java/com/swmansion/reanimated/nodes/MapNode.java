@@ -56,8 +56,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         mMapping = processMapping(config.getArray("argMapping"));
     }
 
-    public void setValue(Double nodeId) {
-        MapNode newMapNode = mNodesManager.findNodeById(nodeId.intValue(), MapNode.class);
+    public void setValue(int nodeID) {
+        MapNode newMapNode = mNodesManager.findNodeById(nodeID, MapNode.class);
         mMapping = newMapNode.mMapping;
     }
 
