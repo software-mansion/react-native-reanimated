@@ -56,8 +56,13 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         mMapping = processMapping(config.getArray("argMapping"));
     }
 
-    public void setValue(Double nodeId) {
-        MapNode newMapNode = mNodesManager.findNodeById(nodeId.intValue(), MapNode.class);
+    public void merge(int nodeID) {
+        MapNode other = mNodesManager.findNodeById(nodeID, MapNode.class);
+        mMapping.addAll(other.mMapping);
+    }
+
+    public void setValue(int nodeID) {
+        MapNode newMapNode = mNodesManager.findNodeById(nodeID, MapNode.class);
         mMapping = newMapNode.mMapping;
     }
 
@@ -91,7 +96,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             accumulator = new Utils.ReanimatedWritableNativeMap();
             for (int j = path.length - 1; j >= 0; j--) {
                 argVal = new Utils.ReanimatedWritableNativeMap();
-                if(j == path.length - 1) {
+                if (j == path.length - 1) {
                     Node what = mNodesManager.findNodeById(map.nodeID, Node.class);
                     argVal.putDouble(path[j], what.doubleValue());
                 } else {

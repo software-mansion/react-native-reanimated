@@ -29,20 +29,25 @@ function getEventNode(node) {
 }
 
 function forEachEvent(props, cb) {
+  let prop;
   for (const key in props) {
-    const node = getEventNode(props[key]);
-    if (node && node instanceof AnimatedEvent) {
-      cb(node, key);
-    }
+    prop = props[key];
+    prop = Array.isArray(prop) ? prop : [prop];
+    prop.forEach(element => {
+      const node = getEventNode(element);
+      if (node && node instanceof AnimatedEvent) {
+        cb(node, key);
+      }
+    });
   }
 }
 
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
+    (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
@@ -209,6 +214,11 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (Array.isArray(value) && value.some((v) => v instanceof AnimatedNode)) {
+          const funcEvent = value.find((v) => typeof v === 'function');
+          if (funcEvent) {
+            props[key] = funcEvent;
+          }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
