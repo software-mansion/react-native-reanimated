@@ -137,7 +137,7 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SpringUtils =  {
+    type SpringUtils = {
       makeDefaultConfig: () => SpringConfig;
       makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
       makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
@@ -151,13 +151,13 @@ declare module 'react-native-reanimated' {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
-          ? AnimateStyle<S[K]>
-          :
-              | S[K]
-              | AnimatedNode<
-                  // allow `number` where `string` normally is to support colors
-                  S[K] extends (string | undefined) ? S[K] | number : S[K]
-                >)
+        ? AnimateStyle<S[K]>
+        :
+        | S[K]
+        | AnimatedNode<
+          // allow `number` where `string` normally is to support colors
+          S[K] extends (string | undefined) ? S[K] | number : S[K]
+        >)
     };
 
     export type AnimateProps<
@@ -165,11 +165,11 @@ declare module 'react-native-reanimated' {
       P extends {
         style?: StyleProp<S>;
       }
-    > = {
-      [K in keyof P]: K extends 'style'
+      > = {
+        [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<S>>
         : P[K] | AnimatedNode<P[K]>
-    };
+      };
 
     type CodeProps = {
       exec?: AnimatedNode<number>
@@ -185,15 +185,15 @@ declare module 'react-native-reanimated' {
     }
     export class Image extends Component<
       AnimateProps<ImageStyle, ImageProps>
-    > {
+      > {
       getNode(): ReactNativeImage;
     }
     export class ScrollView extends Component<
       AnimateProps<ViewStyle, ScrollViewProps>
-    > {
+      > {
       getNode(): ReactNativeScrollView;
     }
-    export class Code extends Component<CodeProps> {}
+    export class Code extends Component<CodeProps> { }
     export function createAnimatedComponent(component: any): any;
 
     // classes
@@ -231,7 +231,7 @@ declare module 'react-native-reanimated' {
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
 
-    export function proc<R, T extends (...params: Array<Animated.Value<number>>) => AnimatedNode<R>>(cb: T): T;
+    export function proc<R extends Value, T extends (...params: Array<Adaptable<number>>) => AnimatedNode<R>>(cb: T): T;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set(
@@ -265,7 +265,7 @@ declare module 'react-native-reanimated' {
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
 
-    
+
     type MappingBasic = { [key: string]: MappingBasic } | Adaptable<any>;
     type MappingProxy<T> = (arg: T) => AnimatedNode<number>;
     type MappingNested<T> = T extends object ? { [K in keyof T]?: MappingNested<T[K]> | MappingProxy<T[K]> } : Adaptable<T> | MappingProxy<T>;
