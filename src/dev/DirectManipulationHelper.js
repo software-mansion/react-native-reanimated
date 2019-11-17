@@ -86,7 +86,7 @@ function toInvokeAnnotation(module, method, params) {
 }
 
 function toDispatchAnnotation(module, method) {
-  return `dispatch("${module}", "${method}", map)`;
+  return `dispatch("${module}", "${method}", ...args)`;
 }
 
 function Item({ item, section }) {
