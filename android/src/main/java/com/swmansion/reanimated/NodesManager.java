@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import android.util.SparseArray;
 
+import com.eclipsesource.v8.V8;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -78,6 +79,7 @@ public class NodesManager implements EventDispatcherListener {
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
+  public final V8 jsRuntime;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
 
@@ -108,6 +110,8 @@ public class NodesManager implements EventDispatcherListener {
         onAnimationFrame(frameTimeNanos);
       }
     };
+
+    jsRuntime = V8.createV8Runtime();
 
     mNoopNode = new NoopNode(this);
   }
@@ -273,6 +277,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new FunctionNode(nodeID, config, this);
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
+    } else if ("jsfunc".equals(type)) {
+      node = new JSNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
