@@ -398,8 +398,19 @@ declare module 'react-native-reanimated' {
   }
   export const Easing: EasingStatic;
 
+  export enum TransitionState {
+    BEGAN,
+    END
+  }
+
+  export interface TransitionStateChangeEvent {
+    target: number,
+    state: TransitionState
+  }
+
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
+    onTransitionStateChange: (e: NativeSyntheticEvent<TransitionStateChangeEvent>) => void
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
