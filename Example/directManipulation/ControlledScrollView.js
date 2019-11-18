@@ -3,13 +3,11 @@ import { findNodeHandle, Image, StyleSheet, UIManager, processColor } from 'reac
 import { PanGestureHandler, State, RectButton } from 'react-native-gesture-handler';
 import Animated, { Easing } from 'react-native-reanimated';
 
-const { interpolate, cond, eq, timing, add, call, max, set, Text, Value, event, decay, concat, divide, abs, sub, color, invoke, dispatch, useCode, or, Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { interpolate, debug, cond, eq, timing, add, call, max, set, Text, Value, event, decay, concat, divide, abs, sub, color, invoke, dispatch, useCode, or, Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
-const decelerationRate = 0.9955;
+const decelerationRate = 0.996;
 
 const Button = createAnimatedComponent(RectButton);
-
-
 
 function runDecay(clock, value, velocity) {
   const state = {
@@ -142,7 +140,7 @@ function ControlledScrollView(props, ref) {
       [
         cond(clockRunning(clockX), stopClock(clockX)),
         cond(clockRunning(clockY), stopClock(clockY)),
-        scrollBy(handle, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 1)
+        scrollBy(handle, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 0)
       ]
     ),
     [handle, panOldState, translationX, translationY, finalScrollX, finalScrollY, scrollX, scrollY, clockX, clockY, velocityX, velocityY]
