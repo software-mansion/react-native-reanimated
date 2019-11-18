@@ -9,7 +9,6 @@ import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 public class InvokeNode extends Node implements ConnectedNode {
     ReanimatedAccessor mEvalHelper;
     protected final int[] mParams;
-    private int invocationId = 0;
 
     public InvokeNode(int nodeID, ReadableMap config, NodesManager nodesManager){
         super(nodeID, config, nodesManager);
@@ -20,9 +19,7 @@ public class InvokeNode extends Node implements ConnectedNode {
     @Override
     protected Object evaluate() {
         mEvalHelper.call(mParams, mNodesManager);
-
-        invocationId++;
-        return invocationId;
+        return ZERO;
     }
 
     @Override
