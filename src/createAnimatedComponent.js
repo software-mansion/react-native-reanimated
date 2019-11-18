@@ -22,7 +22,6 @@ function getEventNode(node) {
     return node;
   } else if (node instanceof AnimatedCallFunc) {
     throw new Error('events nested in procs are not yet supported');
-    return node.__source() instanceof AnimatedEvent && node.__source();
   } else {
     return false;
   }
@@ -40,9 +39,9 @@ function forEachEvent(props, cb) {
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
+    (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
