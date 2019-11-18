@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { findNodeHandle, Image, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 
-const { interpolate, cond, eq, add, call, set, Value, event, concat, sub, color, invoke, dispatch,useCode, or,Code, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { interpolate, cond, eq, add, call, set, Value, event, concat, sub, color, invoke, dispatch, useCode, or, Code, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
-const scrollTo = proc((tag, scrollX, scrollY, animated) => cond(defined(tag, -1), dispatch('RCTScrollView', 'scrollTo', tag, scrollX, scrollY, animated)));
+const scrollTo = proc((scrollX, scrollY, animated) => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, animated));
 
 export default function SyncedScrollViews() {
   //const ref = React.useRef();
@@ -13,7 +13,9 @@ export default function SyncedScrollViews() {
   const [handleB, setHandleB] = React.useState();
   const scrollX = useMemo(() => new Value(0), []);
   const scrollY = useMemo(() => new Value(0), []);
- 
+
+  const scrollToA = useMemo(() => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0), [scrollX, scrollY]);
+  const scrollToB = useMemo(() => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0), [scrollX, scrollY]);
 
   const onScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { x: scrollX, y: scrollY } } }]), [scrollX, scrollY]);
 
@@ -22,10 +24,10 @@ export default function SyncedScrollViews() {
 
   useCode(() =>
     block([
-      scrollTo(handleA, scrollX, scrollY, 0),
-      scrollTo(handleB, scrollX, scrollY, 0)
+      scrollToA,
+      scrollToB
     ]),
-    [handleA, handleB, scrollX, scrollY]
+    [scrollToA, scrollToB]
   );
 
   const baseScrollComponent = (
@@ -42,8 +44,8 @@ export default function SyncedScrollViews() {
 
   return (
     <>
-      {React.cloneElement(baseScrollComponent, { ref: (ref) => setHandleA(findNodeHandle(ref)) })}
-      {React.cloneElement(baseScrollComponent, { ref: (ref) => setHandleB(findNodeHandle(ref)) })}
+      {React.cloneElement(baseScrollComponent, { ref: (ref) => scrollToA.setNativeView(ref) })}
+      {React.cloneElement(baseScrollComponent, { ref: (ref) => scrollToB.setNativeView(ref) })}
     </>
   );
 }

@@ -65,6 +65,7 @@ public class PropsNode extends Node implements FinalNode, ConnectedNode {
     dangerouslyRescheduleEvaluate();
   }
 
+  @Override
   public void disconnectFromView(int viewTag) {
     mConnectedViewTag = View.NO_ID;
   }

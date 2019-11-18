@@ -343,11 +343,11 @@ public class NodesManager implements EventDispatcherListener {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
               " does not exists");
     }
-    if (!(node instanceof PropsNode)) {
+    if (!(node instanceof ConnectedNode)) {
       throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
-              "of type " + PropsNode.class.getName());
+              "of type " + PropsNode.class.getName() + " or " + InvokeNode.class.getName());
     }
-    ((PropsNode) node).disconnectFromView(viewTag);
+    ((ConnectedNode) node).disconnectFromView(viewTag);
   }
 
   public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps) {

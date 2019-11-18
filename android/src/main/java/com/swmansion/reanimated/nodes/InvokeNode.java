@@ -27,4 +27,8 @@ public class InvokeNode extends Node implements ConnectedNode {
         mEvalHelper.connectToView(viewTag);
     }
 
+    @Override
+    public void disconnectFromView(int viewTag) {
+        mEvalHelper.disconnectFromView(viewTag);
+    }
 }

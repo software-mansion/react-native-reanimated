@@ -1,8 +1,8 @@
 package com.swmansion.reanimated.reflection;
 
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.nodes.ConnectedNode;
 
-public interface ReanimatedAccessor {
-    public void call(int[] params, NodesManager nodesManager);
-    public void connectToView(int viewTag);
+public interface ReanimatedAccessor extends ConnectedNode {
+    void call(int[] params, NodesManager nodesManager);
 }

@@ -1,9 +1,10 @@
+import { findNodeHandle } from 'react-native';
+import ReanimatedModule from '../ReanimatedModule';
 import { val } from '../val';
 import { adapt } from './AnimatedBlock';
-import { createAnimatedCallback, createAnimatedMap } from './AnimatedMap';
-import AnimatedAlways, { createAnimatedAlways } from './AnimatedAlways';
+import { createAnimatedMap } from './AnimatedMap';
 import AnimatedNode from './AnimatedNode';
-import ReanimatedModule from '../ReanimatedModule';
+import invariant from 'fbjs/lib/invariant';
 
 class AnimatedInvoke extends AnimatedNode {
   _alwaysNodes;
@@ -17,10 +18,40 @@ class AnimatedInvoke extends AnimatedNode {
       },
       params
     );
+
+    this.__attach();
   }
 
   __onEvaluate() {
     return val(this);
+  }
+
+  setNativeView(animatedView) {
+    if (this._animatedView === animatedView) {
+      return;
+    }
+    this._animatedView = animatedView;
+
+    const nativeViewTag = findNodeHandle(this._animatedView);
+    invariant(
+      nativeViewTag != null,
+      'Unable to locate attached view in the native tree'
+    );
+    this._connectAnimatedView(nativeViewTag);
+  }
+
+  __detach() {
+    if (this._animatedView) {
+      const nativeViewTag = findNodeHandle(this._animatedView);
+      invariant(
+        nativeViewTag != null,
+        'Unable to locate attached view in the native tree'
+      );
+      this._disconnectAnimatedView(nativeViewTag);
+      this._animatedView = null;
+    }
+
+    super.__detach();
   }
 }
 
@@ -33,7 +64,7 @@ function createAnimatedInvokeBase(config, ...params) {
       return adapt(value);
     }
   });
-  
+
   return new AnimatedInvoke(config, ...inputNodes);
 }
 

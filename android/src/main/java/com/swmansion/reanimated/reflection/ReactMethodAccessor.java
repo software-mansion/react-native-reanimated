@@ -105,4 +105,10 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         //  noop
         //  this is used for invoking a view manager command only
     }
+
+    @Override
+    public void disconnectFromView(int viewTag) {
+        //  noop
+        //  this is used for invoking a view manager command only
+    }
 }

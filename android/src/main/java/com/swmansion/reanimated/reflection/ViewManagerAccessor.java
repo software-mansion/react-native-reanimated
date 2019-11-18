@@ -19,7 +19,6 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
-import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueNode;
 
@@ -33,7 +32,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
     private ViewManager mViewManager;
     private Map<String, Object> mCommandsMap;
     private View mView;
-    private int mConnectedViewTag;
+    private int mConnectedViewTag = View.NO_ID;
     private Boolean mAttachedToAnimatedView = false;
 
     public ViewManagerAccessor(ReactContext context, String viewManagerName, Dynamic commandId){
@@ -99,15 +98,24 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         }
     }
 
+    protected void setViewTag(int viewTag) {
+        if(viewTag != mConnectedViewTag) {
+            mConnectedViewTag = viewTag;
+            mView = mUIManager.resolveView(mConnectedViewTag);
+        }
+    }
+
     @Override
     public void connectToView(int viewTag) {
         mAttachedToAnimatedView = true;
         setViewTag(viewTag);
     }
 
-    protected void setViewTag(int viewTag) {
-        mConnectedViewTag = viewTag;
-        mView = mUIManager.resolveView(mConnectedViewTag);
+    @Override
+    public void disconnectFromView(int viewTag) {
+        mAttachedToAnimatedView = false;
+        mConnectedViewTag = View.NO_ID;
+        mView = null;
     }
 
     @Override

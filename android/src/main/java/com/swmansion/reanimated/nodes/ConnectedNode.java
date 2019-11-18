@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.nodes;
 
 public interface ConnectedNode {
-    public void connectToView(int viewTag);
+    void connectToView(int viewTag);
+    void disconnectFromView(int viewTag);
 }
