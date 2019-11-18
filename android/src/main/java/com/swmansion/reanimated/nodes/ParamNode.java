@@ -52,7 +52,9 @@ public class ParamNode extends ValueNode implements ContextNode {
       mUpdateContext.callID = callID;
       return val;
     } catch (EmptyStackException e) {
-      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to evaluate with no context.", e);
+      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to evaluate with no context.\n" +
+              "It seems you are trying to use `callback` inside `proc`. This is not yet supported.",
+              e);
     }
   }
 }
