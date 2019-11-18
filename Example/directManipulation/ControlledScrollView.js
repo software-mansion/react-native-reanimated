@@ -25,12 +25,12 @@ function runDecay(clock, value, velocity) {
     cond(
       not(clockRunning(clock)),
       [
-      set(state.finished, 0),
-      set(state.velocity, velocity),
-      set(state.position, value),
-      set(state.time, 0),
-      startClock(clock),
-    ]),
+        set(state.finished, 0),
+        set(state.velocity, velocity),
+        set(state.position, value),
+        set(state.time, 0),
+        startClock(clock),
+      ]),
     decay(clock, state, config),
     cond(state.finished, stopClock(clock)),
     state.position,
@@ -54,7 +54,7 @@ const sign = proc((x) => divide(x, abs(x)));
 const decayVelocity = proc((v) => cond(eq(v, 0), 1, multiply(v, -1)));
 const scrollEvent = proc((x, y) => event([{ nativeEvent: { contentOffset: { x, y } } }]));
 
-function ControlledScrollView(props) {
+function ControlledScrollView(props, ref) {
   const [handle, setHandle] = useState(-1);
 
   const scrollX = useMemo(() => new Value(0), []);
@@ -92,7 +92,7 @@ function ControlledScrollView(props) {
       panOldState
     ]
   );
-  
+
   const onScroll = useMemo(() =>
     event([{
       nativeEvent: ({ contentOffset: { x, y } }) => cond(
@@ -106,7 +106,7 @@ function ControlledScrollView(props) {
     }]),
     [panOldState, scrollX, scrollY]
   );
-  
+
   const onScroll1 = useMemo(() =>
     event([{
       nativeEvent: {
@@ -128,6 +128,7 @@ function ControlledScrollView(props) {
       eq(panOldState, State.ACTIVE),
       [
         clockX,
+        clockY,
         set(finalScrollX, 0),
         //set(finalScrollX, runDecay(clockX, scrollX, props.horizontal && Platform.OS === 'android' ? decayVelocity(velocityX) : Platform.OS !== 'android' ? decayVelocity(velocityX):0)),
         set(finalScrollY, runDecay(clockY, scrollY, decayVelocity(velocityY))),
@@ -136,12 +137,12 @@ function ControlledScrollView(props) {
         scrollTo(handle, max(finalScrollX, 0), max(finalScrollY, 0), 0),
         set(scrollXBegin, finalScrollX),
         set(scrollYBegin, finalScrollY),
-        call([scrollX, scrollY, finalScrollX, finalScrollY], e => console.log('scroll', e)),
+        //call([scrollX, scrollY, finalScrollX, finalScrollY], e => console.log('scroll', e)),
       ],
       [
         cond(clockRunning(clockX), stopClock(clockX)),
         cond(clockRunning(clockY), stopClock(clockY)),
-        scrollBy(handle, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 0)
+        scrollBy(handle, scrollXBegin, scrollYBegin, multiply(translationX, -1), multiply(translationY, -1), 1)
       ]
     ),
     [handle, panOldState, translationX, translationY, finalScrollX, finalScrollY, scrollX, scrollY, clockX, clockY, velocityX, velocityY]
@@ -152,6 +153,7 @@ function ControlledScrollView(props) {
       onGestureEvent={onPan}
       onHandlerStateChange={onPan}
       {...props}
+      ref={ref}
     >
       <ScrollView
         style={styles.scrollView}
@@ -166,6 +168,8 @@ function ControlledScrollView(props) {
     </PanGestureHandler>
   );
 }
+
+ControlledScrollView = React.forwardRef(ControlledScrollView);
 
 export default function ScrollViewMock(props) {
   const [i, forceRefresh] = useState(0);
@@ -199,6 +203,7 @@ export default function ScrollViewMock(props) {
   */
   const refA = useRef();
   const refB = useRef();
+  const refC = useRef();
 
   const vibrateEvent = useMemo(() =>
     event([{
@@ -237,9 +242,10 @@ export default function ScrollViewMock(props) {
         e.nativeEvent.state === State.ACTIVE && correct.setValue(1);
       }}
       ref={refB}
+      waitFor={refC}
     >
       <View style={styles.default} collapsable={false}>
-        <ControlledScrollView waitFor={refB} />
+        <ControlledScrollView ref={refC} />
         <View
           pointerEvents="none"
           style={[
@@ -276,7 +282,7 @@ const styles = StyleSheet.create({
     margin: 5
   },
   default: {
-    flex:1
+    flex: 1
   },
   text: {
     fontSize: 18,
