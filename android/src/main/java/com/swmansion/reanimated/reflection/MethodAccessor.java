@@ -22,7 +22,7 @@ public class MethodAccessor {
     private String[] mParamNames;
     private String[] mJSTypes;
 
-    public static String CALLBACK = "Callback";
+    private static String CALLBACK = "Callback";
 
     public static Boolean isReactMethod(Method method) {
         return method.getAnnotation(ReactMethod.class) != null;
@@ -32,7 +32,7 @@ public class MethodAccessor {
         setMethod(method);
     }
 
-    protected void setMethod(Method method) {
+    private void setMethod(Method method) {
         mMethod = method;
         mMethod.setAccessible(true);
         mParamTypes = mMethod.getParameterTypes();
@@ -71,7 +71,7 @@ public class MethodAccessor {
         return mTypes;
     }
 
-    public static String[] getJSParameterTypes(Method method) {
+    private static String[] getJSParameterTypes(Method method) {
         Class<?>[] mParamTypes = method.getParameterTypes();
         String[] mTypes = new String[mParamTypes.length];
         for (int i = 0; i < mParamTypes.length; i++) {
