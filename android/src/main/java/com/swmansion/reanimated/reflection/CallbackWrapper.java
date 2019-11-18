@@ -46,17 +46,8 @@ public class CallbackWrapper implements Callback, Promise {
 
     private @CallbackState
     int mState = CallbackState.READY;
-    
-    //private final int mWhatNodeID;
-    //private final NodesManager mNodesManager;
-    private final Node mWhatNode;
-/*
-    public CallbackWrapper(final int whatNodeID, NodesManager nodesManager) {
-        mWhatNodeID = whatNodeID;
-        mNodesManager = nodesManager;
-    }
 
- */
+    private final Node mWhatNode;
 
     public CallbackWrapper(final Node what) {
         mWhatNode = what;

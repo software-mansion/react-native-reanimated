@@ -22,7 +22,7 @@ function MainScreen(props) {
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      //keyExtractor={(item, index) => }
+      // keyExtractor={(item, index) => }
       renderItem={p => (
         <MainScreenItem
           {...p}

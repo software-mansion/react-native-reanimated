@@ -98,7 +98,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         }
     }
 
-    protected void setViewTag(int viewTag) {
+    private void setViewTag(int viewTag) {
         if(viewTag != mConnectedViewTag) {
             mConnectedViewTag = viewTag;
             mView = mUIManager.resolveView(mConnectedViewTag);
@@ -155,7 +155,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         receiveCommand(args);
     }
 
-    public void receiveCommand(ReadableArray args) {
+    private void receiveCommand(ReadableArray args) {
         if (mCommandId.getType().equals(ReadableType.Number)) {
             mViewManager.receiveCommand(mView, mCommandId.asInt(), args);
         } else {

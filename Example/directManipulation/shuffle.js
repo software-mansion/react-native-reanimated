@@ -1,16 +1,13 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { StyleSheet, Button, findNodeHandle, UIManager, processColor, Platform, StatusBar } from 'react-native';
-import Animated, { Transitioning, Transition, TransitionState } from 'react-native-reanimated';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { StyleSheet, processColor, Platform, StatusBar } from 'react-native';
+import Animated, { Transitioning, Transition } from 'react-native-reanimated';
 import { FlatList, State, PanGestureHandler, RectButton } from 'react-native-gesture-handler';
-import * as _ from 'lodash';
 
 const {
   useCode,
-  block,
   defined,
   cond,
   invoke,
-  call,
   and,
   Value,
   set,
@@ -23,12 +20,6 @@ const {
   add,
   Text,
   neq,
-  Clock,
-  startClock,
-  clockRunning,
-  sub,
-  createAnimatedComponent,
-  onChange,
   callback,
   map
 } = Animated;
@@ -56,12 +47,12 @@ const inRect = proc((x, y, left, top, width, height, statusBarHeight) => isInRec
  * */
 export function useStatusBarHeight() {
   return useMemo(() => {
-    const height = _.defaultTo(StatusBar.currentHeight, 0);
+    const height = StatusBar.currentHeight ||  0;
     if (height === 0 || Platform.OS !== 'android') return 0;
 
     // Android measurements do not account for StatusBar, so we must do so manually.
-    const hidden = _.get(StatusBar, '_currentValues.hidden.value', false);
-    const translucent = _.get(StatusBar, '_currentValues.translucent', false);
+    const hidden = StatusBar.currentValues && StatusBar.currentValues.hidden && StatusBar.currentValues.hidden.value || false;
+    const translucent = StatusBar.currentValues && StatusBar.currentValues.translucent || false;
     const visible = !hidden && !translucent;
     return visible ? height : 0;
   }, []);
@@ -73,50 +64,19 @@ function useLayout() {
   return [tag, onLayout];
 }
 
-const keys = ['x', 'y', 'width', 'height', 'screenX', 'screenY'];
-
-function delay(node, delayMs) {
-  const clock = new Clock();
-  const start = new Value();
-
-  return block([
-    cond(clockRunning(clock), 0, [
-      set(start, clock),
-      startClock(clock)
-    ]),
-    cond(greaterOrEq(sub(clock, start), delayMs), node)
-  ]);
-}
-
 function Item({ item, parent, evaluate, x, y, index }) {
   const ref = useRef();
   const values = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
-  const values1 = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
   const [ax, ay, width, height] = values;
   const statusBarHeight = useStatusBarHeight();
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
-  const measure = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
-
-  /*
-  const m = useCallback(() => {
-    const handle = findNodeHandle(ref.current);
-    const handleParent = findNodeHandle(parent.current);
-    handle && handleParent && UIManager.measureLayout(
-      handle,
-      handleParent,
-      () => console.warn('measureLayout'),
-      (...o) => console.log('measured', o)
-    )
-  }, [ref, parent]);
-  */
 
   useCode(
     () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
         measureView(tag, callback(successMap(ax, ay, width, height))),
-        //cond(neq(parent, 0), invoke('UIManager', 'measureLayout', tag, parent, callback(), callback(...values1))),
       ]
     ),
     [tag, parent]
@@ -139,8 +99,6 @@ function Item({ item, parent, evaluate, x, y, index }) {
   );
 }
 
-const AButton = createAnimatedComponent(Button);
-
 function Shuffle() {
   const transition = (
     <Transition.Together>
@@ -148,7 +106,7 @@ function Shuffle() {
     </Transition.Together>
   );
 
-  let [items, setItems] = useState([
+  const [items, setItems] = useState([
     {
       title: '🍇 Grapes',
       color: 'purple'
@@ -180,7 +138,6 @@ function Shuffle() {
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
   const evaluate = useMemo(() => new Value(0), []);
-  const transitionState = useMemo(() => new Value(-1), []);
 
   const onGestureEvent = useMemo(() =>
     event([{
@@ -206,18 +163,6 @@ function Shuffle() {
     }]),
     [absoluteX, absoluteY]
   );
-  /*
-    const onTransition = useMemo(() =>
-      event([{
-        nativeEvent: ({ state }) => block([
-          set(transitionState, state),
-          onChange(state, cond(eq(state, TransitionState.END), set(evaluate, add(evaluate, 1))))
-        ])
-      }]),
-      [evaluate, transitionState]
-    );
-  */
-  //useCode(() => call([evaluate], console.log), [evaluate]);
 
   const renderItem = useCallback((props) => (
     <Item
@@ -243,7 +188,6 @@ function Shuffle() {
           transition={transition}
           style={styles.centerAll}
           animateMount
-        //onTransitionStateChange={onTransition}
         >
           <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
@@ -262,7 +206,6 @@ function Shuffle() {
                 style={[
                   styles.button,
                   {
-                    //backgroundColor: cond(neq(transitionState, TransitionState.BEGAN), processColor("#FF5252"), processColor("grey"))
                     backgroundColor: "#FF5252"
                   }
                 ]}

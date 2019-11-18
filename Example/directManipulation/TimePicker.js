@@ -8,10 +8,10 @@ const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, i
 
 const Button = createAnimatedComponent(RectButton);
 
-//const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
+// const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
 
 const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minute }]));
-//const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
+// const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
 
 const showTimer = proc((hour, minute, is24Hour, cb) => {
   const startStateBuilder = proc((hour, minute, is24Hour) =>
@@ -62,7 +62,7 @@ function runTiming(clock, value, dest, startStopClock = true) {
 }
 
 export default function AnimatedTimePicker() {
-  //const ref = React.useRef();
+  // const ref = React.useRef();
   const action = useMemo(() => new Value(0), []);
   const hour = useMemo(() => new Value(-1), []);
   const minute = useMemo(() => new Value(-1), []);
@@ -103,7 +103,7 @@ export default function AnimatedTimePicker() {
       cond(
         animState,
         [
-          //showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
+          // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
           showTimer(hour, minute, 1, callback(timerSuccessMap(action, hour, minute))),
           invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback()),
           set(animState, 0),

@@ -20,7 +20,6 @@ public class MethodAccessor {
     private Method mMethod;
     private Class<?>[] mParamTypes;
     private String[] mParamNames;
-    private ReadableType[] mInferredTypes;
     private String[] mJSTypes;
 
     public static String CALLBACK = "Callback";
@@ -38,7 +37,6 @@ public class MethodAccessor {
         mMethod.setAccessible(true);
         mParamTypes = mMethod.getParameterTypes();
         mParamNames = getParameterNames(mMethod);
-        mInferredTypes = getInferredParameterTypes(mMethod);
         mJSTypes = getJSParameterTypes(mMethod);
     }
 
