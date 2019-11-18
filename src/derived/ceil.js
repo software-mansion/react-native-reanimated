@@ -1,5 +1,5 @@
-import { sub, round } from '../base';
+import { sub, round, proc } from '../base';
 
-export default function ceil(a) {
+export default proc(function ceil(a) {
   return sub(1, round(sub(0.5, a)));
-}
+});
