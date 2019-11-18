@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 public class ReanimatedViewManagerRegistry {
-    public static ViewManagerRegistry getViewManagerRegistry(UIImplementation uiImplementation) throws NoSuchFieldException, IllegalAccessException {
+    private static ViewManagerRegistry getViewManagerRegistry(UIImplementation uiImplementation) throws NoSuchFieldException, IllegalAccessException {
         Field f = uiImplementation.getClass().getDeclaredField("mViewManagers");
         f.setAccessible(true);
         return ((ViewManagerRegistry) f.get(uiImplementation));
@@ -18,7 +18,7 @@ public class ReanimatedViewManagerRegistry {
         return getViewManagers(getViewManagerRegistry(uiImplementation));
     }
 
-    public static Map<String, ViewManager> getViewManagers(ViewManagerRegistry viewManagerRegistry) throws NoSuchFieldException, IllegalAccessException {
+    private static Map<String, ViewManager> getViewManagers(ViewManagerRegistry viewManagerRegistry) throws NoSuchFieldException, IllegalAccessException {
         Field f = viewManagerRegistry.getClass().getDeclaredField("mViewManagers");
         f.setAccessible(true);
         return ((Map<String, ViewManager>) f.get(viewManagerRegistry));
