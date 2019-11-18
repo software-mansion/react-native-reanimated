@@ -40,7 +40,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         setCaller(viewManagerName, commandId);
     }
 
-    public void setCaller(String viewManagerName, Dynamic commandId) {
+    private void setCaller(String viewManagerName, Dynamic commandId) {
         resolveViewManager(viewManagerName);
         setCommand(commandId);
     }
