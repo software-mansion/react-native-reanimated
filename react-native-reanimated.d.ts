@@ -403,11 +403,7 @@ declare module 'react-native-reanimated' {
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
-    /**
-     * 
-     * @param callback invoked once transition has ended
-     */
-    animateNextTransition(callback?: () => void): void;
+    animateNextTransition(): void;
   }
 
   export class Transitioning extends Component {
