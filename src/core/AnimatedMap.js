@@ -96,7 +96,7 @@ export default class AnimatedMap extends AnimatedNode {
     super({
       type: 'map',
       argMapping: objectMappings
-    }, children);
+    }, [...children, ...alwaysNodes]);
 
     this._alwaysNodes = alwaysNodes;
   }
@@ -104,19 +104,6 @@ export default class AnimatedMap extends AnimatedNode {
   __onEvaluate() {
     return val(this);
   }
-
-  __attach() {
-    const deps = [...this.__inputNodes, ...this._alwaysNodes];
-    deps.forEach(n => n.__attach());
-    super.__attach();
-  }
-
-  __detach() {
-    const deps = [...this.__inputNodes, ...this._alwaysNodes];
-    super.__detach();
-    deps.forEach(n => n.isNativelyInitialized() && n.__detach());
-  }
-
 }
 
 export function createAnimatedMap(argMapping, config) {
