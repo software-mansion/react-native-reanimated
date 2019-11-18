@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { add, cond, lessThan, multiply, round, sub, proc } from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
-const idempotentColor = proc(function(r, g, b, a) {
+const procColor = proc(function(r, g, b, a) {
   const color = add(
     multiply(a, 1 << 24),
     multiply(r, 1 << 16),
@@ -32,5 +32,5 @@ export default function color(r, g, b, a = 1) {
     throw new Error('color is not implemented on web yet');
   }
 
-  return idempotentColor(r, g, b, a);
+  return procColor(r, g, b, a);
 }

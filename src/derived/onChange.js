@@ -1,7 +1,7 @@
 import { block, cond, defined, neq, not, set, proc } from '../base';
 import AnimatedValue from '../core/InternalAnimatedValue';
 
-const idempotentOnChange = proc(function(value, action, prevValue) {
+const procOnChange = proc(function(value, action, prevValue) {
   return block([
     cond(not(defined(prevValue)), set(prevValue, value)),
     cond(neq(value, prevValue), [set(prevValue, value), action]),
@@ -10,5 +10,5 @@ const idempotentOnChange = proc(function(value, action, prevValue) {
 
 export default function onChange(value, action) {
   const prevValue = new AnimatedValue();
-  return idempotentOnChange(value, action, prevValue);
+  return procOnChange(value, action, prevValue);
 }

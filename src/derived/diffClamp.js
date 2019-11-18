@@ -4,7 +4,7 @@ import min from './min';
 import max from './max';
 import diff from './diff';
 
-const idempotentAcc = proc(function(a, minVal, maxVal, value) {
+const procAcc = proc(function(a, minVal, maxVal, value) {
   return set(
     value,
     min(max(add(cond(defined(value), value, a), diff(a)), minVal), maxVal)
@@ -13,5 +13,5 @@ const idempotentAcc = proc(function(a, minVal, maxVal, value) {
 
 export default function diffClamp(a, minVal, maxVal) {
   const value = new AnimatedValue();
-  return idempotentAcc(a, minVal, maxVal, value);
+  return procAcc(a, minVal, maxVal, value);
 }
