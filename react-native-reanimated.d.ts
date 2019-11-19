@@ -235,10 +235,10 @@ declare module 'react-native-reanimated' {
     ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
-    export function set(
-      valueToBeUpdated: AnimatedValue<number>,
-      sourceNode: Adaptable<number>,
-    ): AnimatedNode<number>;
+    export function set<T extends Value>(
+      valueToBeUpdated: AnimatedValue<T>,
+      sourceNode: Adaptable<T>,
+    ): AnimatedNode<T>;
     export function concat(
       ...args: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
