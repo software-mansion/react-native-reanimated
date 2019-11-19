@@ -1,11 +1,15 @@
 import { val } from '../val';
 import { createAnimatedMap } from './AnimatedMap';
 import AnimatedNode from './AnimatedNode';
+import { Platform } from "react-native";
 
 export default class AnimatedCallback extends AnimatedNode {
   _what;
 
   constructor(what) {
+    if (Platform.OS !== 'Android') {
+      throw new Error('Currently experimental direct manipulation are available only on Android');
+    }
     super(
       {
         type: 'callback',
