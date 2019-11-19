@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect } from 'react';
+﻿import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList, RectButton } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
