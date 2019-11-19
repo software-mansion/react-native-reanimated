@@ -7,7 +7,7 @@ export default class AnimatedCallback extends AnimatedNode {
   _what;
 
   constructor(what) {
-    if (Platform.OS !== 'Android') {
+    if (Platform.OS !== 'android') {
       throw new Error('Currently experimental direct manipulation are available only on Android');
     }
     super(

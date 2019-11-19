@@ -8,7 +8,7 @@ import invariant from 'fbjs/lib/invariant';
 
 class AnimatedInvoke extends AnimatedNode {
   constructor(invokeConfig, ...params) {
-    if (Platform.OS !== 'Android') {
+    if (Platform.OS !== 'android') {
       throw new Error('Currently experimental direct manipulation are available only on Android');
     }
     super(
