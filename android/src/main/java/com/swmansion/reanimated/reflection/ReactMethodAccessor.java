@@ -12,7 +12,6 @@ import java.lang.reflect.InvocationTargetException;
 import static com.swmansion.reanimated.Utils.concat;
 
 public class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
-    //protected final ReactContext mContext;
     private NativeModule mCallee;
     private MethodAccessor mMethod;
 
@@ -21,12 +20,12 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         setCaller(moduleName, methodName);
     }
 
-    public void setCaller(String moduleName, String methodName) {
+    private void setCaller(String moduleName, String methodName) {
         NativeModule module = getNativeModule(moduleName);
         setCaller(module, methodName);
     }
 
-    public void setCaller(NativeModule module, String methodName){
+    private void setCaller(NativeModule module, String methodName){
         mCallee = module;
         mMethod = getReactMethod(module, methodName);
     }
@@ -35,7 +34,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         invoke(cast(params, nodesManager));
     }
 
-    protected void invoke(Object[] params) {
+    private void invoke(Object[] params) {
         try {
             mMethod.getMethod().invoke(mCallee, params);
         } catch (Throwable err) {
@@ -55,7 +54,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
         }
     }
 
-    public Object[] cast(int[] params, NodesManager nodesManager) {
+    private Object[] cast(int[] params, NodesManager nodesManager) {
         Object[] out = new Object[params.length];
         Node n;
         Object value;

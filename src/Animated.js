@@ -21,7 +21,6 @@ import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWr
 import {
   Transition,
   Transitioning,
-  TransitionState,
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';

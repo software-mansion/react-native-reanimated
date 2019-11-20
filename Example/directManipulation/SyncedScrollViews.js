@@ -18,8 +18,8 @@ export default function SyncedScrollViews() {
 
   const onScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { x: scrollX, y: scrollY } } }]), [scrollX, scrollY]);
 
-  //const otherScrollY = useMemo(() => new Value(0), []);
-  //const otherOnScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { y: otherScrollY } } }]), [otherScrollY]);
+  // const otherScrollY = useMemo(() => new Value(0), []);
+  // const otherOnScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { y: otherScrollY } } }]), [otherScrollY]);
 
   useCode(() =>
     block([

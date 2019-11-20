@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect } from 'react';
+﻿import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FlatList, RectButton } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
@@ -22,7 +22,7 @@ function MainScreen(props) {
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      //keyExtractor={(item, index) => }
+      // keyExtractor={(item, index) => }
       renderItem={p => (
         <MainScreenItem
           {...p}

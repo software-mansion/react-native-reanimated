@@ -91,7 +91,10 @@ export function sanitizeArgMapping(argMapping) {
 
 export default class AnimatedMap extends AnimatedNode {
   _alwaysNodes;
-  constructor(argMapping, config = {}) {
+  constructor(argMapping) {
+    if (Platform.OS !== 'android') {
+      throw new Error('Currently experimental direct manipulation are available only on Android');
+    }
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({
       type: 'map',

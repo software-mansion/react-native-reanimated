@@ -40,7 +40,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         setCaller(viewManagerName, commandId);
     }
 
-    public void setCaller(String viewManagerName, Dynamic commandId) {
+    private void setCaller(String viewManagerName, Dynamic commandId) {
         resolveViewManager(viewManagerName);
         setCommand(commandId);
     }
@@ -98,7 +98,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         }
     }
 
-    protected void setViewTag(int viewTag) {
+    private void setViewTag(int viewTag) {
         if(viewTag != mConnectedViewTag) {
             mConnectedViewTag = viewTag;
             mView = mUIManager.resolveView(mConnectedViewTag);
@@ -155,7 +155,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         receiveCommand(args);
     }
 
-    public void receiveCommand(ReadableArray args) {
+    private void receiveCommand(ReadableArray args) {
         if (mCommandId.getType().equals(ReadableType.Number)) {
             mViewManager.receiveCommand(mView, mCommandId.asInt(), args);
         } else {
