@@ -35,7 +35,6 @@ export default function SyncedScrollViews() {
       collapsable={false}
       onScroll={onScroll}
       scrollEventThrottle={1}
-      momentumScrollEnabled={false}
     >
       <Image source={require('../imageViewer/grid.png')} collapsable={false} />
     </ScrollView>
