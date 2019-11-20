@@ -167,7 +167,7 @@ export default class Example extends Component {
         {Array.from(Array(40)).map((_, i) => (
           <Animated.View
             key={i}
-            style={[styles.box, { transform: [{ translateX: this.t[i] }] }]}
+            style={[styles.box, { transform: [{ translateX: Animated.js("function(t){return t*0.25}",this.t[i] ) }] }]}
           />
         ))}
       </View>
