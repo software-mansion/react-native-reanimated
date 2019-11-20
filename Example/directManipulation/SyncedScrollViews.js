@@ -8,9 +8,8 @@ const { interpolate, cond, eq, add, call, set, Value, event, concat, sub, color,
 const scrollTo = proc((scrollX, scrollY, animated) => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, animated));
 
 export default function SyncedScrollViews() {
-  //const ref = React.useRef();
-  const [handleA, setHandleA] = React.useState();
-  const [handleB, setHandleB] = React.useState();
+  //const [handleA, setHandleA] = React.useState();
+  //const [handleB, setHandleB] = React.useState();
   const scrollX = useMemo(() => new Value(0), []);
   const scrollY = useMemo(() => new Value(0), []);
 
