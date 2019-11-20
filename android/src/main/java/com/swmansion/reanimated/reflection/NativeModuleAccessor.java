@@ -18,13 +18,13 @@ import java.util.Map;
 import static com.swmansion.reanimated.Utils.concat;
 
 public class NativeModuleAccessor {
-    protected final ReactContext mContext;
+    private final ReactContext mContext;
 
     public NativeModuleAccessor(ReactContext context){
         mContext = context;
     }
 
-    public Map<String, NativeModule> getNativeModules(){
+    private Map<String, NativeModule> getNativeModules(){
         Collection<NativeModule> modules = mContext.getCatalystInstance().getNativeModules();
         Iterator<NativeModule> moduleIterator = modules.iterator();
         Map<String, NativeModule> moduleMap = new HashMap();
@@ -40,9 +40,6 @@ public class NativeModuleAccessor {
 
     public NativeModule getNativeModule(String name) {
         try {
-            //mContext.getCatalystInstance().hasNativeModule()
-            //Class.forName()
-
             return mContext.getCatalystInstance().getNativeModule(name);
         } catch (Throwable err) {
             //  module was not found
@@ -57,7 +54,7 @@ public class NativeModuleAccessor {
         }
     }
 
-    public Map<String, MethodAccessor> getReactMethodsForModule(NativeModule module) {
+    private Map<String, MethodAccessor> getReactMethodsForModule(NativeModule module) {
         Method[] methods = module.getClass().getDeclaredMethods();
         Method m;
         Map<String, MethodAccessor> methodMap = new HashMap();
@@ -86,7 +83,7 @@ public class NativeModuleAccessor {
         }
     }
 
-    public WritableNativeMap out() {
+    private WritableNativeMap out() {
         WritableNativeMap out = new WritableNativeMap();
         WritableNativeMap temp;
         Map<String, NativeModule> modules = getNativeModules();

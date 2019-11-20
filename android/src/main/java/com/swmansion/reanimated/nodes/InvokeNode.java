@@ -7,8 +7,8 @@ import com.swmansion.reanimated.reflection.ReanimatedAccessor;
 import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 
 public class InvokeNode extends Node implements ConnectedNode {
-    ReanimatedAccessor mEvalHelper;
-    protected final int[] mParams;
+    private ReanimatedAccessor mEvalHelper;
+    private final int[] mParams;
 
     public InvokeNode(int nodeID, ReadableMap config, NodesManager nodesManager){
         super(nodeID, config, nodesManager);

@@ -6,7 +6,6 @@ import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import AnimatedCallFunc from "./core/AnimatedCallFunc";
-import AnimatedFunction from "./core/AnimatedFunction";
 
 import invariant from 'fbjs/lib/invariant';
 

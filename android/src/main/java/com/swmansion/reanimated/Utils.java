@@ -3,14 +3,11 @@ package com.swmansion.reanimated;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 
-import com.facebook.jni.HybridData;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.ReadableNativeArray;
-import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -54,23 +51,23 @@ public class Utils {
             o.equals(short.class) || o.equals(Short.class);
   }
 
-  public static Boolean isInteger(Object o){
+  private static Boolean isInteger(Object o){
     return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
   }
 
-  public static Boolean isString(Object o){
+  private static Boolean isString(Object o){
     return o instanceof String || o.equals(String.class);
   }
 
-  public static Boolean isBoolean(Object o){
+  private static Boolean isBoolean(Object o){
     return o instanceof Boolean || o.equals(boolean.class) || o.equals(Boolean.class);
   }
 
-  public static Boolean isNull(Object o){
+  private static Boolean isNull(Object o){
     return o == null;
   }
 
-  public static Boolean isArray(Object o){
+  private static Boolean isArray(Object o){
     return o.getClass().isArray();
   }
 
@@ -90,7 +87,7 @@ public class Utils {
     }
   }
 
-  public static WritableMap putVariant(WritableMap map, String key, Object o){
+  private static WritableMap putVariant(WritableMap map, String key, Object o){
     switch(inferType(o)){
       case Array:
         map.putArray(key, ((WritableArray) o));
@@ -156,24 +153,6 @@ public class Utils {
     return arr;
   }
 
-  public static class ReanimatedReadableNativeMap extends ReadableNativeMap {
-    ReanimatedReadableNativeMap(HybridData hybridData){
-      super(hybridData);
-    }
-
-    @Override
-    public boolean getBoolean(@NonNull String name) {
-      return super.getDouble(name) == 1;
-    }
-
-    @Override
-    public double getDouble(@NonNull String name) {
-      return super.getType(name) == ReadableType.Boolean ?
-              toDouble(super.getBoolean(name)) :
-              super.getDouble(name);
-    }
-  }
-
   public static class ReanimatedWritableNativeMap extends WritableNativeMap {
     @Override
     public boolean getBoolean(@NonNull String name) {
@@ -185,24 +164,6 @@ public class Utils {
       return super.getType(name) == ReadableType.Boolean ?
               toDouble(super.getBoolean(name)) :
               super.getDouble(name);
-    }
-  }
-
-  public static class ReanimatedReadableNativeArray extends ReadableNativeArray {
-    ReanimatedReadableNativeArray(HybridData hybridData){
-      super(hybridData);
-    }
-
-    @Override
-    public boolean getBoolean(int index) {
-      return super.getDouble(index) == 1;
-    }
-
-    @Override
-    public double getDouble(int index) {
-      return super.getType(index) == ReadableType.Boolean ?
-              toDouble(super.getBoolean(index)) :
-              super.getDouble(index);
     }
   }
 
@@ -239,7 +200,7 @@ public class Utils {
     String BOOLEAN = "boolean";
   }
 
-  public static <T extends Object> T fromDouble(Double value, Class<T> clazz){
+  public static <T> T fromDouble(Double value, Class<T> clazz){
     switch (clazz.getName()){
       case PrimitiveNumber.BYTE: return ((T) Byte.valueOf(value.byteValue()));
       case PrimitiveNumber.INT: return ((T) Integer.valueOf(value.intValue()));
@@ -269,7 +230,7 @@ public class Utils {
     }
   }
   
-  public static Double toDouble(Object value) {
+  private static Double toDouble(Object value) {
     Object o = value;
     if (value instanceof Dynamic){
       switch (((Dynamic) value).getType()) {
@@ -291,11 +252,11 @@ public class Utils {
     }
 
     if(isBoolean(o)) {
-      return Double.valueOf(((Boolean) o) ? 1 : 0);
+      return (double) (((Boolean) o) ? 1 : 0);
     } else if (o instanceof Number){
-      return Double.valueOf(((Number) o).doubleValue());
+      return ((Number) o).doubleValue();
     } else {
-      return Double.valueOf((double) o);
+      return (double) o;
     }
   }
 
@@ -312,11 +273,13 @@ public class Utils {
   }
 
   public static String concat(Object[] args, String separator){
-    String concat = "";
+    StringBuilder concat = new StringBuilder();
     for (int i = 0; i < args.length; i++) {
-      concat += args[i].toString();
-      if(i < args.length - 1) concat += separator;
+      concat.append(args[i].toString());
+      if(i < args.length - 1) {
+        concat.append(separator);
+      }
     }
-    return concat;
+    return concat.toString();
   }
 }

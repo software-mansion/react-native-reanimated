@@ -2,7 +2,7 @@ import { Platform, findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
-import AnimatedMap, { sanitizeArgMapping } from './AnimatedMap';
+import { sanitizeArgMapping } from './AnimatedMap';
 
 import invariant from 'fbjs/lib/invariant';
 

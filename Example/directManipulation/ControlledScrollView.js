@@ -1,13 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { findNodeHandle, Image, StyleSheet, UIManager, processColor } from 'react-native';
+import { findNodeHandle, Image, StyleSheet, Platform, processColor } from 'react-native';
 import { PanGestureHandler, State, RectButton } from 'react-native-gesture-handler';
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-const { interpolate, debug, cond, eq, timing, add, call, max, set, Text, Value, event, decay, concat, divide, abs, sub, color, invoke, dispatch, useCode, or, Code, map, callback, neq, createAnimatedComponent, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, max, set, Text, Value, event, decay, invoke, dispatch, useCode, neq, createAnimatedComponent, View, ScrollView, proc, Clock, multiply, not, clockRunning, startClock, stopClock } = Animated;
 
 const decelerationRate = 0.996;
-
-const Button = createAnimatedComponent(RectButton);
 
 function runDecay(clock, value, velocity) {
   const state = {
@@ -35,8 +33,6 @@ function runDecay(clock, value, velocity) {
   ];
 }
 
-//const measureLayout = proc((tag, parentTag, x, error) => cond(defined(tag, -1), invoke('UIManager', 'measureLayout', tag, parentTag, [error], { x })));
-
 function resolveScrollViewNS(horizontal = false) {
   const fallback = 'RCTScrollView';
   return Platform.select({
@@ -47,12 +43,9 @@ function resolveScrollViewNS(horizontal = false) {
 
 const scrollTo = proc((tag, scrollX, scrollY, animated) => cond(neq(tag, -1), dispatch(resolveScrollViewNS(), 'scrollTo', tag, scrollX, scrollY, animated)));
 const scrollBy = proc((tag, scrollX, scrollY, scrollByX, scrollByY, animated) => scrollTo(tag, add(scrollX, scrollByX), add(scrollY, scrollByY), animated))
-const cb = proc((x) => callback({ x }));
-const sign = proc((x) => divide(x, abs(x)));
 const decayVelocity = proc((v) => cond(eq(v, 0), 1, multiply(v, -1)));
-const scrollEvent = proc((x, y) => event([{ nativeEvent: { contentOffset: { x, y } } }]));
 
-function ControlledScrollView(props, ref) {
+const ControlledScrollView = React.forwardRef(function (props, ref) {
   const [handle, setHandle] = useState(-1);
 
   const scrollX = useMemo(() => new Value(0), []);
@@ -105,22 +98,6 @@ function ControlledScrollView(props, ref) {
     [panOldState, scrollX, scrollY]
   );
 
-  const onScroll1 = useMemo(() =>
-    event([{
-      nativeEvent: {
-        contentOffset: ({ x, y }) => cond(
-          neq(panOldState, State.ACTIVE),
-          [
-            set(scrollX, x),
-            set(scrollY, y),
-          ]
-        )
-
-      }
-    }]),
-    [panOldState, scrollX, scrollY]
-  );
-
   useCode(() =>
     cond(
       eq(panOldState, State.ACTIVE),
@@ -128,14 +105,12 @@ function ControlledScrollView(props, ref) {
         clockX,
         clockY,
         set(finalScrollX, 0),
-        //set(finalScrollX, runDecay(clockX, scrollX, props.horizontal && Platform.OS === 'android' ? decayVelocity(velocityX) : Platform.OS !== 'android' ? decayVelocity(velocityX):0)),
         set(finalScrollY, runDecay(clockY, scrollY, decayVelocity(velocityY))),
         set(translationX, 0),
         set(translationY, 0),
         scrollTo(handle, max(finalScrollX, 0), max(finalScrollY, 0), 0),
         set(scrollXBegin, finalScrollX),
         set(scrollYBegin, finalScrollY),
-        //call([scrollX, scrollY, finalScrollX, finalScrollY], e => console.log('scroll', e)),
       ],
       [
         cond(clockRunning(clockX), stopClock(clockX)),
@@ -165,12 +140,9 @@ function ControlledScrollView(props, ref) {
       </ScrollView>
     </PanGestureHandler>
   );
-}
+});
 
-ControlledScrollView = React.forwardRef(ControlledScrollView);
-
-export default function ScrollViewMock(props) {
-  const [i, forceRefresh] = useState(0);
+export default function ScrollViewMock() {
   const vibrate = useMemo(() => new Value(0), []);
   const correct = useMemo(() => new Value(0), []);
 
@@ -180,40 +152,16 @@ export default function ScrollViewMock(props) {
       [
         invoke('Vibration', 'vibrate', 500),
         set(vibrate, 0),
-        //set(correct, 1)
       ]
     ),
     [vibrate]
   );
-  /*
-  useCode(() =>
-    onChange(
-      panState,
-      cond(
-        eq(panState, State.BEGAN),
-        [
-          set(correct, 0)
-        ]
-      )
-    ),
-    [panState, correct]
-  );
-  */
   const refA = useRef();
   const refB = useRef();
   const refC = useRef();
 
-  const vibrateEvent = useMemo(() =>
-    event([{
-      nativeEvent: ({ state }) =>
-        set(vibrate, eq(state, State.ACTIVE))
-    }]),
-    [vibrate]
-  );
-
   const baseScrollComponent = (
     <RectButton
-      key="______ScrollView1"
       style={styles.default}
       ref={refA}
       onHandlerStateChange={(e) => e.nativeEvent.state === State.ACTIVE && vibrate.setValue(1)}
@@ -222,7 +170,6 @@ export default function ScrollViewMock(props) {
         <ScrollView
           style={styles.scrollView}
           collapsable={false}
-          //decelerationRate={decelerationRate}
           waitFor={refA}
         >
           <Image source={require('../imageViewer/grid.png')} collapsable={false} />
@@ -233,7 +180,6 @@ export default function ScrollViewMock(props) {
 
   const animatedScrollComponent = (
     <RectButton
-      key="______ScrollView2"
       style={styles.default}
       onHandlerStateChange={(e) => {
         e.nativeEvent.state === State.BEGAN && correct.setValue(0);
@@ -260,7 +206,7 @@ export default function ScrollViewMock(props) {
     </RectButton>
   );
 
-  const randomizer = useMemo(() => Math.round(Math.random() * 10) % 2 === 0, [i]);
+  const randomizer = useMemo(() => Math.round(Math.random() * 10) % 2 === 0, []);
 
   return (
     <View style={styles.default}>

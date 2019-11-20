@@ -40,7 +40,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         }
     }
 
-    public static List<ArgMap> processMapping(ReadableArray mapping) {
+    private static List<ArgMap> processMapping(ReadableArray mapping) {
         int size = mapping.size();
         List<ArgMap> res = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -49,7 +49,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         return res;
     }
 
-    protected List<ArgMap> mMapping;
+    private List<ArgMap> mMapping;
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);

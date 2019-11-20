@@ -1,4 +1,4 @@
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, Platform } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 import { val } from '../val';
 import { adapt } from './AnimatedBlock';
@@ -7,9 +7,10 @@ import AnimatedNode from './AnimatedNode';
 import invariant from 'fbjs/lib/invariant';
 
 class AnimatedInvoke extends AnimatedNode {
-  _alwaysNodes;
-
   constructor(invokeConfig, ...params) {
+    if (Platform.OS !== 'android') {
+      throw new Error('Currently experimental direct manipulation are available only on Android');
+    }
     super(
       {
         type: 'invoke',

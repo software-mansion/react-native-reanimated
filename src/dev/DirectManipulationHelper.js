@@ -1,7 +1,6 @@
 ﻿import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { StyleSheet, Text, View, UIManager, SectionList, YellowBox, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
-import openURLInBrowser from 'react-native/Libraries/Core/Devtools/openURLInBrowser';
 
 
 YellowBox.ignoreWarnings(['measureLayoutRelativeToContainingList']);
@@ -42,7 +41,7 @@ function compareFunc(a, b) {
 }
 
 function orderBy(collection, iterator) {
-  let out = collection || [];
+  const out = collection || [];
   const it = sanitizeIterator(collection, iterator);
 
   if (!Array.isArray(out)) {
@@ -117,7 +116,7 @@ function Item({ item, section }) {
             {...p}
           />
         )}
-      //renderScrollComponent={p => <ScrollView {...p} />}
+      // renderScrollComponent={p => <ScrollView {...p} />}
       />}
     </RectButton>
   );
