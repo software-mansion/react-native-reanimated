@@ -1,6 +1,7 @@
 #import "REANodesManager.h"
 
 #import <React/RCTConvert.h>
+#import <JavaScriptCore/JavaScriptCore.h>
 
 #import "Nodes/REANode.h"
 #import "Nodes/REAPropsNode.h"
@@ -22,6 +23,7 @@
 #import "Nodes/REAParamNode.h"
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
+#import "Nodes/REAJSNode.h"
 
 @interface RCTUIManager ()
 
@@ -240,6 +242,7 @@
             @"param": [REAParamNode class],
             @"func": [REAFunctionNode class],
             @"callfunc": [REACallFuncNode class],
+            @"jsfunc": [REAJSNode class]
 //            @"listener": nil,
             };
   });

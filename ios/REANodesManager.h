@@ -19,6 +19,8 @@ typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 @property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
 
+@property (nonatomic, strong, nullable) JSContext* jsContext;
+
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
                              uiManager:(nonnull RCTUIManager *)uiManager;
 
