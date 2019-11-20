@@ -41,6 +41,7 @@ import com.swmansion.reanimated.nodes.ValueNode;
 import com.swmansion.reanimated.nodes.ParamNode;
 import com.swmansion.reanimated.nodes.FunctionNode;
 import com.swmansion.reanimated.nodes.CallFuncNode;
+import com.swmansion.reanimated.nodes.JSNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
