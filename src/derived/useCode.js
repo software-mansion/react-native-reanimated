@@ -4,7 +4,7 @@ import { always, block } from '../base';
 /**
  * @callback NodeFactory
  * Function to create a node or an array of nodes.
- * @returns {(Node[] | Node | null | undefined)}
+ * @returns {(Node[] | Node | null | undefined | Boolean)}
  */
 
 /**
