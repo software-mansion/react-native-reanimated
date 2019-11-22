@@ -69,7 +69,25 @@ export function useStatusBarHeight() {
 
 function useLayout() {
   const tag = useMemo(() => new Value(0), []);
+  const pip = useMemo(() => new Value(0), []);
   const onLayout = useCallback((e) => tag.setValue(e.nativeEvent.target), [tag]);
+  const onLayoutE = useMemo(() =>
+    event([{
+      nativeEvent: {
+        target: tag,
+        layout: {
+          width: pip
+        }
+      }
+    }]),
+    [tag, pip]
+  )
+
+  useCode(() =>
+    call([pip, tag], console.log),
+    [pip, tag]
+  );
+
   return [tag, onLayout];
 }
 
@@ -97,6 +115,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
   const measure = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
+
 
   /*
   const m = useCallback(() => {
