@@ -226,14 +226,15 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
+    _platformProps = Platform.select({
+      web: {},
+      default: { collapsable: false },
+    });
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      const platformProps = Platform.select({
-        web: {},
-        default: { collapsable: false },
-      });
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component {...props} ref={this._setComponentRef} {...this._platformProps} />
       );
     }
 
