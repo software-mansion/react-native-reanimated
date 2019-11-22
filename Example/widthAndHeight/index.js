@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 const {
   divide,
-  greaterThan,
   set,
   cond,
   startClock,
@@ -17,6 +16,7 @@ const {
   debug,
   Value,
   Clock,
+  greaterOrEq,
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -58,8 +58,12 @@ export default class Example extends Component {
     const clock = new Clock();
     this._trans = runSpring(clock, 10, 150);
   }
+
   componentDidMount() {}
+
   render() {
+    const fontSize = add(divide(this._trans, 10), 15);
+    const letterSpacing = add(divide(this._trans, -15), 10);
     return (
       <Animated.View
         style={[styles.container, { borderWidth: divide(this._trans, 5) }]}>
@@ -78,10 +82,10 @@ export default class Example extends Component {
           style={[
             styles.text,
             {
-              fontSize: add(divide(this._trans, 10), 15),
-              letterSpacing: add(divide(this._trans, -15), 10),
+              fontSize: cond(greaterOrEq(fontSize, 0), fontSize, 0),
+              letterSpacing: letterSpacing,
               fontStyle: cond(
-                greaterThan(this._trans, 190),
+                greaterOrEq(this._trans, 190),
                 'normal',
                 'italic'
               ),
