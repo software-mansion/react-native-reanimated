@@ -11,6 +11,7 @@ import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
 import com.swmansion.reanimated.BuildConfig;
@@ -44,8 +45,7 @@ public class CallbackWrapper implements Callback, Promise {
         int REJECTED = 2;
     }
 
-    private @CallbackState
-    int mState = CallbackState.READY;
+    private @CallbackState int mState = CallbackState.READY;
 
     private final Node mWhatNode;
 
@@ -53,9 +53,8 @@ public class CallbackWrapper implements Callback, Promise {
         mWhatNode = what;
     }
 
-    protected ValueManagingNode what() {
+    private ValueManagingNode what() {
         try {
-            //Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
             return ((ValueManagingNode) mWhatNode);
         } catch (ClassCastException e) {
             throw new JSApplicationIllegalArgumentException(
@@ -63,8 +62,17 @@ public class CallbackWrapper implements Callback, Promise {
         }
     }
 
-    public void setValue(@Nullable WritableMap data) {
-        what().setValue(data);
+    public void setValue(@Nullable final WritableMap data) {
+        if (UiThreadUtil.isOnUiThread()) {
+            what().setValue(data);
+        } else {
+            UiThreadUtil.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    what().setValue(data);
+                }
+            });
+        }
     }
 
     public void reject() {
