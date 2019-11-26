@@ -69,7 +69,7 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
                 n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
-                if (Utils.isNumber(value)) {
+                if (value != null && Utils.isNumber(value)) {
                     out[k] = Utils.fromDouble(((Double) value), paramType);
                 } else {
                     out[k] = paramType.cast(value);
