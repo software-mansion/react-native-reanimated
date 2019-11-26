@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -226,7 +227,34 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Writable
     @NonNull
     @Override
     public HashMap<String, Object> toHashMap() {
-        return value().toHashMap();
+        WritableMap out = new WritableNativeMap();
+        out.merge(this);
+        addAll(out, source);
+        return out.toHashMap();
+    }
+
+    @NonNull
+    @Override
+    public ReadableMapKeySetIterator keySetIterator() {
+        return new ReadableMapKeySetIterator() {
+            private final Iterator<String> mIterator = toHashMap().keySet().iterator();
+
+            @Override
+            public boolean hasNextKey() {
+                return mIterator.hasNext();
+            }
+
+            @Override
+            public String nextKey() {
+                return mIterator.next();
+            }
+        };
+    }
+
+    @NonNull
+    @Override
+    public Iterator<Map.Entry<String, Object>> getEntryIterator() {
+        return toHashMap().entrySet().iterator();
     }
 
     @Override
