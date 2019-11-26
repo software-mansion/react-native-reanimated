@@ -4,24 +4,25 @@ import Animated, { Transitioning, Transition } from 'react-native-reanimated';
 import { FlatList, State, PanGestureHandler, RectButton } from 'react-native-gesture-handler';
 
 const {
-  useCode,
-  defined,
-  cond,
-  invoke,
-  and,
-  Value,
-  set,
-  View,
-  proc,
-  event,
-  eq,
-  greaterOrEq,
-  lessOrEq,
   add,
-  Text,
-  neq,
+  and,
   callback,
-  map
+  cond,
+  defined,
+  debug,
+  eq,
+  event,
+  greaterOrEq,
+  invoke,
+  lessOrEq,
+  map,
+  neq,
+  proc,
+  set,
+  Text,
+  useCode,
+  Value,
+  View,
 } = Animated;
 
 function shuffle(array) {
@@ -76,7 +77,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
     () => cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        measureView(tag, callback(successMap(ax, ay, width, height))),
+        measureView(tag, debug('measure', callback(successMap(ax, debug('measured abs y', ay), width, height)))),
       ]
     ),
     [tag, parent]

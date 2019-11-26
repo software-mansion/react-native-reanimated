@@ -10,7 +10,7 @@ const Button = createAnimatedComponent(RectButton);
 
 // const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
 
-const timerSuccessMap = proc((action, hour, minute) => debug('timer result', map([{ action, hour, minute }])));
+const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minute }]));
 // const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
 
 const showTimer = proc((hour, minute, is24Hour, cb) => {
@@ -105,7 +105,7 @@ export default function AnimatedTimePicker() {
         [
           // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
           showTimer(hour, minute, 1, callback(timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute)))),
-          invoke('AppState', 'getCurrentAppState', debug('app state callback', callback({ app_state: appState })), debug('stub', callback())),
+          invoke('AppState', 'getCurrentAppState', debug('app state', callback({ app_state: appState })), debug('stub', callback())),
           set(animState, 0),
         ]
       )
