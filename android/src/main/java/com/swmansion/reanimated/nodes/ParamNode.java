@@ -23,7 +23,7 @@ public class ParamNode extends ValueNode implements ContextNode {
       Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
       String callID = mUpdateContext.callID;
       mUpdateContext.callID = mPrevCallID;
-      ((ValueNode) node).setValue(value);
+      ((ValueManagingNode) node).setValue(value);
       mUpdateContext.callID = callID;
     } catch (EmptyStackException e) {
       throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to set value with no context.", e);

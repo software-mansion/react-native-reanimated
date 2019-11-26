@@ -4,13 +4,13 @@ import { RectButton, State, TapGestureHandler, PanGestureHandler } from 'react-n
 import Animated, { Easing } from 'react-native-reanimated';
 import { colorHSV } from '../colors';
 
-const { cond, eq, add, call, set, Value, event, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or, Code, map, callback, round, neq, createAnimatedComponent, Text, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
+const { cond, eq, add, call, set, Value, debug, concat, timing, color, modulo, invoke, dispatch, diff, useCode, lessThan, greaterThan, or, Code, map, callback, round, neq, createAnimatedComponent, Text, View, ScrollView, and, proc, Clock, multiply, onChange, not, defined, clockRunning, block, startClock, stopClock, spring } = Animated;
 
 const Button = createAnimatedComponent(RectButton);
 
 // const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
 
-const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minute }]));
+const timerSuccessMap = proc((action, hour, minute) => debug('timer result', map([{ action, hour, minute }])));
 // const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
 
 const showTimer = proc((hour, minute, is24Hour, cb) => {
@@ -28,7 +28,7 @@ const showTimer = proc((hour, minute, is24Hour, cb) => {
     startStateBuilder(hour, minute, is24Hour)
   );
 
-  return invoke('TimePickerAndroid', 'open', startState, cb);
+  return invoke('TimePickerAndroid', 'open', debug('timer start', startState), debug('timer result', cb));
 })
 
 
@@ -104,10 +104,9 @@ export default function AnimatedTimePicker() {
         animState,
         [
           // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
-          showTimer(hour, minute, 1, callback(timerSuccessMap(action, hour, minute))),
-          invoke('AppState', 'getCurrentAppState', callback({ app_state: appState }), callback()),
+          showTimer(hour, minute, 1, callback(timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute)))),
+          invoke('AppState', 'getCurrentAppState', debug('app state callback', callback({ app_state: appState })), debug('stub', callback())),
           set(animState, 0),
-          call([appState], a => console.log('appState', a))
         ]
       )
     ),

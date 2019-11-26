@@ -5,7 +5,7 @@ import android.util.Log;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class DebugNode extends Node {
+public class DebugNode extends Node implements ValueManagingNode {
 
   private final String mMessage;
   private final int mValueID;
@@ -21,5 +21,11 @@ public class DebugNode extends Node {
     Object value = mNodesManager.findNodeById(mValueID, Node.class).value();
     Log.d("REANIMATED", String.format("%s %s", mMessage, value));
     return value;
+  }
+
+  @Override
+  public void setValue(Object value) {
+    Node node = mNodesManager.findNodeById(mValueID, Node.class);
+    ((ValueManagingNode) node).setValue(value);
   }
 }

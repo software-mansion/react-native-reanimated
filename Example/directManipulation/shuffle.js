@@ -47,7 +47,7 @@ const inRect = proc((x, y, left, top, width, height, statusBarHeight) => isInRec
  * */
 export function useStatusBarHeight() {
   return useMemo(() => {
-    const height = StatusBar.currentHeight ||  0;
+    const height = StatusBar.currentHeight || 0;
     if (height === 0 || Platform.OS !== 'android') return 0;
 
     // Android measurements do not account for StatusBar, so we must do so manually.
