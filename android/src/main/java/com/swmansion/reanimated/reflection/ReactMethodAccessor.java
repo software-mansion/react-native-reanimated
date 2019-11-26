@@ -1,21 +1,23 @@
 package com.swmansion.reanimated.reflection;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactContext;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.nodes.Node;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 import static com.swmansion.reanimated.Utils.concat;
 
-public class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
+class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
     private NativeModule mCallee;
     private MethodAccessor mMethod;
 
-    public ReactMethodAccessor(ReactContext context, String moduleName, String methodName) {
+    ReactMethodAccessor(ReactContext context, String moduleName, String methodName) {
         super(context);
         setCaller(moduleName, methodName);
     }
@@ -46,8 +48,10 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
             }
 
             throw new JSApplicationIllegalArgumentException(
-                    "Reanimated invoke: Failed to invoke " + mCallee.getName() + "." +
-                            mMethod.getName() + "(" + concat(params) + ")" + "\n" +
+                    "Reanimated invoke error:\n" +
+                            String.format("module: %s,\n", mCallee.getName()) +
+                            String.format("method: %s,\n", mMethod.getName()) +
+                            String.format("\nparams: %s\n", concat(params, "\n")) +
                             "Details: " + errorMessage,
                     err
             );
@@ -68,21 +72,25 @@ public class ReactMethodAccessor extends NativeModuleAccessor implements Reanima
                 n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
-                if (Utils.isNumber(value)) {
-                    out[k] = Utils.fromDouble(((Double) value), paramType);
+                if (value != null && ReflectionUtils.isNumber(value)) {
+                    out[k] = ReflectionUtils.fromDouble(((Double) value), paramType);
                 } else {
                     out[k] = paramType.cast(value);
                 }
             }
-        }
-        catch (Throwable err){
+        } catch (Throwable err){
             String outOfBoundsMessage = "";
             String[] inputTypes = new String[params.length];
+            ArrayList<String> parts = new ArrayList<>();
             for (int i = 0; i < params.length; i++) {
                 n = nodesManager.findNodeById(params[i], Node.class);
-                inputTypes[i] = "expected: " + paramTypes[i].getSimpleName() + ", got: " + n.getClass().getSimpleName() + " => " + n.value();
+                parts.clear();
+                parts.add(paramTypes[i].getSimpleName());
+                parts.add(n.getClass().getSimpleName());
+                parts.add(n.value().toString());
+                inputTypes[i] = concat(parts.toArray());
             }
-            String typeDetails = "Args:\n" + concat(inputTypes, "\n");
+            String typeDetails = "Args: (expected, got, value)\n" + concat(inputTypes, "\n");
             if(err instanceof ArrayIndexOutOfBoundsException){
                 outOfBoundsMessage = "Expected " + paramTypes.length + " parameters, got " + params.length;
             }

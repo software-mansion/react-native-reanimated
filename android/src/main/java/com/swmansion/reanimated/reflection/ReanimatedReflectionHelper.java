@@ -4,6 +4,7 @@ import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableNativeMap;
 
 public class ReanimatedReflectionHelper {
     private static String CONFIG_KEYS_MODULE = "module";
@@ -21,5 +22,9 @@ public class ReanimatedReflectionHelper {
             throw new JSApplicationIllegalArgumentException("Missing method/command arg in animated invoke");
         }
 
+    }
+
+    public static WritableNativeMap getReflectionMap(ReactContext context) {
+        return NativeModuleAccessor.getReflectionMap(context);
     }
 }

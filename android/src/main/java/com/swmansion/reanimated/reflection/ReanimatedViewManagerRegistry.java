@@ -7,14 +7,14 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public class ReanimatedViewManagerRegistry {
+class ReanimatedViewManagerRegistry {
     private static ViewManagerRegistry getViewManagerRegistry(UIImplementation uiImplementation) throws NoSuchFieldException, IllegalAccessException {
         Field f = uiImplementation.getClass().getDeclaredField("mViewManagers");
         f.setAccessible(true);
         return ((ViewManagerRegistry) f.get(uiImplementation));
     }
 
-    public static Map<String, ViewManager> getViewManagers(UIImplementation uiImplementation) throws NoSuchFieldException, IllegalAccessException {
+    static Map<String, ViewManager> getViewManagers(UIImplementation uiImplementation) throws NoSuchFieldException, IllegalAccessException {
         return getViewManagers(getViewManagerRegistry(uiImplementation));
     }
 

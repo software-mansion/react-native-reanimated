@@ -9,14 +9,14 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.swmansion.reanimated.Utils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import static com.swmansion.reanimated.Utils.concat;
+import static com.swmansion.reanimated.reflection.ReflectionUtils.inferType;
 
-public class MethodAccessor {
+class MethodAccessor {
     private Method mMethod;
     private Class<?>[] mParamTypes;
     private String[] mParamNames;
@@ -24,11 +24,11 @@ public class MethodAccessor {
 
     private static String CALLBACK = "Callback";
 
-    public static Boolean isReactMethod(Method method) {
+    static Boolean isReactMethod(Method method) {
         return method.getAnnotation(ReactMethod.class) != null;
     }
 
-    public MethodAccessor(Method method) {
+    MethodAccessor(Method method) {
         setMethod(method);
     }
 
@@ -66,7 +66,7 @@ public class MethodAccessor {
         Class<?>[] mParamTypes = method.getParameterTypes();
         ReadableType[] mTypes = new ReadableType[mParamTypes.length];
         for (int i = 0; i < mParamTypes.length; i++) {
-            mTypes[i] = Utils.inferType(mParamTypes[i]);
+            mTypes[i] = inferType(mParamTypes[i]);
         }
         return mTypes;
     }
@@ -77,7 +77,7 @@ public class MethodAccessor {
         for (int i = 0; i < mParamTypes.length; i++) {
             mTypes[i] = (mParamTypes[i] == Callback.class || mParamTypes[i] == Promise.class) ?
                     CALLBACK :
-                    Utils.inferType(mParamTypes[i]).name();
+                    inferType(mParamTypes[i]).name();
         }
         return mTypes;
     }

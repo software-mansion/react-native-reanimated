@@ -1,10 +1,10 @@
 package com.swmansion.reanimated.nodes;
 
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.Utils;
+import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,16 +25,16 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             nodeID = eventPath.getInt(size - 1);
         }
 
-        public Object lookupValue(ReadableMap event) {
-            ReadableMap map = event;
+        public Object lookupValue(ReanimatedWritableMap data) {
+            ReanimatedWritableMap map = data;
             for (int i = 0; map != null && i < path.length - 1; i++) {
                 String key = path[i];
-                map = map.hasKey(key) ? map.getMap(key) : null;
+                map = ((ReanimatedWritableMap) map.value(key));
             }
 
             if (map != null) {
                 String key = path[path.length - 1];
-                return map.hasKey(key) ? Utils.fromDynamic(map.getDynamic(key)) : null;
+                return map.value(key);
             }
             return null;
         }
@@ -63,10 +63,32 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     @Override
     public void setValue(Object value) {
-        setValue(((WritableMap) value));
+        if (value instanceof ReadableArray) {
+            setValue(((ReadableArray) value));
+        } else if (value instanceof ReadableMap) {
+            setValue(((ReadableMap) value));
+        } else {
+            throw new JSApplicationCausedNativeException(
+                    String.format(
+                            "Trying to set value %s of illegal type %s on reanimated map #%d",
+                            value,
+                            value.getClass().getSimpleName(),
+                            mNodeID
+                    )
+            );
+        }
+
     }
 
-    public void setValue(@Nullable WritableMap data) {
+    public void setValue(@Nullable ReadableArray data) {
+        setValue(ReanimatedWritableMap.fromArray(data));
+    }
+
+    public void setValue(@Nullable ReadableMap data) {
+        setValue(ReanimatedWritableMap.fromMap(data));
+    }
+
+    private void setValue(@Nullable ReanimatedWritableMap data) {
         if (data == null) {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
@@ -80,20 +102,20 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         }
     }
 
-    protected WritableMap getValue() {
-        Utils.ReanimatedWritableNativeMap value = new Utils.ReanimatedWritableNativeMap();
-        WritableMap argVal, accumulator;
+    protected ReanimatedWritableMap getValue() {
+        ReanimatedWritableMap value = new ReanimatedWritableMap();
+        ReanimatedWritableMap argVal, accumulator;
         String[] path;
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
             path = map.path;
-            accumulator = new Utils.ReanimatedWritableNativeMap();
+            accumulator = new ReanimatedWritableMap();
             for (int j = path.length - 1; j >= 0; j--) {
-                argVal = new Utils.ReanimatedWritableNativeMap();
+                argVal = new ReanimatedWritableMap();
                 if(j == path.length - 1) {
                     Node what = mNodesManager.findNodeById(map.nodeID, Node.class);
-                    argVal.putDouble(path[j], what.doubleValue());
+                    argVal.putDynamic(path[j], what.value());
                 } else {
                     argVal.putMap(path[j], accumulator);
                 }

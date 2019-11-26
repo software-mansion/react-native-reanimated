@@ -18,7 +18,6 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueNode;
 
@@ -35,7 +34,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
     private int mConnectedViewTag = View.NO_ID;
     private Boolean mAttachedToAnimatedView = false;
 
-    public ViewManagerAccessor(ReactContext context, String viewManagerName, Dynamic commandId){
+    ViewManagerAccessor(ReactContext context, String viewManagerName, Dynamic commandId){
         mUIManager = context.getNativeModule(UIManagerModule.class);
         setCaller(viewManagerName, commandId);
     }
@@ -120,7 +119,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
     @Override
     public void call(int[] params, NodesManager nodesManager) {
-        Utils.ReanimatedWritableNativeArray args = new Utils.ReanimatedWritableNativeArray();
+        ReanimatedWritableMap args = new ReanimatedWritableMap();
         Node n;
         int paramStart;
 
@@ -139,7 +138,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
             n = nodesManager.findNodeById(params[i], Node.class);
             Object value = n.value();
 
-            if (value instanceof CallbackWrapper) {
+            if (value instanceof ReanimatedCallback) {
                 /**
                  * {@link ViewManager } has no {@link Callback} or {@link Promise} args
                  */
@@ -148,7 +147,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
                                 "Dispatch can't receive callback params, index = " + i
                 );
             } else {
-                Utils.pushVariant(args, value);
+                args.pushDynamic(value);
             }
         }
 

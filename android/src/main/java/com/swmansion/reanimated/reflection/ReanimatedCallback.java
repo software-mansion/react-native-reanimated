@@ -15,7 +15,6 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
 import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueManagingNode;
 
@@ -23,13 +22,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * {@link CallbackWrapper } is used for consuming/stubbing
+ * {@link ReanimatedCallback } is used for consuming/stubbing
  *      {@link ReadableMap },
  *      {@link ReadableArray },
  *      {@link Callback },
  *      {@link Promise }
  *      */
-public class CallbackWrapper implements Callback, Promise {
+public class ReanimatedCallback implements Callback, Promise {
 
     @IntDef({
             CallbackState.READY,
@@ -49,7 +48,7 @@ public class CallbackWrapper implements Callback, Promise {
 
     private final Node mWhatNode;
 
-    public CallbackWrapper(final Node what) {
+    public ReanimatedCallback(final Node what) {
         mWhatNode = what;
     }
 
@@ -85,12 +84,14 @@ public class CallbackWrapper implements Callback, Promise {
 
     @Override
     public void invoke(Object... args) {
-        setValue(Utils.toFakeWritableArray(args));
+        setValue(ReanimatedWritableMap.fromArray(args));
     }
 
     @Override
     public void resolve(@Nullable Object value) {
-        setValue(Utils.toFakeWritableArray(value));
+        Object[] params = new Object[1];
+        params[0] = value;
+        setValue(ReanimatedWritableMap.fromArray(params));
     }
 
     @Override
@@ -236,5 +237,11 @@ public class CallbackWrapper implements Callback, Promise {
                 );
             }
         }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("callback(%s)", mWhatNode.value());
     }
 }

@@ -13,8 +13,7 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
-import com.swmansion.reanimated.nodes.InvokeNode;
-import com.swmansion.reanimated.reflection.NativeModuleAccessor;
+import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 import com.swmansion.reanimated.transitions.TransitionModule;
 
 import java.util.ArrayList;
@@ -219,6 +218,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
   @ReactMethod
   public void getDirectManipulationUtil(final Promise promise) {
-    promise.resolve(NativeModuleAccessor.getReflectionMap(getReactApplicationContext()));
+    promise.resolve(ReanimatedReflectionHelper.getReflectionMap(getReactApplicationContext()));
   }
 }

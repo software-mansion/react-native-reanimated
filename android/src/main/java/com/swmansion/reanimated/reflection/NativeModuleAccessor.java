@@ -17,10 +17,10 @@ import java.util.Map;
 
 import static com.swmansion.reanimated.Utils.concat;
 
-public class NativeModuleAccessor {
+class NativeModuleAccessor {
     private final ReactContext mContext;
 
-    public NativeModuleAccessor(ReactContext context){
+    NativeModuleAccessor(ReactContext context){
         mContext = context;
     }
 

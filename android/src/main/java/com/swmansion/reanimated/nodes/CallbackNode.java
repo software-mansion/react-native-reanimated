@@ -4,7 +4,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.CallbackWrapper;
+import com.swmansion.reanimated.reflection.ReanimatedCallback;
 
 public class CallbackNode extends Node implements ValueManagingNode {
 
@@ -25,6 +25,6 @@ public class CallbackNode extends Node implements ValueManagingNode {
     @Override
     protected Object evaluate() {
         Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        return new CallbackWrapper(whatNode);
+        return new ReanimatedCallback(whatNode);
     }
 }
