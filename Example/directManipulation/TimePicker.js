@@ -80,11 +80,6 @@ export default function AnimatedTimePicker() {
   const color = useMemo(() => colorHSV(colorHue, 0.9, 1), [colorHue]);
   const inputChangeTracker = useMemo(() => or(neq(diff(hour), 0), neq(diff(minute), 0)), [hour, minute]);
 
-  useCode(() =>
-    call([animState, animator], a => console.log('state', a)),
-    [animState]
-  );
-
   useEffect(() => {
     return () => colorHue.setValue(50)
   })
@@ -104,7 +99,7 @@ export default function AnimatedTimePicker() {
         animState,
         [
           // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
-          showTimer(hour, minute, 1, callback(timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute)))),
+          showTimer(hour, minute, 1, debug('timer result', callback(timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute))))),
           invoke('AppState', 'getCurrentAppState', debug('app state', callback({ app_state: appState })), debug('stub', callback())),
           set(animState, 0),
         ]
