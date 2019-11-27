@@ -11,6 +11,8 @@ import com.swmansion.reanimated.nodes.Node;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
+import javax.annotation.Nullable;
+
 import static com.swmansion.reanimated.Utils.concat;
 
 class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
@@ -79,27 +81,25 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
                 }
             }
         } catch (Throwable err){
-            String outOfBoundsMessage = "";
             String[] inputTypes = new String[params.length];
             ArrayList<String> parts = new ArrayList<>();
+            @Nullable Object tempVal;
             for (int i = 0; i < params.length; i++) {
                 n = nodesManager.findNodeById(params[i], Node.class);
+                tempVal = n.value();
                 parts.clear();
                 parts.add(paramTypes[i].getSimpleName());
                 parts.add(n.getClass().getSimpleName());
-                parts.add(n.value().toString());
+                parts.add(tempVal == null ? "null" : tempVal.toString());
                 inputTypes[i] = concat(parts.toArray());
-            }
-            String typeDetails = "Args: (expected, got, value)\n" + concat(inputTypes, "\n");
-            if(err instanceof ArrayIndexOutOfBoundsException){
-                outOfBoundsMessage = "Expected " + paramTypes.length + " parameters, got " + params.length;
             }
 
             throw new JSApplicationIllegalArgumentException(
-                    "Parameter mismatch when calling reanimated invoke, index=" + k + ".\n" +
-                            mCallee.getName() + "." + mMethod +"\n" +
-                            outOfBoundsMessage + ".\n" +
-                            typeDetails + ".\n",
+                    String.format("Reanimated invoke error: Parameter mismatch, index=%d\n", k) +
+                            String.format("module: %s,\n", mCallee.getName()) +
+                            String.format("method: %s,\n", mMethod.getName()) +
+                            (err instanceof ArrayIndexOutOfBoundsException ? String.format("Expected %d params, got %d\n", paramTypes.length, params.length) : "") +
+                            String.format("\nArgs: (expected, got, value)\n%s", concat(inputTypes, "\n")),
                     err
             );
         }
