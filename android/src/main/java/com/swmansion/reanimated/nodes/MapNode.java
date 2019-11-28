@@ -151,11 +151,14 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
 
+        Node node;
+
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
             Object value = map.lookupValue(data);
             if (value != null) {
-                mNodesManager.findNodeById(map.nodeID, ValueNode.class).setValue(value);
+                node = mNodesManager.findNodeById(map.nodeID, Node.class);
+                ((ValueManagingNode) node).setValue(value);
             }
         }
     }
