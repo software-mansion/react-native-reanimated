@@ -50,10 +50,10 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
             }
 
             throw new JSApplicationIllegalArgumentException(
-                    "Reanimated invoke error:\n" +
+                    "Reanimated invoke error\n" +
                             String.format("module: %s,\n", mCallee.getName()) +
                             String.format("method: %s,\n", mMethod.getName()) +
-                            String.format("\nparams: %s\n", concat(params, "\n")) +
+                            String.format("\nparams: %s\n\n", concat(params, "\n")) +
                             "Details: " + errorMessage,
                     err
             );
@@ -95,11 +95,11 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
             }
 
             throw new JSApplicationIllegalArgumentException(
-                    String.format("Reanimated invoke error: Parameter mismatch, index=%d\n", k) +
+                    String.format("Reanimated invoke error\nParameter #%d mismatch\n", k + 1) +
                             String.format("module: %s,\n", mCallee.getName()) +
                             String.format("method: %s,\n", mMethod.getName()) +
                             (err instanceof ArrayIndexOutOfBoundsException ? String.format("Expected %d params, got %d\n", paramTypes.length, params.length) : "") +
-                            String.format("\nArgs: (expected, got, value)\n%s", concat(inputTypes, "\n")),
+                            String.format("\nArgs (expected, got, value):\n\n%s\n\n", concat(inputTypes, "\n")),
                     err
             );
         }
