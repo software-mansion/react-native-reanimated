@@ -13,22 +13,18 @@ import { always, block } from '../base';
  * @param dependencies Array of dependencies. Refresh the node on changes.
  */
 export default function useCode(nodeFactory, dependencies) {
-  // check hook support first
   if (!(React.useEffect instanceof Function))
     return;
 
-  // --- run ----
   React.useEffect(() => {
-        // --- check and correct 1st parameter ---
+        // check and correct 1st parameter
         if (!(nodeFactory instanceof Function)) {
           console.warn('useCode() first argument should be a function that returns an animation node.');
 
-          // correct parameter
           const node = nodeFactory;
           nodeFactory = () => node;
         }
 
-        // --- get and execute node (if defined) ---
         let node = nodeFactory();
         if (node) {
           // allow factory to return array
