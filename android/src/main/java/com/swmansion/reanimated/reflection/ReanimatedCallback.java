@@ -61,7 +61,7 @@ public class ReanimatedCallback implements Callback, Promise {
         }
     }
 
-    public void setValue(@Nullable final WritableMap data) {
+    private void setValue(@Nullable final ReanimatedWritableArray data) {
         if (UiThreadUtil.isOnUiThread()) {
             what().setValue(data);
         } else {
@@ -84,14 +84,14 @@ public class ReanimatedCallback implements Callback, Promise {
 
     @Override
     public void invoke(Object... args) {
-        setValue(ReanimatedWritableMap.fromArray(args));
+        setValue(ReanimatedWritableArray.fromArray(args));
     }
 
     @Override
     public void resolve(@Nullable Object value) {
         Object[] params = new Object[1];
         params[0] = value;
-        setValue(ReanimatedWritableMap.fromArray(params));
+        setValue(ReanimatedWritableArray.fromArray(params));
     }
 
     @Override

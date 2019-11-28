@@ -2,12 +2,11 @@ package com.swmansion.reanimated.reflection;
 
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 
-class ReanimatedDynamic implements Dynamic {
+public class ReanimatedDynamic implements Dynamic {
     private Dynamic value;
+
     ReanimatedDynamic(Dynamic value) {
         this.value = value;
     }
@@ -60,8 +59,8 @@ class ReanimatedDynamic implements Dynamic {
     }
 
     @Override
-    public ReanimatedWritableMap asArray() {
-        return ReanimatedWritableMap.fromArray(value.asArray());
+    public ReanimatedWritableArray asArray() {
+        return ReanimatedWritableArray.fromArray(value.asArray());
     }
 
     @Override

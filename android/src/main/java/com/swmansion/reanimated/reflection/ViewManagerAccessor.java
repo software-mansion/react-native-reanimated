@@ -119,7 +119,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
     @Override
     public void call(int[] params, NodesManager nodesManager) {
-        ReanimatedWritableMap args = new ReanimatedWritableMap();
+        ReanimatedWritableArray args = new ReanimatedWritableArray();
         Node n;
         int paramStart;
 

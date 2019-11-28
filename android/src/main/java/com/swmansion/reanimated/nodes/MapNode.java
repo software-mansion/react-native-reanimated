@@ -29,13 +29,14 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             ReanimatedWritableMap map = data;
             for (int i = 0; map != null && i < path.length - 1; i++) {
                 String key = path[i];
-                map = ((ReanimatedWritableMap) map.value(key));
+                map = map.hasKey(key) ? map.getMap(key) : null;
             }
 
             if (map != null) {
                 String key = path[path.length - 1];
                 return map.value(key);
             }
+
             return null;
         }
     }
@@ -101,18 +102,18 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             }
         }
     }
-
-    protected ReanimatedWritableMap getValue() {
-        ReanimatedWritableMap value = new ReanimatedWritableMap();
-        ReanimatedWritableMap argVal, accumulator;
+/*
+    protected ReanimatedWritableCollection getValue() {
+        ReanimatedWritableCollection value = new ReanimatedWritableCollection();
+        ReanimatedWritableCollection argVal, accumulator;
         String[] path;
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
             path = map.path;
-            accumulator = new ReanimatedWritableMap();
+            accumulator = new ReanimatedWritableCollection();
             for (int j = path.length - 1; j >= 0; j--) {
-                argVal = new ReanimatedWritableMap();
+                argVal = new ReanimatedWritableCollection();
                 if(j == path.length - 1) {
                     Node what = mNodesManager.findNodeById(map.nodeID, Node.class);
                     argVal.putDynamic(path[j], what.value());
@@ -126,11 +127,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
         return value;
     }
-
+*/
     @Nullable
     @Override
     protected Object evaluate() {
-        return getValue();
+        return ZERO;
     }
 
 }
