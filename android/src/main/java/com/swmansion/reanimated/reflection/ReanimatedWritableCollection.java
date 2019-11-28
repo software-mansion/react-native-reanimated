@@ -159,11 +159,15 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
                 while (list.size() <= index) {
                     list.add(null);
                 }
-                list.set(index, getDynamic(key));
+                list.set(index, new ReanimatedDynamic(getDynamic(key)).value());
             }
         }
 
         return list;
     }
 
+    @Override
+    public String toString() {
+        return isArray() ? toArrayList().toString() : super.toString();
+    }
 }

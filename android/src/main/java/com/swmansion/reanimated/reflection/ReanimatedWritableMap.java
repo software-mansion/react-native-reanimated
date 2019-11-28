@@ -73,7 +73,6 @@ public class ReanimatedWritableMap extends WritableNativeMap {
     @Nullable
     @Override
     public ReanimatedWritableMap getMap(@NonNull String name) {
-        Log.d("Invoke", "getMap: from array " + (getType(name) == ReadableType.Array ? fromArray(super.getArray(name)) : ""));
         return getType(name) == ReadableType.Array ?
                 fromArray(super.getArray(name)) :
                 fromMap(super.getMap(name));
