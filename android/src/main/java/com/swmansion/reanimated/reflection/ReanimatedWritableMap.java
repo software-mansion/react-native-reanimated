@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
@@ -36,6 +37,13 @@ public class ReanimatedWritableMap extends WritableNativeMap {
 
     public @Nullable Object value(String name) {
         return hasKey(name) ? new ReanimatedDynamic(getDynamic(name)).value() : null;
+    }
+
+    @Override
+    public ReanimatedWritableMap copy() {
+        ReanimatedWritableMap copy = new ReanimatedWritableMap();
+        copy.merge(this);
+        return copy;
     }
 
     @Nullable

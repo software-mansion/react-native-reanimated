@@ -4,9 +4,11 @@ import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.reflection.ReanimatedWritableArray;
 import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -25,6 +27,14 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             nodeID = eventPath.getInt(size - 1);
         }
 
+        public ArrayList<String> getPath() {
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < path.length; i++) {
+                list.add(i, path[i]);
+            }
+            return list;
+        }
+
         public Object lookupValue(ReanimatedWritableMap data) {
             ReanimatedWritableMap map = data;
             for (int i = 0; map != null && i < path.length - 1; i++) {
@@ -40,33 +50,48 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return null;
         }
 
-        public static ReanimatedWritableMap buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
+        static ReanimatedWritableMap buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
             int depth = 0;
-            String[] path;
+            ArrayList<String> path;
+            List<String> next;
+            List<String> current;
             String key;
             ReanimatedWritableMap collection;
-            ReanimatedWritableMap accumulator = new ReanimatedWritableMap();
+            ReanimatedWritableMap map = new ReanimatedWritableMap();
+            HashMap<List<String>, ReanimatedWritableMap> accumulator = new HashMap<>();
 
             for (int i = 0; i < mapping.size(); i++) {
                 depth = Math.max(depth, mapping.get(i).path.length);
             }
-            for (int i = 0; i < depth + 1; i++) {
+            for (int i = depth; i >= 0; i--) {
                 for (ArgMap argMap: mapping) {
-                    path = argMap.path;
-                    if (i < path.length) {
-                        key = path[i];
+                    path = argMap.getPath();
+
+                    if (i < path.size()) {
+                        key = path.get(i);
                         collection = new ReanimatedWritableMap();
-                        if(i == path.length - 1) {
+                        if(i == path.size() - 1) {
                             collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
+
                         } else {
-                            collection.putMap(key, new ReanimatedWritableMap());
+                            current = path.subList(0, i);
+                            collection.putMap(key, accumulator.get(current).copy());
                         }
-                        accumulator.merge(key, collection);
+
+                        if (i == 0) {
+                            map.merge(collection);
+                        } else {
+                            next = path.subList(0, i - 1);
+                            if (accumulator.containsKey(next)) {
+                                collection.merge(accumulator.get(next).copy());
+                            }
+                            accumulator.put(next, collection.copy());
+                        }
                     }
                 }
             }
 
-            return accumulator;
+            return map;
         }
     }
 
@@ -131,36 +156,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             }
         }
     }
-/*
-    protected ReanimatedWritableCollection getValue() {
-        ReanimatedWritableCollection value = new ReanimatedWritableCollection();
-        ReanimatedWritableCollection argVal, accumulator;
-        String[] path;
 
-        for (int i = 0; i < mMapping.size(); i++) {
-            ArgMap map = mMapping.get(i);
-            path = map.path;
-            accumulator = new ReanimatedWritableCollection();
-            for (int j = path.length - 1; j >= 0; j--) {
-                argVal = new ReanimatedWritableCollection();
-                if(j == path.length - 1) {
-                    Node what = mNodesManager.findNodeById(map.nodeID, Node.class);
-                    argVal.putDynamic(path[j], what.value());
-                } else {
-                    argVal.putMap(path[j], accumulator);
-                }
-                accumulator = argVal;
-            }
-            value.merge(accumulator);
-        }
-
-        return value;
-    }
-*/
     @Nullable
     @Override
     protected Object evaluate() {
-        return ZERO;
+        return ArgMap.buildMap(mMapping, mNodesManager);
     }
 
 }
