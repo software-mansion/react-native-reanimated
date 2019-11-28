@@ -156,6 +156,9 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
             if (TextUtils.isDigitsOnly(key)) {
                 index = Integer.valueOf(key);
                 list.ensureCapacity(index + 1);
+                while (list.size() <= index) {
+                    list.add(null);
+                }
                 list.set(index, getDynamic(key));
             }
         }

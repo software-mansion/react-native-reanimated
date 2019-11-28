@@ -5,6 +5,7 @@ import android.util.Log;
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableArray;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.ReanimatedWritableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
@@ -162,7 +163,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Nullable
     @Override
     protected Object evaluate() {
-        Log.d("Invoke", "evaluate map: " + ArgMap.buildMap(mMapping, mNodesManager).toArrayList());
         return ArgMap.buildMap(mMapping, mNodesManager);
     }
 
