@@ -39,6 +39,35 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
             return null;
         }
+
+        public static ReanimatedWritableMap buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
+            int depth = 0;
+            String[] path;
+            String key;
+            ReanimatedWritableMap collection;
+            ReanimatedWritableMap accumulator = new ReanimatedWritableMap();
+
+            for (int i = 0; i < mapping.size(); i++) {
+                depth = Math.max(depth, mapping.get(i).path.length);
+            }
+            for (int i = 0; i < depth + 1; i++) {
+                for (ArgMap argMap: mapping) {
+                    path = argMap.path;
+                    if (i < path.length) {
+                        key = path[i];
+                        collection = new ReanimatedWritableMap();
+                        if(i == path.length - 1) {
+                            collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
+                        } else {
+                            collection.putMap(key, new ReanimatedWritableMap());
+                        }
+                        accumulator.merge(key, collection);
+                    }
+                }
+            }
+
+            return accumulator;
+        }
     }
 
     private static List<ArgMap> processMapping(ReadableArray mapping) {
