@@ -78,7 +78,7 @@ public class ReanimatedWritableArray extends WritableNativeArray {
         return super.toString();
     }
 
-    private static WritableArray pushVariant(WritableArray arr, Object o) {
+    protected static WritableArray pushVariant(WritableArray arr, Object o) {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
         } else {

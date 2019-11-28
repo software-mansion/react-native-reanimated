@@ -1,10 +1,12 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.ReanimatedWritableArray;
+import com.swmansion.reanimated.reflection.ReanimatedWritableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
 
 import java.util.ArrayList;
@@ -50,15 +52,15 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return null;
         }
 
-        static ReanimatedWritableMap buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
+        static ReanimatedWritableCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
             int depth = 0;
             ArrayList<String> path;
             List<String> next;
             List<String> current;
             String key;
-            ReanimatedWritableMap collection;
-            ReanimatedWritableMap map = new ReanimatedWritableMap();
-            HashMap<List<String>, ReanimatedWritableMap> accumulator = new HashMap<>();
+            ReanimatedWritableCollection collection;
+            ReanimatedWritableCollection map = new ReanimatedWritableCollection();
+            HashMap<List<String>, ReanimatedWritableCollection> accumulator = new HashMap<>();
 
             for (int i = 0; i < mapping.size(); i++) {
                 depth = Math.max(depth, mapping.get(i).path.length);
@@ -69,7 +71,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
                     if (i < path.size()) {
                         key = path.get(i);
-                        collection = new ReanimatedWritableMap();
+                        collection = new ReanimatedWritableCollection();
                         if(i == path.size() - 1) {
                             collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
 
@@ -85,7 +87,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                             if (accumulator.containsKey(next)) {
                                 collection.merge(accumulator.get(next).copy());
                             }
-                            accumulator.put(next, collection.copy());
+                            accumulator.put(next, collection);
                         }
                     }
                 }
@@ -160,6 +162,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Nullable
     @Override
     protected Object evaluate() {
+        Log.d("Invoke", "evaluate map: " + ArgMap.buildMap(mMapping, mNodesManager).toArrayList());
         return ArgMap.buildMap(mMapping, mNodesManager);
     }
 
