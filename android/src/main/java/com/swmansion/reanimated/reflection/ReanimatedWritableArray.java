@@ -14,7 +14,6 @@ import com.facebook.react.bridge.WritableNativeArray;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-@SuppressWarnings("UnusedReturnValue")
 public class ReanimatedWritableArray extends WritableNativeArray {
 
     public static ReanimatedWritableArray fromArray(Object[] array){
@@ -73,6 +72,7 @@ public class ReanimatedWritableArray extends WritableNativeArray {
         return copy;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     protected static WritableArray pushVariant(WritableArray arr, Object o) {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
@@ -106,6 +106,7 @@ public class ReanimatedWritableArray extends WritableNativeArray {
         return arr;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private static WritableArray pushDynamic(WritableArray arr, Dynamic o){
         switch(o.getType()){
             case Array:
@@ -131,6 +132,7 @@ public class ReanimatedWritableArray extends WritableNativeArray {
         return arr;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private static ReadableArray addAll(WritableArray to, ReadableArray from) {
         Dynamic dynamic;
         for (int i = 0; i < from.size(); i++) {
