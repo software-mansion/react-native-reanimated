@@ -104,6 +104,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         return res;
     }
 
+    //  it seems to be counter productive to use memozation as map values are currently limited in use
+    //  therefore evaluate will be much more efficient and cheap
+    //  because it will not require building `mMapping` for every `setValue` run
+    private static final Boolean USE_MEMOZATION = false;
+
     private List<ArgMap> mMapping;
     private ReanimatedWritableCollection mValue;
 
@@ -160,18 +165,23 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             }
         }
 
-        updateMemoizedValue();
+        if (USE_MEMOZATION) {
+            updateMemoizedValue();
+        }
     }
 
     private void updateMemoizedValue() {
-        mValue = ArgMap.buildMap(mMapping, mNodesManager);
-        forceUpdateMemoizedValue(mValue);
+        ReanimatedWritableCollection value = ArgMap.buildMap(mMapping, mNodesManager);
+        if (!value.equals(mValue)) {
+            mValue = value;
+            forceUpdateMemoizedValue(mValue);
+        }
     }
 
     @Nullable
     @Override
     protected Object evaluate() {
-        return mValue;
+        return USE_MEMOZATION ? mValue : ArgMap.buildMap(mMapping, mNodesManager);
     }
 
 }
