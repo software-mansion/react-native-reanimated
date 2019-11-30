@@ -6,10 +6,10 @@ import com.swmansion.reanimated.Utils;
 
 public class CallFuncNode extends Node implements ValueManagingNode {
 
-  protected String mPreviousCallID;
-  protected final int mWhatNodeID;
-  protected final int[] mArgs;
-  protected int[] mParams;
+  private String mPreviousCallID;
+  private final int mWhatNodeID;
+  private final int[] mArgs;
+  private final int[] mParams;
 
   public CallFuncNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
@@ -18,9 +18,9 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     mArgs = Utils.processIntArray(config.getArray("args"));
   }
 
-  protected void beginContext() {
+  private void beginContext() {
     mPreviousCallID = mNodesManager.updateContext.callID;
-    mNodesManager.updateContext.callID = mNodesManager.updateContext.callID + '/' + String.valueOf(mNodeID);
+    mNodesManager.updateContext.callID = mNodesManager.updateContext.callID + '/' + mNodeID;
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
       Node paramNode = mNodesManager.findNodeById(paramId, Node.class);
@@ -28,7 +28,7 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     }
   }
 
-  protected void endContext() {
+  private void endContext() {
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
       Node paramNode = mNodesManager.findNodeById(paramId, Node.class);

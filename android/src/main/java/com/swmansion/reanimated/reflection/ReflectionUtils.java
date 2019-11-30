@@ -25,19 +25,19 @@ class ReflectionUtils {
         return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
     }
 
-    static Boolean isString(Object o){
+    private static Boolean isString(Object o){
         return o instanceof String || o.equals(String.class);
     }
 
-    static Boolean isBoolean(Object o){
+    private static Boolean isBoolean(Object o){
         return o instanceof Boolean || o.equals(boolean.class) || o.equals(Boolean.class);
     }
 
-    static Boolean isNull(Object o){
+    private static Boolean isNull(Object o){
         return o == null;
     }
 
-    static Boolean isArray(Object o){
+    private static Boolean isArray(Object o){
         return o.getClass().isArray() || o instanceof ReadableArray;
     }
 
@@ -77,6 +77,7 @@ class ReflectionUtils {
         String BOOLEAN = "boolean";
     }
 
+    @SuppressWarnings("unchecked")
     static <T> T fromDouble(Double value, Class<T> clazz){
         switch (clazz.getName()){
             case PrimitiveNumber.BYTE: return ((T) Byte.valueOf(value.byteValue()));

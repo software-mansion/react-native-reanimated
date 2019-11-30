@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactContext;

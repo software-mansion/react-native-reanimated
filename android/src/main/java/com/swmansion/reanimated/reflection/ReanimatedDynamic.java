@@ -4,8 +4,8 @@ import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableType;
 
-public class ReanimatedDynamic implements Dynamic {
-    private Dynamic value;
+class ReanimatedDynamic implements Dynamic {
+    private final Dynamic value;
 
     ReanimatedDynamic(Dynamic value) {
         this.value = value;
@@ -75,7 +75,7 @@ public class ReanimatedDynamic implements Dynamic {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return value.hashCode();
     }
 
     @Override

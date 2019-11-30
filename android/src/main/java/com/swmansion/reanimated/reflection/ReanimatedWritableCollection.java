@@ -166,6 +166,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
         return list;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return isArray() ? toArrayList().toString() : super.toString();

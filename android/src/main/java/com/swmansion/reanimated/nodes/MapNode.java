@@ -1,11 +1,8 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableArray;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.ReanimatedWritableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
@@ -17,11 +14,11 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class MapNode extends ValueNode implements ValueManagingNode {
-    public static class ArgMap {
-        protected final int nodeID;
+    static class ArgMap {
+        final int nodeID;
         private final String[] path;
 
-        public ArgMap(ReadableArray eventPath) {
+        ArgMap(ReadableArray eventPath) {
             int size = eventPath.size();
             path = new String[size - 1];
             for (int i = 0; i < size - 1; i++) {
@@ -30,7 +27,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             nodeID = eventPath.getInt(size - 1);
         }
 
-        public ArrayList<String> getPath() {
+        ArrayList<String> getPath() {
             ArrayList<String> list = new ArrayList<>();
             for (int i = 0; i < path.length; i++) {
                 list.add(i, path[i]);
@@ -38,7 +35,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return list;
         }
 
-        public Object lookupValue(ReanimatedWritableMap data) {
+        Object lookupValue(ReanimatedWritableMap data) {
             ReanimatedWritableMap map = data;
             for (int i = 0; map != null && i < path.length - 1; i++) {
                 String key = path[i];
@@ -108,6 +105,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     private List<ArgMap> mMapping;
+    private ReanimatedWritableCollection mValue;
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
@@ -138,11 +136,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     }
 
-    public void setValue(@Nullable ReadableArray data) {
+    private void setValue(@Nullable ReadableArray data) {
         setValue(ReanimatedWritableMap.fromArray(data));
     }
 
-    public void setValue(@Nullable ReadableMap data) {
+    void setValue(@Nullable ReadableMap data) {
         setValue(ReanimatedWritableMap.fromMap(data));
     }
 

@@ -14,6 +14,7 @@ import com.facebook.react.bridge.WritableNativeMap;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
+@SuppressWarnings("UnusedReturnValue")
 public class ReanimatedWritableMap extends WritableNativeMap {
 
     public static ReanimatedWritableMap fromMap(ReadableMap source) {
@@ -75,6 +76,7 @@ public class ReanimatedWritableMap extends WritableNativeMap {
                 fromMap(super.getMap(name));
     }
 
+    @NonNull
     @Override
     public String toString() {
         return super.copy().toString();

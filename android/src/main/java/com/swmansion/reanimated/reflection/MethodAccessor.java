@@ -22,7 +22,7 @@ class MethodAccessor {
     private String[] mParamNames;
     private String[] mJSTypes;
 
-    private static String CALLBACK = "Callback";
+    private static final String CALLBACK = "Callback";
 
     static Boolean isReactMethod(Method method) {
         return method.getAnnotation(ReactMethod.class) != null;

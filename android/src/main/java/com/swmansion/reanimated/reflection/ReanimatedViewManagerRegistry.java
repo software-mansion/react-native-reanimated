@@ -21,6 +21,7 @@ class ReanimatedViewManagerRegistry {
     private static Map<String, ViewManager> getViewManagers(ViewManagerRegistry viewManagerRegistry) throws NoSuchFieldException, IllegalAccessException {
         Field f = viewManagerRegistry.getClass().getDeclaredField("mViewManagers");
         f.setAccessible(true);
+        //noinspection unchecked
         return ((Map<String, ViewManager>) f.get(viewManagerRegistry));
     }
 }

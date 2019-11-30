@@ -105,7 +105,7 @@ public class PropsNode extends Node implements FinalNode, ConnectedNode {
               dest.putString(key, style.getString(key));
               break;
             case Array:
-              dest.putArray(key, (WritableArray) style.getArray(key));
+              dest.putArray(key, style.getArray(key));
               break;
             default:
               throw new IllegalArgumentException("Unexpected type " + type);

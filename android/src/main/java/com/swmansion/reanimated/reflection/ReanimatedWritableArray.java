@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;
@@ -15,6 +14,7 @@ import com.facebook.react.bridge.WritableNativeArray;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
+@SuppressWarnings("UnusedReturnValue")
 public class ReanimatedWritableArray extends WritableNativeArray {
 
     public static ReanimatedWritableArray fromArray(Object[] array){
@@ -71,11 +71,6 @@ public class ReanimatedWritableArray extends WritableNativeArray {
         ReanimatedWritableArray copy = new ReanimatedWritableArray();
         addAll(copy, this);
         return copy;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString();
     }
 
     protected static WritableArray pushVariant(WritableArray arr, Object o) {

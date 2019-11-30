@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 

@@ -27,7 +27,7 @@ class NativeModuleAccessor {
     private Map<String, NativeModule> getNativeModules(){
         Collection<NativeModule> modules = mContext.getCatalystInstance().getNativeModules();
         Iterator<NativeModule> moduleIterator = modules.iterator();
-        Map<String, NativeModule> moduleMap = new HashMap();
+        Map<String, NativeModule> moduleMap = new HashMap<>();
         NativeModule module;
 
         while (moduleIterator.hasNext()){
@@ -38,7 +38,7 @@ class NativeModuleAccessor {
         return moduleMap;
     }
 
-    public NativeModule getNativeModule(String name) {
+    NativeModule getNativeModule(String name) {
         try {
             return mContext.getCatalystInstance().getNativeModule(name);
         } catch (Throwable err) {
@@ -57,7 +57,7 @@ class NativeModuleAccessor {
     private Map<String, MethodAccessor> getReactMethodsForModule(NativeModule module) {
         Method[] methods = module.getClass().getDeclaredMethods();
         Method m;
-        Map<String, MethodAccessor> methodMap = new HashMap();
+        Map<String, MethodAccessor> methodMap = new HashMap<>();
 
         for (int i = 0; i < methods.length; i++) {
             m = methods[i];
@@ -69,7 +69,7 @@ class NativeModuleAccessor {
         return methodMap;
     }
 
-    public MethodAccessor getReactMethod(NativeModule nativeModule, String name) {
+    MethodAccessor getReactMethod(NativeModule nativeModule, String name) {
         Map<String, MethodAccessor> methods = getReactMethodsForModule(nativeModule);
         if(methods.containsKey(name)) {
             return methods.get(name);

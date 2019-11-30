@@ -3,11 +3,9 @@ package com.swmansion.reanimated.reflection;
 import android.util.Log;
 import android.view.View;
 
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.DynamicFromArray;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
@@ -26,7 +24,7 @@ import java.util.Map;
 import static com.swmansion.reanimated.Utils.concat;
 
 public class ViewManagerAccessor implements ReanimatedAccessor {
-    private UIManagerModule mUIManager;
+    private final UIManagerModule mUIManager;
     private Dynamic mCommandId;
     private ViewManager mViewManager;
     private Map<String, Object> mCommandsMap;
@@ -70,8 +68,8 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
     private void setCommand(Dynamic commandId) {
         mCommandId = commandId;
-        /**
-         * validate {@link mCommandId} against the {@link mCommandsMap} of the {@link ViewManager}
+        /*
+          validate {@link mCommandId} against the {@link mCommandsMap} of the {@link ViewManager}
          */
         if (mCommandsMap != null && mCommandsMap.size() > 0){
             if(mCommandsMap.containsValue(mCommandId.getType() == ReadableType.String ? mCommandId.asString(): mCommandId.asInt())){
@@ -123,8 +121,8 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
         Node n;
         int paramStart;
 
-        /**
-         * If this node isn't attached to a view the first node must be the view's tag
+        /*
+          If this node isn't attached to a view the first param node must be the view's tag
          */
         if(mAttachedToAnimatedView) {
             paramStart = 0;
@@ -139,12 +137,12 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
             Object value = n.value();
 
             if (value instanceof ReanimatedCallback) {
-                /**
-                 * {@link ViewManager } has no {@link Callback} or {@link Promise} args
+                /*
+                  {@link ViewManager } has no {@link Callback} or {@link Promise} args
                  */
                 throw new JSApplicationIllegalArgumentException(
                         "Parameter mismatch when calling reanimated invoke.\n" +
-                                "Dispatch can't receive callback params, index = " + i
+                                "Dispatch can't receive callback params, Param# " + i + 1
                 );
             } else {
                 args.pushDynamic(value);
