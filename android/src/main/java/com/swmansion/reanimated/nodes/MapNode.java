@@ -159,12 +159,19 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                 ((ValueManagingNode) node).setValue(value);
             }
         }
+
+        updateMemoizedValue();
+    }
+
+    private void updateMemoizedValue() {
+        mValue = ArgMap.buildMap(mMapping, mNodesManager);
+        forceUpdateMemoizedValue(mValue);
     }
 
     @Nullable
     @Override
     protected Object evaluate() {
-        return ArgMap.buildMap(mMapping, mNodesManager);
+        return mValue;
     }
 
 }
