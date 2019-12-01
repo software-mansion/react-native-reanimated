@@ -189,7 +189,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                     Log.d("Invoke", "setValue: mmmm " + value + "   " +mMemoizedValues.get(map.nodeID));
                     if (!mDirty) {
                         mDirty = !value.equals(mMemoizedValues.get(map.nodeID));
-                        Log.d("Invoke", "setValue: mmmm " + value + "   " +mMemoizedValues.get(map.nodeID));
                     }
                     mMemoizedValues.put(map.nodeID, value);
                 }
