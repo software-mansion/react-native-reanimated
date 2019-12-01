@@ -170,6 +170,24 @@ function DirectManipulationHelper() {
     setDisplayedSections(sections)
   }, [sections]);
 
+  const filterResults = useCallback((text) => {
+    text = text.toLowerCase();
+    setInput(text);
+    setDisplayedSections(text === "" ?
+      sections :
+      map(sections, (s) => {
+        const section = {};
+        Object.assign(section, s, {
+          data: s.data.filter(({ key, methods }) => {
+            return key.toLowerCase().includes(text) ||
+              Object.keys(methods || {}).some((method) => method.toLowerCase().includes(text));
+          })
+        });
+        return section;
+      })
+    );
+  })
+
   return (
     <>
       <Text>
@@ -180,19 +198,10 @@ function DirectManipulationHelper() {
         </Text>
       <TextInput
         style={styles.textInput}
-        onChangeText={(text) => {
-          setInput(text);
-          setDisplayedSections(text === "" ?
-            sections :
-            map(sections, (s) => {
-              const section = {};
-              Object.assign(section, s, { data: s.data.filter(({ key }) => key.includes(text)) });
-              return section;
-            })
-          );
-        }}
+        onChangeText={filterResults}
         value={input}
         placeholder="Type here to filter..."
+        autoCapitalize='none'
       />
       <SectionList
         style={styles.list}
