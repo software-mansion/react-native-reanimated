@@ -1,6 +1,8 @@
 // Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
+type Nullable<T> = T | null | undefined;
+
 declare module 'react-native-reanimated' {
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
@@ -244,10 +246,10 @@ declare module 'react-native-reanimated' {
     export function proc<R extends Value, T extends (...params: Array<Adaptable<number>>) => AnimatedNode<R>>(cb: T): T;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
-    export function set(
-      valueToBeUpdated: AnimatedValue<number>,
-      sourceNode: Adaptable<number>,
-    ): AnimatedNode<number>;
+    export function set<T extends Value>(
+      valueToBeUpdated: AnimatedValue<T>,
+      sourceNode: Adaptable<T>,
+    ): AnimatedNode<T>;
     export function concat(
       ...args: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
@@ -385,7 +387,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => AnimatedNode<number>,
+      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
       deps: Array<any>,
     ): void
 
