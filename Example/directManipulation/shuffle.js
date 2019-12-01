@@ -259,7 +259,12 @@ function Shuffle() {
               data={items}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
-              renderScrollComponent={(props) => <ScrollView {...props} ref={scrollRef} waitFor={panRef} onScroll={onScrollSetEvaluate} />}
+              renderScrollComponent={(props) => {
+                ref.current.animateNextTransition();
+                return (
+                  <ScrollView {...props} ref={scrollRef} waitFor={panRef} onScroll={onScrollSetEvaluate} />
+                );
+              }}
               scrollEnabled={false}
             />
           </View>
