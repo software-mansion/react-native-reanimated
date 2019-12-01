@@ -41,15 +41,19 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
         return index < 0 ? size() + index : index;
     }
 
+    private Boolean indexInBounds(int index) {
+        return index >= 0 && index < size();
+    }
+
     @Override
     public Boolean has(String name) {
         int index = resolveIndex(Integer.valueOf(name));
-        return index > 0 && index < size();
+        return indexInBounds(index);
     }
 
     public Object value(int index) {
         index = resolveIndex(index);
-        return  index > 0 && index < size() ? new ReanimatedDynamic(getDynamic(index)).value() : null;
+        return  indexInBounds(index) ? new ReanimatedDynamic(getDynamic(index)).value() : null;
     }
 
     @Nullable
