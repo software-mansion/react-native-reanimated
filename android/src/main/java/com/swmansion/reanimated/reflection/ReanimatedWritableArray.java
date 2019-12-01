@@ -44,12 +44,12 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
     @Override
     public Boolean has(String name) {
         int index = resolveIndex(Integer.valueOf(name));
-        return index < size();
+        return index > 0 && index < size();
     }
 
     public Object value(int index) {
         index = resolveIndex(index);
-        return index < size() ? new ReanimatedDynamic(getDynamic(index)).value() : null;
+        return  index > 0 && index < size() ? new ReanimatedDynamic(getDynamic(index)).value() : null;
     }
 
     @Nullable
