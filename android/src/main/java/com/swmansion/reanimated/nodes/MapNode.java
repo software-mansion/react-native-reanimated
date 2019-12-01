@@ -186,11 +186,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                 if (value != null) {
                     node = mNodesManager.findNodeById(map.nodeID, Node.class);
                     ((ValueManagingNode) node).setValue(value);
-                    Log.d("Invoke", "setValue: mmmm " + value + "   " +mMemoizedValues.get(map.nodeID));
-                    if (!mDirty) {
-                        mDirty = !value.equals(mMemoizedValues.get(map.nodeID));
+
+                    if (!value.equals(mMemoizedValues.get(map.nodeID))) {
+                        mDirty = true;
+                        mMemoizedValues.put(map.nodeID, value);
                     }
-                    mMemoizedValues.put(map.nodeID, value);
                 }
             }
         }
