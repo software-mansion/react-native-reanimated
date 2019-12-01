@@ -89,6 +89,8 @@ export default function SyncedScrollViews() {
       collapsable={false}
       scrollEventThrottle={1}
       simultaneousHandlers={panRef}
+      disableScrollViewPanResponder
+      decelerationRate='normal'
     >
       <Image source={require('../imageViewer/grid.png')} collapsable={false} />
     </ScrollView>
