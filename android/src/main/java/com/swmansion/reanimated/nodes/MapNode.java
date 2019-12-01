@@ -1,6 +1,9 @@
 package com.swmansion.reanimated.nodes;
 
 import android.util.Log;
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
@@ -97,6 +100,17 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
             return map;
         }
+
+        @NonNull
+        @Override
+        public String toString() {
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < path.length; i++) {
+                list.add(i, path[i]);
+            }
+            list.add(String.valueOf(nodeID));
+            return list.toString();
+        }
     }
 
     private static List<ArgMap> processMapping(ReadableArray mapping) {
@@ -111,6 +125,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     private List<ArgMap> mMapping;
     private Boolean mDirty = true;
     private ReanimatedWritableCollection mValue;
+    private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
@@ -157,19 +172,26 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         Node node;
         ArgMap map;
         Object value;
-        Object memoizedValue;
 
         for (int i = 0; i < mMapping.size(); i++) {
             map = mMapping.get(i);
-            value = map.lookupValue(data);
-            if (value != null) {
+
+            if (map.path.length == 0) {
+                //  a case in which the proxy is an effect proxy,
+                //  e.g { nativeEvent: () => set(run, 1) }
                 node = mNodesManager.findNodeById(map.nodeID, Node.class);
-                ((ValueManagingNode) node).setValue(value);
-                if (!mDirty) {
-                    memoizedValue = map.lookupValue(mValue);
-                    //  this will degrade performance if node is MapNode
-                    value = node.value();
-                    mDirty = value != null && !value.equals(memoizedValue);
+                node.value();
+            } else {
+                value = map.lookupValue(data);
+                if (value != null) {
+                    node = mNodesManager.findNodeById(map.nodeID, Node.class);
+                    ((ValueManagingNode) node).setValue(value);
+                    Log.d("Invoke", "setValue: mmmm " + value + "   " +mMemoizedValues.get(map.nodeID));
+                    if (!mDirty) {
+                        mDirty = !value.equals(mMemoizedValues.get(map.nodeID));
+                        Log.d("Invoke", "setValue: mmmm " + value + "   " +mMemoizedValues.get(map.nodeID));
+                    }
+                    mMemoizedValues.put(map.nodeID, value);
                 }
             }
         }
