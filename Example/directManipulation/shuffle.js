@@ -180,7 +180,7 @@ function Shuffle() {
 
   const onScrollSetEvaluate = useMemo(() =>
     event([{
-      nativeEvent: ({ contentOffset: { x } }) => set(evaluate, add(evaluate, divide(add(x, 1), add(x, 1))))
+      nativeEvent: () => set(evaluate, add(evaluate, 1))
     }]),
     [evaluate]
   );

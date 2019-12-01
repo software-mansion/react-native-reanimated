@@ -47,7 +47,8 @@ export default function SyncedScrollViews() {
 
   const effectEvent = useMemo(() =>
     event([{
-      nativeEvent: ({ contentOffset: { x } }) => set(holder, divide(add(x, 1), add(x, 1)))
+      //nativeEvent: ({ contentOffset: { x } }) => set(holder, divide(add(x, 1), add(x, 1)))
+      nativeEvent: () => set(holder, 1)
     }]),
     [holder]
   );
@@ -85,8 +86,8 @@ export default function SyncedScrollViews() {
     [state]
   );
 
-  // const otherScrollY = useMemo(() => new Value(0), []);
-  // const otherOnScroll = useMemo(() => event([{ nativeEvent: { contentOffset: { y: otherScrollY } } }]), [otherScrollY]);
+  const otherScrollY = useMemo(() => new Value(0), []);
+  const otherOnScroll = useMemo(() => event([{ nativeEvent: { contentOffset: ({ x, y }) => set(debug('assert nested proxy', otherScrollY), y) } }]), [otherScrollY]);
 
   useCode(() =>
     block([
@@ -136,7 +137,8 @@ export default function SyncedScrollViews() {
           onScroll: onScrollB,
           onScrollBeginDrag: beginDragB,
           onMomentumScrollBegin: beginDragB,
-          onMomentumScrollEnd: onScrollB
+          onMomentumScrollEnd: onScrollB,
+          onScrollEndDrag: otherOnScroll
         })}
       </View>
     </PanGestureHandler>

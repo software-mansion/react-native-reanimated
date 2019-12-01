@@ -57,11 +57,21 @@ export function sanitizeArgMapping(argMapping) {
     } else if (typeof value === 'object' && value.__val) {
       children.push(value.__val);
       objectMappings.push(path.concat(getNode(value.__val)));
+    } else if (typeof value === 'function' && value.length === 0) {
+      const stub = new InternalAnimatedValue(0);
+      const node = value();
+      const alwaysNode = createAnimatedAlways(node);
+      node.__addChild(stub);
+      children.push(stub);
+      alwaysNodes.push(alwaysNode);
+      objectMappings.push(path.concat(getNode(alwaysNode)));
     } else if (typeof value === 'function') {
       const node = new InternalAnimatedValue(0);
       children.push(node);
       alwaysNodes.push(createAnimatedAlways(value(node)));
+
       objectMappings.push(path.concat(getNode(node)));
+      console.log(path)
     } else if (typeof value === 'object') {
       if (Array.isArray(value)) {
         value = traverseArray(value);
@@ -89,10 +99,9 @@ export function sanitizeArgMapping(argMapping) {
     }
   };
 
-  if (typeof argMapping === 'object') {
+  if (typeof argMapping === 'object' || (typeof argMapping === 'function' && argMapping.length === 0)) {
     traverse(argMapping, []);
   } else if (typeof argMapping === 'function') {
-
     const proxyHandler = {
       get: function (target, name) {
         if (name === '__isProxy') {
@@ -101,6 +110,7 @@ export function sanitizeArgMapping(argMapping) {
         if (!target[name] && name !== '__val') {
           target[name] = new Proxy({}, proxyHandler);
         }
+
         return target[name];
       },
       set: function (target, prop, value) {
@@ -129,7 +139,7 @@ export default class AnimatedMap extends AnimatedNode {
     }
 
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
-
+    console.log('????????????????????', objectMappings, argMapping)
     super({
       type: 'map',
       argMapping: objectMappings

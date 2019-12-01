@@ -13,6 +13,8 @@ const Button = createAnimatedComponent(RectButton);
 const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minute }]));
 // const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
 
+const timeInitialized = proc((hour, minute) => not(or(eq(hour, -1), eq(minute, -1))));
+
 const showTimer = proc((hour, minute, is24Hour, cb) => {
   const startStateBuilder = proc((hour, minute, is24Hour) =>
     map({
@@ -23,9 +25,9 @@ const showTimer = proc((hour, minute, is24Hour, cb) => {
   );
 
   const startState = cond(
-    or(eq(hour, -1), eq(minute, -1)),
-    map(),
-    startStateBuilder(hour, minute, is24Hour)
+    timeInitialized(hour, minute),
+    startStateBuilder(hour, minute, is24Hour),
+    map()
   );
 
   return invoke('TimePickerAndroid', 'open', debug('timer start', startState), debug('timer result', cb));
@@ -69,7 +71,7 @@ export default function AnimatedTimePicker() {
   const timeRepresentation = useMemo(() => {
     const m = multiply(minute, 0.01);
     return add(hour, m);
-  }, [minute]);
+  }, [minute, hour]);
 
   const animState = useMemo(() => new Value(State.UNDETERMINED), []);
   const appState = useMemo(() => new Value("initialAppState"), []);
@@ -116,12 +118,15 @@ export default function AnimatedTimePicker() {
     return Platform.select({
       android: [
         ...common,
-        invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', timeRepresentation), 200, 0)
+        cond(
+          timeInitialized(hour, minute),
+          invoke('ToastAndroid', 'showWithGravity', concat('selected hour: ', timeRepresentation), 200, 0)
+        )
       ],
       default: common
     });
   },
-    [clock, animator, timeRepresentation]
+    [clock, animator, timeRepresentation, hour, minute]
   );
 
 
