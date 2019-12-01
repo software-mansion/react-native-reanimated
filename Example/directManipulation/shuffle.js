@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { StyleSheet, processColor, Platform, StatusBar } from 'react-native';
 import Animated, { Transitioning, Transition } from 'react-native-reanimated';
-import { FlatList, State, PanGestureHandler, RectButton } from 'react-native-gesture-handler';
+import { FlatList, State, PanGestureHandler, RectButton, ScrollView } from 'react-native-gesture-handler';
 
 const {
   add,
@@ -136,6 +136,30 @@ function Shuffle() {
       title: '🍌 Banana',
       color: 'gold'
     },
+    {
+      title: '🍇 Grapes1',
+      color: 'purple'
+    },
+    {
+      title: '🍈 Melon1',
+      color: 'lightgreen'
+    },
+    {
+      title: '🍉 Watermelon1',
+      color: 'red'
+    },
+    {
+      title: '🍊 Tangerine1',
+      color: 'orange'
+    },
+    {
+      title: '🍋 Lemon1',
+      color: 'yellow'
+    },
+    {
+      title: '🍌 Banana1',
+      color: 'gold'
+    },
   ]);
   const ref = useRef();
   const [tag, onLayout] = useLayout();
@@ -143,6 +167,13 @@ function Shuffle() {
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
   const evaluate = useMemo(() => new Value(0), []);
+
+  const onScrollSetEvaluate = useMemo(() =>
+    event([{
+      nativeEvent: () => set(evaluate, add(evaluate, 1))
+    }]),
+    [evaluate]
+  );
 
   const onGestureEvent = useMemo(() =>
     event([{
@@ -181,10 +212,15 @@ function Shuffle() {
 
   const keyExtractor = useCallback((item) => item.title, []);
 
+  const panRef = useRef();
+  const scrollRef = useRef();
+
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
       onHandlerStateChange={onHandlerStateChange}
+      ref={panRef}
+      simultaneousHandlers={scrollRef}
     >
       <View collapsable={false} style={styles.default} onLayout={onLayout}>
         <Transitioning.View
@@ -205,6 +241,7 @@ function Shuffle() {
 
                 //  an ugly workaround until `onTransitionStateChange` will be available on both platforms (hopefully!)
                 setTimeout(() => evaluate.setValue(add(evaluate, 1)), 500);
+                setTimeout(() => evaluate.setValue(add(evaluate, 1)), 1500);
               }}
             >
               <Text
@@ -222,6 +259,8 @@ function Shuffle() {
               data={items}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
+              renderScrollComponent={(props) => <ScrollView {...props} ref={scrollRef} waitFor={panRef} onScroll={onScrollSetEvaluate} />}
+              scrollEnabled={false}
             />
           </View>
         </Transitioning.View>
