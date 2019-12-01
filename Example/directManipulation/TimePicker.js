@@ -76,15 +76,15 @@ export default function AnimatedTimePicker() {
   const animState = useMemo(() => new Value(State.UNDETERMINED), []);
   const appState = useMemo(() => new Value("initialAppState"), []);
 
-  const animator = useMemo(() => new Value(1), []);
+  const animator = useMemo(() => new Value(0), []);
   const colorHue = useMemo(() => new Value(0), []);
   const clock = useMemo(() => new Clock(), []);
   const color = useMemo(() => colorHSV(colorHue, 0.9, 1), [colorHue]);
   const inputChangeTracker = useMemo(() => or(neq(diff(hour), 0), neq(diff(minute), 0)), [hour, minute]);
 
   useEffect(() => {
-    return () => colorHue.setValue(50)
-  })
+    return () => colorHue.setValue(50);
+  }, []);
 
   useCode(() =>
     block([
@@ -133,15 +133,11 @@ export default function AnimatedTimePicker() {
   useCode(() =>
     block([
       onChange(
-        hour,
+        timeRepresentation,
         showToast
-      ),
-      onChange(
-        minute,
-        showToast
-      ),
+      )
     ]),
-    [animator, hour, minute, showToast]
+    [animator, showToast, timeRepresentation]
   );
 
   return (
