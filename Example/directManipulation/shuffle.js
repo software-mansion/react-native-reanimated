@@ -1,15 +1,17 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { StyleSheet, processColor, Platform, StatusBar } from 'react-native';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { StyleSheet, processColor, Platform, StatusBar, UIManager, findNodeHandle } from 'react-native';
 import Animated, { Transitioning, Transition } from 'react-native-reanimated';
-import { FlatList, State, PanGestureHandler, RectButton, ScrollView } from 'react-native-gesture-handler';
+import { FlatList as GHFlatList, State, PanGestureHandler, RectButton, ScrollView } from 'react-native-gesture-handler';
 
 const {
   add,
   and,
+  call,
   callback,
   cond,
-  defined,
+  createAnimatedComponent,
   debug,
+  defined,
   eq,
   event,
   greaterOrEq,
@@ -17,14 +19,18 @@ const {
   lessOrEq,
   map,
   neq,
+  onChange,
   proc,
   set,
   Text,
   useCode,
   Value,
   View,
-  onChange,
+  acc,
+  divide
 } = Animated;
+
+const FlatList = createAnimatedComponent(GHFlatList);
 
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5);
@@ -33,6 +39,8 @@ function shuffle(array) {
 const successMap = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
 
 const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
+
+const relativeMeasureView = proc((tag, relTo, success, error) => cond(defined(tag), invoke('UIManager', 'measureLayout', tag, relTo, success, error)));
 
 const isInRect = proc((x, y, left, top, right, bottom) => and(
   greaterOrEq(x, left),
@@ -79,9 +87,10 @@ function Item({ item, parent, evaluate, x, y, index }) {
       and(neq(tag, 0), neq(evaluate, -1)),
       [
         measureView(tag, callback(successMap(ax, debug('measured abs y', ay), width, height))),
-        measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
-        measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
-        measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd())))
+        //measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
+        //measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
+        //measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd()))),
+        //relativeMeasureView(tag, parent, callback(), callback())
       ]
     ),
     [tag, parent]
@@ -166,11 +175,12 @@ function Shuffle() {
 
   const absoluteX = useMemo(() => new Value(-1), []);
   const absoluteY = useMemo(() => new Value(-1), []);
-  const evaluate = useMemo(() => new Value(0), []);
+  const evaluate = useMemo(() => debug('eval', new Value(0)), []);
+  const holder = useMemo(() => debug('eval', new Value(0)), []);
 
   const onScrollSetEvaluate = useMemo(() =>
     event([{
-      nativeEvent: () => set(evaluate, add(evaluate, 1))
+      nativeEvent: ({ contentOffset: { x } }) => set(evaluate, add(evaluate, divide(add(x, 1), add(x, 1))))
     }]),
     [evaluate]
   );
@@ -214,6 +224,15 @@ function Shuffle() {
 
   const panRef = useRef();
   const scrollRef = useRef();
+
+  useCode(() =>
+    call([evaluate], console.log),
+    [evaluate]
+  );
+
+  useEffect(() => {
+    //setTimeout(() => UIManager.measureLayout(findNodeHandle(scrollRef.current), findNodeHandle(ref.current), console.log, console.warn), 5000)
+  }, [])
 
   return (
     <PanGestureHandler
@@ -259,13 +278,19 @@ function Shuffle() {
               data={items}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
+              onScrollEndDrag={onScrollSetEvaluate}
+              onMomentumScrollEnd={onScrollSetEvaluate}
               renderScrollComponent={(props) => {
-                ref.current.animateNextTransition();
+                //ref.current.animateNextTransition();
                 return (
-                  <ScrollView {...props} ref={scrollRef} waitFor={panRef} onScroll={onScrollSetEvaluate} />
+                  <ScrollView
+                    {...props}
+                    ref={scrollRef}
+                    waitFor={panRef}
+                  />
                 );
               }}
-              scrollEnabled={false}
+            //scrollEnabled={false}
             />
           </View>
         </Transitioning.View>

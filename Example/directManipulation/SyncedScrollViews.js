@@ -3,7 +3,7 @@ import { Image, StyleSheet, ScrollView as RNScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { State, NativeViewGestureHandler, PanGestureHandler } from 'react-native-gesture-handler';
 
-const { Value, event, dispatch, useCode, createAnimatedComponent, block, cond, not, and, eq, set, View, or, debug } = Animated;
+const { Value, event, dispatch, useCode, createAnimatedComponent, block, cond, not, and, divide, acc, eq, set, View, or, debug, add, call } = Animated;
 const ScrollView = createAnimatedComponent(RNScrollView);
 
 export default function SyncedScrollViews() {
@@ -11,8 +11,7 @@ export default function SyncedScrollViews() {
   //const [handleB, setHandleB] = React.useState();
   const scrollX = useMemo(() => new Value(0), []);
   const scrollY = useMemo(() => new Value(0), []);
-  const stateA = useMemo(() => new Value(State.UNDETERMINED), []);
-  const stateB = useMemo(() => new Value(State.UNDETERMINED), []);
+  const effect = useMemo(() => new Value(0), []);
   const state = useMemo(() => debug('scroll state', new Value(0)), []);
 
   const scrollToA = useMemo(() => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0), [scrollX, scrollY]);
@@ -42,6 +41,20 @@ export default function SyncedScrollViews() {
       ])
     }]),
     [state]
+  );
+
+  const holder = useMemo(() => debug('eval', new Value(0)), []);
+
+  const effectEvent = useMemo(() =>
+    event([{
+      nativeEvent: ({ contentOffset: { x } }) => set(holder, divide(add(x, 1), add(x, 1)))
+    }]),
+    [holder]
+  );
+
+  useCode(() =>
+    set(effect, acc(holder)),
+    [effect, holder]
   );
 
   const onScrollA = useMemo(() =>
@@ -79,6 +92,7 @@ export default function SyncedScrollViews() {
     block([
       scrollToA,
       scrollToB,
+      call([effect], console.log)
     ]),
     [scrollToA, scrollToB]
   );
@@ -111,7 +125,8 @@ export default function SyncedScrollViews() {
           onScroll: onScrollA,
           onScrollBeginDrag: beginDragA,
           onMomentumScrollBegin: beginDragA,
-          onMomentumScrollEnd: onScrollA
+          onMomentumScrollEnd: onScrollA,
+          onScrollEndDrag: effectEvent
         })}
         {React.cloneElement(baseScrollComponent, {
           ref: (ref) => {
