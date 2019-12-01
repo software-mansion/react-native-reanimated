@@ -79,7 +79,9 @@ function Item({ item, parent, evaluate, x, y, index }) {
       and(neq(tag, 0), neq(evaluate, -1)),
       [
         measureView(tag, callback(successMap(ax, debug('measured abs y', ay), width, height))),
-        measureView(tag, callback.fromEnd(assert => debug('assert from end, correct? 1 == ', eq(assert, ay)))),
+        measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
+        measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
+        measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd())))
       ]
     ),
     [tag, parent]
