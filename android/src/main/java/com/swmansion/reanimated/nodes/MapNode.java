@@ -79,7 +79,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
                         } else {
                             current = path.subList(0, i);
-                            collection.putMap(key, accumulator.get(current));
+                            collection.putMap(key, accumulator.get(current).copy());
                         }
 
                         if (i == 0) {
