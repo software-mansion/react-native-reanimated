@@ -16,8 +16,8 @@ public class SetNode extends Node {
   @Override
   protected Object evaluate() {
     Object newValue = mNodesManager.getNodeValue(mValueNodeID);
-    ValueNode what = mNodesManager.findNodeById(mWhatNodeID, ValueNode.class);
-    what.setValue(newValue);
+    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+    ((ValueManagingNode) what).setValue(newValue);
     return newValue;
   }
 }
