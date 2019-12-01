@@ -51,7 +51,7 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
                     "Reanimated invoke error\n" +
                             String.format("module: %s,\n", mCallee.getName()) +
                             String.format("method: %s,\n", mMethod.getName()) +
-                            String.format("\nparams: %s\n\n", concat(params, "\n")) +
+                            String.format("\nparams:\n%s\n\n", concat(params, "\n")) +
                             "Details: " + errorMessage,
                     err
             );
