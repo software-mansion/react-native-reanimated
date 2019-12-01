@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -26,8 +24,17 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
         }
     }
 
+    private String key(String name) {
+        return ReflectionUtils.isInteger(name) ? key(Integer.valueOf(name)) : name;
+    }
+
     private String key(int index) {
-        return String.valueOf(index) ;
+        return String.valueOf(index < 0 ? size() + index : index) ;
+    }
+
+    @Override
+    public boolean hasKey(@NonNull String name) {
+        return super.hasKey(key(name));
     }
 
     private String nextIndex() {
@@ -36,6 +43,12 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
     private Boolean isArray() {
         return size() > 0;
+    }
+
+    @Nullable
+    @Override
+    public ReadableArray getArray(@NonNull String name) {
+        return super.getArray(key(name));
     }
 
     @Nullable
@@ -50,6 +63,11 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     }
 
     @Override
+    public boolean getBoolean(@NonNull String name) {
+        return super.getBoolean(key(name));
+    }
+
+    @Override
     public boolean getBoolean(int index) {
         return getBoolean(key(index));
     }
@@ -57,6 +75,11 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     @Override
     public void pushBoolean(boolean value) {
         putBoolean(nextIndex(), value);
+    }
+
+    @Override
+    public double getDouble(@NonNull String name) {
+        return super.getDouble(key(name));
     }
 
     @Override
@@ -71,12 +94,23 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
     @NonNull
     @Override
+    public Dynamic getDynamic(@NonNull String name) {
+        return super.getDynamic(key(name));
+    }
+
+    @NonNull
+    @Override
     public Dynamic getDynamic(int index) {
         return getDynamic(key(index));
     }
 
     public void pushDynamic(Dynamic value) {
         putDynamic(nextIndex(), value);
+    }
+
+    @Override
+    public int getInt(@NonNull String name) {
+        return super.getInt(key(name));
     }
 
     @Override
@@ -87,6 +121,12 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     @Override
     public void pushInt(int value) {
         putInt(nextIndex(), value);
+    }
+
+    @Nullable
+    @Override
+    public ReanimatedWritableMap getMap(@NonNull String name) {
+        return super.getMap(key(name));
     }
 
     @Nullable
@@ -102,6 +142,12 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
     @Nullable
     @Override
+    public String getString(@NonNull String name) {
+        return super.getString(key(name));
+    }
+
+    @Nullable
+    @Override
     public String getString(int index) {
         return getString(key(index));
     }
@@ -109,6 +155,12 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     @Override
     public void pushString(@Nullable String value) {
         putString(nextIndex(), value);
+    }
+
+    @NonNull
+    @Override
+    public ReadableType getType(@NonNull String name) {
+        return super.getType(key(name));
     }
 
     @NonNull
@@ -135,7 +187,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            if (TextUtils.isDigitsOnly(key)) {
+            if (ReflectionUtils.isInteger(key)) {
                 size = Math.max(size, Integer.valueOf(key) + 1);
             }
         }
@@ -153,7 +205,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            if (TextUtils.isDigitsOnly(key)) {
+            if (ReflectionUtils.isInteger(key)) {
                 index = Integer.valueOf(key);
                 list.ensureCapacity(index + 1);
                 while (list.size() <= index) {

@@ -14,6 +14,35 @@ function getNode(node) {
   return node.__nodeID;
 }
 
+Array.fromEnd = (elements) => {
+  if (!Array.isArray(elements)) {
+    throw new Error(`Array.fromEnd: ${elements} must be an array`);
+  }
+  return elements.fromEnd();
+}
+
+Object.defineProperty(Array.prototype, 'fromEnd', {
+  value(value = true) {
+    Object.defineProperty(this, '__fromEnd', {
+      value,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    });
+
+    return this;
+  }
+});
+
+function traverseArray(array) {
+  return array.__fromEnd ?
+    array.reduce((map, current, index) => {
+      map[(index + 1) * -1] = current;
+      return map;
+    }, {}) :
+    array;
+}
+
 export function sanitizeArgMapping(argMapping) {
   // Find animated values in `argMapping` and create an array representing their key path inside
   const children = [];
@@ -34,6 +63,9 @@ export function sanitizeArgMapping(argMapping) {
       alwaysNodes.push(createAnimatedAlways(value(node)));
       objectMappings.push(path.concat(getNode(node)));
     } else if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        value = traverseArray(value);
+      }
       for (const key in value) {
         traverse(value[key], path.concat(key));
       }
@@ -91,11 +123,13 @@ export function sanitizeArgMapping(argMapping) {
 
 export default class AnimatedMap extends AnimatedNode {
   _alwaysNodes;
-  constructor(argMapping) {
+  constructor(argMapping, config = {}) {
     if (Platform.OS !== 'android') {
       throw new Error('Currently experimental direct manipulation are available only on Android');
     }
+
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
+
     super({
       type: 'map',
       argMapping: objectMappings
@@ -112,3 +146,12 @@ export default class AnimatedMap extends AnimatedNode {
 export function createAnimatedMap(argMapping, config) {
   return new AnimatedMap(argMapping, config);
 }
+
+Object.defineProperty(createAnimatedMap, 'fromEnd', {
+  value(array) {
+    return this(Array.fromEnd(array));
+  },
+  configurable: false,
+  enumerable: true,
+  writable: false,
+});

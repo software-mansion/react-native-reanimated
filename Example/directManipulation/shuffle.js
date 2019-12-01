@@ -23,6 +23,7 @@ const {
   useCode,
   Value,
   View,
+  onChange,
 } = Animated;
 
 function shuffle(array) {
@@ -71,20 +72,24 @@ function Item({ item, parent, evaluate, x, y, index }) {
   const [ax, ay, width, height] = values;
   const statusBarHeight = useStatusBarHeight();
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
+  const assert = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
 
-  useCode(
-    () => cond(
+  useCode(() =>
+    cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        measureView(tag, debug('measure', callback(successMap(ax, debug('measured abs y', ay), width, height)))),
+        measureView(tag, callback(successMap(ax, debug('measured abs y', ay), width, height))),
+        measureView(tag, callback.fromEnd(assert)),
+        debug('assert', assert),
+        debug('assert from end, correct? 1 == ', eq(assert, ay)),
       ]
     ),
     [tag, parent]
   );
 
-  useCode(
-    () => set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
+  useCode(() =>
+    set(bgc, cond(inRect(x, y, ax, ay, width, height, statusBarHeight), processColor(item.color), processColor('transparent'))),
     [bgc, x, y, ax, ay, width, height, statusBarHeight, item.color, index]
   );
 

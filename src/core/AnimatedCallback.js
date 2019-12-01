@@ -40,3 +40,13 @@ export function createAnimatedCallback(...args) {
 
   return new AnimatedCallback(what);
 }
+
+Object.defineProperty(createAnimatedCallback, 'fromEnd', {
+  value(...args) {
+    const what = createAnimatedMap(Array.fromEnd(args));
+    return new AnimatedCallback(what);
+  },
+  configurable: false,
+  enumerable: true,
+  writable: false,
+});

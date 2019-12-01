@@ -19,6 +19,16 @@ declare module 'react-native-reanimated' {
     ScrollView as ReactNativeScrollView,
     NativeSyntheticEvent
   } from 'react-native';
+
+  global {
+    interface Array<T> {
+      fromEnd(value?: boolean): T[];
+    }
+    interface ArrayConstructor {
+      fromEnd<T extends any[]>(array: T): T;
+    }
+  }
+
   namespace Animated {
     class AnimatedNode<T> {
       constructor(
@@ -265,6 +275,11 @@ declare module 'react-native-reanimated' {
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
 
+    export namespace Array {
+      export function fromEnd<T extends any[]>(array: T): T;
+    }
+
+
 
     type MappingBasic = { [key: string]: MappingBasic } | Adaptable<any>;
     type MappingProxy<T> = (arg: T) => AnimatedNode<number>;
@@ -272,6 +287,9 @@ declare module 'react-native-reanimated' {
     type MappingArray<T> = T extends Array<any> ? { [I in keyof T]: MappingNested<T[I]> } : [MappingNested<T>];
     export type Mapping<T> = T extends never ? ReadonlyArray<MappingBasic> : Readonly<MappingArray<T>>;
     export function map<T>(argMapping: Mapping<T>, config?: {}): Adaptable<Value>;
+    export namespace map {
+      export function fromEnd<T>(argMapping: Mapping<T>, config?: {}): Adaptable<Value>;
+    }
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
     export function event<T>(argMapping: Mapping<T>, config?: {}): (...args: any[]) => void;
@@ -301,6 +319,9 @@ declare module 'react-native-reanimated' {
     //  direct manipulation
     export function callback<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
     export function callback<T extends AnimatedNode<Value>>(map: T): AnimatedNode<number>;
+    export namespace callback {
+      export function fromEnd<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
+    }
 
     /**
      * Invokes a method of a given ReactModule without going through the bridge.

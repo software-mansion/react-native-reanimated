@@ -25,6 +25,10 @@ class ReflectionUtils {
         return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
     }
 
+    static boolean isInteger(String str) {
+        return str.matches("-?\\d");
+    }
+
     private static Boolean isString(Object o){
         return o instanceof String || o.equals(String.class);
     }
@@ -119,4 +123,5 @@ class ReflectionUtils {
             return (double) o;
         }
     }
+
 }
