@@ -72,7 +72,6 @@ function Item({ item, parent, evaluate, x, y, index }) {
   const [ax, ay, width, height] = values;
   const statusBarHeight = useStatusBarHeight();
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
-  const assert = useMemo(() => new Value(0), []);
   const [tag, onLayout] = useLayout();
 
   useCode(() =>
@@ -80,9 +79,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
       and(neq(tag, 0), neq(evaluate, -1)),
       [
         measureView(tag, callback(successMap(ax, debug('measured abs y', ay), width, height))),
-        measureView(tag, callback.fromEnd(assert)),
-        debug('assert', assert),
-        debug('assert from end, correct? 1 == ', eq(assert, ay)),
+        measureView(tag, callback.fromEnd(assert => debug('assert from end, correct? 1 == ', eq(assert, ay)))),
       ]
     ),
     [tag, parent]
