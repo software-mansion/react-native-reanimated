@@ -69,9 +69,7 @@ export function sanitizeArgMapping(argMapping) {
       const node = new InternalAnimatedValue(0);
       children.push(node);
       alwaysNodes.push(createAnimatedAlways(value(node)));
-
       objectMappings.push(path.concat(getNode(node)));
-      console.log(path)
     } else if (typeof value === 'object') {
       if (Array.isArray(value)) {
         value = traverseArray(value);
@@ -139,7 +137,6 @@ export default class AnimatedMap extends AnimatedNode {
     }
 
     const { objectMappings, children, alwaysNodes } = sanitizeArgMapping(argMapping);
-    console.log('????????????????????', objectMappings, argMapping)
     super({
       type: 'map',
       argMapping: objectMappings
