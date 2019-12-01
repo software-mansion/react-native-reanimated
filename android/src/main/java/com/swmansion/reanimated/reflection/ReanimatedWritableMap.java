@@ -15,7 +15,7 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
 @SuppressWarnings("UnusedReturnValue")
-public class ReanimatedWritableMap extends WritableNativeMap {
+public class ReanimatedWritableMap extends WritableNativeMap implements ReadableObject {
 
     public static ReanimatedWritableMap fromMap(ReadableMap source) {
         if (source instanceof ReanimatedWritableMap) {
@@ -33,7 +33,31 @@ public class ReanimatedWritableMap extends WritableNativeMap {
         return out;
     }
 
-    public @Nullable Object value(String name) {
+    @Override
+    public Boolean has(String name) {
+        return hasKey(name);
+    }
+
+    @Override
+    public <T> T value(String name, Class<T> type) {
+        Object value = value(name);
+        if (type.isInstance(value)) {
+            return (T) value;
+        }
+        throw new IllegalArgumentException(
+                String.format(
+                        "%s: %s is of incompatible type %s, requested type was %s",
+                        getClass().getSimpleName(),
+                        name,
+                        value.getClass(),
+                        type
+                )
+        );
+    }
+
+    @Nullable
+    @Override
+    public Object value(String name) {
         return hasKey(name) ? new ReanimatedDynamic(getDynamic(name)).value() : null;
     }
 

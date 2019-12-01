@@ -1,9 +1,13 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.reflection.ReadableObject;
+import com.swmansion.reanimated.reflection.ReanimatedWritableArray;
 import com.swmansion.reanimated.reflection.ReanimatedWritableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
 
@@ -35,11 +39,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return list;
         }
 
-        Object lookupValue(ReanimatedWritableMap data) {
-            ReanimatedWritableMap map = data;
+        Object lookupValue(ReadableObject data) {
+            ReadableObject map = data;
             for (int i = 0; map != null && i < path.length - 1; i++) {
                 String key = path[i];
-                map = map.hasKey(key) ? map.getMap(key) : null;
+                map = map.has(key) ? map.value(key, ReadableObject.class) : null;
             }
 
             if (map != null) {
@@ -75,7 +79,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
                         } else {
                             current = path.subList(0, i);
-                            collection.putMap(key, accumulator.get(current).copy());
+                            collection.putMap(key, accumulator.get(current));
                         }
 
                         if (i == 0) {
@@ -83,7 +87,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                         } else {
                             next = path.subList(0, i - 1);
                             if (accumulator.containsKey(next)) {
-                                collection.merge(accumulator.get(next).copy());
+                                collection.merge(accumulator.get(next));
                             }
                             accumulator.put(next, collection);
                         }
@@ -104,12 +108,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         return res;
     }
 
-    //  it seems to be counter productive to use memozation as map values are currently limited in use
-    //  therefore evaluate will be much more efficient and cheap
-    //  because it will not require building `mMapping` for every `setValue` run
-    private static final Boolean USE_MEMOZATION = false;
-
     private List<ArgMap> mMapping;
+    private Boolean mDirty = true;
     private ReanimatedWritableCollection mValue;
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
@@ -141,47 +141,67 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     }
 
-    private void setValue(@Nullable ReadableArray data) {
-        setValue(ReanimatedWritableMap.fromArray(data));
+    void setValue(@Nullable ReadableArray data) {
+        setValue(((ReadableObject) ReanimatedWritableArray.fromArray(data)));
     }
 
     void setValue(@Nullable ReadableMap data) {
-        setValue(ReanimatedWritableMap.fromMap(data));
+        setValue(((ReadableObject) ReanimatedWritableMap.fromMap(data)));
     }
 
-    private void setValue(@Nullable ReanimatedWritableMap data) {
+    private void setValue(@Nullable ReadableObject data) {
         if (data == null) {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }
 
         Node node;
+        ArgMap map;
+        Object value;
+        Object memoizedValue;
 
         for (int i = 0; i < mMapping.size(); i++) {
-            ArgMap map = mMapping.get(i);
-            Object value = map.lookupValue(data);
+            map = mMapping.get(i);
+            value = map.lookupValue(data);
             if (value != null) {
                 node = mNodesManager.findNodeById(map.nodeID, Node.class);
                 ((ValueManagingNode) node).setValue(value);
+                if (!mDirty) {
+                    memoizedValue = map.lookupValue(mValue);
+                    //  this will degrade performance if node is MapNode
+                    value = node.value();
+                    mDirty = value != null && !value.equals(memoizedValue);
+                }
             }
-        }
-
-        if (USE_MEMOZATION) {
-            updateMemoizedValue();
         }
     }
 
-    private void updateMemoizedValue() {
-        ReanimatedWritableCollection value = ArgMap.buildMap(mMapping, mNodesManager);
-        if (!value.equals(mValue)) {
-            mValue = value;
-            forceUpdateMemoizedValue(mValue);
+    private Boolean isDirty() {
+        if (mDirty) {
+            return true;
         }
+
+        for (int i = 0; i < mMapping.size(); i++) {
+            ArgMap map = mMapping.get(i);
+            Object memoizedNodeValue = map.lookupValue(mValue);
+            Object nodeValue = mNodesManager.getNodeValue(map.nodeID);
+            if (!nodeValue.equals(memoizedNodeValue)) {
+                return true;
+            }
+        }
+
+        mDirty = false;
+        return false;
     }
 
     @Nullable
     @Override
     protected Object evaluate() {
-        return USE_MEMOZATION ? mValue : ArgMap.buildMap(mMapping, mNodesManager);
+        //  `buildMap` is extremely expensive, therefore we check if node is dirty
+        if (isDirty()) {
+            mDirty = false;
+            mValue = ArgMap.buildMap(mMapping, mNodesManager);
+        }
+        return mValue;
     }
 
 }
