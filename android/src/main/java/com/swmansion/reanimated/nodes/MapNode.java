@@ -78,7 +78,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             }
         }
 
-        private static <T extends WritableCollection> T build(List<ArgMap> mapping, NodesManager nodesManager, Class<T> builder) throws InstantiationException, IllegalAccessException {
+        private static <T extends WritableCollection> T build(List<ArgMap> mapping, NodesManager nodesManager, Class<T> arrayBuilder, Class<T> mapBuilder) throws InstantiationException, IllegalAccessException {
             int depth = 0;
             ArrayList<String> path;
             List<String> next;
@@ -105,20 +105,19 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                         } else {
                             current = path.subList(0, i);
                             collection.putDynamic(key, stack.get(current).copy());
-                            Log.d("Invoke", "build: " + collection);
                             stack.remove(current);
                         }
 
                         //  merge
                         if (i == 0) {
                             Log.d("Invoke", "merge end: " + collection);
-                            //map.merge(collection.copy());
+                            map.merge(collection);
                         } else {
                             next = path.subList(0, i - 1);
                             if (stack.containsKey(next)) {
-                                collection.merge(stack.get(next).copy());
+                                collection.merge(stack.get(next));
                             }
-                            stack.put(next, collection.copy());
+                            stack.put(next, collection);
                         }
 
                     }

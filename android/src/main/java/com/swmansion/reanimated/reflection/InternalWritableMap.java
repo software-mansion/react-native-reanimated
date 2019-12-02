@@ -166,12 +166,7 @@ public class InternalWritableMap extends HashMap<String, Object> implements Writ
 
     @Override
     public void merge(@NonNull ReadableMap source) {
-        //InternalWritableMap from = fromMap(source);
-        //String[] keys = source.toHashMap();
-
-        Log.d("Invoke", "merge: " + source + "     " + this);
         putAll(source.toHashMap());
-
     }
 
     @Override
