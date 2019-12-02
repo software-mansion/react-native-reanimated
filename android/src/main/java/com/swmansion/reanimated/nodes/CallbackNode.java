@@ -27,4 +27,11 @@ public class CallbackNode extends Node implements ValueManagingNode {
         Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
         return new ReanimatedCallback(whatNode);
     }
+
+    @Nullable
+    @Override
+    public Object finalValue() {
+        Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+        return what.finalValue();
+    }
 }

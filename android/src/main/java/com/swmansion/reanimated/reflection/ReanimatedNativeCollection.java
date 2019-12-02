@@ -10,6 +10,8 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import java.util.ArrayList;
 
@@ -31,16 +33,6 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     public ReanimatedNativeCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
-    }
-
-    @Override
-    public WritableMapResolver resolver() {
-        return resolver;
-    }
-
-    @Override
-    public void putValue(String key, Object value) {
-        resolver.putVariant(key, value);
     }
 
     @Override
@@ -68,8 +60,21 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     }
 
     @Override
+    public void putArray(@NonNull String key, @Nullable ReadableArray value) {
+        if (value instanceof WritableNativeMap) {
+            super.putMap(key, ((WritableNativeMap) value));
+        } else {
+            super.putArray(key, value);
+        }
+    }
+
+    @Override
     public void pushArray(@Nullable ReadableArray array) {
-        putArray(mResolver.nextIndex(), array);
+        if (array instanceof WritableNativeMap) {
+            putMap(mResolver.nextIndex(), ((WritableNativeMap) array));
+        } else {
+            putArray(mResolver.nextIndex(), array);
+        }
     }
 
     @Override
@@ -114,8 +119,13 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
         return getDynamic(mResolver.resolveKey(index));
     }
 
-    public void pushDynamic(Dynamic value) {
+    public void pushDynamic(Object value) {
         putDynamic(mResolver.nextIndex(), value);
+    }
+
+    @Override
+    public void putDynamic(String key, Object value) {
+        resolver.putVariant(mResolver.resolveKey(key), value);
     }
 
     @Override
@@ -233,7 +243,7 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     }
 
     @Override
-    public Object export() {
+    public WritableNativeMap export() {
         return this;
     }
 

@@ -36,7 +36,7 @@ public class ReanimatedNativeArray extends WritableNativeArray implements Readab
 
     protected final WritableArrayResolver resolver;
 
-    ReanimatedNativeArray() {
+    public ReanimatedNativeArray() {
         super();
         resolver = new WritableArrayResolver(this);
     }

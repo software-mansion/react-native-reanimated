@@ -18,7 +18,6 @@ class ReanimatedDynamic implements Dynamic {
             this.key = key;
         }
 
-
         private <T> T value(ReadableType type) {
             return (T) collection.value(key, ReflectionUtils.inferClass(type));
         }

@@ -1,9 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -19,18 +15,8 @@ public class ReanimatedCollection extends ReanimatedMap implements WritableColle
     }
 
     @Override
-    public void putMap(@NonNull String key, @Nullable ReadableMap value) {
-        super.putMap(mResolver.resolveKey(key), value);
-    }
-
-    @Override
-    public void putValue(String key, Object value) {
-        resolver.putVariant(key, value);
-    }
-
-    @Override
-    public WritableMapResolver resolver() {
-        return resolver;
+    public void putDynamic(String key, Object value) {
+        put(mResolver.resolveKey(key), value);
     }
 
     @Override
@@ -38,14 +24,13 @@ public class ReanimatedCollection extends ReanimatedMap implements WritableColle
         return mResolver.getType();
     }
 
-    @Override
     public ReanimatedCollection copy() {
         return ((ReanimatedCollection) clone());
     }
 
     @Override
     public WritableMap asMap() {
-        return this;
+        return null;
     }
 
     @Override

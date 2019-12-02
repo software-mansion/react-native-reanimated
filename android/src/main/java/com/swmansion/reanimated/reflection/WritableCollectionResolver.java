@@ -1,11 +1,13 @@
 package com.swmansion.reanimated.reflection;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 
 public class WritableCollectionResolver {
 
-    private final WritableCollection mCollection;
+    private WritableCollection mCollection;
     private ReadableType mType = ReadableType.Null;
 
     WritableCollectionResolver(WritableCollection collection) {
@@ -14,24 +16,32 @@ public class WritableCollectionResolver {
     }
 
     int size() {
+        return 0;
+        /*
         ReadableMapKeySetIterator keySetIterator = mCollection.keySetIterator();
         String key;
         int size = 0;
         boolean hasKeys = false;
 
+        Log.d("Invoke", "collection: ");
+
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
+            Log.d("Invoke", "size: key set iterator " + key);
+
             hasKeys = true;
             if (WritableArrayResolver.isIndex(key)) {
                 size = Math.max(size, Integer.valueOf(key) + 1);
             }
         }
 
-        if (hasKeys) {
+        if (hasKeys && mType == ReadableType.Null) {
             mType = size > 0 ? ReadableType.Array : ReadableType.Map;
         }
 
         return size;
+
+         */
     }
 
     String resolveKey(String name) {
@@ -51,6 +61,7 @@ public class WritableCollectionResolver {
     }
 
     boolean isArray() {
+        Log.d("Invoke", "isArray: " + size());
         return mType == ReadableType.Array;
     }
 }

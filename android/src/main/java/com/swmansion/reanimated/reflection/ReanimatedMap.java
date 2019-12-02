@@ -12,6 +12,7 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class ReanimatedMap extends HashMap<String, Object> implements WritableMap, ReadableCollection {
 
@@ -144,7 +145,7 @@ public class ReanimatedMap extends HashMap<String, Object> implements WritableMa
 
     @Override
     public void merge(@NonNull ReadableMap source) {
-        putAll(source.toHashMap());
+        putAll((HashMap<String, Object>) source.toHashMap().clone());
     }
 
     @Override
