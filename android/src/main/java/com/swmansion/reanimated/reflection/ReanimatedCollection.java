@@ -12,7 +12,8 @@ public class ReanimatedCollection extends ReanimatedMap implements WritableColle
 
     private final WritableCollectionResolver mResolver;
 
-    ReanimatedCollection() {
+    @SuppressWarnings("WeakerAccess")
+    public ReanimatedCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
     }
@@ -20,6 +21,16 @@ public class ReanimatedCollection extends ReanimatedMap implements WritableColle
     @Override
     public void putMap(@NonNull String key, @Nullable ReadableMap value) {
         super.putMap(mResolver.resolveKey(key), value);
+    }
+
+    @Override
+    public void putValue(String key, Object value) {
+        resolver.putVariant(key, value);
+    }
+
+    @Override
+    public WritableMapResolver resolver() {
+        return resolver;
     }
 
     @Override

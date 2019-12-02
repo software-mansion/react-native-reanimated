@@ -12,7 +12,7 @@ import com.facebook.react.bridge.WritableArray;
 import java.util.ArrayList;
 
 
-public class ReanimatedArray extends ArrayList<Object> implements WritableArray {
+public class ReanimatedArray extends ArrayList<Object> implements WritableArray, ReadableCollection {
     
     static ReanimatedArray fromArray(ReadableArray source) {
         ReanimatedArray array = new ReanimatedArray();
@@ -20,11 +20,27 @@ public class ReanimatedArray extends ArrayList<Object> implements WritableArray 
         return array;
     }
 
-    protected final WritableArrayResolver resolver;
+    final WritableArrayResolver resolver;
 
     ReanimatedArray() {
         super();
         resolver = new WritableArrayResolver(this);
+    }
+
+    @Override
+    public boolean has(Object key) {
+        return resolver.has(key);
+    }
+
+    @Nullable
+    @Override
+    public Object value(Object key) {
+        return resolver.value(key);
+    }
+
+    @Override
+    public <T> T value(Object key, Class<T> type) {
+        return resolver.value(key, type);
     }
 
     @Nullable

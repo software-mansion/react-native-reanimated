@@ -27,9 +27,20 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     
     private final WritableCollectionResolver mResolver;
 
-    ReanimatedNativeCollection() {
+    @SuppressWarnings("WeakerAccess")
+    public ReanimatedNativeCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
+    }
+
+    @Override
+    public WritableMapResolver resolver() {
+        return resolver;
+    }
+
+    @Override
+    public void putValue(String key, Object value) {
+        resolver.putVariant(key, value);
     }
 
     @Override

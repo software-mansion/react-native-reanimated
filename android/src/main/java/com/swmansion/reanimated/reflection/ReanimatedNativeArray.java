@@ -12,7 +12,7 @@ import com.facebook.react.bridge.WritableNativeArray;
 
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class ReanimatedNativeArray extends WritableNativeArray {
+public class ReanimatedNativeArray extends WritableNativeArray implements ReadableCollection {
 
     public static ReanimatedNativeArray fromArray(Object[] array){
         ReanimatedNativeArray out = new ReanimatedNativeArray();
@@ -39,6 +39,22 @@ public class ReanimatedNativeArray extends WritableNativeArray {
     ReanimatedNativeArray() {
         super();
         resolver = new WritableArrayResolver(this);
+    }
+
+    @Override
+    public boolean has(Object key) {
+        return resolver.has(key);
+    }
+
+    @Nullable
+    @Override
+    public Object value(Object key) {
+        return resolver.value(key);
+    }
+
+    @Override
+    public <T> T value(Object key, Class<T> type) {
+        return resolver.value(key, type);
     }
 
     @Nullable

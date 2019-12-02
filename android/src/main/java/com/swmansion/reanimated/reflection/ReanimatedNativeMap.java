@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeMap;
 
-public class ReanimatedNativeMap extends WritableNativeMap {
+public class ReanimatedNativeMap extends WritableNativeMap implements ReadableCollection {
 
     public static ReanimatedNativeMap fromMap(ReadableMap source) {
         if (source instanceof ReanimatedNativeMap) {
@@ -31,6 +31,22 @@ public class ReanimatedNativeMap extends WritableNativeMap {
     ReanimatedNativeMap() {
         super();
         resolver = new WritableMapResolver(this);
+    }
+
+    @Override
+    public boolean has(Object key) {
+        return resolver.has(key);
+    }
+
+    @Nullable
+    @Override
+    public Object value(Object key) {
+        return resolver.value(key);
+    }
+
+    @Override
+    public <T> T value(Object key, Class<T> type) {
+        return resolver.value(key, type);
     }
 
     @Override
