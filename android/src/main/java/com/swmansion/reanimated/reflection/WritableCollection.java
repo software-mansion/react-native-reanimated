@@ -1,9 +1,18 @@
 package com.swmansion.reanimated.reflection;
 
-import androidx.annotation.NonNull;
+import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
-public interface WritableCollection extends ReadableCollection {
-    void putDynamic(String name, Object value);
-    void merge(@NonNull ReadableCollection source);
-    WritableCollection copy();
+public interface WritableCollection extends WritableMap {
+    /**
+     * builds an {@link java.util.ArrayList} mocking {@link WritableArray}
+     * if size isn't provided and relative indexes exist (e.g. -1), indexes are resolved from current size of elements
+     * pass `size` in order to resolve relative indexes properly
+     */
+    WritableArray asArray();
+    WritableArray asArray(int size);
+    WritableMap asMap();
+    ReadableType getType();
+    Object export();
 }

@@ -117,7 +117,7 @@ public class ViewManagerAccessor implements ReanimatedAccessor {
 
     @Override
     public void call(int[] params, NodesManager nodesManager) {
-        ReanimatedWritableArray args = new ReanimatedWritableArray();
+        ReanimatedNativeArray args = new ReanimatedNativeArray();
         Node n;
         int paramStart;
 

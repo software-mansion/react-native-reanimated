@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.reflection;
 
+import androidx.annotation.Nullable;
+
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
@@ -9,26 +11,75 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isString;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableArrayUtils {
+public class WritableArrayResolver implements ReadableCollection {
+
+    private WritableArray mSource;
+
+    WritableArrayResolver(WritableArray array) {
+        mSource = array;
+    }
+
+    private int size() {
+        return mSource.size();
+    }
+
+    int resolveIndex(Object key) {
+        return resolveIndex(key instanceof String ? Integer.valueOf((String) key) : ((int) key));
+    }
+
+    int resolveIndex(int index) {
+        return index < 0 ? size() + index : index;
+    }
+
+    boolean indexInBounds(int index) {
+        return index >= 0 && index < size();
+    }
+
+    void pushVariant(Object o) {
+        pushVariant(mSource, o);
+    }
+
+    public Object value(int index) {
+        index = resolveIndex(index);
+        return indexInBounds(index) ? new ReanimatedDynamic(mSource.getDynamic(index)).value() : null;
+    }
+
+    @Override
+    public boolean has(Object key) {
+        int index = resolveIndex(key);
+        return indexInBounds(index);
+    }
+
+    @Nullable
+    @Override
+    public Object value(Object key) {
+        return isIndex(key) ?
+                value(resolveIndex(key)):
+                null;
+    }
+
+    @Override
+    public <T> T value(Object key, Class<T> type) {
+        Object value = value(key);
+        if (type.isInstance(value)) {
+            return (T) value;
+        }
+        throw new IllegalArgumentException(
+                String.format(
+                        "%s: %s is of incompatible type %s, requested type was %s",
+                        getClass().getSimpleName(),
+                        key,
+                        value.getClass(),
+                        type
+                )
+        );
+    }
 
     static boolean isIndex(Object key) {
         return isInteger(key) || (isString(key) && ((String) key).matches("-?\\d"));
     }
 
-    static int resolveIndex(Object key, int size) {
-        return resolveIndex(key instanceof String ? Integer.valueOf((String) key) : ((int) key), size);
-    }
-
-    static int resolveIndex(int index, int size) {
-        return index < 0 ? size + index : index;
-    }
-
-    static boolean indexInBounds(int index, int size) {
-        return index >= 0 && index < size;
-    }
-
-    @SuppressWarnings("UnusedReturnValue")
-    static WritableArray pushVariant(WritableArray arr, Object o) {
+    private static void pushVariant(WritableArray arr, Object o) {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
         } else {
@@ -57,12 +108,9 @@ public class WritableArrayUtils {
                     break;
             }
         }
-
-        return arr;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    private static WritableArray pushDynamic(WritableArray arr, Dynamic o){
+    private static void pushDynamic(WritableArray arr, Dynamic o){
         switch(o.getType()){
             case Array:
                 arr.pushArray(o.asArray());
@@ -83,19 +131,14 @@ public class WritableArrayUtils {
                 arr.pushBoolean(o.asBoolean());
                 break;
         }
-
-        return arr;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    static ReadableArray addAll(WritableArray to, ReadableArray from) {
+    static void addAll(WritableArray to, ReadableArray from) {
         Dynamic dynamic;
         for (int i = 0; i < from.size(); i++) {
             dynamic =  from.getDynamic(i);
             pushDynamic(to, dynamic);
             dynamic.recycle();
         }
-
-        return to;
     }
 }

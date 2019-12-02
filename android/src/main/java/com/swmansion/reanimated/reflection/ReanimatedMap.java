@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -11,60 +9,34 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
-import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.nodes.MapNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
-public class InternalWritableMap extends HashMap<String, Object> implements WritableMap, WritableCollection {
+public class ReanimatedMap extends HashMap<String, Object> implements WritableMap {
 
-    public static InternalWritableMap fromMap(ReadableMap source) {
-        InternalWritableMap map = new InternalWritableMap();
+    public static ReanimatedMap fromMap(ReadableMap source) {
+        ReanimatedMap map = new ReanimatedMap();
         map.putAll(source.toHashMap());
         return map;
     }
 
+    protected WritableMapResolver resolver;
+
+    ReanimatedMap() {
+        super();
+        resolver = new WritableMapResolver(this);
+    }
+
     @Override
     public boolean hasKey(@NonNull String name) {
-        return has(name);
-    }
-
-    @Override
-    public Boolean has(Object key) {
-        return containsKey(key);
-    }
-
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        Object value = value(key);
-        if (type.isInstance(value)) {
-            return (T) value;
-        }
-        throw new IllegalArgumentException(
-                String.format(
-                        "%s: %s is of incompatible type %s, requested type was %s",
-                        getClass().getSimpleName(),
-                        key,
-                        value.getClass(),
-                        type
-                )
-        );
+        return containsKey(name);
     }
 
     @Nullable
     @Override
-    public Object value(Object key) {
-        String name = WritableMapUtils.resolveKey(key);
-        return hasKey(name) ? new ReanimatedDynamic(getDynamic(name)).value() : null;
-    }
-
-    @Nullable
-    @Override
-    public InternalWritableArray getArray(@NonNull String name) {
-        return InternalWritableArray.fromArray((ReadableArray) super.get(name));
+    public ReanimatedArray getArray(@NonNull String name) {
+        return ReanimatedArray.fromArray((ReadableArray) super.get(name));
     }
 
     @Override
@@ -99,16 +71,11 @@ public class InternalWritableMap extends HashMap<String, Object> implements Writ
     @NonNull
     @Override
     public Dynamic getDynamic(@NonNull String name) {
-        return new ReanimatedDynamic(this, name);
+        return new ReanimatedDynamic(resolver, name);
     }
 
     public void putDynamic(String key, Dynamic value) {
-        WritableMapUtils.putDynamic(this, key, value);
-    }
-
-    @Override
-    public void putDynamic(String name, Object value) {
-        WritableMapUtils.putVariant(this, name, value);
+        resolver.putVariant(key, value);
     }
 
     @Override
@@ -123,7 +90,7 @@ public class InternalWritableMap extends HashMap<String, Object> implements Writ
 
     @Nullable
     @Override
-    public InternalWritableMap getMap(@NonNull String name) {
+    public ReanimatedMap getMap(@NonNull String name) {
         return fromMap(((ReadableMap) super.get(name)));
     }
 
@@ -160,24 +127,13 @@ public class InternalWritableMap extends HashMap<String, Object> implements Writ
     }
 
     @Override
-    public void merge(@NonNull ReadableCollection source) {
-        merge((ReadableMap) source);
-    }
-
-    @Override
     public void merge(@NonNull ReadableMap source) {
         putAll(source.toHashMap());
     }
 
     @Override
-    public InternalWritableMap copy() {
-        return ((InternalWritableMap) clone());
-        /*
-        InternalWritableMap copy = new InternalWritableMap();
-        copy.putAll(this);
-        return copy;
-
-         */
+    public ReanimatedMap copy() {
+        return ((ReanimatedMap) clone());
     }
 
     @NonNull

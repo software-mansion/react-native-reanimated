@@ -1,5 +1,8 @@
 package com.swmansion.reanimated.reflection;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
@@ -8,12 +11,52 @@ import com.facebook.react.bridge.WritableMap;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableMapUtils {
-    static String resolveKey(Object key) {
+public class WritableMapResolver implements ReadableCollection {
+
+    private final WritableMap mSource;
+
+    WritableMapResolver(WritableMap source) {
+        mSource = source;
+    }
+
+    String resolveKey(Object key) {
         return String.valueOf(key);
     }
 
-    static WritableMap putVariant(WritableMap map, String key, Object o){
+    void putVariant(String key, Object o) {
+        putVariant(mSource, key, o);
+    }
+
+    @Override
+    public boolean has(Object key) {
+        return mSource.hasKey(resolveKey(key));
+    }
+
+    @Override
+    public <T> T value(Object key, Class<T> type) {
+        Object value = value(key);
+        if (type.isInstance(value)) {
+            return (T) value;
+        }
+        throw new IllegalArgumentException(
+                String.format(
+                        "%s: %s is of incompatible type %s, requested type was %s",
+                        getClass().getSimpleName(),
+                        key,
+                        value.getClass(),
+                        type
+                )
+        );
+    }
+
+    @Nullable
+    @Override
+    public Object value(Object key) {
+        String name = resolveKey(key);
+        return has(name) ? new ReanimatedDynamic(mSource.getDynamic(name)).value() : null;
+    }
+
+    private static void putVariant(WritableMap map, String key, Object o){
         if (o instanceof Dynamic) {
             putDynamic(map, key, ((Dynamic) o));
         } else {
@@ -42,11 +85,9 @@ public class WritableMapUtils {
                     break;
             }
         }
-
-        return map;
     }
 
-    static WritableMap putDynamic(WritableMap map, String key, Dynamic o){
+    private static void putDynamic(WritableMap map, String key, Dynamic o){
         switch(o.getType()){
             case Array:
                 map.putArray(key, o.asArray());
@@ -67,18 +108,14 @@ public class WritableMapUtils {
                 map.putBoolean(key, o.asBoolean());
                 break;
         }
-
-        return map;
     }
 
-    static WritableMap addAll(WritableMap to, ReadableArray from) {
+    static void addAll(WritableMap to, ReadableArray from) {
         Dynamic dynamic;
         for (int i = 0; i < from.size(); i++) {
             dynamic =  from.getDynamic(i);
             putDynamic(to, String.valueOf(i), dynamic);
             dynamic.recycle();
         }
-
-        return to;
     }
 }

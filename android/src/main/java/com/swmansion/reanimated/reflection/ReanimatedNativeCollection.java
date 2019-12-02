@@ -9,195 +9,178 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
 import java.util.ArrayList;
 
-public class ReanimatedWritableCollection extends ReanimatedWritableMap implements WritableArray {
+public class ReanimatedNativeCollection extends ReanimatedNativeMap implements WritableArray, WritableCollection {
 
-    public static ReanimatedWritableCollection fromMap(ReadableMap source) {
-        if (source instanceof ReanimatedWritableCollection) {
-            return ((ReanimatedWritableCollection) source);
+    public static ReanimatedNativeCollection fromMap(ReadableMap source) {
+        if (source instanceof ReanimatedNativeCollection) {
+            return ((ReanimatedNativeCollection) source);
         } else {
-            ReanimatedWritableCollection out = new ReanimatedWritableCollection();
+            ReanimatedNativeCollection out = new ReanimatedNativeCollection();
             out.merge(source);
             return out;
         }
     }
+    
+    private final WritableCollectionResolver mResolver;
 
-    private String key(String name) {
-        return WritableArrayUtils.isIndex(name) ? key(Integer.valueOf(name)) : name;
-    }
-
-    private String key(int index) {
-        return String.valueOf(index < 0 ? size() + index : index) ;
+    ReanimatedNativeCollection() {
+        super();
+        mResolver = new WritableCollectionResolver(this);
     }
 
     @Override
-    public boolean hasKey(@NonNull String name) {
-        return super.hasKey(key(name));
+    public ReadableType getType() {
+        return mResolver.getType();
     }
 
-    private String nextIndex() {
-        return String.valueOf(size());
-    }
-
-    private Boolean isArray() {
-        return size() > 0;
+    @Override
+    public ReanimatedNativeCollection copy() {
+        ReanimatedNativeCollection copy = new ReanimatedNativeCollection();
+        copy.merge(this);
+        return copy;
     }
 
     @Nullable
     @Override
     public ReadableArray getArray(@NonNull String name) {
-        return super.getArray(key(name));
+        return super.getArray(mResolver.resolveKey(name));
     }
 
     @Nullable
     @Override
     public ReadableArray getArray(int index) {
-        return getArray(key(index));
+        return getArray(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushArray(@Nullable ReadableArray array) {
-        putArray(nextIndex(), array);
+        putArray(mResolver.nextIndex(), array);
     }
 
     @Override
     public boolean getBoolean(@NonNull String name) {
-        return super.getBoolean(key(name));
+        return super.getBoolean(mResolver.resolveKey(name));
     }
 
     @Override
     public boolean getBoolean(int index) {
-        return getBoolean(key(index));
+        return getBoolean(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushBoolean(boolean value) {
-        putBoolean(nextIndex(), value);
+        putBoolean(mResolver.nextIndex(), value);
     }
 
     @Override
     public double getDouble(@NonNull String name) {
-        return super.getDouble(key(name));
+        return super.getDouble(mResolver.resolveKey(name));
     }
 
     @Override
     public double getDouble(int index) {
-        return getDouble(key(index));
+        return getDouble(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushDouble(double value) {
-        putDouble(nextIndex(), value);
+        putDouble(mResolver.nextIndex(), value);
     }
 
     @NonNull
     @Override
     public Dynamic getDynamic(@NonNull String name) {
-        return super.getDynamic(key(name));
+        return super.getDynamic(mResolver.resolveKey(name));
     }
 
     @NonNull
     @Override
     public Dynamic getDynamic(int index) {
-        return getDynamic(key(index));
+        return getDynamic(mResolver.resolveKey(index));
     }
 
     public void pushDynamic(Dynamic value) {
-        putDynamic(nextIndex(), value);
-    }
-
-    @Override
-    public void putDynamic(String name, Object o) {
-        super.putDynamic(key(name), o);
+        putDynamic(mResolver.nextIndex(), value);
     }
 
     @Override
     public int getInt(@NonNull String name) {
-        return super.getInt(key(name));
+        return super.getInt(mResolver.resolveKey(name));
     }
 
     @Override
     public int getInt(int index) {
-        return getInt(key(index));
+        return getInt(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushInt(int value) {
-        putInt(nextIndex(), value);
+        putInt(mResolver.nextIndex(), value);
     }
 
     @Nullable
     @Override
-    public ReanimatedWritableMap getMap(@NonNull String name) {
-        return super.getMap(key(name));
+    public ReanimatedNativeMap getMap(@NonNull String name) {
+        return super.getMap(mResolver.resolveKey(name));
     }
 
     @Nullable
     @Override
     public ReadableMap getMap(int index) {
-        return getMap(key(index));
+        return getMap(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushMap(@Nullable ReadableMap map) {
-        putMap(nextIndex(), map);
+        putMap(mResolver.nextIndex(), map);
     }
 
     @Nullable
     @Override
     public String getString(@NonNull String name) {
-        return super.getString(key(name));
+        return super.getString(mResolver.resolveKey(name));
     }
 
     @Nullable
     @Override
     public String getString(int index) {
-        return getString(key(index));
+        return getString(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushString(@Nullable String value) {
-        putString(nextIndex(), value);
+        putString(mResolver.nextIndex(), value);
     }
 
     @NonNull
     @Override
     public ReadableType getType(@NonNull String name) {
-        return super.getType(key(name));
+        return super.getType(mResolver.resolveKey(name));
     }
 
     @NonNull
     @Override
     public ReadableType getType(int index) {
-        return getType(key(index));
+        return getType(mResolver.resolveKey(index));
     }
 
     @Override
     public boolean isNull(int index) {
-        return isNull(key(index));
+        return isNull(mResolver.resolveKey(index));
     }
 
     @Override
     public void pushNull() {
-        putNull(nextIndex());
+        putNull(mResolver.nextIndex());
     }
 
     @Override
     public int size() {
-        ReadableMapKeySetIterator keySetIterator = keySetIterator();
-        String key;
-        int size = 0;
-
-        while (keySetIterator.hasNextKey()) {
-            key = keySetIterator.nextKey();
-            if (WritableArrayUtils.isIndex(key)) {
-                size = Math.max(size, Integer.valueOf(key) + 1);
-            }
-        }
-
-        return size;
+        return mResolver.size();
     }
 
     @NonNull
@@ -210,7 +193,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            if (WritableArrayUtils.isIndex(key)) {
+            if (WritableArrayResolver.isIndex(key)) {
                 index = Integer.valueOf(key);
                 list.ensureCapacity(index + 1);
                 while (list.size() <= index) {
@@ -223,9 +206,29 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
         return list;
     }
 
+    @Override
+    public WritableArray asArray() {
+        return this;
+    }
+
+    @Override
+    public WritableArray asArray(int size) {
+        return this;
+    }
+
+    @Override
+    public WritableMap asMap() {
+        return this;
+    }
+
+    @Override
+    public Object export() {
+        return this;
+    }
+
     @NonNull
     @Override
     public String toString() {
-        return isArray() ? toArrayList().toString() : super.toString();
+        return mResolver.isArray() ? toArrayList().toString() : super.toString();
     }
 }
