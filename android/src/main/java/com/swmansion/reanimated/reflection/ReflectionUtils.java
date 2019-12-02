@@ -5,6 +5,7 @@ import androidx.annotation.StringDef;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 
 import java.lang.annotation.Retention;
@@ -18,31 +19,34 @@ class ReflectionUtils {
                 o.equals(float.class) || o.equals(Float.class) ||
                 o.equals(double.class) || o.equals(Double.class) ||
                 o.equals(long.class) || o.equals(Long.class) ||
-                o.equals(short.class) || o.equals(Short.class);
+                o.equals(short.class) || o.equals(Short.class) ||
+                (o instanceof Dynamic && ((Dynamic) o).getType().equals(ReadableType.Number));
     }
 
     static Boolean isInteger(Object o){
         return o instanceof Integer || o.equals(int.class) || o.equals(Integer.class);
     }
 
-    static boolean isInteger(String str) {
-        return str.matches("-?\\d");
+    static Boolean isString(Object o){
+        return o instanceof String || o.equals(String.class) ||
+                (o instanceof Dynamic && ((Dynamic) o).getType().equals(ReadableType.String));
     }
 
-    private static Boolean isString(Object o){
-        return o instanceof String || o.equals(String.class);
+    static Boolean isBoolean(Object o){
+        return o instanceof Boolean ||
+                o.equals(boolean.class) ||
+                o.equals(Boolean.class) ||
+                (o instanceof Dynamic && ((Dynamic) o).getType().equals(ReadableType.Boolean));
     }
 
-    private static Boolean isBoolean(Object o){
-        return o instanceof Boolean || o.equals(boolean.class) || o.equals(Boolean.class);
+    static Boolean isNull(Object o){
+        return o == null ||
+                (o instanceof Dynamic && ((Dynamic) o).getType().equals(ReadableType.Null));
     }
 
-    private static Boolean isNull(Object o){
-        return o == null;
-    }
-
-    private static Boolean isArray(Object o){
-        return o.getClass().isArray() || o instanceof ReadableArray;
+    static Boolean isArray(Object o){
+        return o.getClass().isArray() || o instanceof ReadableArray ||
+                (o instanceof Dynamic && ((Dynamic) o).getType().equals(ReadableType.Array));
     }
 
     static ReadableType inferType(Object o){
@@ -60,6 +64,25 @@ class ReflectionUtils {
             return ReadableType.Array;
         } else {
             return ReadableType.Map;
+        }
+    }
+
+    static Class inferClass(ReadableType type){
+        switch(type){
+            case Array:
+                return ReadableArray.class;
+            case Map:
+                return ReadableMap.class;
+            case Null:
+                return Object.class;
+            case Number:
+                return Number.class;
+            case String:
+                return String.class;
+            case Boolean:
+                return Boolean.class;
+            default:
+                throw new Error(String.format("Reanimated: this is quite impossible, type %s", type));
         }
     }
 

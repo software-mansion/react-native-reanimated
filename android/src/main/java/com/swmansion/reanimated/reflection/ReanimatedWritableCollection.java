@@ -25,7 +25,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     }
 
     private String key(String name) {
-        return ReflectionUtils.isInteger(name) ? key(Integer.valueOf(name)) : name;
+        return WritableArrayUtils.isIndex(name) ? key(Integer.valueOf(name)) : name;
     }
 
     private String key(int index) {
@@ -109,6 +109,11 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
     }
 
     @Override
+    public void putDynamic(String name, Object o) {
+        super.putDynamic(key(name), o);
+    }
+
+    @Override
     public int getInt(@NonNull String name) {
         return super.getInt(key(name));
     }
@@ -187,7 +192,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            if (ReflectionUtils.isInteger(key)) {
+            if (WritableArrayUtils.isIndex(key)) {
                 size = Math.max(size, Integer.valueOf(key) + 1);
             }
         }
@@ -205,7 +210,7 @@ public class ReanimatedWritableCollection extends ReanimatedWritableMap implemen
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            if (ReflectionUtils.isInteger(key)) {
+            if (WritableArrayUtils.isIndex(key)) {
                 index = Integer.valueOf(key);
                 list.ensureCapacity(index + 1);
                 while (list.size() <= index) {

@@ -1,25 +1,93 @@
 package com.swmansion.reanimated.reflection;
 
 import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.DynamicFromMap;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 
 class ReanimatedDynamic implements Dynamic {
     private final Dynamic value;
+
+    private static class DynamicFromCollection implements Dynamic {
+        private final ReadableCollection collection;
+        private final Object key;
+
+        DynamicFromCollection(ReadableCollection collection, Object key) {
+            this.collection = collection;
+            this.key = key;
+        }
+
+
+        private <T> T value(ReadableType type) {
+            return (T) collection.value(key, ReflectionUtils.inferClass(type));
+        }
+
+        @Override
+        public boolean isNull() {
+            return collection.value(key) == null;
+        }
+
+        @Override
+        public boolean asBoolean() {
+            return value(ReadableType.Boolean);
+        }
+
+        @Override
+        public double asDouble() {
+            return value(ReadableType.Number);
+        }
+
+        @Override
+        public int asInt() {
+            return ReflectionUtils.fromDouble(asDouble(), int.class);
+        }
+
+        @Override
+        public ReanimatedWritableArray asArray() {
+            return value(ReadableType.Array);
+        }
+
+        @Override
+        public ReanimatedWritableMap asMap() {
+            return value(ReadableType.Map);
+        }
+
+        @Override
+        public String asString() {
+            return value(ReadableType.String);
+        }
+
+        @Override
+        public ReadableType getType() {
+            return ReflectionUtils.inferType(collection.value(key));
+        }
+
+        @Override
+        public void recycle() {
+
+        }
+    }
+
+    ReanimatedDynamic(ReadableCollection collection, Object key) {
+        value = new DynamicFromCollection(collection, key);
+    }
 
     ReanimatedDynamic(Dynamic value) {
         this.value = value;
     }
 
     public Object value() {
-        switch (value.getType()) {
+        switch (getType()) {
             case Boolean:
-                return ReflectionUtils.toDouble(value.asBoolean());
+                return ReflectionUtils.toDouble(asBoolean());
             case Null:
+                //  should this be null safe? if soo uncomment next line
                 //return ReflectionUtils.toDouble(0.);
                 return null;
             case Number:
-                return ReflectionUtils.toDouble(value.asDouble());
+                return ReflectionUtils.toDouble(asDouble());
             case String:
                 return asString();
             case Array:
@@ -36,7 +104,7 @@ class ReanimatedDynamic implements Dynamic {
 
     @Override
     public boolean isNull() {
-        return value.isNull();
+        return ReflectionUtils.isNull(value);
     }
 
     @Override
@@ -59,13 +127,13 @@ class ReanimatedDynamic implements Dynamic {
     }
 
     @Override
-    public ReanimatedWritableArray asArray() {
-        return ReanimatedWritableArray.fromArray(value.asArray());
+    public ReadableArray asArray() {
+        return value.asArray();
     }
 
     @Override
-    public ReanimatedWritableMap asMap() {
-        return ReanimatedWritableMap.fromMap(value.asMap());
+    public ReadableMap asMap() {
+        return value.asMap();
     }
 
     @Override

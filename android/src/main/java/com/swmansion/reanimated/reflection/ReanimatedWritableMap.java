@@ -3,19 +3,14 @@ package com.swmansion.reanimated.reflection;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 
-import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
-import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
 @SuppressWarnings("UnusedReturnValue")
-public class ReanimatedWritableMap extends WritableNativeMap implements ReadableObject {
+public class ReanimatedWritableMap extends WritableNativeMap implements WritableCollection {
 
     public static ReanimatedWritableMap fromMap(ReadableMap source) {
         if (source instanceof ReanimatedWritableMap) {
@@ -29,18 +24,18 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Readable
 
     public static ReanimatedWritableMap fromArray(ReadableArray source) {
         ReanimatedWritableMap out = new ReanimatedWritableMap();
-        addAll(out, source);
+        WritableMapUtils.addAll(out, source);
         return out;
     }
 
     @Override
-    public Boolean has(String name) {
-        return hasKey(name);
+    public Boolean has(Object key) {
+        return hasKey(WritableMapUtils.resolveKey(key));
     }
 
     @Override
-    public <T> T value(String name, Class<T> type) {
-        Object value = value(name);
+    public <T> T value(Object key, Class<T> type) {
+        Object value = value(key);
         if (type.isInstance(value)) {
             return (T) value;
         }
@@ -48,7 +43,7 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Readable
                 String.format(
                         "%s: %s is of incompatible type %s, requested type was %s",
                         getClass().getSimpleName(),
-                        name,
+                        key,
                         value.getClass(),
                         type
                 )
@@ -57,14 +52,15 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Readable
 
     @Nullable
     @Override
-    public Object value(String name) {
+    public Object value(Object key) {
+        String name = WritableMapUtils.resolveKey(key);
         return hasKey(name) ? new ReanimatedDynamic(getDynamic(name)).value() : null;
     }
 
     @Override
     public ReanimatedWritableMap copy() {
         ReanimatedWritableMap copy = new ReanimatedWritableMap();
-        copy.merge(this);
+        copy.merge(((ReadableMap) this));
         return copy;
     }
 
@@ -84,12 +80,12 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Readable
     @Override
     public double getDouble(@NonNull String name) {
         return getType(name) == ReadableType.Boolean ?
-                toDouble(super.getBoolean(name)) :
+                ReflectionUtils.toDouble(super.getBoolean(name)) :
                 super.getDouble(name);
     }
 
     public void putDynamic(String key, Object o) {
-        putVariant(this, key, o);
+        WritableMapUtils.putVariant(this, key, o);
     }
 
     @Nullable
@@ -100,78 +96,15 @@ public class ReanimatedWritableMap extends WritableNativeMap implements Readable
                 fromMap(super.getMap(name));
     }
 
+    @Override
+    public void merge(@NonNull ReadableCollection source) {
+        super.merge(((ReadableMap) source));
+    }
+
     @NonNull
     @Override
     public String toString() {
         return super.copy().toString();
     }
 
-    private static WritableMap putVariant(WritableMap map, String key, Object o){
-        if (o instanceof Dynamic) {
-            putDynamic(map, key, ((Dynamic) o));
-        } else {
-            switch(ReflectionUtils.inferType(o)){
-                case Array:
-                    map.putArray(key, ((WritableArray) o));
-                    break;
-                case Map:
-                    map.putMap(key, ((WritableMap) o));
-                    break;
-                case Null:
-                    map.putNull(key);
-                    break;
-                case Number:
-                    if (isInteger(o)){
-                        map.putInt(key, ((Integer) o));
-                    } else {
-                        map.putDouble(key, toDouble(o));
-                    }
-                    break;
-                case String:
-                    map.putString(key, ((String) o));
-                    break;
-                case Boolean:
-                    map.putBoolean(key, ((Boolean) o));
-                    break;
-            }
-        }
-
-        return map;
-    }
-
-    private static WritableMap putDynamic(WritableMap map, String key, Dynamic o){
-        switch(o.getType()){
-            case Array:
-                map.putArray(key, o.asArray());
-                break;
-            case Map:
-                map.putMap(key, o.asMap());
-                break;
-            case Null:
-                map.putNull(key);
-                break;
-            case Number:
-                map.putDouble(key, o.asDouble());
-                break;
-            case String:
-                map.putString(key, o.asString());
-                break;
-            case Boolean:
-                map.putBoolean(key, o.asBoolean());
-                break;
-        }
-
-        return map;
-    }
-
-    private static WritableMap addAll(WritableMap to, ReadableArray from) {
-        Dynamic dynamic;
-        for (int i = 0; i < from.size(); i++) {
-            dynamic =  from.getDynamic(i);
-            putDynamic(to, String.valueOf(i), dynamic);
-            dynamic.recycle();
-        }
-
-        return to;
-    }
 }

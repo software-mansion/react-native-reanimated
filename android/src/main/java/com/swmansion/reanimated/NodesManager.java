@@ -379,7 +379,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    callback.invoke(mAnimatedNodes.get(nodeID).finalValue());
   }
 
   public void postRunUpdatesAfterAnimation() {

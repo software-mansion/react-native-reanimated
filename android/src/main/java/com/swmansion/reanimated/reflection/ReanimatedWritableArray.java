@@ -8,14 +8,11 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 
-import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class ReanimatedWritableArray extends WritableNativeArray implements ReadableObject {
+public class ReanimatedWritableArray extends WritableNativeArray implements ReadableCollection {
 
     public static ReanimatedWritableArray fromArray(Object[] array){
         ReanimatedWritableArray out = new ReanimatedWritableArray();
@@ -38,16 +35,20 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
     }
 
     private int resolveIndex(int index) {
-        return index < 0 ? size() + index : index;
+        return WritableArrayUtils.resolveIndex(index, size());
     }
 
-    private Boolean indexInBounds(int index) {
-        return index >= 0 && index < size();
+    private int resolveIndex(Object key) {
+        return WritableArrayUtils.resolveIndex(key, size());
+    }
+
+    private boolean indexInBounds(int index) {
+        return WritableArrayUtils.indexInBounds(index, size());
     }
 
     @Override
-    public Boolean has(String name) {
-        int index = resolveIndex(Integer.valueOf(name));
+    public Boolean has(Object key) {
+        int index = resolveIndex(key);
         return indexInBounds(index);
     }
 
@@ -58,15 +59,15 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
 
     @Nullable
     @Override
-    public Object value(String name) {
-        return ReflectionUtils.isInteger(name) ?
-                value(Integer.valueOf(name)):
+    public Object value(Object key) {
+        return WritableArrayUtils.isIndex(key) ?
+                value(resolveIndex(key)):
                 null;
     }
 
     @Override
-    public <T> T value(String name, Class<T> type) {
-        Object value = value(name);
+    public <T> T value(Object key, Class<T> type) {
+        Object value = value(key);
         if (type.isInstance(value)) {
             return (T) value;
         }
@@ -74,7 +75,7 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
                 String.format(
                         "%s: %s is of incompatible type %s, requested type was %s",
                         getClass().getSimpleName(),
-                        name,
+                        key,
                         value.getClass(),
                         type
                 )
@@ -112,7 +113,7 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
     }
 
     public void pushDynamic(Object o) {
-        pushVariant(this, o);
+        WritableArrayUtils.pushVariant(this, o);
     }
 
     @Override
@@ -144,80 +145,9 @@ public class ReanimatedWritableArray extends WritableNativeArray implements Read
 
     public ReanimatedWritableArray copy() {
         ReanimatedWritableArray copy = new ReanimatedWritableArray();
-        addAll(copy, this);
+        WritableArrayUtils.addAll(copy, this);
         return copy;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    protected static WritableArray pushVariant(WritableArray arr, Object o) {
-        if (o instanceof Dynamic) {
-            pushDynamic(arr, ((Dynamic) o));
-        } else {
-            switch(ReflectionUtils.inferType(o)){
-                case Array:
-                    arr.pushArray(((WritableArray) o));
-                    break;
-                case Map:
-                    arr.pushMap(((WritableMap) o));
-                    break;
-                case Null:
-                    arr.pushNull();
-                    break;
-                case Number:
-                    if (isInteger(o)){
-                        arr.pushInt((Integer) o);
-                    } else {
-                        arr.pushDouble(toDouble(o));
-                    }
-                    break;
-                case String:
-                    arr.pushString(((String) o));
-                    break;
-                case Boolean:
-                    arr.pushBoolean(((Boolean) o));
-                    break;
-            }
-        }
-
-        return arr;
-    }
-
-    @SuppressWarnings("UnusedReturnValue")
-    private static WritableArray pushDynamic(WritableArray arr, Dynamic o){
-        switch(o.getType()){
-            case Array:
-                arr.pushArray(o.asArray());
-                break;
-            case Map:
-                arr.pushMap(o.asMap());
-                break;
-            case Null:
-                arr.pushNull();
-                break;
-            case Number:
-                arr.pushDouble(o.asDouble());
-                break;
-            case String:
-                arr.pushString(o.asString());
-                break;
-            case Boolean:
-                arr.pushBoolean(o.asBoolean());
-                break;
-        }
-
-        return arr;
-    }
-
-    @SuppressWarnings("UnusedReturnValue")
-    private static ReadableArray addAll(WritableArray to, ReadableArray from) {
-        Dynamic dynamic;
-        for (int i = 0; i < from.size(); i++) {
-            dynamic =  from.getDynamic(i);
-            pushDynamic(to, dynamic);
-            dynamic.recycle();
-        }
-
-        return to;
-    }
 
 }
