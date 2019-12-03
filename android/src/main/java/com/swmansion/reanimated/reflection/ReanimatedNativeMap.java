@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeMap;
 
-public class ReanimatedNativeMap extends WritableNativeMap implements ReadableCollection {
+public class ReanimatedNativeMap extends WritableNativeMap implements ReanimatedMap {
 
     public static ReanimatedNativeMap fromMap(ReadableMap source) {
         if (source instanceof ReanimatedNativeMap) {
@@ -76,6 +76,7 @@ public class ReanimatedNativeMap extends WritableNativeMap implements ReadableCo
                 super.getDouble(name);
     }
 
+    @Override
     public void putDynamic(String key, Object o) {
         resolver.putVariant(key, o);
     }

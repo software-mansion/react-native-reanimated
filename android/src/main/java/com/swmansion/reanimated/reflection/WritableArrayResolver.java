@@ -13,9 +13,14 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
 public class WritableArrayResolver implements ReadableCollection {
 
-    private WritableArray mSource;
+    interface Resolvable {
+        int size();
+        Object value(int index);
+    }
 
-    WritableArrayResolver(WritableArray array) {
+    private Resolvable mSource;
+
+    WritableArrayResolver(Resolvable array) {
         mSource = array;
     }
 
@@ -35,13 +40,9 @@ public class WritableArrayResolver implements ReadableCollection {
         return index >= 0 && index < size();
     }
 
-    void pushVariant(Object o) {
-        pushVariant(mSource, o);
-    }
-
     public Object value(int index) {
         index = resolveIndex(index);
-        return indexInBounds(index) ? new ReanimatedDynamic(mSource.getDynamic(index)).value() : null;
+        return indexInBounds(index) ? mSource.value(index) : null;
     }
 
     @Override
@@ -79,7 +80,7 @@ public class WritableArrayResolver implements ReadableCollection {
         return isInteger(key) || (isString(key) && ((String) key).matches("-?\\d"));
     }
 
-    private static void pushVariant(WritableArray arr, Object o) {
+    protected static void pushVariant(WritableArray arr, Object o) {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
         } else {

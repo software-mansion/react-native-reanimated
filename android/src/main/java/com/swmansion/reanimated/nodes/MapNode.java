@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
@@ -8,16 +7,15 @@ import androidx.annotation.NonNull;
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.ReanimatedCollection;
+import com.swmansion.reanimated.reflection.MapBuilder;
 import com.swmansion.reanimated.reflection.ReadableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
 import com.swmansion.reanimated.reflection.ReanimatedNativeCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
-import com.swmansion.reanimated.reflection.MapBuilder;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -25,19 +23,19 @@ import javax.annotation.Nullable;
 public class MapNode extends ValueNode implements ValueManagingNode {
     public static class ArgMap {
         public final int nodeID;
-        private final String[] path;
+        private final Object[] path;
 
         ArgMap(ReadableArray eventPath) {
             int size = eventPath.size();
             path = new String[size - 1];
             for (int i = 0; i < size - 1; i++) {
-                path[i] = eventPath.getString(i);
+                path[i] = eventPath.getType(i) == ReadableType.Number ? eventPath.getInt(i) : eventPath.getString(i);
             }
             nodeID = eventPath.getInt(size - 1);
         }
 
-        public ArrayList<String> getPath() {
-            ArrayList<String> list = new ArrayList<>();
+        public ArrayList<Object> getPath() {
+            ArrayList<Object> list = new ArrayList<>();
             for (int i = 0; i < path.length; i++) {
                 list.add(i, path[i]);
             }
@@ -46,13 +44,14 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
         Object lookupValue(ReadableCollection resolver) {
             ReadableCollection collection = resolver;
+            Object key;
             for (int i = 0; collection != null && i < path.length - 1; i++) {
-                String key = path[i];
+                key = path[i];
                 collection = collection.has(key) ? collection.value(key, ReadableCollection.class) : null;
             }
 
             if (collection != null) {
-                String key = path[path.length - 1];
+                key = path[path.length - 1];
                 return collection.value(key);
             }
 
@@ -66,7 +65,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
 
  */
-
+/*
         private static ReanimatedCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
             int depth = 0;
             ArrayList<String> path;
@@ -120,10 +119,12 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         }
 
 
+
+ */
         @NonNull
         @Override
         public String toString() {
-            ArrayList<String> list = new ArrayList<>();
+            ArrayList<Object> list = new ArrayList<>();
             for (int i = 0; i < path.length; i++) {
                 list.add(i, path[i]);
             }
@@ -223,7 +224,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
-            Object memoizedNodeValue = map.lookupValue(mBuilder.resolver());
+            Object memoizedNodeValue = map.lookupValue(mBuilder);
             Object nodeValue = mNodesManager.getNodeValue(map.nodeID);
             if (!nodeValue.equals(memoizedNodeValue)) {
                 return true;
@@ -240,7 +241,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         if (isDirty()) {
             mDirty = false;
-            mBuilder = ReanimatedNativeCollection.fromMapping(mMapping, mNodesManager);
+            mBuilder = MapBuilder.fromMapping(mMapping, mNodesManager);
             mValue = mBuilder.export();
         }
         return mValue;

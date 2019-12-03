@@ -10,9 +10,12 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class WritableCollectionResolver {
-
+/*
     private MapBuilder mCollection;
     private ReadableType mType = ReadableType.Null;
 
@@ -21,7 +24,7 @@ public class WritableCollectionResolver {
     }
 
     int size() {
-        ReadableMapKeySetIterator keySetIterator = mCollection.getMap().keySetIterator();
+        ReadableMapKeySetIterator keySetIterator = mCollection.mapContext().keySetIterator();
         String key;
         int size = 0;
         int n = 0;
@@ -45,7 +48,7 @@ public class WritableCollectionResolver {
     @NonNull
     ArrayList<Object> toArrayList() {
         ArrayList<Object> list = new ArrayList<>();
-        WritableMap map = mCollection.getMap();
+        WritableMap map = mCollection.mapContext();
         ReadableMapKeySetIterator keySetIterator = map.keySetIterator();
         String key;
         int index;
@@ -68,24 +71,37 @@ public class WritableCollectionResolver {
         return list;
     }
 
-    String resolveKey(String name) {
-        if (WritableArrayResolver.isIndex(name)) {
-            return resolveKey(Integer.valueOf(name));
+    <T extends Object> T resolveKey(T key) {
+        if (WritableArrayResolver.isIndex(key)) {
+            assertType(mType == ReadableType.Map, key);
+            mType = ReadableType.Array;
+            int index = ((int) key);
+            Integer retVal = index < 0 ? size() + index : index;
+            return ((T) retVal);
         } else {
-            assertType(mType == ReadableType.Map, name);
+            assertType(mType == ReadableType.Map, key);
             mType = ReadableType.Map;
-            return name;
+            return key;
         }
     }
 
-    private String resolveKey(int index) {
-        assertType(mType == ReadableType.Map, index);
-        mType = ReadableType.Array;
-        return String.valueOf(index < 0 ? size() + index : index);
+    static ArrayList<Object> inflate(HashMap<Integer, Object> context) {
+        ArrayList<Object> out = new ArrayList<>();
+        Iterator<Map.Entry<Integer, Object>> entryIterator = context.entrySet().iterator();
+        Map.Entry<Integer, Object> entry;
+        while (entryIterator.hasNext()) {
+            entry = entryIterator.next();
+            addArrayMember(out, entry.getKey(), entry.getValue());
+        }
+        return out;
     }
 
-    String nextIndex() {
-        return String.valueOf(size());
+    static void addArrayMember(ArrayList<Object> arrayList, int index, Object value) {
+        arrayList.ensureCapacity(index + 1);
+        while (index >= arrayList.size()) {
+            arrayList.add(null);
+        }
+        arrayList.set(index, value);
     }
 
     ReadableType getType() {
@@ -97,7 +113,7 @@ public class WritableCollectionResolver {
     }
 
     private void assertType(boolean condition, Object key) {
-        assertCondition(condition, String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), key));
+        assertCondition(condition, String.format("Ambiguous collection type: existing %s, next key %s", mCollection.mapContext(), key));
     }
 
     private void assertCondition(boolean condition, String message) {
@@ -105,4 +121,6 @@ public class WritableCollectionResolver {
             throw new JSApplicationCausedNativeException(message);
         }
     }
+
+ */
 }
