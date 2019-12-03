@@ -23,10 +23,12 @@ public class WritableCollectionResolver {
         ReadableMapKeySetIterator keySetIterator = mCollection.getMap().keySetIterator();
         String key;
         int size = 0;
+        int n = 0;
         Log.d("Invoke", "collection: ");
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
+            n++;
             Log.d("Invoke", "size:iterator " + key);
 
             if (WritableArrayResolver.isIndex(key)) {
@@ -34,6 +36,8 @@ public class WritableCollectionResolver {
             }
         }
 
+        assertCondition((size > 0 && mType == ReadableType.Map) || (size != n && mType == ReadableType.Array), "Ambiguous collection type");
+        mType = size > 0 ? ReadableType.Array : ReadableType.Map;
         return size;
     }
 
@@ -56,6 +60,7 @@ public class WritableCollectionResolver {
             }
         }
 
+
         return list;
     }
 
@@ -63,22 +68,14 @@ public class WritableCollectionResolver {
         if (WritableArrayResolver.isIndex(name)) {
             return resolveKey(Integer.valueOf(name));
         } else {
-            if (mType == ReadableType.Array) {
-                throw new JSApplicationCausedNativeException(
-                        String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), name)
-                );
-            }
+            assertType(mType == ReadableType.Map, name);
             mType = ReadableType.Map;
             return name;
         }
     }
 
     private String resolveKey(int index) {
-        if (mType == ReadableType.Map) {
-            throw new JSApplicationCausedNativeException(
-                    String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), index)
-            );
-        }
+        assertType(mType == ReadableType.Map, index);
         mType = ReadableType.Array;
         return String.valueOf(index < 0 ? size() + index : index);
     }
@@ -93,5 +90,15 @@ public class WritableCollectionResolver {
 
     boolean isArray() {
         return mType == ReadableType.Array;
+    }
+
+    private void assertType(boolean condition, Object key) {
+        assertCondition(condition, String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), key));
+    }
+
+    private void assertCondition(boolean condition, String message) {
+        if (condition) {
+            throw new JSApplicationCausedNativeException(message);
+        }
     }
 }

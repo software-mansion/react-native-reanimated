@@ -41,12 +41,13 @@ public class ReanimatedCollection implements WritableCollection {
 
     @Override
     public void merge(WritableCollection source) {
-        map.merge(source.getMap());
+        merge(source.getMap());
     }
 
     @Override
     public void merge(ReadableMap source) {
         map.merge(source);
+        mResolver.size();
     }
 
     public ReanimatedCollection copy() {
@@ -72,5 +73,11 @@ public class ReanimatedCollection implements WritableCollection {
     @Override
     public Object export() {
         return mResolver.isArray() ? asArray() : asMap();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return export().toString();
     }
 }
