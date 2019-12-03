@@ -55,14 +55,4 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     endContext();
     return retVal;
   }
-
-    @Nullable
-    @Override
-    public Object finalValue() {
-        beginContext();
-        Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        Object retVal = whatNode.finalValue();
-        endContext();
-        return retVal;
-    }
 }
