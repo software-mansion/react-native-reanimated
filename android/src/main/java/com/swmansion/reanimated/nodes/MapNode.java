@@ -240,7 +240,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         if (isDirty()) {
             mDirty = false;
-            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, false);
             mValue = mBuilder.export();
         }
         return mValue;
@@ -250,7 +250,5 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Override
     public Object finalValue() {
         return ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
-        //ReanimatedNativeCollection.fromMapping(mMapping, mNodesManager);
-        //return WritableNa(mMapping, mNodesManager).export();
     }
 }
