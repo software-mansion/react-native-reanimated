@@ -6,13 +6,8 @@ import com.facebook.react.bridge.WritableMap;
 
 public interface WritableCollection extends WritableMap {
     void putDynamic(String key, Object value);
-    /**
-     * builds an {@link java.util.ArrayList} mocking {@link WritableArray}
-     * if size isn't provided and relative indexes exist (e.g. -1), indexes are resolved from current size of elements
-     * pass `size` in order to resolve relative indexes properly
-     */
+    ReadableCollection resolver();
     WritableArray asArray();
-    WritableArray asArray(int size);
     WritableMap asMap();
     ReadableType getType();
     Object export();

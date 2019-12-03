@@ -12,12 +12,9 @@ public class WritableCollectionResolver {
 
     WritableCollectionResolver(WritableCollection collection) {
         mCollection = collection;
-        size();
     }
 
     int size() {
-        return 0;
-        /*
         ReadableMapKeySetIterator keySetIterator = mCollection.keySetIterator();
         String key;
         int size = 0;
@@ -40,8 +37,6 @@ public class WritableCollectionResolver {
         }
 
         return size;
-
-         */
     }
 
     String resolveKey(String name) {

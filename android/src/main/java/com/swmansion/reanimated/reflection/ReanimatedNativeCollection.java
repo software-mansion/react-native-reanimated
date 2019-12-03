@@ -1,21 +1,20 @@
 package com.swmansion.reanimated.reflection;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.facebook.react.bridge.Dynamic;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeArray;
-import com.facebook.react.bridge.WritableNativeMap;
+import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.nodes.MapNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-public class ReanimatedNativeCollection extends ReanimatedNativeMap implements WritableArray, WritableCollection {
+public class ReanimatedNativeCollection extends ReanimatedNativeMap implements WritableCollection {
 
     public static ReanimatedNativeCollection fromMap(ReadableMap source) {
         if (source instanceof ReanimatedNativeCollection) {
@@ -29,10 +28,19 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     
     private final WritableCollectionResolver mResolver;
 
-    @SuppressWarnings("WeakerAccess")
-    public ReanimatedNativeCollection() {
+    ReanimatedNativeCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
+    }
+
+    @Override
+    public ReadableCollection resolver() {
+        return resolver;
+    }
+
+    @Override
+    public void putDynamic(String key, Object o) {
+        super.putDynamic(mResolver.resolveKey(key), o);
     }
 
     @Override
@@ -47,165 +55,7 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
         return copy;
     }
 
-    @Nullable
-    @Override
-    public ReadableArray getArray(@NonNull String name) {
-        return super.getArray(mResolver.resolveKey(name));
-    }
-
-    @Nullable
-    @Override
-    public ReadableArray getArray(int index) {
-        return getArray(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void putArray(@NonNull String key, @Nullable ReadableArray value) {
-        if (value instanceof WritableNativeMap) {
-            super.putMap(key, ((WritableNativeMap) value));
-        } else {
-            super.putArray(key, value);
-        }
-    }
-
-    @Override
-    public void pushArray(@Nullable ReadableArray array) {
-        if (array instanceof WritableNativeMap) {
-            putMap(mResolver.nextIndex(), ((WritableNativeMap) array));
-        } else {
-            putArray(mResolver.nextIndex(), array);
-        }
-    }
-
-    @Override
-    public boolean getBoolean(@NonNull String name) {
-        return super.getBoolean(mResolver.resolveKey(name));
-    }
-
-    @Override
-    public boolean getBoolean(int index) {
-        return getBoolean(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushBoolean(boolean value) {
-        putBoolean(mResolver.nextIndex(), value);
-    }
-
-    @Override
-    public double getDouble(@NonNull String name) {
-        return super.getDouble(mResolver.resolveKey(name));
-    }
-
-    @Override
-    public double getDouble(int index) {
-        return getDouble(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushDouble(double value) {
-        putDouble(mResolver.nextIndex(), value);
-    }
-
     @NonNull
-    @Override
-    public Dynamic getDynamic(@NonNull String name) {
-        return super.getDynamic(mResolver.resolveKey(name));
-    }
-
-    @NonNull
-    @Override
-    public Dynamic getDynamic(int index) {
-        return getDynamic(mResolver.resolveKey(index));
-    }
-
-    public void pushDynamic(Object value) {
-        putDynamic(mResolver.nextIndex(), value);
-    }
-
-    @Override
-    public void putDynamic(String key, Object value) {
-        resolver.putVariant(mResolver.resolveKey(key), value);
-    }
-
-    @Override
-    public int getInt(@NonNull String name) {
-        return super.getInt(mResolver.resolveKey(name));
-    }
-
-    @Override
-    public int getInt(int index) {
-        return getInt(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushInt(int value) {
-        putInt(mResolver.nextIndex(), value);
-    }
-
-    @Nullable
-    @Override
-    public ReanimatedNativeMap getMap(@NonNull String name) {
-        return super.getMap(mResolver.resolveKey(name));
-    }
-
-    @Nullable
-    @Override
-    public ReadableMap getMap(int index) {
-        return getMap(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushMap(@Nullable ReadableMap map) {
-        putMap(mResolver.nextIndex(), map);
-    }
-
-    @Nullable
-    @Override
-    public String getString(@NonNull String name) {
-        return super.getString(mResolver.resolveKey(name));
-    }
-
-    @Nullable
-    @Override
-    public String getString(int index) {
-        return getString(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushString(@Nullable String value) {
-        putString(mResolver.nextIndex(), value);
-    }
-
-    @NonNull
-    @Override
-    public ReadableType getType(@NonNull String name) {
-        return super.getType(mResolver.resolveKey(name));
-    }
-
-    @NonNull
-    @Override
-    public ReadableType getType(int index) {
-        return getType(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public boolean isNull(int index) {
-        return isNull(mResolver.resolveKey(index));
-    }
-
-    @Override
-    public void pushNull() {
-        putNull(mResolver.nextIndex());
-    }
-
-    @Override
-    public int size() {
-        return mResolver.size();
-    }
-
-    @NonNull
-    @Override
     public ArrayList<Object> toArrayList() {
         ArrayList<Object> list = new ArrayList<>();
         ReadableMapKeySetIterator keySetIterator = keySetIterator();
@@ -229,12 +79,11 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
 
     @Override
     public WritableArray asArray() {
-        return this;
-    }
-
-    @Override
-    public WritableArray asArray(int size) {
-        return this;
+        ReanimatedNativeArray array = new ReanimatedNativeArray();
+        for (Object value: toArrayList()) {
+            array.pushDynamic(value);
+        }
+        return array;
     }
 
     @Override
@@ -243,8 +92,8 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     }
 
     @Override
-    public WritableNativeMap export() {
-        return this;
+    public Object export() {
+        return mResolver.isArray() ? asArray() : asMap();
     }
 
     @NonNull
@@ -252,4 +101,53 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     public String toString() {
         return mResolver.isArray() ? toArrayList().toString() : super.toString();
     }
+
+    public static ReanimatedNativeCollection fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
+        int depth = 0;
+        ArrayList<String> path;
+        List<String> next;
+        List<String> current;
+        String key;
+        ReanimatedNativeCollection collection;
+        ReanimatedNativeCollection map = new ReanimatedNativeCollection();
+        HashMap<List<String>, ReanimatedNativeCollection> stack = new HashMap<>();
+
+        for (int i = 0; i < mapping.size(); i++) {
+            depth = Math.max(depth, mapping.get(i).getPath().size());
+        }
+        for (int i = depth; i >= 0; i--) {
+            for (MapNode.ArgMap argMap: mapping) {
+                path = argMap.getPath();
+
+                if (i < path.size()) {
+                    key = path.get(i);
+                    collection = new ReanimatedNativeCollection();
+
+                    //  assign
+                    if(i == path.size() - 1) {
+                        collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
+                    } else {
+                        current = path.subList(0, i);
+                        collection.putDynamic(key, stack.get(current).copy());
+                    }
+
+                    //  merge
+                    if (i == 0) {
+                        //Log.d("Invoke", "merge end: " + collection);
+                        map.merge(collection);
+                    } else {
+                        next = path.subList(0, i - 1);
+                        if (stack.containsKey(next)) {
+                            collection.merge(stack.get(next));
+                        }
+                        stack.put(next, collection);
+                    }
+
+                }
+            }
+        }
+
+        return map;
+    }
+
 }
