@@ -81,6 +81,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
   const statusBarHeight = useStatusBarHeight();
   const bgc = useMemo(() => new Value(processColor('transparent')), []);
   const [tag, onLayout] = useLayout();
+  const relativeMeasurements = useMemo(() => new Array(4).fill(0).map(() => new Value(0)), []);
 
   useCode(() =>
     cond(
@@ -90,8 +91,7 @@ function Item({ item, parent, evaluate, x, y, index }) {
         //measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
         // measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
         //measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd()))),
-        //call([callback(successMap(ax, debug('measured abs y', ay), width, height))], console.log)
-        //relativeMeasureView(tag, parent, callback(), callback())
+        relativeMeasureView(tag, parent, debug('relativeMeasureView', callback(...relativeMeasurements)), callback())
       ]
     ),
     [tag, parent]
@@ -219,7 +219,7 @@ function Shuffle() {
       x={absoluteX}
       y={absoluteY}
     />
-  ), [tag, absoluteX, absoluteY]);
+  ), [tag, evaluate, absoluteX, absoluteY]);
 
   const keyExtractor = useCallback((item) => item.title, []);
 
@@ -242,13 +242,14 @@ function Shuffle() {
       ref={panRef}
       simultaneousHandlers={scrollRef}
     >
-      <View collapsable={false} style={styles.default} onLayout={onLayout}>
+      <View collapsable={false} style={styles.default}>
         <Transitioning.View
           ref={ref}
           collapsable={false}
           transition={transition}
           style={styles.centerAll}
           animateMount
+          onLayout={onLayout}
         >
           <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
