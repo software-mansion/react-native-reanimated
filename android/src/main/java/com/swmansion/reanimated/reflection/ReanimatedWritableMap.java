@@ -8,12 +8,11 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class ReanimatedWritableMap extends HashMap<String, Object> implements ReanimatedMap {
+public class ReanimatedWritableMap extends HashMap<String, Object> implements ReanimatedBridge.ReanimatedMap {
 
     public static ReanimatedWritableMap fromMap(ReadableMap source) {
         ReanimatedWritableMap map = new ReanimatedWritableMap();

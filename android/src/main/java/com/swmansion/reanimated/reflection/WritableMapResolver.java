@@ -10,7 +10,7 @@ import com.facebook.react.bridge.WritableMap;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableMapResolver implements ReadableCollection {
+public class WritableMapResolver implements ReanimatedBridge.ReadableCollection {
 
     private final WritableMap mSource;
 

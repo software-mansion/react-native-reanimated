@@ -9,8 +9,8 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.reflection.ReanimatedBridge;
 import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
-import com.swmansion.reanimated.reflection.ReadableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
 import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
 
@@ -41,12 +41,12 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return list;
         }
 
-        Object lookupValue(ReadableCollection resolver) {
-            ReadableCollection collection = resolver;
+        Object lookupValue(ReanimatedBridge.ReadableCollection resolver) {
+            ReanimatedBridge.ReadableCollection collection = resolver;
             Object key;
             for (int i = 0; collection != null && i < path.length - 1; i++) {
                 key = path[i];
-                collection = collection.has(key) ? collection.value(key, ReadableCollection.class) : null;
+                collection = collection.has(key) ? collection.value(key, ReanimatedBridge.ReadableCollection.class) : null;
             }
 
             if (collection != null) {
@@ -177,14 +177,14 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     void setValue(@Nullable ReadableArray data) {
-        setValue(((ReadableCollection) ReanimatedNativeArray.fromArray(data)));
+        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedNativeArray.fromArray(data)));
     }
 
     void setValue(@Nullable ReadableMap data) {
-        setValue(((ReadableCollection) ReanimatedNativeMap.fromMap(data)));
+        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedNativeMap.fromMap(data)));
     }
 
-    private void setValue(@Nullable ReadableCollection data) {
+    private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
         if (data == null) {
             throw new IllegalArgumentException("Animated maps must have map data.");
         }

@@ -10,10 +10,10 @@ class ReanimatedDynamic implements Dynamic {
     private final Dynamic value;
 
     private static class DynamicFromCollection implements Dynamic {
-        private final ReadableCollection collection;
+        private final ReanimatedBridge.ReadableCollection collection;
         private final Object key;
 
-        DynamicFromCollection(ReadableCollection collection, Object key) {
+        DynamicFromCollection(ReanimatedBridge.ReadableCollection collection, Object key) {
             this.collection = collection;
             this.key = key;
         }
@@ -68,7 +68,7 @@ class ReanimatedDynamic implements Dynamic {
         }
     }
 
-    ReanimatedDynamic(ReadableCollection collection, Object key) {
+    ReanimatedDynamic(ReanimatedBridge.ReadableCollection collection, Object key) {
         value = new DynamicFromCollection(collection, key);
     }
 

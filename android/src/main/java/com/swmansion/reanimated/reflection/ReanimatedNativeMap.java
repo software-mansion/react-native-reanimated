@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeMap;
 
-public class ReanimatedNativeMap extends WritableNativeMap implements ReanimatedMap {
+public class ReanimatedNativeMap extends WritableNativeMap implements ReanimatedBridge.ReanimatedMap {
 
     public static ReanimatedNativeMap fromMap(ReadableMap source) {
         if (source instanceof ReanimatedNativeMap) {

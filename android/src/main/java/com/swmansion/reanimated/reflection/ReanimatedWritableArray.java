@@ -7,12 +7,11 @@ import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableArray;
 
 import java.util.ArrayList;
 
 
-public class ReanimatedWritableArray extends ArrayList<Object> implements ReanimatedArray {
+public class ReanimatedWritableArray extends ArrayList<Object> implements ReanimatedBridge.ReanimatedArray {
     
     static ReanimatedWritableArray fromArray(ReadableArray source) {
         ReanimatedWritableArray array = new ReanimatedWritableArray();

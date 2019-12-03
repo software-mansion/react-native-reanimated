@@ -11,7 +11,7 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isString;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableArrayResolver implements ReadableCollection {
+public class WritableArrayResolver implements ReanimatedBridge.ReadableCollection {
 
     interface Resolvable {
         int size();

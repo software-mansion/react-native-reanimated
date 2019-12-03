@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static com.swmansion.reanimated.Utils.concat;
 
-public class ViewManagerAccessor implements ReanimatedAccessor {
+public class ViewManagerAccessor implements ReanimatedBridge.ReanimatedAccessor {
     private final UIManagerModule mUIManager;
     private Dynamic mCommandId;
     private ViewManager mViewManager;

@@ -12,7 +12,7 @@ import com.facebook.react.bridge.WritableNativeArray;
 
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class ReanimatedNativeArray extends WritableNativeArray implements ReanimatedArray {
+public class ReanimatedNativeArray extends WritableNativeArray implements ReanimatedBridge.ReanimatedArray {
 
     public static ReanimatedNativeArray fromArray(Object[] array){
         ReanimatedNativeArray out = new ReanimatedNativeArray();

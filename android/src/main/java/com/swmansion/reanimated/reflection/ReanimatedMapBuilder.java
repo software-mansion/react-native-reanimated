@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ReanimatedMapBuilder<A extends ReanimatedArray, M extends ReanimatedMap, AB extends Class<A>, MB extends Class<M>> implements ReadableCollection {
+public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M extends ReanimatedBridge.ReanimatedMap, AB extends Class<A>, MB extends Class<M>> implements ReanimatedBridge.ReadableCollection {
     private final AB arrayBuilder;
     private final MB mapBuilder;
     private SparseArray<Object> arrayContext;
@@ -50,7 +50,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedArray, M extends Reanimate
         mapResolver = new WritableMapResolver(mapContext);
     }
 
-    private ReadableCollection resolver(Object key) {
+    private ReanimatedBridge.ReadableCollection resolver(Object key) {
         return ReflectionUtils.isInteger(key) ? arrayResolver : mapResolver;
     }
 

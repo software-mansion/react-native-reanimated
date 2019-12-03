@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 import static com.swmansion.reanimated.Utils.concat;
 
-class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
+class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedBridge.ReanimatedAccessor {
     private NativeModule mCallee;
     private MethodAccessor mMethod;
 
