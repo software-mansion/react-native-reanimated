@@ -1,15 +1,19 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.ReanimatedCollection;
 import com.swmansion.reanimated.reflection.ReadableCollection;
+import com.swmansion.reanimated.reflection.ReanimatedMap;
 import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
 import com.swmansion.reanimated.reflection.ReanimatedNativeCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
@@ -58,9 +62,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return null;
         }
 
-        static ReanimatedNativeCollection buildFinalMap(List<ArgMap> mapping, NodesManager nodesManager) {
-            return buildMap(mapping, nodesManager, ReanimatedNativeCollection.class);
-        }
 /*
         static ReanimatedCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
             return buildMap(mapping, nodesManager, ReanimatedCollection.class);
@@ -68,16 +69,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
 
  */
-
-        private static <T extends WritableCollection> T buildMap(List<ArgMap> mapping, NodesManager nodesManager, Class<T> builder) {
-            try {
-                return build(mapping, nodesManager, builder);
-            } catch (InstantiationException e) {
-                throw new JSApplicationCausedNativeException("Reanimated map builder error", e);
-            } catch (IllegalAccessException e) {
-                throw new JSApplicationCausedNativeException("Reanimated map builder error", e);
-            }
-        }
 
         private static ReanimatedCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
             int depth = 0;
@@ -102,20 +93,28 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                         //  assign
                         if (i == 0) {
                             collection = map;
+                            collection.putDynamic(key, new HashMap<>());
+                            current = path.subList(0, i + 1);
+                            stack.put(current, collection);
                         } else {
-                            prev = path.subList(0, i - 1);
+                            prev = path.subList(0, i);
+                            current = path.subList(0, i + 1);
                             collection = stack.get(prev);
+                            Log.d("Invoke", "buildMap: current " + prev + "  " + collection);
                             if (i == path.size() - 1) {
                                 collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
                             } else {
                                 collection.putDynamic(key, new HashMap<>());
+                                stack.put(current, collection);
+                                stack.remove(prev);
                             }
 
                         }
 
                         //  put in stack
-                        current = path.subList(0, i);
-                        stack.put(current, collection);
+                        //current = path.subList(0, i);
+                        Log.d("Invoke", "buildMap: current " + current + "  " + collection);
+
                     }
                 }
             }
@@ -123,53 +122,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return map;
         }
 
-        private static <T extends WritableCollection> T build(List<ArgMap> mapping, NodesManager nodesManager, Class<T> builder) throws InstantiationException, IllegalAccessException {
-            int depth = 0;
-            ArrayList<String> path;
-            List<String> next;
-            List<String> current;
-            String key;
-            WritableCollection collection;
-            WritableCollection map = builder.newInstance();
-            HashMap<List<String>, WritableCollection> stack = new HashMap<>();
-
-            for (int i = 0; i < mapping.size(); i++) {
-                depth = Math.max(depth, mapping.get(i).path.length);
-            }
-            for (int i = depth; i >= 0; i--) {
-                for (ArgMap argMap: mapping) {
-                    path = argMap.getPath();
-
-                    if (i < path.size()) {
-                        key = path.get(i);
-                        collection = builder.newInstance();
-
-                        //  assign
-                        if(i == path.size() - 1) {
-                            collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
-                        } else {
-                            current = path.subList(0, i);
-                            collection.putDynamic(key, stack.get(current).copy());
-                        }
-
-                        //  merge
-                        if (i == 0) {
-                            //Log.d("Invoke", "merge end: " + collection);
-                            map.merge(collection);
-                        } else {
-                            next = path.subList(0, i - 1);
-                            if (stack.containsKey(next)) {
-                                collection.merge(stack.get(next));
-                            }
-                            stack.put(next, collection);
-                        }
-
-                    }
-                }
-            }
-
-            return ((T) map);
-        }
 
         @NonNull
         @Override
@@ -194,7 +146,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     private List<ArgMap> mMapping;
     private Boolean mDirty = true;
-    private ReanimatedCollection mBuilder;
+    private WritableCollection mBuilder;
     private Object mValue;
     private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
@@ -291,7 +243,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         if (isDirty()) {
             mDirty = false;
-            mBuilder = ArgMap.buildMap(mMapping, mNodesManager);
+            mBuilder = ReanimatedNativeCollection.fromMapping(mMapping, mNodesManager);
             mValue = mBuilder.export();
         }
         return mValue;
@@ -300,6 +252,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Nullable
     @Override
     public Object finalValue() {
-        return ArgMap.buildFinalMap(mMapping, mNodesManager).export();
+        return null;
+        //ReanimatedNativeCollection.fromMapping(mMapping, mNodesManager);
+        //return WritableNa(mMapping, mNodesManager).export();
     }
 }

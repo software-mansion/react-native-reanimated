@@ -2,6 +2,7 @@ package com.swmansion.reanimated.reflection;
 
 import androidx.annotation.NonNull;
 
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
@@ -29,7 +30,7 @@ public class ReanimatedNativeCollection implements WritableCollection {
     private final WritableCollectionResolver mResolver;
     private ReanimatedNativeMap map;
 
-    ReanimatedNativeCollection() {
+    public ReanimatedNativeCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
         map = new ReanimatedNativeMap();
@@ -98,7 +99,66 @@ public class ReanimatedNativeCollection implements WritableCollection {
         return mResolver.isArray() ? mResolver.toArrayList().toString() : super.toString();
     }
 
-    public static ReanimatedNativeCollection fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
+    public static WritableCollection fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
+        try {
+            return fromMapping(mapping, nodesManager, ReanimatedNativeCollection.class);
+        } catch (InstantiationException e) {
+            throw new JSApplicationCausedNativeException("Reanimated map builder error", e);
+        } catch (IllegalAccessException e) {
+            throw new JSApplicationCausedNativeException("Reanimated map builder error", e);
+        }
+    }
+
+    private static <T extends WritableCollection, R extends WritableMap> T fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager, Class<T> builder) throws InstantiationException, IllegalAccessException {
+        int depth = 0;
+        ArrayList<String> path;
+        List<String> next;
+        List<String> current;
+        String key;
+        WritableCollection collection;
+        WritableCollection map = builder.newInstance();
+        HashMap<List<String>, WritableCollection> stack = new HashMap<>();
+
+        for (int i = 0; i < mapping.size(); i++) {
+            depth = Math.max(depth, mapping.get(i).getPath().size());
+        }
+        for (int i = depth; i >= 0; i--) {
+            for (MapNode.ArgMap argMap: mapping) {
+                path = argMap.getPath();
+
+                if (i < path.size()) {
+                    key = path.get(i);
+                    collection = builder.newInstance();
+
+                    //  assign
+                    if(i == path.size() - 1) {
+                        collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
+                    } else {
+                        current = path.subList(0, i);
+                        collection.putDynamic(key, stack.get(current).getMap().copy());
+                    }
+
+                    //  merge
+                    if (i == 0) {
+                        //Log.d("Invoke", "merge end: " + collection);
+                        map.merge(collection);
+                    } else {
+                        next = path.subList(0, i - 1);
+                        if (stack.containsKey(next)) {
+                            collection.merge(stack.get(next));
+                        }
+                        stack.put(next, collection);
+                    }
+
+                }
+            }
+        }
+
+        return ((T) map);
+    }
+
+
+    public static ReanimatedNativeCollection fromMapping111(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
         int depth = 0;
         ArrayList<String> path;
         List<String> next;

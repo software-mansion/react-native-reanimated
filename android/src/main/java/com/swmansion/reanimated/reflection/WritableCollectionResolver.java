@@ -64,16 +64,20 @@ public class WritableCollectionResolver {
             return resolveKey(Integer.valueOf(name));
         } else {
             if (mType == ReadableType.Array) {
-                throw new JSApplicationCausedNativeException("Ambiguous collection type");
+                throw new JSApplicationCausedNativeException(
+                        String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), name)
+                );
             }
             mType = ReadableType.Map;
             return name;
         }
     }
 
-    String resolveKey(int index) {
+    private String resolveKey(int index) {
         if (mType == ReadableType.Map) {
-            throw new JSApplicationCausedNativeException("Ambiguous collection type");
+            throw new JSApplicationCausedNativeException(
+                    String.format("Ambiguous collection type: existing %s, next key %s", mCollection.getMap(), index)
+            );
         }
         mType = ReadableType.Array;
         return String.valueOf(index < 0 ? size() + index : index);
