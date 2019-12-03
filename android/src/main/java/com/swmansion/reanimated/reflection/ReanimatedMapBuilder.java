@@ -148,7 +148,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
 
     public static ReanimatedMapBuilder fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager, boolean useNativeBuilder) {
         try {
-            return buildMap(mapping, nodesManager, true);
+            return buildMap(mapping, nodesManager, useNativeBuilder);
         } catch (Throwable e) {
             throw new JSApplicationCausedNativeException(String.format("%s error", ReanimatedMapBuilder.class.getSimpleName()), e);
         }
