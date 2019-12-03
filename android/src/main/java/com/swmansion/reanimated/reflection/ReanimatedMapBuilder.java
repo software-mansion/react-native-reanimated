@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.MapNode;
@@ -128,7 +129,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         try {
             array = arrayBuilder.newInstance();
             for (int i = 0; i < arrayContext.size(); i++) {
-                array.pushDynamic(arrayContext.valueAt(i));
+                array.pushDynamic(ReflectionUtils.clone(arrayContext.valueAt(i)));
             }
         } catch (Throwable e) {
             e.printStackTrace();

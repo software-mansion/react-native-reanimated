@@ -147,4 +147,13 @@ class ReflectionUtils {
         }
     }
 
+    static Object clone(Object o) {
+        switch (ReflectionUtils.inferType(o)) {
+            case Map:
+                return ((ReanimatedBridge.ReanimatedMap) o).copy();
+            default:
+                return o;
+        }
+    }
+
 }
