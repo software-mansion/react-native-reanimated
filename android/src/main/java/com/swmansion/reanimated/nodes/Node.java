@@ -68,15 +68,6 @@ public abstract class Node {
     throw new IllegalStateException("Value of node " + this + " cannot be cast to a number");
   }
 
-  /**
-   * This method is a performance booster and is used for communicating with js only.
-   * Nodes that mock interfaces such as {@link com.facebook.react.bridge.WritableMap}
-   * in order to save on computation (e.g {@link MapNode}) should override this method.
-   */
-  public @Nullable Object finalValue() {
-    return value();
-  }
-
   public void addChild(Node child) {
     if (mChildren == null) {
       mChildren = new ArrayList<>();

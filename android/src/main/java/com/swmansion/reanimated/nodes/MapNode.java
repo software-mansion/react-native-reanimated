@@ -183,9 +183,4 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         return mValue;
     }
 
-    @Nullable
-    @Override
-    public Object finalValue() {
-        return ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
-    }
 }
