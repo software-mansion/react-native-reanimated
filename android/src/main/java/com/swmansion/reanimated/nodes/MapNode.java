@@ -57,69 +57,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             return null;
         }
 
-/*
-        static ReanimatedCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
-            return buildMap(mapping, nodesManager, ReanimatedCollection.class);
-        }
-
-
- */
-/*
-        private static ReanimatedCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
-            int depth = 0;
-            ArrayList<String> path;
-            List<String> current;
-            List<String> prev;
-            String key;
-            ReanimatedCollection collection;
-            ReanimatedCollection map = new ReanimatedCollection();
-            HashMap<List<String>, ReanimatedCollection> stack = new HashMap<>();
-
-            for (int i = 0; i < mapping.size(); i++) {
-                depth = Math.max(depth, mapping.get(i).path.length);
-            }
-            for (int i = 0; i <= depth; i++) {
-                for (ArgMap argMap: mapping) {
-                    path = argMap.getPath();
-
-                    if (i < path.size()) {
-                        key = path.get(i);
-
-                        //  assign
-                        if (i == 0) {
-                            collection = map;
-                            collection.putDynamic(key, new HashMap<>());
-                            current = path.subList(0, i + 1);
-                            stack.put(current, collection);
-                        } else {
-                            prev = path.subList(0, i);
-                            current = path.subList(0, i + 1);
-                            collection = stack.get(prev);
-                            Log.d("Invoke", "buildMap: current " + prev + "  " + collection);
-                            if (i == path.size() - 1) {
-                                collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
-                            } else {
-                                collection.putDynamic(key, new HashMap<>());
-                                stack.put(current, collection);
-                                stack.remove(prev);
-                            }
-
-                        }
-
-                        //  put in stack
-                        //current = path.subList(0, i);
-                        Log.d("Invoke", "buildMap: current " + current + "  " + collection);
-
-                    }
-                }
-            }
-
-            return map;
-        }
-
-
-
- */
         @NonNull
         @Override
         public String toString() {
@@ -240,7 +177,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         if (isDirty()) {
             mDirty = false;
-            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, false);
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
             mValue = mBuilder.export();
         }
         return mValue;
