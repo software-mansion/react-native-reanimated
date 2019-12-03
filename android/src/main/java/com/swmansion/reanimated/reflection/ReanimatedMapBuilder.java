@@ -73,9 +73,11 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     public void putDynamic(Object key, Object o) {
         if (WritableArrayResolver.isIndex(key)) {
             assertIsNotType(ReadableType.Map, key);
+            type = ReadableType.Array;
             arrayContext.put(arrayResolver.resolveIndex(key), o);
         } else {
             assertIsNotType(ReadableType.Array, key);
+            type = ReadableType.Map;
             mapContext.putDynamic((String) key, o);
         }
     }
@@ -83,6 +85,11 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     public void merge(ReanimatedMapBuilder source) {
         mapContext.merge(source.mapContext);
         SparseArray<Object> sourceArray = source.arrayContext;
+        assertCondition(
+                type != source.type && type != ReadableType.Null,
+                String.format("Illegal merge operation: (%s) %s trying to merge (%s) %s", type, this, source.type, source)
+        );
+        type = source.type;
         for (int i = 0; i < sourceArray.size(); i++) {
             assertIsNotType(ReadableType.Map, i);
             arrayContext.append(sourceArray.keyAt(i), sourceArray.valueAt(i));
@@ -93,6 +100,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     public ReanimatedMapBuilder copy() throws InstantiationException, IllegalAccessException {
         ReanimatedMapBuilder copy = new ReanimatedMapBuilder(mapBuilder, arrayBuilder);
         copy.merge(this);
+        copy.type = type;
         return copy;
     }
 
