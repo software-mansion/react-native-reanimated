@@ -11,8 +11,8 @@ import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.ReanimatedBridge;
 import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
-import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
-import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
+import com.swmansion.reanimated.reflection.ReanimatedWritableNativeArray;
+import com.swmansion.reanimated.reflection.ReanimatedWritableNativeMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -177,11 +177,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     void setValue(@Nullable ReadableArray data) {
-        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedNativeArray.fromArray(data)));
+        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedWritableNativeArray.fromArray(data)));
     }
 
     void setValue(@Nullable ReadableMap data) {
-        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedNativeMap.fromMap(data)));
+        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedWritableNativeMap.fromMap(data)));
     }
 
     private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {

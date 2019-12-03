@@ -43,12 +43,12 @@ class ReanimatedDynamic implements Dynamic {
         }
 
         @Override
-        public ReanimatedNativeArray asArray() {
+        public ReanimatedWritableNativeArray asArray() {
             return value(ReadableType.Array);
         }
 
         @Override
-        public ReanimatedNativeMap asMap() {
+        public ReanimatedWritableNativeMap asMap() {
             return value(ReadableType.Map);
         }
 

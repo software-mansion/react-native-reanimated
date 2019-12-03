@@ -12,21 +12,21 @@ import com.facebook.react.bridge.WritableNativeArray;
 
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class ReanimatedNativeArray extends WritableNativeArray implements ReanimatedBridge.ReanimatedArray {
+public class ReanimatedWritableNativeArray extends WritableNativeArray implements ReanimatedBridge.ReanimatedArray {
 
-    public static ReanimatedNativeArray fromArray(Object[] array){
-        ReanimatedNativeArray out = new ReanimatedNativeArray();
+    public static ReanimatedWritableNativeArray fromArray(Object[] array){
+        ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
         for (int i = 0; i < array.length; i++) {
             out.pushDynamic(array[i]);
         }
         return out;
     }
 
-    public static ReanimatedNativeArray fromArray(ReadableArray array) {
-        if (array instanceof ReanimatedNativeArray) {
-            return ((ReanimatedNativeArray) array);
+    public static ReanimatedWritableNativeArray fromArray(ReadableArray array) {
+        if (array instanceof ReanimatedWritableNativeArray) {
+            return ((ReanimatedWritableNativeArray) array);
         } else {
-            ReanimatedNativeArray out = new ReanimatedNativeArray();
+            ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
             for (Object value: array.toArrayList()) {
                 out.pushDynamic(value);
             }
@@ -36,7 +36,7 @@ public class ReanimatedNativeArray extends WritableNativeArray implements Reanim
 
     protected final WritableArrayResolver resolver;
 
-    public ReanimatedNativeArray() {
+    public ReanimatedWritableNativeArray() {
         super();
         resolver = new WritableArrayResolver(this);
     }
@@ -107,7 +107,7 @@ public class ReanimatedNativeArray extends WritableNativeArray implements Reanim
     @Override
     public ReadableNativeMap getMap(int index) {
         index = resolver.resolveIndex(index);
-        return ReanimatedNativeMap.fromMap(super.getMap(index));
+        return ReanimatedWritableNativeMap.fromMap(super.getMap(index));
     }
 
     @Nullable
@@ -124,8 +124,8 @@ public class ReanimatedNativeArray extends WritableNativeArray implements Reanim
         return super.getType(index);
     }
 
-    public ReanimatedNativeArray copy() {
-        ReanimatedNativeArray copy = new ReanimatedNativeArray();
+    public ReanimatedWritableNativeArray copy() {
+        ReanimatedWritableNativeArray copy = new ReanimatedWritableNativeArray();
         WritableArrayResolver.addAll(copy, this);
         return copy;
     }

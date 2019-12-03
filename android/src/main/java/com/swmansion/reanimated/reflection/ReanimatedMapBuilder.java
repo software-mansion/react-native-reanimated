@@ -25,7 +25,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
 
     public static ReanimatedMapBuilder create(boolean useNativeBuilder) throws InstantiationException, IllegalAccessException {
         if (useNativeBuilder) {
-            return new ReanimatedMapBuilder(ReanimatedNativeMap.class, ReanimatedNativeArray.class);
+            return new ReanimatedMapBuilder(ReanimatedWritableNativeMap.class, ReanimatedWritableNativeArray.class);
         } else {
             return new ReanimatedMapBuilder(ReanimatedWritableMap.class, ReanimatedWritableArray.class);
         }

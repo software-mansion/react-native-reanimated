@@ -117,7 +117,7 @@ public class ViewManagerAccessor implements ReanimatedBridge.ReanimatedAccessor 
 
     @Override
     public void call(int[] params, NodesManager nodesManager) {
-        ReanimatedNativeArray args = new ReanimatedNativeArray();
+        ReanimatedWritableNativeArray args = new ReanimatedWritableNativeArray();
         Node n;
         int paramStart;
 

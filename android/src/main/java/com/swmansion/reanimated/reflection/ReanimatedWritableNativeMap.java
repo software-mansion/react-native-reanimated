@@ -8,27 +8,27 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeMap;
 
-public class ReanimatedNativeMap extends WritableNativeMap implements ReanimatedBridge.ReanimatedMap {
+public class ReanimatedWritableNativeMap extends WritableNativeMap implements ReanimatedBridge.ReanimatedMap {
 
-    public static ReanimatedNativeMap fromMap(ReadableMap source) {
-        if (source instanceof ReanimatedNativeMap) {
-            return ((ReanimatedNativeMap) source);
+    public static ReanimatedWritableNativeMap fromMap(ReadableMap source) {
+        if (source instanceof ReanimatedWritableNativeMap) {
+            return ((ReanimatedWritableNativeMap) source);
         } else {
-            ReanimatedNativeMap out = new ReanimatedNativeMap();
+            ReanimatedWritableNativeMap out = new ReanimatedWritableNativeMap();
             out.merge(source);
             return out;
         }
     }
 
-    public static ReanimatedNativeMap fromArray(ReadableArray source) {
-        ReanimatedNativeMap out = new ReanimatedNativeMap();
+    public static ReanimatedWritableNativeMap fromArray(ReadableArray source) {
+        ReanimatedWritableNativeMap out = new ReanimatedWritableNativeMap();
         WritableMapResolver.addAll(out, source);
         return out;
     }
 
     protected WritableMapResolver resolver;
 
-    ReanimatedNativeMap() {
+    ReanimatedWritableNativeMap() {
         super();
         resolver = new WritableMapResolver(this);
     }
@@ -50,8 +50,8 @@ public class ReanimatedNativeMap extends WritableNativeMap implements Reanimated
     }
 
     @Override
-    public ReanimatedNativeMap copy() {
-        ReanimatedNativeMap copy = new ReanimatedNativeMap();
+    public ReanimatedWritableNativeMap copy() {
+        ReanimatedWritableNativeMap copy = new ReanimatedWritableNativeMap();
         copy.merge(this);
         return copy;
     }
@@ -59,7 +59,7 @@ public class ReanimatedNativeMap extends WritableNativeMap implements Reanimated
     @Nullable
     @Override
     public ReadableArray getArray(@NonNull String name) {
-        return ReanimatedNativeArray.fromArray(super.getArray(name));
+        return ReanimatedWritableNativeArray.fromArray(super.getArray(name));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ReanimatedNativeMap extends WritableNativeMap implements Reanimated
 
     @Nullable
     @Override
-    public ReanimatedNativeMap getMap(@NonNull String name) {
+    public ReanimatedWritableNativeMap getMap(@NonNull String name) {
         return getType(name) == ReadableType.Array ?
                 fromArray(super.getArray(name)) :
                 fromMap(super.getMap(name));
