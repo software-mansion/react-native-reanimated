@@ -7,12 +7,12 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-public interface WritableCollection {
+public interface MapBuilder {
     @NonNull WritableMap getMap();
     void putDynamic(String key, Object value);
-    void merge(WritableCollection source);
+    void merge(MapBuilder source);
     void merge(ReadableMap source);
-    WritableCollection copy();
+    MapBuilder copy();
     ReadableCollection resolver();
     WritableArray asArray();
     WritableMap asMap();

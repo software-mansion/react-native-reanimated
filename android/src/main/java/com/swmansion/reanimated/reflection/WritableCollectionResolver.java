@@ -13,10 +13,10 @@ import java.util.ArrayList;
 
 public class WritableCollectionResolver {
 
-    private WritableCollection mCollection;
+    private MapBuilder mCollection;
     private ReadableType mType = ReadableType.Null;
 
-    WritableCollectionResolver(WritableCollection collection) {
+    WritableCollectionResolver(MapBuilder collection) {
         mCollection = collection;
     }
 

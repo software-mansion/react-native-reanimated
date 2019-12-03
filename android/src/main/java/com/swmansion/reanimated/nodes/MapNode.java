@@ -6,18 +6,15 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
-import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.ReanimatedCollection;
 import com.swmansion.reanimated.reflection.ReadableCollection;
-import com.swmansion.reanimated.reflection.ReanimatedMap;
 import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
 import com.swmansion.reanimated.reflection.ReanimatedNativeCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
-import com.swmansion.reanimated.reflection.WritableCollection;
+import com.swmansion.reanimated.reflection.MapBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -146,7 +143,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     private List<ArgMap> mMapping;
     private Boolean mDirty = true;
-    private WritableCollection mBuilder;
+    private MapBuilder mBuilder;
     private Object mValue;
     private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 

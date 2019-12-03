@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-public class ReanimatedCollection implements WritableCollection {
+public class ReanimatedCollection implements MapBuilder {
 
     private final WritableCollectionResolver mResolver;
     private ReanimatedMap map;
@@ -40,7 +40,7 @@ public class ReanimatedCollection implements WritableCollection {
     }
 
     @Override
-    public void merge(WritableCollection source) {
+    public void merge(MapBuilder source) {
         merge(source.getMap());
     }
 

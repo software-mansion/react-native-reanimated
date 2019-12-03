@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -15,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ReanimatedNativeCollection implements WritableCollection {
+public class ReanimatedNativeCollection implements MapBuilder {
 
     private final WritableCollectionResolver mResolver;
     private ReanimatedNativeMap map;
@@ -48,7 +47,7 @@ public class ReanimatedNativeCollection implements WritableCollection {
     }
 
     @Override
-    public void merge(WritableCollection source) {
+    public void merge(MapBuilder source) {
         merge(source.getMap());
     }
 
@@ -90,7 +89,7 @@ public class ReanimatedNativeCollection implements WritableCollection {
         return mResolver.isArray() ? mResolver.toArrayList().toString() : super.toString();
     }
 
-    public static WritableCollection fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
+    public static MapBuilder fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {
         try {
             return fromMapping(mapping, nodesManager, ReanimatedNativeCollection.class);
         } catch (InstantiationException e) {
@@ -100,15 +99,15 @@ public class ReanimatedNativeCollection implements WritableCollection {
         }
     }
 
-    private static <T extends WritableCollection> T fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager, Class<T> builder) throws InstantiationException, IllegalAccessException {
+    private static <T extends MapBuilder> T fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager, Class<T> builder) throws InstantiationException, IllegalAccessException {
         int depth = 0;
         ArrayList<String> path;
         List<String> next;
         List<String> current;
         String key;
-        WritableCollection collection;
-        WritableCollection map = builder.newInstance();
-        HashMap<List<String>, WritableCollection> stack = new HashMap<>();
+        MapBuilder collection;
+        MapBuilder map = builder.newInstance();
+        HashMap<List<String>, MapBuilder> stack = new HashMap<>();
 
         for (int i = 0; i < mapping.size(); i++) {
             depth = Math.max(depth, mapping.get(i).getPath().size());
