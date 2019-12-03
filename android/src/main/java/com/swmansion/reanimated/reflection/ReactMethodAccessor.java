@@ -32,8 +32,18 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedBrid
         mMethod = getReactMethod(module, methodName);
     }
 
-    public void call(int[] params, NodesManager nodesManager){
-        invoke(cast(params, nodesManager));
+    public void call(int[] params, NodesManager nodesManager) {
+        final Object[] args = cast(params, nodesManager);
+        nodesManager
+                .getContext()
+                .runOnNativeModulesQueueThread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                invoke(args);
+                            }
+                        });
+
     }
 
     private void invoke(Object[] params) {
