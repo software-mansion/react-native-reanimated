@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;

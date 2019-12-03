@@ -2,8 +2,13 @@ package com.swmansion.reanimated.reflection;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+
+import java.util.ArrayList;
 
 public class WritableCollectionResolver {
 
@@ -15,35 +20,62 @@ public class WritableCollectionResolver {
     }
 
     int size() {
-        ReadableMapKeySetIterator keySetIterator = mCollection.keySetIterator();
+        ReadableMapKeySetIterator keySetIterator = mCollection.getMap().keySetIterator();
         String key;
         int size = 0;
-        boolean hasKeys = false;
-
         Log.d("Invoke", "collection: ");
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
-            Log.d("Invoke", "size: key set iterator " + key);
+            Log.d("Invoke", "size:iterator " + key);
 
-            hasKeys = true;
             if (WritableArrayResolver.isIndex(key)) {
                 size = Math.max(size, Integer.valueOf(key) + 1);
             }
         }
 
-        if (hasKeys && mType == ReadableType.Null) {
-            mType = size > 0 ? ReadableType.Array : ReadableType.Map;
-        }
-
         return size;
     }
 
+    @NonNull
+    ArrayList<Object> toArrayList() {
+        ArrayList<Object> list = new ArrayList<>();
+        ReadableMapKeySetIterator keySetIterator = mCollection.getMap().keySetIterator();
+        String key;
+        int index;
+
+        while (keySetIterator.hasNextKey()) {
+            key = keySetIterator.nextKey();
+            if (WritableArrayResolver.isIndex(key)) {
+                index = Integer.valueOf(key);
+                list.ensureCapacity(index + 1);
+                while (list.size() <= index) {
+                    list.add(null);
+                }
+                list.set(index, new ReanimatedDynamic(mCollection.getMap().getDynamic(key)).value());
+            }
+        }
+
+        return list;
+    }
+
     String resolveKey(String name) {
-        return WritableArrayResolver.isIndex(name) ? resolveKey(Integer.valueOf(name)) : name;
+        if (WritableArrayResolver.isIndex(name)) {
+            return resolveKey(Integer.valueOf(name));
+        } else {
+            if (mType == ReadableType.Array) {
+                throw new JSApplicationCausedNativeException("Ambiguous collection type");
+            }
+            mType = ReadableType.Map;
+            return name;
+        }
     }
 
     String resolveKey(int index) {
+        if (mType == ReadableType.Map) {
+            throw new JSApplicationCausedNativeException("Ambiguous collection type");
+        }
+        mType = ReadableType.Array;
         return String.valueOf(index < 0 ? size() + index : index);
     }
 
@@ -56,7 +88,6 @@ public class WritableCollectionResolver {
     }
 
     boolean isArray() {
-        Log.d("Invoke", "isArray: " + size());
         return mType == ReadableType.Array;
     }
 }

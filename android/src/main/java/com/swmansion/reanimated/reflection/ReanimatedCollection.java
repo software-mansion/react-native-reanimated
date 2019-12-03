@@ -1,22 +1,37 @@
 package com.swmansion.reanimated.reflection;
 
+import androidx.annotation.NonNull;
+
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-public class ReanimatedCollection extends ReanimatedMap implements WritableCollection {
+public class ReanimatedCollection implements WritableCollection {
 
     private final WritableCollectionResolver mResolver;
+    private ReanimatedMap map;
 
-    @SuppressWarnings("WeakerAccess")
     public ReanimatedCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
+        map = new ReanimatedMap();
+    }
+
+    @Override
+    public ReadableCollection resolver() {
+        return map.resolver;
+    }
+
+    @NonNull
+    @Override
+    public ReanimatedMap getMap() {
+        return map;
     }
 
     @Override
     public void putDynamic(String key, Object value) {
-        put(mResolver.resolveKey(key), value);
+        map.put(mResolver.resolveKey(key), value);
     }
 
     @Override
@@ -24,27 +39,38 @@ public class ReanimatedCollection extends ReanimatedMap implements WritableColle
         return mResolver.getType();
     }
 
+    @Override
+    public void merge(WritableCollection source) {
+        map.merge(source.getMap());
+    }
+
+    @Override
+    public void merge(ReadableMap source) {
+        map.merge(source);
+    }
+
     public ReanimatedCollection copy() {
-        return ((ReanimatedCollection) clone());
+        ReanimatedCollection copy = new ReanimatedCollection();
+        copy.merge(this);
+        return copy;
     }
 
     @Override
     public WritableMap asMap() {
-        return null;
+        return map;
     }
 
     @Override
     public WritableArray asArray() {
-        return null;
-    }
-
-    @Override
-    public WritableArray asArray(int size) {
-        return null;
+        ReanimatedArray array = new ReanimatedArray();
+        for (Object value: mResolver.toArrayList()) {
+            array.pushDynamic(value);
+        }
+        return array;
     }
 
     @Override
     public Object export() {
-        return getType() == ReadableType.Array ? asArray() : asMap();
+        return mResolver.isArray() ? asArray() : asMap();
     }
 }

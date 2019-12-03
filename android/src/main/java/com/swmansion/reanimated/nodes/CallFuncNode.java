@@ -4,6 +4,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
+import javax.annotation.Nullable;
+
 public class CallFuncNode extends Node implements ValueManagingNode {
 
   private String mPreviousCallID;
@@ -53,4 +55,14 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     endContext();
     return retVal;
   }
+
+    @Nullable
+    @Override
+    public Object finalValue() {
+        beginContext();
+        Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+        Object retVal = whatNode.finalValue();
+        endContext();
+        return retVal;
+    }
 }

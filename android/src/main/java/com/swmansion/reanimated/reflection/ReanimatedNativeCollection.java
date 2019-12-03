@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ReanimatedNativeCollection extends ReanimatedNativeMap implements WritableCollection {
+public class ReanimatedNativeCollection implements WritableCollection {
 
     public static ReanimatedNativeCollection fromMap(ReadableMap source) {
         if (source instanceof ReanimatedNativeCollection) {
@@ -27,25 +27,43 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     }
     
     private final WritableCollectionResolver mResolver;
+    private ReanimatedNativeMap map;
 
     ReanimatedNativeCollection() {
         super();
         mResolver = new WritableCollectionResolver(this);
+        map = new ReanimatedNativeMap();
     }
 
     @Override
     public ReadableCollection resolver() {
-        return resolver;
+        return map.resolver;
+    }
+
+    @NonNull
+    @Override
+    public ReanimatedNativeMap getMap() {
+        return map;
     }
 
     @Override
     public void putDynamic(String key, Object o) {
-        super.putDynamic(mResolver.resolveKey(key), o);
+        map.putDynamic(mResolver.resolveKey(key), o);
     }
 
     @Override
     public ReadableType getType() {
         return mResolver.getType();
+    }
+
+    @Override
+    public void merge(WritableCollection source) {
+        map.merge(source.getMap());
+    }
+
+    @Override
+    public void merge(ReadableMap source) {
+        map.merge(source);
     }
 
     @Override
@@ -55,32 +73,10 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
         return copy;
     }
 
-    @NonNull
-    public ArrayList<Object> toArrayList() {
-        ArrayList<Object> list = new ArrayList<>();
-        ReadableMapKeySetIterator keySetIterator = keySetIterator();
-        String key;
-        int index;
-
-        while (keySetIterator.hasNextKey()) {
-            key = keySetIterator.nextKey();
-            if (WritableArrayResolver.isIndex(key)) {
-                index = Integer.valueOf(key);
-                list.ensureCapacity(index + 1);
-                while (list.size() <= index) {
-                    list.add(null);
-                }
-                list.set(index, new ReanimatedDynamic(getDynamic(key)).value());
-            }
-        }
-
-        return list;
-    }
-
     @Override
     public WritableArray asArray() {
         ReanimatedNativeArray array = new ReanimatedNativeArray();
-        for (Object value: toArrayList()) {
+        for (Object value: mResolver.toArrayList()) {
             array.pushDynamic(value);
         }
         return array;
@@ -88,7 +84,7 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
 
     @Override
     public WritableMap asMap() {
-        return this;
+        return map;
     }
 
     @Override
@@ -99,7 +95,7 @@ public class ReanimatedNativeCollection extends ReanimatedNativeMap implements W
     @NonNull
     @Override
     public String toString() {
-        return mResolver.isArray() ? toArrayList().toString() : super.toString();
+        return mResolver.isArray() ? mResolver.toArrayList().toString() : super.toString();
     }
 
     public static ReanimatedNativeCollection fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager) {

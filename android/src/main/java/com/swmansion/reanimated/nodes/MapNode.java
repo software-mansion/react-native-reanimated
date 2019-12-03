@@ -22,8 +22,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class MapNode extends ValueNode implements ValueManagingNode {
-    static class ArgMap {
-        final int nodeID;
+    public static class ArgMap {
+        public final int nodeID;
         private final String[] path;
 
         ArgMap(ReadableArray eventPath) {
@@ -35,7 +35,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
             nodeID = eventPath.getInt(size - 1);
         }
 
-        ArrayList<String> getPath() {
+        public ArrayList<String> getPath() {
             ArrayList<String> list = new ArrayList<>();
             for (int i = 0; i < path.length; i++) {
                 list.add(i, path[i]);
@@ -108,7 +108,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                             if (i == path.size() - 1) {
                                 collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
                             } else {
-                                collection.put(key, new HashMap<>());
+                                collection.putDynamic(key, new HashMap<>());
                             }
 
                         }
@@ -274,7 +274,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
-            Object memoizedNodeValue = map.lookupValue(mBuilder);
+            Object memoizedNodeValue = map.lookupValue(mBuilder.resolver());
             Object nodeValue = mNodesManager.getNodeValue(map.nodeID);
             if (!nodeValue.equals(memoizedNodeValue)) {
                 return true;
