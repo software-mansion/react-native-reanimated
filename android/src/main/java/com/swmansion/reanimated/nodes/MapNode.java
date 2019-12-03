@@ -9,10 +9,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.MapBuilder;
+import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
 import com.swmansion.reanimated.reflection.ReadableCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeArray;
-import com.swmansion.reanimated.reflection.ReanimatedNativeCollection;
 import com.swmansion.reanimated.reflection.ReanimatedNativeMap;
 
 import java.util.ArrayList;
@@ -144,7 +143,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     private List<ArgMap> mMapping;
     private Boolean mDirty = true;
-    private MapBuilder mBuilder;
+    private ReanimatedMapBuilder mBuilder;
     private Object mValue;
     private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
@@ -241,7 +240,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         if (isDirty()) {
             mDirty = false;
-            mBuilder = MapBuilder.fromMapping(mMapping, mNodesManager);
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
             mValue = mBuilder.export();
         }
         return mValue;
@@ -250,7 +249,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Nullable
     @Override
     public Object finalValue() {
-        return null;
+        return ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
         //ReanimatedNativeCollection.fromMapping(mMapping, mNodesManager);
         //return WritableNa(mMapping, mNodesManager).export();
     }

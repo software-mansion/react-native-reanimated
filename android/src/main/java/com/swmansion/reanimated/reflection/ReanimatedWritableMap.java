@@ -13,7 +13,7 @@ import com.facebook.react.bridge.WritableMap;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class ReanimatedWritableMap extends HashMap<String, Object> implements WritableMap, ReanimatedMap {
+public class ReanimatedWritableMap extends HashMap<String, Object> implements ReanimatedMap {
 
     public static ReanimatedWritableMap fromMap(ReadableMap source) {
         ReanimatedWritableMap map = new ReanimatedWritableMap();
