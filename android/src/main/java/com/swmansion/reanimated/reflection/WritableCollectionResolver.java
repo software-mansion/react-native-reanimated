@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 
 import java.util.ArrayList;
 
@@ -44,9 +45,12 @@ public class WritableCollectionResolver {
     @NonNull
     ArrayList<Object> toArrayList() {
         ArrayList<Object> list = new ArrayList<>();
-        ReadableMapKeySetIterator keySetIterator = mCollection.getMap().keySetIterator();
+        WritableMap map = mCollection.getMap();
+        ReadableMapKeySetIterator keySetIterator = map.keySetIterator();
         String key;
         int index;
+
+        Log.d("Invoke", "toArrayList: map: " + map);
 
         while (keySetIterator.hasNextKey()) {
             key = keySetIterator.nextKey();
@@ -56,7 +60,7 @@ public class WritableCollectionResolver {
                 while (list.size() <= index) {
                     list.add(null);
                 }
-                list.set(index, new ReanimatedDynamic(mCollection.getMap().getDynamic(key)).value());
+                list.set(index, new ReanimatedDynamic(map.getDynamic(key)).value());
             }
         }
 
