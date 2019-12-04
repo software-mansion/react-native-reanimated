@@ -6,7 +6,10 @@ import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import java.lang.annotation.Retention;
 
@@ -147,13 +150,31 @@ class ReflectionUtils {
         }
     }
 
-    static Object clone(Object o) {
-        switch (ReflectionUtils.inferType(o)) {
-            case Map:
-                return ((ReanimatedBridge.ReanimatedMap) o).copy();
-            default:
-                return o;
+    static Object nativeCloneDeep(Object source) {
+        if (ReflectionUtils.inferType(source) == ReadableType.Map) {
+            WritableNativeMap out = new WritableNativeMap();
+            if (source instanceof WritableNativeMap) {
+                out.merge((WritableNativeMap) source);
+            } else {
+                ReadableMapKeySetIterator iterator = ((ReadableMap) source).keySetIterator();
+                String key;
+                ReadableMap map = ((ReadableMap) source);
+                while (iterator.hasNextKey()) {
+                    key = iterator.nextKey();
+                    WritableMapResolver.putVariant(out, key, nativeCloneDeep(new ReanimatedDynamic(map.getDynamic(key)).value()));
+                }
+            }
+
+            return out;
+        } else if (ReflectionUtils.inferType(source) == ReadableType.Array) {
+            WritableNativeArray out = new WritableNativeArray();
+            ReadableArray in = ((ReadableArray) source);
+            for (int i = 0; i < in.size(); i++) {
+                WritableArrayResolver.pushVariant(out, nativeCloneDeep(new ReanimatedDynamic(in.getDynamic(i)).value()));
+            }
+            return out;
         }
+        return source;
     }
 
 }

@@ -15,7 +15,12 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
             return ((ReanimatedWritableNativeMap) source);
         } else {
             ReanimatedWritableNativeMap out = new ReanimatedWritableNativeMap();
-            out.merge(source);
+            if (source instanceof WritableNativeMap) {
+                out.merge(source);
+            } else {
+                out.merge((ReadableMap) ReflectionUtils.nativeCloneDeep(source));
+            }
+
             return out;
         }
     }

@@ -17,7 +17,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
     public static ReanimatedWritableNativeArray fromArray(Object[] array){
         ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
         for (int i = 0; i < array.length; i++) {
-            out.pushDynamic(array[i]);
+            out.pushDynamic(ReflectionUtils.nativeCloneDeep(array[i]));
         }
         return out;
     }
@@ -28,7 +28,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
         } else {
             ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
             for (Object value: array.toArrayList()) {
-                out.pushDynamic(value);
+                out.pushDynamic(ReflectionUtils.nativeCloneDeep(value));
             }
             return out;
         }
