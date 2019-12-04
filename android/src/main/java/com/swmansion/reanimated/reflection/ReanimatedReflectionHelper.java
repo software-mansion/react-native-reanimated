@@ -39,7 +39,7 @@ public class ReanimatedReflectionHelper {
 
     public WritableNativeMap getDevUtil() {
         WritableNativeMap data = NativeModuleAccessor.getReflectionMap(context);
-        data.putMap("intercept", jsEventDispatcherAccessor.getDevUtil());
+        data.putMap("JSEvents", jsEventDispatcherAccessor.getDevUtil());
         return data;
     }
 }

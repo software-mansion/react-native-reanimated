@@ -85,6 +85,7 @@ class NativeModuleAccessor {
 
     private WritableNativeMap getDevUtil() {
         WritableNativeMap out = new WritableNativeMap();
+        WritableNativeMap nativeModulesMap = new WritableNativeMap();
         WritableNativeMap temp;
         Map<String, NativeModule> modules = getNativeModules();
         Map<String, MethodAccessor> methods;
@@ -98,8 +99,10 @@ class NativeModuleAccessor {
             for (int j = 0; j < mKeys.length; j++) {
                 temp.putArray(mKeys[j], methods.get(mKeys[j]).out());
             }
-            out.putMap(keys[i], temp);
+            nativeModulesMap.putMap(keys[i], temp);
         }
+
+        out.putMap("nativeModules", nativeModulesMap);
 
         //  append view manager names
         try{
