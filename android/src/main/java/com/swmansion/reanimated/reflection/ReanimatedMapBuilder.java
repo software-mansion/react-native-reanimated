@@ -6,7 +6,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.MapNode;
@@ -105,6 +104,33 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         return copy;
     }
 
+    public void set(Object[] path, Object value) {
+        /*
+        ReanimatedBridge.ReadableCollection collection = this;
+        Object key;
+
+        for (int i = 0; collection != null && i < path.length - 1; i++) {
+            key = path[i];
+            Log.d("Invoke", "set: " + collection + "  " + key);
+            collection = collection.has(key) ? collection.value(key, ReanimatedBridge.ReadableCollection.class) : null;
+        }
+
+        Log.d("Invoke", "set: result " + collection);
+        if (collection != null) {
+            key = path[path.length - 1];
+            switch (ReflectionUtils.inferType(value)) {
+                case Map:
+                    WritableMapResolver.putVariant((WritableMap) collection, (String) key, value);
+                    break;
+                case Array:
+WritableArrayResolver.pushVariant(((WritableArray) collection), value);
+                    break;
+            }
+        }
+
+         */
+    }
+
     public ReadableType getType() {
         return type;
     }
@@ -129,7 +155,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         try {
             array = arrayBuilder.newInstance();
             for (int i = 0; i < arrayContext.size(); i++) {
-                array.pushDynamic(ReflectionUtils.clone(arrayContext.valueAt(i)));
+                array.pushDynamic(ReflectionUtils.nativeCloneDeep(arrayContext.valueAt(i)));
             }
         } catch (Throwable e) {
             e.printStackTrace();
