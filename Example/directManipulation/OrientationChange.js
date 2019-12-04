@@ -11,28 +11,29 @@ const orientationMap = proc((width, height, scale) => {
   });
 });
 
+const rotation = new Value(0);
+const interceptRotation = intercept('namedOrientationDidChange', {
+  rotationDegrees: rotation
+});
+
 const div = 3;
 
-function StateOrientation() {
+function useDimensions() {
   const [window, setDims] = useState(Dimensions.get('window'));
   useEffect(() => {
     const l = ({ window }) => setDims(window);
     Dimensions.addEventListener('change', l);
     return () => Dimensions.removeEventListener('change', l);
-  }, [])
+  }, []);
 
-  return (
-    <View
-      style={[{ width: window.width / div, height: window.height / div }, styles.view]}
-      collapsable={false}
-    />
-  );
+  return window;
 }
 
-export default function OrientationChange() {
+function useAnimatedDimensions() {
   const width = useMemo(() => new Value(Dimensions.get('window').width), []);
   const height = useMemo(() => new Value(Dimensions.get('window').height), []);
   const scale = useMemo(() => new Value(1), []);
+
   useCode(() =>
     block([
       intercept('didUpdateDimensions', orientationMap(width, height, scale)),
@@ -41,10 +42,34 @@ export default function OrientationChange() {
       debug('width', width),
       debug('height', height),
       debug('scale', scale),
+
     ]),
     [width, height, scale]
   );
 
+  useCode(() =>
+    block([
+      interceptRotation,
+      debug('rotation', rotation)
+    ]),
+    [interceptRotation, rotation]
+  );
+
+  return { width, height };
+}
+
+function StateOrientation() {
+  const { width, height } = useDimensions();
+  return (
+    <View
+      style={[{ width: width / div, height: height / div }, styles.view]}
+      collapsable={false}
+    />
+  );
+}
+
+export default function OrientationChange() {
+  const { width, height } = useAnimatedDimensions();
   return (
     <View style={styles.container}>
       <View
