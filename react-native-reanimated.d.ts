@@ -358,12 +358,30 @@ declare module 'react-native-reanimated' {
     export function intercept<T>(eventName: string, argMapping: Mapping<T>): AnimatedNode<number>;
     export function intercept<T extends AnimatedNode<Value>>(eventName: string, node: T): AnimatedNode<number>;
 
+    type DirectManipulationModuleData = {
+      [method: string]: {
+        type: string,
+        nativeType: string,
+        name: string
+      }
+    };
+
+    export type DirectManipulatioUtilData = {
+      nativeModules: DirectManipulationModuleData,
+      viewManagers: string[],
+      JSEvents: {
+        [eventName: string]: {
+          [key: string]: any
+        }
+      }
+    }
+
     /**
      * A helper for devs using invoke/dispatch
      * This component will render only in __DEV__ mode and is safe for production
      * */
     export class DirectManipulationHelper extends Component {
-
+      static directManipulationUtil(): Promise<DirectManipulatioUtilData>
     }
 
     // animations
