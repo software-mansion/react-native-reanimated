@@ -30,6 +30,7 @@ import com.swmansion.reanimated.nodes.ConnectedNode;
 import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
 import com.swmansion.reanimated.nodes.FunctionNode;
+import com.swmansion.reanimated.nodes.InterceptNode;
 import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.InvokeNode;
 import com.swmansion.reanimated.nodes.MapNode;
@@ -43,6 +44,7 @@ import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
 import com.swmansion.reanimated.nodes.ParamNode;
 import com.swmansion.reanimated.nodes.CallFuncNode;
+import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,6 +76,7 @@ public class NodesManager implements EventDispatcherListener {
   private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
+  private final ReanimatedReflectionHelper mReflectionHelper;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -101,8 +104,8 @@ public class NodesManager implements EventDispatcherListener {
     mUIImplementation = mUIManager.getUIImplementation();
     mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
     mUIManager.getEventDispatcher().addListener(this);
-
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+    mReflectionHelper = new ReanimatedReflectionHelper(this);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback = new GuardedFrameCallback(context) {
@@ -115,8 +118,12 @@ public class NodesManager implements EventDispatcherListener {
     mNoopNode = new NoopNode(this);
   }
 
-  public ReactContext getContext(){
+  public final ReactContext getContext(){
     return mContext;
+  }
+
+  public final ReanimatedReflectionHelper getReflectionHelper() {
+    return mReflectionHelper;
   }
 
   public void onHostPause() {
@@ -276,6 +283,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new CallbackNode(nodeID, config, this);
     } else if ("invoke".equals(type)) {
       node = new InvokeNode(nodeID, config, this);
+    } else if ("intercept".equals(type)) {
+      node = new InterceptNode(nodeID, config, this);
     } else if ("always".equals(type)) {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
