@@ -55,7 +55,7 @@ public class WritableMapResolver implements ReanimatedBridge.ReadableCollection 
         return has(name) ? new ReanimatedDynamic(mSource.getDynamic(name)).value() : null;
     }
 
-    private static void putVariant(WritableMap map, String key, Object o){
+    static void putVariant(WritableMap map, String key, Object o){
         if (o instanceof Dynamic) {
             putDynamic(map, key, ((Dynamic) o));
         } else {
