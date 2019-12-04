@@ -336,6 +336,7 @@ declare module 'react-native-reanimated' {
       method: string,
       ...params: Array<Animated.Adaptable<Value> | typeof map | typeof callback>
     ): AnimatedNode<number>;
+
     /**
      * Dispatches a command to the specified ViewManager without going through the bridge.
      * @param viewManager
@@ -347,6 +348,16 @@ declare module 'react-native-reanimated' {
       command: string | number,
       ...params: Array<Animated.Adaptable<Value> | typeof map>
     ): AnimatedNode<number>;
+
+    /**
+     * Intercepts an event before being sent over the bridge.
+     * @param eventName 
+     * @param argMapping 
+     * @param node
+     */
+    export function intercept<T>(eventName: string, argMapping: Mapping<T>): AnimatedNode<number>;
+    export function intercept<T extends AnimatedNode<Value>>(eventName: string, node: T): AnimatedNode<number>;
+
     /**
      * A helper for devs using invoke/dispatch
      * This component will render only in __DEV__ mode and is safe for production
@@ -387,7 +398,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
+      exec: () => Nullable<AnimatedNode<number>[] | AnimatedNode<number>> | boolean,
       deps: Array<any>,
     ): void
 

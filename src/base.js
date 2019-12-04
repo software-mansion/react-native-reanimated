@@ -15,6 +15,7 @@ export { createAnimatedConcat as concat } from './core/AnimatedConcat';
 export { createAnimatedBlock as block, adapt } from './core/AnimatedBlock';
 export { createAnimatedFunction as proc } from './core/AnimatedFunction';
 export { createAnimatedInvoke as invoke, createAnimatedDispatch as dispatch, getDevUtil } from './core/AnimatedInvoke';
+export { createAnimatedIntercept as intercept } from './core/AnimatedIntercept';
 export { createAnimatedMap as map } from './core/AnimatedMap';
 export { createAnimatedCallback as callback } from './core/AnimatedCallback';
 export * from './operators';

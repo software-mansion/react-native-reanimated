@@ -7,6 +7,7 @@ import com.swmansion.reanimated.NodesManager;
 
 public class DebugNode extends Node implements ValueManagingNode {
 
+  public static final String TAG = "REANIMATED";
   private final String mMessage;
   private final int mValueID;
 
@@ -19,7 +20,7 @@ public class DebugNode extends Node implements ValueManagingNode {
   @Override
   protected Object evaluate() {
     Object value = mNodesManager.findNodeById(mValueID, Node.class).value();
-    Log.d("REANIMATED", String.format("%s %s", mMessage, value));
+    Log.d(TAG, String.format("%s %s", mMessage, value));
     return value;
   }
 

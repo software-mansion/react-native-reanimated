@@ -5,6 +5,7 @@ import Animated from 'react-native-reanimated';
 import SyncedScrollViews from './SyncedScrollViews';
 import ControlledScrollView from './ControlledScrollView';
 import AnimatedTimePicker from './TimePicker';
+import OrientationChange from './OrientationChange';
 import Shuffle from './shuffle';
 
 export const SCREENS = {
@@ -12,6 +13,7 @@ export const SCREENS = {
   SyncedScrollViews: { screen: SyncedScrollViews, title: 'SyncedScrollViews' },
   NativeModules: { screen: AnimatedTimePicker, title: 'NativeModulesCombo' },
   Shuffle: { screen: Shuffle, title: 'Shuffle & measure' },
+  OrientationChange: { screen: OrientationChange, title: 'OrientationChange' },
   Dev: { screen: Animated.DirectManipulationHelper, title: 'DEV' }
 };
 
