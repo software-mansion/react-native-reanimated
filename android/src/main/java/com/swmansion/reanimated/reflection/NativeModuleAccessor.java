@@ -83,7 +83,7 @@ class NativeModuleAccessor {
         }
     }
 
-    private WritableNativeMap out() {
+    private WritableNativeMap getDevUtil() {
         WritableNativeMap out = new WritableNativeMap();
         WritableNativeMap temp;
         Map<String, NativeModule> modules = getNativeModules();
@@ -122,6 +122,6 @@ class NativeModuleAccessor {
     }
 
     public static WritableNativeMap getReflectionMap(ReactContext context) {
-        return new NativeModuleAccessor(context).out();
+        return new NativeModuleAccessor(context).getDevUtil();
     }
 }
