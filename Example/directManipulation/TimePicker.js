@@ -94,7 +94,7 @@ export default function AnimatedTimePicker() {
     [colorHue, clock, animator, action, hour, minute, animState]
   );
 
-  const cb = useMemo(() => callback(timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute))), []);
+  const result = useMemo(() => timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute)), []);
 
   useCode(() =>
     onChange(
@@ -103,14 +103,18 @@ export default function AnimatedTimePicker() {
         animState,
         [
           // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
-          showTimer(hour, minute, 1, debug('timer result', cb)),
+          showTimer(hour, minute, 1, debug('timer result', callback(result))),
           invoke('AppState', 'getCurrentAppState', debug('app state', callback({ app_state: appState })), debug('stub', callback())),
           set(animState, 0),
-          call([cb], ([c]) => console.log(`user picked following time: `, c))
         ]
       )
     ),
     [animState, animator, appState, action, hour, minute, inputChangeTracker, timeRepresentation, clock]
+  );
+
+  useCode(() =>
+    call([result], ([c]) => console.log(`user picked following time: `, c)),
+    [result]
   );
 
   const showToast = useMemo(() => {
