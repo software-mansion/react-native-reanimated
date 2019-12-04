@@ -303,6 +303,7 @@ public class NodesManager implements EventDispatcherListener {
 
   public void dropNode(int tag) {
     mAnimatedNodes.remove(tag);
+    mReflectionHelper.JSEventDispatcher().detach(tag);
   }
 
   public void connectNodes(int parentID, int childID) {

@@ -39,7 +39,7 @@ public class InterceptNode extends Node implements ValueManagingNode {
     }
 
     public void detach() {
-        eventDispatcherAccessor.detach(mNodeID, mEventName);
+        eventDispatcherAccessor.detach(mNodeID);
     }
 
     @Override

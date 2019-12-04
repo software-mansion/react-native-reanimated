@@ -88,7 +88,6 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
             for (int i = 0; i < registry.size(); i++) {
                 nodeID = registry.keyAt(i);
                 node = mNodesManager.findNodeById(nodeID, Node.class);
-                Log.d(TAG, "emit: " + nodeID + "  "    +        node.getClass().getSimpleName());
                 ((ValueManagingNode) node).setValue(data);
             }
         } else if (BuildConfig.DEBUG && !mDevUtil.containsKey(eventName) && data != null) {
@@ -105,10 +104,12 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
         eventRegistry.get(eventName).put(nodeID, eventName + nodeID);
     }
 
-    public void detach(int nodeID, String eventName) {
-        if (eventRegistry.containsKey(eventName)) {
-            SparseArray<String> registry = eventRegistry.get(eventName);
-            registry.remove(nodeID);
+    public void detach(int nodeID) {
+        Iterator<Map.Entry<String, SparseArray<String>>> iterator = eventRegistry.entrySet().iterator();
+        Map.Entry<String, SparseArray<String>> entry;
+        while (iterator.hasNext()) {
+            entry = iterator.next();
+            entry.getValue().remove(nodeID);
         }
     }
 
@@ -118,7 +119,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
         Map.Entry<String, Object> entry;
         while (data.hasNext()) {
             entry = data.next();
-            out.putDynamic(entry.getKey(), entry.getValue());
+            out.putDynamic(entry.getKey(), ReflectionUtils.nativeCloneDeep(entry.getValue()));
         }
 
         return out;
