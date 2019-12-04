@@ -242,6 +242,7 @@ public class ReanimatedCallback implements Callback, Promise {
     @NonNull
     @Override
     public String toString() {
+        // TODO: 04/12/2019 disable this once Callback can be nested inside CallFuncNode
         return String.format("callback(%s)", mWhatNode.value());
     }
 }
