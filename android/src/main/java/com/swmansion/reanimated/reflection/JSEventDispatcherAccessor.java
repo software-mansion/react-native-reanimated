@@ -127,7 +127,9 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
     @SuppressWarnings("unchecked cast")
     private static HashMap<Class<? extends JavaScriptModule>, JavaScriptModule> getModuleInstances(ReactContext context) {
         try {
+            //  ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java
             Field jsModuleRegistryField = CatalystInstanceImpl.class.getDeclaredField("mJSModuleRegistry");
+            //  ReactAndroid/src/main/java/com/facebook/react/bridge/JavaScriptModuleRegistry.java
             Field moduleInstancesField = JavaScriptModuleRegistry.class.getDeclaredField("mModuleInstances");
             jsModuleRegistryField.setAccessible(true);
             moduleInstancesField.setAccessible(true);
