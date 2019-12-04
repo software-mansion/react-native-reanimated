@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { findNodeHandle, Image, StyleSheet, Platform, processColor } from 'react-native';
+import { findNodeHandle, StyleSheet, Platform, processColor, Dimensions, useWindowDimensions } from 'react-native';
 import { PanGestureHandler, State, RectButton } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
-const { intercept, divide, debug, map, block, cond, eq, add, max, set, Text, Value, event, decay, invoke, dispatch, useCode, neq, createAnimatedComponent, View, ScrollView, proc, Clock, multiply, not, clockRunning, startClock, stopClock } = Animated;
+const { intercept, divide, debug, map, block, Image, cond, eq, add, max, set, Text, Value, event, decay, invoke, dispatch, useCode, neq, createAnimatedComponent, View, ScrollView, proc, Clock, multiply, not, clockRunning, startClock, stopClock } = Animated;
 
 const orientationMap = proc((width, height, scale) => {
   return map({
@@ -11,11 +11,11 @@ const orientationMap = proc((width, height, scale) => {
   });
 });
 
+const div = 2;
 
 export default function OrientationChange() {
-
-  const width = useMemo(() => new Value(0), []);
-  const height = useMemo(() => new Value(0), []);
+  const width = useMemo(() => new Value(Dimensions.get('window').width), []);
+  const height = useMemo(() => new Value(Dimensions.get('window').height), []);
   const scale = useMemo(() => new Value(1), []);
   useCode(() =>
     block([
@@ -29,26 +29,36 @@ export default function OrientationChange() {
     [width, height, scale]
   );
 
-  return null;
+  //const window = useWindowDimensions();
+
+  /*
+  <View
+        style={[{ width: window.width / 4, height: window.height / 4 }, styles.view]}
+        collapsable={false}
+      />
+      */
+
+  return (
+    <View style={styles.container}>
+      <View
+        style={[{ width: divide(width, div), height: divide(height, div) }, styles.view]}
+        collapsable={false}
+      />
+
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  view: {
+    backgroundColor: 'red',
+    //margin: 20
+  },
+  container: {
     flex: 1,
-    borderColor: 'blue',
-    borderWidth: 2,
-    margin: 5
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: 'pink'
   },
-  default: {
-    flex: 1
-  },
-  text: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    alignSelf: 'center',
-    color: 'black',
-    backgroundColor: 'white'
-  }
 })
