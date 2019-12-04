@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { findNodeHandle, StyleSheet, Platform, processColor, Dimensions, useWindowDimensions } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { findNodeHandle, StyleSheet, Platform, processColor, Dimensions } from 'react-native';
 import { PanGestureHandler, State, RectButton } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
@@ -11,7 +11,23 @@ const orientationMap = proc((width, height, scale) => {
   });
 });
 
-const div = 2;
+const div = 3;
+
+function StateOrientation() {
+  const [window, setDims] = useState(Dimensions.get('window'));
+  useEffect(() => {
+    const l = ({ window }) => setDims(window);
+    Dimensions.addEventListener('change', l);
+    return () => Dimensions.removeEventListener('change', l);
+  }, [])
+
+  return (
+    <View
+      style={[{ width: window.width / div, height: window.height / div }, styles.view]}
+      collapsable={false}
+    />
+  );
+}
 
 export default function OrientationChange() {
   const width = useMemo(() => new Value(Dimensions.get('window').width), []);
@@ -29,22 +45,13 @@ export default function OrientationChange() {
     [width, height, scale]
   );
 
-  //const window = useWindowDimensions();
-
-  /*
-  <View
-        style={[{ width: window.width / 4, height: window.height / 4 }, styles.view]}
-        collapsable={false}
-      />
-      */
-
   return (
     <View style={styles.container}>
       <View
         style={[{ width: divide(width, div), height: divide(height, div) }, styles.view]}
         collapsable={false}
       />
-
+      <StateOrientation />
     </View>
   );
 }
