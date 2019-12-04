@@ -26,7 +26,7 @@ public class ParamNode extends ValueNode implements ContextNode {
       ((ValueManagingNode) node).setValue(value);
       mUpdateContext.callID = callID;
     } catch (EmptyStackException e) {
-      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to set value with no context.", e);
+      throwNoContext(e);
     }
   }
 
@@ -41,7 +41,6 @@ public class ParamNode extends ValueNode implements ContextNode {
     mArgsStack.pop();
   }
 
-
   @Override
   protected Object evaluate() {
     try {
@@ -52,10 +51,15 @@ public class ParamNode extends ValueNode implements ContextNode {
       mUpdateContext.callID = callID;
       return val;
     } catch (EmptyStackException e) {
-      throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to evaluate with no context.\n" +
-              "This happens when running an async task inside `proc`." +
-              "Are you trying to use `callback` inside `proc`? This is not yet supported.",
-              e);
+      throwNoContext(e);
+      return null;
     }
+  }
+
+  private void throwNoContext(Throwable throwable) throws JSApplicationCausedNativeException {
+    throwable.printStackTrace();
+    throw new JSApplicationCausedNativeException(getClass().getSimpleName() + " is trying to evaluate with no context.\n" +
+            "This happens when using value setting nodes (e.g `callback`) inside `proc`. This is not yet supported.",
+            throwable);
   }
 }
