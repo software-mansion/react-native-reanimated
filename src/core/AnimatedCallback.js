@@ -17,8 +17,8 @@ export default class AnimatedCallback extends AnimatedNode {
       },
       [what]
     );
+
     this._what = what;
-    this.__attach();
   }
 
   __onEvaluate() {
