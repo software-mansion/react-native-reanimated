@@ -3,8 +3,6 @@ import invariant from 'fbjs/lib/invariant';
 import { val } from '../val';
 import { adapt } from '../core/AnimatedBlock';
 
-import invariant from 'fbjs/lib/invariant';
-
 class AnimatedSet extends AnimatedNode {
   _what;
   _value;
