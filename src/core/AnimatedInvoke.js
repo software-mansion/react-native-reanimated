@@ -19,8 +19,6 @@ class AnimatedInvoke extends AnimatedNode {
       },
       params
     );
-
-    this.__attach();
   }
 
   __onEvaluate() {
@@ -75,8 +73,4 @@ export function createAnimatedInvoke(module, method, ...params) {
 
 export function createAnimatedDispatch(module, command, ...params) {
   return createAnimatedInvokeBase({ module, command }, ...params);
-}
-
-export function getDevUtil() {
-  return ReanimatedModule.getDevUtil();
 }
