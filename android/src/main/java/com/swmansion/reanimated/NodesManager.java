@@ -4,6 +4,7 @@ import android.util.SparseArray;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -228,13 +229,13 @@ public class NodesManager implements EventDispatcherListener {
       if (type == Node.class || type == ValueNode.class) {
         return (T) mNoopNode;
       }
-      throw new IllegalArgumentException("Requested node with id " + id + " of type " + type +
+      throw new JSApplicationCausedNativeException("Requested node with id " + id + " of type " + type +
               " cannot be found");
     }
     if (type.isInstance(node)) {
       return (T) node;
     }
-    throw new IllegalArgumentException("Node with id " + id + " is of incompatible type " +
+    throw new JSApplicationCausedNativeException("Node with id " + id + " is of incompatible type " +
             node.getClass() + ", requested type was " + type);
   }
 
