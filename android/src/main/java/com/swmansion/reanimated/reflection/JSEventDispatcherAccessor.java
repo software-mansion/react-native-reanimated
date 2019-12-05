@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.CatalystInstanceImpl;
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.JSModuleReanimatedHelper;
 import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.JavaScriptModuleRegistry;
 import com.facebook.react.bridge.ReactContext;
@@ -127,19 +128,6 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
 
     @SuppressWarnings("unchecked cast")
     private static HashMap<Class<? extends JavaScriptModule>, JavaScriptModule> getModuleInstances(ReactContext context) {
-        try {
-            //  ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java
-            Field jsModuleRegistryField = CatalystInstanceImpl.class.getDeclaredField("mJSModuleRegistry");
-            //  ReactAndroid/src/main/java/com/facebook/react/bridge/JavaScriptModuleRegistry.java
-            Field moduleInstancesField = JavaScriptModuleRegistry.class.getDeclaredField("mModuleInstances");
-            jsModuleRegistryField.setAccessible(true);
-            moduleInstancesField.setAccessible(true);
-            JavaScriptModuleRegistry javaScriptModuleRegistry =
-                    (JavaScriptModuleRegistry) jsModuleRegistryField.get(context.getCatalystInstance());
-            return (HashMap<Class<? extends JavaScriptModule>, JavaScriptModule>) moduleInstancesField.get(javaScriptModuleRegistry);
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-            throw new JSApplicationCausedNativeException("Reanimated intercept critical error", throwable);
-        }
+        return JSModuleReanimatedHelper.getModuleInstances((CatalystInstanceImpl) context.getCatalystInstance());
     }
 }
