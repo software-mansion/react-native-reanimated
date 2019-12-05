@@ -46,29 +46,20 @@ public class ReanimatedCallback implements Callback, Promise {
 
     private @CallbackState int mState = CallbackState.READY;
 
-    private final Node mWhatNode;
+    private final ValueManagingNode mWhatNode;
 
-    public ReanimatedCallback(final Node what) {
+    public ReanimatedCallback(final ValueManagingNode what) {
         mWhatNode = what;
-    }
-
-    private ValueManagingNode what() {
-        try {
-            return ((ValueManagingNode) mWhatNode);
-        } catch (ClassCastException e) {
-            throw new JSApplicationIllegalArgumentException(
-                    "Reanimated callback received a wrong node of " + mWhatNode.getClass().getSimpleName(), e);
-        }
     }
 
     private void setValue(@Nullable final ReanimatedWritableNativeArray data) {
         if (UiThreadUtil.isOnUiThread()) {
-            what().setValue(data);
+            mWhatNode.setValue(data);
         } else {
             UiThreadUtil.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    what().setValue(data);
+                    mWhatNode.setValue(data);
                 }
             });
         }
@@ -242,7 +233,6 @@ public class ReanimatedCallback implements Callback, Promise {
     @NonNull
     @Override
     public String toString() {
-        // TODO: 04/12/2019 disable this once Callback can be nested inside CallFuncNode
-        return String.format("callback(%s)", mWhatNode.value());
+        return "callback";
     }
 }

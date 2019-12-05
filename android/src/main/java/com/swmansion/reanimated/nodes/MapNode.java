@@ -5,10 +5,13 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.reflection.ReadableArrayResolver;
+import com.swmansion.reanimated.reflection.ReadableMapResolver;
 import com.swmansion.reanimated.reflection.ReanimatedBridge;
 import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
 import com.swmansion.reanimated.reflection.ReanimatedWritableNativeArray;
@@ -97,9 +100,9 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Override
     public void setValue(Object value) {
         if (value instanceof ReadableArray) {
-            setValue(((ReadableArray) value));
+            setValue((ReadableArray) value);
         } else if (value instanceof ReadableMap) {
-            setValue(((ReadableMap) value));
+            setValue((ReadableMap) value);
         } else {
             throw new JSApplicationCausedNativeException(
                     String.format(
@@ -114,21 +117,25 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     void setValue(@Nullable ReadableArray data) {
-        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedWritableNativeArray.fromArray(data)));
+        setValue(ReadableArrayResolver.obtain(data));
     }
 
     void setValue(@Nullable ReadableMap data) {
-        setValue(((ReanimatedBridge.ReadableCollection) ReanimatedWritableNativeMap.fromMap(data)));
+        setValue(ReadableMapResolver.obtain(data));
     }
 
     private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
         if (data == null) {
-            throw new IllegalArgumentException("Animated maps must have map data.");
+            throw new JSApplicationIllegalArgumentException("Animated maps must have map data.");
         }
 
         Node node;
         ArgMap map;
         Object value;
+
+        if (mBuilder == null) {
+//            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, false);
+        }
 
         for (int i = 0; i < mMapping.size(); i++) {
             map = mMapping.get(i);
@@ -147,6 +154,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                     if (!value.equals(mMemoizedValues.get(map.nodeID))) {
                         mDirty = true;
                         mMemoizedValues.put(map.nodeID, value);
+                        //mBuilder.set(map.path, value);
                     }
                 }
             }

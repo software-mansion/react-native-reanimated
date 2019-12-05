@@ -1,5 +1,7 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableMap;
@@ -9,23 +11,30 @@ import com.swmansion.reanimated.reflection.ReanimatedCallback;
 public class CallbackNode extends Node implements ValueManagingNode {
 
     private final int mWhatNodeID;
+    private final ReanimatedCallback mCallbackWrapper;
 
     public CallbackNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
         mWhatNodeID = config.getInt("what");
+        mCallbackWrapper = new ReanimatedCallback(this);
     }
 
     @Override
-    public void setValue(Object value) {
-        Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        ((ValueManagingNode) what).setValue(value);
+    public void setValue(final Object value) {
+        runInContext(new Runnable() {
+            @Override
+            public void run() {
+                Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+                ((ValueManagingNode) what).setValue(value);
+                what.value();
+            }
+        });
     }
 
     @Nullable
     @Override
     protected Object evaluate() {
-        Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        return new ReanimatedCallback(whatNode);
+        return mCallbackWrapper;
     }
 
 }
