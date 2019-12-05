@@ -3,18 +3,44 @@ package com.swmansion.reanimated.reflection;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableMapResolver implements ReanimatedBridge.ReadableCollection {
+public class ReadableMapResolver extends ReadableCollectionResolver {
 
-    private final WritableMap mSource;
+    interface Resolvable {
+        boolean hasKey(String key);
+        Object resolve(String key);
+    }
 
-    WritableMapResolver(WritableMap source) {
+    public static ReadableMapResolver obtain(final ReadableMap source) {
+        if (source instanceof ReanimatedBridge.ReanimatedMap) {
+            return ((ReanimatedBridge.ReanimatedMap) source).resolver();
+        } else {
+            return new ReadableMapResolver(new Resolvable() {
+                @Override
+                public boolean hasKey(String key) {
+                    return source.hasKey(key);
+                }
+
+                @Override
+                public Object resolve(String key) {
+                    return new ReanimatedDynamic(source.getDynamic(key)).value();
+                }
+            });
+        }
+    }
+
+    private final Resolvable mSource;
+
+    ReadableMapResolver(Resolvable source) {
+        super();
         mSource = source;
     }
 
@@ -22,37 +48,16 @@ public class WritableMapResolver implements ReanimatedBridge.ReadableCollection 
         return String.valueOf(key);
     }
 
-    void putVariant(String key, Object o) {
-        putVariant(mSource, key, o);
-    }
-
     @Override
     public boolean has(Object key) {
         return mSource.hasKey(resolveKey(key));
-    }
-
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        Object value = value(key);
-        if (type.isInstance(value)) {
-            return (T) value;
-        }
-        throw new IllegalArgumentException(
-                String.format(
-                        "%s: %s is of incompatible type %s, requested type was %s",
-                        getClass().getSimpleName(),
-                        key,
-                        value.getClass(),
-                        type
-                )
-        );
     }
 
     @Nullable
     @Override
     public Object value(Object key) {
         String name = resolveKey(key);
-        return has(name) ? new ReanimatedDynamic(mSource.getDynamic(name)).value() : null;
+        return has(name) ? mSource.resolve(name) : null;
     }
 
     static void putVariant(WritableMap map, String key, Object o){

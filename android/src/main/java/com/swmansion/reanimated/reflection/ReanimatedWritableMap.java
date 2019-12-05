@@ -20,32 +20,26 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
         return map;
     }
 
-    protected WritableMapResolver resolver;
+    private ReadableMapResolver resolver;
 
     ReanimatedWritableMap() {
         super();
-        resolver = new WritableMapResolver(this);
-    }
-
-    @Override
-    public boolean has(Object key) {
-        return resolver.has(key);
-    }
-
-    @Nullable
-    @Override
-    public Object value(Object key) {
-        return resolver.value(key);
-    }
-
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        return resolver.value(key, type);
+        resolver = new ReadableMapResolver(this);
     }
 
     @Override
     public boolean hasKey(@NonNull String name) {
         return containsKey(name);
+    }
+
+    @Override
+    public Object resolve(String key) {
+        return super.get(key);
+    }
+
+    @Override
+    public ReadableMapResolver resolver() {
+        return resolver;
     }
 
     @Nullable
@@ -91,7 +85,7 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
 
     @Override
     public void putDynamic(String key, Object value) {
-        resolver.putVariant(key, value);
+        ReadableMapResolver.putVariant(this, key, value);
     }
 
     @Override

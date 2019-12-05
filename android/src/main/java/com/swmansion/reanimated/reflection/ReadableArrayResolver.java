@@ -1,8 +1,11 @@
 package com.swmansion.reanimated.reflection;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -11,16 +14,34 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isString;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
-public class WritableArrayResolver implements ReanimatedBridge.ReadableCollection {
+public class ReadableArrayResolver extends ReadableCollectionResolver {
 
     interface Resolvable {
         int size();
-        Object value(int index);
+        Object resolve(int index);
+    }
+
+    public static ReadableArrayResolver obtain(final ReadableArray source) {
+        if (source instanceof ReanimatedBridge.ReanimatedArray) {
+            return ((ReanimatedBridge.ReanimatedArray) source).resolver();
+        } else {
+            return new ReadableArrayResolver(new Resolvable() {
+                @Override
+                public int size() {
+                    return source.size();
+                }
+
+                @Override
+                public Object resolve(int index) {
+                    return new ReanimatedDynamic(source.getDynamic(index)).value();
+                }
+            });
+        }
     }
 
     private Resolvable mSource;
 
-    WritableArrayResolver(Resolvable array) {
+    ReadableArrayResolver(Resolvable array) {
         mSource = array;
     }
 
@@ -42,7 +63,7 @@ public class WritableArrayResolver implements ReanimatedBridge.ReadableCollectio
 
     public Object value(int index) {
         index = resolveIndex(index);
-        return indexInBounds(index) ? mSource.value(index) : null;
+        return indexInBounds(index) ? mSource.resolve(index) : null;
     }
 
     @Override
@@ -59,28 +80,11 @@ public class WritableArrayResolver implements ReanimatedBridge.ReadableCollectio
                 null;
     }
 
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        Object value = value(key);
-        if (type.isInstance(value)) {
-            return (T) value;
-        }
-        throw new IllegalArgumentException(
-                String.format(
-                        "%s: %s is of incompatible type %s, requested type was %s",
-                        getClass().getSimpleName(),
-                        key,
-                        value.getClass(),
-                        type
-                )
-        );
-    }
-
     static boolean isIndex(Object key) {
         return isInteger(key) || (isString(key) && ((String) key).matches("-?\\d"));
     }
 
-    protected static void pushVariant(WritableArray arr, Object o) {
+    static void pushVariant(WritableArray arr, Object o) {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
         } else {

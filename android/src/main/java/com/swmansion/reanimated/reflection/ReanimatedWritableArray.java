@@ -19,32 +19,21 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
         return array;
     }
 
-    final WritableArrayResolver resolver;
+    private final ReadableArrayResolver resolver;
 
     ReanimatedWritableArray() {
         super();
-        resolver = new WritableArrayResolver(this);
+        resolver = new ReadableArrayResolver(this);
     }
 
     @Override
-    public Object value(int index) {
-        return new ReanimatedDynamic(getDynamic(index)).value();
+    public Object resolve(int index) {
+        return super.get(index);
     }
 
     @Override
-    public boolean has(Object key) {
-        return resolver.has(key);
-    }
-
-    @Nullable
-    @Override
-    public Object value(Object key) {
-        return resolver.value(key);
-    }
-
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        return resolver.value(key, type);
+    public ReadableArrayResolver resolver() {
+        return resolver;
     }
 
     @Nullable
@@ -94,7 +83,7 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
 
     @Override
     public void pushDynamic(Object o) {
-        WritableArrayResolver.pushVariant(this, o);
+        ReadableArrayResolver.pushVariant(this, o);
     }
 
     @Override

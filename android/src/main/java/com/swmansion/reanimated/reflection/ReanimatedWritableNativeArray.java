@@ -34,32 +34,21 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
         }
     }
 
-    protected final WritableArrayResolver resolver;
+    private final ReadableArrayResolver resolver;
 
     public ReanimatedWritableNativeArray() {
         super();
-        resolver = new WritableArrayResolver(this);
+        resolver = new ReadableArrayResolver(this);
     }
 
     @Override
-    public Object value(int index) {
+    public Object resolve(int index) {
         return new ReanimatedDynamic(getDynamic(index)).value();
     }
 
     @Override
-    public boolean has(Object key) {
-        return resolver.has(key);
-    }
-
-    @Nullable
-    @Override
-    public Object value(Object key) {
-        return resolver.value(key);
-    }
-
-    @Override
-    public <T> T value(Object key, Class<T> type) {
-        return resolver.value(key, type);
+    public ReadableArrayResolver resolver() {
+        return resolver;
     }
 
     @Nullable
@@ -94,7 +83,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
 
     @Override
     public void pushDynamic(Object o) {
-        WritableArrayResolver.pushVariant(this, o);
+        ReadableArrayResolver.pushVariant(this, o);
     }
 
     @Override
@@ -126,7 +115,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
 
     public ReanimatedWritableNativeArray copy() {
         ReanimatedWritableNativeArray copy = new ReanimatedWritableNativeArray();
-        WritableArrayResolver.addAll(copy, this);
+        ReadableArrayResolver.addAll(copy, this);
         return copy;
     }
 

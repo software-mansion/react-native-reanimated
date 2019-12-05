@@ -10,20 +10,22 @@ import com.swmansion.reanimated.nodes.ConnectedNode;
 public class ReanimatedBridge {
     public interface ReadableCollection {
         boolean has(Object key);
-        @Nullable
-        Object value(Object key);
+        @Nullable Object value(Object key);
         <T extends Object> T value(Object key, Class<T> type);
     }
 
-    public interface ReanimatedArray extends WritableArray, ReadableCollection, WritableArrayResolver.Resolvable {
+    public interface ReanimatedArray extends WritableArray, ReadableArrayResolver.Resolvable {
         void pushDynamic(Object value);
+        ReadableArrayResolver resolver();
+    }
+
+    public interface ReanimatedMap extends WritableMap, ReadableMapResolver.Resolvable {
+        void putDynamic(String name, Object value);
+        ReadableMapResolver resolver();
     }
 
     public interface ReanimatedAccessor extends ConnectedNode {
         void call(int[] params, NodesManager nodesManager);
     }
 
-    public interface ReanimatedMap extends WritableMap, ReadableCollection {
-        void putDynamic(String name, Object value);
-    }
 }

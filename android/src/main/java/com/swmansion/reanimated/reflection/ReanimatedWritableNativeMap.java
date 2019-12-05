@@ -27,31 +27,25 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
 
     public static ReanimatedWritableNativeMap fromArray(ReadableArray source) {
         ReanimatedWritableNativeMap out = new ReanimatedWritableNativeMap();
-        WritableMapResolver.addAll(out, source);
+        ReadableMapResolver.addAll(out, source);
         return out;
     }
 
-    protected WritableMapResolver resolver;
+    private ReadableMapResolver resolver;
 
     ReanimatedWritableNativeMap() {
         super();
-        resolver = new WritableMapResolver(this);
+        resolver = new ReadableMapResolver(this);
     }
 
     @Override
-    public boolean has(Object key) {
-        return resolver.has(key);
-    }
-
-    @Nullable
-    @Override
-    public Object value(Object key) {
-        return resolver.value(key);
+    public Object resolve(String key) {
+        return new ReanimatedDynamic(super.getDynamic(key)).value();
     }
 
     @Override
-    public <T> T value(Object key, Class<T> type) {
-        return resolver.value(key, type);
+    public ReadableMapResolver resolver() {
+        return resolver;
     }
 
     @Override
@@ -83,7 +77,7 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
 
     @Override
     public void putDynamic(String key, Object o) {
-        resolver.putVariant(key, o);
+        ReadableMapResolver.putVariant(this, key, o);
     }
 
     @Nullable

@@ -161,7 +161,7 @@ class ReflectionUtils {
                 ReadableMap map = ((ReadableMap) source);
                 while (iterator.hasNextKey()) {
                     key = iterator.nextKey();
-                    WritableMapResolver.putVariant(out, key, nativeCloneDeep(new ReanimatedDynamic(map.getDynamic(key)).value()));
+                    ReadableMapResolver.putVariant(out, key, nativeCloneDeep(new ReanimatedDynamic(map.getDynamic(key)).value()));
                 }
             }
 
@@ -170,7 +170,7 @@ class ReflectionUtils {
             WritableNativeArray out = new WritableNativeArray();
             ReadableArray in = ((ReadableArray) source);
             for (int i = 0; i < in.size(); i++) {
-                WritableArrayResolver.pushVariant(out, nativeCloneDeep(new ReanimatedDynamic(in.getDynamic(i)).value()));
+                ReadableArrayResolver.pushVariant(out, nativeCloneDeep(new ReanimatedDynamic(in.getDynamic(i)).value()));
             }
             return out;
         }

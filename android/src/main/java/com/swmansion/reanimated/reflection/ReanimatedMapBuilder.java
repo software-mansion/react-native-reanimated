@@ -19,8 +19,8 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     private final MB mapBuilder;
     private SparseArray<Object> arrayContext;
     private M mapContext;
-    private final WritableArrayResolver arrayResolver;
-    private final WritableMapResolver mapResolver;
+    private final ReadableArrayResolver arrayResolver;
+    private final ReadableMapResolver mapResolver;
     private ReadableType type = ReadableType.Null;
 
     public static ReanimatedMapBuilder create(boolean useNativeBuilder) throws InstantiationException, IllegalAccessException {
@@ -36,18 +36,18 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         this.mapBuilder = mapBuilder;
         arrayContext = new SparseArray<>();
         mapContext = this.mapBuilder.newInstance();
-        arrayResolver = new WritableArrayResolver(new WritableArrayResolver.Resolvable() {
+        arrayResolver = new ReadableArrayResolver(new ReadableArrayResolver.Resolvable() {
             @Override
             public int size() {
                 return arrayContext.size();
             }
 
             @Override
-            public Object value(int index) {
+            public Object resolve(int index) {
                 return arrayContext.valueAt(index);
             }
         });
-        mapResolver = new WritableMapResolver(mapContext);
+        mapResolver = new ReadableMapResolver(mapContext);
     }
 
     private ReanimatedBridge.ReadableCollection resolver(Object key) {
@@ -71,7 +71,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     }
 
     public void putDynamic(Object key, Object o) {
-        if (WritableArrayResolver.isIndex(key)) {
+        if (ReadableArrayResolver.isIndex(key)) {
             assertIsNotType(ReadableType.Map, key);
             type = ReadableType.Array;
             arrayContext.put(arrayResolver.resolveIndex(key), o);
@@ -104,31 +104,12 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         return copy;
     }
 
-    public void set(Object[] path, Object value) {
-        /*
-        ReanimatedBridge.ReadableCollection collection = this;
-        Object key;
-
-        for (int i = 0; collection != null && i < path.length - 1; i++) {
-            key = path[i];
-            Log.d("Invoke", "set: " + collection + "  " + key);
-            collection = collection.has(key) ? collection.value(key, ReanimatedBridge.ReadableCollection.class) : null;
+    public static void set(ReanimatedBridge.ReadableCollection collection, ArrayList<Object> path, Object value) {
+        if (path.size() == 1) {
+            //collection.
+        } else {
+            //set(collection.value(path.remove(0)), path, value);
         }
-
-        Log.d("Invoke", "set: result " + collection);
-        if (collection != null) {
-            key = path[path.length - 1];
-            switch (ReflectionUtils.inferType(value)) {
-                case Map:
-                    WritableMapResolver.putVariant((WritableMap) collection, (String) key, value);
-                    break;
-                case Array:
-WritableArrayResolver.pushVariant(((WritableArray) collection), value);
-                    break;
-            }
-        }
-
-         */
     }
 
     public ReadableType getType() {
