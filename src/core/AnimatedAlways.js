@@ -1,5 +1,6 @@
 import AnimatedNode from './AnimatedNode';
 import invariant from 'fbjs/lib/invariant';
+import { val } from '../val';
 
 class AnimatedAlways extends AnimatedNode {
   _what;
@@ -17,7 +18,12 @@ class AnimatedAlways extends AnimatedNode {
     return `AnimatedAlways, id: ${this.__nodeID}`;
   }
 
+  update() {
+    this.__getValue();
+  }
+
   __onEvaluate() {
+    val(this._what);
     return 0;
   }
 }

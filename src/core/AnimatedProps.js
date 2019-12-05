@@ -6,6 +6,7 @@ import { createOrReuseStyleNode } from './AnimatedStyle';
 
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
+import { val } from '../val';
 
 function sanitizeProps(inputProps) {
   const props = {};
@@ -74,6 +75,12 @@ class AnimatedProps extends AnimatedNode {
 
   update() {
     this._callback();
+
+    if (!this._animatedView) {
+      return;
+    }
+
+    val(this);
   }
 
   setNativeView(animatedView) {

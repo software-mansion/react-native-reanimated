@@ -1,0 +1,32 @@
+{
+  "name": "react-native-reanimated",
+  "version": "0.0.1",
+  "description": "Documentation for React Native Reanimated",
+  "private": true,
+  "scripts": {
+    "start": "component-docs serve",
+    "build": "component-docs build",
+    "clean": "del dist/",
+    "prestart": "yarn clean",
+     "deploy": "component-docs build && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.2.3",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/preset-flow": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "del-cli": "^1.1.0",
+    "file-loader": "^1.1.11",
+    "gh-pages": "^2.1.1",
+    "url-loader": "^1.0.1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "color": "^2.0.1",
+    "component-docs": "^0.19.5",
+    "linaria": "^1.2.4",
+    "react-native-vector-icons": "^6.4.2"
+  }
+}

@@ -1,6 +1,7 @@
 import invariant from 'fbjs/lib/invariant';
 import { adapt } from '../core/AnimatedBlock';
 import AnimatedNode from './AnimatedNode';
+import { val } from '../val';
 
 class AnimatedConcat extends AnimatedNode {
   constructor(input) {
@@ -14,6 +15,11 @@ class AnimatedConcat extends AnimatedNode {
       `Reanimated: Animated.concat node arguments should be of type AnimatedNode or String or Number. One or more of them are not of that type. Node: ${input}`
     );
     super({ type: 'concat', input: input.map(n => n.__nodeID) }, input);
+    this._input = input;
+  }
+
+  __onEvaluate() {
+    return this._input.reduce((prev, current) => prev + val(current), '');
   }
 
   toString() {

@@ -9,6 +9,7 @@ export const divide = operator('divide');
 export const pow = operator('pow');
 export const modulo = operator('modulo');
 export const sqrt = operator('sqrt');
+export const log = operator('log');
 export const sin = operator('sin');
 export const cos = operator('cos');
 export const exp = operator('exp');
