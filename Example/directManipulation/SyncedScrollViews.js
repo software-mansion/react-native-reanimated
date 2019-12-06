@@ -14,8 +14,16 @@ export default function SyncedScrollViews() {
   const effect = useMemo(() => new Value(0), []);
   const state = useMemo(() => debug('scroll state', new Value(0)), []);
 
-  const scrollToA = useMemo(() => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0), [scrollX, scrollY]);
-  const scrollToB = useMemo(() => dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0), [scrollX, scrollY]);
+  const scrollToA = useMemo(() => {
+    const d = dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0);
+    d.__attach();
+    return d;
+  }, [scrollX, scrollY]);
+  const scrollToB = useMemo(() => {
+    const d = dispatch('RCTScrollView', 'scrollTo', scrollX, scrollY, 0);
+    d.__attach();
+    return d;
+  }, [scrollX, scrollY]);
 
   const panRef = useRef();
   const scrollARef = useRef();
