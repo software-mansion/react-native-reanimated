@@ -21,14 +21,9 @@ public class CallbackNode extends Node implements ValueManagingNode {
 
     @Override
     public void setValue(final Object value) {
-        runInContext(new Runnable() {
-            @Override
-            public void run() {
-                Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-                ((ValueManagingNode) what).setValue(value);
-                what.value();
-            }
-        });
+        Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+        ((ValueManagingNode) what).setValue(value);
+        what.value();
     }
 
     @Nullable
