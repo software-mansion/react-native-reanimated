@@ -64,7 +64,7 @@ class ReanimatedDynamic implements Dynamic {
 
         @Override
         public void recycle() {
-
+            //  noop
         }
     }
 
