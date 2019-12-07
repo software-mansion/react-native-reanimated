@@ -24,11 +24,11 @@ class ContextProvider {
         }
     }
 
-    static class ValueManagingContextProvider extends ContextProvider implements ValueManagingNode {
+    static class ValueManager extends ContextProvider implements ValueManagingNode {
 
         final ValueManagingNode mEvaluator;
 
-        ValueManagingContextProvider(ValueManagingNode evaluator, final ArrayList<CallFuncNode> context) {
+        ValueManager(ValueManagingNode evaluator, final ArrayList<CallFuncNode> context) {
             super(context);
             mEvaluator = evaluator;
         }

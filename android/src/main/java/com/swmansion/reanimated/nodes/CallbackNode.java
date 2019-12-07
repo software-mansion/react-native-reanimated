@@ -36,7 +36,7 @@ public class CallbackNode extends Node implements ValueManagingNode {
     @Override
     protected Object evaluate() {
         if (mContext != null) {
-            ValueManagingNode provider = new ContextProvider.ValueManagingContextProvider(this, mContext);
+            ValueManagingNode provider = new ContextProvider.ValueManager(this, mContext);
             mContext = null;
             return new ReanimatedCallback(provider);
         } else {
