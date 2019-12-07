@@ -48,7 +48,9 @@ public class CallFuncNode extends Node implements ValueManagingNode {
   @Override
   protected void propagateContext(ArrayList<CallFuncNode> context) {
     context.add(this);
+    Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     super.propagateContext(context);
+    whatNode.propagateContext(context);
   }
 
   @Override
