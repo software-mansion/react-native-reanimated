@@ -4,10 +4,11 @@ import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
+import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Stack;
 
-public class ParamNode extends ValueNode implements ContextNode {
+public class ParamNode extends ValueNode {
 
   private final Stack<Integer> mArgsStack;
   private String mPrevCallID;
@@ -18,25 +19,23 @@ public class ParamNode extends ValueNode implements ContextNode {
   }
 
   @Override
-  public void setValue(Object value) {
+  public void setValue(Object value, ArrayList<CallFuncNode> context) {
     try {
       Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
       String callID = mUpdateContext.callID;
       mUpdateContext.callID = mPrevCallID;
-      ((ValueManagingNode) node).setValue(value);
+      ((ValueManagingNode) node).setValue(value, null);
       mUpdateContext.callID = callID;
     } catch (EmptyStackException e) {
       throwNoContext(e);
     }
   }
 
-  @Override
   public void beginContext(Integer ref, String prevCallID) {
     mPrevCallID = prevCallID;
     mArgsStack.push(ref);
   }
 
-  @Override
   public void endContext() {
     mArgsStack.pop();
   }

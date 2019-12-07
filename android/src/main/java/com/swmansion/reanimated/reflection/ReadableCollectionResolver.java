@@ -1,14 +1,12 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 
 abstract class ReadableCollectionResolver implements ReanimatedBridge.ReadableCollection {
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked cast")
     @Override
     public <T> T value(Object key, Class<T> type) {
         Object value = value(key);

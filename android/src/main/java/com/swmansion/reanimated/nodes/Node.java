@@ -28,6 +28,7 @@ public abstract class Node {
   private final Map<String, Long> mLastLoopID = new HashMap<>();
   private final Map<String, Object> mMemoizedValue = new HashMap<>();
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
+  private @Nullable List<Node> mParents; /* lazy-initialized when a parent is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
     mLastLoopID.put("", -1L);
@@ -73,12 +74,27 @@ public abstract class Node {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
+    child.addParent(this);
     child.dangerouslyRescheduleEvaluate();
+  }
+
+  private void addParent(Node parent) {
+    if (mParents == null) {
+      mParents = new ArrayList<>();
+    }
+    mParents.add(parent);
   }
 
   public void removeChild(Node child) {
     if (mChildren != null) {
+      child.removeParent(this);
       mChildren.remove(child);
+    }
+  }
+
+  private void removeParent(Node parent) {
+    if (mParents != null) {
+      mParents.remove(parent);
     }
   }
 
@@ -131,5 +147,13 @@ public abstract class Node {
     }
     updatedNodes.clear();
     updateContext.updateLoopID++;
+  }
+
+  protected void propagateContext(ArrayList<CallFuncNode> context) {
+    if (mParents != null) {
+      for (Node parent: mParents) {
+        parent.propagateContext(context);
+      }
+    }
   }
 }

@@ -7,7 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -15,7 +14,6 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
 import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueManagingNode;
 
 import java.lang.annotation.Retention;
@@ -54,12 +52,12 @@ public class ReanimatedCallback implements Callback, Promise {
 
     private void setValue(@Nullable final ReanimatedWritableNativeArray data) {
         if (UiThreadUtil.isOnUiThread()) {
-            mWhatNode.setValue(data);
+            mWhatNode.setValue(data, null);
         } else {
             UiThreadUtil.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mWhatNode.setValue(data);
+                    mWhatNode.setValue(data, null);
                 }
             });
         }

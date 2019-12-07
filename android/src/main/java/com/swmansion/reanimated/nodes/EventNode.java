@@ -20,7 +20,7 @@ public class EventNode extends MapNode implements RCTEventEmitter {
       throw new JSApplicationIllegalArgumentException("Animated events must have event data.");
     }
 
-    setValue(event);
+    setValue(event, null);
   }
 
   @Override

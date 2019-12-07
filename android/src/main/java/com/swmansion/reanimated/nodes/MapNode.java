@@ -14,8 +14,6 @@ import com.swmansion.reanimated.reflection.ReadableArrayResolver;
 import com.swmansion.reanimated.reflection.ReadableMapResolver;
 import com.swmansion.reanimated.reflection.ReanimatedBridge;
 import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
-import com.swmansion.reanimated.reflection.ReanimatedWritableNativeArray;
-import com.swmansion.reanimated.reflection.ReanimatedWritableNativeMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,11 +96,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     @Override
-    public void setValue(Object value) {
+    public void setValue(Object value,@Nullable ArrayList<CallFuncNode> context) {
         if (value instanceof ReadableArray) {
-            setValue((ReadableArray) value);
+            setValue((ReadableArray) value, context);
         } else if (value instanceof ReadableMap) {
-            setValue((ReadableMap) value);
+            setValue((ReadableMap) value, context);
         } else {
             throw new JSApplicationCausedNativeException(
                     String.format(
@@ -116,12 +114,30 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     }
 
-    void setValue(@Nullable ReadableArray data) {
-        setValue(ReadableArrayResolver.obtain(data));
+    void setValue(@Nullable ReadableArray data,@Nullable ArrayList<CallFuncNode> context) {
+        setValue(ReadableArrayResolver.obtain(data), context);
     }
 
-    void setValue(@Nullable ReadableMap data) {
-        setValue(ReadableMapResolver.obtain(data));
+    void setValue(@Nullable ReadableMap data,@Nullable ArrayList<CallFuncNode> context) {
+        setValue(ReadableMapResolver.obtain(data), context);
+    }
+
+    private void setValue(@Nullable final ReanimatedBridge.ReadableCollection data, @Nullable ArrayList<CallFuncNode> context) {
+        setValue(data);
+        /*
+        if (context != null) {
+            new ContextProvider(context)
+                    .runInContext(new Runnable() {
+                        @Override
+                        public void run() {
+                            setValue(data);
+                        }
+                    });
+        } else {
+            setValue(data);
+        }
+
+         */
     }
 
     private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
@@ -149,7 +165,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                 value = map.lookupValue(data);
                 if (value != null) {
                     node = mNodesManager.findNodeById(map.nodeID, Node.class);
-                    ((ValueManagingNode) node).setValue(value);
+                    ((ValueManagingNode) node).setValue(value, null);
 
                     if (!value.equals(mMemoizedValues.get(map.nodeID))) {
                         mDirty = true;

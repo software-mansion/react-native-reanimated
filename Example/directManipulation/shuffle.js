@@ -27,7 +27,9 @@ const {
   Value,
   View,
   acc,
-  divide
+  divide,
+  concat,
+  block
 } = Animated;
 
 const FlatList = createAnimatedComponent(GHFlatList);
@@ -38,7 +40,16 @@ function shuffle(array) {
 
 const successMap = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
 
-const measureView = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
+const measureView1 = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
+
+const measureView = proc((tag, fruit, x, y, w, h) => {
+  //const map = successMap(x, y, w, h);
+  const measure = invoke('UIManager', 'measure', tag, callback(0, 0, w, h, x, y));
+  return block([
+    cond(defined(tag), measure),
+    debug('measured', concat(tag, ' ', fruit, ' ', measure))
+  ]);
+});
 
 const relativeMeasureView = proc((tag, relTo, success, error) => cond(defined(tag), invoke('UIManager', 'measureLayout', tag, relTo, success, error)));
 
@@ -87,8 +98,10 @@ function Item({ item, parent, evaluate, x, y, index }) {
     cond(
       and(neq(tag, 0), neq(evaluate, -1)),
       [
-        measureView(tag, debug('result', callback(successMap(ax, debug('measured abs y', ay), width, height)))),
-        measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
+        tag,
+        measureView(tag, item.title, ax, ay, width, height),
+        //cond(defined(tag), invoke('UIManager', 'measure', tag, callback(successMap(ax, ay, width, height)))),
+        //measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
         // measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
         //measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd()))),
         debug('parent tag', tag),

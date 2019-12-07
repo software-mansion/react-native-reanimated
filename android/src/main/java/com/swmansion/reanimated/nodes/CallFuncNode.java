@@ -1,10 +1,12 @@
 package com.swmansion.reanimated.nodes;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 
 public class CallFuncNode extends Node implements ValueManagingNode {
 
@@ -20,36 +22,47 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     mArgs = Utils.processIntArray(config.getArray("args"));
   }
 
-  private void beginContext() {
+  protected void beginContext() {
     mPreviousCallID = mNodesManager.updateContext.callID;
     mNodesManager.updateContext.callID = mNodesManager.updateContext.callID + '/' + mNodeID;
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
-      Node paramNode = mNodesManager.findNodeById(paramId, Node.class);
-      ((ContextNode) paramNode).beginContext(mArgs[i], mPreviousCallID);
+      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
+      paramNode.beginContext(mArgs[i], mPreviousCallID);
     }
   }
 
-  private void endContext() {
+  protected void endContext() {
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
-      Node paramNode = mNodesManager.findNodeById(paramId, Node.class);
-      ((ContextNode) paramNode).endContext();
+      ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);
+      paramNode.endContext();
     }
     mNodesManager.updateContext.callID = mPreviousCallID;
   }
 
+  private void beginContextPropagation() {
+    propagateContext(new ArrayList<CallFuncNode>());
+  }
+
   @Override
-  public void setValue(Object value) {
+  protected void propagateContext(ArrayList<CallFuncNode> context) {
+    context.add(this);
+    super.propagateContext(context);
+  }
+
+  @Override
+  public void setValue(Object value, ArrayList<CallFuncNode> context) {
     beginContext();
     Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-    ((ValueManagingNode) whatNode).setValue(value);
+    ((ValueManagingNode) whatNode).setValue(value, context);
     endContext();
   }
 
   @Override
   protected Object evaluate() {
     beginContext();
+    beginContextPropagation();
     Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     Object retVal = whatNode.value();
     endContext();

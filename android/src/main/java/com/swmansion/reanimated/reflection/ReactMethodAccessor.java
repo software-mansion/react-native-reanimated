@@ -1,7 +1,9 @@
 package com.swmansion.reanimated.reflection;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.Node;
@@ -82,7 +84,9 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedBrid
                 n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
-                if (value != null && ReflectionUtils.isNumber(value)) {
+                /*if (paramType.equals(Callback.class) || paramType.equals(Promise.class)) {
+                    out[k] = new ReanimatedCallback(value);
+                } else */if (value != null && ReflectionUtils.isNumber(value)) {
                     out[k] = ReflectionUtils.fromDouble(((Double) value), paramType);
                 } else {
                     out[k] = paramType.cast(value);

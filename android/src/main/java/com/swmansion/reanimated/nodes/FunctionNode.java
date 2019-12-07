@@ -4,6 +4,10 @@ import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
+import java.util.ArrayList;
+
+import javax.annotation.Nullable;
+
 public class FunctionNode extends Node implements ValueManagingNode {
 
   private final int mWhatNodeID;
@@ -20,10 +24,10 @@ public class FunctionNode extends Node implements ValueManagingNode {
   }
 
   @Override
-  public void setValue(Object value) {
+  public void setValue(Object value, ArrayList<CallFuncNode> context) {
     Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     try {
-      ((ValueManagingNode) what).setValue(value);
+      ((ValueManagingNode) what).setValue(value, context);
     } catch (Throwable throwable) {
       throw new JSApplicationCausedNativeException(
               "Error while trying to set value on reanimated " + what.getClass().getSimpleName(), throwable);

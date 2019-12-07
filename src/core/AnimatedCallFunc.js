@@ -15,7 +15,7 @@ export default class AnimatedCallFunc extends AnimatedNode {
         params: params.map(n => n.__nodeID),
         ...config
       },
-      [...args]
+      [...args, what]
     );
     this._what = what;
     this._args = args;

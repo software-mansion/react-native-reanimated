@@ -16,21 +16,20 @@ const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minu
 const timeInitialized = proc((hour, minute) => not(or(eq(hour, -1), eq(minute, -1))));
 
 const showTimer = proc((hour, minute, is24Hour, cb) => {
-  const startStateBuilder = proc((hour, minute, is24Hour) =>
+  const startState = cond(
+    timeInitialized(hour, minute),
     map({
       hour,
       minute,
       is24Hour
-    })
-  );
-
-  const startState = cond(
-    timeInitialized(hour, minute),
-    startStateBuilder(hour, minute, is24Hour),
+    }),
     map()
   );
 
-  return invoke('TimePickerAndroid', 'open', debug('timer start', startState), debug('timer result', cb));
+  //const cb = proc((hour, minute) => callback({ hour, minute }));
+
+  //  return invoke('TimePickerAndroid', 'open', debug('timer start', startState), callback({ hour, minute }));
+  return invoke('TimePickerAndroid', 'open', {}, callback({ hour, minute }));
 })
 
 
