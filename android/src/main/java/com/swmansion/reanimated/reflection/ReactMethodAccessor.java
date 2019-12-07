@@ -84,9 +84,7 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedBrid
                 n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
-                /*if (paramType.equals(Callback.class) || paramType.equals(Promise.class)) {
-                    out[k] = new ReanimatedCallback(value);
-                } else */if (value != null && ReflectionUtils.isNumber(value)) {
+                if (value != null && ReflectionUtils.isNumber(value)) {
                     out[k] = ReflectionUtils.fromDouble(((Double) value), paramType);
                 } else {
                     out[k] = paramType.cast(value);
