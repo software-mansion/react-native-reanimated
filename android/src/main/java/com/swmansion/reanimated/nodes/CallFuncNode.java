@@ -1,7 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
@@ -54,10 +52,10 @@ public class CallFuncNode extends Node implements ValueManagingNode {
   }
 
   @Override
-  public void setValue(Object value, ArrayList<CallFuncNode> context) {
+  public void setValue(Object value) {
     beginContext();
     Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-    ((ValueManagingNode) whatNode).setValue(value, context);
+    ((ValueManagingNode) whatNode).setValue(value);
     endContext();
   }
 

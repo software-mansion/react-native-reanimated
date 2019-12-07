@@ -2,8 +2,6 @@ package com.swmansion.reanimated.nodes;
 
 import com.swmansion.reanimated.NodesManager;
 
-import java.util.ArrayList;
-
 /**
  * This node is used by {@link NodesManager} to return in place of a missing node that might have
  * been requested. This way we avoid a top of null-checks and we make nodes manager compatible with
@@ -18,7 +16,7 @@ public class NoopNode extends ValueNode {
   }
 
   @Override
-  public void setValue(Object value, ArrayList<CallFuncNode> context) {
+  public void setValue(Object value) {
     // no-op
   }
 

@@ -52,12 +52,12 @@ public class ReanimatedCallback implements Callback, Promise {
 
     private void setValue(@Nullable final ReanimatedWritableNativeArray data) {
         if (UiThreadUtil.isOnUiThread()) {
-            mWhatNode.setValue(data, null);
+            mWhatNode.setValue(data);
         } else {
             UiThreadUtil.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mWhatNode.setValue(data, null);
+                    mWhatNode.setValue(data);
                 }
             });
         }

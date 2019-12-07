@@ -7,8 +7,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.JSEventDispatcherAccessor;
 
-import java.util.ArrayList;
-
 import javax.annotation.Nullable;
 
 public class InterceptNode extends Node implements ValueManagingNode {
@@ -45,9 +43,9 @@ public class InterceptNode extends Node implements ValueManagingNode {
     }
 
     @Override
-    public void setValue(Object value, ArrayList<CallFuncNode> context) {
+    public void setValue(Object value) {
         Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
-        ((ValueManagingNode) what).setValue(value, context);
+        ((ValueManagingNode) what).setValue(value);
     }
 
     @Nullable

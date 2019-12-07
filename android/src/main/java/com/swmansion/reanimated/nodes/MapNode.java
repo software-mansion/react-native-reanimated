@@ -96,11 +96,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     @Override
-    public void setValue(Object value,@Nullable ArrayList<CallFuncNode> context) {
+    public void setValue(Object value) {
         if (value instanceof ReadableArray) {
-            setValue((ReadableArray) value, context);
+            setValue((ReadableArray) value);
         } else if (value instanceof ReadableMap) {
-            setValue((ReadableMap) value, context);
+            setValue((ReadableMap) value);
         } else {
             throw new JSApplicationCausedNativeException(
                     String.format(
@@ -114,26 +114,12 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     }
 
-    void setValue(@Nullable ReadableArray data,@Nullable ArrayList<CallFuncNode> context) {
-        setValue(ReadableArrayResolver.obtain(data), context);
+    void setValue(@Nullable ReadableArray data) {
+        setValue(ReadableArrayResolver.obtain(data));
     }
 
-    void setValue(@Nullable ReadableMap data,@Nullable ArrayList<CallFuncNode> context) {
-        setValue(ReadableMapResolver.obtain(data), context);
-    }
-
-    private void setValue(@Nullable final ReanimatedBridge.ReadableCollection data, @Nullable ArrayList<CallFuncNode> context) {
-        if (context != null) {
-            new ContextProvider(context)
-                    .runInContext(new Runnable() {
-                        @Override
-                        public void run() {
-                            setValue(data);
-                        }
-                    });
-        } else {
-            setValue(data);
-        }
+    void setValue(@Nullable ReadableMap data) {
+        setValue(ReadableMapResolver.obtain(data));
     }
 
     private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
@@ -161,7 +147,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                 value = map.lookupValue(data);
                 if (value != null) {
                     node = mNodesManager.findNodeById(map.nodeID, Node.class);
-                    ((ValueManagingNode) node).setValue(value, null);
+                    ((ValueManagingNode) node).setValue(value);
 
                     if (!value.equals(mMemoizedValues.get(map.nodeID))) {
                         mDirty = true;

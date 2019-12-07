@@ -4,8 +4,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
 
-import java.util.ArrayList;
-
 import javax.annotation.Nullable;
 
 public class ValueNode extends Node implements ValueManagingNode {
@@ -30,7 +28,7 @@ public class ValueNode extends Node implements ValueManagingNode {
     }
   }
 
-  public void setValue(Object value, @Nullable ArrayList<CallFuncNode> context) {
+  public void setValue(Object value) {
     mValue = value;
     forceUpdateMemoizedValue(mValue);
   }

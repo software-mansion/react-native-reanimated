@@ -86,7 +86,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
             for (int i = 0; i < registry.size(); i++) {
                 nodeID = registry.keyAt(i);
                 node = mNodesManager.findNodeById(nodeID, Node.class);
-                ((ValueManagingNode) node).setValue(data, null);
+                ((ValueManagingNode) node).setValue(data);
             }
         } else if (BuildConfig.DEBUG && !mDevUtil.containsKey(eventName) && data != null) {
             //  dev util

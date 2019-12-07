@@ -34,11 +34,11 @@ class ContextProvider {
         }
 
         @Override
-        public void setValue(final Object value, ArrayList<CallFuncNode> context) {
+        public void setValue(final Object value) {
             runInContext(new Runnable() {
                 @Override
                 public void run() {
-                    mEvaluator.setValue(value, mContext);
+                    mEvaluator.setValue(value);
                 }
             });
         }

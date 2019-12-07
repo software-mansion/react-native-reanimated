@@ -4,7 +4,6 @@ import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
-import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Stack;
 
@@ -19,12 +18,12 @@ public class ParamNode extends ValueNode {
   }
 
   @Override
-  public void setValue(Object value, ArrayList<CallFuncNode> context) {
+  public void setValue(Object value) {
     try {
       Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
       String callID = mUpdateContext.callID;
       mUpdateContext.callID = mPrevCallID;
-      ((ValueManagingNode) node).setValue(value, null);
+      ((ValueManagingNode) node).setValue(value);
       mUpdateContext.callID = callID;
     } catch (EmptyStackException e) {
       throwNoContext(e);
