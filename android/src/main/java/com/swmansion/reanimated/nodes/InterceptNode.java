@@ -32,8 +32,6 @@ public class InterceptNode extends Node implements ValueManagingNode {
         attach();
     }
 
-
-
     public void attach() {
         eventDispatcherAccessor.attach(mNodeID, mEventName);
     }
@@ -57,6 +55,6 @@ public class InterceptNode extends Node implements ValueManagingNode {
     @NonNull
     @Override
     public String toString() {
-        return String.format("%s(%s)", getClass().getSimpleName(), mEventName);
+        return String.format("%s('%s')", getClass().getSimpleName(), mEventName);
     }
 }

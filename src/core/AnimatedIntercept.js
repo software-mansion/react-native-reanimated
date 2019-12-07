@@ -15,6 +15,9 @@ class AnimatedIntercept extends AnimatedNode {
       },
       [what]
     );
+
+    //  attach node so it begins intercepting events
+    this.__attach();
   }
 }
 
