@@ -21,12 +21,6 @@ public class InvokeNode extends Node implements ConnectedNode {
     }
 
     @Override
-    protected void propagateContext(ArrayList<CallFuncNode> context) {
-        Log.d("Invoke", "propagateContext from invoke: " + context);
-        super.propagateContext(context);
-    }
-
-    @Override
     protected Object evaluate() {
         mEvalHelper.call(mParams, mNodesManager);
         return ZERO;
