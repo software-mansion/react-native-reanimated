@@ -1,6 +1,6 @@
-import React, { useMemo, useEffect } from 'react';
-import { processColor, ToastAndroid, TimePickerAndroid, StyleSheet, Platform } from 'react-native';
-import { RectButton, State, TapGestureHandler, PanGestureHandler } from 'react-native-gesture-handler';
+import React, { useEffect, useMemo } from 'react';
+import { Platform, StyleSheet } from 'react-native';
+import { RectButton, State } from 'react-native-gesture-handler';
 import Animated, { Easing } from 'react-native-reanimated';
 import { colorHSV } from '../colors';
 
@@ -9,13 +9,11 @@ const { cond, eq, add, call, set, Value, debug, concat, timing, color, modulo, i
 const Button = createAnimatedComponent(RectButton);
 
 // const showTimer = proc((startState, callback) => invoke('TimePickerAndroid', 'open', startState, callback))
-
 const timerSuccessMap = proc((action, hour, minute) => map([{ action, hour, minute }]));
-// const timerSuccessCallback = proc((action, hour, minute) => callback({ action, hour, minute }));
 
 const timeInitialized = proc((hour, minute) => not(or(eq(hour, -1), eq(minute, -1))));
 
-const showTimer = proc((hour, minute, is24Hour, cb) => {
+const showTimer = proc((hour, minute, is24Hour, pickerAction) => {
   const startState = cond(
     timeInitialized(hour, minute),
     map({
@@ -26,10 +24,13 @@ const showTimer = proc((hour, minute, is24Hour, cb) => {
     map()
   );
 
-  //const cb = proc((hour, minute) => callback({ hour, minute }));
+  const cb = callback({
+    hour,
+    minute,
+    action: pickerAction
+  });
 
-  //  return invoke('TimePickerAndroid', 'open', debug('timer start', startState), callback({ hour, minute }));
-  return invoke('TimePickerAndroid', 'open', {}, callback({ hour, minute }));
+  return invoke('TimePickerAndroid', 'open', startState, cb);
 })
 
 
@@ -63,7 +64,6 @@ function runTiming(clock, value, dest, startStopClock = true) {
 }
 
 export default function AnimatedTimePicker() {
-  // const ref = React.useRef();
   const action = useMemo(() => new Value(0), []);
   const hour = useMemo(() => new Value(-1), []);
   const minute = useMemo(() => new Value(-1), []);
@@ -93,16 +93,13 @@ export default function AnimatedTimePicker() {
     [colorHue, clock, animator, action, hour, minute, animState]
   );
 
-  const result = useMemo(() => timerSuccessMap(action, debug('timer hour', hour), debug('timer minute', minute)), []);
-
   useCode(() =>
     onChange(
       animState,
       cond(
         animState,
         [
-          // showTimerCB(hourIn, 47, 1, callback({ action, hour, minute })),
-          showTimer(hour, minute, 1, debug('timer result', callback(result))),
+          showTimer(hour, minute, 1, action),
           invoke('AppState', 'getCurrentAppState', debug('app state', callback({ app_state: appState })), debug('stub', callback())),
           set(animState, 0),
         ]
@@ -112,8 +109,8 @@ export default function AnimatedTimePicker() {
   );
 
   useCode(() =>
-    call([result], ([c]) => console.log(`user picked following time: `, c)),
-    [result]
+    call([hour, minute], ([hour, minute]) => console.log(`user picked following time: `, { hour, minute })),
+    [hour, minute]
   );
 
   const showToast = useMemo(() => {
