@@ -123,8 +123,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     private void setValue(@Nullable final ReanimatedBridge.ReadableCollection data, @Nullable ArrayList<CallFuncNode> context) {
-        setValue(data);
-        /*
         if (context != null) {
             new ContextProvider(context)
                     .runInContext(new Runnable() {
@@ -136,8 +134,6 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         } else {
             setValue(data);
         }
-
-         */
     }
 
     private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
