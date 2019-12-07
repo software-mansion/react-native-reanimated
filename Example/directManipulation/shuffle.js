@@ -43,8 +43,8 @@ const successMap = proc((x, y, w, h) => map([0, 0, w, h, x, y]));
 const measureView1 = proc((tag, cb) => cond(defined(tag), invoke('UIManager', 'measure', tag, cb)));
 
 const measureView = proc((tag, fruit, x, y, w, h) => {
-  //const map = successMap(x, y, w, h);
-  const measure = invoke('UIManager', 'measure', tag, callback(0, 0, w, h, x, y));
+  const mapping = successMap(x, y, w, h);
+  const measure = invoke('UIManager', 'measure', tag, callback(mapping) /*callback(0, 0, w, h, x, y)*/);
   return block([
     cond(defined(tag), measure),
     debug('measured', concat(tag, ' ', fruit, ' ', measure))
