@@ -28,7 +28,6 @@ public class InvokeNode extends Node implements ConnectedNode {
 
     @Override
     protected Object evaluate() {
-        Log.d("Invoke", "evaluate invoke: " + mUpdateContext);
         mEvalHelper.call(mParams, mNodesManager);
         return ZERO;
     }
