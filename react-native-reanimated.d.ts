@@ -281,8 +281,6 @@ declare module 'react-native-reanimated' {
       export function fromEnd<T extends any[]>(array: T): T;
     }
 
-
-
     type MappingBasic = { [key: string]: MappingBasic } | Adaptable<any>;
     type MappingProxy<T> = (arg: T) => AnimatedNode<number>;
     type MappingNested<T> = T extends object ? { [K in keyof T]?: MappingNested<T[K]> | MappingProxy<T[K]> } : Adaptable<T> | MappingProxy<T>;

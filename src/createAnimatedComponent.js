@@ -27,11 +27,16 @@ function getEventNode(node) {
 }
 
 function forEachEvent(props, cb) {
+  let prop;
   for (const key in props) {
-    const node = getEventNode(props[key]);
-    if (node && node instanceof AnimatedEvent) {
-      cb(node, key);
-    }
+    prop = props[key];
+    prop = Array.isArray(prop) ? prop : [prop];
+    prop.forEach(element => {
+      const node = getEventNode(element);
+      if (node && node instanceof AnimatedEvent) {
+        cb(node, key);
+      }
+    });
   }
 }
 
@@ -207,6 +212,11 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (Array.isArray(value) && value.some((v) => v instanceof AnimatedNode)) {
+          const funcEvent = value.find((v) => typeof v === 'function');
+          if (funcEvent) {
+            props[key] = funcEvent;
+          }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
@@ -214,14 +224,15 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
+    _platformProps = Platform.select({
+      web: {},
+      default: { collapsable: false },
+    });
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      const platformProps = Platform.select({
-        web: {},
-        default: { collapsable: false },
-      });
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component {...props} ref={this._setComponentRef} {...this._platformProps} />
       );
     }
 

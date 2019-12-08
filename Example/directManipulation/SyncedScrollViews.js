@@ -106,10 +106,25 @@ export default function SyncedScrollViews() {
     [scrollToA, scrollToB]
   );
 
+  const __scrollX = useMemo(() => new Value(0), []);
+  const __scrollY = useMemo(() => new Value(0), []);
+  const attachedEvent = useMemo(() => event([{ nativeEvent: { contentOffset: { x: __scrollX, y: __scrollY } } }]), [scrollX, scrollY]);
+
+  useCode(() =>
+    call([__scrollX, __scrollY], v => console.log('logging second attached event values', v)),
+    [__scrollX, __scrollY]
+  );
+
+  const onScrollFunc = useCallback((e) =>
+    console.log('logging additional `onScroll` function prop', e.nativeEvent.contentOffset),
+    []
+  );
+
   const baseScrollComponent = (
     <ScrollView
       style={styles.scrollView}
       collapsable={false}
+      onScroll={[onScroll, onScrollFunc, attachedEvent]}
       scrollEventThrottle={1}
       simultaneousHandlers={panRef}
       disableScrollViewPanResponder

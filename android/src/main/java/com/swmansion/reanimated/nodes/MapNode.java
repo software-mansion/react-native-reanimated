@@ -98,6 +98,11 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         }
     }
 
+    public void merge(int nodeID) {
+        MapNode other = mNodesManager.findNodeById(nodeID, MapNode.class);
+        mMapping.addAll(other.mMapping);
+    }
+
     public void setValue(int nodeID) {
         MapNode newMapNode = mNodesManager.findNodeById(nodeID, MapNode.class);
         mMapping = newMapNode.mMapping;

@@ -371,11 +371,13 @@ public class NodesManager implements EventDispatcherListener {
     if (node == null) {
       throw new JSApplicationIllegalArgumentException("Event node " + eventNodeID + " does not exists");
     }
-    if (mEventMapping.containsKey(key)) {
-      throw new JSApplicationIllegalArgumentException("Event handler already set for the given view and event type");
-    }
 
-    mEventMapping.put(key, node);
+    if (mEventMapping.containsKey(key)) {
+      //  merge events
+      mEventMapping.get(key).merge(eventNodeID);
+    } else {
+      mEventMapping.put(key, node);
+    }
   }
 
   public void detachEvent(int viewTag, String eventName, int eventNodeID) {
