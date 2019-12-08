@@ -22,6 +22,7 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
+import com.swmansion.reanimated.nodes.CallFuncNode;
 import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
@@ -32,19 +33,18 @@ import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
 import com.swmansion.reanimated.nodes.FunctionNode;
 import com.swmansion.reanimated.nodes.InterceptNode;
-import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.InvokeNode;
+import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.MapNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
+import com.swmansion.reanimated.nodes.ParamNode;
 import com.swmansion.reanimated.nodes.PropsNode;
 import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-import com.swmansion.reanimated.nodes.ParamNode;
-import com.swmansion.reanimated.nodes.CallFuncNode;
 import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 
 import java.util.ArrayList;
@@ -304,7 +304,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void dropNode(int tag) {
     mAnimatedNodes.remove(tag);
-    mReflectionHelper.JSEventDispatcher().detach(tag);
   }
 
   public void connectNodes(int parentID, int childID) {
@@ -390,7 +389,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    callback.invoke(mAnimatedNodes.get(nodeID).exportableValue());
   }
 
   public void postRunUpdatesAfterAnimation() {
