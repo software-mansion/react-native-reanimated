@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;

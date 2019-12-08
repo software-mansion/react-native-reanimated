@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.JSEventDispatcherAccessor;
+import com.swmansion.reanimated.bridging.JSEventDispatcherAccessor;
 
 import java.util.ArrayList;
 

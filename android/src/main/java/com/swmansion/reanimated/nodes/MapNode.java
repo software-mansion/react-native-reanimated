@@ -10,10 +10,10 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.ReadableArrayResolver;
-import com.swmansion.reanimated.reflection.ReadableMapResolver;
-import com.swmansion.reanimated.reflection.ReanimatedBridge;
-import com.swmansion.reanimated.reflection.ReanimatedMapBuilder;
+import com.swmansion.reanimated.bridging.ReadableArrayResolver;
+import com.swmansion.reanimated.bridging.ReadableMapResolver;
+import com.swmansion.reanimated.bridging.ReanimatedBridge;
+import com.swmansion.reanimated.bridging.ReanimatedMapBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

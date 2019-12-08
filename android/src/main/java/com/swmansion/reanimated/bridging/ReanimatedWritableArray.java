@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

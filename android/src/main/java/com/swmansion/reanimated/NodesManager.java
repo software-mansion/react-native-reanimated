@@ -45,7 +45,7 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
+import com.swmansion.reanimated.bridging.ReanimatedReflectionHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;

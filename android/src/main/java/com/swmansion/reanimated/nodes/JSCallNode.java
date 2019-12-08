@@ -5,7 +5,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
-import com.swmansion.reanimated.reflection.ReanimatedWritableNativeArray;
+import com.swmansion.reanimated.bridging.ReanimatedWritableNativeArray;
 
 public class JSCallNode extends Node {
 

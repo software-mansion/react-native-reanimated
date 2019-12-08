@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,7 +10,7 @@ import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeArray;
 
-import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
+import static com.swmansion.reanimated.bridging.ReflectionUtils.toDouble;
 
 public class ReanimatedWritableNativeArray extends WritableNativeArray implements ReanimatedBridge.ReanimatedArray {
 

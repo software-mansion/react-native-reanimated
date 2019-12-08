@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.NonNull;
 
@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import static com.swmansion.reanimated.Utils.concat;
-import static com.swmansion.reanimated.reflection.ReflectionUtils.inferType;
+import static com.swmansion.reanimated.bridging.ReflectionUtils.inferType;
 
 class MethodAccessor {
     private Method mMethod;

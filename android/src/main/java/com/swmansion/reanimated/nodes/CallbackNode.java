@@ -4,7 +4,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.ReanimatedCallback;
+import com.swmansion.reanimated.bridging.ReanimatedCallback;
 
 import java.util.ArrayList;
 

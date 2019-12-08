@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.Nullable;
 
@@ -7,9 +7,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
-import static com.swmansion.reanimated.reflection.ReflectionUtils.isString;
-import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
+import static com.swmansion.reanimated.bridging.ReflectionUtils.isInteger;
+import static com.swmansion.reanimated.bridging.ReflectionUtils.isString;
+import static com.swmansion.reanimated.bridging.ReflectionUtils.toDouble;
 
 @SuppressWarnings("WeakerAccess")
 public class ReadableArrayResolver extends ReadableCollectionResolver {
