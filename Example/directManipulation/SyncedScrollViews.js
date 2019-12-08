@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { Image, StyleSheet, ScrollView as RNScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { State, NativeViewGestureHandler, PanGestureHandler } from 'react-native-gesture-handler';
@@ -124,7 +124,6 @@ export default function SyncedScrollViews() {
     <ScrollView
       style={styles.scrollView}
       collapsable={false}
-      onScroll={[onScroll, onScrollFunc, attachedEvent]}
       scrollEventThrottle={1}
       simultaneousHandlers={panRef}
       disableScrollViewPanResponder
@@ -133,6 +132,9 @@ export default function SyncedScrollViews() {
       <Image source={require('../imageViewer/grid.png')} collapsable={false} />
     </ScrollView>
   );
+
+  const scrollerA = [onScrollA, onScrollFunc, attachedEvent];
+  const scrollerB = [onScrollB, onScrollFunc, attachedEvent];
 
   return (
     <PanGestureHandler
@@ -146,10 +148,10 @@ export default function SyncedScrollViews() {
             scrollToA.setNativeView(ref);
             scrollARef.current = ref;
           },
-          onScroll: onScrollA,
+          onScroll: scrollerA,
           onScrollBeginDrag: beginDragA,
           onMomentumScrollBegin: beginDragA,
-          onMomentumScrollEnd: onScrollA,
+          onMomentumScrollEnd: scrollerA,
           onScrollEndDrag: effectEvent
         })}
         {React.cloneElement(baseScrollComponent, {
@@ -157,10 +159,10 @@ export default function SyncedScrollViews() {
             scrollToB.setNativeView(ref);
             scrollBRef.current = ref;
           },
-          onScroll: onScrollB,
+          onScroll: scrollerB,
           onScrollBeginDrag: beginDragB,
           onMomentumScrollBegin: beginDragB,
-          onMomentumScrollEnd: onScrollB,
+          onMomentumScrollEnd: scrollerB,
           onScrollEndDrag: otherOnScroll
         })}
       </View>
