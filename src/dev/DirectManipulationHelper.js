@@ -252,7 +252,7 @@ function DirectManipulationHelper() {
       />
       <TouchableOpacity
         onPress={() => setDisplayInfo(false)}
-        onLongPress={() => trycopy()}
+        onLongPress={() => invalidate()}
         style={[!displayInfo && styles.hidden, styles.infoContainer]}
       >
         <Text>
