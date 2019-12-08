@@ -35,14 +35,12 @@ public class ReanimatedCallback implements Callback, Promise {
             CallbackState.REJECTED,
     })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface CallbackState {
+    @interface CallbackState {
         int READY = -1;
         int PENDING = 0;
         int RESOLVED = 1;
         int REJECTED = 2;
     }
-
-    private @CallbackState int mState = CallbackState.READY;
 
     private final ValueManagingNode mWhatNode;
 
@@ -63,12 +61,11 @@ public class ReanimatedCallback implements Callback, Promise {
         }
     }
 
-    public void reject() {
+    private void reject() {
         updateState(CallbackState.REJECTED);
     }
 
     private void updateState(@CallbackState int state) {
-        mState = state;
     }
 
     @Override
@@ -182,7 +179,7 @@ public class ReanimatedCallback implements Callback, Promise {
         String message;
         WritableMap useInfo;
 
-        public static RejectionWarning getInstance() {
+        static RejectionWarning getInstance() {
             return new RejectionWarning();
         }
 
@@ -190,17 +187,17 @@ public class ReanimatedCallback implements Callback, Promise {
 
         }
 
-        public RejectionWarning put(Throwable throwable) {
+        RejectionWarning put(Throwable throwable) {
             this.throwable = throwable;
             return this;
         }
 
-        public RejectionWarning putCode(String code) {
+        RejectionWarning putCode(String code) {
             this.code = code;
             return this;
         }
 
-        public RejectionWarning putMessage(String message) {
+        RejectionWarning putMessage(String message) {
             this.message = message;
             return this;
         }
@@ -211,12 +208,12 @@ public class ReanimatedCallback implements Callback, Promise {
             return this;
         }
 
-        public RejectionWarning put(WritableMap useInfo){
+        RejectionWarning put(WritableMap useInfo){
             this.useInfo = useInfo;
             return this;
         }
 
-        public void log(){
+        void log(){
             if(BuildConfig.DEBUG) {
                 Log.w(ReactConstants.TAG, "Reanimated callback was rejected, see details:\n" +
                         (code != null ? "code: " + code + ",\n" : "") +

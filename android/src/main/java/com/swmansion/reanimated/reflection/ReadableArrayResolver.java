@@ -1,11 +1,8 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
-
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Dynamic;
-import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -14,6 +11,7 @@ import static com.swmansion.reanimated.reflection.ReflectionUtils.isInteger;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.isString;
 import static com.swmansion.reanimated.reflection.ReflectionUtils.toDouble;
 
+@SuppressWarnings("WeakerAccess")
 public class ReadableArrayResolver extends ReadableCollectionResolver {
 
     interface Resolvable {
@@ -39,7 +37,7 @@ public class ReadableArrayResolver extends ReadableCollectionResolver {
         }
     }
 
-    private Resolvable mSource;
+    private final Resolvable mSource;
 
     ReadableArrayResolver(Resolvable array) {
         mSource = array;

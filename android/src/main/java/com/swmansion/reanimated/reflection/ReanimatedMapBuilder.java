@@ -1,6 +1,5 @@
 package com.swmansion.reanimated.reflection;
 
-import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
@@ -10,7 +9,6 @@ import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.MapNode;
 
@@ -21,7 +19,7 @@ import java.util.List;
 public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M extends ReanimatedBridge.ReanimatedMap, AB extends Class<A>, MB extends Class<M>> implements ReanimatedBridge.ReadableCollection {
     private final AB arrayBuilder;
     private final MB mapBuilder;
-    private SparseArray<Object> arrayContext;
+    private final SparseArray<Object> arrayContext;
     private M mapContext;
     private final ReadableArrayResolver arrayResolver;
     private final ReadableMapResolver mapResolver;
@@ -94,6 +92,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
 
     public void merge(ReanimatedMapBuilder source) {
         mapContext.merge(source.mapContext);
+        //noinspection unchecked
         SparseArray<Object> sourceArray = source.arrayContext;
         assertCondition(
                 type != source.type && type != ReadableType.Null,
@@ -108,6 +107,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
 
     @NonNull
     public ReanimatedMapBuilder copy() throws InstantiationException, IllegalAccessException {
+        //noinspection unchecked,unchecked
         ReanimatedMapBuilder copy = new ReanimatedMapBuilder(mapBuilder, arrayBuilder);
         copy.merge(this);
         copy.type = type;
@@ -156,6 +156,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         return array;
     }
 
+    @SuppressWarnings("unchecked")
     @NonNull
     public M asMap(boolean useNativeBuilder) {
         return ((M) (useNativeBuilder ? ReanimatedWritableNativeMap.fromMap(mapContext) : mapContext));

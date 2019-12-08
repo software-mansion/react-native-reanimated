@@ -1,11 +1,8 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeArray;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.reflection.ReanimatedWritableNativeArray;

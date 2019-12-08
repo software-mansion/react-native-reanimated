@@ -1,14 +1,10 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
-
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.reflection.ReanimatedBridge;
 import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
-
-import java.util.ArrayList;
 
 public class InvokeNode extends Node implements ConnectedNode {
     private final ReanimatedBridge.ReanimatedAccessor mEvalHelper;

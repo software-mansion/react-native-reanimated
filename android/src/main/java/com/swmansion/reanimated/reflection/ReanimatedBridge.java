@@ -11,7 +11,7 @@ public class ReanimatedBridge {
     public interface ReadableCollection {
         boolean has(Object key);
         @Nullable Object value(Object key);
-        <T extends Object> T value(Object key, Class<T> type);
+        <T> T value(Object key, Class<T> type);
         Object source();
     }
 

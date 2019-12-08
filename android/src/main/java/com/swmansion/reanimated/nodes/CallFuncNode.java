@@ -20,7 +20,7 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     mArgs = Utils.processIntArray(config.getArray("args"));
   }
 
-  protected void beginContext() {
+  void beginContext() {
     mPreviousCallID = mNodesManager.updateContext.callID;
     mNodesManager.updateContext.callID = mNodesManager.updateContext.callID + '/' + mNodeID;
     for (int i = 0; i < mParams.length; i++) {
@@ -30,7 +30,7 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     }
   }
 
-  protected void endContext() {
+  void endContext() {
     for (int i = 0; i < mParams.length; i++) {
       int paramId = mParams[i];
       ParamNode paramNode = mNodesManager.findNodeById(paramId, ParamNode.class);

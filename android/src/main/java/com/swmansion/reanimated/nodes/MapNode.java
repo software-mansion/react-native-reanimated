@@ -83,7 +83,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     private Boolean mDirty = true;
     private ReanimatedMapBuilder mBuilder;
     private ReanimatedMapBuilder.ReanimatedMapBuilderManager mBuilderManager;
-    private boolean useNativeBuilder = false;
+    private final boolean useNativeBuilder = false;
     private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {

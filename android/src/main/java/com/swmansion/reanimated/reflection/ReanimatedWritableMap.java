@@ -20,7 +20,7 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
         return map;
     }
 
-    private ReadableMapResolver resolver;
+    private final ReadableMapResolver resolver;
 
     ReanimatedWritableMap() {
         super();

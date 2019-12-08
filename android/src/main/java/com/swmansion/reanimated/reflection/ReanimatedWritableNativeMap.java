@@ -31,7 +31,7 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
         return out;
     }
 
-    private ReadableMapResolver resolver;
+    private final ReadableMapResolver resolver;
 
     ReanimatedWritableNativeMap() {
         super();

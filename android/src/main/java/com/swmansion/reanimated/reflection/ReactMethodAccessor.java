@@ -1,9 +1,7 @@
 package com.swmansion.reanimated.reflection;
 
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.Node;

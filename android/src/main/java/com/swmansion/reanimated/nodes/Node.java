@@ -157,7 +157,7 @@ public abstract class Node {
     updateContext.updateLoopID++;
   }
 
-  protected void propagateContext(ArrayList<CallFuncNode> context) {
+  void propagateContext(ArrayList<CallFuncNode> context) {
     if (mParents != null) {
       for (Node parent: mParents) {
         parent.propagateContext(context);

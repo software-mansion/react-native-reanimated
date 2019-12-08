@@ -1,7 +1,6 @@
 package com.swmansion.reanimated.reflection;
 
 import android.util.Log;
-import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,7 +15,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEm
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueManagingNode;
 
 import java.util.ArrayList;
@@ -28,13 +26,11 @@ import static com.swmansion.reanimated.nodes.DebugNode.TAG;
 
 public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNativeAppEventEmitter {
 
-    private final NodesManager mNodesManager;
     private final Map<String, ArrayList<ValueManagingNode>> eventRegistry = new HashMap<>();
     private final Map<String, Object> mDevUtil = new HashMap<>();
 
     JSEventDispatcherAccessor(NodesManager nodesManager) {
-        mNodesManager = nodesManager;
-        Map<Class<? extends JavaScriptModule>, JavaScriptModule> mModuleInstances = getModuleInstances(mNodesManager.getContext());
+        Map<Class<? extends JavaScriptModule>, JavaScriptModule> mModuleInstances = getModuleInstances(nodesManager.getContext());
         final RCTDeviceEventEmitter deviceEventEmitter = (RCTDeviceEventEmitter) mModuleInstances
                 .get(RCTDeviceEventEmitter.class);
         final RCTNativeAppEventEmitter appEventEmitter = (RCTNativeAppEventEmitter) mModuleInstances
@@ -46,6 +42,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
                     @Override
                     public void emit(@NonNull String eventName, @Nullable Object data) {
                         JSEventDispatcherAccessor.this.emit(eventName, data);
+                        assert deviceEventEmitter != null;
                         deviceEventEmitter.emit(eventName, data);
                     }
                 }
@@ -57,6 +54,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
                     @Override
                     public void emit(String eventName, @Nullable Object data) {
                         JSEventDispatcherAccessor.this.emit(eventName, data);
+                        assert appEventEmitter != null;
                         appEventEmitter.emit(eventName, data);
                     }
                 }
@@ -97,6 +95,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
             eventRegistry.put(eventName, new ArrayList<ValueManagingNode>());
         }
         ArrayList<ValueManagingNode> registry = eventRegistry.get(eventName);
+        assert registry != null;
         if (registry.lastIndexOf(valueManager) == -1) {
             registry.add(valueManager);
         }
