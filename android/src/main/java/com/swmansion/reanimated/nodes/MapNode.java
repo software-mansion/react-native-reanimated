@@ -140,7 +140,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         Object value;
 
         if (!useNativeBuilder) {
-            initMapBuilder();
+            // TODO: 08/12/2019 uncomment once set is working 
+            //initMapBuilder();
         }
 
         for (int i = 0; i < mMapping.size(); i++) {
@@ -161,6 +162,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                         mDirty = true;
                         mMemoizedValues.put(map.nodeID, value);
                         if (!useNativeBuilder) {
+                            // TODO: 08/12/2019 uncomment once set is working 
                             //mBuilderManager.set(map.getPath(), value);
                         }
                     }
@@ -192,7 +194,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     protected Object evaluate() {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
         /*
-        once ReanimatedMapBuilder set method will work use this
+        // TODO: 08/12/2019 once ReanimatedMapBuilder set method will work use this and uncomment the rest
         if (isDirty() && useNativeBuilder) {
             mDirty = false;
             mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
@@ -201,7 +203,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         }
 
          */
-        //  defaulting
+        
+        //  defaulting // TODO: 08/12/2019 remove  
         mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, useNativeBuilder);
 
         return mBuilder.export(useNativeBuilder);
