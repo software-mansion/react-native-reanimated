@@ -11,6 +11,8 @@ const orientationMap = proc((width, height, scale) => {
   });
 });
 
+const orientationListener = proc((width, height, scale) => intercept('didUpdateDimensions', orientationMap(width, height, scale)));
+
 const rotation = new Value(0);
 const interceptRotation = intercept('namedOrientationDidChange', {
   rotationDegrees: rotation
@@ -36,7 +38,8 @@ function useAnimatedDimensions() {
 
   useCode(() =>
     block([
-      intercept('didUpdateDimensions', orientationMap(width, height, scale)),
+      //intercept('didUpdateDimensions', orientationMap(width, height, scale)),
+      orientationListener(width, height, scale),
       set(width, divide(width, scale)),
       set(height, divide(height, scale)),
       debug('width', width),

@@ -19,6 +19,7 @@ import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueManagingNode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,7 +29,7 @@ import static com.swmansion.reanimated.nodes.DebugNode.TAG;
 public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNativeAppEventEmitter {
 
     private final NodesManager mNodesManager;
-    private final Map<String, SparseArray<String>> eventRegistry = new HashMap<>();
+    private final Map<String, ArrayList<ValueManagingNode>> eventRegistry = new HashMap<>();
     private final Map<String, Object> mDevUtil = new HashMap<>();
 
     JSEventDispatcherAccessor(NodesManager nodesManager) {
@@ -78,15 +79,11 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
     }
 
     private void receiveEvent(@NonNull String eventName, @Nullable Object data) {
-        SparseArray<String> registry = eventRegistry.get(eventName);
-        Node node;
-        int nodeID;
+        ArrayList<ValueManagingNode> registry = eventRegistry.get(eventName);
 
         if (registry != null) {
-            for (int i = 0; i < registry.size(); i++) {
-                nodeID = registry.keyAt(i);
-                node = mNodesManager.findNodeById(nodeID, Node.class);
-                ((ValueManagingNode) node).setValue(data);
+            for (ValueManagingNode valueManager: registry) {
+                valueManager.setValue(data);
             }
         } else if (BuildConfig.DEBUG && !mDevUtil.containsKey(eventName) && data != null) {
             //  dev util
@@ -95,19 +92,22 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
         }
     }
 
-    public void attach(int nodeID, String eventName) {
+    public void attach(String eventName, ValueManagingNode valueManager) {
         if (!eventRegistry.containsKey(eventName)) {
-            eventRegistry.put(eventName, new SparseArray<String>());
+            eventRegistry.put(eventName, new ArrayList<ValueManagingNode>());
         }
-        eventRegistry.get(eventName).put(nodeID, eventName + nodeID);
+        ArrayList<ValueManagingNode> registry = eventRegistry.get(eventName);
+        if (registry.lastIndexOf(valueManager) == -1) {
+            registry.add(valueManager);
+        }
     }
 
-    public void detach(int nodeID) {
-        Iterator<Map.Entry<String, SparseArray<String>>> iterator = eventRegistry.entrySet().iterator();
-        Map.Entry<String, SparseArray<String>> entry;
+    public void detach(ValueManagingNode valueManager) {
+        Iterator<Map.Entry<String, ArrayList<ValueManagingNode>>> iterator = eventRegistry.entrySet().iterator();
+        Map.Entry<String, ArrayList<ValueManagingNode>> entry;
         while (iterator.hasNext()) {
             entry = iterator.next();
-            entry.getValue().remove(nodeID);
+            entry.getValue().remove(valueManager);
         }
     }
 

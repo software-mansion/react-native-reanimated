@@ -7,6 +7,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.reflection.JSEventDispatcherAccessor;
 
+import java.util.ArrayList;
+
 import javax.annotation.Nullable;
 
 public class InterceptNode extends Node implements ValueManagingNode {
@@ -14,6 +16,8 @@ public class InterceptNode extends Node implements ValueManagingNode {
     private final int mWhatNodeID;
     private final String mEventName;
     private final JSEventDispatcherAccessor eventDispatcherAccessor;
+    private boolean mIsAttached = false;
+    private ArrayList<CallFuncNode> mContext;
 
     public InterceptNode(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
@@ -28,16 +32,6 @@ public class InterceptNode extends Node implements ValueManagingNode {
         }
 
         eventDispatcherAccessor = mNodesManager.getReflectionHelper().JSEventDispatcher();
-
-        attach();
-    }
-
-    public void attach() {
-        eventDispatcherAccessor.attach(mNodeID, mEventName);
-    }
-
-    public void detach() {
-        eventDispatcherAccessor.detach(mNodeID);
     }
 
     @Override
@@ -46,9 +40,32 @@ public class InterceptNode extends Node implements ValueManagingNode {
         ((ValueManagingNode) what).setValue(value);
     }
 
+    @Override
+    protected void propagateContext(ArrayList<CallFuncNode> context) {
+        mContext = context;
+        super.propagateContext(context);
+    }
+
     @Nullable
     @Override
     protected Object evaluate() {
+        if (!mIsAttached) {
+            ValueManagingNode valueManager;
+            if (mContext != null) {
+                valueManager = new ContextProvider.ValueManager(this, mContext);
+                mContext = null;
+            } else {
+                valueManager = this;
+                mIsAttached = true;
+            }
+            eventDispatcherAccessor.attach(mEventName, valueManager);
+        }
+
+        return ZERO;
+    }
+
+    @Override
+    public Object exportableValue() {
         return ZERO;
     }
 
