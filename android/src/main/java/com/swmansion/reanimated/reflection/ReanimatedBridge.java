@@ -12,6 +12,7 @@ public class ReanimatedBridge {
         boolean has(Object key);
         @Nullable Object value(Object key);
         <T extends Object> T value(Object key, Class<T> type);
+        Object source();
     }
 
     public interface ReanimatedArray extends WritableArray, ReadableArrayResolver.Resolvable {

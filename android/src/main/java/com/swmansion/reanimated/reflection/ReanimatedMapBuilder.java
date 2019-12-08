@@ -1,12 +1,16 @@
 package com.swmansion.reanimated.reflection;
 
+import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.facebook.react.bridge.WritableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.nodes.MapNode;
 
@@ -51,7 +55,13 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     }
 
     private ReanimatedBridge.ReadableCollection resolver(Object key) {
-        return ReflectionUtils.isInteger(key) ? arrayResolver : mapResolver;
+        return ReadableArrayResolver.isIndex(key) ? arrayResolver : mapResolver;
+    }
+
+    @Override
+    public Object source() {
+        //  noop
+        return null;
     }
 
     @Override
@@ -104,14 +114,6 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
         return copy;
     }
 
-    public static void set(ReanimatedBridge.ReadableCollection collection, ArrayList<Object> path, Object value) {
-        if (path.size() == 1) {
-            //collection.
-        } else {
-            //set(collection.value(path.remove(0)), path, value);
-        }
-    }
-
     public ReadableType getType() {
         return type;
     }
@@ -121,7 +123,13 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     }
 
     private void assertIsNotType(ReadableType type, Object key) {
-        assertCondition(this.type == type, String.format("Ambiguous collection type: map context %s, array context %s, next key %s, current type %s", mapContext, arrayContext, key, type));
+        assertCondition(
+                this.type == type,
+                String.format(
+                        "Ambiguous collection type: map context %s, array context %s, next key %s, current type %s",
+                        mapContext, arrayContext, key, type
+                )
+        );
     }
 
     private void assertCondition(boolean condition, String message) {
@@ -131,12 +139,14 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     }
 
     @NonNull
-    public A asArray() {
+    public A asArray(boolean useNativeBuilder) {
         A array;
+        Object value;
         try {
             array = arrayBuilder.newInstance();
             for (int i = 0; i < arrayContext.size(); i++) {
-                array.pushDynamic(ReflectionUtils.nativeCloneDeep(arrayContext.valueAt(i)));
+                value = arrayContext.valueAt(i);
+                array.pushDynamic(useNativeBuilder ? ReflectionUtils.nativeCloneDeep(value) : value);
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -147,19 +157,67 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
     }
 
     @NonNull
-    public M asMap() {
-        return (M) mapContext.copy();
+    public M asMap(boolean useNativeBuilder) {
+        return ((M) (useNativeBuilder ? ReanimatedWritableNativeMap.fromMap(mapContext) : mapContext));
     }
 
     @NonNull
     public Object export() {
-        return isArray() ? asArray() : asMap();
+        return export(true);
+    }
+
+    @NonNull
+    public Object export(boolean useNativeBuilder) {
+        return isArray() ? asArray(useNativeBuilder) : asMap(useNativeBuilder);
     }
 
     @NonNull
     @Override
     public String toString() {
-        return export().toString();
+        return export(false).toString();
+    }
+
+    public static Object exportValue(Object value) {
+        if (value instanceof ReadableMap) {
+            return ReanimatedWritableNativeMap.fromMap((ReadableMap) value);
+        } else if (value instanceof ReadableArray) {
+            return ReanimatedWritableNativeArray.fromArray((ReadableArray) value);
+        } else {
+            return value;
+        }
+    }
+
+    public static class ReanimatedMapBuilderManager {
+
+        private final ReanimatedMapBuilder mMapBuilder;
+
+        public ReanimatedMapBuilderManager(ReanimatedMapBuilder mapBuilder) {
+            mMapBuilder = mapBuilder;
+        }
+
+        // TODO: 08/12/2019  setting value at path doesn't propagate to collection
+        public void set(ArrayList<Object> path, Object value) {
+            ReanimatedBridge.ReadableCollection collection = mMapBuilder;
+            Object key;
+            for (int i = 0; collection != null && i < path.size() - 1; i++) {
+                key = path.get(i);
+                collection = collection.has(key) ? collection.value(key, ReanimatedBridge.ReadableCollection.class) : null;
+            }
+
+            if (collection != null) {
+                key = path.get(path.size() - 1);
+                Object source = mMapBuilder.resolver(key).source();
+                if (source instanceof ReanimatedWritableMap) {
+                    ((ReanimatedWritableMap) source).put((String) key, value);
+                } else if (source instanceof ReanimatedWritableArray) {
+                    ((ReanimatedWritableArray) source).set((int) key, value);
+                } else {
+                    throw new JSApplicationCausedNativeException(
+                            String.format("It is impossible to set values for %s", collection.getClass().getSimpleName())
+                    );
+                }
+            }
+        }
     }
 
     public static ReanimatedMapBuilder fromMapping(List<MapNode.ArgMap> mapping, NodesManager nodesManager, boolean useNativeBuilder) {
@@ -196,7 +254,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
                         collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
                     } else {
                         current = path.subList(0, i);
-                        collection.putDynamic(key, stack.get(current).export());
+                        collection.putDynamic(key, stack.get(current).export(useNativeBuilder));
                     }
 
                     //  merge

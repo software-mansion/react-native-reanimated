@@ -80,6 +80,7 @@ export default function AnimatedTimePicker() {
   const clock = useMemo(() => new Clock(), []);
   const color = useMemo(() => colorHSV(colorHue, 0.9, 1), [colorHue]);
   const inputChangeTracker = useMemo(() => or(neq(diff(hour), 0), neq(diff(minute), 0)), [hour, minute]);
+  const appStateCallback = useMemo(() => callback({ app_state: appState }), [appState]);
 
   useEffect(() => {
     return () => colorHue.setValue(50);
@@ -100,17 +101,17 @@ export default function AnimatedTimePicker() {
         animState,
         [
           showTimer(hour, minute, 1, action),
-          invoke('AppState', 'getCurrentAppState', debug('app state', callback({ app_state: appState })), debug('stub', callback())),
+          invoke('AppState', 'getCurrentAppState', debug('app state', appStateCallback), debug('stub', callback())),
           set(animState, 0),
         ]
       )
     ),
-    [animState, animator, appState, action, hour, minute, inputChangeTracker, timeRepresentation, clock]
+    [animState, animator, appState, action, hour, minute, inputChangeTracker, timeRepresentation, clock, appStateCallback]
   );
 
   useCode(() =>
-    call([hour, minute], ([hour, minute]) => console.log(`user picked following time: `, { hour, minute })),
-    [hour, minute]
+    call([hour, minute, appStateCallback], ([hour, minute, appStateMap]) => console.log(`user picked following time: `, { hour, minute }, appStateMap)),
+    [hour, minute, appStateCallback]
   );
 
   const showToast = useMemo(() => {

@@ -49,6 +49,11 @@ public class ReadableMapResolver extends ReadableCollectionResolver {
     }
 
     @Override
+    public Object source() {
+        return mSource;
+    }
+
+    @Override
     public boolean has(Object key) {
         return mSource.hasKey(resolveKey(key));
     }

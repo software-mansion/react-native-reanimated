@@ -68,4 +68,10 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     endContext();
     return retVal;
   }
+
+  @Override
+  public Object exportableValue() {
+    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+    return what.exportableValue();
+  }
 }

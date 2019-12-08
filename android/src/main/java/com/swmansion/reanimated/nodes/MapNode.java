@@ -82,12 +82,20 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     private List<ArgMap> mMapping;
     private Boolean mDirty = true;
     private ReanimatedMapBuilder mBuilder;
-    private Object mValue;
+    private ReanimatedMapBuilder.ReanimatedMapBuilderManager mBuilderManager;
+    private boolean useNativeBuilder = false;
     private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
         mMapping = processMapping(config.getArray("argMapping"));
+    }
+
+    private void initMapBuilder() {
+        if (mBuilder == null) {
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, useNativeBuilder);
+            mBuilderManager = new ReanimatedMapBuilder.ReanimatedMapBuilderManager(mBuilder);
+        }
     }
 
     public void setValue(int nodeID) {
@@ -131,8 +139,8 @@ public class MapNode extends ValueNode implements ValueManagingNode {
         ArgMap map;
         Object value;
 
-        if (mBuilder == null) {
-//            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, false);
+        if (!useNativeBuilder) {
+            initMapBuilder();
         }
 
         for (int i = 0; i < mMapping.size(); i++) {
@@ -152,7 +160,9 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                     if (!value.equals(mMemoizedValues.get(map.nodeID))) {
                         mDirty = true;
                         mMemoizedValues.put(map.nodeID, value);
-                        //mBuilder.set(map.path, value);
+                        if (!useNativeBuilder) {
+                            //mBuilderManager.set(map.getPath(), value);
+                        }
                     }
                 }
             }
@@ -181,12 +191,24 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Override
     protected Object evaluate() {
         //  `buildMap` is extremely expensive, therefore we check if node is dirty
-        if (isDirty()) {
+        /*
+        once ReanimatedMapBuilder set method will work use this
+        if (isDirty() && useNativeBuilder) {
             mDirty = false;
             mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
-            mValue = mBuilder.export();
+        } else {
+            initMapBuilder();
         }
-        return mValue;
+
+         */
+        //  defaulting
+        mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, useNativeBuilder);
+
+        return mBuilder.export(useNativeBuilder);
     }
 
+    @Override
+    public Object exportableValue() {
+        return ReanimatedMapBuilder.exportValue(value());
+    }
 }

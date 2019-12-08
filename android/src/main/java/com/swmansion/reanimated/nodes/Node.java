@@ -69,6 +69,14 @@ public abstract class Node {
     throw new IllegalStateException("Value of node " + this + " cannot be cast to a number");
   }
 
+  /**
+   * Nodes that manage expensive values by mocking bridge classes should override this method.
+   * Return values that can be transmitted over the bridge safely.
+   */
+  public Object exportableValue() {
+    return value();
+  }
+
   public void addChild(Node child) {
     if (mChildren == null) {
       mChildren = new ArrayList<>();

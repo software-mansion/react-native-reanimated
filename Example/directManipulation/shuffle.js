@@ -47,7 +47,7 @@ const measureView = proc((tag, fruit, x, y, w, h) => {
   const measure = invoke('UIManager', 'measure', tag, callback(mapping) /*callback(0, 0, w, h, x, y)*/);
   return block([
     cond(defined(tag), measure),
-    debug('measured', concat(tag, ' ', fruit, ' ', measure))
+    debug('measured', concat(tag, ' ', fruit))
   ]);
 });
 
@@ -100,10 +100,9 @@ function Item({ item, parent, evaluate, x, y, index }) {
       [
         tag,
         measureView(tag, item.title, ax, ay, width, height),
-        //cond(defined(tag), invoke('UIManager', 'measure', tag, callback(successMap(ax, ay, width, height)))),
-        //measureView(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
-        // measureView(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
-        //measureView(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd()))),
+        measureView1(tag, callback.fromEnd(assert => debug('assert callback.fromEnd, correct? 1 == ', eq(assert, ay)))),
+        measureView1(tag, callback(map.fromEnd([assert => debug('assert map.fromEnd, correct? 1 == ', eq(assert, ay))]))),
+        measureView1(tag, callback(map([assert => debug('assert map([].fromEnd()), correct? 1 == ', eq(assert, ay))].fromEnd()))),
         debug('parent tag', tag),
         relativeMeasureView(tag, parent, debug('relativeMeasureView', callback(...relativeMeasurements)), callback())
       ]

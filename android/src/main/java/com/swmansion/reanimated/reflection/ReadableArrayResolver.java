@@ -67,6 +67,11 @@ public class ReadableArrayResolver extends ReadableCollectionResolver {
     }
 
     @Override
+    public Object source() {
+        return mSource;
+    }
+
+    @Override
     public boolean has(Object key) {
         int index = resolveIndex(key);
         return indexInBounds(index);

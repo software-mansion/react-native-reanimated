@@ -43,4 +43,10 @@ public class CallbackNode extends Node implements ValueManagingNode {
             return mCallbackWrapper;
         }
     }
+
+    @Override
+    public Object exportableValue() {
+        Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+        return what.exportableValue();
+    }
 }

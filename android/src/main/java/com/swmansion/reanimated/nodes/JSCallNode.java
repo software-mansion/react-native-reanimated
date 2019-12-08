@@ -24,7 +24,7 @@ public class JSCallNode extends Node {
     ReanimatedWritableNativeArray args = new ReanimatedWritableNativeArray();
     for (int i = 0; i < mInputIDs.length; i++) {
       Node node = mNodesManager.findNodeById(mInputIDs[i], Node.class);
-      args.pushDynamic(node.value());
+      args.pushDynamic(node.exportableValue());
     }
     WritableMap eventData = Arguments.createMap();
     eventData.putInt("id", mNodeID);
