@@ -63,7 +63,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
 
     @Override
     public void emit(@NonNull final String eventName, @Nullable final Object data) {
-        final Object clone = ReflectionUtils.nativeCloneDeep(data);
+        final Object clone = BridgingUtils.nativeCloneDeep(data);
         if (UiThreadUtil.isOnUiThread()) {
             receiveEvent(eventName, clone);
         } else {
@@ -85,7 +85,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
             }
         } else if (BuildConfig.DEBUG && !mDevUtil.containsKey(eventName) && data != null) {
             //  dev util
-            Log.d(TAG, String.format("Reanimated intercept('%s', %s)", eventName, ReflectionUtils.nativeCloneDeep(data)));
+            Log.d(TAG, String.format("Reanimated intercept('%s', %s)", eventName, BridgingUtils.nativeCloneDeep(data)));
             mDevUtil.put(eventName, data);
         }
     }
@@ -116,7 +116,7 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
         Map.Entry<String, Object> entry;
         while (data.hasNext()) {
             entry = data.next();
-            out.putDynamic(entry.getKey(), ReflectionUtils.nativeCloneDeep(entry.getValue()));
+            out.putDynamic(entry.getKey(), BridgingUtils.nativeCloneDeep(entry.getValue()));
         }
 
         return out;

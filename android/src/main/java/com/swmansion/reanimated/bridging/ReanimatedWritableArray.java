@@ -52,8 +52,8 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
     public boolean getBoolean(int index) {
         index = resolver.resolveIndex(index);
         Object value = get(index);
-        if (ReflectionUtils.isNumber(value)) {
-            value = ReflectionUtils.toDouble(value) == 1;
+        if (BridgingUtils.isNumber(value)) {
+            value = BridgingUtils.toDouble(value) == 1;
         }
         return ((boolean) value);
     }
@@ -66,7 +66,7 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
     @Override
     public double getDouble(int index) {
         index = resolver.resolveIndex(index);
-        return ReflectionUtils.toDouble(super.get(index));
+        return BridgingUtils.toDouble(super.get(index));
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
     @Override
     public int getInt(int index) {
         index = resolver.resolveIndex(index);
-        return ReflectionUtils.fromDouble(getDouble(index), int.class);
+        return BridgingUtils.fromDouble(getDouble(index), int.class);
     }
 
     @Override
@@ -135,7 +135,7 @@ public class ReanimatedWritableArray extends ArrayList<Object> implements Reanim
     @Override
     public ReadableType getType(int index) {
         index = resolver.resolveIndex(index);
-        return ReflectionUtils.inferType(super.get(index));
+        return BridgingUtils.inferType(super.get(index));
     }
 
     public ReanimatedWritableArray copy() {

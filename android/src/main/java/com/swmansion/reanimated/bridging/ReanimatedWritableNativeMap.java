@@ -18,7 +18,7 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
             if (source instanceof WritableNativeMap) {
                 out.merge(source);
             } else {
-                out.merge((ReadableMap) ReflectionUtils.nativeCloneDeep(source));
+                out.merge((ReadableMap) BridgingUtils.nativeCloneDeep(source));
             }
 
             return out;
@@ -71,7 +71,7 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
     @Override
     public double getDouble(@NonNull String name) {
         return getType(name) == ReadableType.Boolean ?
-                ReflectionUtils.toDouble(super.getBoolean(name)) :
+                BridgingUtils.toDouble(super.getBoolean(name)) :
                 super.getDouble(name);
     }
 

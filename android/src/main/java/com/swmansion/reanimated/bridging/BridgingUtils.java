@@ -15,7 +15,7 @@ import java.lang.annotation.Retention;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-class ReflectionUtils {
+class BridgingUtils {
     static Boolean isNumber(Object o){
         return o instanceof Number ||
                 o.equals(int.class) || o.equals(Integer.class) ||
@@ -151,7 +151,7 @@ class ReflectionUtils {
     }
 
     static Object nativeCloneDeep(Object source) {
-        if (ReflectionUtils.inferType(source) == ReadableType.Map) {
+        if (BridgingUtils.inferType(source) == ReadableType.Map) {
             WritableNativeMap out = new WritableNativeMap();
             if (source instanceof WritableNativeMap) {
                 out.merge((WritableNativeMap) source);
@@ -166,7 +166,7 @@ class ReflectionUtils {
             }
 
             return out;
-        } else if (ReflectionUtils.inferType(source) == ReadableType.Array) {
+        } else if (BridgingUtils.inferType(source) == ReadableType.Array) {
             WritableNativeArray out = new WritableNativeArray();
             ReadableArray in = ((ReadableArray) source);
             for (int i = 0; i < in.size(); i++) {

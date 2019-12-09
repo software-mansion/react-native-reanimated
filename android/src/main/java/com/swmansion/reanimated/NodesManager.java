@@ -45,7 +45,7 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-import com.swmansion.reanimated.bridging.ReanimatedReflectionHelper;
+import com.swmansion.reanimated.bridging.ReanimatedBridgeDelegate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,7 +77,7 @@ public class NodesManager implements EventDispatcherListener {
   private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
-  private final ReanimatedReflectionHelper mReflectionHelper;
+  private final ReanimatedBridgeDelegate mReflectionHelper;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -106,7 +106,7 @@ public class NodesManager implements EventDispatcherListener {
     mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
     mUIManager.getEventDispatcher().addListener(this);
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
-    mReflectionHelper = new ReanimatedReflectionHelper(this);
+    mReflectionHelper = new ReanimatedBridgeDelegate(this);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback = new GuardedFrameCallback(context) {
@@ -123,7 +123,7 @@ public class NodesManager implements EventDispatcherListener {
     return mContext;
   }
 
-  public final ReanimatedReflectionHelper getReflectionHelper() {
+  public final ReanimatedBridgeDelegate getReflectionHelper() {
     return mReflectionHelper;
   }
 
