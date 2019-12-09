@@ -10,14 +10,14 @@ import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeArray;
 
-import static com.swmansion.reanimated.bridging.ReflectionUtils.toDouble;
+import static com.swmansion.reanimated.bridging.BridgingUtils.toDouble;
 
 public class ReanimatedWritableNativeArray extends WritableNativeArray implements ReanimatedBridge.ReanimatedArray {
 
     public static ReanimatedWritableNativeArray fromArray(Object[] array){
         ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
         for (int i = 0; i < array.length; i++) {
-            out.pushDynamic(ReflectionUtils.nativeCloneDeep(array[i]));
+            out.pushDynamic(BridgingUtils.nativeCloneDeep(array[i]));
         }
         return out;
     }
@@ -28,7 +28,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
         } else {
             ReanimatedWritableNativeArray out = new ReanimatedWritableNativeArray();
             for (Object value: array.toArrayList()) {
-                out.pushDynamic(ReflectionUtils.nativeCloneDeep(value));
+                out.pushDynamic(BridgingUtils.nativeCloneDeep(value));
             }
             return out;
         }

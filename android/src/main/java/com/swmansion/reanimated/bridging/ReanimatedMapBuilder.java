@@ -146,7 +146,7 @@ public class ReanimatedMapBuilder<A extends ReanimatedBridge.ReanimatedArray, M 
             array = arrayBuilder.newInstance();
             for (int i = 0; i < arrayContext.size(); i++) {
                 value = arrayContext.valueAt(i);
-                array.pushDynamic(useNativeBuilder ? ReflectionUtils.nativeCloneDeep(value) : value);
+                array.pushDynamic(useNativeBuilder ? BridgingUtils.nativeCloneDeep(value) : value);
             }
         } catch (Throwable e) {
             e.printStackTrace();

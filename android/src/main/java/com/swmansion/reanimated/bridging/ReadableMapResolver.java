@@ -8,8 +8,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-import static com.swmansion.reanimated.bridging.ReflectionUtils.isInteger;
-import static com.swmansion.reanimated.bridging.ReflectionUtils.toDouble;
+import static com.swmansion.reanimated.bridging.BridgingUtils.isInteger;
+import static com.swmansion.reanimated.bridging.BridgingUtils.toDouble;
 
 @SuppressWarnings("WeakerAccess")
 public class ReadableMapResolver extends ReadableCollectionResolver {
@@ -69,7 +69,7 @@ public class ReadableMapResolver extends ReadableCollectionResolver {
         if (o instanceof Dynamic) {
             putDynamic(map, key, ((Dynamic) o));
         } else {
-            switch(ReflectionUtils.inferType(o)){
+            switch(BridgingUtils.inferType(o)){
                 case Array:
                     map.putArray(key, ((WritableArray) o));
                     break;

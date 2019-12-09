@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import static com.swmansion.reanimated.Utils.concat;
-import static com.swmansion.reanimated.bridging.ReflectionUtils.inferType;
+import static com.swmansion.reanimated.bridging.BridgingUtils.inferType;
 
 class MethodAccessor {
     private Method mMethod;

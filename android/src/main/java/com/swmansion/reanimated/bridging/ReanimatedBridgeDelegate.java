@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.swmansion.reanimated.NodesManager;
 
-public class ReanimatedReflectionHelper {
+public class ReanimatedBridgeDelegate {
     private static final String CONFIG_KEYS_MODULE = "module";
     private static final String CONFIG_KEYS_METHOD = "method";
     private static final String CONFIG_KEYS_COMMAND = "command";
@@ -16,7 +16,7 @@ public class ReanimatedReflectionHelper {
     private final JSEventDispatcherAccessor jsEventDispatcherAccessor;
     private final ReactContext context;
 
-    public ReanimatedReflectionHelper(NodesManager nodesManager) {
+    public ReanimatedBridgeDelegate(NodesManager nodesManager) {
         context = nodesManager.getContext();
         jsEventDispatcherAccessor = new JSEventDispatcherAccessor(nodesManager);
     }

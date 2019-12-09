@@ -19,7 +19,7 @@ class ReanimatedDynamic implements Dynamic {
         }
 
         private <T> T value(ReadableType type) {
-            return (T) collection.value(key, ReflectionUtils.inferClass(type));
+            return (T) collection.value(key, BridgingUtils.inferClass(type));
         }
 
         @Override
@@ -39,7 +39,7 @@ class ReanimatedDynamic implements Dynamic {
 
         @Override
         public int asInt() {
-            return ReflectionUtils.fromDouble(asDouble(), int.class);
+            return BridgingUtils.fromDouble(asDouble(), int.class);
         }
 
         @Override
@@ -59,7 +59,7 @@ class ReanimatedDynamic implements Dynamic {
 
         @Override
         public ReadableType getType() {
-            return ReflectionUtils.inferType(collection.value(key));
+            return BridgingUtils.inferType(collection.value(key));
         }
 
         @Override
@@ -79,13 +79,13 @@ class ReanimatedDynamic implements Dynamic {
     public Object value() {
         switch (getType()) {
             case Boolean:
-                return ReflectionUtils.toDouble(asBoolean());
+                return BridgingUtils.toDouble(asBoolean());
             case Null:
                 //  should this be null safe? if soo uncomment next line
-                //return ReflectionUtils.toDouble(0.);
+                //return BridgingUtils.toDouble(0.);
                 return null;
             case Number:
-                return ReflectionUtils.toDouble(asDouble());
+                return BridgingUtils.toDouble(asDouble());
             case String:
                 return asString();
             case Array:
@@ -102,7 +102,7 @@ class ReanimatedDynamic implements Dynamic {
 
     @Override
     public boolean isNull() {
-        return ReflectionUtils.isNull(value);
+        return BridgingUtils.isNull(value);
     }
 
     @Override
@@ -115,7 +115,7 @@ class ReanimatedDynamic implements Dynamic {
     @Override
     public double asDouble() {
         return getType() == ReadableType.Boolean ?
-                ReflectionUtils.toDouble(value.asBoolean()) :
+                BridgingUtils.toDouble(value.asBoolean()) :
                 value.asDouble();
     }
 

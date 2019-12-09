@@ -56,8 +56,8 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
     @Override
     public boolean getBoolean(@NonNull String name) {
         Object value = get(name);
-        if (ReflectionUtils.isNumber(value)) {
-            value = ReflectionUtils.toDouble(value) == 1;
+        if (BridgingUtils.isNumber(value)) {
+            value = BridgingUtils.toDouble(value) == 1;
         }
         return ((boolean) value);
     }
@@ -69,7 +69,7 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
 
     @Override
     public double getDouble(@NonNull String name) {
-        return ReflectionUtils.toDouble(super.get(name));
+        return BridgingUtils.toDouble(super.get(name));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
 
     @Override
     public int getInt(@NonNull String name) {
-        return ReflectionUtils.fromDouble(getDouble(name), int.class);
+        return BridgingUtils.fromDouble(getDouble(name), int.class);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class ReanimatedWritableMap extends HashMap<String, Object> implements Re
     @NonNull
     @Override
     public ReadableType getType(@NonNull String name) {
-        return ReflectionUtils.inferType(super.get(name));
+        return BridgingUtils.inferType(super.get(name));
     }
 
     @Override

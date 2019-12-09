@@ -7,9 +7,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
-import static com.swmansion.reanimated.bridging.ReflectionUtils.isInteger;
-import static com.swmansion.reanimated.bridging.ReflectionUtils.isString;
-import static com.swmansion.reanimated.bridging.ReflectionUtils.toDouble;
+import static com.swmansion.reanimated.bridging.BridgingUtils.isInteger;
+import static com.swmansion.reanimated.bridging.BridgingUtils.isString;
+import static com.swmansion.reanimated.bridging.BridgingUtils.toDouble;
 
 @SuppressWarnings("WeakerAccess")
 public class ReadableArrayResolver extends ReadableCollectionResolver {
@@ -91,7 +91,7 @@ public class ReadableArrayResolver extends ReadableCollectionResolver {
         if (o instanceof Dynamic) {
             pushDynamic(arr, ((Dynamic) o));
         } else {
-            switch(ReflectionUtils.inferType(o)){
+            switch(BridgingUtils.inferType(o)){
                 case Array:
                     arr.pushArray(((WritableArray) o));
                     break;
