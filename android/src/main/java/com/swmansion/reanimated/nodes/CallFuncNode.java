@@ -12,12 +12,14 @@ public class CallFuncNode extends Node implements ValueManagingNode {
   private final int mWhatNodeID;
   private final int[] mArgs;
   private final int[] mParams;
+  private final ArrayList<CallFuncNode> mContext;
 
   public CallFuncNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
     mWhatNodeID = config.getInt("what");
     mParams = Utils.processIntArray(config.getArray("params"));
     mArgs = Utils.processIntArray(config.getArray("args"));
+    mContext = new ArrayList<>();
   }
 
   void beginContext() {
@@ -40,11 +42,18 @@ public class CallFuncNode extends Node implements ValueManagingNode {
   }
 
   private void beginContextPropagation() {
-    propagateContext(new ArrayList<CallFuncNode>());
+    propagateContext(mContext);
+  }
+
+  private void endContextPropagation() {
+    mContext.clear();
   }
 
   @Override
   protected void propagateContext(ArrayList<CallFuncNode> context) {
+    if (!mContext.equals(context)) {
+      mContext.addAll(context);
+    }
     context.add(this);
     Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     super.propagateContext(context);
@@ -65,6 +74,7 @@ public class CallFuncNode extends Node implements ValueManagingNode {
     beginContextPropagation();
     Node whatNode = mNodesManager.findNodeById(mWhatNodeID, Node.class);
     Object retVal = whatNode.value();
+    endContextPropagation();
     endContext();
     return retVal;
   }
