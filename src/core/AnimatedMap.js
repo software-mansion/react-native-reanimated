@@ -51,7 +51,9 @@ export function sanitizeArgMapping(argMapping) {
 
 
   const traverse = (value, path) => {
-    if (value instanceof AnimatedNode && (value.__source() instanceof InternalAnimatedValue || value instanceof AnimatedParam)) {
+    if (value instanceof AnimatedNode &&
+      ((value.__source() instanceof InternalAnimatedValue || value instanceof AnimatedParam) ||
+        (value.__source() instanceof AnimatedMap || value instanceof AnimatedMap))) {
       children.push(value);
       objectMappings.push(path.concat(getNode(value)));
     } else if (typeof value === 'object' && value.__val) {
