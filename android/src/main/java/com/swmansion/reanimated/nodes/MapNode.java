@@ -10,6 +10,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
+import com.swmansion.reanimated.bridging.BridgingUtils;
 import com.swmansion.reanimated.bridging.ReadableArrayResolver;
 import com.swmansion.reanimated.bridging.ReadableMapResolver;
 import com.swmansion.reanimated.bridging.ReanimatedBridge;
@@ -161,7 +162,7 @@ public class MapNode extends ValueNode implements ValueManagingNode {
                 value = map.lookupValue(data);
                 if (value != null) {
                     node = mNodesManager.findNodeById(map.nodeID, Node.class);
-                    ((ValueManagingNode) node).setValue(value);
+                    ((ValueManagingNode) node).setValue(BridgingUtils.parse(value));
 
                     if (!value.equals(mMemoizedValues.get(map.nodeID))) {
                         mDirty = true;

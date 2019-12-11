@@ -15,7 +15,7 @@ import java.lang.annotation.Retention;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-class BridgingUtils {
+public class BridgingUtils {
     static Boolean isNumber(Object o){
         return o instanceof Number ||
                 o.equals(int.class) || o.equals(Integer.class) ||
@@ -121,6 +121,14 @@ class BridgingUtils {
     }
 
     static Double toDouble(Object value) {
+        return (Double) parse(value, true);
+    }
+
+    public static Object parse(Object value) {
+        return parse(value, false);
+    }
+
+    static Object parse(Object value, boolean strictMode) {
         Object o = value;
         if (value instanceof Dynamic){
             switch (((Dynamic) value).getType()) {
@@ -134,19 +142,25 @@ class BridgingUtils {
                     o = ((Dynamic) value).asDouble();
                     break;
                 default:
-                    throw new JSApplicationIllegalArgumentException(
-                            "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
-                                    " into " + Double.class.getName()
-                    );
+                    o = null;
+                    break;
             }
         }
 
-        if(isBoolean(o)) {
+        if (o == null) {
+            if (strictMode) {
+                throw new JSApplicationIllegalArgumentException(
+                        "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
+                                " into " + Double.class.getName()
+                );
+            }
+            return value;
+        } else if (isBoolean(o)) {
             return (double) (((Boolean) o) ? 1 : 0);
         } else if (o instanceof Number){
             return ((Number) o).doubleValue();
         } else {
-            return (double) o;
+            return o;
         }
     }
 
