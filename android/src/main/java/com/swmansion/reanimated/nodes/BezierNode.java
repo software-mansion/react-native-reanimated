@@ -3,7 +3,6 @@ package com.swmansion.reanimated.nodes;
 import android.graphics.PointF;
 
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public class BezierNode extends Node {
@@ -67,7 +66,7 @@ public class BezierNode extends Node {
   public BezierNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
 
-    mInputID = MapUtils.getInt(config, "input", "Reanimated: Argument passed to bezier node is either of wrong type or is missing.");
+    mInputID = config.getInt("input");
 
     float startX = (float) config.getDouble("mX1");
     float startY = (float) config.getDouble("mY1");

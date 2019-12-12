@@ -2,16 +2,11 @@ import AnimatedNode from './AnimatedNode';
 import { createAnimatedCallFunc } from './AnimatedCallFunc';
 import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
-import invariant from 'fbjs/lib/invariant';
 
 class AnimatedFunction extends AnimatedNode {
   _what;
 
   constructor(what, ...params) {
-    invariant(
-      what instanceof AnimatedNode,
-      `Reanimated: AnimatedCallFunc 'what' argument should be of type AnimatedNode but got ${what}`
-    );
     super(
       {
         type: 'func',
@@ -25,10 +20,6 @@ class AnimatedFunction extends AnimatedNode {
 
   __onEvaluate() {
     return val(this._what);
-  }
-
-  toString() {
-    return `AnimatedFunction, id: ${this.__nodeID}`;
   }
 }
 

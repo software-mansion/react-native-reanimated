@@ -1,5 +1,5 @@
 #import "REATransformNode.h"
-#import <React/RCTConvert.h>
+
 #import "REANodesManager.h"
 
 @implementation REATransformNode
@@ -20,7 +20,7 @@
   NSMutableArray<NSDictionary *> *transform = [NSMutableArray arrayWithCapacity:_transformConfigs.count];
   for (NSDictionary *transformConfig in _transformConfigs) {
     NSString *property = transformConfig[@"property"];
-    REANodeID nodeID = [RCTConvert NSNumber:transformConfig[@"nodeID"]];
+    REANodeID nodeID = transformConfig[@"nodeID"];
     NSNumber *value;
     if (nodeID) {
       REANode *node = [self.nodesManager findNodeByID:nodeID];

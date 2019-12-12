@@ -48,10 +48,6 @@ class AnimatedProps extends AnimatedNode {
     this.__attach();
   }
 
-  toString() {
-    return `AnimatedProps, id: ${this.__nodeID}`;
-  }
-
   __onEvaluate() {
     const props = {};
     for (const key in this._props) {
