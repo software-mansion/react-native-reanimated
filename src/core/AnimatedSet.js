@@ -28,7 +28,7 @@ class AnimatedSet extends AnimatedNode {
 
   __onEvaluate() {
     const newValue = val(this._value);
-    this._what._updateValue(newValue);
+    if (this._what._updateValue) this._what._updateValue(newValue);
     return newValue;
   }
 }
