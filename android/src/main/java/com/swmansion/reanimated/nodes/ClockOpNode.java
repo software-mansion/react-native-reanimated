@@ -1,7 +1,6 @@
 package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public abstract class ClockOpNode extends Node {
@@ -45,7 +44,7 @@ public abstract class ClockOpNode extends Node {
 
   public ClockOpNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    clockID = MapUtils.getInt(config, "clock", "Reanimated: Argument passed to clock node is either of wrong type or is missing.");
+    clockID = config.getInt("clock");
   }
 
   @Override

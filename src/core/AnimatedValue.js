@@ -14,10 +14,6 @@ export default class AnimatedValue extends InternalAnimatedValue {
       evaluateOnce(set(this, value), this);
     }
   }
-  
-  toString() {
-    return `AnimatedValue, id: ${super.__nodeID}`;
-  }
 
   interpolate(config) {
     return interpolate(this, config);

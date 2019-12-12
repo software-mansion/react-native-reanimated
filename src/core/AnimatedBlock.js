@@ -1,22 +1,13 @@
-import invariant from 'fbjs/lib/invariant';
-import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
+import { val } from '../val';
 import InternalAnimatedValue from './InternalAnimatedValue';
 
 class AnimatedBlock extends AnimatedNode {
   _array;
 
   constructor(array) {
-    invariant(
-      array.every(el => el instanceof AnimatedNode),
-      `Reanimated: Animated.block node argument should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
-    );
     super({ type: 'block', block: array.map(n => n.__nodeID) }, array);
     this._array = array;
-  }
-
-  toString() {
-    return `AnimatedBlock, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

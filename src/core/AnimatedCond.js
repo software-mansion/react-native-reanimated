@@ -1,7 +1,6 @@
-import invariant from 'fbjs/lib/invariant';
-import { adapt } from '../core/AnimatedBlock';
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
+import { adapt } from '../core/AnimatedBlock';
 
 class AnimatedCond extends AnimatedNode {
   _condition;
@@ -9,18 +8,6 @@ class AnimatedCond extends AnimatedNode {
   _elseBlock;
 
   constructor(condition, ifBlock, elseBlock) {
-    invariant(
-      condition instanceof AnimatedNode,
-      `Reanimated: Animated.cond node first argument should be of type AnimatedNode but got ${condition}`
-    );
-    invariant(
-      ifBlock instanceof AnimatedNode,
-      `Reanimated: Animated.cond node second argument should be of type AnimatedNode but got ${ifBlock}`
-    );
-    invariant(
-      elseBlock instanceof AnimatedNode || elseBlock === undefined,
-      `Reanimated: Animated.cond node third argument should be of type AnimatedNode or should be undefined but got ${elseBlock}`
-    );
     super(
       {
         type: 'cond',
@@ -33,10 +20,6 @@ class AnimatedCond extends AnimatedNode {
     this._condition = condition;
     this._ifBlock = ifBlock;
     this._elseBlock = elseBlock;
-  }
-
-  toString() {
-    return `AnimatedCond, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {
