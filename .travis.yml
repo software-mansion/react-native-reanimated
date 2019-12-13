@@ -73,4 +73,5 @@ matrix:
         - node_modules
     script:
       - brew install yarn --ignore-dependencies
+      - yarn
       - yarn test
