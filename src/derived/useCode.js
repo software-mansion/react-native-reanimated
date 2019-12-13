@@ -13,31 +13,29 @@ import { always, block } from '../base';
  * @param dependencies Array of dependencies. Refresh the node on changes.
  */
 export default function useCode(nodeFactory, dependencies) {
-  if (!(React.useEffect instanceof Function))
-    return;
+  if (!(React.useEffect instanceof Function)) return;
 
   React.useEffect(() => {
-        // check and correct 1st parameter
-        if (!(nodeFactory instanceof Function)) {
-          console.warn('useCode() first argument should be a function that returns an animation node.');
+    // check and correct 1st parameter
+    if (!(nodeFactory instanceof Function)) {
+      console.warn(
+        'useCode() first argument should be a function that returns an animation node.'
+      );
 
-          const node = nodeFactory;
-          nodeFactory = () => node;
-        }
+      const node = nodeFactory;
+      nodeFactory = () => node;
+    }
 
-        let node = nodeFactory();
-        if (node) {
-          // allow factory to return array
-          if (node instanceof Array)
-            node = block(node);
+    let node = nodeFactory();
+    if (node) {
+      // allow factory to return array
+      if (node instanceof Array) node = block(node);
 
-          const animatedAlways = always(node);
-          animatedAlways.__attach();
+      const animatedAlways = always(node);
+      animatedAlways.__attach();
 
-          // return undo function
-          return () => animatedAlways.__detach();
-        }
-      },
-      dependencies
-  );
+      // return undo function
+      return () => animatedAlways.__detach();
+    }
+  }, dependencies);
 }
