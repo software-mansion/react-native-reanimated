@@ -50,9 +50,9 @@ const SCREENS = {
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  ...(Platform.OS === 'android' ? {invoke: { screen: require('./directManipulation').default, title: 'Invoke & Dispatch' }}: {}),
+  ...(Platform.OS === 'android' ? { directManipulation: { screen: require('./directManipulation').default, title: 'Direct Manipulation (invoke, dispatch & intercept)' } } : {}),
   code: { screen: Code, title: 'Animated.Code component' },
-  
+
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
   imperative: {
