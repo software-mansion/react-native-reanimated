@@ -41,11 +41,9 @@ matrix:
     xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
     env: NODE_VERSION=10.15.3
 
-    branches:
-      only:
-      - master
-
-    cache: yarn
+    cache:
+      yarn : true
+      cocoapods: true
 
     install:
     - nvm --version
