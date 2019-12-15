@@ -136,27 +136,25 @@ public class BridgingUtils {
                     o = ((Dynamic) value).asBoolean();
                     break;
                 case Null:
-                    o = 0;
+                    o = 0.;
                     break;
                 case Number:
                     o = ((Dynamic) value).asDouble();
                     break;
                 default:
+                    if (strictMode) {
+                        throw new JSApplicationIllegalArgumentException(
+                                "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
+                                        " into " + Double.class.getName()
+                        );
+                    }
                     o = null;
                     break;
             }
         }
 
-        if (o == null) {
-            if (strictMode) {
-                throw new JSApplicationIllegalArgumentException(
-                        "Can not cast" + value + " of type " + ((Dynamic) value).getType() +
-                                " into " + Double.class.getName()
-                );
-            }
-            return value;
-        } else if (isBoolean(o)) {
-            return (double) (((Boolean) o) ? 1 : 0);
+        if (isBoolean(o)) {
+            return (((Boolean) o) ? 1. : 0.);
         } else if (o instanceof Number){
             return ((Number) o).doubleValue();
         } else {
