@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public class DebugNode extends Node implements ValueManagingNode {
@@ -13,8 +14,8 @@ public class DebugNode extends Node implements ValueManagingNode {
 
   public DebugNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
-    mMessage = config.getString("message");
-    mValueID = config.getInt("value");
+    mMessage = MapUtils.getString(config, "message", "Reanimated: First argument passed to debug node is either of wrong type or is missing.");
+    mValueID = MapUtils.getInt(config, "value", "Reanimated: Second argument passed to debug node is either of wrong type or is missing.");
   }
 
   @Override

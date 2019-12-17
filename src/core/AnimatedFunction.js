@@ -2,11 +2,16 @@ import AnimatedNode from './AnimatedNode';
 import { createAnimatedCallFunc } from './AnimatedCallFunc';
 import { createAnimatedParam } from './AnimatedParam';
 import { val } from '../val';
+import invariant from 'fbjs/lib/invariant';
 
 export default class AnimatedFunction extends AnimatedNode {
   _what;
 
   constructor(what, ...params) {
+    invariant(
+      what instanceof AnimatedNode,
+      `Reanimated: AnimatedCallFunc 'what' argument should be of type AnimatedNode but got ${what}`
+    );
     super(
       {
         type: 'func',
@@ -25,6 +30,10 @@ export default class AnimatedFunction extends AnimatedNode {
   __source() {
     return this._what;
   }
+
+  toString() {
+    return `AnimatedFunction, id: ${this.__nodeID}`;
+  }
 }
 
 export function createAnimatedFunction(cb) {
@@ -39,10 +48,10 @@ export function createAnimatedFunction(cb) {
     if (args.length !== params.length) {
       throw new Error(
         'Parameter mismatch when calling reanimated function. Expected ' +
-          params.length +
-          ' parameters, got ' +
-          args.length +
-          '.'
+        params.length +
+        ' parameters, got ' +
+        args.length +
+        '.'
       );
     }
     return createAnimatedCallFunc(func, args, params);

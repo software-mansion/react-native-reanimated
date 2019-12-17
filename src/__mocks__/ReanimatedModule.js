@@ -3,4 +3,5 @@ export default {
   connectNodes: () => {},
   getValue: () => 0,
   disconnectNodes: () => {},
+  createNode: () => {},
 };

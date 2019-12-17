@@ -130,6 +130,7 @@
 		44125DCD2253A038003C1762 /* REATransitionValues.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = REATransitionValues.m; sourceTree = "<group>"; };
 		44125DCF2253A3C0003C1762 /* RCTConvert+REATransition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTConvert+REATransition.h"; sourceTree = "<group>"; };
 		44125DD02253A3C0003C1762 /* RCTConvert+REATransition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "RCTConvert+REATransition.m"; sourceTree = "<group>"; };
+		4DA383A8226FA6A400582919 /* REAUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = REAUtils.h; sourceTree = "<group>"; };
 		660A44282119B820006BFD5E /* REAConcatNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REAConcatNode.m; sourceTree = "<group>"; };
 		660A442A2119B83E006BFD5E /* REAConcatNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAConcatNode.h; sourceTree = "<group>"; };
 		66240C6720C68DEA00648F55 /* REAAlwaysNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAAlwaysNode.h; sourceTree = "<group>"; };
@@ -236,6 +237,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				4DA383A8226FA6A400582919 /* REAUtils.h */,
 				44125C76224FBE0B003C1762 /* Transitioning */,
 				440FEC0C209062F100EEC73A /* Nodes */,
 				440FEC0A209062F100EEC73A /* REAModule.h */,
