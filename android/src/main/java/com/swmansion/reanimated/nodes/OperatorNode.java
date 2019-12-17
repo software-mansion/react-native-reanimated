@@ -213,7 +213,7 @@ public class OperatorNode extends Node {
   private static final Operator NEQ = new CompOperator() {
     @Override
     public boolean eval(Double x, Double y) {
-      return !(x.doubleValue() == y.doubleValue());
+      return x.doubleValue() != y.doubleValue();
     }
   };
 
