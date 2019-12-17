@@ -396,4 +396,66 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
+  export var Clock: AnimatedClock;
+  export var Value: AnimatedValue;
+  export var Node: AnimatedNode;
+
+  export var add: add;
+  export var sub: sub;
+  export var multiply: multiply;
+  export var divide: divide;
+  export var pow: pow;
+  export var modulo: modulo;
+  export var sqrt: sqrt;
+  export var log: log;
+  export var sin: sin;
+  export var cos: cos;
+  export var exp: exp;
+  export var round: round;
+  export var lessThan: lessThan;
+  export var eq: eq;
+  export var greaterThan: greaterThan;
+  export var lessOrEq: lessOrEq;
+  export var greaterOrEq: greaterOrEq;
+  export var neq: neq;
+  export var and: and;
+  export var or: or;
+  export var defined: defined;
+  export var not: not;
+  export var tan: tan;
+  export var acos: acos;
+  export var asin: asin;
+  export var atan: atan;
+  export var proc: proc;
+  export var block: block;
+  export var adapt: adapt;
+  export var concat: concat;
+  export var always: always;
+  export var event: event;
+  export var call: call;
+  export var debug: debug;
+  export var clockRunning: clockRunning;
+  export var stopClock: stopClock;
+  export var startClock: startClock;
+  export var set: set;
+  export var cond: cond;
+  export var abs: abs;
+  export var acc: acc;
+  export var color: color;
+  export var diff: diff;
+  export var diffClamp: diffClamp;
+  export var interpolate: interpolate;
+  export var Extrapolate: Extrapolate;
+  export var max: max;
+  export var min: min;
+  export var onChange: onChange;
+  export var floor: floor;
+  export var ceil: ceil;
+  export var useCode: useCode;
+
+  // animations
+  export var decay: decay;
+  export var timing: timing;
+  export var spring: spring;
+  export var SpringUtils: SpringUtils;
 }
