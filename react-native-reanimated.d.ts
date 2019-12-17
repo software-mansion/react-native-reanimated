@@ -320,8 +320,8 @@ declare module 'react-native-reanimated' {
 
     //  direct manipulation
     export function callback<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
-    export function callback<T extends AnimatedNode<Value>>(map: T): AnimatedNode<number>;
     export namespace callback {
+      export function fromMap<T extends AnimatedNode<Value>>(map: T): AnimatedNode<number>;
       export function fromEnd<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
     }
 
