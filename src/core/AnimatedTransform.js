@@ -54,6 +54,10 @@ class AnimatedTransform extends AnimatedNode {
     this._transform = transform;
   }
 
+  toString() {
+    return `AnimatedTransform, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     return this._transform.map(transform => {
       const result = {};

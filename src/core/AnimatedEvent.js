@@ -92,6 +92,10 @@ export default class AnimatedEvent extends AnimatedNode {
     }
   }
 
+  toString() {
+    return `AnimatedEvent, id: ${this.__nodeID}`;
+  }
+
   // The below field is a temporary workaround to make AnimatedEvent object be recognized
   // as Animated.event event callback and therefore filtered out from being send over the
   // bridge which was causing the object to be frozen in JS.

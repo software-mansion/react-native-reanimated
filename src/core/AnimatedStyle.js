@@ -45,6 +45,10 @@ export default class AnimatedStyle extends AnimatedNode {
     this._style = style;
   }
 
+  toString() {
+    return `AnimatedStyle, id: ${this.__nodeID}`;
+  }
+
   _walkStyleAndGetAnimatedValues(style) {
     const updatedStyle = {};
     for (const key in style) {
