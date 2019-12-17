@@ -77,7 +77,7 @@ public class ReanimatedWritableNativeMap extends WritableNativeMap implements Re
 
     @Override
     public void putDynamic(String key, Object o) {
-        ReadableMapResolver.putVariant(this, key, o);
+        ReadableMapResolver.putVariant(this, key, BridgingUtils.nativeCloneDeep(o));
     }
 
     @Nullable

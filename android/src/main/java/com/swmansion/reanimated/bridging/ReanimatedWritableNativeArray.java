@@ -83,7 +83,7 @@ public class ReanimatedWritableNativeArray extends WritableNativeArray implement
 
     @Override
     public void pushDynamic(Object o) {
-        ReadableArrayResolver.pushVariant(this, o);
+        ReadableArrayResolver.pushVariant(this, BridgingUtils.nativeCloneDeep(o));
     }
 
     @Override
