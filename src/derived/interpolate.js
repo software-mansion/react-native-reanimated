@@ -5,6 +5,8 @@ import {
   add,
   divide,
   greaterThan,
+  lessOrEq,
+  eq,
 } from '../operators';
 import invariant from 'fbjs/lib/invariant';
 
@@ -20,7 +22,10 @@ const interpolateInternalSingleProc = proc(function(
   outE
 ) {
   const progress = divide(sub(value, inS), sub(inE, inS));
-  return add(outS, multiply(progress, sub(outE, outS)));
+  // logic below was made in order to provide a compatibility witn an Animated API
+  const resultForNonZeroRange = add(outS, multiply(progress, sub(outE, outS)));
+  const result = cond(eq(inS, inE), cond(lessOrEq(value, inS), outS, outE), resultForNonZeroRange);
+  return result;
 });
 
 function interpolateInternalSingle(value, inputRange, outputRange, offset) {

@@ -59,6 +59,10 @@ export default class AnimatedNode {
       inputNodes && inputNodes.filter(node => node instanceof AnimatedNode);
   }
 
+  toString() {
+    return `AnimatedNode, id: ${this.__nodeID}`;
+  }
+
   __attach() {
     this.__nativeInitialize();
 
