@@ -76,8 +76,8 @@ export {
   AnimatedNode as Node,
 
   // animations
-  decay: decayWrapper,
-  timing: timingWrapper,
-  spring: springWrapper,
+  decayWrapper as decay,
+  timingWrapper as timing,
+  springWrapper as spring,
   SpringUtils,
 };
