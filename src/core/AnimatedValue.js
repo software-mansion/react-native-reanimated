@@ -1,8 +1,7 @@
-import { createAnimatedSet as set } from '../core/AnimatedSet';
 import interpolate from '../derived/interpolate';
 import InternalAnimatedValue from './InternalAnimatedValue';
-import { evaluateOnce } from '../derived/evaluateOnce';
 import { Platform } from 'react-native';
+import  ReanimatedModule from '../ReanimatedModule';
 
 // Animated value wrapped with extra methods for omit cycle of dependencies
 export default class AnimatedValue extends InternalAnimatedValue {
@@ -11,7 +10,7 @@ export default class AnimatedValue extends InternalAnimatedValue {
     if (Platform.OS === 'web') {
       this._updateValue(value);
     } else {
-      evaluateOnce(set(this, value), this);
+      ReanimatedModule.setValue(this.__nodeID, value);
     }
   }
   

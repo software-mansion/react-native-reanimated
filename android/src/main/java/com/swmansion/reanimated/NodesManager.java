@@ -407,4 +407,13 @@ public class NodesManager implements EventDispatcherListener {
   public void sendEvent(String name, WritableMap body) {
     mEventEmitter.emit(name, body);
   }
+
+  public void setValue(int nodeID, Double newValue) {
+    Node node = mAnimatedNodes.get(nodeID);
+    if (node == null || !(node instanceof ValueNode)) {
+      return;
+    }
+
+    ((ValueNode) node).setValue(newValue);
+  }
 }
