@@ -17,7 +17,14 @@ public class ConcatNode extends Node {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < mInputIDs.length; i++) {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
-      builder.append(inputNodes.value());
+         Object value = inputNodes.value();
+            if (value instanceof Double) {
+              Double d = (Double) value;
+              if (d == d.intValue()) {
+                value = (Integer) d.intValue();
+              }
+            }
+      builder.append(value);
     }
     return builder.toString();
   }
