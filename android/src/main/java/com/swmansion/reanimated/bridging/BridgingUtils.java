@@ -2,6 +2,7 @@ package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.StringDef;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
@@ -12,6 +13,7 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
 import java.lang.annotation.Retention;
+import java.util.Map;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
@@ -168,13 +170,8 @@ public class BridgingUtils {
             if (source instanceof WritableNativeMap) {
                 out.merge((WritableNativeMap) source);
             } else {
-                ReadableMapKeySetIterator iterator = ((ReadableMap) source).keySetIterator();
-                String key;
-                ReadableMap map = ((ReadableMap) source);
-                while (iterator.hasNextKey()) {
-                    key = iterator.nextKey();
-                    ReadableMapResolver.putVariant(out, key, nativeCloneDeep(new ReanimatedDynamic(map.getDynamic(key)).value()));
-                }
+                Map<String, Object> map = source instanceof ReadableMap ? ((ReadableMap) source).toHashMap() : (Map<String, Object>) source);
+                out.merge(Arguments.makeNativeMap(map);
             }
 
             return out;
