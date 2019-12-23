@@ -394,4 +394,16 @@
   _nativeProps = nativeProps;
 }
 
+- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
+{
+  RCTAssertParam(nodeID);
+
+  REANode *node = _nodes[nodeID];
+
+  RCTAssertParam(node);
+
+  REAValueNode *valueNode = (REAValueNode *)node;
+  [valueNode setValue:newValue];
+}
+
 @end
