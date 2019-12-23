@@ -68,7 +68,7 @@ public class ParamNode extends ValueNode {
     if (node instanceof ParamNode) {
       return  ((ParamNode) node).isRunning();
     }
-    return ((ClockNode) node).isRunning();
+    return ((ClockNode) node).isRunning;
   }
 }
 

@@ -48,7 +48,7 @@ public abstract class ClockOpNode extends Node {
       if (clock instanceof ParamNode) {
         return ((ParamNode) clock).isRunning() ? 1. : 0.;
       }
-      return ((ClockNode) clock).isRunning() ? 1. : 0.;
+      return ((ClockNode) clock).isRunning ? 1. : 0.;
     }
   }
 
