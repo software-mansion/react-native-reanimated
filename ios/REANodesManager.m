@@ -402,10 +402,8 @@
 
   RCTAssertParam(node);
 
-  if ([node isKindOfClass:[REAValueNode class]]) {
-    REAValueNode *valueNode = (REAValueNode *)node;
-    [valueNode setValue:newValue];
-  }
+  REAValueNode *valueNode = (REAValueNode *)node;
+  [valueNode setValue:newValue];
 }
 
 @end
