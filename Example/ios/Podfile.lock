@@ -217,7 +217,7 @@ PODS:
     - React-cxxreact (= 0.61.1)
     - React-jsi (= 0.61.1)
     - ReactCommon/jscallinvoker (= 0.61.1)
-  - RNGestureHandler (1.4.1):
+  - RNGestureHandler (1.5.2):
     - React
   - RNReanimated (1.4.0):
     - React
@@ -341,7 +341,7 @@ SPEC CHECKSUMS:
   React-RCTText: 81b62b4e7f11531a5154e4daa5617670d5a2d5de
   React-RCTVibration: 8be61459e3749d1fb02cf414edd05b3007622882
   ReactCommon: 4fba5be89efdf0b5720e0adb3d8d7edf6e532db0
-  RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
+  RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
   RNReanimated: 8b675a650fc67c87f63d4345a1b2d4a699c25e4f
   Yoga: d8c572ddec8d05b7dba08e4e5f1924004a177078
 

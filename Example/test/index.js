@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -78,6 +79,8 @@ function springFill(clock, state, config) {
     clock
   );
 }
+const stopClockProc = proc(clock => stopClock(clock))
+const startClockProc = proc(clock => startClock(clock))
 
 function runSpring(clock, value, dest) {
   const state = {
@@ -104,13 +107,14 @@ function runSpring(clock, value, dest) {
       set(state.position, value),
       set(state.velocity, -2500),
       set(config.toValue, dest),
-      startClock(clock),
+      startClockProc(clock),
     ]),
     springFill(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
+    cond(state.finished, debug('stop clock', stopClockProc(clock))),
     state.position,
   ]);
 }
+
 
 function runTiming(clock, value, dest) {
   const state = {
@@ -133,10 +137,10 @@ function runTiming(clock, value, dest) {
       set(state.position, value),
       set(state.frameTime, 0),
       set(config.toValue, dest),
-      startClock(clock),
+      startClockProc(clock),
     ]),
     timing(clock, state, config),
-    cond(state.finished, debug('stop clock', stopClock(clock))),
+    cond(state.finished, debug('stop clock', stopClockProc(clock))),
     state.position,
   ]);
 }
@@ -163,7 +167,7 @@ export default class Example extends Component {
 
   render() {
     return (
-      <View style={styles.container}>        
+      <View style={styles.container}>
         {Array.from(Array(40)).map((_, i) => (
           <Animated.View
             key={i}
