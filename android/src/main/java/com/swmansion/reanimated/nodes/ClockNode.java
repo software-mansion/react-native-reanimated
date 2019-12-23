@@ -5,22 +5,26 @@ import com.swmansion.reanimated.NodesManager;
 
 public class ClockNode extends Node implements NodesManager.OnAnimationFrame {
 
-  public boolean isRunning;
+  private boolean mIsRunning;
 
   public ClockNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
   }
 
   public void start() {
-    if (isRunning) {
+    if (mIsRunning) {
       return;
     }
-    isRunning = true;
+    mIsRunning = true;
     mNodesManager.postOnAnimation(this);
   }
 
+  public boolean isRunning() {
+    return mIsRunning;
+  }
+
   public void stop() {
-    isRunning = false;
+    mIsRunning = false;
   }
 
   @Override
@@ -30,7 +34,7 @@ public class ClockNode extends Node implements NodesManager.OnAnimationFrame {
 
   @Override
   public void onAnimationFrame() {
-    if (isRunning) {
+    if (mIsRunning) {
       markUpdated();
       mNodesManager.postOnAnimation(this);
     }
