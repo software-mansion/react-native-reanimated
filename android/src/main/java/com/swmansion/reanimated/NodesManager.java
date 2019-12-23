@@ -410,10 +410,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void setValue(int nodeID, Double newValue) {
     Node node = mAnimatedNodes.get(nodeID);
-    if (node == null || !(node instanceof ValueNode)) {
-      return;
-    }
-
     ((ValueNode) node).setValue(newValue);
   }
 }
