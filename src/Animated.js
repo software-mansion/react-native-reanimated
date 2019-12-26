@@ -65,6 +65,7 @@ const Animated = {
 
 export default Animated;
 
+<<<<<<< HEAD
 // operations
 export * from './base';
 export * from './derived';
@@ -86,3 +87,6 @@ export {
   spring,
   SpringUtils,
 };
+=======
+export { Easing, Transitioning, Transition, TransitionState, createTransitioningComponent };
+>>>>>>> parent of 4f45344... revert transitioning :unamused:
