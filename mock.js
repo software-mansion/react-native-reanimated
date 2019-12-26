@@ -129,7 +129,7 @@ module.exports = {
     timing: NOOP,
     spring: NOOP,
 
-    proc: () => NOOP,
+    proc: cb => cb,
 
     useCode: NOOP,
     createAnimatedComponent: Component => Component,
