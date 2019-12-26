@@ -10,6 +10,8 @@ import invariant from 'fbjs/lib/invariant';
 
 const NODE_MAPPING = new Map();
 
+const stubEventProp = () => { };
+
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
@@ -18,9 +20,9 @@ function listener(data) {
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
+    (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
@@ -207,6 +209,8 @@ export default function createAnimatedComponent(Component) {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
+        } else if (value instanceof AnimatedEvent) {
+          props[key] = stubEventProp;
         }
       }
       return props;

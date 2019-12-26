@@ -372,7 +372,24 @@ class Viewer extends Component {
         panFriction
       )
     );
+
+    // animated layout event
+    this._x = new Value(0);
+    this._y = new Value(0);
+    this._width = new Value(0);
+    this._height = new Value(0);
+    this._layoutEvent = event([{
+      nativeEvent: {
+        layout: {
+          x: this._x,
+          y: this._y,
+          width: this._width,
+          height: this._height
+        }
+      }
+    }]);
   }
+
   render() {
     // The below two animated values makes it so that scale appears to be done
     // from the top left corner of the image view instead of its center. This
@@ -381,6 +398,11 @@ class Viewer extends Component {
     const scaleTopLeftFixY = divide(multiply(HEIGHT, add(this._scale, -1)), 2);
     return (
       <View style={styles.wrapper}>
+        <Animated.Code>
+          {
+            call([this._x, this._y, this._width, this._height], ([x, y, width, height]) => console.log('layout', { x, y, width, height }))
+          }
+        </Animated.Code>
         <PinchGestureHandler
           ref={this.pinchRef}
           simultaneousHandlers={this.panRef}
@@ -395,6 +417,7 @@ class Viewer extends Component {
               onGestureEvent={this._onPanEvent}
               onHandlerStateChange={this._onPanEvent}>
               <Animated.Image
+                onLayout={this._layoutEvent}
                 style={[
                   styles.image,
                   {

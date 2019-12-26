@@ -17,6 +17,8 @@ const {
   Value,
   Clock,
   greaterOrEq,
+  event,
+  call
 } = Animated;
 
 function runSpring(clock, value, dest) {
@@ -57,9 +59,24 @@ export default class Example extends Component {
     super(props);
     const clock = new Clock();
     this._trans = runSpring(clock, 10, 150);
+
+    this._x = new Value(0);
+    this._y = new Value(0);
+    this._width = new Value(0);
+    this._height = new Value(0);
+    this._layoutEvent = event([{
+      nativeEvent: {
+        layout: {
+          x: this._x,
+          y: this._y,
+          width: this._width,
+          height: this._height
+        }
+      }
+    }]);
   }
 
-  componentDidMount() {}
+  componentDidMount() { }
 
   render() {
     const fontSize = add(divide(this._trans, 10), 15);
@@ -67,7 +84,13 @@ export default class Example extends Component {
     return (
       <Animated.View
         style={[styles.container, { borderWidth: divide(this._trans, 5) }]}>
+        <Animated.Code>
+          {
+            call([this._x, this._y, this._width, this._height], ([x, y, width, height]) => console.log('layout', { x, y, width, height }))
+          }
+        </Animated.Code>
         <Animated.Text
+          onLayout={this._layoutEvent}
           style={[
             styles.box,
             {
