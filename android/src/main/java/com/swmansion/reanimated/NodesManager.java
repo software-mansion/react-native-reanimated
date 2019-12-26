@@ -78,7 +78,7 @@ public class NodesManager implements EventDispatcherListener {
   private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
-  private final ReanimatedBridgeDelegate mReflectionHelper;
+  private final ReanimatedBridgeDelegate mReanimatedBridgeDelegate;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -109,7 +109,7 @@ public class NodesManager implements EventDispatcherListener {
     mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
     mUIManager.getEventDispatcher().addListener(this);
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
-    mReflectionHelper = new ReanimatedBridgeDelegate(this);
+    mReanimatedBridgeDelegate = new ReanimatedBridgeDelegate(this);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback = new GuardedFrameCallback(context) {
@@ -126,8 +126,8 @@ public class NodesManager implements EventDispatcherListener {
     return mContext;
   }
 
-  public final ReanimatedBridgeDelegate getReflectionHelper() {
-    return mReflectionHelper;
+  public final ReanimatedBridgeDelegate getBridgeDelegate() {
+    return mReanimatedBridgeDelegate;
   }
 
   public void onHostPause() {

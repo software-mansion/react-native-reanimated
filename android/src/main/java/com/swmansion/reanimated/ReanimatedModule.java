@@ -217,6 +217,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
   @ReactMethod
   public void getDirectManipulationUtil(final Promise promise) {
-    promise.resolve(getNodesManager().getReflectionHelper().getDevUtil());
+    promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
   }
 }

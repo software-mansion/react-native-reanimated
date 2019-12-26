@@ -31,7 +31,7 @@ public class InterceptNode extends Node implements ValueManagingNode {
             );
         }
 
-        eventDispatcherAccessor = mNodesManager.getReflectionHelper().JSEventDispatcher();
+        eventDispatcherAccessor = mNodesManager.getBridgeDelegate().JSEventDispatcher();
     }
 
     @Override
