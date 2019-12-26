@@ -22,10 +22,6 @@ public class TransitionModule {
     mUIManager = uiManager;
   }
 
-  public void animateNextTransition(final ReactContext context, final int rootTag, final ReadableMap config) {
-    animateNextTransition(context, rootTag, config, null);
-  }
-
   public void animateNextTransition(final ReactContext context, final int rootTag, final ReadableMap config, final @Nullable Callback callback) {
     mUIManager.prependUIBlock(new UIBlock() {
       @Override

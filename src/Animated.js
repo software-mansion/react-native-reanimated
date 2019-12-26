@@ -7,9 +7,9 @@ import AnimatedCode from './core/AnimatedCode';
 import * as base from './base';
 import * as derived from './derived';
 import createAnimatedComponent from './createAnimatedComponent';
-import {default as ogDecay} from './animations/decay';
-import {default as ogTiming} from './animations/timing';
-import {default as ogSpring} from './animations/spring';
+import { default as ogDecay } from './animations/decay';
+import { default as ogTiming } from './animations/timing';
+import { default as ogSpring } from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
@@ -65,7 +65,6 @@ const Animated = {
 
 export default Animated;
 
-<<<<<<< HEAD
 // operations
 export * from './base';
 export * from './derived';
@@ -74,7 +73,8 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
+  TransitionState,
+  createTransitioningComponent,
 
   // classes
   AnimatedClock as Clock,
@@ -87,6 +87,3 @@ export {
   spring,
   SpringUtils,
 };
-=======
-export { Easing, Transitioning, Transition, TransitionState, createTransitioningComponent };
->>>>>>> parent of 4f45344... revert transitioning :unamused:
