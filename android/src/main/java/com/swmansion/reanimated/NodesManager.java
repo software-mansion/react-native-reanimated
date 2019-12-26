@@ -357,12 +357,6 @@ public class NodesManager implements EventDispatcherListener {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
-  public void notifyViewOfAttachingEvent(int tag, String eventName) {
-    WritableNativeMap nativeProps = new WritableNativeMap();
-    nativeProps.putBoolean(eventName, true);
-    enqueueUpdateViewOnNativeThread(tag, nativeProps);
-  }
-
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
     String key = viewTag + eventName;
 
@@ -379,7 +373,6 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     mEventMapping.put(key, node);
-    notifyViewOfAttachingEvent(viewTag, eventName);
   }
 
   public void detachEvent(int viewTag, String eventName, int eventNodeID) {
