@@ -17,6 +17,11 @@ function listener(data) {
   component && component._updateFromNative(data.props);
 }
 
+const platformProps = Platform.select({
+  web: {},
+  default: { collapsable: false },
+});
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -218,10 +223,6 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      const platformProps = Platform.select({
-        web: {},
-        default: { collapsable: false },
-      });
       return (
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
