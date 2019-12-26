@@ -241,8 +241,6 @@ function Shuffle() {
     }]),
     [absoluteX, absoluteY]
   );
-<<<<<<< HEAD
-=======
 
   const onTransition = useMemo(() =>
     event([{
@@ -255,7 +253,6 @@ function Shuffle() {
   );
 
   useCode(() => call([evaluate], console.log), [evaluate]);
->>>>>>> parent of 4f45344... revert transitioning :unamused:
 
   const renderItem = useCallback((props) => (
     <Item
@@ -295,11 +292,8 @@ function Shuffle() {
           transition={transition}
           style={styles.centerAll}
           animateMount
-<<<<<<< HEAD
           onLayout={onLayout}
-=======
           onTransitionStateChange={onTransition}
->>>>>>> parent of 4f45344... revert transitioning :unamused:
         >
           <View collapsable={false} style={styles.default}>
             <Text style={styles.text}>Drag your finger over the list</Text>
@@ -319,11 +313,8 @@ function Shuffle() {
                 style={[
                   styles.button,
                   {
-<<<<<<< HEAD
-                    backgroundColor: "#FF5252"
-=======
+                    //backgroundColor: "#FF5252"
                     backgroundColor: cond(neq(transitionState, TransitionState.BEGAN), processColor("#FF5252"), processColor("grey"))
->>>>>>> parent of 4f45344... revert transitioning :unamused:
                   }
                 ]}
               >
