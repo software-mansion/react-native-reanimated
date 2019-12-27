@@ -45,7 +45,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-    mTransitionManager = new TransitionModule(uiManager);
+    mTransitionManager = new TransitionModule(reactCtx);
   }
 
   @Override
@@ -99,8 +99,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
-  public void animateNextTransition(int tag, ReadableMap config) {
-    mTransitionManager.animateNextTransition(tag, config);
+  public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
+    mTransitionManager.animateNextTransition(tag, config, callback);
   }
 
   @ReactMethod

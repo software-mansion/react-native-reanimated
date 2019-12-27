@@ -18,7 +18,8 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    NativeSyntheticEvent
   } from 'react-native';
   namespace Animated {
     class AnimatedNode<T> {
@@ -139,7 +140,7 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SpringUtils =  {
+    type SpringUtils = {
       makeDefaultConfig: () => SpringConfig;
       makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
       makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
@@ -153,13 +154,13 @@ declare module 'react-native-reanimated' {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
-          ? AnimateStyle<S[K]>
-          :
-              | S[K]
-              | AnimatedNode<
-                  // allow `number` where `string` normally is to support colors
-                  S[K] extends (string | undefined) ? S[K] | number : S[K]
-                >)
+        ? AnimateStyle<S[K]>
+        :
+        | S[K]
+        | AnimatedNode<
+          // allow `number` where `string` normally is to support colors
+          S[K] extends (string | undefined) ? S[K] | number : S[K]
+        >)
     };
 
     export type AnimateProps<
@@ -167,11 +168,11 @@ declare module 'react-native-reanimated' {
       P extends {
         style?: StyleProp<S>;
       }
-    > = {
-      [K in keyof P]: K extends 'style'
+      > = {
+        [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<S>>
         : P[K] | AnimatedNode<P[K]>
-    };
+      };
 
     type CodeProps = {
       exec?: AnimatedNode<number>
@@ -187,15 +188,15 @@ declare module 'react-native-reanimated' {
     }
     export class Image extends Component<
       AnimateProps<ImageStyle, ImageProps>
-    > {
+      > {
       getNode(): ReactNativeImage;
     }
     export class ScrollView extends Component<
       AnimateProps<ViewStyle, ScrollViewProps>
-    > {
+      > {
       getNode(): ReactNativeScrollView;
     }
-    export class Code extends Component<CodeProps> {}
+    export class Code extends Component<CodeProps> { }
     export function createAnimatedComponent(component: any): any;
 
     // classes
@@ -273,8 +274,8 @@ declare module 'react-native-reanimated' {
     type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
     type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
     export function event<T>(
-        argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
-        config?: {},
+      argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
+      config?: {},
     ): (...args: any[]) => void;
 
     // derived operations
@@ -331,7 +332,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
+      exec: () => Nullable<AnimatedNode<number>[] | AnimatedNode<number>> | boolean,
       deps: Array<any>,
     ): void
 
@@ -365,12 +366,27 @@ declare module 'react-native-reanimated' {
   }
   export const Easing: EasingStatic;
 
+  export enum TransitionState {
+    BEGAN,
+    END
+  }
+
+  export interface TransitionStateChangeEvent {
+    target: number,
+    state: TransitionState
+  }
+
   export interface TransitioningViewProps extends ViewProps {
-    transition: ReactNode;
+    transition: ReactNode
+    onTransitionStateChange: (e: NativeSyntheticEvent<TransitionStateChangeEvent>) => void
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
-    animateNextTransition(): void;
+    /**
+     * 
+     * @param callback invoked once transition has ended
+     */
+    animateNextTransition(callback?: () => void): void;
   }
 
   export class Transitioning extends Component {
@@ -396,7 +412,7 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
- 
+
   const {
     Clock,
     Value,

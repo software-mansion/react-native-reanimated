@@ -21,6 +21,7 @@ import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWr
 import {
   Transition,
   Transitioning,
+  TransitionState,
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
@@ -68,7 +69,8 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
+  TransitionState,
+  createTransitioningComponent,
 
   // classes
   AnimatedClock as Clock,
