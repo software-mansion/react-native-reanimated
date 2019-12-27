@@ -36,6 +36,7 @@ matrix:
     - cd ./android && ./gradlew assembleDebug
 
   - language: objective-c
+    podfile: Example/ios/Podfile
     osx_image: xcode10.2
     xcode_sdk: iphonesimulator12.2
     xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
@@ -44,9 +45,8 @@ matrix:
       only:
       - master
     cache:
-      - yarn
-      directories:
-        - ./Example/ios/Pods/
+      yarn: true
+      cocoapods: true
 
     install:
     - nvm --version
