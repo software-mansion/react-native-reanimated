@@ -2,6 +2,7 @@ package com.swmansion.reanimated.transitions;
 
 import androidx.annotation.Nullable;
 import androidx.transition.TransitionManager;
+
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -13,7 +14,9 @@ import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
-//fork
+
+import javax.annotation.Nullable;
+
 public class TransitionModule {
 
   private final ReactContext mContext;
@@ -27,7 +30,7 @@ public class TransitionModule {
   public void animateNextTransition(final int rootTag, final ReadableMap config, @Nullable final Callback callback) {
     mUIManager.prependUIBlock(new UIBlock() {
       @Override
-      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+      public void execute(final NativeViewHierarchyManager nativeViewHierarchyManager) {
         try {
           View rootView = nativeViewHierarchyManager.resolveView(rootTag);
           TransitionHelper transitionHelper = new TransitionHelper(mContext, rootView, config, callback);
@@ -39,5 +42,4 @@ public class TransitionModule {
     });
 
   }
-
 }

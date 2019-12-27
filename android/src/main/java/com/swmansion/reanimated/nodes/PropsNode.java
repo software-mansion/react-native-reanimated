@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -16,7 +17,7 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
-public class PropsNode extends Node implements FinalNode {
+public class PropsNode extends Node implements FinalNode, ConnectedNode {
 
   private final Map<String, Integer> mMapping;
   private final UIImplementation mUIImplementation;
@@ -59,11 +60,13 @@ public class PropsNode extends Node implements FinalNode {
     mDiffMap = new ReactStylesDiffMap(mPropMap);
   }
 
+  @Override
   public void connectToView(int viewTag) {
     mConnectedViewTag = viewTag;
     dangerouslyRescheduleEvaluate();
   }
 
+  @Override
   public void disconnectFromView(int viewTag) {
     mConnectedViewTag = View.NO_ID;
   }
@@ -103,10 +106,10 @@ public class PropsNode extends Node implements FinalNode {
               dest.putString(key, style.getString(key));
               break;
             case Array:
-              dest.putArray(key, (WritableArray) style.getArray(key));
+              dest.putArray(key, style.getArray(key));
               break;
             default:
-              throw new IllegalArgumentException("Unexpected type " + type);
+              throw new JSApplicationIllegalArgumentException("Unexpected type " + type);
           }
         }
       } else {

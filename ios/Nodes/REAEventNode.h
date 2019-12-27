@@ -1,8 +1,8 @@
-#import "REANode.h"
+#import "REAMapNode.h"
 
 #import <React/RCTEventDispatcher.h>
 
-@interface REAEventNode : REANode
+@interface REAEventNode : REAMapNode
 
 - (void)processEvent:(id<RCTEvent>)event;
 
