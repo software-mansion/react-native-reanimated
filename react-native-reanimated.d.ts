@@ -232,9 +232,27 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function proc(
-      cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
-    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
+    export function proc<P1>(
+      cb: (p1: P1) => AnimatedNode<number>
+    ): (p1: P1) => AnimatedNode<number>;
+    export function proc<P1, P2>(
+      cb: (p1: P1, p2: P2) => AnimatedNode<number>
+    ): (p1: P1, p2: P2) => AnimatedNode<number>;
+    export function proc<P1, P2, P3>(
+      cb: (p1: P1, p2: P2, p3: P3) => AnimatedNode<number>
+    ): (p1: P1, p2: P2, p3: P3) => AnimatedNode<number>;
+    export function proc<P1, P2, P3, P4>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4) => AnimatedNode<number>
+    ): (p1: P1, p2: P2, p3: P3, p4: P4) => AnimatedNode<number>;
+    export function proc<P1, P2, P3, P4, P5>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => AnimatedNode<number>
+    ): (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => AnimatedNode<number>;
+    export function proc<P1, P2, P3, P4, P5, P6>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>
+    ): (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>;
+    export function proc <P>(
+      cb: (...params: AnimatedValue<number>[]) => AnimatedNode<number>
+    ): (...params: Adaptable<number>[]) => AnimatedNode<number>;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set<T extends Value>(
