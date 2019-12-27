@@ -10,8 +10,6 @@ import invariant from 'fbjs/lib/invariant';
 
 const NODE_MAPPING = new Map();
 
-const stubEventProp = () => { };
-
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
@@ -69,13 +67,17 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
+      const nativeUpdate = {};
 
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
+          nativeUpdate[key] = true;
         }
       }
+
+      this.setNativeProps(nativeUpdate)
     }
 
     _detachNativeEvents() {
@@ -93,6 +95,7 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
       const attached = new Set();
       const nextEvts = new Set();
+      const nativeUpdate = {};
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
@@ -105,6 +108,7 @@ export default function createAnimatedComponent(Component) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
+            nativeUpdate[key] = false;
           } else {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
@@ -116,8 +120,11 @@ export default function createAnimatedComponent(Component) {
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
+          nativeUpdate[key] = true;
         }
       }
+
+      this.setNativeProps(nativeUpdate);
     }
 
     // The system is best designed when setNativeProps is implemented. It is
@@ -214,8 +221,6 @@ export default function createAnimatedComponent(Component) {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
-        } else if (value instanceof AnimatedEvent) {
-          props[key] = stubEventProp;
         }
       }
       return props;
