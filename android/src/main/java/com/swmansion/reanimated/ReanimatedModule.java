@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -45,7 +46,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-    mTransitionManager = new TransitionModule(uiManager);
+    mTransitionManager = new TransitionModule(reactCtx);
   }
 
   @Override
@@ -99,8 +100,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
-  public void animateNextTransition(int tag, ReadableMap config) {
-    mTransitionManager.animateNextTransition(tag, config);
+  public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
+    mTransitionManager.animateNextTransition(tag, config, callback);
   }
 
   @ReactMethod
@@ -222,5 +223,9 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
         nodesManager.setValue(nodeID, newValue);
       }
     });
+
+  public void getDirectManipulationUtil(final Promise promise) {
+    promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
   }
+    
 }

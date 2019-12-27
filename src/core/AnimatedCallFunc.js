@@ -1,9 +1,9 @@
-import AnimatedNode from './AnimatedNode';
-import { adapt } from './AnimatedBlock';
-import { val } from '../val';
 import invariant from 'fbjs/lib/invariant';
+import { val } from '../val';
+import { adapt } from './AnimatedBlock';
+import AnimatedNode from './AnimatedNode';
 
-class AnimatedCallFunc extends AnimatedNode {
+export default class AnimatedCallFunc extends AnimatedNode {
   _what;
   _args;
   _params;
@@ -25,7 +25,7 @@ class AnimatedCallFunc extends AnimatedNode {
         type: 'callfunc',
         what: what.__nodeID,
         args: args.map(n => n.__nodeID),
-        params: params.map(n => n.__nodeID),
+        params: params.map(n => n.__nodeID)
       },
       [...args]
     );
@@ -55,6 +55,10 @@ class AnimatedCallFunc extends AnimatedNode {
     const value = val(this._what);
     this.endContext();
     return value;
+  }
+
+  __source() {
+    return this._what.__source();
   }
 }
 

@@ -28,4 +28,27 @@ public class Utils {
     }
     return res;
   }
+
+  public static String concat(int[] args){
+    Object[] out = new Object[args.length];
+    for (int i = 0; i < args.length; i++) {
+      out[i] = args[i];
+    }
+    return concat(out, ", ");
+  }
+
+  public static String concat(Object[] args){
+    return concat(args, ", ");
+  }
+
+  public static String concat(Object[] args, String separator){
+    StringBuilder concat = new StringBuilder();
+    for (int i = 0; i < args.length; i++) {
+      concat.append(args[i].toString());
+      if(i < args.length - 1) {
+        concat.append(separator);
+      }
+    }
+    return concat.toString();
+  }
 }

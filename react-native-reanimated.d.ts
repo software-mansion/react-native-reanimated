@@ -18,8 +18,19 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    NativeSyntheticEvent
   } from 'react-native';
+
+  global {
+    interface Array<T> {
+      fromEnd(value?: boolean): T[];
+    }
+    interface ArrayConstructor {
+      fromEnd<T extends any[]>(array: T): T;
+    }
+  }
+
   namespace Animated {
     class AnimatedNode<T> {
       constructor(
@@ -61,7 +72,6 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
       | AnimatedNode<T>
@@ -139,7 +149,7 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SpringUtils =  {
+    type SpringUtils = {
       makeDefaultConfig: () => SpringConfig;
       makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
       makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
@@ -153,13 +163,13 @@ declare module 'react-native-reanimated' {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
-          ? AnimateStyle<S[K]>
-          :
-              | S[K]
-              | AnimatedNode<
-                  // allow `number` where `string` normally is to support colors
-                  S[K] extends (string | undefined) ? S[K] | number : S[K]
-                >)
+        ? AnimateStyle<S[K]>
+        :
+        | S[K]
+        | AnimatedNode<
+          // allow `number` where `string` normally is to support colors
+          S[K] extends (string | undefined) ? S[K] | number : S[K]
+        >)
     };
 
     export type AnimateProps<
@@ -167,11 +177,11 @@ declare module 'react-native-reanimated' {
       P extends {
         style?: StyleProp<S>;
       }
-    > = {
-      [K in keyof P]: K extends 'style'
+      > = {
+        [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<S>>
         : P[K] | AnimatedNode<P[K]>
-    };
+      };
 
     type CodeProps = {
       exec?: AnimatedNode<number>
@@ -187,15 +197,15 @@ declare module 'react-native-reanimated' {
     }
     export class Image extends Component<
       AnimateProps<ImageStyle, ImageProps>
-    > {
+      > {
       getNode(): ReactNativeImage;
     }
     export class ScrollView extends Component<
       AnimateProps<ViewStyle, ScrollViewProps>
-    > {
+      > {
       getNode(): ReactNativeScrollView;
     }
-    export class Code extends Component<CodeProps> {}
+    export class Code extends Component<CodeProps> { }
     export function createAnimatedComponent(component: any): any;
 
     // classes
@@ -232,9 +242,8 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function proc(
-      cb: (...params: Array<Animated.Value<number>>) => Adaptable<number>
-    ): (...args: Array<Adaptable<number>>) => AnimatedNode<number>;
+
+    export function proc<R extends Value, T extends (...params: Array<Adaptable<R>>) => AnimatedNode<R>>(cb: T): T;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set<T extends Value>(
@@ -267,14 +276,28 @@ declare module 'react-native-reanimated' {
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
+
+    export namespace Array {
+      export function fromEnd<T extends any[]>(array: T): T;
+    }
+
+    type MappingBasic = { [key: string]: MappingBasic } | Adaptable<any>;
+    type MappingProxy<T> = (arg: T) => AnimatedNode<number>;
+    type MappingNested<T> = T extends object ? { [K in keyof T]?: MappingNested<T[K]> | MappingProxy<T[K]> } : Adaptable<T> | MappingProxy<T>;
+    type MappingArray<T> = T extends Array<any> ? { [I in keyof T]: MappingNested<T[I]> } : [MappingNested<T>];
+    export type Mapping<T> = T extends never ? ReadonlyArray<MappingBasic> : Readonly<MappingArray<T>>;
+    export function map<T>(argMapping: Mapping<T>, config?: {}): Adaptable<Value>;
+    export namespace map {
+      export function fromEnd<T>(argMapping: Mapping<T>, config?: {}): Adaptable<Value>;
+    }
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
     type EventArgFunc<T> = (arg: T) => AnimatedNode<number>;
     type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
     type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
     export function event<T>(
-        argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
-        config?: {},
+      argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
+      config?: {},
     ): (...args: any[]) => void;
 
     // derived operations
@@ -298,6 +321,72 @@ declare module 'react-native-reanimated' {
     ): AnimatedNode<number>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
+
+    //  direct manipulation
+    export function callback<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
+    export namespace callback {
+      export function fromMap<T extends AnimatedNode<Value>>(map: T): AnimatedNode<number>;
+      export function fromEnd<T>(...argMapping: Mapping<T>[]): AnimatedNode<number>;
+    }
+
+    /**
+     * Invokes a method of a given ReactModule without going through the bridge.
+     * @param module
+     * @param method
+     * @param params
+     */
+    export function invoke(
+      module: string,
+      method: string,
+      ...params: Array<Animated.Adaptable<Value> | typeof map | typeof callback>
+    ): AnimatedNode<number>;
+
+    /**
+     * Dispatches a command to the specified ViewManager without going through the bridge.
+     * @param viewManager
+     * @param command
+     * @param params
+     */
+    export function dispatch(
+      viewManager: string,
+      command: string | number,
+      ...params: Array<Animated.Adaptable<Value> | typeof map>
+    ): AnimatedNode<number>;
+
+    /**
+     * Intercepts an event before being sent over the bridge.
+     * @param eventName 
+     * @param argMapping 
+     * @param node
+     */
+    export function intercept<T>(eventName: string, argMapping: Mapping<T>): AnimatedNode<number>;
+    export function intercept<T extends AnimatedNode<Value>>(eventName: string, node: T): AnimatedNode<number>;
+
+    type DirectManipulationModuleData = {
+      [method: string]: {
+        type: string,
+        nativeType: string,
+        name: string
+      }
+    };
+
+    export type DirectManipulatioUtilData = {
+      nativeModules: DirectManipulationModuleData,
+      viewManagers: string[],
+      JSEvents: {
+        [eventName: string]: {
+          [key: string]: any
+        }
+      }
+    }
+
+    /**
+     * A helper for devs using invoke/dispatch
+     * This component will render only in __DEV__ mode and is safe for production
+     * */
+    export class DirectManipulationHelper extends Component {
+      static directManipulationUtil(): Promise<DirectManipulatioUtilData>
+    }
 
     // animations
     export function decay(
@@ -331,7 +420,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
+      exec: () => Nullable<AnimatedNode<number>[] | AnimatedNode<number>> | boolean,
       deps: Array<any>,
     ): void
 
@@ -365,12 +454,27 @@ declare module 'react-native-reanimated' {
   }
   export const Easing: EasingStatic;
 
+  export enum TransitionState {
+    BEGAN,
+    END
+  }
+
+  export interface TransitionStateChangeEvent {
+    target: number,
+    state: TransitionState
+  }
+
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
+    onTransitionStateChange: (e: NativeSyntheticEvent<TransitionStateChangeEvent>) => void
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
-    animateNextTransition(): void;
+    /**
+     * 
+     * @param callback invoked once transition has ended
+     */
+    animateNextTransition(callback?: () => void): void;
   }
 
   export class Transitioning extends Component {
@@ -396,7 +500,7 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
- 
+
   const {
     Clock,
     Value,

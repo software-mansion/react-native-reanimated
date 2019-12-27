@@ -1,8 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-import com.facebook.react.bridge.JSApplicationCausedNativeException;
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-import com.facebook.react.bridge.NoSuchKeyException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
@@ -20,8 +17,8 @@ public class SetNode extends Node {
   @Override
   protected Object evaluate() {
     Object newValue = mNodesManager.getNodeValue(mValueNodeID);
-    ValueNode what = mNodesManager.findNodeById(mWhatNodeID, ValueNode.class);
-    what.setValue(newValue);
+    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+    ((ValueManagingNode) what).setValue(newValue);
     return newValue;
   }
 }

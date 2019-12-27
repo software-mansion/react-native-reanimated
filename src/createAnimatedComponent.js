@@ -5,6 +5,7 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
+import AnimatedCallFunc from "./core/AnimatedCallFunc";
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -19,6 +20,30 @@ const platformProps = Platform.select({
   web: {},
   default: { collapsable: false },
 });
+
+function getEventNode(node) {
+  if (node instanceof AnimatedEvent) {
+    return node;
+  } else if (node instanceof AnimatedCallFunc) {
+    throw new Error('events nested in procs are not yet supported');
+  } else {
+    return false;
+  }
+}
+
+function forEachEvent(props, cb) {
+  let prop;
+  for (const key in props) {
+    prop = props[key];
+    prop = Array.isArray(prop) ? prop : [prop];
+    prop.forEach(element => {
+      const node = getEventNode(element);
+      if (node && node instanceof AnimatedEvent) {
+        cb(node, key);
+      }
+    });
+  }
+}
 
 export default function createAnimatedComponent(Component) {
   invariant(
@@ -69,61 +94,45 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
       const nativeUpdate = {};
 
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          prop.attachEvent(node, key);
-          nativeUpdate[key] = true;
-        }
-      }
+      forEachEvent(this.props, (ev, key) => {
+        ev.attachEvent(node, key);
+        nativeUpdate[key] = true;
+      });
 
       this.setNativeProps(nativeUpdate)
     }
 
     _detachNativeEvents() {
       const node = this._getEventViewRef();
-
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          prop.detachEvent(node, key);
-        }
-      }
+      forEachEvent(this.props, (ev, key) => ev.detachEvent(node, key));
     }
 
     _reattachNativeEvents(prevProps) {
       const node = this._getEventViewRef();
       const attached = new Set();
       const nextEvts = new Set();
-      const nativeUpdate = {};
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          nextEvts.add(prop.__nodeID);
+
+      forEachEvent(this.props, (ev, key) => nextEvts.add(ev.__nodeID));
+
+      forEachEvent(prevProps, (ev, key) => {
+        if (!nextEvts.has(ev.__nodeID)) {
+          // event was in prev props but not in current props, we detach
+          ev.detachEvent(node, key);
+          nativeUpdate[key] = false;
+        } else {
+          // event was in prev and is still in current props
+          attached.add(ev.__nodeID);
         }
-      }
-      for (const key in prevProps) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop.__nodeID)) {
-            // event was in prev props but not in current props, we detach
-            prop.detachEvent(node, key);
-            nativeUpdate[key] = false;
-          } else {
-            // event was in prev and is still in current props
-            attached.add(prop.__nodeID);
-          }
-        }
-      }
-      for (const key in this.props) {
-        const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
+      });
+
+      forEachEvent(this.props, (ev, key) => {
+        if (!attached.has(ev.__nodeID)) {
           // not yet attached
-          prop.attachEvent(node, key);
+          ev.attachEvent(node, key);
           nativeUpdate[key] = true;
         }
-      }
-
+      });
+          
       this.setNativeProps(nativeUpdate);
     }
 
@@ -219,6 +228,11 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (Array.isArray(value) && value.some((v) => v instanceof AnimatedNode)) {
+          const funcEvent = value.find((v) => typeof v === 'function');
+          if (funcEvent) {
+            props[key] = funcEvent;
+          }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
@@ -226,10 +240,15 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
+    _platformProps = Platform.select({
+      web: {},
+      default: { collapsable: false },
+    });
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component {...props} ref={this._setComponentRef} {...this._platformProps} />
       );
     }
 
