@@ -1,9 +1,14 @@
 import React from 'react';
-import { View, findNodeHandle, requireNativeComponent, StyleSheet, Platform } from 'react-native';
+import { View, findNodeHandle, requireNativeComponent, Platform, StyleSheet } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
 import createAnimatedComponent from './createAnimatedComponent';
 
 const TransitioningContext = React.createContext();
+
+const TransitionState = {
+  BEGAN: 0,
+  END: 1
+};
 
 function configFromProps(type, props) {
   const config = { type };
@@ -107,7 +112,8 @@ class Sequence extends React.Component {
 }
 
 const viewName = 'ReanimatedTransitionManager';
-const TransitioningNativeView = Platform.select({
+
+const TransitioningBaseView = Platform.select({
   android: () => createAnimatedComponent(requireNativeComponent(viewName)),
   default: () => createAnimatedComponent(View)
 })();
@@ -128,11 +134,13 @@ function createTransitioningComponent(Component) {
       this.viewRef.current.setNativeProps(props);
     }
 
-    animateNextTransition(callback) {
-      const viewTag = findNodeHandle(this.viewRef.current);
-      return ReanimatedModule.animateNextTransition(viewTag, {
-        transitions: this.transitions,
-      }, callback);
+    animateNextTransition(callback = null) {
+      const viewTag = findNodeHandle(this.viewRef.current.getNode());
+      ReanimatedModule.animateNextTransition(
+        viewTag,
+        { transitions: this.transitions },
+        callback
+      );
     }
 
     render() {
@@ -143,14 +151,13 @@ function createTransitioningComponent(Component) {
             {transition}
           </TransitioningContext.Provider>
           <Component {...rest}>
-            <TransitioningNativeView
-              collapsable={false}
+            <TransitioningBaseView
               ref={this.viewRef}
               onTransitionStateChange={onTransitionStateChange}
               style={styles.default}
             >
               {children}
-            </TransitioningNativeView>
+            </TransitioningBaseView>
           </Component>
         </React.Fragment>
       );

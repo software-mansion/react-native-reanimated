@@ -1,7 +1,8 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
-export default class AnimatedParam extends AnimatedNode {
+export class AnimatedParam extends AnimatedNode {
+
   argsStack = [];
 
   constructor() {

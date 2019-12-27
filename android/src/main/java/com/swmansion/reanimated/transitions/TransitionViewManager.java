@@ -7,13 +7,13 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.views.view.ReactViewGroup;
+import com.facebook.react.views.view.ReactViewManager;
 
 import java.util.Map;
 
-public class TransitionViewManager extends ViewGroupManager<ViewGroup> {
-    public static final String NAME = "ReanimatedTransitionManager";
+public class TransitionViewManager extends ReactViewManager {
+    private static final String NAME = "ReanimatedTransitionManager";
 
     public TransitionViewManager() {
         super();
@@ -27,13 +27,14 @@ public class TransitionViewManager extends ViewGroupManager<ViewGroup> {
 
     @NonNull
     @Override
-    protected ViewGroup createViewInstance(@NonNull ThemedReactContext reactContext) {
+    public ReactViewGroup createViewInstance(@NonNull ThemedReactContext reactContext) {
         return new ReactViewGroup(reactContext);
     }
 
     @Nullable
     @Override
-    public Map getExportedCustomDirectEventTypeConstants() {
-        return MapBuilder.of(TransitionEvent.EVENT_NAME, MapBuilder.of("registrationName", TransitionEvent.EVENT_NAME));
+    public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
+        return MapBuilder.<String, Object>of(TransitionEvent.EVENT_NAME, MapBuilder.of("registrationName", TransitionEvent.EVENT_NAME));
     }
+
 }

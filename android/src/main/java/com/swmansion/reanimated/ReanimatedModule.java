@@ -46,7 +46,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-    mTransitionManager = new TransitionModule(uiManager);
+    mTransitionManager = new TransitionModule(reactCtx);
   }
 
   @Override
@@ -100,13 +100,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
-  public void animateNextTransition(int tag, ReadableMap config) {
-    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, null);
-  }
-
-  @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
-    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, callback);
+    mTransitionManager.animateNextTransition(tag, config, callback);
   }
 
   @ReactMethod
@@ -221,7 +216,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+  public void setValue(final int nodeID, final Double newValue) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.setValue(nodeID, newValue);
+      }
+    });
+
   public void getDirectManipulationUtil(final Promise promise) {
     promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
   }
+    
 }
