@@ -19,6 +19,25 @@ class Code extends React.Component {
   }
 }
 
+const getValue = node => {
+  if (typeof node === "number") {
+    return node;
+  }
+  return node[" __value"];
+};
+
+class AnimatedValue {
+  " __value": number;
+
+  constructor(val: number) {
+    this[" __value"] = val;
+  }
+
+  setValue(val: number) {
+    this[" __value"] = val;
+  }
+}
+
 module.exports = {
   __esModule: true,
 
@@ -49,59 +68,68 @@ module.exports = {
       IDENTITY: 'identity',
     },
 
-    add: NOOP,
-    sub: NOOP,
-    multiply: NOOP,
-    divide: NOOP,
-    pow: NOOP,
-    modulo: NOOP,
-    sqrt: NOOP,
-    log: NOOP,
-    sin: NOOP,
-    cos: NOOP,
-    tan: NOOP,
-    acos: NOOP,
-    asin: NOOP,
-    atan: NOOP,
-    exp: NOOP,
-    round: NOOP,
-    floor: NOOP,
-    ceil: NOOP,
-    lessThan: NOOP,
-    eq: NOOP,
-    greaterThan: NOOP,
-    lessOrEq: NOOP,
-    greaterOrEq: NOOP,
-    neq: NOOP,
-    and: NOOP,
-    or: NOOP,
-    defined: NOOP,
-    not: NOOP,
-    set: NOOP,
-    concat: NOOP,
-    cond: NOOP,
-    block: NOOP,
-    call: NOOP,
+    add: (a, b) => new AnimatedValue(getValue(a) + getValue(b)),
+    sub: (a, b) => new AnimatedValue(getValue(a) - getValue(b)),
+    multiply: (a, b) => new AnimatedValue(getValue(a) * getValue(b)),
+    divide: (a, b) => new AnimatedValue(getValue(a) / getValue(b)),
+    pow: (a, b) => new AnimatedValue(getValue(a) ** getValue(b)),
+    modulo: (a, b) => new AnimatedValue(getValue(a) % getValue(b)),
+    sqrt: a => new AnimatedValue(Math.sqrt(getValue(a))),
+    log: a => new AnimatedValue(Math.log(getValue(a))),
+    sin: a => new AnimatedValue(Math.sin(getValue(a))),
+    cos: a => new AnimatedValue(Math.cos(getValue(a))),
+    tan: a => new AnimatedValue(Math.tan(getValue(a))),
+    acos: a => new AnimatedValue(Math.acos(getValue(a))),
+    asin: a => new AnimatedValue(Math.asin(getValue(a))),
+    atan: a => new AnimatedValue(Math.atan(getValue(a))),
+    exp: a => new AnimatedValue(Math.exp(getValue(a))),
+    round: a => new AnimatedValue(Math.round(getValue(a))),
+    floor: a => new AnimatedValue(Math.floor(getValue(a))),
+    ceil: a => new AnimatedValue(Math.ceil(getValue(a))),
+    lessThan: (a, b) => new AnimatedValue(getValue(a) < getValue(b)),
+    eq: (a, b) => new AnimatedValue(getValue(a) === getValue(b)),
+    greaterThan: (a, b) => new AnimatedValue(getValue(a) > getValue(b)),
+    lessOrEq: (a, b) => new AnimatedValue(getValue(a) <= getValue(b)),
+    greaterOrEq: (a, b) => new AnimatedValue(getValue(a) >= getValue(b)),
+    neq: (a, b) => new AnimatedValue(getValue(a) !== getValue(b)),
+    and: (a, b) => new AnimatedValue(getValue(a) && getValue(b)),
+    or: (a, b) => new AnimatedValue(getValue(a) || getValue(b)),
+    defined: (a) => new AnimatedValue(getValue(a) !== null && getValue(a) !== undefined),
+    not: (a) => new AnimatedValue(!getValue(a)),
+    set: (a, b) => {
+      a.setValue(getValue(b));
+      return a;
+    },
+    concat: (a, b) => `${a}${b}`,
+    cond: (a, b, c) => {
+      if (getValue(a)) {
+        return b;
+      } else {
+        return c; 
+      }
+    },
+    block: (a) => a[a.length - 1],
+    call: (a, b) => b(a),
     debug: NOOP,
     onChange: NOOP,
     startClock: NOOP,
     stopClock: NOOP,
     clockRunning: NOOP,
     event: NOOP,
-    abs: NOOP,
+    abs: (a) => Math.abs(getValue(a)),
     acc: NOOP,
     color: NOOP,
     diff: NOOP,
     diffClamp: NOOP,
     interpolate: NOOP,
-    max: NOOP,
-    min: NOOP,
+    max: (a, b) => Math.max(getValue(a), getValue(b)),
+    min: (a, b) => Math.min(getValue(a), getValue(b)),
 
     decay: NOOP,
     timing: NOOP,
     spring: NOOP,
 
-    proc: () => NOOP,
+    proc: cb => cb,
 
     useCode: NOOP,
     createAnimatedComponent: Component => Component,
