@@ -15,12 +15,17 @@ function listener(data) {
   component && component._updateFromNative(data.props);
 }
 
+const platformProps = Platform.select({
+  web: {},
+  default: { collapsable: false },
+});
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
+    (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-      'use a class component instead.'
+    'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
@@ -62,13 +67,17 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
+      const nativeUpdate = {};
 
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
+          nativeUpdate[key] = true;
         }
       }
+
+      this.setNativeProps(nativeUpdate)
     }
 
     _detachNativeEvents() {
@@ -86,6 +95,7 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
       const attached = new Set();
       const nextEvts = new Set();
+      const nativeUpdate = {};
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
@@ -98,6 +108,7 @@ export default function createAnimatedComponent(Component) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
+            nativeUpdate[key] = false;
           } else {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
@@ -109,8 +120,11 @@ export default function createAnimatedComponent(Component) {
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
+          nativeUpdate[key] = true;
         }
       }
+
+      this.setNativeProps(nativeUpdate);
     }
 
     // The system is best designed when setNativeProps is implemented. It is
@@ -214,10 +228,6 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      const platformProps = Platform.select({
-        web: {},
-        default: { collapsable: false },
-      });
       return (
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
