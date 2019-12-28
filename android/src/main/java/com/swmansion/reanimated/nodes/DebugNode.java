@@ -6,9 +6,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
-public class DebugNode extends Node implements ValueManagingNode {
+public class DebugNode extends Node {
 
-  public static final String TAG = "REANIMATED";
   private final String mMessage;
   private final int mValueID;
 
@@ -21,13 +20,7 @@ public class DebugNode extends Node implements ValueManagingNode {
   @Override
   protected Object evaluate() {
     Object value = mNodesManager.findNodeById(mValueID, Node.class).value();
-    Log.d(TAG, String.format("%s %s", mMessage, value));
+    Log.d("REANIMATED", String.format("%s %s", mMessage, value));
     return value;
-  }
-
-  @Override
-  public void setValue(Object value) {
-    Node node = mNodesManager.findNodeById(mValueID, Node.class);
-    ((ValueManagingNode) node).setValue(value);
   }
 }

@@ -9,6 +9,8 @@ import com.swmansion.reanimated.Utils;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public class StyleNode extends Node {
 
   private final Map<String, Integer> mMapping;

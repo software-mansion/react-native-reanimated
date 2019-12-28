@@ -105,5 +105,4 @@ public class TransitionHelper implements Transition.TransitionListener {
     public void onTransitionResume(@NonNull Transition transition) {
 
     }
-
 }

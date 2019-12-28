@@ -57,11 +57,6 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-
-  // dev
-  get DirectManipulationHelper() {
-    return require('./dev').DirectManipulationHelper;
-  }
 };
 
 export default Animated;

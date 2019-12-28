@@ -118,6 +118,7 @@ const TransitioningBaseView = Platform.select({
   default: () => createAnimatedComponent(View)
 })();
 
+
 function createTransitioningComponent(Component) {
   class Wrapped extends React.Component {
     propTypes = Component.propTypes;
@@ -171,11 +172,6 @@ const styles = StyleSheet.create({
     flex: 1
   }
 });
-
-const TransitionState = {
-  BEGAN: 0,
-  END: 1
-};
 
 const Transitioning = {
   View: createTransitioningComponent(View),

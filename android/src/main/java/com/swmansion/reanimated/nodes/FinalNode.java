@@ -1,5 +1,5 @@
 package com.swmansion.reanimated.nodes;
 
-interface FinalNode {
+public interface FinalNode {
   void update();
 }

@@ -49,7 +49,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+    //noinspection GradleDynamicVersion
+    implementation 'com.facebook.react:react-native:+'  // From node_modules
     implementation "androidx.transition:transition:1.1.0"
 }
 

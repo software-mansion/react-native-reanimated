@@ -74,5 +74,4 @@ public class TransitionEvent extends Event<TransitionEvent> {
     public void dispatch(RCTEventEmitter rctEventEmitter) {
         rctEventEmitter.receiveEvent(getViewTag(), EVENT_NAME, mExtraData);
     }
-
 }

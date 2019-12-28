@@ -50,9 +50,7 @@ const SCREENS = {
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  ...(Platform.OS === 'android' ? { directManipulation: { screen: require('./directManipulation').default, title: 'Direct Manipulation (invoke, dispatch & intercept)' } } : {}),
   code: { screen: Code, title: 'Animated.Code component' },
-
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
   imperative: {
@@ -93,7 +91,6 @@ class MainScreen extends React.Component {
   static navigationOptions = {
     title: '🎬 Reanimated Examples',
   };
-
   render() {
     const data = Object.keys(SCREENS).map(key => ({ key }));
     return (
@@ -132,7 +129,6 @@ const ExampleApp = createStackNavigator(
     Main: { screen: MainScreen },
     ...SCREENS,
     ...INTERACTABLE_SCREENS,
-    ...Platform.OS === 'android' ? require('./directManipulation').SCREENS : {}
   },
   {
     initialRouteName: 'Main',
