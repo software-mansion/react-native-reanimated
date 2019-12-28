@@ -1,7 +1,10 @@
 package com.swmansion.reanimated.transitions;
 
+<<<<<<< HEAD
 import androidx.annotation.Nullable;
 import androidx.transition.TransitionManager;
+=======
+>>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -16,25 +19,24 @@ import com.facebook.react.uimanager.UIManagerModule;
 //fork
 public class TransitionModule {
 
-  private final ReactContext mContext;
   private final UIManagerModule mUIManager;
 
-  public TransitionModule(ReactContext context) {
-    mContext = context;
-    mUIManager = mContext.getNativeModule(UIManagerModule.class);
+  public TransitionModule(UIManagerModule uiManager) {
+    mUIManager = uiManager;
   }
 
-  public void animateNextTransition(final int rootTag, final ReadableMap config, @Nullable final Callback callback) {
+  public void animateNextTransition(final ReactContext context, final int rootTag, final ReadableMap config, final @Nullable Callback callback) {
     mUIManager.prependUIBlock(new UIBlock() {
       @Override
       public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
         try {
-          View rootView = nativeViewHierarchyManager.resolveView(rootTag);
-          TransitionHelper transitionHelper = new TransitionHelper(mContext, rootView, config, callback);
+          final View rootView = nativeViewHierarchyManager.resolveView(rootTag);
+          TransitionHelper transitionHelper = new TransitionHelper(context, rootView, config, callback);
           transitionHelper.beginDelayedTransition();
         } catch (IllegalViewOperationException ex) {
           // ignore, view might have not been registered yet
         }
+
       }
     });
 

@@ -1,7 +1,11 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
+<<<<<<< HEAD
 export class AnimatedParam extends AnimatedNode {
+=======
+export default class AnimatedParam extends AnimatedNode {
+>>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange
   argsStack = [];
 
   constructor() {

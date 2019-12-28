@@ -1,12 +1,12 @@
 #import "REAClockNodes.h"
 #import "REAUtils.h"
 #import "REANodesManager.h"
-#import "REAParamNode.h"
 #import <React/RCTConvert.h>
 #import <React/RCTLog.h>
 
 @interface REAClockNode ()
 
+@property (nonatomic, readonly) BOOL isRunning;
 @property (nonatomic) NSNumber *lastTimestampMs;
 
 @end
@@ -64,9 +64,9 @@
   return self;
 }
 
-- (REANode*)clockNode
+- (REAClockNode*)clockNode
 {
-  return (REANode*)[self.nodesManager findNodeByID:_clockNodeID];
+  return (REAClockNode*)[self.nodesManager findNodeByID:_clockNodeID];
 }
 
 @end
@@ -75,12 +75,7 @@
 
 - (id)evaluate
 {
-  REANode* node = [self clockNode];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    [(REAParamNode* )node start];
-  } else {
-    [(REAClockNode* )node start];
-  }
+  [[self clockNode] start];
   return @(0);
 }
 
@@ -90,15 +85,9 @@
 
 - (id)evaluate
 {
-  REANode* node = [self clockNode];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    [(REAParamNode* )node stop];
-  } else {
-    [(REAClockNode* )node stop];
-  }
+  [[self clockNode] stop];
   return @(0);
 }
-
 
 @end
 
@@ -106,11 +95,7 @@
 
 - (id)evaluate
 {
-  REANode* node = [self clockNode];
-  if ([node isKindOfClass:[REAParamNode class]]) {
-    return @(((REAParamNode* )node).isRunning ? 1 : 0);
-  }
-  return @([(REAClockNode* )node isRunning] ? 1 : 0);
+  return @([self clockNode].isRunning ? 1 : 0);
 }
 
 @end

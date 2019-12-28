@@ -105,4 +105,8 @@ public class TransitionHelper implements Transition.TransitionListener {
     public void onTransitionResume(@NonNull Transition transition) {
 
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange

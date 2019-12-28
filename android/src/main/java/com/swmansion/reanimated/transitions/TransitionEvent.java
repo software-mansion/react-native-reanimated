@@ -74,4 +74,8 @@ public class TransitionEvent extends Event<TransitionEvent> {
     public void dispatch(RCTEventEmitter rctEventEmitter) {
         rctEventEmitter.receiveEvent(getViewTag(), EVENT_NAME, mExtraData);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange

@@ -74,6 +74,4 @@ typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
-- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue;
-
 @end

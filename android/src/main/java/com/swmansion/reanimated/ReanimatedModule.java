@@ -45,7 +45,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
-    mTransitionManager = new TransitionModule(reactCtx);
+    mTransitionManager = new TransitionModule(uiManager);
   }
 
   @Override
@@ -99,8 +99,13 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+  public void animateNextTransition(int tag, ReadableMap config) {
+    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, null);
+  }
+
+  @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
-    mTransitionManager.animateNextTransition(tag, config, callback);
+    mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, callback);
   }
 
   @ReactMethod
@@ -215,6 +220,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+<<<<<<< HEAD
   public void setValue(final int nodeID, final Double newValue) {
     mOperations.add(new UIThreadOperation() {
       @Override
@@ -222,5 +228,9 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
         nodesManager.setValue(nodeID, newValue);
       }
     });
+=======
+  public void getDirectManipulationUtil(final Promise promise) {
+    promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
+>>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange
   }
 }

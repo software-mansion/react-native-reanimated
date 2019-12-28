@@ -7,9 +7,9 @@ import AnimatedCode from './core/AnimatedCode';
 import * as base from './base';
 import * as derived from './derived';
 import createAnimatedComponent from './createAnimatedComponent';
-import decay from './animations/decay';
-import timing from './animations/timing';
-import spring from './animations/spring';
+import { default as ogDecay } from './animations/decay';
+import { default as ogTiming } from './animations/timing';
+import { default as ogSpring } from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
@@ -21,15 +21,14 @@ import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWr
 import {
   Transition,
   Transitioning,
-  TransitionState,
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
 
 
-const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
-const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
-const springWrapper = backwardCompatibleAnimWrapper(spring, SpringAnimation);
+const decay = backwardCompatibleAnimWrapper(ogDecay, DecayAnimation);
+const timing = backwardCompatibleAnimWrapper(ogTiming, TimingAnimation);
+const spring = backwardCompatibleAnimWrapper(ogSpring, SpringAnimation);
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -49,9 +48,9 @@ const Animated = {
   ...derived,
 
   // animations
-  decay: decayWrapper,
-  timing: timingWrapper,
-  spring: springWrapper,
+  decay,
+  timing,
+  spring,
   SpringUtils,
 
   // configuration
@@ -78,8 +77,8 @@ export {
   AnimatedNode as Node,
 
   // animations
-  decayWrapper as decay,
-  timingWrapper as timing,
-  springWrapper as spring,
+  decay,
+  timing,
+  spring,
   SpringUtils,
 };
