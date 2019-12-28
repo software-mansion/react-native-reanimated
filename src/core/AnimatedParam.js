@@ -3,9 +3,12 @@ import { val } from '../val';
 
 <<<<<<< HEAD
 export class AnimatedParam extends AnimatedNode {
+<<<<<<< HEAD
 =======
 export default class AnimatedParam extends AnimatedNode {
 >>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
   argsStack = [];
 
   constructor() {

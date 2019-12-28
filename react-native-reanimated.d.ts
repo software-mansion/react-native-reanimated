@@ -18,8 +18,7 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView,
-    NativeSyntheticEvent
+    ScrollView as ReactNativeScrollView
   } from 'react-native';
   namespace Animated {
     class AnimatedNode<T> {
@@ -140,7 +139,7 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SpringUtils = {
+    type SpringUtils =  {
       makeDefaultConfig: () => SpringConfig;
       makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
       makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
@@ -154,13 +153,13 @@ declare module 'react-native-reanimated' {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
-        ? AnimateStyle<S[K]>
-        :
-        | S[K]
-        | AnimatedNode<
-          // allow `number` where `string` normally is to support colors
-          S[K] extends (string | undefined) ? S[K] | number : S[K]
-        >)
+          ? AnimateStyle<S[K]>
+          :
+              | S[K]
+              | AnimatedNode<
+                  // allow `number` where `string` normally is to support colors
+                  S[K] extends (string | undefined) ? S[K] | number : S[K]
+                >)
     };
 
     export type AnimateProps<
@@ -168,11 +167,11 @@ declare module 'react-native-reanimated' {
       P extends {
         style?: StyleProp<S>;
       }
-      > = {
-        [K in keyof P]: K extends 'style'
+    > = {
+      [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<S>>
         : P[K] | AnimatedNode<P[K]>
-      };
+    };
 
     type CodeProps = {
       exec?: AnimatedNode<number>
@@ -188,15 +187,15 @@ declare module 'react-native-reanimated' {
     }
     export class Image extends Component<
       AnimateProps<ImageStyle, ImageProps>
-      > {
+    > {
       getNode(): ReactNativeImage;
     }
     export class ScrollView extends Component<
       AnimateProps<ViewStyle, ScrollViewProps>
-      > {
+    > {
       getNode(): ReactNativeScrollView;
     }
-    export class Code extends Component<CodeProps> { }
+    export class Code extends Component<CodeProps> {}
     export function createAnimatedComponent(component: any): any;
 
     // classes
@@ -270,7 +269,17 @@ declare module 'react-native-reanimated' {
     export function clockRunning(clock: AnimatedClock): AnimatedNode<0 | 1>;
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
+<<<<<<< HEAD
     export function event<T>(argMapping: Mapping<T>, config?: {}): (...args: any[]) => void;
+=======
+    type EventArgFunc<T> = (arg: T) => AnimatedNode<number>;
+    type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
+    type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
+    export function event<T>(
+        argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
+        config?: {},
+    ): (...args: any[]) => void;
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 
     // derived operations
     export function abs(value: Adaptable<number>): AnimatedNode<number>;
@@ -326,7 +335,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable<AnimatedNode<number>[] | AnimatedNode<number>> | boolean,
+      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
       deps: Array<any>,
     ): void
 
@@ -360,27 +369,17 @@ declare module 'react-native-reanimated' {
   }
   export const Easing: EasingStatic;
 
-  export enum TransitionState {
-    BEGAN,
-    END
-  }
-
-  export interface TransitionStateChangeEvent {
-    target: number,
-    state: TransitionState
-  }
-
   export interface TransitioningViewProps extends ViewProps {
+<<<<<<< HEAD
     transition: ReactNode
     onTransitionStateChange: (e: NativeSyntheticEvent<TransitionStateChangeEvent>) => void
+=======
+    transition: ReactNode;
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
   }
 
   export class TransitioningView extends Component<TransitioningViewProps> {
-    /**
-     * 
-     * @param callback invoked once transition has ended
-     */
-    animateNextTransition(callback?: () => void): void;
+    animateNextTransition(): void;
   }
 
   export class Transitioning extends Component {
@@ -406,6 +405,7 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
+<<<<<<< HEAD
   export var Clock: AnimatedClock;
   export var Value: AnimatedValue;
   export var Node: AnimatedNode;
@@ -468,4 +468,128 @@ declare module 'react-native-reanimated' {
   export var timing: timing;
   export var spring: spring;
   export var SpringUtils: SpringUtils;
+=======
+ 
+  const {
+    Clock,
+    Value,
+    Node,
+    add,
+    sub,
+    multiply,
+    divide,
+    pow,
+    modulo,
+    sqrt,
+    log,
+    sin,
+    cos,
+    exp,
+    round,
+    lessThan,
+    eq,
+    greaterThan,
+    lessOrEq,
+    greaterOrEq,
+    neq,
+    and,
+    or,
+    defined,
+    not,
+    tan,
+    acos,
+    asin,
+    atan,
+    proc,
+    block,
+    concat,
+    event,
+    call,
+    debug,
+    clockRunning,
+    stopClock,
+    startClock,
+    set,
+    cond,
+    abs,
+    acc,
+    color,
+    diff,
+    diffClamp,
+    interpolate,
+    Extrapolate,
+    max,
+    min,
+    onChange,
+    floor,
+    ceil,
+    useCode,
+
+    decay,
+    timing,
+    spring,
+    SpringUtils
+  } = Animated;
+
+  export {
+    Clock,
+    Value,
+    Node,
+    add,
+    sub,
+    multiply,
+    divide,
+    pow,
+    modulo,
+    sqrt,
+    log,
+    sin,
+    cos,
+    exp,
+    round,
+    lessThan,
+    eq,
+    greaterThan,
+    lessOrEq,
+    greaterOrEq,
+    neq,
+    and,
+    or,
+    defined,
+    not,
+    tan,
+    acos,
+    asin,
+    atan,
+    proc,
+    block,
+    concat,
+    event,
+    call,
+    debug,
+    clockRunning,
+    stopClock,
+    startClock,
+    set,
+    cond,
+    abs,
+    acc,
+    color,
+    diff,
+    diffClamp,
+    interpolate,
+    Extrapolate,
+    max,
+    min,
+    onChange,
+    floor,
+    ceil,
+    useCode,
+
+    decay,
+    timing,
+    spring,
+    SpringUtils
+  };
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 }

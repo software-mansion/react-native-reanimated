@@ -21,6 +21,7 @@ const platformProps = Platform.select({
   default: { collapsable: false },
 });
 
+<<<<<<< HEAD
 function getEventNode(node) {
   if (node instanceof AnimatedEvent) {
     return node;
@@ -47,6 +48,8 @@ function forEachEvent(props, cb) {
 
 =======
 >>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -97,10 +100,13 @@ export default function createAnimatedComponent(Component) {
 <<<<<<< HEAD
       const nativeUpdate = {};
 
-      forEachEvent(this.props, (ev, key) => {
-        ev.attachEvent(node, key);
-        nativeUpdate[key] = true;
-      });
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          prop.attachEvent(node, key);
+          nativeUpdate[key] = true;
+        }
+      }
 
       this.setNativeProps(nativeUpdate)
 =======
@@ -130,6 +136,7 @@ export default function createAnimatedComponent(Component) {
       const attached = new Set();
       const nextEvts = new Set();
 <<<<<<< HEAD
+<<<<<<< HEAD
 
       forEachEvent(this.props, (ev, key) => nextEvts.add(ev.__nodeID));
 
@@ -142,11 +149,17 @@ export default function createAnimatedComponent(Component) {
           // event was in prev and is still in current props
           attached.add(ev.__nodeID);
 =======
+=======
+      const nativeUpdate = {};
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
+<<<<<<< HEAD
 >>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
         }
       }
       for (const key in prevProps) {
@@ -155,6 +168,10 @@ export default function createAnimatedComponent(Component) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
             prop.detachEvent(node, key);
+<<<<<<< HEAD
+=======
+            nativeUpdate[key] = false;
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
           } else {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
@@ -166,11 +183,15 @@ export default function createAnimatedComponent(Component) {
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
 <<<<<<< HEAD
+<<<<<<< HEAD
           ev.attachEvent(node, key);
+=======
+          prop.attachEvent(node, key);
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
           nativeUpdate[key] = true;
         }
-      });
-          
+      }
+
       this.setNativeProps(nativeUpdate);
 =======
           prop.attachEvent(node, key);

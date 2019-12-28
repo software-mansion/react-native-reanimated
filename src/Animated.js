@@ -68,8 +68,7 @@ export {
   Easing,
   Transitioning,
   Transition,
-  TransitionState,
-  createTransitioningComponent,
+  createTransitioningComponent, 
 
   // classes
   AnimatedClock as Clock,

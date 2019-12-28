@@ -39,6 +39,16 @@ public class ParamNode extends ValueNode {
   protected Object evaluate() {
     String callID = mUpdateContext.callID;
     mUpdateContext.callID = mPrevCallID;
+<<<<<<< HEAD
+=======
+    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
+    Object val = node.value();
+    mUpdateContext.callID = callID;
+    return val;
+  }
+
+  public void start() {
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
     Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
     Object val = node.value();
     mUpdateContext.callID = callID;

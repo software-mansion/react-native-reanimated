@@ -1,7 +1,10 @@
 import React from 'react';
+<<<<<<< HEAD
 import { View, findNodeHandle, requireNativeComponent, StyleSheet, Platform } from 'react-native';
+=======
+import { View, findNodeHandle } from 'react-native';
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 import ReanimatedModule from './ReanimatedModule';
-import createAnimatedComponent from './createAnimatedComponent';
 
 const TransitioningContext = React.createContext();
 
@@ -106,6 +109,7 @@ class Sequence extends React.Component {
   }
 }
 
+<<<<<<< HEAD
 const viewName = 'ReanimatedTransitionManager';
 const TransitioningNativeView = Platform.select({
   android: () => createAnimatedComponent(requireNativeComponent(viewName)),
@@ -113,6 +117,8 @@ const TransitioningNativeView = Platform.select({
 })();
 
 
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 function createTransitioningComponent(Component) {
   class Wrapped extends React.Component {
     propTypes = Component.propTypes;
@@ -129,20 +135,29 @@ function createTransitioningComponent(Component) {
       this.viewRef.current.setNativeProps(props);
     }
 
+<<<<<<< HEAD
     animateNextTransition(callback) {
       const viewTag = findNodeHandle(this.viewRef.current);
       return ReanimatedModule.animateNextTransition(viewTag, {
         transitions: this.transitions,
       }, callback);
+=======
+    animateNextTransition() {
+      const viewTag = findNodeHandle(this.viewRef.current);
+      ReanimatedModule.animateNextTransition(viewTag, {
+        transitions: this.transitions,
+      });
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
     }
 
     render() {
-      const { transition, onTransitionStateChange, children, ...rest } = this.props;
+      const { transition, ...rest } = this.props;
       return (
         <React.Fragment>
           <TransitioningContext.Provider value={this.transitions}>
             {transition}
           </TransitioningContext.Provider>
+<<<<<<< HEAD
           <Component {...rest}>
             <TransitioningNativeView
               collapsable={false}
@@ -153,6 +168,9 @@ function createTransitioningComponent(Component) {
               {children}
             </TransitioningNativeView>
           </Component>
+=======
+          <Component {...rest} ref={this.viewRef} collapsable={false} />
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
         </React.Fragment>
       );
     }
@@ -160,12 +178,15 @@ function createTransitioningComponent(Component) {
   return Wrapped;
 }
 
+<<<<<<< HEAD
 const styles = StyleSheet.create({
   default: {
     flex: 1
   }
 });
 
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
 const Transitioning = {
   View: createTransitioningComponent(View),
 };
@@ -178,4 +199,4 @@ const Transition = {
   Change: wrapTransitioningContext(Change),
 };
 
-export { Transitioning, Transition, TransitionState, createTransitioningComponent };
+export { Transitioning, Transition, createTransitioningComponent };

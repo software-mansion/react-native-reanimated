@@ -100,12 +100,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
   @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config) {
+<<<<<<< HEAD
     mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, null);
   }
 
   @ReactMethod
   public void animateNextTransition(int tag, ReadableMap config, @Nullable Callback callback) {
     mTransitionManager.animateNextTransition(getReactApplicationContext(), tag, config, callback);
+=======
+    mTransitionManager.animateNextTransition(tag, config);
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
   }
 
   @ReactMethod
@@ -228,9 +232,12 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
         nodesManager.setValue(nodeID, newValue);
       }
     });
+<<<<<<< HEAD
 =======
   public void getDirectManipulationUtil(final Promise promise) {
     promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
 >>>>>>> parent of 71b1b0c... Merge pull request #2 from ShaMan123/TransitionStateChange
+=======
+>>>>>>> parent of 6e156bb... Merge branch 'android-cwd' into patch-1
   }
 }
