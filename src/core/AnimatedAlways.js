@@ -26,10 +26,6 @@ class AnimatedAlways extends AnimatedNode {
     val(this._what);
     return 0;
   }
-
-  __source() {
-    return this._what;
-  }
 }
 
 export function createAnimatedAlways(item) {

@@ -10,8 +10,6 @@ import androidx.transition.Visibility;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-
 public class Scale extends Visibility {
 
   static final String PROPNAME_SCALE_X = "scale:scaleX";
@@ -26,7 +24,7 @@ public class Scale extends Visibility {
 
   public Scale setDisappearedScale(float disappearedScale) {
     if (disappearedScale < 0f) {
-      throw new JSApplicationIllegalArgumentException("disappearedScale cannot be negative!");
+      throw new IllegalArgumentException("disappearedScale cannot be negative!");
     }
     return this;
   }

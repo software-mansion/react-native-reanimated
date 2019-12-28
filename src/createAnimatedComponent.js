@@ -5,7 +5,6 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
-import AnimatedCallFunc from "./core/AnimatedCallFunc";
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -16,6 +15,7 @@ function listener(data) {
   component && component._updateFromNative(data.props);
 }
 
+<<<<<<< HEAD
 const platformProps = Platform.select({
   web: {},
   default: { collapsable: false },
@@ -45,12 +45,14 @@ function forEachEvent(props, cb) {
   }
 }
 
+=======
+>>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
-    (Component.prototype && Component.prototype.isReactComponent),
+      (Component.prototype && Component.prototype.isReactComponent),
     '`createAnimatedComponent` does not support stateless functional components; ' +
-    'use a class component instead.'
+      'use a class component instead.'
   );
 
   class AnimatedComponent extends React.Component {
@@ -92,6 +94,7 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
+<<<<<<< HEAD
       const nativeUpdate = {};
 
       forEachEvent(this.props, (ev, key) => {
@@ -100,17 +103,33 @@ export default function createAnimatedComponent(Component) {
       });
 
       this.setNativeProps(nativeUpdate)
+=======
+
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          prop.attachEvent(node, key);
+        }
+      }
+>>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
     }
 
     _detachNativeEvents() {
       const node = this._getEventViewRef();
-      forEachEvent(this.props, (ev, key) => ev.detachEvent(node, key));
+
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          prop.detachEvent(node, key);
+        }
+      }
     }
 
     _reattachNativeEvents(prevProps) {
       const node = this._getEventViewRef();
       const attached = new Set();
       const nextEvts = new Set();
+<<<<<<< HEAD
 
       forEachEvent(this.props, (ev, key) => nextEvts.add(ev.__nodeID));
 
@@ -122,18 +141,42 @@ export default function createAnimatedComponent(Component) {
         } else {
           // event was in prev and is still in current props
           attached.add(ev.__nodeID);
+=======
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          nextEvts.add(prop.__nodeID);
+>>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
         }
-      });
-
-      forEachEvent(this.props, (ev, key) => {
-        if (!attached.has(ev.__nodeID)) {
+      }
+      for (const key in prevProps) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent) {
+          if (!nextEvts.has(prop.__nodeID)) {
+            // event was in prev props but not in current props, we detach
+            prop.detachEvent(node, key);
+          } else {
+            // event was in prev and is still in current props
+            attached.add(prop.__nodeID);
+          }
+        }
+      }
+      for (const key in this.props) {
+        const prop = this.props[key];
+        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
+<<<<<<< HEAD
           ev.attachEvent(node, key);
           nativeUpdate[key] = true;
         }
       });
           
       this.setNativeProps(nativeUpdate);
+=======
+          prop.attachEvent(node, key);
+        }
+      }
+>>>>>>> parent of 2b5ffaa... Merge branch 'android-cwd' into TransitionStateChange
     }
 
     // The system is best designed when setNativeProps is implemented. It is
@@ -228,11 +271,6 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
-        } else if (Array.isArray(value) && value.some((v) => v instanceof AnimatedNode)) {
-          const funcEvent = value.find((v) => typeof v === 'function');
-          if (funcEvent) {
-            props[key] = funcEvent;
-          }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
@@ -240,15 +278,14 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
-    _platformProps = Platform.select({
-      web: {},
-      default: { collapsable: false },
-    });
-
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      const platformProps = Platform.select({
+        web: {},
+        default: { collapsable: false },
+      });
       return (
-        <Component {...props} ref={this._setComponentRef} {...this._platformProps} />
+        <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
 

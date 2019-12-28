@@ -31,10 +31,6 @@ class AnimatedDebug extends AnimatedNode {
     console.log(this._message, value);
     return value;
   }
-
-  setValue(value) {
-    this._value.setValue(value);
-  }
 }
 
 export function createAnimatedDebug(message, value) {

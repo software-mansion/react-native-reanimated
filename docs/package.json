@@ -1,5 +1,5 @@
 {
-  "name": "react-native-reanimated-docs",
+  "name": "react-native-reanimated",
   "version": "0.0.1",
   "description": "Documentation for React Native Reanimated",
   "private": true,
@@ -8,7 +8,7 @@
     "build": "component-docs build",
     "clean": "del dist/",
     "prestart": "yarn clean",
-    "deploy": "component-docs build && gh-pages -d dist"
+     "deploy": "component-docs build && gh-pages -d dist"
   },
   "devDependencies": {
     "@babel/node": "^7.2.2",
