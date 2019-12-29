@@ -77,7 +77,9 @@ export default function createAnimatedComponent(Component) {
         }
       }
 
-      this.setNativeProps(nativeUpdate)
+      if (Object.keys(nativeUpdate).length > 0) {
+        this.setNativeProps(nativeUpdate);
+      }
     }
 
     _detachNativeEvents() {
@@ -124,7 +126,9 @@ export default function createAnimatedComponent(Component) {
         }
       }
 
-      this.setNativeProps(nativeUpdate);
+      if (Object.keys(nativeUpdate).length > 0) {
+        this.setNativeProps(nativeUpdate);
+      }
     }
 
     // The system is best designed when setNativeProps is implemented. It is
