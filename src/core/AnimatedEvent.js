@@ -60,7 +60,9 @@ function sanitizeArgMapping(argMapping) {
       set: function(target, prop, value) {
         if (prop === '__val') {
           target[prop] = value;
+          return true;
         }
+        return false;
       },
     };
 
