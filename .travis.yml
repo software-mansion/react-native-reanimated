@@ -1,8 +1,9 @@
 jobs:
   include:
     - stage: Prepare environment
-      env:
-        - NODE_VERSION=13.3.0
+      language: node_js
+      node_js:
+        - 13
       cache:
         - yarn
         - directories:
@@ -10,10 +11,6 @@ jobs:
       install:
         - nvm --version
         - echo $NODE_VERSION
-        - nvm install $NODE_VERSION
-        - nvm use $NODE_VERSION
-        - nvm alias default $NODE_VERSION
-        - brew install yarn --ignore-dependencies
         - npm install -g react-native-cli
       script: yarn
 
