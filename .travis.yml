@@ -10,7 +10,6 @@ jobs:
       install:
         - nvm --version
         - echo $NODE_VERSION
-        - sudo ulimit -n 10000
         - nvm install $NODE_VERSION
         - nvm use $NODE_VERSION
         - nvm alias default $NODE_VERSION
@@ -64,6 +63,7 @@ jobs:
         directories:
           - Example/ios/Pods
       install:
+        - sudo ulimit -n 10000
         - sudo launchctl limit maxfiles 2048 unlimited
         - cd Example
         - yarn
