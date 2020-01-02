@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { add, cond, lessThan, multiply, round, sub, proc } from '../base';
+import { add, cond, concat, lessThan, multiply, round, sub, proc } from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
 const procColor = proc(function(r, g, b, a) {
@@ -10,6 +10,7 @@ const procColor = proc(function(r, g, b, a) {
     multiply(g, 1 << 8),
     b
   );
+  
   if (Platform.OS === 'android') {
     // on Android color is represented as signed 32 bit int
     return cond(
@@ -22,14 +23,15 @@ const procColor = proc(function(r, g, b, a) {
 });
 
 export default function color(r, g, b, a = 1) {
+  if (Platform.OS === 'web') {
+    // doesn't support bit shifting
+    return concat('rgba(', r, ',', g, ',', b, ',', a, ')');
+  }
+
   if (a instanceof AnimatedNode) {
     a = round(multiply(a, 255));
   } else {
     a = Math.round(a * 255);
-  }
-
-  if (Platform.OS === 'web') {
-    throw new Error('color is not implemented on web yet');
   }
 
   return procColor(r, g, b, a);
