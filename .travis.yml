@@ -41,6 +41,8 @@ jobs:
           - $HOME/.gradle/wrapper/
           - Example/node_modules
       before_install:
+        - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+        - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         - sudo apt-get -y install yarn nodejs
       install:
         - cd Example
@@ -62,7 +64,7 @@ jobs:
         directories:
           - Example/ios/Pods
       before_install:
-        - sudo apt-get -y install yarn nodejs
+        - brew install install nodejs
       install:
         - sudo ulimit -n 10000
         - sudo launchctl limit maxfiles 2048 unlimited
