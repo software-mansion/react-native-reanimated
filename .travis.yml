@@ -40,6 +40,8 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
+      before_install:
+        - sudo apt-get -y install yarn nodejs
       install:
         - cd Example
         - yarn
@@ -59,6 +61,8 @@ jobs:
       cache:
         directories:
           - Example/ios/Pods
+      before_install:
+        - sudo apt-get -y install yarn nodejs
       install:
         - sudo ulimit -n 10000
         - sudo launchctl limit maxfiles 2048 unlimited
