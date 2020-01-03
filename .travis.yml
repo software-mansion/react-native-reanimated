@@ -76,7 +76,7 @@ jobs:
         - yarn run test-android
 
     - language: objective-c
-      osx_image: xcode10.2
+      osx_image: xcode11.2
       xcode_sdk: iphonesimulator12.2
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env:
