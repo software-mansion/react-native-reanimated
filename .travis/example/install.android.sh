@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-$(dirname "$0")/install.sh
+source $(dirname "$0")/../install.sh
 
 cd Example
 
