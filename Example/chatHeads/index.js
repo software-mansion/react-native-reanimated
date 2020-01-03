@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { Dimensions, Image, View, StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
-
+import { Dimensions, StyleSheet, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
@@ -63,14 +62,12 @@ class Tracking extends Component {
 
     const gestureState = new Value(-1);
     const dragVX = new Value(0);
-    const dragVY = new Value(0);
 
     this._onGestureEvent = event([
       {
         nativeEvent: {
           translationX: dragX,
           velocityX: dragVX,
-          velocityY: dragVY,
           state: gestureState,
           translationY: dragY,
         },
@@ -166,7 +163,8 @@ class Tracking extends Component {
             styles.box,
             {
               transform: [
-                { translateX: this.follow3x, translateY: this.follow3y },
+                { translateX: this.follow3x }, 
+                { translateY: this.follow3y },
               ],
             },
           ]}
@@ -179,7 +177,8 @@ class Tracking extends Component {
             styles.box,
             {
               transform: [
-                { translateX: this.follow2x, translateY: this.follow2y },
+                { translateX: this.follow2x }, 
+                { translateY: this.follow2y },
               ],
             },
           ]}
@@ -193,7 +192,8 @@ class Tracking extends Component {
             styles.box,
             {
               transform: [
-                { translateX: this.follow1x, translateY: this.follow1y },
+                { translateX: this.follow1x }, 
+                { translateY: this.follow1y },
               ],
             },
           ]}
@@ -211,7 +211,8 @@ class Tracking extends Component {
               styles.box,
               {
                 transform: [
-                  { translateX: this._transX, translateY: this._transY },
+                  { translateX: this._transX }, 
+                  { translateY: this._transY },
                 ],
               },
             ]}
