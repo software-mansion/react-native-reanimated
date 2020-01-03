@@ -20,6 +20,7 @@ class AnimatedStartClock extends AnimatedNode {
   }
 
   __onEvaluate() {
+    console.log('AnimatedStartClock.fuck: ', this._clockNode)
     this._clockNode.start();
     return 0;
   }
