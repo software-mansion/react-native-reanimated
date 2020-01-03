@@ -1,4 +1,5 @@
 import ReanimatedModule from '../ReanimatedModule';
+import { Platform } from 'react-native';
 
 const UPDATED_NODES = [];
 
@@ -6,6 +7,9 @@ let loopID = 1;
 let propUpdatesEnqueued = null;
 
 function sanitizeConfig(config) {
+  if (Platform.OS === 'web') {
+    return config;
+  }
   for (const key in config) {
     const value = config[key];
     if (value instanceof AnimatedNode) {
