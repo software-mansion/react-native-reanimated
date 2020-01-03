@@ -1,26 +1,13 @@
-language: node_js
-cache:
-  - yarn
-  - directories:
-      - node_modules
-env:
-  - NODE_VERSION=13
-install:
-  - nvm --version
-  - nvm install "$NODE_VERSION"
-  - echo "$NODE_VERSION"
-  - npm install -g react-native-cli
-  - npm install -g yarn
-script: yarn
-
 jobs:
   include:
-    - stage: Build
+    - stage: Unit tests
       language: node_js
+      install:
+        - yarn
       script:
         - yarn test
 
-    - stage: Build
+    - stage: Build examples - Android
       language: android
       jdk: oraclejdk8
       env:
@@ -36,26 +23,16 @@ jobs:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
       cache:
+        yarn: true
         directories:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
-      # before_install:
-      # # from https://github.com/travis-ci/travis-ci/issues/6720#issuecomment-254988120
-      # # Repo for newer Node.js versions
-      # - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-      # # Repo for Yarn
-      # - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-      # - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-      # - sudo apt-get update -qq
-      # - sudo apt-get install -y -qq node yarn
-      install:
-        - cd Example
-        - yarn
+      install: true
       script:
-        - cd ./android && ./gradlew assembleDebug
+        - ./.travis/example/install.android.sh
 
-    - stage: Build
+    - stage: Build examples - IOS
       language: objective-c
       osx_image: xcode10.2
       xcode_sdk: iphonesimulator12.2
@@ -66,13 +43,56 @@ jobs:
         only:
           - master
       cache:
+        yarn: true
         directories:
           - Example/ios/Pods
-      install:
-        - sudo ulimit -n 10000
-        - sudo launchctl limit maxfiles 2048 unlimited
-        - cd Example
-        - yarn
-        - cd ios && pod install && cd ..
+          - Example/node_modules
+      install: true
       script:
-        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
+        - ./.travis/example/install.ios.sh
+
+    - stage: Test E2E - Android
+      language: android
+      jdk: oraclejdk8
+      env:
+        - ANDROID_API=28
+        - ANDROID_BUILD_TOOLS=28.0.3
+      android:
+        components:
+          - tools
+          - platform-tools
+          - android-${ANDROID_API}
+          - build-tools-${ANDROID_BUILD_TOOLS}
+      before_cache:
+        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+        - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
+      cache:
+        yarn: true
+        directories:
+          - $HOME/.gradle/caches/
+          - $HOME/.gradle/wrapper/
+          - Example/node_modules
+      install:
+        - ./.travis/e2e/install.android.sh
+      script:
+        - yarn run test-android
+
+    - stage: Test E2E - IOS
+      language: objective-c
+      osx_image: xcode10.2
+      xcode_sdk: iphonesimulator12.2
+      xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
+      env:
+        - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.example.ReanimatedExample'
+      branches:
+        only:
+          - master
+      cache:
+        yarn: true
+        directories:
+          - Example/ios/Pods
+          - Example/node_modules
+      install:
+        - ./.travis/e2e/install.ios.sh
+      script:
+        - yarn run test-ios

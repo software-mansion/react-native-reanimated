@@ -6,7 +6,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "jest",
+    "test-ios": "detox test -c ios.debug",
+    "test-android": "detox test -c android.debug",
     "lint": "eslint ."
   },
   "dependencies": {
