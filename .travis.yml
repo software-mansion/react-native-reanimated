@@ -1,5 +1,7 @@
 language: node_js
 node_js: 12
+env:
+  - NODE_VERSION=13.3.0
 jobs:
   include:
     - language: node_js
@@ -14,7 +16,6 @@ jobs:
       env:
         - ANDROID_API=28
         - ANDROID_BUILD_TOOLS=28.0.3
-        - NODE_VERSION=13.3.0
       android:
         components:
           - tools
@@ -30,8 +31,7 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
-      install:
-        - nvm --version
+      install: true
       script:
         - ./.travis/example/install.android.sh
 
@@ -49,8 +49,7 @@ jobs:
         directories:
           - Example/ios/Pods
           - Example/node_modules
-      install:
-        - nvm --version
+      install: true
       script:
         - ./.travis/example/install.ios.sh
 
@@ -75,7 +74,6 @@ jobs:
           - $HOME/.gradle/wrapper/
           - Example/node_modules
       install:
-        - nvm --version
         - ./.travis/e2e/install.android.sh
       script:
         - yarn run test-android
@@ -85,7 +83,7 @@ jobs:
       xcode_sdk: iphonesimulator12.2
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env:
-        - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.example.ReanimatedExample'
+        - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.e2e'
       branches:
         only:
           - master
@@ -95,7 +93,6 @@ jobs:
           - Example/ios/Pods
           - Example/node_modules
       install:
-        - nvm --version
         - ./.travis/e2e/install.ios.sh
       script:
         - yarn run test-ios
