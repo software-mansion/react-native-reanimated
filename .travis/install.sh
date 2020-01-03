@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
-NODE_VERSION="13.3.0"
+NODE_V=${NODE_VERSION:-'13.3.0'}
 
-echo "installing node, version $NODE_VERSION"
-nvm install $NODE_VERSION
-nvm use $NODE_VERSION
-nvm alias default $NODE_VERSION
+echo "installing node via nvm, node version: ${NODE_V}, nvm version $(nvm --version)"
+nvm install $NODE_V
+nvm use $NODE_V
+nvm alias default $NODE_V
 node --version
 echo 'Installing react-native-cli, detox-cli, yarn'
 npm install -g react-native-cli

@@ -1,3 +1,5 @@
+env:
+  - NODE_VERSION=13.3.0
 jobs:
   include:
     - language: node_js
