@@ -43,7 +43,7 @@ export class AnimatedParam extends AnimatedNode {
     const node = this._getTopNode();
     invariant(
       node instanceof AnimatedClock || node instanceof AnimatedParam,
-      `Reanimated: Animated.startClock argument should be of type AnimatedClock but got ${node}`
+      `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.start();
   }
@@ -52,7 +52,7 @@ export class AnimatedParam extends AnimatedNode {
     const node = this._getTopNode();
     invariant(
       node instanceof AnimatedClock || node instanceof AnimatedParam,
-      `Reanimated: Animated.startClock argument should be of type AnimatedClock but got ${node}`
+      `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.stop();
   }
@@ -61,7 +61,7 @@ export class AnimatedParam extends AnimatedNode {
     const node = this._getTopNode();
     invariant(
       node instanceof AnimatedClock || node instanceof AnimatedParam,
-      `Reanimated: Animated.startClock argument should be of type AnimatedClock but got ${node}`
+      `param: top node should be of type AnimatedClock but got ${node}`
     );
     return node.isRunning()
   }
