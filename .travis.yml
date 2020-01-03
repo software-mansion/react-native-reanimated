@@ -1,22 +1,20 @@
+language: node_js
+cache:
+  - yarn
+  - directories:
+      - node_modules
+env:
+  - NODE_VERSION=13
+install:
+  - nvm --version
+  - nvm install "$NODE_VERSION"
+  - echo "$NODE_VERSION"
+  - npm install -g react-native-cli
+  - npm install -g yarn
+script: yarn
+
 jobs:
   include:
-    - stage: Prepare environment
-      language: node_js
-      cache:
-        - yarn
-        - directories:
-            - node_modules
-      env:
-        - NODE_VERSION=13
-      install:
-        - nvm --version
-        - nvm install "$NODE_VERSION"
-        - echo "$NODE_VERSION"
-        - npm install -g react-native-cli
-        - curl -o- -L https://yarnpkg.com/install.sh | bash
-        - export PATH="$HOME/.yarn/bin:$PATH"
-      script: yarn
-
     - stage: Build
       language: node_js
       script:
