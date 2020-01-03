@@ -1,7 +1,6 @@
 jobs:
   include:
-    - stage: Unit tests
-      language: node_js
+    - language: node_js
       node_js:
         - 12
       install:
@@ -9,8 +8,7 @@ jobs:
       script:
         - yarn test
 
-    - stage: Build examples - Android
-      language: android
+    - language: android
       jdk: oraclejdk8
       env:
         - ANDROID_API=28
@@ -34,8 +32,7 @@ jobs:
       script:
         - ./.travis/example/install.android.sh
 
-    - stage: Build examples - IOS
-      language: objective-c
+    - language: objective-c
       osx_image: xcode10.2
       xcode_sdk: iphonesimulator12.2
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
@@ -53,8 +50,7 @@ jobs:
       script:
         - ./.travis/example/install.ios.sh
 
-    - stage: Test E2E - Android
-      language: android
+    - language: android
       jdk: oraclejdk8
       env:
         - ANDROID_API=28
@@ -79,8 +75,7 @@ jobs:
       script:
         - yarn run test-android
 
-    - stage: Test E2E - IOS
-      language: objective-c
+    - language: objective-c
       osx_image: xcode10.2
       xcode_sdk: iphonesimulator12.2
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
