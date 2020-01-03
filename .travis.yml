@@ -2,21 +2,23 @@ jobs:
   include:
     - stage: Prepare environment
       language: node_js
-      node_js:
-        - 13
       cache:
         - yarn
         - directories:
             - node_modules
+      env:
+        - NODE_VERSION=13
       install:
         - nvm --version
-        - echo $NODE_VERSION
+        - nvm install "$NODE_VERSION"
+        - echo "$NODE_VERSION"
         - npm install -g react-native-cli
+        - curl -o- -L https://yarnpkg.com/install.sh | bash
+        - export PATH="$HOME/.yarn/bin:$PATH"
       script: yarn
 
     - stage: Build
       language: node_js
-      node_js: 13
       script:
         - yarn test
 
@@ -40,15 +42,15 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
-      before_install:
-        # from https://github.com/travis-ci/travis-ci/issues/6720#issuecomment-254988120
-        # Repo for newer Node.js versions
-        - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-        # Repo for Yarn
-        - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-        - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-        - sudo apt-get update -qq
-        - sudo apt-get install -y -qq node yarn
+      # before_install:
+      # # from https://github.com/travis-ci/travis-ci/issues/6720#issuecomment-254988120
+      # # Repo for newer Node.js versions
+      # - curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+      # # Repo for Yarn
+      # - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+      # - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      # - sudo apt-get update -qq
+      # - sudo apt-get install -y -qq node yarn
       install:
         - cd Example
         - yarn
@@ -68,8 +70,6 @@ jobs:
       cache:
         directories:
           - Example/ios/Pods
-      before_install:
-        - brew install node yarn
       install:
         - sudo ulimit -n 10000
         - sudo launchctl limit maxfiles 2048 unlimited
