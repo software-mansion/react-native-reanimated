@@ -2,7 +2,7 @@
 
 NODE_V=${NODE_VERSION:-'13.3.0'}
 
-echo "installing node via nvm, node version: ${NODE_V}, nvm version $(nvm --version)"
+echo "installing node"
 nvm install $NODE_V
 nvm use $NODE_V
 nvm alias default $NODE_V

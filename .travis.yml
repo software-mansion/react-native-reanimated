@@ -29,7 +29,8 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
-      install: true
+      install:
+        - nvm --version
       script:
         - ./.travis/example/install.android.sh
 
@@ -47,7 +48,8 @@ jobs:
         directories:
           - Example/ios/Pods
           - Example/node_modules
-      install: true
+      install:
+        - nvm --version
       script:
         - ./.travis/example/install.ios.sh
 
@@ -72,6 +74,7 @@ jobs:
           - $HOME/.gradle/wrapper/
           - Example/node_modules
       install:
+        - nvm --version
         - ./.travis/e2e/install.android.sh
       script:
         - yarn run test-android
@@ -91,6 +94,7 @@ jobs:
           - Example/ios/Pods
           - Example/node_modules
       install:
+        - nvm --version
         - ./.travis/e2e/install.ios.sh
       script:
         - yarn run test-ios
