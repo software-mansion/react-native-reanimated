@@ -82,16 +82,6 @@ export default class AnimatedEvent extends AnimatedNode {
     const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({ type: 'event', argMapping: eventMappings });
     this._alwaysNodes = alwaysNodes;
-    if (Platform.OS === 'web') {
-      this._argMapping = eventMappings;
-      this.__getHandler = () => {
-        return ({ nativeEvent }) => {
-          for (const [key, value] of this._argMapping) {
-            if (key in nativeEvent) value.setValue(nativeEvent[key]);
-          }
-        };
-      };
-    }
   }
 
   toString() {
