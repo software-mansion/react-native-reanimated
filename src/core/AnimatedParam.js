@@ -1,4 +1,6 @@
+import invariant from 'fbjs/lib/invariant';
 import AnimatedNode from './AnimatedNode';
+import AnimatedClock from './AnimatedClock';
 import { val } from '../val';
 
 export class AnimatedParam extends AnimatedNode {
@@ -17,9 +19,14 @@ export class AnimatedParam extends AnimatedNode {
     this.argsStack.pop();
   }
 
-  setValue(value) {
-    if (!this.argsStack.length) throw new Error(`param: setValue(${value}) failed because argsStack is empty`);
+  _getTopNode() {
+    if (this.argsStack.length === 0) throw new Error(`param: Invocation failed because argsStack is empty`);
     const top = this.argsStack[this.argsStack.length - 1];
+    return top;
+  }
+
+  setValue(value) {
+    const top = this._getTopNode();
     if (top.setValue) {
       top.setValue(value);
     } else {
@@ -28,9 +35,35 @@ export class AnimatedParam extends AnimatedNode {
   }
   
   __onEvaluate() {
-    if (!this.argsStack.length) throw new Error(`param: __onEvaluate() failed because argsStack is empty`);
-    const top = this.argsStack[this.argsStack.length - 1];
+    const top = this._getTopNode();
     return val(top);
+  }
+
+  start() {
+    const node = this._getTopNode();
+    invariant(
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      `param: top node should be of type AnimatedClock but got ${node}`
+    );
+    node.start();
+  }
+
+  stop() {
+    const node = this._getTopNode();
+    invariant(
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      `param: top node should be of type AnimatedClock but got ${node}`
+    );
+    node.stop();
+  }
+
+  isRunning() {
+    const node = this._getTopNode();
+    invariant(
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      `param: top node should be of type AnimatedClock but got ${node}`
+    );
+    return node.isRunning()
   }
 }
 
