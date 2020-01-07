@@ -50,10 +50,13 @@ public class TransformNode extends Node {
       } else {
         StaticTransformConfig transformConfig = new StaticTransformConfig();
         transformConfig.propertyName = property;
-        transformConfig.value = transformConfigMap.getType("value") ==
-                ReadableType.String ?
-                transformConfigMap.getString("value") :
-                transformConfigMap.getDouble("value");
+        ReadableType type = transformConfigMap.getType("value");
+        transformConfig.value =
+                type == ReadableType.String ?
+                        transformConfigMap.getString("value") :
+                        type == ReadableType.Array ?
+                                transformConfigMap.getArray("value") :
+                                transformConfigMap.getDouble("value");
         configs.add(transformConfig);
       }
     }
