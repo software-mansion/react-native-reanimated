@@ -270,7 +270,6 @@
   REANode *parentNode = _nodes[parentID];
   REANode *childNode = _nodes[childID];
 
-  RCTAssertParam(parentNode);
   RCTAssertParam(childNode);
 
   [parentNode addChild:childNode];
@@ -284,7 +283,6 @@
   REANode *parentNode = _nodes[parentID];
   REANode *childNode = _nodes[childID];
 
-  RCTAssertParam(parentNode);
   RCTAssertParam(childNode);
 
   [parentNode removeChild:childNode];
