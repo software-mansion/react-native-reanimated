@@ -6,10 +6,6 @@ class AnimatedClockTest extends AnimatedNode {
   _clockNode;
 
   constructor(clockNode) {
-    invariant(
-      clockNode instanceof AnimatedClock,
-      `Reanimated: Animated.clockRunning argument should be of type AnimatedClock but got ${clockNode}`
-    );
     super({ type: 'clockTest', clock: clockNode.__nodeID });
     this._clockNode = clockNode;
   }
