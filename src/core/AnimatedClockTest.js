@@ -1,6 +1,4 @@
 import AnimatedNode from './AnimatedNode';
-import AnimatedClock from './AnimatedClock';
-import invariant from 'fbjs/lib/invariant';
 
 class AnimatedClockTest extends AnimatedNode {
   _clockNode;
