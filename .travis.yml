@@ -75,11 +75,13 @@ jobs:
           - Example/node_modules
       install:
         - ./.travis/e2e/install.android.sh
-        - echo -n 'node version - '
-        - node -v
+        - echo '============== DEBUG =============='
+        - echo "$PATH"
       script:
         - echo -n 'node version - '
         - node -v
+        - echo '============== DEBUG =============='
+        - echo "$PATH"
         - yarn run test-android
 
     - language: objective-c
