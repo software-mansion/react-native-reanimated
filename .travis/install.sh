@@ -15,3 +15,6 @@ npm install -g detox-cli
 npm install -g yarn
 echo 'Installing packages...'
 yarn
+
+echo '============== DEBUG =============='
+echo "$PATH"
