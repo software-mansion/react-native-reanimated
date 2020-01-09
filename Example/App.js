@@ -41,85 +41,23 @@ YellowBox.ignoreWarnings([
 // refers to bug in React Navigation which should be fixed soon
 // https://github.com/react-navigation/react-navigation/issues/3956
 
-const SCREENS = {
-  Snappable: { screen: Snappable, title: 'Snappable' },
-  Test: { screen: Test, title: 'Test' },
-  ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
-  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
-  Interpolate: { screen: Interpolate, title: 'Interpolate' },
-  Colors: { screen: Colors, title: 'Colors' },
-  StartAPI: { screen: StartAPI, title: 'Start API' },
-  chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  code: { screen: Code, title: 'Animated.Code component' },
-  width: { screen: WidthAndHeight, title: 'width & height & more' },
-  rotations: { screen: Rotations, title: 'rotations (concat node)' },
-  imperative: {
-    screen: Imperative,
-    title: 'imperative (set value / toggle visibility)',
-  },
-  panRotateAndZoom: {
-    screen: PanRotateAndZoom,
-    title: 'Pan, rotate and zoom (via native event function)',
-  },
-  progressBar: {
-    screen: ProgressBar,
-    title: 'Progress bar',
-  },
-  differentSpringConfigs: {
-    screen: DifferentSpringConfigs,
-    title: 'Different Spring Configs',
-  },
-  transitionsSequence: {
-    screen: TransitionsSequence,
-    title: 'Transitions sequence',
-  },
-  transitionsShuffle: {
-    screen: TransitionsShuffle,
-    title: 'Transitions shuffle',
-  },
-  transitionsProgress: {
-    screen: TransitionsProgress,
-    title: 'Transitions progress bar',
-  },
-  transitionsTicket: {
-    screen: TransitionsTicket,
-    title: 'Transitions – flight ticket demo',
-  },
-};
+
 
 class MainScreen extends React.Component {
   static navigationOptions = {
     title: '🎬 Reanimated Examples',
   };
-  render() {
-    const data = Object.keys(SCREENS).map(key => ({ key }));
-    return (
-      <FlatList
-        style={styles.list}
-        data={data}
-        ItemSeparatorComponent={ItemSeparator}
-        renderItem={props => (
-          <MainScreenItem
-            {...props}
-            onPressItem={({ key }) => this.props.navigation.navigate(key)}
-          />
-        )}
-        renderScrollComponent={props => <ScrollView {...props} />}
-      />
-    );
+
+  componentDidMount() {
+    console.warn("native: " + global.NativeReanimated.getString("ok"));
   }
-}
 
-const ItemSeparator = () => <View style={styles.separator} />;
-
-class MainScreenItem extends React.Component {
-  _onPress = () => this.props.onPressItem(this.props.item);
   render() {
-    const { key } = this.props.item;
+
     return (
-      <RectButton style={styles.button} onPress={this._onPress}>
-        <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
-      </RectButton>
+      <View>
+        <Text>dziala</Text>
+      </View>
     );
   }
 }
@@ -127,8 +65,6 @@ class MainScreenItem extends React.Component {
 const ExampleApp = createStackNavigator(
   {
     Main: { screen: MainScreen },
-    ...SCREENS,
-    ...INTERACTABLE_SCREENS,
   },
   {
     initialRouteName: 'Main',

@@ -46,6 +46,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
     mTransitionManager = new TransitionModule(uiManager);
+    NativeProxy.getInstance().install(reactCtx.getJavaScriptContextHolder().get());
   }
 
   @Override
