@@ -1,14 +1,17 @@
 language: node_js
 node_js: 12
-env:
-  - NODE_VERSION=13.3.0
 jobs:
   include:
     - language: node_js
       node_js: 12
       install:
+        - echo "install pid - $$"
+        - ./test.sh
         - yarn
+
       script:
+        - echo "script pid - $$"
+        - ./test.sh
         - yarn test
 
     - language: android
@@ -16,7 +19,6 @@ jobs:
       env:
         - ANDROID_API=28
         - ANDROID_BUILD_TOOLS=28.0.3
-        - NODE_VERSION=13.3.0
       android:
         components:
           - tools
@@ -33,9 +35,6 @@ jobs:
           - $HOME/.gradle/wrapper/
           - Example/node_modules
       install:
-        - nvm install $NODE_VERSION
-        - nvm use $NODE_VERSION
-        - nvm alias default $NODE_VERSION
         - node --version
         - npm install -g react-native-cli detox-cli yarn
         - yarn
@@ -52,7 +51,6 @@ jobs:
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.example.ReanimatedExample'
         - CODE_SIGNING_REQUIRED=NO
-        - NODE_VERSION=13.3.0
       branches:
         only:
           - master
@@ -62,9 +60,6 @@ jobs:
           - Example/ios/Pods
           - Example/node_modules
       install:
-        - nvm install $NODE_VERSION
-        - nvm use $NODE_VERSION
-        - nvm alias default $NODE_VERSION
         - node --version
         - npm install -g react-native-cli detox-cli yarn
         - yarn
@@ -101,9 +96,6 @@ jobs:
           - $HOME/.gradle/wrapper/
           - e2e/node_modules
       install:
-        - nvm install $NODE_VERSION
-        - nvm use $NODE_VERSION
-        - nvm alias default $NODE_VERSION
         - node --version
         - npm install -g react-native-cli detox-cli yarn
         - yarn
@@ -121,7 +113,6 @@ jobs:
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.e2e'
         - CODE_SIGNING_REQUIRED=NO
-        - NODE_VERSION=13.3.0
       branches:
         only:
           - master
@@ -131,9 +122,6 @@ jobs:
           - e2e/ios/Pods
           - e2e/node_modules
       install:
-        - nvm install $NODE_VERSION
-        - nvm use $NODE_VERSION
-        - nvm alias default $NODE_VERSION
         - node --version
         - npm install -g react-native-cli detox-cli yarn
         - yarn
