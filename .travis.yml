@@ -99,7 +99,7 @@ jobs:
         directories:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
-          - Example/node_modules
+          - e2e/node_modules
       install:
         - nvm install $NODE_VERSION
         - nvm use $NODE_VERSION
@@ -128,8 +128,8 @@ jobs:
       cache:
         yarn: true
         directories:
-          - Example/ios/Pods
-          - Example/node_modules
+          - e2e/ios/Pods
+          - e2e/node_modules
       install:
         - nvm install $NODE_VERSION
         - nvm use $NODE_VERSION
@@ -138,6 +138,7 @@ jobs:
         - npm install -g react-native-cli detox-cli yarn
         - yarn
 
+        - cd e2e
         - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew
         - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
         - sudo ulimit -n 10000
