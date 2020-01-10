@@ -31,9 +31,18 @@ jobs:
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
           - Example/node_modules
-      install: true
+      install:
+        - nvm install $NODE_VERSION
+        - nvm use $NODE_VERSION
+        - nvm alias default $NODE_VERSION
+        - node --version
+        - npm install -g react-native-cli detox-cli yarn
+        - yarn
+
+        - cd Example
+        - yarn
       script:
-        - ./.travis/example/install.android.sh
+        - cd ./android && ./gradlew assembleDebug
 
     - language: objective-c
       osx_image: xcode11.2
@@ -41,6 +50,7 @@ jobs:
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.example.ReanimatedExample'
+        - CODE_SIGNING_REQUIRED=NO
       branches:
         only:
           - master
@@ -49,9 +59,23 @@ jobs:
         directories:
           - Example/ios/Pods
           - Example/node_modules
-      install: true
+      install:
+        - nvm install $NODE_VERSION
+        - nvm use $NODE_VERSION
+        - nvm alias default $NODE_VERSION
+        - node --version
+        - npm install -g react-native-cli detox-cli yarn
+        - yarn
+
+        - cd Example
+        - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew
+        - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+        - sudo ulimit -n 10000
+        - sudo launchctl limit maxfiles 2048 unlimited
+        - yarn
+        - cd ios && pod install && cd ..
       script:
-        - ./.travis/example/install.ios.sh
+        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
 
     - language: android
       jdk: oraclejdk8
@@ -74,14 +98,17 @@ jobs:
           - $HOME/.gradle/wrapper/
           - Example/node_modules
       install:
-        - ./.travis/e2e/install.android.sh
-        - echo '============== DEBUG =============='
-        - echo "$PATH"
+        - nvm install $NODE_VERSION
+        - nvm use $NODE_VERSION
+        - nvm alias default $NODE_VERSION
+        - node --version
+        - npm install -g react-native-cli detox-cli yarn
+        - yarn
+
+        - cd e2e
+        - yarn
+        - cd ./android && ./gradlew assembleDebug
       script:
-        - echo -n 'node version - '
-        - node -v
-        - echo '============== DEBUG =============='
-        - echo "$PATH"
         - yarn run test-android
 
     - language: objective-c
@@ -90,6 +117,7 @@ jobs:
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.e2e'
+        - CODE_SIGNING_REQUIRED=NO
       branches:
         only:
           - master
@@ -99,6 +127,19 @@ jobs:
           - Example/ios/Pods
           - Example/node_modules
       install:
-        - ./.travis/e2e/install.ios.sh
+        - nvm install $NODE_VERSION
+        - nvm use $NODE_VERSION
+        - nvm alias default $NODE_VERSION
+        - node --version
+        - npm install -g react-native-cli detox-cli yarn
+        - yarn
+
+        - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew
+        - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
+        - sudo ulimit -n 10000
+        - sudo launchctl limit maxfiles 2048 unlimited
+        - yarn
+        - cd ios && pod install && cd ..
+        - xcodebuild -workspace ios/e2e.xcworkspace -scheme e2e -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
       script:
         - yarn run test-ios
