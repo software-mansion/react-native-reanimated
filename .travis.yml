@@ -16,6 +16,7 @@ jobs:
       env:
         - ANDROID_API=28
         - ANDROID_BUILD_TOOLS=28.0.3
+        - NODE_VERSION=13.3.0
       android:
         components:
           - tools
@@ -51,6 +52,7 @@ jobs:
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.example.ReanimatedExample'
         - CODE_SIGNING_REQUIRED=NO
+        - NODE_VERSION=13.3.0
       branches:
         only:
           - master
@@ -82,6 +84,7 @@ jobs:
       env:
         - ANDROID_API=28
         - ANDROID_BUILD_TOOLS=28.0.3
+        - NODE_VERSION=13.3.0
       android:
         components:
           - tools
@@ -118,6 +121,7 @@ jobs:
       env:
         - PRODUCT_BUNDLE_IDENTIFIER='org.reactjs.native.e2e'
         - CODE_SIGNING_REQUIRED=NO
+        - NODE_VERSION=13.3.0
       branches:
         only:
           - master
