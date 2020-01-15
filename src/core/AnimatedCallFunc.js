@@ -24,9 +24,9 @@ class AnimatedCallFunc extends AnimatedNode {
     super(
       {
         type: 'callfunc',
-        what: what.__nodeID,
-        args: args.map(n => n.__nodeID),
-        params: params.map(n => n.__nodeID),
+        what,
+        args,
+        params,
       },
       [...args]
     );

@@ -17,15 +17,22 @@ export function setCallID(nextCallID) {
 }
 
 function sanitizeConfig(config) {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === 'web' || ['undefined', 'string', 'function', 'boolean', 'number'].includes(typeof config)) {
     return config;
-  }
-  for (const key in config) {
-    const value = config[key];
-    if (value instanceof AnimatedNode) {
-      config[key] = value.__nodeID;
+  } else if (Array.isArray(config)) {
+    return config.map(sanitizeConfig);
+  } else if (config instanceof AnimatedNode) {
+    return config.__nodeID;
+  } else if (typeof config === 'object') {
+    const output = {};
+    for (const property in config) {
+      if (property in config) {
+        output[property] = sanitizeConfig(config[property]);
+      }
     }
+    return output;
   }
+  // unhandled
   return config;
 }
 
