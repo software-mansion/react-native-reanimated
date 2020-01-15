@@ -64,7 +64,6 @@ function runPropUpdates() {
 
 export default class AnimatedNode {
 
-  /* { [loop: string]: int } */
   __nodeID;
   __lastLoopID = { "": -1 };
   __memoizedValue = { "": null };
