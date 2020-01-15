@@ -14,7 +14,7 @@ function sanitizeConfig(config) {
   } else if (config instanceof AnimatedNode) {
     return config.__nodeID;
   } else if (typeof config === 'object') {
-    const output: { [key: string]: any } = {};
+    const output = {};
     for (const property in config) {
       if (property in config) {
         output[property] = sanitizeConfig(config[property]);
