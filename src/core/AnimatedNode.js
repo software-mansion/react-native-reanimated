@@ -5,6 +5,16 @@ const UPDATED_NODES = [];
 
 let loopID = 1;
 let propUpdatesEnqueued = null;
+let nodeCount = 0;
+let callID = "";
+
+export function getCallID() {
+  return callID;
+}
+
+export function setCallID(nextCallID) {
+  callID = nextCallID;
+}
 
 function sanitizeConfig(config) {
   if (Platform.OS === 'web') {
@@ -52,9 +62,13 @@ function runPropUpdates() {
   loopID += 1;
 }
 
-let nodeCount = 0;
-
 export default class AnimatedNode {
+
+  __nodeID;
+  __lastLoopID = { "": -1 };
+  __memoizedValue = { "": null };
+  __children = [];
+
   constructor(nodeConfig, inputNodes) {
     this.__nodeID = ++nodeCount;
     this.__nodeConfig = sanitizeConfig(nodeConfig);
@@ -91,26 +105,23 @@ export default class AnimatedNode {
     this.__nativeTearDown();
   }
 
-  __lastLoopID = 0;
-  __memoizedValue = null;
-
-  __children = [];
-
   __getValue() {
-    if (this.__lastLoopID < loopID) {
-      this.__lastLoopID = loopID;
-      return (this.__memoizedValue = this.__onEvaluate());
+    if (!(callID in this.__lastLoopID) || this.__lastLoopID[callID] < loopID) {
+      this.__lastLoopID[callID] = loopID;
+      const result = this.__onEvaluate();
+      this.__memoizedValue[callID] = result;
+      return result;
     }
-    return this.__memoizedValue;
+    return this.__memoizedValue[callID];
   }
 
   __forceUpdateCache(newValue) {
-    this.__memoizedValue = newValue;
+    this.__memoizedValue[callID] = newValue;
     this.__markUpdated();
   }
 
   __dangerouslyRescheduleEvaluate() {
-    this.__lastLoopID = 0;
+    this.__lastLoopID[callID] = -1;
     this.__markUpdated();
   }
 
