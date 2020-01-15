@@ -4,7 +4,7 @@ class AnimatedClockTest extends AnimatedNode {
   _clockNode;
 
   constructor(clockNode) {
-    super({ type: 'clockTest', clock: clockNode.__nodeID });
+    super({ type: 'clockTest', clock: clockNode });
     this._clockNode = clockNode;
   }
 

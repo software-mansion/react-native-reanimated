@@ -17,7 +17,7 @@ class AnimatedDebug extends AnimatedNode {
       value instanceof AnimatedNode,
       `Reanimated: Animated.debug node second argument should be of type AnimatedNode but got ${value}`
     );
-    super({ type: 'debug', message, value: value.__nodeID }, [value]);
+    super({ type: 'debug', message, value }, [value]);
     this._message = message;
     this._value = value;
   }

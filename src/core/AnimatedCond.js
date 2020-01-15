@@ -24,9 +24,9 @@ class AnimatedCond extends AnimatedNode {
     super(
       {
         type: 'cond',
-        cond: condition.__nodeID,
-        ifBlock: ifBlock.__nodeID,
-        elseBlock: elseBlock ? elseBlock.__nodeID : undefined,
+        cond: condition,
+        ifBlock,
+        elseBlock,
       },
       [condition, ifBlock, elseBlock]
     );
