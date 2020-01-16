@@ -12,5 +12,4 @@
 
 extern  std::string fun;
 
-
 #endif //REANIMATEDEXAMPLE_NATIVEPROXY_H

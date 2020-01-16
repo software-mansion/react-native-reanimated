@@ -20,13 +20,6 @@ NativeReanimatedModule::NativeReanimatedModule(ALooper *looper) : NativeReanimat
 jsi::String NativeReanimatedModule::getString(
   jsi::Runtime &rt,
   const jsi::String &arg) {
-
-  auto res = "natywny string :) " + arg.utf8(rt);
-  //return jsi::String::createFromUtf8(rt, arg.utf8(rt));
-
-  auto functionImpl = arg.utf8(rt);
-  //fun = &(rt.global().getPropertyAsFunction(rt, functionName.c_str()).getHostFunction(rt));
-//  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "impl2 %s", fun.c_str());
   return jsi::String::createFromAscii(rt, res);
 }
 

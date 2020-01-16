@@ -25,7 +25,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_call(
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec()
     : ReanimatedTurboModule("NativeReanimated") {
-  methodMap_["getString"] = MethodMetadata{
+  methodMap_[""] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_getString};
 
   methodMap_["call"] = MethodMetadata{
