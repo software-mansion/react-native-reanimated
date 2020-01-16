@@ -1,7 +1,13 @@
 import invariant from 'fbjs/lib/invariant';
 import AnimatedNode from './AnimatedNode';
-import AnimatedClock from './AnimatedClock';
 import { val } from '../val';
+
+/**
+ * duck-typing used instead of instanceof for omitting cycle of requires
+ */
+function isAnimatedClock(node) {
+  return !!node.isStarted
+}
 
 export class AnimatedParam extends AnimatedNode {
   argsStack = [];
@@ -42,7 +48,7 @@ export class AnimatedParam extends AnimatedNode {
   start() {
     const node = this._getTopNode();
     invariant(
-      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      isAnimatedClock(node) || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.start();
@@ -51,7 +57,7 @@ export class AnimatedParam extends AnimatedNode {
   stop() {
     const node = this._getTopNode();
     invariant(
-      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      isAnimatedClock(node) || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.stop();
@@ -60,7 +66,7 @@ export class AnimatedParam extends AnimatedNode {
   isRunning() {
     const node = this._getTopNode();
     invariant(
-      node instanceof AnimatedClock || node instanceof AnimatedParam,
+      isAnimatedClock(node) || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
     return node.isRunning()
