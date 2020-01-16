@@ -13,6 +13,7 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
+import { custom } from './ReanimatedModule'
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -56,6 +57,8 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+  
+  custom,
 };
 
 export default Animated;

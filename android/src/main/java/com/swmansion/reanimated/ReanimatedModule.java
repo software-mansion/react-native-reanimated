@@ -46,7 +46,15 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
     mTransitionManager = new TransitionModule(uiManager);
-    NativeProxy.getInstance().install(reactCtx.getJavaScriptContextHolder().get());
+
+    final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
+    uiManager.addUIBlock(new UIBlock() {
+      @Override
+      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+        NativeProxy.getInstance().install(runtimePtr);
+      }
+    });
+
   }
 
   @Override
@@ -221,6 +229,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       @Override
       public void execute(NodesManager nodesManager) {
         nodesManager.setValue(nodeID, newValue);
+      }
+    });
+  }
+
+  @ReactMethod
+  public void custom() {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        NativeProxy.getInstance().uiCall();
       }
     });
   }

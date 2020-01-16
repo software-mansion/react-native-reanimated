@@ -7,7 +7,10 @@ import {
   Text,
   View,
   YellowBox,
+  TouchableHighlight,
+  NativeModules,
 } from 'react-native';
+const { ReanimatedModule } = NativeModules;
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -41,7 +44,13 @@ YellowBox.ignoreWarnings([
 // refers to bug in React Navigation which should be fixed soon
 // https://github.com/react-navigation/react-navigation/issues/3956
 
+function callback(text) {
+  console.warn("text: " + text);
+}
 
+function callback2(text) {
+  return 5;
+}
 
 class MainScreen extends React.Component {
   static navigationOptions = {
@@ -49,7 +58,9 @@ class MainScreen extends React.Component {
   };
 
   componentDidMount() {
-    console.warn("native: " + global.NativeReanimated.getString("ok"));
+    //console.warn("native: " + global.NativeReanimated.getString("ok"));
+    global.NativeReanimated.call(callback);
+    global.callback2 = callback2;
   }
 
   render() {
@@ -57,6 +68,13 @@ class MainScreen extends React.Component {
     return (
       <View>
         <Text>dziala</Text>
+        <TouchableHighlight onPress={ async () => {console.warn(global.NativeReanimated.getString(callback2.toString())); }}>
+          <Text> remember callback </Text>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={ async () => {ReanimatedModule.custom()}} >
+          <Text> call from second js context </Text>
+        </TouchableHighlight>
+        <Text>{callback2.toString()}</Text>
       </View>
     );
   }

@@ -18,4 +18,6 @@ public class NativeProxy {
   }
 
   public native void install(long runtimePtr);
+
+  public native void uiCall();
 }

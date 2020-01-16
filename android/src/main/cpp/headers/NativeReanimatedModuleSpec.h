@@ -15,6 +15,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public ReanimatedTurboModule {
 
  public:
   virtual jsi::String getString(jsi::Runtime &rt, const jsi::String &arg) = 0;
+  virtual void call(
+        jsi::Runtime &rt,
+        const jsi::Function &callback) = 0;
 };
 
 } // namespace react
