@@ -1,4 +1,4 @@
-import InternalAnimatedValue from './AnimatedValue';
+import InternalAnimatedValue from './InternalAnimatedValue';
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
