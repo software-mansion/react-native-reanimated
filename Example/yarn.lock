@@ -5977,6 +5977,10 @@ realpath-native@^1.1.0:
   dependencies:
     util.promisify "^1.0.0"
 
+reanimated-bottom-sheet@osdnk/react-native-reanimated-bottom-sheet#reanimated-example:
+  version "1.0.0-alpha.18"
+  resolved "https://codeload.github.com/osdnk/react-native-reanimated-bottom-sheet/tar.gz/3e2c887eabdbd0d5daa4372d4059bcbebfeb4732"
+
 regenerate-unicode-properties@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/regenerate-unicode-properties/-/regenerate-unicode-properties-7.0.0.tgz#107405afcc4a190ec5ed450ecaa00ed0cafa7a4c"

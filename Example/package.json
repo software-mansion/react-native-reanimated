@@ -17,7 +17,8 @@
     "react-native-gesture-handler": "^1.5.0",
     "react-native-web": "^0.11.7",
     "react-navigation": "4.0.3",
-    "react-navigation-stack": "^1.7.3"
+    "react-navigation-stack": "^1.7.3",
+    "reanimated-bottom-sheet": "osdnk/react-native-reanimated-bottom-sheet#reanimated-example"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",

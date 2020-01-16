@@ -17,6 +17,7 @@ module.exports = api => {
         {
           alias: {
             'react-native-reanimated': '../src/Animated',
+            'reanimated-bottom-sheet': './node_modules/reanimated-bottom-sheet',
             react: './node_modules/react',
             'react-native': './node_modules/react-native',
             '@babel': './node_modules/@babel',

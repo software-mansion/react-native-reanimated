@@ -11,6 +11,7 @@ import {
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
+import BottomSheetPlayground from 'reanimated-bottom-sheet/Example/App'
 
 import ChatHeads from './chatHeads';
 import Code from './code';
@@ -46,6 +47,7 @@ const SCREENS = {
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
   Interactable: { screen: InteractablePlayground, title: 'Interactable' },
+  BottomSheet: { screen: BottomSheetPlayground, title: 'BottomSheet Playground' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
@@ -91,6 +93,7 @@ class MainScreen extends React.Component {
   static navigationOptions = {
     title: '🎬 Reanimated Examples',
   };
+
   render() {
     const data = Object.keys(SCREENS).map(key => ({ key }));
     return (
