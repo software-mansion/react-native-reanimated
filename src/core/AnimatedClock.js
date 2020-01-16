@@ -89,5 +89,3 @@ export default class AnimatedClock extends AnimatedNode {
   }
 }
 
-const clock = mainClock;
-export { clock };
