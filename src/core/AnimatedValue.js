@@ -12,16 +12,17 @@ export default class AnimatedValue extends InternalAnimatedValue {
     if (Platform.OS === 'web') {
       this._updateValue(value);
     } else {
-      if (ReanimatedModule.setValue) {
+      if (ReanimatedModule.setValue && typeof value === "number") {
         // FIXME Remove it after some time
         // For OTA-safety
+        // FIXME handle setting value with a node
         ReanimatedModule.setValue(this.__nodeID, value);
       } else {
         evaluateOnce(set(this, value), this);
       }
     }
   }
-  
+
   toString() {
     return `AnimatedValue, id: ${this.__nodeID}`;
   }
