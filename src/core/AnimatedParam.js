@@ -1,25 +1,17 @@
 import invariant from 'fbjs/lib/invariant';
-import AnimatedNode, { getCallID, setCallID } from './AnimatedNode';
+import AnimatedNode from './AnimatedNode';
+import AnimatedClock from './AnimatedClock';
 import { val } from '../val';
-
-/**
- * duck-typing used instead of instanceof for omitting cycle of requires
- */
-function isAnimatedClock(node) {
-  return !!node.isStarted
-}
 
 export class AnimatedParam extends AnimatedNode {
   argsStack = [];
-  _prevCallID;
-  
+
   constructor() {
     super({ type: 'param' }, []);
     this.__attach();
   }
 
-  beginContext(ref, prevCallID) {
-    this._prevCallID = prevCallID;
+  beginContext(ref) {
     this.argsStack.push(ref);
   }
 
@@ -36,28 +28,21 @@ export class AnimatedParam extends AnimatedNode {
   setValue(value) {
     const top = this._getTopNode();
     if (top.setValue) {
-      const callID = getCallID();
-      setCallID(this._prevCallID);
       top.setValue(value);
-      setCallID(callID);
     } else {
       throw new Error(`param: setValue(${value}) failed because the top element has no known method for updating it's current value.`)
     }
   }
   
   __onEvaluate() {
-    const callID = getCallID();
-    setCallID(this._prevCallID);
     const top = this._getTopNode();
-    const value = val(top);
-    setCallID(callID);
-    return value;
+    return val(top);
   }
 
   start() {
     const node = this._getTopNode();
     invariant(
-      isAnimatedClock(node) || node instanceof AnimatedParam,
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.start();
@@ -66,7 +51,7 @@ export class AnimatedParam extends AnimatedNode {
   stop() {
     const node = this._getTopNode();
     invariant(
-      isAnimatedClock(node) || node instanceof AnimatedParam,
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
     node.stop();
@@ -74,15 +59,11 @@ export class AnimatedParam extends AnimatedNode {
 
   isRunning() {
     const node = this._getTopNode();
-
-    if (node instanceof AnimatedParam) {
-      return node.isRunning()
-    }
     invariant(
-      isAnimatedClock(node)
+      node instanceof AnimatedClock || node instanceof AnimatedParam,
       `param: top node should be of type AnimatedClock but got ${node}`
     );
-    return node.isStarted();
+    return node.isRunning()
   }
 }
 
