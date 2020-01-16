@@ -23,7 +23,7 @@ export default class AnimatedValue extends InternalAnimatedValue {
   }
   
   toString() {
-    return `AnimatedValue, id: ${super.__nodeID}`;
+    return `AnimatedValue, id: ${this.__nodeID}`;
   }
 
   interpolate(config) {

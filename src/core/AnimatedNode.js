@@ -5,17 +5,34 @@ const UPDATED_NODES = [];
 
 let loopID = 1;
 let propUpdatesEnqueued = null;
+let nodeCount = 0;
+let callID = "";
+
+export function getCallID() {
+  return callID;
+}
+
+export function setCallID(nextCallID) {
+  callID = nextCallID;
+}
 
 function sanitizeConfig(config) {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === 'web' || ['undefined', 'string', 'function', 'boolean', 'number'].includes(typeof config)) {
     return config;
-  }
-  for (const key in config) {
-    const value = config[key];
-    if (value instanceof AnimatedNode) {
-      config[key] = value.__nodeID;
+  } else if (Array.isArray(config)) {
+    return config.map(sanitizeConfig);
+  } else if (config instanceof AnimatedNode) {
+    return config.__nodeID;
+  } else if (typeof config === 'object') {
+    const output = {};
+    for (const property in config) {
+      if (property in config) {
+        output[property] = sanitizeConfig(config[property]);
+      }
     }
+    return output;
   }
+  // unhandled
   return config;
 }
 
@@ -52,9 +69,13 @@ function runPropUpdates() {
   loopID += 1;
 }
 
-let nodeCount = 0;
-
 export default class AnimatedNode {
+
+  __nodeID;
+  __lastLoopID = { "": -1 };
+  __memoizedValue = { "": null };
+  __children = [];
+
   constructor(nodeConfig, inputNodes) {
     this.__nodeID = ++nodeCount;
     this.__nodeConfig = sanitizeConfig(nodeConfig);
@@ -91,26 +112,23 @@ export default class AnimatedNode {
     this.__nativeTearDown();
   }
 
-  __lastLoopID = 0;
-  __memoizedValue = null;
-
-  __children = [];
-
   __getValue() {
-    if (this.__lastLoopID < loopID) {
-      this.__lastLoopID = loopID;
-      return (this.__memoizedValue = this.__onEvaluate());
+    if (!(callID in this.__lastLoopID) || this.__lastLoopID[callID] < loopID) {
+      this.__lastLoopID[callID] = loopID;
+      const result = this.__onEvaluate();
+      this.__memoizedValue[callID] = result;
+      return result;
     }
-    return this.__memoizedValue;
+    return this.__memoizedValue[callID];
   }
 
   __forceUpdateCache(newValue) {
-    this.__memoizedValue = newValue;
+    this.__memoizedValue[callID] = newValue;
     this.__markUpdated();
   }
 
   __dangerouslyRescheduleEvaluate() {
-    this.__lastLoopID = 0;
+    this.__lastLoopID[callID] = -1;
     this.__markUpdated();
   }
 
@@ -161,7 +179,7 @@ export default class AnimatedNode {
     if (ReanimatedModule.connectNodes) {
       ReanimatedModule.connectNodes(this.__nodeID, child.__nodeID);
     } else {
-      this.__dangerouslyRescheduleEvaluate();
+      child.__dangerouslyRescheduleEvaluate();
     }
   }
 
@@ -171,7 +189,10 @@ export default class AnimatedNode {
       console.warn("Trying to remove a child that doesn't exist");
       return;
     }
-    ReanimatedModule.disconnectNodes(this.__nodeID, child.__nodeID);
+
+    if (ReanimatedModule.disconnectNodes) {
+      ReanimatedModule.disconnectNodes(this.__nodeID, child.__nodeID);
+    }
 
     this.__children.splice(index, 1);
     if (this.__children.length === 0) {

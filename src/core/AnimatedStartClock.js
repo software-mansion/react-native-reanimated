@@ -11,7 +11,7 @@ class AnimatedStartClock extends AnimatedNode {
       clockNode instanceof AnimatedClock || clockNode instanceof AnimatedParam,
       `Reanimated: Animated.startClock argument should be of type AnimatedClock but got ${clockNode}`
     );
-    super({ type: 'clockStart', clock: clockNode.__nodeID });
+    super({ type: 'clockStart', clock: clockNode });
     this._clockNode = clockNode;
   }
 

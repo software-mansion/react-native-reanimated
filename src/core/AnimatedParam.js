@@ -1,5 +1,5 @@
 import invariant from 'fbjs/lib/invariant';
-import AnimatedNode from './AnimatedNode';
+import AnimatedNode, { getCallID, setCallID } from './AnimatedNode';
 import { val } from '../val';
 
 /**
@@ -11,13 +11,15 @@ function isAnimatedClock(node) {
 
 export class AnimatedParam extends AnimatedNode {
   argsStack = [];
-
+  _prevCallID;
+  
   constructor() {
     super({ type: 'param' }, []);
     this.__attach();
   }
 
-  beginContext(ref) {
+  beginContext(ref, prevCallID) {
+    this._prevCallID = prevCallID;
     this.argsStack.push(ref);
   }
 
@@ -34,15 +36,22 @@ export class AnimatedParam extends AnimatedNode {
   setValue(value) {
     const top = this._getTopNode();
     if (top.setValue) {
+      const callID = getCallID();
+      setCallID(this._prevCallID);
       top.setValue(value);
+      setCallID(callID);
     } else {
       throw new Error(`param: setValue(${value}) failed because the top element has no known method for updating it's current value.`)
     }
   }
   
   __onEvaluate() {
+    const callID = getCallID();
+    setCallID(this._prevCallID);
     const top = this._getTopNode();
-    return val(top);
+    const value = val(top);
+    setCallID(callID);
+    return value;
   }
 
   start() {
@@ -65,11 +74,15 @@ export class AnimatedParam extends AnimatedNode {
 
   isRunning() {
     const node = this._getTopNode();
+
+    if (node instanceof AnimatedParam) {
+      return node.isRunning()
+    }
     invariant(
-      isAnimatedClock(node) || node instanceof AnimatedParam,
+      isAnimatedClock(node)
       `param: top node should be of type AnimatedClock but got ${node}`
     );
-    return node.isRunning()
+    return node.isStarted();
   }
 }
 

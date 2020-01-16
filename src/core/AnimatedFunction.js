@@ -15,7 +15,7 @@ class AnimatedFunction extends AnimatedNode {
     super(
       {
         type: 'func',
-        what: what.__nodeID,
+        what,
       },
       [what, ...params]
     );

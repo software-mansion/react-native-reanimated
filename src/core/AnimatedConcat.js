@@ -14,7 +14,7 @@ class AnimatedConcat extends AnimatedNode {
       ),
       `Reanimated: Animated.concat node arguments should be of type AnimatedNode or String or Number. One or more of them are not of that type. Node: ${input}`
     );
-    super({ type: 'concat', input: input.map(n => n.__nodeID) }, input);
+    super({ type: 'concat', input }, input);
     this._input = input;
   }
 

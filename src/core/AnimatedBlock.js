@@ -11,7 +11,7 @@ class AnimatedBlock extends AnimatedNode {
       array.every(el => el instanceof AnimatedNode),
       `Reanimated: Animated.block node argument should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
     );
-    super({ type: 'block', block: array.map(n => n.__nodeID) }, array);
+    super({ type: 'block', block: array }, array);
     this._array = array;
   }
 

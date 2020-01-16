@@ -76,7 +76,7 @@ class AnimatedOperator extends AnimatedNode {
       `Reanimated: Animated.operator node second argument should be one or more of type AnimatedNode, String or Number but got ${input}`
     );
     super(
-      { type: 'op', op: operator, input: input.map(n => n.__nodeID) },
+      { type: 'op', op: operator, input },
       input
     );
     this._op = operator;
