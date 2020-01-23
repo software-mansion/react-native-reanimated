@@ -7,15 +7,24 @@ import ReanimatedModule from '../ReanimatedModule';
 
 // Animated value wrapped with extra methods for omit cycle of dependencies
 export default class AnimatedValue extends InternalAnimatedValue {
+  __attach() {
+    super.__attach();
+
+    if (this._value !== this._startingValue) {
+      this.setValue(this._value);
+    }
+  }
+
   setValue(value) {
     this.__detachAnimation(this._animation);
     if (Platform.OS === 'web') {
       this._updateValue(value);
     } else {
-      if (ReanimatedModule.setValue && typeof value === "number") {
+      if (ReanimatedModule.setValue && typeof value === 'number') {
         // FIXME Remove it after some time
         // For OTA-safety
         // FIXME handle setting value with a node
+        this._value = value;
         ReanimatedModule.setValue(this.__nodeID, value);
       } else {
         evaluateOnce(set(this, value), this);
