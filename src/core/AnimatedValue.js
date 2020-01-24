@@ -11,17 +11,16 @@ export default class AnimatedValue extends InternalAnimatedValue {
   }
 
   interpolate(config) {
-    _convertToRadians(config);
+    this._convertToRadians(config);
     return interpolate(this, config);
   }
 
   // FIXME: Where to put this code???
   _convertToRadians(config) {
-    if (typeof config.outputRange[0] == 'string' && config.outputRange.some(v => v.includes('deg'))) {
+    if (typeof config.outputRange[0] == 'string' && config.outputRange[0].includes('deg')) {
       config.outputRange = config.outputRange
-        .map(v => v.slice(0, v.indexOf('deg')))
-        .map(Number)
-        .map(v => v * Math.PI / 180)
+        .map(value => Number(value.slice(0, value.indexOf('deg'))))
+        .map(value => value * Math.PI / 180)
     }
   }
 }
