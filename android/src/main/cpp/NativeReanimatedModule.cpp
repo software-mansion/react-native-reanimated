@@ -20,7 +20,7 @@ NativeReanimatedModule::NativeReanimatedModule(ALooper *looper) : NativeReanimat
 jsi::String NativeReanimatedModule::getString(
   jsi::Runtime &rt,
   const jsi::String &arg) {
-  return jsi::String::createFromAscii(rt, res);
+  return jsi::String::createFromAscii(rt, arg.utf8(rt));
 }
 
 void NativeReanimatedModule::call(
