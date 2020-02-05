@@ -9,6 +9,7 @@ import {
   YellowBox,
   TouchableHighlight,
   NativeModules,
+  TurboModuleRegistry,
 } from 'react-native';
 const { ReanimatedModule } = NativeModules;
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
@@ -44,6 +45,9 @@ YellowBox.ignoreWarnings([
 // refers to bug in React Navigation which should be fixed soon
 // https://github.com/react-navigation/react-navigation/issues/3956
 
+
+const nativeModule = TurboModuleRegistry.get("SampleTurboModule"); 
+
 function callback(text) {
   console.warn("text: " + text);
 }
@@ -59,8 +63,9 @@ class MainScreen extends React.Component {
 
   componentDidMount() {
     //console.warn("native: " + global.NativeReanimated.getString("ok"));
-    global.NativeReanimated.call(callback);
-    global.callback2 = callback2;
+    //global.NativeReanimated.call(callback);
+    //global.callback2 = callback2;
+    console.log("okokokokok:",nativeModule.getString("test"));
   }
 
   render() {
