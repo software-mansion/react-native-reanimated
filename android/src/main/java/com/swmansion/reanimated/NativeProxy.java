@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import com.facebook.react.turbomodule.core.JSCallInvokerHolderImpl;
+
 public class NativeProxy {
 
   static {

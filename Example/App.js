@@ -46,7 +46,7 @@ YellowBox.ignoreWarnings([
 // https://github.com/react-navigation/react-navigation/issues/3956
 
 
-const nativeModule = TurboModuleRegistry.get("SampleTurboModule"); 
+//const nativeModule = TurboModuleRegistry.get("SampleTurboModule"); 
 const re = TurboModuleRegistry.get("NativeReanimated");
 
 function callback(text) {
@@ -66,7 +66,7 @@ class MainScreen extends React.Component {
     //console.warn("native: " + global.NativeReanimated.getString("ok"));
     //global.NativeReanimated.call(callback);
     //global.callback2 = callback2;
-    console.log("okokokokok:",nativeModule.getString("test"));
+    //console.log("okokokokok:",nativeModule.getString("test"));
     re.call(callback);
   }
 

@@ -24,12 +24,13 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 std::unique_ptr<facebook::jsi::Runtime> r;
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env, jobject thiz, jlong runtimePtr) {
-    auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
-     r = std::unique_ptr<facebook::jsi::Runtime>(&runtime);
-     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "Value of runtime 2 %lld", (long long)runtimePtr);
+Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
+    jobject thiz, jlong runtimePtr) {
 
-    auto module = std::make_shared<NativeReanimatedModule>();
+    auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
+    r = std::unique_ptr<facebook::jsi::Runtime>(&runtime);
+
+    auto module = std::make_shared<NativeReanimatedModule>(nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);

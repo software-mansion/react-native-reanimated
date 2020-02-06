@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.turbomodule.core.JSCallInvokerHolderImpl;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -48,6 +49,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     mTransitionManager = new TransitionModule(uiManager);
 
     final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
+//     final JSCallInvokerHolderImpl jsInvoker = (JSCallInvokerHolderImpl) reactCtx.getCatalystInstance().getJSCallInvokerHolder();
     uiManager.addUIBlock(new UIBlock() {
       @Override
       public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {

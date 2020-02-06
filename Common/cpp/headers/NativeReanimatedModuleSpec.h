@@ -4,7 +4,12 @@
 #include <memory>
 #include <string>
 
-#include <ReactCommon/TurboModule.h>
+#ifdef ONANDROID
+  #include "TurboModule.h"
+#else
+  #include <ReactCommon/TurboModule.h>
+#endif
+
 #include <ReactCommon/JSCallInvoker.h>
 
 namespace facebook {

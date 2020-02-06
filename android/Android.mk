@@ -19,11 +19,9 @@ LOCAL_SRC_FILES := $(PROJECT_FILES)
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/src/main/cpp/headers $(LOCAL_PATH)/../Common/cpp/headers $(HERMES_ENGINE)/android/include 
 
+LOCAL_CFLAGS += -DONANDROID -fvisibility=hidden -fexceptions -frtti
 
-
-LOCAL_CFLAGS += -fvisibility=hidden -fexceptions -frtti
-
-LOCAL_STATIC_LIBRARIES := libjsi libjsireact
+LOCAL_STATIC_LIBRARIES := libjsi libjsireact libjscallinvoker jscallinvokerholder
 LOCAL_SHARED_LIBRARIES := libfolly_json libfb libreactnativejni libhermes
 
 include $(BUILD_SHARED_LIBRARY)
