@@ -38,10 +38,7 @@ class AnimatedValue {
   }
 }
 
-module.exports = {
-  __esModule: true,
-
-  default: {
+const lib = {
     SpringUtils: {
       makeDefaultConfig: NOOP,
       makeConfigFromBouncinessAndSpeed: NOOP,
@@ -133,8 +130,13 @@ module.exports = {
 
     useCode: NOOP,
     createAnimatedComponent: Component => Component,
-  },
+  }
 
+module.exports = {
+  __esModule: true,
+
+  default: lib,
+  ...lib,
   Easing: {
     linear: NOOP,
     ease: NOOP,
