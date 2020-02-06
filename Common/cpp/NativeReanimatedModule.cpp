@@ -1,5 +1,4 @@
 #include "NativeReanimatedModule.h"
-#include "NativeProxy.h"
 #include <thread>
 
 #define APPNAME "NATIVE_REANIMATED"
@@ -11,11 +10,7 @@ namespace react {
 
 std::string fun = "";
 
-NativeReanimatedModule::NativeReanimatedModule() : NativeReanimatedModuleSpec() {}
-
-NativeReanimatedModule::NativeReanimatedModule(ALooper *looper) : NativeReanimatedModuleSpec() {
-  this->looper = looper;
-}
+NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {}
 
 jsi::String NativeReanimatedModule::getString(
   jsi::Runtime &rt,

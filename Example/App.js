@@ -47,6 +47,7 @@ YellowBox.ignoreWarnings([
 
 
 const nativeModule = TurboModuleRegistry.get("SampleTurboModule"); 
+const re = TurboModuleRegistry.get("NativeReanimated");
 
 function callback(text) {
   console.warn("text: " + text);
@@ -66,6 +67,7 @@ class MainScreen extends React.Component {
     //global.NativeReanimated.call(callback);
     //global.callback2 = callback2;
     console.log("okokokokok:",nativeModule.getString("test"));
+    re.call(callback);
   }
 
   render() {

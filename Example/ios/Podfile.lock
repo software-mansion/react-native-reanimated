@@ -239,7 +239,36 @@ PODS:
   - RNGestureHandler (1.5.2):
     - React
   - RNReanimated (1.4.0):
+    - DoubleConversion
+    - FBLazyVector
+    - FBReactNativeSpec
+    - Folly
+    - glog
+    - RCTRequired
+    - RCTTypeSafety
     - React
+    - React-ART
+    - React-Core
+    - React-Core/DevSupport
+    - React-Core/RCTWebSocket
+    - React-CoreModules
+    - React-cxxreact
+    - React-jsi
+    - React-jsiexecutor
+    - React-jsinspector
+    - React-RCTActionSheet
+    - React-RCTAnimation
+    - React-RCTBlob
+    - React-RCTImage
+    - React-RCTLinking
+    - React-RCTNetwork
+    - React-RCTSettings
+    - React-RCTText
+    - React-RCTVibration
+    - ReactCommon/jscallinvoker
+    - ReactCommon/turbomodule/core
+    - ReactCommon/turbomodule/samples
+    - Yoga
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -366,7 +395,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: a49a1f42bf8f5acf1c3e297097517c6b3af377ad
   ReactCommon: 198c7c8d3591f975e5431bec1b0b3b581aa1c5dd
   RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
-  RNReanimated: 8b675a650fc67c87f63d4345a1b2d4a699c25e4f
+  RNReanimated: 907b4bcd151e231687ef3fc3d1e4e4fb956030c5
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
 
 PODFILE CHECKSUM: ab8c1cc34bc35b754db4e7803df8bdd19239492c

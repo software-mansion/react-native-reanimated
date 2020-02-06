@@ -4,6 +4,7 @@
 #import <React/CoreModulesPlugins.h>
 #import <ReactCommon/SampleTurboCxxModule.h>
 #import <ReactCommon/RCTSampleTurboModule.h>
+#import <NativeReanimatedModule.h>
 
 // NOTE: This entire file should be codegen'ed.
 
@@ -17,6 +18,10 @@ Class RETurboModuleClassProvider(const char *name) {
 std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name, std::shared_ptr<JSCallInvoker> jsInvoker) {
   if (name == "SampleTurboCxxModule") {
     return std::make_shared<SampleTurboCxxModule>(jsInvoker);
+  }
+  
+  if (name == "NativeReanimated") {
+    return std::make_shared<NativeReanimatedModule>(jsInvoker);
   }
 
   return nullptr;

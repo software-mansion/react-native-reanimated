@@ -5,7 +5,7 @@ namespace react {
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getString(
     jsi::Runtime &rt,
-    ReanimatedTurboModule &turboModule,
+    TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
@@ -14,7 +14,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getString(
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_call(
     jsi::Runtime &rt,
-    ReanimatedTurboModule &turboModule,
+    TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
@@ -23,8 +23,8 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_call(
   return jsi::Value::undefined();
 }
 
-NativeReanimatedModuleSpec::NativeReanimatedModuleSpec()
-    : ReanimatedTurboModule("NativeReanimated") {
+NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker)
+    : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_[""] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_getString};
 

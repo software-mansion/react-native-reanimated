@@ -4,14 +4,15 @@
 #include <memory>
 #include <string>
 
-#include "ReanimatedTurboModule.h"
+#include <ReactCommon/TurboModule.h>
+#include <ReactCommon/JSCallInvoker.h>
 
 namespace facebook {
 namespace react {
 
-class JSI_EXPORT NativeReanimatedModuleSpec : public ReanimatedTurboModule {
+class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  protected:
-  NativeReanimatedModuleSpec();
+  NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker);
 
  public:
   virtual jsi::String getString(jsi::Runtime &rt, const jsi::String &arg) = 0;
