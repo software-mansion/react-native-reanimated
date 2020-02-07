@@ -1,9 +1,9 @@
 // Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
-type Nullable<T> = T | null | undefined;
-
 declare module 'react-native-reanimated' {
+  type Nullable<T> = T | null | undefined;
+
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
     ViewProps,
