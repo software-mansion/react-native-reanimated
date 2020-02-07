@@ -1,6 +1,9 @@
 package com.swmansion.reanimated;
 
-import com.facebook.react.turbomodule.core.JSCallInvokerHolderImpl;
+import com.facebook.react.bridge.UIManager;
+import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.UIBlock;
+import com.facebook.react.uimanager.UIManagerModule;
 
 public class NativeProxy {
 
@@ -8,18 +11,23 @@ public class NativeProxy {
     System.loadLibrary("reanimated");
   }
 
-  private static NativeProxy mInstance = null;
+  private static UIManagerModule mManager;
 
-  private NativeProxy() {}
-
-  public synchronized static NativeProxy getInstance() {
-    if (mInstance == null) {
-      mInstance = new NativeProxy();
-    }
-    return mInstance;
+  public static void setUIManager(UIManagerModule uiManager) {
+    mManager = uiManager;
   }
 
-  public native void install(long runtimePtr);
+  public static native void install(long runtimePtr);
 
-  public native void uiCall();
+  public static native void triggerScheduler();
+
+  public static int scheduleTrigger(boolean x)  {
+    mManager.addUIBlock(new UIBlock() {
+      @Override
+      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+        NativeProxy.triggerScheduler();
+      }
+    });
+    return 1;
+  }
 }

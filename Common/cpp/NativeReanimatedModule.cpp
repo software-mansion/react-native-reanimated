@@ -10,7 +10,9 @@ namespace react {
 
 std::string fun = "";
 
-NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {}
+NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<UIScheduler> uiScheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+  this->uiScheduler = uiScheduler;
+}
 
 jsi::String NativeReanimatedModule::getString(
   jsi::Runtime &rt,

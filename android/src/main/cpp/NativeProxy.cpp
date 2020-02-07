@@ -7,6 +7,7 @@
 #include <android/looper.h>
 #include <unistd.h>
 #include <hermes/hermes.h>
+#include "AndroidUIScheduler.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -23,6 +24,8 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 
 std::unique_ptr<facebook::jsi::Runtime> r;
 
+std::shared_ptr<UIScheduler> uiScheduler;
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     jobject thiz, jlong runtimePtr) {
@@ -30,7 +33,11 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
     r = std::unique_ptr<facebook::jsi::Runtime>(&runtime);
 
-    auto module = std::make_shared<NativeReanimatedModule>(nullptr);
+    JavaVM* javaVM = nullptr;
+    env->GetJavaVM(&javaVM);
+    std::make_shared<UIScheduler> uiScheduler(new AndroidUIScheduler(javaVM));
+
+    auto module = std::make_shared<NativeReanimatedModule>(uiScheduler, nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
@@ -38,6 +45,11 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_swmansion_reanimated_NativeProxy_triggerScheduler(JNIEnv* env) {
+  uiScheduler->trigger();
+}
+
+/*extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
 //    auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
 
@@ -71,7 +83,7 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
       jsi::Value ret2 = callback.call(*runtime2, text.c_str());
       __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "wartosci to  %d %d", (int)ret1.asNumber(), (int)ret2.asNumber());
       //fun->call(*runtime2, jsi::String::createFromUtf8(*runtime2, s));
-}
+}*/
 
 
 
