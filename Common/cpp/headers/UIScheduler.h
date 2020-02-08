@@ -68,6 +68,7 @@ class UIScheduler {
   public:
     virtual void schedule(std::function<void()> job);
     virtual void trigger();
+    virtual ~UIScheduler();
   private:
     Queue<std::function<void()>> jobs;
 };

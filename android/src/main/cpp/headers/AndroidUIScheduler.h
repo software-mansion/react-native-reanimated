@@ -12,6 +12,7 @@ class AndroidUIScheduler : public UIScheduler {
   public:
     AndroidUIScheduler(JavaVM *vm);
     virtual void schedule(std::function<void()> job);
+    ~AndroidUIScheduler();
   private:
     JavaVM *vm;
 };

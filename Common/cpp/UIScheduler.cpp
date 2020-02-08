@@ -8,6 +8,8 @@ void UIScheduler::schedule(std::function<void()> job) {
   jobs.push(job);
 }
 
+UIScheduler::~UIScheduler() {}
+
 void UIScheduler::trigger() {
   auto job = jobs.pop();
   job();

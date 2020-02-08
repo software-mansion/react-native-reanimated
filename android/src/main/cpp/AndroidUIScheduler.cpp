@@ -9,6 +9,8 @@ AndroidUIScheduler::AndroidUIScheduler(JavaVM *vm) {
   this->vm = vm;
 }
 
+AndroidUIScheduler::~AndroidUIScheduler() {}
+
 void AndroidUIScheduler::schedule(std::function<void()> job) {
   UIScheduler::schedule(job);
   // call java function
@@ -16,6 +18,6 @@ void AndroidUIScheduler::schedule(std::function<void()> job) {
   vm->AttachCurrentThread(&env, NULL);
 
   jclass nativeProxyClass = env->FindClass("com/swmansion/reanimated/NativeProxy");
-  jmethodID scheduleTriggerMethod = env->GetStaticMethodID(nativeProxyClass, "scheduleTrigger", "(Z)I;");
-  env->CallStaticObjectMethod(nativeProxyClass, scheduleTriggerMethod, (jboolean)true);
+  jmethodID scheduleTriggerMethod = env->GetStaticMethodID(nativeProxyClass, "scheduleTrigger", "(Z)I");
+  env->CallStaticIntMethod(nativeProxyClass, scheduleTriggerMethod, (jboolean)true);
 }

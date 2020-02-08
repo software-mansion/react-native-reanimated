@@ -35,9 +35,10 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
-    std::make_shared<UIScheduler> uiScheduler(new AndroidUIScheduler(javaVM));
+    std::shared_ptr<UIScheduler> uiSchedulerForModule((UIScheduler*)new AndroidUIScheduler(javaVM));
+    uiScheduler = uiSchedulerForModule;
 
-    auto module = std::make_shared<NativeReanimatedModule>(uiScheduler, nullptr);
+    auto module = std::make_shared<NativeReanimatedModule>(uiSchedulerForModule, nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
