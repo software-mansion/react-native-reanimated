@@ -25,7 +25,7 @@ void AndroidScheduler::scheduleOnUI(std::function<void()> job) { // memorize jcl
 }
 
 void AndroidScheduler::scheduleOnJS(std::function<void()> job) { // memorize jclass and method id !!!!
-  Scheduler::scheduleOnUI(job);
+  Scheduler::scheduleOnJS(job);
   // call java function
   JNIEnv *env;
   vm->AttachCurrentThread(&env, NULL);

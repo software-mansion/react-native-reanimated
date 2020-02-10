@@ -1,5 +1,5 @@
 #include "NativeReanimatedModule.h"
-#include <thread>
+#include <memory>
 
 #define APPNAME "NATIVE_REANIMATED"
 
@@ -28,13 +28,22 @@ void NativeReanimatedModule::call(
   jsi::Runtime &rt,
   const jsi::Function &callback) {
 
-  scheduler->scheduleOnUI([&rt, callback] () mutable {
-     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt OK");
-     scheduler->scheduleOnJS([&rt, callback] () mutable {
-        callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));
-     }
-  });
+  jsi::WeakObject * fun = new jsi::WeakObject(rt, callback);
+  std::shared_ptr<jsi::WeakObject> sharedFunction(fun);
 
+  scheduler->scheduleOnUI([&rt, sharedFunction, this] () mutable {
+     __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt OK");
+     scheduler->scheduleOnJS([&rt, sharedFunction] () mutable {
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt2 OK");
+        jsi::Value val = sharedFunction->lock(rt);
+        jsi::Function cb = val.asObject(rt).asFunction(rt);
+        cb.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));
+     });
+  });
+  /*scheduler->scheduleOnJS([] () mutable {
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt2 OK");
+  });
+  callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));*/
 }
 
 }

@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
@@ -34,6 +36,7 @@ public class Scheduler {
         triggerUI();
       }
     });
+    Log.v("Reaniumated", "co jest2");
     return true;
   }
 
@@ -44,7 +47,9 @@ public class Scheduler {
     mReactContext.get().runOnJSQueueThread(new Runnable() {
       @Override
       public void run() {
+        Log.v("Reaniumated", "co jest");
         triggerJS();
+        Log.v("Reaniumated", "co jest3");
       }
     });
     return true;
