@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.turbomodule.core.JSCallInvokerHolderImpl;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -55,7 +56,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       }
     });
 
-    NativeProxy.setUIManager(uiManager);
+    Scheduler.setUIManager(uiManager);
+    Scheduler.setContext(reactCtx);
 
   }
 

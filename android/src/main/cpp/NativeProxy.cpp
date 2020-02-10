@@ -7,7 +7,7 @@
 #include <android/looper.h>
 #include <unistd.h>
 #include <hermes/hermes.h>
-#include "AndroidUIScheduler.h"
+#include "AndroidScheduler.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -24,7 +24,7 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 
 std::unique_ptr<facebook::jsi::Runtime> r;
 
-std::shared_ptr<UIScheduler> uiScheduler;
+std::shared_ptr<Scheduler> scheduler;
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
@@ -35,10 +35,10 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
-    std::shared_ptr<UIScheduler> uiSchedulerForModule((UIScheduler*)new AndroidUIScheduler(javaVM));
-    uiScheduler = uiSchedulerForModule;
+    std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM));
+    scheduler = schedulerForModule;
 
-    auto module = std::make_shared<NativeReanimatedModule>(uiSchedulerForModule, nullptr);
+    auto module = std::make_shared<NativeReanimatedModule>(schedulerForModule, nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
@@ -46,9 +46,16 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_swmansion_reanimated_NativeProxy_triggerScheduler(JNIEnv* env) {
-  uiScheduler->trigger();
+Java_com_swmansion_reanimated_Scheduler_triggerUI(JNIEnv* env) {
+  scheduler->triggerUI();
 }
+
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
+  scheduler->triggerJS();
+}
+
 
 /*extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {

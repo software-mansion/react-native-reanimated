@@ -1,6 +1,6 @@
 
-#ifndef REANIMATEDEXAMPLE_UISCHEDULER_H
-#define REANIMATEDEXAMPLE_UISCHEDULER_H
+#ifndef REANIMATEDEXAMPLE_SCHEDULER_H
+#define REANIMATEDEXAMPLE_SCHEDULER_H
 
 #include <queue>
 #include <thread>
@@ -64,14 +64,17 @@ class Queue
 };
 
 
-class UIScheduler {
+class Scheduler {
   public:
-    virtual void schedule(std::function<void()> job);
-    virtual void trigger();
-    virtual ~UIScheduler();
-  private:
-    Queue<std::function<void()>> jobs;
+    virtual void scheduleOnUI(std::function<void()> job);
+    virtual void scheduleOnJS(std::function<void()> job);
+    virtual void triggerUI();
+    virtual void triggerJS();
+    virtual ~Scheduler();
+  protected:
+    Queue<std::function<void()>> uiJobs;
+    Queue<std::function<void()>> jsJobs;
 };
 
 
-#endif //REANIMATEDEXAMPLE_UISCHEDULER_H
+#endif //REANIMATEDEXAMPLE_SCHEDULER_H

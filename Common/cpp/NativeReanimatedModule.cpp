@@ -14,8 +14,8 @@ std::string fun = "";
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
 
-NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<UIScheduler> uiScheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
-  this->uiScheduler = uiScheduler;
+NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+  this->scheduler = scheduler;
 }
 
 jsi::String NativeReanimatedModule::getString(
@@ -27,10 +27,14 @@ jsi::String NativeReanimatedModule::getString(
 void NativeReanimatedModule::call(
   jsi::Runtime &rt,
   const jsi::Function &callback) {
-  uiScheduler->schedule([]{
+
+  scheduler->scheduleOnUI([&rt, callback] () mutable {
      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt OK");
+     scheduler->scheduleOnJS([&rt, callback] () mutable {
+        callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));
+     }
   });
-  callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));
+
 }
 
 }
