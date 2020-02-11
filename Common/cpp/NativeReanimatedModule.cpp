@@ -14,9 +14,10 @@ std::string fun = "";
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
 
-NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<WorkletRegistry> wr, std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<SharedValueRegistry> svr, std::shared_ptr<WorkletRegistry> wr, std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
   this->scheduler = scheduler;
   this->workletRegistry = wr;
+  this->sharedValueRegistry = svr;
 }
 
 void NativeReanimatedModule::registerWorklet( // make it async !!!

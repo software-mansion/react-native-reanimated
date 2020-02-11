@@ -9,6 +9,7 @@
 #include <hermes/hermes.h>
 #include "AndroidScheduler.h"
 #include "WorkletRegistry.h"
+#include "SharedValueRegistry.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -39,9 +40,10 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM));
     scheduler = schedulerForModule;
 
-    std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry);
+    std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
+    std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
 
-    auto module = std::make_shared<NativeReanimatedModule>(workletRegistry, schedulerForModule, nullptr);
+    auto module = std::make_shared<NativeReanimatedModule>(sharedValueRegistry, workletRegistry, schedulerForModule, nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
