@@ -349,7 +349,7 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
+      exec: () => ReadonlyArray<Adaptable<T>>,
       deps: Array<any>,
     ): void
 
