@@ -59,16 +59,20 @@ void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) 
   });
 }
 
-jsi::Value NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id) {
-  return createPromiseAsJSIValue(rt, [id, this](jsi::Runtime &rt2, std::shared_ptr<jsi::Promise> promise) {
-    scheduler->scheduleOnUI([&rt2, promise, id, this]() {
-      auto sv = sharedValueRegistry->getSharedValue(id);
-      scheduler->scheduleOnJS([&rt2, promise, this]) {
-        jsi::Value val = sv.asValue(rt2);
-        promise->resolve(val);
-      }
+void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &cb) {
+  jsi::WeakObject * fun = new jsi::WeakObject(rt, cb);
+  std::shared_ptr<jsi::WeakObject> sharedFunction(fun);
+
+  scheduler->scheduleOnUI([&rt, id, sharedFunction, this]() {
+    auto sv = sharedValueRegistry->getSharedValue(id);
+    scheduler->scheduleOnJS([&rt, sv, sharedFunction] () {
+      jsi::Value val = sv->asValue(rt);
+      jsi::Value functionVal = sharedFunction->lock(rt);
+      jsi::Function cb = functionVal.asObject(rt).asFunction(rt);
+      cb.call(rt, val);
     });
   });
+
 }
 
 void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
@@ -76,7 +80,7 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
     std::shared_ptr<SharedValue> sv(new SharedDouble(value.getNumber()));
     scheduler->scheduleOnUI([=](){
       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
-      oldSV->setNewSharedValue(sv);
+      oldSV->setNewValue(sv);
     });
   } // add here other types
 }
