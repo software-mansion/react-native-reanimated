@@ -12,12 +12,8 @@ public class NativeProxy {
     System.loadLibrary("reanimated");
   }
 
-  private static UIManagerModule mManager;
-
-  public static void setUIManager(UIManagerModule uiManager) {
-    mManager = uiManager;
-  }
-
   public static native void install(long runtimePtr);
+
+  public static native void uiCall();
 
 }

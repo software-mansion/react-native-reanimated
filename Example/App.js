@@ -54,7 +54,7 @@ function callback(text) {
 }
 
 function callback2(text) {
-  return 5;
+  return text+' ok ';
 }
 
 class MainScreen extends React.Component {
@@ -65,7 +65,7 @@ class MainScreen extends React.Component {
   componentDidMount() {
     //console.warn("native: " + global.NativeReanimated.getString("ok"));
     global.NativeReanimated.call(callback);
-    //global.callback2 = callback2;
+    global.callback2 = callback2;
     //console.log("okokokokok:",nativeModule.getString("test"));
    // re.call(callback);
   }
@@ -78,7 +78,12 @@ class MainScreen extends React.Component {
         <TouchableHighlight onPress={ async () => {console.warn(global.NativeReanimated.getString(callback2.toString())); }}>
           <Text> remember callback </Text>
         </TouchableHighlight>
-        <TouchableHighlight onPress={ async () => {ReanimatedModule.custom()}} >
+        <TouchableHighlight onPress={ async () => {
+          await ReanimatedModule.custom();
+          console.log("ok byl call");
+           let z = 100000;
+           let x = 0; while(z--) {x+=1};
+          }} >
           <Text> call from second js context </Text>
         </TouchableHighlight>
         <Text>{callback2.toString()}</Text>

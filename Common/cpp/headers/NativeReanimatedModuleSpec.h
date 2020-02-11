@@ -20,10 +20,11 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker);
 
  public:
-  virtual jsi::String getString(jsi::Runtime &rt, const jsi::String &arg) = 0;
-  virtual void call(
-        jsi::Runtime &rt,
-        const jsi::Function &callback) = 0;
+  virtual void call(jsi::Runtime &rt, const jsi::Function &callback) = 0;
+
+  // worklets
+  virtual void registerWorklet(jsi::Runtime &rt, double id, const jsi::String &globalName) = 0;
+  virtual void unregisterWorklet(jsi::Runtime &rt, double id) = 0;
 };
 
 } // namespace react

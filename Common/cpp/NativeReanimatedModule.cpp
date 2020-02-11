@@ -14,14 +14,29 @@ std::string fun = "";
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
 
-NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<WorkletRegistry> wr, std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
   this->scheduler = scheduler;
+  this->workletRegistry = wr;
 }
 
-jsi::String NativeReanimatedModule::getString(
+void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
+  double id,
   const jsi::String &arg) {
-  return jsi::String::createFromAscii(rt, arg.utf8(rt));
+  std::string functionName = arg.utf8(rt);
+  jsi::Function fun = rt.global().getPropertyAsFunction(rt, functionName.c_str());
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+  scheduler->scheduleOnUI([funPtr, id, this]() mutable {
+    this->workletRegistry->registerWorklet((int)id, funPtr);
+  });
+}
+
+void NativeReanimatedModule::unregisterWorklet( // make it async !!!
+  jsi::Runtime &rt,
+  double id) {
+  scheduler->scheduleOnUI([id, this]() mutable {
+    this->workletRegistry->unregisterWorklet((int)id);
+  });
 }
 
 void NativeReanimatedModule::call(

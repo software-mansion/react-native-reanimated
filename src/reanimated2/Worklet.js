@@ -7,16 +7,17 @@ export default class Worklet {
   static create(func) {
     this.id = this.idCounter++;
     this.func = func;
-    NativeModule.registerWorklet(this.id, this);
+    global[this.id.toString()] = func;
+    NativeModule.registerWorklet(this.id, this.id.toString());
     return this;
   }
 
   start(sharedValues) {
-    NativeModule.activateWorklet(thid.id);
+    NativeModule.activateWorklet(thid.id, sharedValues);
   }
 
   release() {
-    NativeModule.unregisterWorklet(this.id);
+    NativeModule.unregisterWorklet(this.id, sharedValues);
   }
 
 }

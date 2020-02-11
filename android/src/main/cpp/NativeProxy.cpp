@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <hermes/hermes.h>
 #include "AndroidScheduler.h"
+#include "WorkletRegistry.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -38,7 +39,9 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM));
     scheduler = schedulerForModule;
 
-    auto module = std::make_shared<NativeReanimatedModule>(schedulerForModule, nullptr);
+    std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry);
+
+    auto module = std::make_shared<NativeReanimatedModule>(workletRegistry, schedulerForModule, nullptr);
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
@@ -57,13 +60,13 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
 }
 
 
-/*extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
 //    auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
 
       std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
      // std::string add = "5==5";
-      std::string add = "(function(text) {return text+'ooo'})";
+      /*std::string add = "(function(text) {return text+'ooo'})";
       std::string temp = "sdfsdfsdf";
       jsi::Object val = eval(*runtime2, add.c_str()).getObject(*runtime2);
       jsi::Function func = val.getFunction(*runtime2);
@@ -80,18 +83,24 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
       bool one = runtime2->global().hasProperty(*runtime2, propName);
       bool two = r->global().hasProperty(*r, propName);
       __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "maaa %d %d", one, two);
-      //auto s = "ooo dziala to";
-
+      //auto s = "ooo dziala to";*/
+      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "git 0");
 
       // test get callback
       std::string text = "odpowiedni text";
       jsi::Object tempObj = r->global().getPropertyAsObject(*r, "callback2");
-      jsi::Function callback = tempObj.getFunction(*r);
-      jsi::Value ret1 = callback.call(*r, text.c_str());
-      jsi::Value ret2 = callback.call(*runtime2, text.c_str());
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "wartosci to  %d %d", (int)ret1.asNumber(), (int)ret2.asNumber());
+      jsi::Function * ptr = new jsi::Function(tempObj.getFunction(*r));
+
+      //std::unique_ptr<jsi::WeakObject> wo(new WeakObject(*r, callback));
+     ///auto cb = wo->lock(*r).asObject(*r).asFunction(*r);
+
+      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "git 1");
+
+      //jsi::Value ret1 = callback.call(*r, text.c_str());
+      jsi::Value ret2 = ptr->call(*runtime2, text.c_str());
+     // __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "wartosc to  %s", ret2.asString(*runtime2).utf8(*runtime2).c_str());
       //fun->call(*runtime2, jsi::String::createFromUtf8(*runtime2, s));
-}*/
+}
 
 
 

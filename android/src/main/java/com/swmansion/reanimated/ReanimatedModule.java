@@ -1,5 +1,7 @@
 package com.swmansion.reanimated;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -235,6 +237,12 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
         nodesManager.setValue(nodeID, newValue);
       }
     });
+  }
+
+  @ReactMethod
+  public void custom() {
+    Log.v("NATIVE_REANIMATED", "custom");
+    NativeProxy.uiCall();
   }
 
 }
