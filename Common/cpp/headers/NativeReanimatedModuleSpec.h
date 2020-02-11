@@ -32,7 +32,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual void registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) = 0;
   virtual void unregisterSharedValue(jsi::Runtime &rt, double id) = 0;
   virtual jsi::Value getSharedValueAsync(jsi::Runtime &rt, double id) = 0;
-  virtual void setSharedValue(jsi::Runtime &rt, double id, jsi::Value &value) = 0;
+  virtual void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) = 0;
 
 };
 

@@ -8,25 +8,31 @@ SharedDouble::SharedDouble(double value) : SharedValue() {
   this->value = value;
 }
 
-jsi::Value SharedDouble::asValue(jsi::Runtime &rt) {
-  return Value(this->value);
+jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
+  return jsi::Value(this->value);
 }
 
-void SharedDouble::setNewValue(SharedValue sv) {
-  this->value = sv.value;
+void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
+  SharedDouble * sd = (SharedDouble*) sv.get();
+  this->value = sd->value;
 }
 
 jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
 
-  class : public jsi::HostObject {
+  class HO : public jsi::HostObject {
+    public:
     double * value = nullptr;
+
+    HO(double * val) {
+      this->value = val;
+    }
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       auto methodName = name.utf8(rt);
 
       if (methodName == "get") {
 
-        auto callback = [](
+        auto callback = [this](
           jsi::Runtime &runtime,
           const jsi::Value &thisValue,
           const jsi::Value *arguments,
@@ -34,11 +40,11 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
         ) -> jsi::Value {
           return jsi::Value(*value);
         };
-        return jsi::Function::createFromHostFunction(runtime, name, 0, callback);
+        return jsi::Function::createFromHostFunction(rt, name, 0, callback);
 
       } else if (methodName == "set") {
 
-        auto callback = [](
+        auto callback = [this](
           jsi::Runtime &runtime,
           const jsi::Value &thisValue,
           const jsi::Value *arguments,
@@ -48,20 +54,18 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
           (*value) = newValue;
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(runtime, name, 1, callback);
+        return jsi::Function::createFromHostFunction(rt, name, 1, callback);
 
       }
 
       return jsi::Value::undefined();
     }
 
-    void setValuePtr(double * ptr) {
-      value = ptr;
-    }
-  } ho;
+  };
 
-  ho.set(&value);
-  return ho;
+  std::shared_ptr<jsi::HostObject> ptr(new HO(&value));
+
+  return jsi::Object::createFromHostObject(rt, ptr);
 }
 
 SharedDouble::~SharedDouble() {

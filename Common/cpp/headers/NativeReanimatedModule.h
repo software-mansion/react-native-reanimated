@@ -7,6 +7,8 @@
 #include "Scheduler.h"
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
+#include "SharedValue.h"
+#include "SharedDouble.h"
 
 #include <unistd.h>
 
@@ -25,7 +27,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void unregisterSharedValue(jsi::Runtime &rt, double id) override;
     jsi::Value getSharedValueAsync(jsi::Runtime &rt, double id) override;
-    void setSharedValue(jsi::Runtime &rt, double id, jsi::Value &value) override;
+    void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 };

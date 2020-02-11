@@ -73,13 +73,13 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_setSharedValue(
   return jsi::Value::undefined();
 }
 
-static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterSharedValue(
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->getSharedValue(
+      ->getSharedValueAsync(
           rt, std::move(args[0].getNumber()));
 }
 
@@ -97,8 +97,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInv
 
   methodMap_["setSharedValue"] = MethodMetadata{
       2, __hostFunction_NativeReanimatedModuleSpec_setSharedValue};
-  methodMap_["getSharedValue"] = MethodMetadata{
-      1, __hostFunction_NativeReanimatedModuleSpec_getSharedValue};
+  methodMap_["getSharedValueAsync"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync};
 
   methodMap_["call"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_call};

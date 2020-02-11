@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <jsi/jsi.h>
+#include "SharedValue.h"
 
 using namespace facebook;
 
