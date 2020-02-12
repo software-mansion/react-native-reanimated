@@ -1,13 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Text, View, StyleSheet, Button, StatusBar } from 'react-native';
-import { Transitioning, Transition } from 'react-native-reanimated';
+import { Text, View, Button } from 'react-native';
+import { Transitioning, TransitionApi } from 'react-native-reanimated';
 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
+const { Sequence, Together, Out, In, Change } = TransitionApi;
 
 const Hour = ({ hour, min, pm }) => (
   <View
@@ -62,37 +57,30 @@ const Tix = () => (
 );
 
 function Ticket() {
-  let [refreshed, setRefreshed] = useState(1);
+  const [refreshed, setRefreshed] = useState(1);
   const ref = useRef();
 
-  const transition = (
-    <Transition.Sequence>
-      <Transition.Out type="fade" durationMs={400} interpolation="easeIn" />
-      <Transition.Change />
-      <Transition.Together>
-        <Transition.In
-          type="slide-bottom"
-          durationMs={400}
-          interpolation="easeOut"
-          propagation="bottom"
-        />
-        <Transition.In type="fade" durationMs={200} delayMs={200} />
-      </Transition.Together>
-    </Transition.Sequence>
-  );
   return (
     <View style={{ flex: 1 }}>
       <Button
         title="refresh"
         color="#FF5252"
         onPress={() => {
-          ref.current.animateNextTransition();
+          ref.current.animateNextTransition(
+            Sequence([
+              Out({ type: 'fade', durationMs: 400, interpolation: 'easeIn' }),
+              Change(),
+              Together([
+                In({ type: 'slide-bottom', durationMs: 400, interpolation: 'easeOut', propagation: 'bottom' }),
+                In({ type: 'fade', durationMs: 200, delayMs: 200 })
+              ])
+            ])
+          );
           setRefreshed(refreshed + 1);
         }}
       />
       <Transitioning.View
         ref={ref}
-        transition={transition}
         style={{
           flexGrow: 1,
           justifyContent: 'center',
@@ -102,7 +90,5 @@ function Ticket() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({});
 
 export default Ticket;
