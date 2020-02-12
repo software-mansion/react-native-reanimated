@@ -12,6 +12,10 @@ jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
   return jsi::Value(this->value);
 }
 
+jobject SharedDouble::toJavaObject() const {
+  return
+}
+
 void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   SharedDouble * sd = (SharedDouble*) sv.get();
   this->value = sd->value;

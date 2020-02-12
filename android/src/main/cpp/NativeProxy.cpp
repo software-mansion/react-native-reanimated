@@ -64,6 +64,53 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
   scheduler->triggerJS();
 }
 
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_Scheduler_getChangedSharedValuesAfterRender(JNIEnv* env) {
+  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
+  nrm->render(runtime2);
+
+  jclass arrayListClass = env->FindClass("java/util/ArrayList");
+  jmethodID arrayListConstructor = env->GetMethodID(arrayListClass, "<init>", "()V");
+  jmethodID addMethod = env->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
+
+  jclass pairClass = env->FindClass("javafx/util/Pair");
+  jmethodID pairConstructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+
+  // This is needed to go from double to Double (boxed)
+  jclass doubleClass = env->FindClass("java/lang/Double");
+  jmethodID doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
+
+  // This is needed to go from double to Double (boxed)
+  jclass integerClass = env->FindClass("java/lang/Integer");
+  jmethodID integerValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Integer;");
+
+  // The list we're going to return:
+  jobject list = env->NewObject(arrayListClass, arrayListConstructor);
+
+  for(auto & sharedValue : nrm->sharedValueRegistry->sharedValueMap) {
+    int id = sharedValue.first;
+    std::shared_ptr<SharedValue> sv = sharedValue.second;
+    if (!sv->dirty) {
+      continue;
+    }
+    sv->dirty = false;
+
+    jobject x = env->CallStaticObjectMethod(integerClass, integerValueOf, id);
+
+    // temporary solution
+    double val = ((SharedDouble*)(sv.get()))->value;
+    // end
+    jobject y = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
+
+    // Create a new pair object
+    jobject pair = env->NewObject(pairClass, pairConstructor, x, y);
+    // Add it to the list
+    env->CallBooleanMethod(list, addMethod, pair);
+  }
+
+  return list;
+}
+
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {

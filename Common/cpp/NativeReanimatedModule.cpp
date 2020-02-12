@@ -82,6 +82,11 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
   } // add here other types
 }
 
+void NativeReanimatedModule::render(Runtime &rt) {
+  //ToDo create module
+  applierRegistry.render(rt);
+}
+
 // test method
 
 void NativeReanimatedModule::call(
@@ -105,6 +110,8 @@ void NativeReanimatedModule::call(
   });
   callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));*/
 }
+
+
 
 }
 }

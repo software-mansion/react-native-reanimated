@@ -28,6 +28,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &callback) override;
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
+    void render();
+
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 
     std::shared_ptr<WorkletRegistry> workletRegistry;
