@@ -1,15 +1,11 @@
 #include "NativeReanimatedModule.h"
 #include <memory>
 
-#define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
 
 namespace facebook {
 namespace react {
-
-std::string fun = "";
-
 
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
@@ -25,9 +21,10 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<SharedValueRegist
 void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
   double id,
-  const jsi::String &arg) {
-  std::string functionName = arg.utf8(rt);
-  jsi::Function fun = rt.global().getPropertyAsFunction(rt, functionName.c_str());
+  const jsi::Value &holder) {
+  std::string functionName = "func";
+  jsi::Object obj = holder.getObject(rt);
+  jsi::Function fun = obj.getPropertyAsFunction(rt, functionName.c_str());
   std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
   scheduler->scheduleOnUI([funPtr, id, this]() mutable {
     this->workletRegistry->registerWorklet((int)id, funPtr);

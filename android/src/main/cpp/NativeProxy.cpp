@@ -110,6 +110,8 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
         sv1->asParameter(*runtime2),
         sv2->asParameter(*runtime2),
         sv3->asParameter(*runtime2));
+      //std::shared_ptr<jsi::Function> fun = nrm->workletRegistry->getWorklet(1);
+      //jsi::Value ret1 = fun->call(*runtime2);
       double res = ((SharedDouble*)(sv3.get()))->value;
 
 

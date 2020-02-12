@@ -4,11 +4,10 @@ export default class Worklet {
     
   static idCounter = 0;
   
-  static create(func) {
-    this.id = this.idCounter++;
+  constructor(func) {
+    this.id = Worklet.idCounter++;
     this.func = func;
-    global[this.id.toString()] = func;
-   // NativeModule.registerWorklet(this.id, this.id.toString()); //TODO remove useless arg
+    NativeModule.registerWorklet(this.id, this); 
     return this;
   }
 

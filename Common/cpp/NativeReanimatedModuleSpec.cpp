@@ -1,5 +1,8 @@
 #include "NativeReanimatedModuleSpec.h"
 
+#include <android/log.h>
+#define APPNAME "NATIVE_REANIMATED"
+
 namespace facebook {
 namespace react {
 
@@ -21,9 +24,10 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerWorklet(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
+
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerWorklet(
-          rt, std::move(args[0].getNumber()), std::move(args[1].getString(rt)));
+          rt, std::move(args[0].getNumber()), std::move(args[1]));
   return jsi::Value::undefined();
 }
 

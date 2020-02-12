@@ -34,8 +34,8 @@ export default {
 
   // worklet
 
-  registerWorklet(workletId, workletName) {
-    InnerNativeModule.registerWorklet(workletId, workletName);
+  registerWorklet(workletId, holder) {
+    InnerNativeModule.registerWorklet(workletId, holder);
   },
 
   connectEventWithWorklet(workletID, viewID, eventName /* onGestureStateChange */ ) {

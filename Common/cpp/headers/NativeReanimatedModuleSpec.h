@@ -24,7 +24,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
 
   // worklets
 
-  virtual void registerWorklet(jsi::Runtime &rt, double id, const jsi::String &globalName) = 0;
+  virtual void registerWorklet(jsi::Runtime &rt, double id, const jsi::Value &holder) = 0;
   virtual void unregisterWorklet(jsi::Runtime &rt, double id) = 0;
 
   // SharedValue
