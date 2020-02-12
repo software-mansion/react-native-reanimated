@@ -6,9 +6,9 @@ import AnimatedNode from '../core/AnimatedNode';
 const procColor = proc(function(r, g, b, a) {
   const color = add(
     multiply(a, 1 << 24),
-    multiply(r, 1 << 16),
-    multiply(g, 1 << 8),
-    b
+    multiply(round(r), 1 << 16),
+    multiply(round(g), 1 << 8),
+    round(b)
   );
   
   if (Platform.OS === 'android') {
