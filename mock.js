@@ -50,6 +50,20 @@ function createMockComponent(name) {
   };
 }
 
+function createTransitioningComponent(Component) {
+  return class extends React.Component {
+    static displayName = `Transitioning.${Component.displayName || Component.name || 'Component'}`;
+
+    setNativeProps() {}
+
+    animateNextTransition() {}
+
+    render() {
+      return <Component {...this.props} />;
+    }
+  };
+}
+
 const Reanimated = {
   SpringUtils: {
     makeDefaultConfig: NOOP,
@@ -189,5 +203,7 @@ module.exports = {
     In: createMockComponent('Transition.In'),
     Out: createMockComponent('Transition.Out'),
     Change: createMockComponent('Transition.Change')
-  }
+  },
+
+  createTransitioningComponent,
 };
