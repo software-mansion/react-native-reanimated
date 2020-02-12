@@ -21,10 +21,10 @@ import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWr
 import {
   Transition,
   Transitioning,
+  TransitionApi,
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
-
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
 const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
@@ -68,13 +68,12 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
-
+  TransitionApi,
+  createTransitioningComponent,
   // classes
   AnimatedClock as Clock,
   AnimatedValue as Value,
   AnimatedNode as Node,
-
   // animations
   decayWrapper as decay,
   timingWrapper as timing,

@@ -121,10 +121,15 @@ function createTransitioningComponent(Component) {
       this.viewRef.current.setNativeProps(props);
     }
 
-    animateNextTransition() {
+    animateNextTransition(transitionConfig) {
+      const transitions =
+        transitionConfig && Array.isArray(transitionConfig)
+          ? transitionConfig
+          : [transitionConfig];
+
       const viewTag = findNodeHandle(this.viewRef.current);
       ReanimatedModule.animateNextTransition(viewTag, {
-        transitions: this.transitions,
+        transitions: transitions || this.transitions,
       });
     }
 
@@ -155,4 +160,48 @@ const Transition = {
   Change: wrapTransitioningContext(Change),
 };
 
-export { Transitioning, Transition, createTransitioningComponent };
+function groupTransitionCreator(isSequence) {
+  return function(transitions) {
+    return {
+      type: 'group',
+      sequence: !!isSequence,
+      transitions: transitions.reduce((acc, curr) => {
+        return acc.concat(Array.isArray(curr) ? curr : [curr]);
+      }, []),
+    };
+  };
+}
+
+function transitionCreator(type) {
+  return function({
+    durationMs,
+    interpolation,
+    type: animation,
+    delayMs,
+    propagation,
+  } = {}) {
+    return {
+      type,
+      durationMs,
+      interpolation,
+      animation,
+      delayMs,
+      propagation,
+    };
+  };
+}
+
+const TransitionApi = {
+  Sequence: groupTransitionCreator(true),
+  Together: groupTransitionCreator(false),
+  In: transitionCreator('in'),
+  Out: transitionCreator('out'),
+  Change: transitionCreator('change'),
+};
+
+export {
+  Transitioning,
+  Transition,
+  TransitionApi,
+  createTransitioningComponent,
+};
