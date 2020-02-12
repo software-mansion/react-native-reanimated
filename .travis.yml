@@ -50,6 +50,7 @@ matrix:
     install:
     - nvm --version
     - echo $NODE_VERSION
+    - xcodebuild -version
     - sudo launchctl limit maxfiles 2048 unlimited
     - sudo ulimit -n 10000
     - nvm install $NODE_VERSION
