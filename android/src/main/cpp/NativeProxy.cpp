@@ -28,6 +28,8 @@ std::unique_ptr<facebook::jsi::Runtime> r;
 
 std::shared_ptr<Scheduler> scheduler;
 
+std::shared_ptr<NativeReanimatedModule> nrm;
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     jobject thiz, jlong runtimePtr) {
@@ -44,6 +46,7 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
 
     auto module = std::make_shared<NativeReanimatedModule>(sharedValueRegistry, workletRegistry, schedulerForModule, nullptr);
+    nrm = module;
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
@@ -86,21 +89,34 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
       bool two = r->global().hasProperty(*r, propName);
       __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "maaa %d %d", one, two);
       //auto s = "ooo dziala to";*/
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "git 0");
+      //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "git 0");
 
       // test get callback
-      std::string text = "odpowiedni text";
-      jsi::Object tempObj = r->global().getPropertyAsObject(*r, "callback2");
-      jsi::Function * ptr = new jsi::Function(tempObj.getFunction(*r));
+    // std::string text = "odpowiedni text";
+      //jsi::Object tempObj = r->global().getPropertyAsObject(*r, "callback2");
+     // jsi::Function * ptr = new jsi::Function(tempObj.getFunction(*r));
 
       //std::unique_ptr<jsi::WeakObject> wo(new WeakObject(*r, callback));
      ///auto cb = wo->lock(*r).asObject(*r).asFunction(*r);
 
       __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "git 1");
 
+      std::shared_ptr<jsi::Function> fun = nrm->workletRegistry->getWorklet(0);
+      std::shared_ptr<SharedValue> sv1 = nrm->sharedValueRegistry->getSharedValue(0);
+      std::shared_ptr<SharedValue> sv2 = nrm->sharedValueRegistry->getSharedValue(1);
+      std::shared_ptr<SharedValue> sv3 = nrm->sharedValueRegistry->getSharedValue(2);
+      fun->call(*runtime2,
+        jsi::Value::undefined(),
+        sv1->asParameter(*runtime2),
+        sv2->asParameter(*runtime2),
+        sv3->asParameter(*runtime2));
+      double res = ((SharedDouble*)(sv3.get()))->value;
+
+
+
       //jsi::Value ret1 = callback.call(*r, text.c_str());
-      jsi::Value ret2 = ptr->call(*runtime2, text.c_str());
-     // __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "wartosc to  %s", ret2.asString(*runtime2).utf8(*runtime2).c_str());
+     // jsi::Value ret2 = ptr->call(*runtime2, text.c_str());
+      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "wartosc to  %f", res);
       //fun->call(*runtime2, jsi::String::createFromUtf8(*runtime2, s));
 }
 

@@ -67,6 +67,9 @@ export default Animated;
 export * from './base';
 export * from './derived';
 
+import Worklet from './reanimated2/Worklet';
+import SharedValue from './reanimated2/SharedValue';
+
 export {
   Easing,
   Transitioning,
@@ -83,4 +86,7 @@ export {
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
+  // Reanimated 2.0
+  Worklet,
+  SharedValue,
 };

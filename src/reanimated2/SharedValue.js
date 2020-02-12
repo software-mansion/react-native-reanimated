@@ -6,11 +6,15 @@ export default class SharedValue {
 
   constructor(value) {
     this.id = SharedValue.idCounter++;
-    NativeModule.createSharedValue(this.id, value)
+    NativeModule.registerSharedValue(this.id, value);
   }
 
   async get() {
-    return NativeModule.getSharedValue(this.id);
+    return new Promise(function(resolve, reject) {
+      NativeModule.getSharedValueAsync(this.id, (value) => {
+        resolve(value);
+      });
+    });
   }
 
   set(newValue) {
@@ -18,7 +22,7 @@ export default class SharedValue {
   }
 
   release() {
-    NativeModule.destroySharedValue(this.id);
+    NativeModule.unregisterSharedValue(this.id);
   }
 
 }

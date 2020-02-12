@@ -17,8 +17,7 @@ namespace react {
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<Scheduler> scheduler;
-  std::shared_ptr<WorkletRegistry> workletRegistry;
-  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
+
   public:
     NativeReanimatedModule(std::shared_ptr<SharedValueRegistry> svr, std::shared_ptr<WorkletRegistry> wr, std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker);
     void registerWorklet(jsi::Runtime &rt, double id, const jsi::String &arg) override;
@@ -30,6 +29,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
+
+    std::shared_ptr<WorkletRegistry> workletRegistry;
+    std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
 };
 
 }

@@ -10,3 +10,7 @@ void WorkletRegistry::registerWorklet(int id, std::shared_ptr<jsi::Function> ptr
 void WorkletRegistry::unregisterWorklet(int id) {
   workletMap.erase(id);
 }
+
+std::shared_ptr<jsi::Function> WorkletRegistry::getWorklet(int id) {
+  return workletMap[id];
+}

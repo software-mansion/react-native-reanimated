@@ -8,7 +8,7 @@ export default class Worklet {
     this.id = this.idCounter++;
     this.func = func;
     global[this.id.toString()] = func;
-    NativeModule.registerWorklet(this.id, this.id.toString());
+   // NativeModule.registerWorklet(this.id, this.id.toString()); //TODO remove useless arg
     return this;
   }
 
@@ -17,7 +17,7 @@ export default class Worklet {
   }
 
   release() {
-    NativeModule.unregisterWorklet(this.id, sharedValues);
+    NativeModule.unregisterWorklet(this.id);
   }
 
 }

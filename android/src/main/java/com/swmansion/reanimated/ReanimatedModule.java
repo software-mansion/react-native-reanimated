@@ -38,6 +38,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   private @Nullable NodesManager mNodesManager;
   private @Nullable TransitionModule mTransitionManager;
 
+  private UIManagerModule mUIManager;
+
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -49,6 +51,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
     mTransitionManager = new TransitionModule(uiManager);
+
+    mUIManager = uiManager;
 
     final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
     uiManager.addUIBlock(new UIBlock() {
@@ -242,7 +246,12 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   @ReactMethod
   public void custom() {
     Log.v("NATIVE_REANIMATED", "custom");
-    NativeProxy.uiCall();
+    mUIManager.addUIBlock(new UIBlock() {
+      @Override
+      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+        NativeProxy.uiCall();
+      }
+    });
   }
 
 }

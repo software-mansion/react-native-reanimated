@@ -5,58 +5,57 @@ import {
 } from 'react-native';
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
-export default class NativeModule {
+export default {
 
   // shared value
-  createSharedValue(valueId, value) {
-    InnerNativeModule.createSharedValue(valueId, value);
-  }
+  registerSharedValue(valueId, value) {
+    InnerNativeModule.registerSharedValue(valueId, value);
+  },
 
-  destroySharedValue(valueId) {
-    InnerNativeModule.destroySharedValue(valueId);
-  }
+  unregisterSharedValue(valueId) {
+    InnerNativeModule.unregisterSharedValue(valueId);
+  },
 
-  async getSharedValue(valueId) {
-    return InnerNativeModule.getSharedValue(valueId);
-  }
+  async getSharedValue(valueId, callback) {
+    return InnerNativeModule.getSharedValue(valueId, callback);
+  },
 
   setSharedValue(valueId, newValue) {
     InnerNativeModule.setSharedValue(valueId, newValue);
-  }
+  },
 
   connectViewWithValue(viewTag, valueId, propName) {
     InnerNativeModule.connectViewWithValue(viewTag, valueId, propName);
-  }
+  },
 
   disconnectViewFromValue(viewTag, valueId) {
     InnerNativeModule.disconnectViewFromValue(viewTag, valueId);
-  }
+  },
 
   // worklet
 
-  registerWorklet(workletId, worklet) {
-    InnerNativeModule.registerWorklet(workletId, worklet);
-  }
+  registerWorklet(workletId, workletName) {
+    InnerNativeModule.registerWorklet(workletId, workletName);
+  },
 
   connectEventWithWorklet(workletID, viewID, eventName /* onGestureStateChange */ ) {
 
-  }
+  },
 
   disconnectEventFromWorklet(workletID, viewID, eventName /* onGestureStateChange */ ) {
 
-  }
+  },
 
-  startWorklet(workletId, arguments /* shared values (worklet ID) */ ) {
+  startWorklet(workletId, sharedValues /* shared values (worklet ID) */ ) {
     InnerNativeModule.activateWorklet(workletId);
-  }
+  },
 
   stopWorklet(workletId) {
     InnerNativeModule.activateWorklet(workletId);
-  }
+  },
 
   unregisterWorklet(workletId) {
-    DeviceEventEmitter.removeListener()
     InnerNativeModule.unregisterWorklet(workletId);
-  }
+  },
 
-}
+};

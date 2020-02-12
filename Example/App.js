@@ -38,6 +38,8 @@ import TransitionsShuffle from './transitions/shuffle';
 import TransitionsTicket from './transitions/ticket';
 import WidthAndHeight from './widthAndHeight';
 
+import { SharedValue, Worklet } from 'react-native-reanimated';
+
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
   'Module RCTImageLoader',
@@ -63,11 +65,24 @@ class MainScreen extends React.Component {
   };
 
   componentDidMount() {
-    //console.warn("native: " + global.NativeReanimated.getString("ok"));
-    global.NativeReanimated.call(callback);
-    global.callback2 = callback2;
-    //console.log("okokokokok:",nativeModule.getString("test"));
-   // re.call(callback);
+    this.sv1 = new SharedValue(0);
+    this.sv2 = new SharedValue(1);
+    this.sv3 = new SharedValue(-100);
+  
+    this.worklet = new Worklet((reanimatedModule, sv1, sv2, sv3) => {
+      const x = sv1.get();
+      const y = sv2.get();
+      sv3.set(x+y);
+      return true;
+    });
+
+  }
+
+  componentWillUnmount() {
+    this.sv1.release();
+    this.sv2.release();
+    this.sv3.release();
+    this.worklet.release();
   }
 
   render() {
@@ -75,21 +90,19 @@ class MainScreen extends React.Component {
     return (
       <View>
         <Text>dziala</Text>
-        <TouchableHighlight onPress={ async () => {console.warn(global.NativeReanimated.getString(callback2.toString())); }}>
+        <TouchableHighlight onPress={ async () => {console.warn("ok");}}>
           <Text> remember callback </Text>
         </TouchableHighlight>
         <TouchableHighlight onPress={ async () => {
           await ReanimatedModule.custom();
-          console.log("ok byl call");
-           let z = 100000;
-           let x = 0; while(z--) {x+=1};
+            console.log("ok byl call");
           }} >
-          <Text> call from second js context </Text>
+          <Text> custom </Text>
         </TouchableHighlight>
-        <Text>{callback2.toString()}</Text>
       </View>
     );
   }
+
 }
 
 const ExampleApp = createStackNavigator(

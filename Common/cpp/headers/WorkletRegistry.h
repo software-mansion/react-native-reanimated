@@ -16,6 +16,7 @@ class WorkletRegistry {
   public:
     void registerWorklet(int id, std::shared_ptr<jsi::Function> ptr);
     void unregisterWorklet(int id);
+    std::shared_ptr<jsi::Function> getWorklet(int id);
 };
 
 #endif //REANIMATEDEXAMPLE_WORKLETREGISTRY_H
