@@ -36,9 +36,9 @@ matrix:
     - cd ./android && ./gradlew assembleDebug
 
   - language: objective-c
-    osx_image: xcode10.2
-    xcode_sdk: iphonesimulator12.2
-    xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
+    osx_image: xcode11.3
+    xcode_sdk: iphonesimulator13.2
+    xcode_destination: platform=iOS Simulator,OS=13.2,name=iPhone X
     env: NODE_VERSION=10.15.3
 
     branches:
