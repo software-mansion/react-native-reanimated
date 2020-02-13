@@ -9,6 +9,7 @@
 #include "SharedValueRegistry.h"
 #include "SharedValue.h"
 #include "SharedDouble.h"
+#include "WorkletModule.h"
 
 #include <unistd.h>
 

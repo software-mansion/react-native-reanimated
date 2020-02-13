@@ -106,8 +106,8 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
 }
 
 void NativeReanimatedModule::render(Runtime &rt) {
-  //ToDo create module
-
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(std::shared_ptr<NativeReanimatedModule>(this)));
+  jsi::Object module = jsi::Object::createFromHostObject(rt, ho);
   applierRegistry.render(rt, module);
 }
 
