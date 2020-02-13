@@ -34,6 +34,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &callback) = 0;
   virtual void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) = 0;
 
+
+  // Appliers
+  virtual void registerApplierOnRender(jsi::Runtime &rt, double id, double workletId, vector<double> svIds) = 0;
+  virtual void unregisterApplierFromRender(jsi::Runtime &rt, double id) = 0;
 };
 
 } // namespace react

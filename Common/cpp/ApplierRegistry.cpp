@@ -26,7 +26,7 @@ void ApplierRegistry::unregisterApplierFromEvent(int id) {
   eventAppliers[eventName].erase(id);
 }
 
-void ApplierRegistry::render(Runtime &rt, const jsi::Object &module) {
+void ApplierRegistry::render(Runtime &rt, jsi::Object & module) {
   std::vector<int> idsToRemove;
   for (auto & p : renderAppliers) {
     int id = p.first;

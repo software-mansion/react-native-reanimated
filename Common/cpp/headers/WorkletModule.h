@@ -1,0 +1,10 @@
+//
+// Created by Szymon Kapala on 2020-02-13.
+//
+
+#ifndef REANIMATEDEXAMPLE_WORKLETMODULE_H
+#define REANIMATEDEXAMPLE_WORKLETMODULE_H
+
+class Worklet
+
+#endif //REANIMATEDEXAMPLE_WORKLETMODULE_H

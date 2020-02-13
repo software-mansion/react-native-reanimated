@@ -4,8 +4,9 @@
 
 #include "SharedDouble.h"
 
-SharedDouble::SharedDouble(double value) : SharedValue() {
+SharedDouble::SharedDouble(int id, double value) : SharedValue() {
   this->value = value;
+  this->id = id;
 }
 
 jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
@@ -26,15 +27,19 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
   class HO : public jsi::HostObject {
     public:
     double * value = nullptr;
+    bool * dirty = nullptr;
+    int id;
 
-    HO(double * val) {
+    HO(int id, double * val, bool * dirty) {
       this->value = val;
+      this->dirty = dirty;
+      this->id = id;
     }
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
-      auto methodName = name.utf8(rt);
+      auto propName = name.utf8(rt);
 
-      if (methodName == "get") {
+      if (propName == "get") {
 
         auto callback = [this](
           jsi::Runtime &runtime,
@@ -46,7 +51,7 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
         };
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
 
-      } else if (methodName == "set") {
+      } else if (propName == "set") {
 
         auto callback = [this](
           jsi::Runtime &runtime,
@@ -54,12 +59,15 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
           const jsi::Value *arguments,
           size_t count
         ) -> jsi::Value {
+          (*dirty) = true;
           double newValue = arguments[0].asNumber();
           (*value) = newValue;
           return jsi::Value::undefined();
         };
         return jsi::Function::createFromHostFunction(rt, name, 1, callback);
 
+      } else if (propName == "id") {
+        return jsi::Value(id);
       }
 
       return jsi::Value::undefined();
@@ -67,7 +75,7 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
 
   };
 
-  std::shared_ptr<jsi::HostObject> ptr(new HO(&value));
+  std::shared_ptr<jsi::HostObject> ptr(new HO(id, &value, &dirty));
 
   return jsi::Object::createFromHostObject(rt, ptr);
 }

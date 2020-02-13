@@ -69,7 +69,7 @@ class MainScreen extends React.Component {
     this.sv2 = new SharedValue(1);
     this.sv3 = new SharedValue(-100);
 
-    this.worklet = new Worklet((reanimatedModule, sv1, sv2, sv3) => {
+    this.worklet = new Worklet((sv1, sv2, sv3) => {
       const x = sv1.get();
       const y = sv2.get();
       sv3.set(x+y);
@@ -80,12 +80,14 @@ class MainScreen extends React.Component {
       return 10;
     });
 
+    this.release = this.worklet.apply(this.sv1, this.sv2, this.sv3);
   }
 
   componentWillUnmount() {
     this.sv1.release();
     this.sv2.release();
     this.sv3.release();
+    this.release();
     this.worklet.release();
     this.worklet2.release();
   }

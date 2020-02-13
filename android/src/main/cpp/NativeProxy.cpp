@@ -10,6 +10,7 @@
 #include "AndroidScheduler.h"
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
+#include "ApplierRegistry.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -44,8 +45,14 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
+    std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry);
 
-    auto module = std::make_shared<NativeReanimatedModule>(sharedValueRegistry, workletRegistry, schedulerForModule, nullptr);
+    auto module = std::make_shared<NativeReanimatedModule>(
+      applierRegistry,
+      sharedValueRegistry,
+      workletRegistry,
+      schedulerForModule,
+      nullptr);
     nrm = module;
     auto object = jsi::Object::createFromHostObject(runtime, module);
 
@@ -73,7 +80,7 @@ Java_com_swmansion_reanimated_Scheduler_getChangedSharedValuesAfterRender(JNIEnv
   jmethodID arrayListConstructor = env->GetMethodID(arrayListClass, "<init>", "()V");
   jmethodID addMethod = env->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
 
-  jclass pairClass = env->FindClass("javafx/util/Pair");
+  jclass pairClass = env->FindClass("android/util/Pair");
   jmethodID pairConstructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
 
   // This is needed to go from double to Double (boxed)

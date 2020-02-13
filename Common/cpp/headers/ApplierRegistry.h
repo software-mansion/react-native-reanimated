@@ -14,7 +14,7 @@ class ApplierRegistry {
     void unregisterApplierFromRender(int id);
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);
     void unregisterApplierFromEvent(int id);
-    void render(Runtime &rt);
+    void render(Runtime &rt, jsi::Object & module);
     void event(Runtime &rt, std::string eventName);
 };
 

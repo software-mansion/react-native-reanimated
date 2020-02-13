@@ -88,6 +88,36 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync(
     return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRender(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+
+  std::vector<int> svIds;
+  jsi::Array ar = args[2].getObject(rt).asArray(rt);
+  for (int i = 0; i < ar.length(rt); ++i) {
+    int svId = (int)(ar.getValueAtIndex(rt, i).getNumber());
+    svIds.push_back(svIds);
+  }
+
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->registerApplierOnRender(
+          rt, (int)args[0].getNumber(), (int)args[1].getNumber(), svIds);
+  return jsi::Value::undefined();
+}
+
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterApplierOnRender(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->unregisterApplierOnRender(
+          rt, (int)args[0].getNumber());
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["registerWorklet"] = MethodMetadata{
@@ -104,6 +134,11 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInv
       2, __hostFunction_NativeReanimatedModuleSpec_setSharedValue};
   methodMap_["getSharedValueAsync"] = MethodMetadata{
       2, __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync};
+
+  methodMap_["registerApplierOnRender"] = MethodMetadata{
+      3, __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRender};
+  methodMap_["unregisterApplierOnRender"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_unregisterApplierOnRender};
 
   methodMap_["call"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_call};

@@ -10,7 +10,14 @@ namespace react {
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
 
-NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<SharedValueRegistry> svr, std::shared_ptr<WorkletRegistry> wr, std::shared_ptr<Scheduler> scheduler, std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+NativeReanimatedModule::NativeReanimatedModule(
+  std::shared_ptr<ApplierRegistry> ar,
+  std::shared_ptr<SharedValueRegistry> svr,
+  std::shared_ptr<WorkletRegistry> wr,
+  std::shared_ptr<Scheduler> scheduler,
+  std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+
+  this->applierRegistry = ar;
   this->scheduler = scheduler;
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
@@ -82,9 +89,26 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
   } // add here other types
 }
 
+void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, vector<int> svIds) {
+  std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+  std::vector<std::shared_ptr<SharedValue>> svs;
+  for (auto &i : svIds) {
+    std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
+    svs.push_back(sv);
+  }
+
+  std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+  applierRegistry->registerApplierForRender(id, applier);
+}
+
+void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int id) {
+  applierRegistry->unregisterApplierFromRender(id);
+}
+
 void NativeReanimatedModule::render(Runtime &rt) {
   //ToDo create module
-  applierRegistry.render(rt);
+
+  applierRegistry.render(rt, module);
 }
 
 // test method

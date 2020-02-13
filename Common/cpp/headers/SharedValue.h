@@ -14,7 +14,7 @@ using namespace facebook;
 class SharedValue {
   public:
     bool shouldBeSentToJava = true;
-    bool dirty = false;
+    bool dirty = true;
     virtual jsi::Value asValue(jsi::Runtime &rt) const = 0;
     virtual jsi::Object asParameter(jsi::Runtime &rt) = 0;
     virtual void setNewValue(std::shared_ptr<SharedValue> sv) = 0;
