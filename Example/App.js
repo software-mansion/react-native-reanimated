@@ -80,7 +80,7 @@ class MainScreen extends React.Component {
       return 10;
     });
 
-    this.release = this.worklet.apply(this.sv1, this.sv2, this.sv3);
+    this.release = this.worklet.apply([this.sv1, this.sv2, this.sv3]);
   }
 
   componentWillUnmount() {

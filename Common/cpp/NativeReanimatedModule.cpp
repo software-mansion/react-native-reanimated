@@ -90,19 +90,25 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
 }
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
-  std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
-  std::vector<std::shared_ptr<SharedValue>> svs;
-  for (auto &i : svIds) {
-    std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
-    svs.push_back(sv);
-  }
+  scheduler->scheduleOnUI([=]() {
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "jestemmm ");
+    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::vector<std::shared_ptr<SharedValue>> svs;
+    for (auto &i : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
+      svs.push_back(sv);
+    }
 
-  std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
-  applierRegistry->registerApplierForRender(id, applier);
+    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    applierRegistry->registerApplierForRender(id, applier);
+    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "zarejestrowano %d %d ", id, workletId);
+  });
 }
 
 void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int id) {
-  applierRegistry->unregisterApplierFromRender(id);
+  scheduler->scheduleOnUI([=](){
+    applierRegistry->unregisterApplierFromRender(id);
+  });
 }
 
 void NativeReanimatedModule::render(jsi::Runtime &rt) {

@@ -46,8 +46,8 @@ export default {
 
   },
 
-  registerApplier(applierId, workletId, sharedValues /* shared values (worklet ID) */ ) {
-    InnerNativeModule.registerApplierOnRender(applierId, workletId, sharedValues);
+  registerApplier(applierId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {
+    InnerNativeModule.registerApplierOnRender(applierId, workletId, sharedValueIds);
   },
 
   unregisterApplier(applierId) {

@@ -14,8 +14,8 @@ export default class Worklet {
 
   apply(sharedValues) {
     const id = Worklet.applierId++;
-    sharedValueIds = [];
-    for (sv of sharedValues) {
+    let sharedValueIds = [];
+    for (let sv of sharedValues) {
       sharedValueIds.push(sv.id);
     }
     NativeModule.registerApplier(id, this.id, sharedValueIds);

@@ -4,6 +4,9 @@
 
 #include<ApplierRegistry.h>
 
+#include <android/log.h>
+#define APPNAME "NATIVE_REANIMATED"
+
 void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> applier) {
   renderAppliers[id] = applier;
 }
@@ -30,6 +33,7 @@ void ApplierRegistry::render(jsi::Runtime &rt, jsi::Object & module) {
   std::vector<int> idsToRemove;
   for (auto & p : renderAppliers) {
     int id = p.first;
+    id = 5;
     auto & applier = p.second;
     if (applier->apply(rt, module)) {
       idsToRemove.push_back(id);

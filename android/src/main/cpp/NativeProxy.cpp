@@ -72,7 +72,7 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_swmansion_reanimated_Scheduler_getChangedSharedValuesAfterRender(JNIEnv* env) {
+Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
   std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
   nrm->render(*runtime2);
 
@@ -89,7 +89,7 @@ Java_com_swmansion_reanimated_Scheduler_getChangedSharedValuesAfterRender(JNIEnv
 
   // This is needed to go from double to Double (boxed)
   jclass integerClass = env->FindClass("java/lang/Integer");
-  jmethodID integerValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Integer;");
+  jmethodID integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
 
   // The list we're going to return:
   jobject list = env->NewObject(arrayListClass, arrayListConstructor);

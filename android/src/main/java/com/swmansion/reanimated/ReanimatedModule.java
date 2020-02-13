@@ -23,6 +23,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import android.util.Pair;
+
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends ReactContextBaseJavaModule implements
         LifecycleEventListener, UIManagerModuleListener {
@@ -249,7 +251,10 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     mUIManager.addUIBlock(new UIBlock() {
       @Override
       public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-        NativeProxy.uiCall();
+        ArrayList<Pair<Integer, Object>> sharedValues = NativeProxy.getChangedSharedValuesAfterRender();
+        for (Pair<Integer, Object> pair : sharedValues) {
+          Log.e("oooo", pair.first.toString().concat(" ").concat(pair.second.toString()));
+        }
       }
     });
   }
