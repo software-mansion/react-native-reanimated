@@ -123,9 +123,9 @@ function createTransitioningComponent(Component) {
 
     animateNextTransition(transitionConfig) {
       const transitions =
-        transitionConfig && Array.isArray(transitionConfig)
+        transitionConfig && (Array.isArray(transitionConfig)
           ? transitionConfig
-          : [transitionConfig];
+          : [transitionConfig]);
 
       const viewTag = findNodeHandle(this.viewRef.current);
       ReanimatedModule.animateNextTransition(viewTag, {
