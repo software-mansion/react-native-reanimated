@@ -5,6 +5,13 @@
 #ifndef REANIMATEDEXAMPLE_APPLIER_H
 #define REANIMATEDEXAMPLE_APPLIER_H
 
+#include <memory>
+#include <vector>
+#include <jsi/jsi.h>
+#include "SharedValue.h"
+
+using namespace facebook;
+
 class Applier {
   public:
     std::shared_ptr<jsi::Function> worklet;

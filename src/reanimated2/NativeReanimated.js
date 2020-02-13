@@ -46,12 +46,12 @@ export default {
 
   },
 
-  startWorklet(workletId, sharedValues /* shared values (worklet ID) */ ) {
-    InnerNativeModule.activateWorklet(workletId);
+  registerApplier(applierId, workletId, sharedValues /* shared values (worklet ID) */ ) {
+    InnerNativeModule.registerApplierOnRender(applierId, workletId, sharedValues);
   },
 
-  stopWorklet(workletId) {
-    InnerNativeModule.activateWorklet(workletId);
+  unregisterApplier(applierId) {
+    InnerNativeModule.unregisterApplierFromRender(applierId);
   },
 
   unregisterWorklet(workletId) {

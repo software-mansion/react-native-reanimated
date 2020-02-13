@@ -4,8 +4,7 @@
 
 #include "WorkletModule.h"
 
-WorkletModule::WorkletModule(std::shared_ptr<NativeReanimatedModule> nrm) {
-  this->nrm = nrm;
+WorkletModule::WorkletModule() {
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {

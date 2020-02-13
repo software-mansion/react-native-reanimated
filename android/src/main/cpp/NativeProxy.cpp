@@ -74,7 +74,7 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_Scheduler_getChangedSharedValuesAfterRender(JNIEnv* env) {
   std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
-  nrm->render(runtime2);
+  nrm->render(*runtime2);
 
   jclass arrayListClass = env->FindClass("java/util/ArrayList");
   jmethodID arrayListConstructor = env->GetMethodID(arrayListClass, "<init>", "()V");

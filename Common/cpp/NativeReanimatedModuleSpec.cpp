@@ -98,7 +98,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRen
   jsi::Array ar = args[2].getObject(rt).asArray(rt);
   for (int i = 0; i < ar.length(rt); ++i) {
     int svId = (int)(ar.getValueAtIndex(rt, i).getNumber());
-    svIds.push_back(svIds);
+    svIds.push_back(svId);
   }
 
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
@@ -107,13 +107,13 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRen
   return jsi::Value::undefined();
 }
 
-static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterApplierOnRender(
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterApplierFromRender(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->unregisterApplierOnRender(
+      ->unregisterApplierFromRender(
           rt, (int)args[0].getNumber());
   return jsi::Value::undefined();
 }
@@ -137,8 +137,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInv
 
   methodMap_["registerApplierOnRender"] = MethodMetadata{
       3, __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRender};
-  methodMap_["unregisterApplierOnRender"] = MethodMetadata{
-      1, __hostFunction_NativeReanimatedModuleSpec_unregisterApplierOnRender};
+  methodMap_["unregisterApplierFromRender"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_unregisterApplierFromRender};
 
   methodMap_["call"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_call};

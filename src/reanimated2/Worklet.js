@@ -3,6 +3,7 @@ import NativeModule from './NativeReanimated';
 export default class Worklet {
     
   static idCounter = 0;
+  static applierId = 0;
   
   constructor(func) {
     this.id = Worklet.idCounter++;
@@ -11,8 +12,16 @@ export default class Worklet {
     return this;
   }
 
-  start(sharedValues) {
-    NativeModule.activateWorklet(thid.id, sharedValues);
+  apply(sharedValues) {
+    const id = Worklet.applierId++;
+    sharedValueIds = [];
+    for (sv of sharedValues) {
+      sharedValueIds.push(sv.id);
+    }
+    NativeModule.registerApplier(id, this.id, sharedValueIds);
+    return () => {
+      NativeModule.unregisterApplier(id);
+    };
   }
 
   release() {

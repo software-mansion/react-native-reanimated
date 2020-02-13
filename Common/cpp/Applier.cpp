@@ -13,11 +13,15 @@ Applier::~Applier() {}
 
 bool Applier::apply(jsi::Runtime &rt, jsi::Object & module) {
 
-  Value * args = new Value[sharedValues.size()];
+  jsi::Value * args = new jsi::Value[sharedValues.size()];
   for (int i = 0; i < sharedValues.size(); ++i) {
-    args[i] = std::move(sharedValues[i]->asParameter(rt));
+    args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
   }
-  bool shouldFinish = worklet->callWithThis(rt, module, args, sharedValues.size()).getBool();
+
+  bool shouldFinish = worklet->callWithThis(rt,
+                            static_cast<const jsi::Object&>(module),
+                            static_cast<const jsi::Value*>(args),
+                            (size_t)sharedValues.size()).getBool();
 
   delete [] args;
   return shouldFinish;

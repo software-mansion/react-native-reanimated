@@ -15,8 +15,8 @@ void ApplierRegistry::unregisterApplierFromRender(int id) {
 }
 
 void ApplierRegistry::registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier) {
-  eventAppliers[id] = eventName;
-  eventMapping[eventName][id] = applier;
+  eventMapping[id] = eventName;
+  eventAppliers[eventName][id] = applier;
 }
 
 void ApplierRegistry::unregisterApplierFromEvent(int id) {
@@ -26,12 +26,12 @@ void ApplierRegistry::unregisterApplierFromEvent(int id) {
   eventAppliers[eventName].erase(id);
 }
 
-void ApplierRegistry::render(Runtime &rt, jsi::Object & module) {
+void ApplierRegistry::render(jsi::Runtime &rt, jsi::Object & module) {
   std::vector<int> idsToRemove;
   for (auto & p : renderAppliers) {
     int id = p.first;
-    Applier & applier = p.second;
-    if (applier.apply(rt, module)) {
+    auto & applier = p.second;
+    if (applier->apply(rt, module)) {
       idsToRemove.push_back(id);
     }
   }
@@ -41,7 +41,7 @@ void ApplierRegistry::render(Runtime &rt, jsi::Object & module) {
   }
 }
 
-void ApplierRegistry::event(Runtime &rt, std::string eventName) {
+void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName) {
   //TODO
 };
 

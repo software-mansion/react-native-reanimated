@@ -2,6 +2,7 @@
 #define REANIMATEDEXAMPLE_NATIVEREANIMATEDMODULE_H
 
 #include <memory>
+#include <vector>
 
 #include "NativeReanimatedModuleSpec.h"
 #include "Scheduler.h"
@@ -10,6 +11,7 @@
 #include "SharedValue.h"
 #include "SharedDouble.h"
 #include "WorkletModule.h"
+#include "ApplierRegistry.h"
 
 #include <unistd.h>
 
@@ -34,10 +36,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &callback) override;
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
-    void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, vector<int> svIds) override;
+    void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;
     void unregisterApplierFromRender(jsi::Runtime &rt, int id) override;
 
-    void render();
+    void render(jsi::Runtime & rt);
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 

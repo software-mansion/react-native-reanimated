@@ -50,7 +50,7 @@ void NativeReanimatedModule::unregisterWorklet( // make it async !!!
 
 void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(value.getNumber()));
+    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
     scheduler->scheduleOnUI([=](){
       sharedValueRegistry->registerSharedValue(id, sv);
     });
@@ -81,7 +81,7 @@ void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, co
 
 void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(value.getNumber()));
+    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
     scheduler->scheduleOnUI([=](){
       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
       oldSV->setNewValue(sv);
@@ -89,7 +89,7 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
   } // add here other types
 }
 
-void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, vector<int> svIds) {
+void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
   std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
   std::vector<std::shared_ptr<SharedValue>> svs;
   for (auto &i : svIds) {
@@ -105,10 +105,10 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
   applierRegistry->unregisterApplierFromRender(id);
 }
 
-void NativeReanimatedModule::render(Runtime &rt) {
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(std::shared_ptr<NativeReanimatedModule>(this)));
+void NativeReanimatedModule::render(jsi::Runtime &rt) {
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule());
   jsi::Object module = jsi::Object::createFromHostObject(rt, ho);
-  applierRegistry.render(rt, module);
+  applierRegistry->render(rt, module);
 }
 
 // test method
