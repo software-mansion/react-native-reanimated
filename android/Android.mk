@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 $(warning $(LOCAL_PATH))
-HERMES_ENGINE := $(LOCAL_PATH)/../Example/node_modules/Hermes-engine
+HERMES_ENGINE := $(LOCAL_PATH)/../Example/node_modules/hermes-engine
 $(warning $(Hermes-engine))
 $(warning $(Hermes-engine)/android/include)
 
