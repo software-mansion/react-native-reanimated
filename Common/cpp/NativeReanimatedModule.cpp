@@ -54,7 +54,12 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
     scheduler->scheduleOnUI([=](){
       sharedValueRegistry->registerSharedValue(id, sv);
     });
-  } // add here other types
+  } else if(value.isString()) {
+    std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
+    scheduler->scheduleOnUI([=](){
+      sharedValueRegistry->registerSharedValue(id, sv);
+    });
+  }  // add here other types
 }
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {
@@ -85,6 +90,12 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
     scheduler->scheduleOnUI([=](){
       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
       oldSV->setNewValue(sv);
+    });
+  } else if(value.isString()) {
+    std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
+    scheduler->scheduleOnUI([=](){
+       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
+       oldSV->setNewValue(sv);
     });
   } // add here other types
 }

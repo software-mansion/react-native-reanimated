@@ -10,6 +10,7 @@
 #include "SharedValueRegistry.h"
 #include "SharedValue.h"
 #include "SharedDouble.h"
+#include "SharedString.h"
 #include "WorkletModule.h"
 #include "ApplierRegistry.h"
 

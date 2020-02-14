@@ -7,6 +7,7 @@
 SharedDouble::SharedDouble(int id, double value) : SharedValue() {
   this->value = value;
   this->id = id;
+  this->type = 'D';
 }
 
 jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
@@ -16,6 +17,7 @@ jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
 void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   SharedDouble * sd = (SharedDouble*) sv.get();
   this->value = sd->value;
+  this->dirty = true;
 }
 
 jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {

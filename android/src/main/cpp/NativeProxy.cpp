@@ -103,11 +103,25 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
     sv->dirty = false;
 
     jobject x = env->CallStaticObjectMethod(integerClass, integerValueOf, id);
+    jobject y;
 
     // temporary solution
-    double val = ((SharedDouble*)(sv.get()))->value;
+    switch (sv->type)
+    {
+      case 'D':
+      {
+        double val = ((SharedDouble*)(sv.get()))->value;
+        y = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
+        break;
+      }
+      case 'S':
+      {
+        std::string str = ((SharedString*)(sv.get()))->value;
+        y = env->NewStringUTF(str.c_str());
+        break;
+      }
+    }
     // end
-    jobject y = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
 
     // Create a new pair object
     jobject pair = env->NewObject(pairClass, pairConstructor, x, y);

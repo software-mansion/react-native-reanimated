@@ -13,6 +13,7 @@ using namespace facebook;
 
 class SharedValue {
   public:
+    char type;
     bool shouldBeSentToJava = true;
     bool dirty = true;
     virtual jsi::Value asValue(jsi::Runtime &rt) const = 0;
