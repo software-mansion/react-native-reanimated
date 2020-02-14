@@ -7,13 +7,13 @@ import SharedValue from '../reanimated2/SharedValue';
 
 // Animated value wrapped with extra methods for omit cycle of dependencies
 export default class AnimatedSharedValue extends AnimatedNode {
-  constuctor(sharedValue) {
+  constructor(sharedValue) {
     super(
         {
             type: 'shared',
             sharedValueId: sharedValue.id,
             initialValue: sharedValue.initialValue,
-        },
+        },[]
     );
   }  
 

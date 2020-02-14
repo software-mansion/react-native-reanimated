@@ -10,6 +10,7 @@ import {
   TouchableHighlight,
   NativeModules,
   TurboModuleRegistry,
+  Animated,
 } from 'react-native';
 const { ReanimatedModule } = NativeModules;
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
@@ -39,6 +40,7 @@ import TransitionsTicket from './transitions/ticket';
 import WidthAndHeight from './widthAndHeight';
 
 import { SharedValue, Worklet } from 'react-native-reanimated';
+import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -76,11 +78,30 @@ class MainScreen extends React.Component {
       return true;
     });
 
-    this.worklet2 = new Worklet(() => {
-      return 10;
+    this.viewWidth = new SharedValue(0);
+    this.animatedViewWidth = new AnimatedSharedValue(this.viewWidth);
+    this.animationStarted = new SharedValue(0);
+    this.animationStart = new SharedValue(0);
+
+    this.worklet3 = new Worklet((viewWidth, animationStarted, animationStart) => {
+      if (animationStarted.get() === 0) {
+        animationStarted.set(1);
+        animationStart.set(Date.now());    
+      } 
+      const duration = 5000;
+      const endTime = animationStart.get() + duration;
+      const progress = (Date.now() - animationStart.get())/duration;
+      const maxWidth = 200;
+
+      if (Date.now > endTime) { // end condtion
+        return true; // end animation
+      }
+
+      viewWidth.set(maxWidth * progress);
+      return false; // continue 
     });
 
-    this.release = this.worklet.apply([this.sv1, this.sv2, this.sv3]);
+    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart]);
   }
 
   componentWillUnmount() {
@@ -106,6 +127,7 @@ class MainScreen extends React.Component {
           }} >
           <Text> custom </Text>
         </TouchableHighlight>
+        <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} > </Animated.View>
       </View>
     );
   }
