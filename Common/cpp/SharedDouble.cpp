@@ -63,7 +63,7 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
         return jsi::Function::createFromHostFunction(rt, name, 1, callback);
 
       } else if (propName == "id") {
-        return jsi::Value(id);
+        return jsi::Value((double)id);
       }
 
       return jsi::Value::undefined();
