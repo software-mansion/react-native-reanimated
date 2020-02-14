@@ -29,6 +29,10 @@ void ApplierRegistry::unregisterApplierFromEvent(int id) {
   eventAppliers[eventName].erase(id);
 }
 
+bool ApplierRegistry::notEmpty() {
+  return renderAppliers.size() > 0;
+}
+
 void ApplierRegistry::render(jsi::Runtime &rt, jsi::Object & module) {
   std::vector<int> idsToRemove;
   for (auto & p : renderAppliers) {

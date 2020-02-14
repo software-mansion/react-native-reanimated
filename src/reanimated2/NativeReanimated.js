@@ -3,6 +3,7 @@ import {
   Platform,
   TurboModuleRegistry,
 } from 'react-native';
+import ReanimatedModule from '../ReanimatedModule';
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
 export default {
@@ -48,6 +49,7 @@ export default {
 
   registerApplier(applierId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {
     InnerNativeModule.registerApplierOnRender(applierId, workletId, sharedValueIds);
+    ReanimatedModule.triggerRender();
   },
 
   unregisterApplier(applierId) {

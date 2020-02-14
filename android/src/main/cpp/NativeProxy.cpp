@@ -132,6 +132,10 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
   return list;
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
+  return (jboolean)nrm->applierRegistry->notEmpty();
+}
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {

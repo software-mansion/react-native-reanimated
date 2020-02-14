@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.util.Pair;
 import android.util.SparseArray;
 
 import com.facebook.react.bridge.Arguments;
@@ -34,6 +35,7 @@ import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
 import com.swmansion.reanimated.nodes.PropsNode;
 import com.swmansion.reanimated.nodes.SetNode;
+import com.swmansion.reanimated.nodes.SharedValueNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
@@ -125,7 +127,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  private void startUpdatingOnAnimationFrame() {
+  public void startUpdatingOnAnimationFrame() {
     if (!mCallbackPosted.getAndSet(true)) {
       mReactChoreographer.postFrameCallback(
               ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
@@ -143,6 +145,12 @@ public class NodesManager implements EventDispatcherListener {
 
   private void onAnimationFrame(long frameTimeNanos) {
     currentFrameTimeMs = frameTimeNanos / 1000000.;
+
+    // update shared values
+    ArrayList<Pair<Integer, Object>> dirtyValues = NativeProxy.getChangedSharedValuesAfterRender();
+    for (Pair<Integer, Object> p : dirtyValues) {
+      SharedValueNode.setNewValueFor(p.first, p.second);
+    }
 
     while (!mEventQueue.isEmpty()) {
       handleEvent(mEventQueue.poll());
@@ -185,7 +193,7 @@ public class NodesManager implements EventDispatcherListener {
     mCallbackPosted.set(false);
     mWantRunUpdates = false;
 
-    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
+    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty() || NativeProxy.anyRenderApplier()) {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
@@ -273,6 +281,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new FunctionNode(nodeID, config, this);
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
+    } else if ("shared".equals(type)) {
+      node = new SharedValueNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }

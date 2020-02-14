@@ -15,6 +15,7 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.swmansion.reanimated.nodes.SharedValueNode;
 import com.swmansion.reanimated.transitions.TransitionModule;
 
 import java.util.ArrayList;
@@ -255,6 +256,17 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
         for (Pair<Integer, Object> pair : sharedValues) {
           Log.e("oooo", pair.first.toString().concat(" ").concat(pair.second.toString()));
         }
+      }
+    });
+  }
+
+  @ReactMethod
+  public void triggerRender() {
+    Log.v("NATIVE_REANIMATED", "triggerRender");
+    mUIManager.addUIBlock(new UIBlock() {
+      @Override
+      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+        mNodesManager.postRunUpdatesAfterAnimation();
       }
     });
   }

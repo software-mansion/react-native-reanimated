@@ -15,7 +15,7 @@ class SharedValue {
   public:
     char type;
     bool shouldBeSentToJava = true;
-    bool dirty = true;
+    bool dirty = false;
     virtual jsi::Value asValue(jsi::Runtime &rt) const = 0;
     virtual jsi::Object asParameter(jsi::Runtime &rt) = 0;
     virtual void setNewValue(std::shared_ptr<SharedValue> sv) = 0;

@@ -6,6 +6,7 @@ export default class SharedValue {
 
   constructor(value) {
     this.id = SharedValue.idCounter++;
+    this.initialValue = value;
     NativeModule.registerSharedValue(this.id, value);
   }
 

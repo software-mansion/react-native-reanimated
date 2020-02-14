@@ -21,6 +21,7 @@ class ApplierRegistry {
     void unregisterApplierFromEvent(int id);
     void render(jsi::Runtime &rt, jsi::Object & module);
     void event(jsi::Runtime &rt, std::string eventName);
+    bool notEmpty();
 };
 
 #endif //REANIMATEDEXAMPLE_APPLIERREGISTRY_H
