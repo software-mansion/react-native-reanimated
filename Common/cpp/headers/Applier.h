@@ -17,7 +17,7 @@ class Applier {
     std::shared_ptr<jsi::Function> worklet;
     std::vector<std::shared_ptr<SharedValue>> sharedValues;
     Applier(std::shared_ptr<jsi::Function> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues);
-    virtual bool apply(jsi::Runtime &rt, jsi::Object & module);
+    virtual bool apply(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> module);
     virtual ~Applier();
 };
 

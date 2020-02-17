@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 
 public class SharedValueNode extends Node {
   private Object mValue;
-  private static HashMap<Integer, SharedValueNode> mSharedValueMap;
+  private static HashMap<Integer, SharedValueNode> mSharedValueMap = new HashMap<>();
   private int id;
 
   public SharedValueNode(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {

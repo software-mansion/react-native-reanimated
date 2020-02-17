@@ -20,6 +20,7 @@ function sanitizeProps(inputProps) {
 }
 
 export function createOrReusePropsNode(props, callback, oldNode) {
+
   if (props.style) {
     props = {
       ...props,

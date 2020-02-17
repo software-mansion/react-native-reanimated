@@ -14,7 +14,9 @@ Applier::Applier(std::shared_ptr<jsi::Function> worklet, std::vector<std::shared
 
 Applier::~Applier() {}
 
-bool Applier::apply(jsi::Runtime &rt, jsi::Object & module) {
+
+
+bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> module) {
 
   jsi::Value * args = new jsi::Value[sharedValues.size()];
   for (int i = 0; i < sharedValues.size(); ++i) {
@@ -22,7 +24,7 @@ bool Applier::apply(jsi::Runtime &rt, jsi::Object & module) {
   }
 
   bool shouldFinish = worklet->callWithThis(rt,
-                            static_cast<const jsi::Object&>(module),
+                            jsi::Object::createFromHostObject(rt, module),
                             static_cast<const jsi::Value*>(args),
                             (size_t)sharedValues.size()).getBool();
 

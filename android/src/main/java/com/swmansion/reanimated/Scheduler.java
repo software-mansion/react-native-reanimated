@@ -36,7 +36,6 @@ public class Scheduler {
         triggerUI();
       }
     });
-    Log.v("Reaniumated", "co jest2");
     return true;
   }
 
@@ -47,9 +46,7 @@ public class Scheduler {
     mReactContext.get().runOnJSQueueThread(new Runnable() {
       @Override
       public void run() {
-        Log.v("Reaniumated", "co jest");
         triggerJS();
-        Log.v("Reaniumated", "co jest3");
       }
     });
     return true;

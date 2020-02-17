@@ -252,10 +252,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     mUIManager.addUIBlock(new UIBlock() {
       @Override
       public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-        ArrayList<Pair<Integer, Object>> sharedValues = NativeProxy.getChangedSharedValuesAfterRender();
-        for (Pair<Integer, Object> pair : sharedValues) {
-          Log.e("oooo", pair.first.toString().concat(" ").concat(pair.second.toString()));
-        }
+        NativeProxy.uiCall();
       }
     });
   }

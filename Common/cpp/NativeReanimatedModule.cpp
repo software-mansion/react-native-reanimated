@@ -112,7 +112,6 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
 
     std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
     applierRegistry->registerApplierForRender(id, applier);
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "zarejestrowano %d %d ", id, workletId);
   });
 }
 
@@ -124,8 +123,7 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
 
 void NativeReanimatedModule::render(jsi::Runtime &rt) {
   std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry));
-  jsi::Object module = jsi::Object::createFromHostObject(rt, ho);
-  applierRegistry->render(rt, module);
+  applierRegistry->render(rt, ho);
 }
 
 // test method

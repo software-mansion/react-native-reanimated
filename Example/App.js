@@ -1,4 +1,3 @@
-import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
 import {
   FlatList,
@@ -10,34 +9,10 @@ import {
   TouchableHighlight,
   NativeModules,
   TurboModuleRegistry,
-  Animated,
 } from 'react-native';
-const { ReanimatedModule } = NativeModules;
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
 
-import ChatHeads from './chatHeads';
-import Code from './code';
-import Colors from './colors';
-import DifferentSpringConfigs from './differentSpringConfigs';
-import ImageViewer from './imageViewer';
-import Imperative from './imperative';
-import InteractablePlayground, {
-  SCREENS as INTERACTABLE_SCREENS,
-} from './interactablePlayground';
-import PanRotateAndZoom from './PanRotateAndZoom';
-import ProgressBar from './progressBar';
-import Rotations from './rotations';
-import Snappable from './snappable';
-import Interpolate from './src/interpolate';
-import StartAPI from './startAPI';
-import Test from './test';
-import TransitionsProgress from './transitions/progress';
-import TransitionsSequence from './transitions/sequence';
-import TransitionsShuffle from './transitions/shuffle';
-import TransitionsTicket from './transitions/ticket';
-import WidthAndHeight from './widthAndHeight';
+import Animated from 'react-native-reanimated';
+const { ReanimatedModule } = NativeModules;
 
 import { SharedValue, Worklet } from 'react-native-reanimated';
 import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
@@ -49,29 +24,18 @@ YellowBox.ignoreWarnings([
 // refers to bug in React Navigation which should be fixed soon
 // https://github.com/react-navigation/react-navigation/issues/3956
 
-
-//const nativeModule = TurboModuleRegistry.get("SampleTurboModule"); 
-//const re = TurboModuleRegistry.get("NativeReanimated");
-
-function callback(text) {
-  console.warn("text: " + text);
-}
-
-function callback2(text) {
-  return text+' ok ';
-}
-
 class MainScreen extends React.Component {
   static navigationOptions = {
     title: '🎬 Reanimated Examples',
   };
 
-  componentDidMount() {
+  constructor(props) {
+    super(props);
     this.sv1 = new SharedValue(0);
     this.sv2 = new SharedValue(1);
     this.sv3 = new SharedValue(-100);
 
-    this.worklet = new Worklet((sv1, sv2, sv3) => {
+    this.worklet = new Worklet((module, sv1, sv2, sv3) => {
       const x = sv1.get();
       const y = sv2.get();
       sv3.set(x+y);
@@ -82,18 +46,23 @@ class MainScreen extends React.Component {
     this.animatedViewWidth = new AnimatedSharedValue(this.viewWidth);
     this.animationStarted = new SharedValue(0);
     this.animationStart = new SharedValue(0);
+    this.stringVal = new SharedValue("text");
 
-    this.worklet3 = new Worklet((viewWidth, animationStarted, animationStart) => {
+    this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
       if (animationStarted.get() === 0) {
+        this.log(stringVal.get()); // string cannot be hardcoded :(  why?
         animationStarted.set(1);
         animationStart.set(Date.now());    
       } 
+
       const duration = 5000;
       const endTime = animationStart.get() + duration;
       const progress = (Date.now() - animationStart.get())/duration;
-      const maxWidth = 200;
+      const maxWidth = 80;
 
-      if (Date.now > endTime) { // end condtion
+      this.log((Date.now()-endTime).toString());
+
+      if (Date.now() > endTime) { // end condtion
         return true; // end animation
       }
 
@@ -101,20 +70,26 @@ class MainScreen extends React.Component {
       return false; // continue 
     });
 
-    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart]);
+  }
+
+  componentDidMount() {
+    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
   }
 
   componentWillUnmount() {
     this.sv1.release();
     this.sv2.release();
     this.sv3.release();
+    this.viewWidth.release();
+    this.animationStarted.release();
+    this.stringVal.release();
+    this.animationStart.release();
     this.release();
     this.worklet.release();
-    this.worklet2.release();
+    this.worklet3.release();
   }
 
   render() {
-
     return (
       <View>
         <Text>dziala</Text>
@@ -127,47 +102,12 @@ class MainScreen extends React.Component {
           }} >
           <Text> custom </Text>
         </TouchableHighlight>
-        <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} > </Animated.View>
+        <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} /> 
       </View>
     );
   }
 
 }
 
-const ExampleApp = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
-);
 
-const styles = StyleSheet.create({
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
-  buttonText: {
-    backgroundColor: 'transparent',
-  },
-  button: {
-    flex: 1,
-    height: 60,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-});
-
-const createApp = Platform.select({
-  web: input => createBrowserApp(input, { history: 'hash' }),
-  default: input => createAppContainer(input),
-});
-
-export default createApp(ExampleApp);
+export default MainScreen;

@@ -1,4 +1,5 @@
 import ReanimatedModule from '../ReanimatedModule';
+import { conditionalExpression } from '@babel/types';
 
 const UPDATED_NODES = [];
 

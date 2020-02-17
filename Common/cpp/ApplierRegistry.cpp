@@ -33,11 +33,10 @@ bool ApplierRegistry::notEmpty() {
   return renderAppliers.size() > 0;
 }
 
-void ApplierRegistry::render(jsi::Runtime &rt, jsi::Object & module) {
+void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> module) {
   std::vector<int> idsToRemove;
   for (auto & p : renderAppliers) {
     int id = p.first;
-    id = 5;
     auto & applier = p.second;
     if (applier->apply(rt, module)) {
       idsToRemove.push_back(id);

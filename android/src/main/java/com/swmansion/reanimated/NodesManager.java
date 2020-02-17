@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
 
@@ -282,6 +283,7 @@ public class NodesManager implements EventDispatcherListener {
     } else if ("callfunc".equals(type)) {
       node = new CallFuncNode(nodeID, config, this);
     } else if ("shared".equals(type)) {
+      Log.v("teraz", "ok");
       node = new SharedValueNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);

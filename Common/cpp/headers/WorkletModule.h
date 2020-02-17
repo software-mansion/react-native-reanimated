@@ -27,7 +27,7 @@ class WorkletModule : public jsi::HostObject {
                     std::shared_ptr<ApplierRegistry> applierRegistry,
                     std::shared_ptr<WorkletRegistry> workletRegistry);
     //WorkletModule(std::shared_ptr<NativeReanimatedModule> nrm, Event event) add this
-    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name);
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override;
 };
 
 #endif //REANIMATEDEXAMPLE_WORKLETMODULE_H

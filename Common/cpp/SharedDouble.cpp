@@ -4,6 +4,9 @@
 
 #include "SharedDouble.h"
 
+#include <android/log.h>
+#define APPNAME "NATIVE_REANIMATED"
+
 SharedDouble::SharedDouble(int id, double value) : SharedValue() {
   this->value = value;
   this->id = id;
