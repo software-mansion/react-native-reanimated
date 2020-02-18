@@ -404,11 +404,22 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void handleEvent(Event event) {
+    String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
+    int viewTag = event.getViewTag();
+    String key = viewTag + eventName;
+
+    if (NativeProxy.shouldEventBeHijacked(key)) {
+      event.dispatch(NativeProxy.eventHijacker);
+      ArrayList<Pair<Integer, Object>> changedSharedValues = NativeProxy.getChangedSharedValuesAfterEventProxy();
+      for (Pair<Integer, Object> sv : changedSharedValues) {
+        SharedValueNode.setNewValueFor(sv.first, sv.second);
+      }
+      return;
+    }
+
     if (!mEventMapping.isEmpty()) {
       // If the event has a different name in native convert it to it's JS name.
-      String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
-      int viewTag = event.getViewTag();
-      String key = viewTag + eventName;
+
       EventNode node = mEventMapping.get(key);
       if (node != null) {
         event.dispatch(node);

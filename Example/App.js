@@ -1,21 +1,17 @@
 import React from 'react';
 import {
-  FlatList,
-  Platform,
-  StyleSheet,
   Text,
   View,
   YellowBox,
   TouchableHighlight,
   NativeModules,
-  TurboModuleRegistry,
 } from 'react-native';
 
 import Animated, { SharedValue, Worklet } from 'react-native-reanimated';
-
-
+import { WorkletEventHandler } from '../src/Animated';
 import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
 const { ReanimatedModule } = NativeModules;
+
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -70,6 +66,12 @@ class MainScreen extends React.Component {
       return false; // continue 
     });
 
+    this.worklet4 = new Worklet(function(viewWidth){
+      this.log(JSON.stringify(this.event));
+      return true;
+    });
+
+    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
   }
 
   componentDidMount() {
@@ -102,7 +104,13 @@ class MainScreen extends React.Component {
           }} >
           <Text> custom </Text>
         </TouchableHighlight>
-        <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} /> 
+        <PanGestureHandler
+          maxPointers={1}
+          minDist={10}
+          onGestureEvent={this.workletEventHandler}
+          onHandlerStateChange={this.workletEventHandler}>
+          <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} /> 
+        </PanGestureHandler>
       </View>
     );
   }

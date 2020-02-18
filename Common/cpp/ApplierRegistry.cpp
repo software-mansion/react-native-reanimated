@@ -48,9 +48,23 @@ void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> 
   }
 }
 
-void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName) {
-  //TODO
+void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<jsi::HostObject> module) {
+  std::vector<int> idsToRemove;
+  for (auto & p : eventAppliers[eventName]) {
+    int id = p.first;
+    auto & applier = p.second;
+    if (applier->apply(rt, module)) {
+      idsToRemove.push_back(id);
+    }
+  }
+
+  for (auto id : idsToRemove) {
+    unregisterApplierFromEvent(id);
+  }
 };
 
+bool ApplierRegistry::anyApplierRegisteredForEvent(std::string eventName) {
+  return eventAppliers[eventName].size() > 0;
+}
 
 

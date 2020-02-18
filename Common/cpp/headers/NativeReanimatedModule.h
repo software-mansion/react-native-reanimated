@@ -39,8 +39,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
     void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;
     void unregisterApplierFromRender(jsi::Runtime &rt, int id) override;
+    void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) override;
+    void unregisterApplierFromEvent(jsi::Runtime &rt, int id) override;
 
-    void render(jsi::Runtime & rt);
+    void render(jsi::Runtime &rt);
+    void onEvent(jsi::Runtime &rt, std::string eventName, std::string eventObj);
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 

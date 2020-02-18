@@ -39,6 +39,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // Appliers
   virtual void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) = 0;
   virtual void unregisterApplierFromRender(jsi::Runtime &rt, int id) = 0;
+  virtual void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) = 0;
+  virtual void unregisterApplierFromEvent(jsi::Runtime &rt, int id) = 0;
 };
 
 } // namespace react

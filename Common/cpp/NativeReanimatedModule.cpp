@@ -102,7 +102,6 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "jestemmm ");
     std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
     std::vector<std::shared_ptr<SharedValue>> svs;
     for (auto &i : svIds) {
@@ -121,9 +120,36 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
   });
 }
 
+void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) {
+  scheduler->scheduleOnUI([=]() {
+    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::vector<std::shared_ptr<SharedValue>> svs;
+    for (auto &i : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
+      svs.push_back(sv);
+    }
+
+    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    applierRegistry->registerApplierForEvent(id, eventName, applier);
+   });
+}
+
+void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id) {
+  scheduler->scheduleOnUI([=](){
+    applierRegistry->unregisterApplierFromEvent(id);
+  });
+}
+
 void NativeReanimatedModule::render(jsi::Runtime &rt) {
   std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry));
   applierRegistry->render(rt, ho);
+}
+
+void NativeReanimatedModule::onEvent(jsi::Runtime &rt, std::string eventName, std::string eventObj) {
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(eventObj.c_str());
+  jsi::Value event = jsi::Value::createFromJsonUtf8(rt, ptr, std::strlen(eventObj.c_str()));
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, std::move(event)));
+  applierRegistry->event(rt, eventName, ho);
 }
 
 // test method

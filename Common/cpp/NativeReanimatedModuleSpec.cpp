@@ -118,6 +118,39 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterApplierFro
   return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerEventApplier(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+
+  std::vector<int> svIds;
+  jsi::Array ar = args[3].getObject(rt).asArray(rt);
+  for (int i = 0; i < ar.length(rt); ++i) {
+    int svId = (int)(ar.getValueAtIndex(rt, i).getNumber());
+    svIds.push_back(svId);
+  }
+
+  std::string eventName = args[1].getString(rt).utf8(rt);
+
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->registerApplierOnEvent(
+          rt, (int)args[0].getNumber(), eventName, (int)args[1].getNumber(), svIds);
+  return jsi::Value::undefined();
+}
+
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterEventApplier(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->unregisterApplierFromEvent(
+          rt, (int)args[0].getNumber());
+  return jsi::Value::undefined();
+}
+
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["registerWorklet"] = MethodMetadata{
@@ -139,6 +172,11 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInv
       3, __hostFunction_NativeReanimatedModuleSpec_registerApplierOnRender};
   methodMap_["unregisterApplierFromRender"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_unregisterApplierFromRender};
+
+  methodMap_["registerEventApplier"] = MethodMetadata{
+      4, __hostFunction_NativeReanimatedModuleSpec_registerEventApplier};
+  methodMap_["unregisterEventApplier"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_unregisterEventApplier};
 
   methodMap_["call"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_call};

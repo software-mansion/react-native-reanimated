@@ -20,7 +20,8 @@ class ApplierRegistry {
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);
     void unregisterApplierFromEvent(int id);
     void render(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> module);
-    void event(jsi::Runtime &rt, std::string eventName);
+    void event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<jsi::HostObject> module);
+    bool anyApplierRegisteredForEvent(std::string eventName);
     bool notEmpty();
 };
 

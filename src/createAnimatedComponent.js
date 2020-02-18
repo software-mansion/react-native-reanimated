@@ -72,6 +72,8 @@ export default function createAnimatedComponent(Component) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
+        } else if (prop instanceof Worklet) {
+          
         }
       }
     }

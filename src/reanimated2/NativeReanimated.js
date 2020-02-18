@@ -37,12 +37,12 @@ export default {
     InnerNativeModule.registerWorklet(workletId, holder);
   },
 
-  connectEventWithWorklet(workletID, viewID, eventName /* onGestureStateChange */ ) {
-
+  registerEventApplier(applierId, eventHash, workletID, sharedValues) {
+    InnerNativeModule.registerEventApplier(applierId, eventHash, workletID, sharedValues);
   },
 
-  disconnectEventFromWorklet(workletID, viewID, eventName /* onGestureStateChange */ ) {
-
+  unregisterEventApplier(applierId) {
+    InnerNativeModule.unregisterEventApplier(applierId);
   },
 
   registerApplier(applierId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {

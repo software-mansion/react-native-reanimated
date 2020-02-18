@@ -71,11 +71,36 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
   scheduler->triggerJS();
 }
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
-  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
-  nrm->render(*runtime2);
+std::string jstring2string(JNIEnv *env, jstring jStr) { // https://stackoverflow.com/a/41820336
+  if (!jStr)
+      return "";
 
+  const jclass stringClass = env->GetObjectClass(jStr);
+  const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
+  const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
+
+  size_t length = (size_t) env->GetArrayLength(stringJbytes);
+  jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+  std::string ret = std::string((char *)pBytes, length);
+  env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+
+  env->DeleteLocalRef(stringJbytes);
+  env->DeleteLocalRef(stringClass);
+  return ret;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_swmansion_reanimated_NativeProxy_shouldEventBeHijacked(JNIEnv* env, jstring eventHash) {
+  return (jboolean)nrm->applierRegistry->anyApplierRegisteredForEvent(jstring2string(env,eventHash));
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
+  return (jboolean)nrm->applierRegistry->notEmpty();
+}
+
+jobject getChangedSharedValues(JNIEnv* env) {
   jclass arrayListClass = env->FindClass("java/util/ArrayList");
   jmethodID arrayListConstructor = env->GetMethodID(arrayListClass, "<init>", "()V");
   jmethodID addMethod = env->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
@@ -97,7 +122,7 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
   for(auto & sharedValue : nrm->sharedValueRegistry->sharedValueMap) {
     int id = sharedValue.first;
     std::shared_ptr<SharedValue> sv = sharedValue.second;
-    if (!sv->dirty) {
+    if ((!sv->dirty) || (!sv->shouldBeSentToJava)) {
       continue;
     }
     sv->dirty = false;
@@ -132,14 +157,26 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
   return list;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
-  return (jboolean)nrm->applierRegistry->notEmpty();
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
+  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
+  nrm->render(*runtime2);
+  return getChangedSharedValues(env);
 }
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jstring eventHash, jstring eventObj) {
+  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
+  nrm->onEvent(*runtime2, jstring2string(env, eventHash), jstring2string(env, eventObj));
+  return getChangedSharedValues(env);
+}
+
+// tests (temporary)
 
 jsi::Function function(jsi::Runtime &rt, const std::string& code) {
   return eval(rt, ("(" + code + ")").c_str()).getObject(rt).getFunction(rt);
 }
+
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {

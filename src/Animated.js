@@ -69,6 +69,7 @@ export * from './derived';
 
 import Worklet from './reanimated2/Worklet';
 import SharedValue from './reanimated2/SharedValue';
+import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 export {
   Easing,
@@ -86,7 +87,9 @@ export {
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
+  
   // Reanimated 2.0
   Worklet,
   SharedValue,
+  WorkletEventHandler,
 };

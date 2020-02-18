@@ -9,10 +9,12 @@
 
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
-                                   std::shared_ptr<WorkletRegistry> workletRegistry) {
+                                   std::shared_ptr<WorkletRegistry> workletRegistry,
+                                   jsi::Value event) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
+  this->event = std::move(event);
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -47,7 +49,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   } else if (propName == "emit") {
     //TODO
   } else if (propName == "event") {
-    //TODO
+    return jsi::Value(rt, event);
   } else if (propName == "log") {
     auto callback = [](
         jsi::Runtime &rt,
