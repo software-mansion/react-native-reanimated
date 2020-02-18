@@ -27,13 +27,11 @@ const getValue = node => {
 };
 
 class AnimatedValue {
-  " __value": number;
-
-  constructor(val: number) {
+  constructor(val) {
     this[" __value"] = val;
   }
 
-  setValue(val: number) {
+  setValue(val) {
     this[" __value"] = val;
   }
 }
