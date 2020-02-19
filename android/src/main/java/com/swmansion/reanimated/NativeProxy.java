@@ -12,6 +12,8 @@ import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import androidx.annotation.Nullable;
@@ -34,12 +36,17 @@ public class NativeProxy {
 
   public static native ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterRender();
 
-  public static native boolean shouldEventBeHijacked(String eventHash);
+  public static native boolean shouldEventBeHijacked(byte[] eventHash);
 
-  public static native ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterEvent(String eventHash, String eventAsString);
+  public static native ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterEvent(byte[] eventHash, byte[] eventAsString);
 
   public static ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterEventProxy() {
-    return getChangedSharedValuesAfterEvent(eventHash, eventAsString);
+    try {
+      return getChangedSharedValuesAfterEvent(eventHash.getBytes("utf-8"), eventAsString.getBytes("utf-8"));
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+      return new ArrayList<>();
+    }
   }
 
   static class EventHijacker implements RCTEventEmitter {

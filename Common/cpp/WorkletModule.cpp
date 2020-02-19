@@ -10,15 +10,16 @@
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
                                    std::shared_ptr<WorkletRegistry> workletRegistry,
-                                   jsi::Value event) {
+                                   std::shared_ptr<jsi::Value> event) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
-  this->event = std::move(event);
+  this->event = event;
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   auto propName = name.utf8(rt);
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "pyta o  %s", propName.c_str());
   if (propName == "startWorklet") {
      auto callback = [this](
         jsi::Runtime &rt,
@@ -48,8 +49,18 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
   } else if (propName == "emit") {
     //TODO
-  } else if (propName == "event") {
-    return jsi::Value(rt, event);
+  } else if (propName == "getEvent") {
+
+    auto callback = [](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+      return jsi::String::createFromAscii(rt, "what");
+    };
+    return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+
   } else if (propName == "log") {
     auto callback = [](
         jsi::Runtime &rt,

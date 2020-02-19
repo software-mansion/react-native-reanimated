@@ -71,28 +71,18 @@ Java_com_swmansion_reanimated_Scheduler_triggerJS(JNIEnv* env) {
   scheduler->triggerJS();
 }
 
-std::string jstring2string(JNIEnv *env, jstring jStr) { // https://stackoverflow.com/a/41820336
-  if (!jStr)
-      return "";
-
-  const jclass stringClass = env->GetObjectClass(jStr);
-  const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
-  const jbyteArray stringJbytes = (jbyteArray) env->CallObjectMethod(jStr, getBytes, env->NewStringUTF("UTF-8"));
-
-  size_t length = (size_t) env->GetArrayLength(stringJbytes);
-  jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
-
+std::string byteArrayToString(JNIEnv *env, jbyteArray byteArray) {
+  size_t length = (size_t) env->GetArrayLength(byteArray);
+  jboolean isCopy;
+  jbyte* pBytes = env->GetByteArrayElements(byteArray, &isCopy);
   std::string ret = std::string((char *)pBytes, length);
-  env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
-
-  env->DeleteLocalRef(stringJbytes);
-  env->DeleteLocalRef(stringClass);
+  env->ReleaseByteArrayElements(byteArray, pBytes, JNI_ABORT);
   return ret;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_swmansion_reanimated_NativeProxy_shouldEventBeHijacked(JNIEnv* env, jstring eventHash) {
-  return (jboolean)nrm->applierRegistry->anyApplierRegisteredForEvent(jstring2string(env,eventHash));
+Java_com_swmansion_reanimated_NativeProxy_shouldEventBeHijacked(JNIEnv* env, jclass clazz, jbyteArray eventHash) {
+  return (jboolean)nrm->applierRegistry->anyApplierRegisteredForEvent(byteArrayToString(env, eventHash));
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -165,9 +155,13 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jstring eventHash, jstring eventObj) {
+Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jclass clazz, jbyteArray eventHash, jbyteArray eventObj) {
   std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
-  nrm->onEvent(*runtime2, jstring2string(env, eventHash), jstring2string(env, eventObj));
+  std::string eventAsString = byteArrayToString(env, eventObj);
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "event: %s", eventAsString.c_str());
+  jsi::Value event = eval(*runtime2, ("(" + eventAsString + ")").c_str());
+  std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime2, event));
+  nrm->onEvent(*runtime2, byteArrayToString(env, eventHash), eventPtr);
   return getChangedSharedValues(env);
 }
 
@@ -178,8 +172,8 @@ jsi::Function function(jsi::Runtime &rt, const std::string& code) {
 }
 
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jobject thiz) {
+extern "C" JNIEXPORT void
+Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jclass clazz) {
   std::unique_ptr<jsi::Runtime> rt(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
 
    jsi::Function checkPropertyFunction =

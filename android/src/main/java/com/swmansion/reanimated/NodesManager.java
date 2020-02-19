@@ -44,6 +44,7 @@ import com.swmansion.reanimated.nodes.ParamNode;
 import com.swmansion.reanimated.nodes.FunctionNode;
 import com.swmansion.reanimated.nodes.CallFuncNode;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -404,22 +405,25 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void handleEvent(Event event) {
+    // If the event has a different name in native convert it to it's JS name.
     String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
     int viewTag = event.getViewTag();
     String key = viewTag + eventName;
 
-    if (NativeProxy.shouldEventBeHijacked(key)) {
-      event.dispatch(NativeProxy.eventHijacker);
-      ArrayList<Pair<Integer, Object>> changedSharedValues = NativeProxy.getChangedSharedValuesAfterEventProxy();
-      for (Pair<Integer, Object> sv : changedSharedValues) {
-        SharedValueNode.setNewValueFor(sv.first, sv.second);
+    try {
+      if (NativeProxy.shouldEventBeHijacked(key.getBytes("utf-8"))) {
+        event.dispatch(NativeProxy.eventHijacker);
+        ArrayList<Pair<Integer, Object>> changedSharedValues = NativeProxy.getChangedSharedValuesAfterEventProxy();
+        for (Pair<Integer, Object> sv : changedSharedValues) {
+          SharedValueNode.setNewValueFor(sv.first, sv.second);
+        }
+        return;
       }
-      return;
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
     }
 
     if (!mEventMapping.isEmpty()) {
-      // If the event has a different name in native convert it to it's JS name.
-
       EventNode node = mEventMapping.get(key);
       if (node != null) {
         event.dispatch(node);

@@ -135,7 +135,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerEventApplier
 
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerApplierOnEvent(
-          rt, (int)args[0].getNumber(), eventName, (int)args[1].getNumber(), svIds);
+          rt, (int)args[0].getNumber(), eventName, (int)args[2].getNumber(), svIds);
   return jsi::Value::undefined();
 }
 

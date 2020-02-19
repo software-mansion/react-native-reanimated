@@ -10,6 +10,7 @@ import {
 import Animated, { SharedValue, Worklet } from 'react-native-reanimated';
 import { WorkletEventHandler } from '../src/Animated';
 import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 const { ReanimatedModule } = NativeModules;
 
 
@@ -38,7 +39,7 @@ class MainScreen extends React.Component {
       return true;
     });
 
-    this.viewWidth = new SharedValue(0);
+    this.viewWidth = new SharedValue(40);
     this.animatedViewWidth = new AnimatedSharedValue(this.viewWidth);
     this.animationStarted = new SharedValue(0);
     this.animationStart = new SharedValue(0);
@@ -67,7 +68,8 @@ class MainScreen extends React.Component {
     });
 
     this.worklet4 = new Worklet(function(viewWidth){
-      this.log(JSON.stringify(this.event));
+      const x = this.jan;
+      
       return true;
     });
 
@@ -75,7 +77,7 @@ class MainScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
+    this.release = () => {};//this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
   }
 
   componentWillUnmount() {

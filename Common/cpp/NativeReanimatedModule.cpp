@@ -141,14 +141,13 @@ void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id
 }
 
 void NativeReanimatedModule::render(jsi::Runtime &rt) {
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry));
+  std::shared_ptr<jsi::Value> event(new jsi::Value(rt, jsi::Value::undefined()));
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, event));
   applierRegistry->render(rt, ho);
 }
 
-void NativeReanimatedModule::onEvent(jsi::Runtime &rt, std::string eventName, std::string eventObj) {
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(eventObj.c_str());
-  jsi::Value event = jsi::Value::createFromJsonUtf8(rt, ptr, std::strlen(eventObj.c_str()));
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, std::move(event)));
+void NativeReanimatedModule::onEvent(jsi::Runtime &rt, std::string eventName, std::shared_ptr<jsi::Value> event) {
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, event));
   applierRegistry->event(rt, eventName, ho);
 }
 

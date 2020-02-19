@@ -14,10 +14,7 @@ Applier::Applier(std::shared_ptr<jsi::Function> worklet, std::vector<std::shared
 
 Applier::~Applier() {}
 
-
-
 bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> module) {
-
   jsi::Value * args = new jsi::Value[sharedValues.size()];
   for (int i = 0; i < sharedValues.size(); ++i) {
     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
