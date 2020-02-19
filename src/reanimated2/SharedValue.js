@@ -11,9 +11,13 @@ export default class SharedValue {
   }
 
   async get() {
+    var _this = this
     return new Promise(function(resolve, reject) {
-      NativeModule.getSharedValueAsync(this.id, (value) => {
-        resolve(value);
+      NativeModule.getSharedValueAsync(_this.id, (value) => {
+        // without setTimeout with timout 0 VM executes resolve before registering the Promise
+        setTimeout(() => {
+          resolve(value);
+        }, 0)
       });
     });
   }

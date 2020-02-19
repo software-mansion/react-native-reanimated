@@ -1,6 +1,4 @@
 import {
-  DeviceEventEmitter,
-  Platform,
   TurboModuleRegistry,
 } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
@@ -17,8 +15,8 @@ export default {
     InnerNativeModule.unregisterSharedValue(valueId);
   },
 
-  async getSharedValue(valueId, callback) {
-    return InnerNativeModule.getSharedValue(valueId, callback);
+  async getSharedValueAsync(valueId, callback) {
+    return InnerNativeModule.getSharedValueAsync(valueId, callback);
   },
 
   setSharedValue(valueId, newValue) {
