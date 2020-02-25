@@ -11,11 +11,11 @@ import {
   TurboModuleRegistry,
 } from 'react-native';
 
-import Animated from 'react-native-reanimated';
-const { ReanimatedModule } = NativeModules;
+import Animated, { SharedValue, Worklet } from 'react-native-reanimated';
 
-import { SharedValue, Worklet } from 'react-native-reanimated';
+
 import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
+const { ReanimatedModule } = NativeModules;
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',

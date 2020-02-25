@@ -5,6 +5,7 @@ module.exports = api => {
     presets: ['babel-preset-expo'],
     plugins: [
       '@babel/plugin-transform-modules-commonjs',
+      '../babel-plugin',
       isWeb ? [
         'module-resolver',
         {
