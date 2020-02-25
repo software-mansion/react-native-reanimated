@@ -32,7 +32,8 @@ class MainScreen extends React.Component {
     this.sv2 = new SharedValue(1);
     this.sv3 = new SharedValue(-100);
 
-    this.worklet = new Worklet((xyz, sv1, sv2, sv3) => {
+    this.worklet = new Worklet((sv1, sv2, sv3) => {
+      'worklet';
       const x = sv1.get();
       const y = sv2.get();
       sv3.set(x+y);
@@ -45,10 +46,10 @@ class MainScreen extends React.Component {
     this.animationStart = new SharedValue(0);
     this.stringVal = new SharedValue("text");
 
-    this.worklet3 = new Worklet(function(xyz, viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
-      'as worklet';
+    this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
+      'worklet';
       if (animationStarted.get() === 0) {
-        xyz.log(stringVal.get()); // string cannot be hardcoded :(  why?
+        this.log(stringVal.get()); // string cannot be hardcoded :(  why?
         animationStarted.set(1);
         animationStart.set(Date.now());    
       } 
@@ -58,7 +59,7 @@ class MainScreen extends React.Component {
       const progress = (Date.now() - animationStart.get())/duration;
       const maxWidth = 80;
 
-      xyz.log((Date.now()-endTime).toString());
+      this.log((Date.now()-endTime).toString());
 
       if (Date.now() > endTime) { // end condtion
         return true; // end animation
@@ -70,12 +71,12 @@ class MainScreen extends React.Component {
 
     this.eventString = new SharedValue('event');
 
-    this.worklet4 = new Worklet(function(xyz, viewWidth, eventString){
-      'as worklet';
-      xyz.log((1111).toString());
-      xyz.eval((1111).toString());
-      xyz[eventString.get()]((1111).toString());
-      xyz.message((1111).toString());
+    this.worklet4 = new Worklet(function(viewWidth, eventString){
+      'worklet';
+      this.log((1111).toString());
+      this.eval((1111).toString());
+      this[eventString.get()]((1111).toString());
+      this.message((1111).toString());
 
       return true;
     });
