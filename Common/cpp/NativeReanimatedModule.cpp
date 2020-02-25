@@ -10,7 +10,16 @@ namespace react {
 #include <android/log.h>
 #define APPNAME "NATIVE_REANIMATED"
 
+jsi::Value eval(jsi::Runtime &rt, const char *code) {
+  return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
+}
+
+jsi::Function function(jsi::Runtime &rt, const std::string& code) {
+  return eval(rt, ("(" + code + ")").c_str()).getObject(rt).getFunction(rt);
+}
+
 NativeReanimatedModule::NativeReanimatedModule(
+  std::unique_ptr<jsi::Runtime> rt,
   std::shared_ptr<ApplierRegistry> ar,
   std::shared_ptr<SharedValueRegistry> svr,
   std::shared_ptr<WorkletRegistry> wr,
@@ -21,6 +30,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->scheduler = scheduler;
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
+  this->runtime = std::move(rt);
 }
 
 // worklets
@@ -28,12 +38,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
   double id,
-  const jsi::Value &holder) {
-  std::string functionName = "func";
-  jsi::Object obj = holder.getObject(rt);
-  jsi::Function fun = obj.getPropertyAsFunction(rt, functionName.c_str());
-  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-  scheduler->scheduleOnUI([funPtr, id, this]() mutable {
+  std::string functionAsString) {
+  scheduler->scheduleOnUI([functionAsString, id, this]() mutable {
+    auto fun = function(*runtime, functionAsString.c_str());
+    std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
     this->workletRegistry->registerWorklet((int)id, funPtr);
   });
 }
@@ -140,16 +148,21 @@ void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id
   });
 }
 
-void NativeReanimatedModule::render(jsi::Runtime &rt) {
-  std::shared_ptr<jsi::Value> event(new jsi::Value(rt, jsi::Value::undefined()));
+void NativeReanimatedModule::render() {
+  std::shared_ptr<jsi::Value> event(new jsi::Value(*runtime, jsi::Value::undefined()));
   std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, event));
-  applierRegistry->render(rt, ho);
+  applierRegistry->render(*runtime, ho);
 }
 
-void NativeReanimatedModule::onEvent(jsi::Runtime &rt, std::string eventName, std::shared_ptr<jsi::Value> event) {
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, event));
-  applierRegistry->event(rt, eventName, ho);
+void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
+  jsi::Value event = eval(*runtime, ("(" + eventAsString + ")").c_str());
+  std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime, event));
+  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "onEvent");
+  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, eventPtr));
+  applierRegistry->event(*runtime, eventName, ho);
 }
+
+
 
 // test method
 
@@ -174,7 +187,6 @@ void NativeReanimatedModule::call(
   });
   callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));*/
 }
-
 
 
 }

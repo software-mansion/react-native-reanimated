@@ -27,7 +27,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerWorklet(
 
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerWorklet(
-          rt, std::move(args[0].getNumber()), std::move(args[1]));
+          rt, std::move(args[0].getNumber()), args[1].asString(rt).utf8(rt));
   return jsi::Value::undefined();
 }
 

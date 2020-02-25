@@ -32,7 +32,7 @@ class MainScreen extends React.Component {
     this.sv2 = new SharedValue(1);
     this.sv3 = new SharedValue(-100);
 
-    this.worklet = new Worklet((module, sv1, sv2, sv3) => {
+    this.worklet = new Worklet((xyz, sv1, sv2, sv3) => {
       const x = sv1.get();
       const y = sv2.get();
       sv3.set(x+y);
@@ -45,9 +45,10 @@ class MainScreen extends React.Component {
     this.animationStart = new SharedValue(0);
     this.stringVal = new SharedValue("text");
 
-    this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
+    this.worklet3 = new Worklet(function(xyz, viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
+      'as worklet';
       if (animationStarted.get() === 0) {
-        this.log(stringVal.get()); // string cannot be hardcoded :(  why?
+        xyz.log(stringVal.get()); // string cannot be hardcoded :(  why?
         animationStarted.set(1);
         animationStart.set(Date.now());    
       } 
@@ -57,7 +58,7 @@ class MainScreen extends React.Component {
       const progress = (Date.now() - animationStart.get())/duration;
       const maxWidth = 80;
 
-      this.log((Date.now()-endTime).toString());
+      xyz.log((Date.now()-endTime).toString());
 
       if (Date.now() > endTime) { // end condtion
         return true; // end animation
@@ -67,17 +68,23 @@ class MainScreen extends React.Component {
       return false; // continue 
     });
 
-    this.worklet4 = new Worklet(function(viewWidth){
-      const x = this.jan;
-      
+    this.eventString = new SharedValue('event');
+
+    this.worklet4 = new Worklet(function(xyz, viewWidth, eventString){
+      'as worklet';
+      xyz.log((1111).toString());
+      xyz.eval((1111).toString());
+      xyz[eventString.get()]((1111).toString());
+      xyz.message((1111).toString());
+
       return true;
     });
 
-    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
+    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth, this.eventString]);
   }
 
   componentDidMount() {
-    this.release = () => {};//this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
+    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
   }
 
   componentWillUnmount() {

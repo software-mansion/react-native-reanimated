@@ -25,8 +25,6 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
   return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
 }
 
-std::unique_ptr<facebook::jsi::Runtime> r;
-
 std::shared_ptr<Scheduler> scheduler;
 
 std::shared_ptr<NativeReanimatedModule> nrm;
@@ -36,7 +34,6 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     jobject thiz, jlong runtimePtr) {
 
     auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
-    r = std::unique_ptr<facebook::jsi::Runtime>(&runtime);
 
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
@@ -47,7 +44,10 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
     std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry);
 
+    std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
+
     auto module = std::make_shared<NativeReanimatedModule>(
+      std::move(animatedRuntime),
       applierRegistry,
       sharedValueRegistry,
       workletRegistry,
@@ -149,19 +149,16 @@ jobject getChangedSharedValues(JNIEnv* env) {
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
-  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
-  nrm->render(*runtime2);
+  nrm->render();
   return getChangedSharedValues(env);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jclass clazz, jbyteArray eventHash, jbyteArray eventObj) {
-  std::unique_ptr<jsi::Runtime> runtime2(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
   std::string eventAsString = byteArrayToString(env, eventObj);
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "event: %s", eventAsString.c_str());
-  jsi::Value event = eval(*runtime2, ("(" + eventAsString + ")").c_str());
-  std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime2, event));
-  nrm->onEvent(*runtime2, byteArrayToString(env, eventHash), eventPtr);
+  nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
+
   return getChangedSharedValues(env);
 }
 
@@ -177,7 +174,7 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jclass clazz) {
   std::unique_ptr<jsi::Runtime> rt(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
 
    jsi::Function checkPropertyFunction =
-          function(*rt, "function() { return this.a === 'a_property' }");
+          function(*rt, "function() { return this.event === 'a_property' }");
     class APropertyHostObject : public jsi::HostObject {
         jsi::Value get(jsi::Runtime& rt, const jsi::PropNameID& sym) override {
           return jsi::String::createFromUtf8(rt, "a_property");
@@ -188,7 +185,7 @@ Java_com_swmansion_reanimated_NativeProxy_uiCall(JNIEnv* env, jclass clazz) {
       jsi::Object hostObject =
           Object::createFromHostObject(*rt, std::make_shared<APropertyHostObject>());
       bool val  = checkPropertyFunction.callWithThis(*rt, hostObject).getBool();
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "bool : %d", (int)val);
+      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "boolean : %d", (int)val);
 }
 
 

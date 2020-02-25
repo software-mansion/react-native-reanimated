@@ -24,12 +24,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   public:
     NativeReanimatedModule(
+      std::unique_ptr<jsi::Runtime> rt,
       std::shared_ptr<ApplierRegistry> ar,
       std::shared_ptr<SharedValueRegistry> svr,
       std::shared_ptr<WorkletRegistry> wr,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<JSCallInvoker> jsInvoker);
-    void registerWorklet(jsi::Runtime &rt, double id, const jsi::Value &holder) override;
+    void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) override;
     void unregisterWorklet(jsi::Runtime &rt, double id) override;
 
     void registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
@@ -42,14 +43,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) override;
     void unregisterApplierFromEvent(jsi::Runtime &rt, int id) override;
 
-    void render(jsi::Runtime &rt);
-    void onEvent(jsi::Runtime &rt, std::string eventName, std::shared_ptr<jsi::Value> event);
+    void render();
+    void onEvent(std::string eventName, std::string eventAsString);
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 
     std::shared_ptr<WorkletRegistry> workletRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
     std::shared_ptr<ApplierRegistry> applierRegistry;
+    std::unique_ptr<jsi::Runtime> runtime;
 };
 
 }

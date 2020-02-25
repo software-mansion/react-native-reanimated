@@ -34,7 +34,7 @@ export default {
   // worklet
 
   registerWorklet(workletId, holder) {
-    InnerNativeModule.registerWorklet(workletId, holder);
+    InnerNativeModule.registerWorklet(workletId, holder.func.asString);
   },
 
   registerEventApplier(applierId, eventHash, workletID, sharedValues) {
