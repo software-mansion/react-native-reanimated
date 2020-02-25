@@ -49,17 +49,9 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
   } else if (propName == "emit") {
     //TODO
-  } else if (propName == "getEvent") {
+  } else if (propName == "event") {
 
-    auto callback = [](
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        size_t count
-        ) -> jsi::Value {
-      return jsi::String::createFromAscii(rt, "what");
-    };
-    return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+    return event->getObject(rt).getProperty(rt, "NativeMap");
 
   } else if (propName == "log") {
     auto callback = [](

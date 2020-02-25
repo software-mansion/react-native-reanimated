@@ -60,6 +60,7 @@ class MainScreen extends React.Component {
       const maxWidth = 80;
 
       this.log((Date.now()-endTime).toString());
+      this.log('delta');
 
       if (Date.now() > endTime) { // end condtion
         return true; // end animation
@@ -73,10 +74,8 @@ class MainScreen extends React.Component {
 
     this.worklet4 = new Worklet(function(viewWidth, eventString){
       'worklet';
-      this.log((1111).toString());
-      this.eval((1111).toString());
-      this[eventString.get()]((1111).toString());
-      this.message((1111).toString());
+      this.log('event');
+      this.log(this.event.absoluteY.toString());
 
       return true;
     });
