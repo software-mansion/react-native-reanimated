@@ -60,7 +60,14 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         const jsi::Value *args,
         size_t count
         ) -> jsi::Value {
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "log: %s", args[0].getString(rt).utf8(rt).c_str());
+      const jsi::Value *value = &args[0];
+      if (value->isString()) {
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %s", value->getString(rt).utf8(rt).c_str());
+      } else if (value->isNumber()) {
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %f", value->getNumber());
+      } else {
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] unhandled value type");
+      }
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
