@@ -14,19 +14,23 @@ module.exports = function ({ types: t }) {
             /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
           str = str.replace(/\n/ig, '');
           let newCode = ""
-          if (fun.node.type === 'FunctionExpression') {
+          let type = fun.node.type
+          if (type === 'ArrowFunctionExpression') {
+            str = ('function' + str).replace('=> {', '{')
+            type = 'FunctionDeclaration'
+          }
+          
+          if (type === 'FunctionExpression') {
             newCode = codeForExpresion.replace(/FUNCTION_CODE/g, str);
             fun.replaceWithSourceString(newCode);
             fun.skip();
-          } else if (fun.node.type === 'FunctionDeclaration') {
+          } else if (type === 'FunctionDeclaration') {
             newCode = codeForDeclaration;
             newCode = newCode.replace(/NAME/g, fun.node.id.name);
             newCode = newCode.replace(/FUNCTION_CODE/g, str);
             fun.insertAfter(t.StringLiteral(""));
             const nextInd = fun.key+1;
             fun.getSibling(nextInd).replaceWithSourceString(newCode);
-          } else {
-            // arrow functions not supported yet
           }
         }
       }

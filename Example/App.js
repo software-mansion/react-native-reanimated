@@ -1,18 +1,21 @@
 import React from 'react';
 import {
+  FlatList,
+  Platform,
+  StyleSheet,
   Text,
   View,
   YellowBox,
   TouchableHighlight,
   NativeModules,
+  TurboModuleRegistry,
 } from 'react-native';
 
 import Animated, { SharedValue, Worklet } from 'react-native-reanimated';
-import { WorkletEventHandler } from '../src/Animated';
-import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-const { ReanimatedModule } = NativeModules;
 
+
+import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
+const { ReanimatedModule } = NativeModules;
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -28,98 +31,35 @@ class MainScreen extends React.Component {
 
   constructor(props) {
     super(props);
-    this.sv1 = new SharedValue(0);
-    this.sv2 = new SharedValue(1);
-    this.sv3 = new SharedValue(-100);
+    this.str = ''
+    this.value = new SharedValue(this.str);
+    this.finalValue = new SharedValue('aaa');
+    this.appendValue = new SharedValue('a');
 
-    this.worklet = new Worklet((sv1, sv2, sv3) => {
-      'worklet';
-      const x = sv1.get();
-      const y = sv2.get();
-      sv3.set(x+y);
-      return true;
-    });
-
-    this.viewWidth = new SharedValue(40);
-    this.animatedViewWidth = new AnimatedSharedValue(this.viewWidth);
-    this.animationStarted = new SharedValue(0);
-    this.animationStart = new SharedValue(0);
-    this.stringVal = new SharedValue("text");
-
-    this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
-      'worklet';
-      if (animationStarted.get() === 0) {
-        this.log(stringVal.get()); // string cannot be hardcoded :(  why?
-        animationStarted.set(1);
-        animationStart.set(Date.now());    
-      } 
-
-      const duration = 5000;
-      const endTime = animationStart.get() + duration;
-      const progress = (Date.now() - animationStart.get())/duration;
-      const maxWidth = 80;
-
-      this.log((Date.now()-endTime).toString());
-      this.log('delta');
-
-      if (Date.now() > endTime) { // end condtion
-        return true; // end animation
+    this.worklet = new Worklet((v, f, a) => {
+      'worklet'
+      this.log(v.get())
+      if (v.get() !== f.get()) {
+        v.set(v.get() + a.get())
+        return false
       }
+      return true
+    })
 
-      viewWidth.set(maxWidth * progress);
-      return false; // continue 
-    });
-
-    this.eventString = new SharedValue('event');
-
-    this.worklet4 = new Worklet(function(viewWidth, eventString){
-      'worklet';
-      this.log('event');
-      this.log(this.event.absoluteY.toString());
-
-      return true;
-    });
-
-    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth, this.eventString]);
   }
 
   componentDidMount() {
-    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
+    this.worklet.apply([this.value, this.finalValue, this.appendValue]);
   }
 
   componentWillUnmount() {
-    this.sv1.release();
-    this.sv2.release();
-    this.sv3.release();
-    this.viewWidth.release();
-    this.animationStarted.release();
-    this.stringVal.release();
-    this.animationStart.release();
-    this.release();
     this.worklet.release();
-    this.worklet3.release();
   }
 
   render() {
     return (
       <View>
-        <Text>dziala</Text>
-        <TouchableHighlight onPress={ async () => {console.warn("ok");}}>
-          <Text> remember callback </Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={ async () => {
-          await ReanimatedModule.custom();
-            console.log("ok byl call");
-          }} >
-          <Text> custom </Text>
-        </TouchableHighlight>
-        <PanGestureHandler
-          maxPointers={1}
-          minDist={10}
-          onGestureEvent={this.workletEventHandler}
-          onHandlerStateChange={this.workletEventHandler}>
-          <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} /> 
-        </PanGestureHandler>
+        <Text>OK</Text>
       </View>
     );
   }
