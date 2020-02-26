@@ -70,9 +70,7 @@ class MainScreen extends React.Component {
       return false; // continue 
     });
 
-    this.eventString = new SharedValue('event');
-
-    this.worklet4 = new Worklet(function(viewWidth, eventString){
+    this.worklet4 = new Worklet(function(viewWidth){
       'worklet';
       this.log('event');
       this.log(this.event.x);
@@ -84,11 +82,31 @@ class MainScreen extends React.Component {
       return false;
     });
 
-    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth, this.eventString]);
+    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
+
+    this.eventEmitter = new EventEmitter();
+    this.stopVal = new SharedValue(3);
+    this.flag = new SharedValue(0);
+
+    this.worklet5 = new Worklet(function(stopVal, flag) {
+      'worklet'
+      this.log(stopVal.get())
+      if (flag.get() === 0) {
+        this.notify('worklet5')
+        flag.set(1)
+      }
+      return (stopVal.get() >= 5)
+    });
   }
 
   componentDidMount() {
     this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
+
+    var t = this;
+    this.eventEmitter.addListener("worklet5", function() {
+      t.numval.set(11);
+    })
+    this.release = this.worklet5.apply([this.stopVal, this.flag]);
   }
 
   componentWillUnmount() {

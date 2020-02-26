@@ -57,6 +57,14 @@ class Queue
     cond_.notify_one();
   }
 
+  size_t getSize() {
+    std::unique_lock<std::mutex> mlock(mutex_);
+    const size_t res = queue_.size();
+    mlock.unlock();
+    cond_.notify_one();
+    return res;
+  }
+
  private:
   std::queue<T> queue_;
   std::mutex mutex_;
@@ -71,7 +79,7 @@ class Scheduler {
     virtual void triggerUI();
     virtual void triggerJS();
     virtual ~Scheduler();
-  protected:
+  //protected:
     Queue<std::function<void()>> uiJobs;
     Queue<std::function<void()>> jsJobs;
 };

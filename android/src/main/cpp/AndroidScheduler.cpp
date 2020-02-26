@@ -4,6 +4,8 @@
 
 #include "AndroidScheduler.h"
 #include <jni.h>
+#define APPNAME "NATIVE_REANIMATED"
+#include <android/log.h>
 
 AndroidScheduler::AndroidScheduler(JavaVM *vm) {
   this->vm = vm;

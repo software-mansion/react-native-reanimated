@@ -69,6 +69,7 @@ export * from './derived';
 
 import Worklet from './reanimated2/Worklet';
 import SharedValue from './reanimated2/SharedValue';
+import EventEmitter from './reanimated2/EventEmitter';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 export {
@@ -91,5 +92,6 @@ export {
   // Reanimated 2.0
   Worklet,
   SharedValue,
+  EventEmitter,
   WorkletEventHandler,
 };

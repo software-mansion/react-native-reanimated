@@ -8,7 +8,7 @@ export default class Worklet {
   constructor(func) {
     this.id = Worklet.idCounter++;
     this.func = func;
-    NativeModule.registerWorklet(this.id, this); 
+    NativeModule.registerWorklet(this.id, this);
     return this;
   }
 

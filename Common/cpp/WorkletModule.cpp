@@ -4,14 +4,18 @@
 
 #include "WorkletModule.h"
 #include "Logger.h"
-
+#include "ListenerRegistry.h"
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
                                    std::shared_ptr<WorkletRegistry> workletRegistry,
+                                   std::shared_ptr<ListenerRegistry> listenerRegistry,
+                                   std::shared_ptr<Scheduler> scheduler,
                                    std::shared_ptr<jsi::Value> event) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
+  this->listenerRegistry = listenerRegistry;
+  this->scheduler = scheduler;
   this->event = event;
 }
 
@@ -44,8 +48,6 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         return jsi::Value::undefined();
      };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
-  } else if (propName == "emit") {
-    //TODO
   } else if (propName == "event") {
     return event->getObject(rt).getProperty(rt, "NativeMap");
     
@@ -64,6 +66,18 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       } else {
         Logger::log("unsupported value type");
       }
+      return jsi::Value::undefined();
+    };
+    return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+  } else if(propName == "notify") {
+    auto callback = [this](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+      std::string str = args[0].getString(rt).utf8(rt).c_str();
+      this->listenerRegistry->notify(str);
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
