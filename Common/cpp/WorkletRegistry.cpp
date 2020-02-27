@@ -2,8 +2,6 @@
 // Created by Szymon Kapala on 2020-02-11.
 //
 #include "WorkletRegistry.h"
-#include <android/log.h>
-#define APPNAME "NATIVE_REANIMATED"
 
 void WorkletRegistry::registerWorklet(int id, std::shared_ptr<jsi::Function> ptr) {
   workletMap[id] = ptr;

@@ -5,6 +5,8 @@
 #import <ReactCommon/SampleTurboCxxModule.h>
 #import <ReactCommon/RCTSampleTurboModule.h>
 #import <NativeReanimatedModule.h>
+#import <jsi/JSCRuntime.h>
+#import "NativeProxy.h"
 
 // NOTE: This entire file should be codegen'ed.
 
@@ -21,7 +23,7 @@ std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name, std:
   }
   
   if (name == "NativeReanimated") {
-    return std::make_shared<NativeReanimatedModule>(jsInvoker);
+    return NativeProxyWrapper::createNativeReanimatedModule(jsInvoker);
   }
 
   return nullptr;

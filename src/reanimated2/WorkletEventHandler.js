@@ -20,7 +20,7 @@ export default class WorkletEventHandler {
     NativeModule.registerEventApplier(this.id, viewTag+eventName, this.worklet.id, this.sharedValueIds);
   }
 
-  unregisterFromEvent() {
+  release() {
     NativeModule.unregisterEventApplier(this.id);
   }
 }

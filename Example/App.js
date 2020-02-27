@@ -49,7 +49,7 @@ class MainScreen extends React.Component {
     this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
       'worklet';
       if (animationStarted.get() === 0) {
-        this.log(stringVal.get()); // string cannot be hardcoded :(  why?
+        this.log(stringVal.get()); 
         animationStarted.set(1);
         animationStart.set(Date.now());    
       } 
@@ -75,9 +75,13 @@ class MainScreen extends React.Component {
     this.worklet4 = new Worklet(function(viewWidth, eventString){
       'worklet';
       this.log('event');
-      this.log(this.event.absoluteY.toString());
+      this.log(this.event.x);
+      viewWidth.set(this.event.x);
 
-      return true;
+      if (this.event.state === 5) {
+        return true;
+      }
+      return false;
     });
 
     this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth, this.eventString]);
