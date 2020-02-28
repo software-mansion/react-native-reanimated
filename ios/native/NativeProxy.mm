@@ -6,7 +6,7 @@
 //
 
 #import "NativeProxy.h"
-#import <Folly/json.h>
+#import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 
 @interface NativeProxy()

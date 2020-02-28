@@ -6,8 +6,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <RNReanimated/NativeReanimatedModule.h>
+#import "IOSScheduler.h"
+#import <React/RCTEventDispatcher.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+using namespace facebook;
+using namespace react;
 
 @interface NativeProxy : NSObject
 

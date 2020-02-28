@@ -312,7 +312,7 @@
 				PRODUCT_NAME = ReanimatedExample;
 				"SYSTEM_HEADER_SEARCH_PATHS[arch=*]" = "$(PODS_ROOT)/boost-for-react-native $(PODS_ROOT)/Folly";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/boost-for-react-native $(PODS_ROOT)/boost-for-react-native";
+				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/boost-for-react-native $(PODS_ROOT)/Folly";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -340,7 +340,7 @@
 				);
 				PRODUCT_NAME = ReanimatedExample;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/boost-for-react-native $(PODS_ROOT)/boost-for-react-native";
+				USER_HEADER_SEARCH_PATHS = "$(PODS_ROOT)/boost-for-react-native $(PODS_ROOT)/Folly";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

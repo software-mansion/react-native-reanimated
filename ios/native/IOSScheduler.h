@@ -10,6 +10,10 @@
 
 #include <stdio.h>
 #include "Scheduler.h"
+#import <ReactCommon/JSCallInvoker.h>
+#import <React/RCTUIManager.h>
+
+using namespace facebook;
 
 class IOSScheduler : public Scheduler {
   std::shared_ptr<JSCallInvoker> jsInvoker;

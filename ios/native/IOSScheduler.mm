@@ -5,7 +5,7 @@
 //  Created by Szymon Kapala on 27/02/2020.
 //
 
-#include "IOSScheduler.hpp"
+#include "IOSScheduler.h"
 
 IOSSCheduler::IOSScheduler(std::shared_ptr<JSCallInvoker> jsInvoker) {
   this->jsInvoker = jsInvoker;
