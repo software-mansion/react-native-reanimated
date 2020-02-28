@@ -65,6 +65,9 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %s", value->getString(rt).utf8(rt).c_str());
       } else if (value->isNumber()) {
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %f", value->getNumber());
+      } else if (value->isBool()) {
+        std::string strValue = (value->getBool()) ? "true" : "false" ;
+        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %s", strValue.c_str());
       } else {
         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] unhandled value type");
       }

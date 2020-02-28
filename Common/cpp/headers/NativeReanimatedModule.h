@@ -11,6 +11,7 @@
 #include "SharedValue.h"
 #include "SharedDouble.h"
 #include "SharedString.h"
+#include "SharedBoolean.h"
 #include "WorkletModule.h"
 #include "ApplierRegistry.h"
 

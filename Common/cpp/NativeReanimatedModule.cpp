@@ -67,7 +67,12 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
     scheduler->scheduleOnUI([=](){
       sharedValueRegistry->registerSharedValue(id, sv);
     });
-  }  // add here other types
+  } else if(value.isBool()) {    
+    std::shared_ptr<SharedValue> sv(new SharedBoolean(id, value.getBool()));
+    scheduler->scheduleOnUI([=](){
+      sharedValueRegistry->registerSharedValue(id, sv);
+    });
+  } // add here other types
 }
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {
@@ -105,7 +110,14 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
        std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
        oldSV->setNewValue(sv);
     });
-  } // add here other types
+  } else if(value.isBool()) {
+    std::shared_ptr<SharedValue> sv(new SharedBoolean(id, value.getBool()));
+    scheduler->scheduleOnUI([=](){
+       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
+       oldSV->setNewValue(sv);
+    });
+  }
+  // add here other types
 }
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {

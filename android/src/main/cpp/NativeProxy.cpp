@@ -135,6 +135,12 @@ jobject getChangedSharedValues(JNIEnv* env) {
         y = env->NewStringUTF(str.c_str());
         break;
       }
+      case 'B':
+      {
+        bool val = ((SharedBoolean*)(sv.get()))->value;
+        y = env->CallStaticObjectMethod(integerClass, integerValueOf, val);
+        break;
+      }
     }
     // end
 
