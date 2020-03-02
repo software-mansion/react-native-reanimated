@@ -61,8 +61,7 @@ jsi::Object SharedBoolean::asParameter(jsi::Runtime &rt) {
           size_t count
         ) -> jsi::Value {
           (*dirty) = true;
-          //double newValue = arguments[0].asNumber();
-          bool newValue = (bool)arguments[0].asNumber();
+          bool newValue = arguments[0].getBool();
           (*value) = newValue;
           return jsi::Value::undefined();
         };
