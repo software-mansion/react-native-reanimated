@@ -1,5 +1,6 @@
 #include "NativeReanimatedModule.h"
 #include <memory>
+#include "Logger.h"
 
 
 using namespace facebook;
@@ -31,6 +32,12 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
   this->runtime = std::move(rt);
+  Logger::log("constructor here");
+  Logger::log(34.5);
+  Logger::log(true);
+  Logger::log('a');
+  Logger::log(88);
+  Logger::log(&rt);
 }
 
 // worklets
