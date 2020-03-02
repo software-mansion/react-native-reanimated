@@ -5,6 +5,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 folly_version = '2018.10.22.00'
+
 Pod::Spec.new do |s|
   s.name         = "RNReanimated"
   s.version      = package["version"]

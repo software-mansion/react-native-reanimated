@@ -18,6 +18,8 @@
 std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
 std::shared_ptr<IOSScheduler> scheduler;
 
+RCTUIManager* uiManagerTemporary;
+
 @implementation NativeProxy
 
 + (void)clear
@@ -28,7 +30,11 @@ std::shared_ptr<IOSScheduler> scheduler;
 
 + (void)setUIManager:(RCTUIManager*)uiManager
 {
-  scheduler->setUIManager(uiManager);
+  if (scheduler.get() == nullptr) {
+    uiManagerTemporary = uiManager;
+  } else {
+    scheduler->setUIManager(uiManager);
+  }
 }
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender
@@ -61,7 +67,12 @@ std::shared_ptr<IOSScheduler> scheduler;
 + (void*) getNativeReanimatedModule:(void*)jsInvokerVoidPtr
 {
   std::shared_ptr<JSCallInvoker> jsInvoker = *(static_cast<std::shared_ptr<JSCallInvoker>*>(jsInvokerVoidPtr));
+  
   scheduler = std::make_shared<IOSScheduler>(jsInvoker);
+  if (uiManagerTemporary != nullptr) {
+    scheduler->setUIManager(uiManagerTemporary);
+    uiManagerTemporary = nullptr;
+  }
   
   std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)scheduler.get());
   std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
