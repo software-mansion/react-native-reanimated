@@ -42,7 +42,7 @@ public:
   static std::shared_ptr<NativeReanimatedModule> createNativeReanimatedModule(std::shared_ptr<JSCallInvoker> jsInvoker) {
     return *(static_cast<std::shared_ptr<NativeReanimatedModule> *>([NativeProxy getNativeReanimatedModule:(&jsInvoker)]));
   }
-}
+};
 
 #endif
 
