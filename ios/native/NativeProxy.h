@@ -6,21 +6,18 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <RNReanimated/NativeReanimatedModule.h>
-#import "IOSScheduler.h"
 #import <React/RCTEventDispatcher.h>
+#import <React/RCTUIManager.h>
+
+#if __cplusplus
+#import <RNReanimated/NativeReanimatedModule.h>
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
-using namespace facebook;
-using namespace react;
-
 @interface NativeProxy : NSObject
 
-std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
-std::shared_ptr<IOSScheduler> scheduler;
-
-+ (void)clear();
++ (void)clear;
 + (void)setUIManager:(RCTUIManager *)uiManager;
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender;
@@ -29,17 +26,24 @@ std::shared_ptr<IOSScheduler> scheduler;
 + (BOOL)shouldEventBeHijacked:(NSString*)eventName;
 + (BOOL)anyRenderApplier;
 
-+ (std::shared_ptr<NativeReanimatedModule>) getNativeReanimatedModule: jsInvoker: (std::shared_ptr<JSCallInvoker>)jsInvoker;
++ (void*)getNativeReanimatedModule:(void*)jsInvokerVoidPtr;
 
 @end
 
 // cpp
 
+#if __cplusplus
+
+using namespace facebook;
+using namespace react;
+
 class NativeProxyWrapper {
 public:
   static std::shared_ptr<NativeReanimatedModule> createNativeReanimatedModule(std::shared_ptr<JSCallInvoker> jsInvoker) {
-    return [NativeProxy getNativeReanimatedModule:jsInvoker];
+    return *(static_cast<std::shared_ptr<NativeReanimatedModule> *>([NativeProxy getNativeReanimatedModule:(&jsInvoker)]));
   }
 }
+
+#endif
 
 NS_ASSUME_NONNULL_END

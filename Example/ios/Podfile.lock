@@ -242,7 +242,7 @@ PODS:
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
-    - Folly
+    - Folly (= 2018.10.22.00)
     - glog
     - RCTRequired
     - RCTTypeSafety
@@ -395,7 +395,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: a49a1f42bf8f5acf1c3e297097517c6b3af377ad
   ReactCommon: 198c7c8d3591f975e5431bec1b0b3b581aa1c5dd
   RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
-  RNReanimated: 907b4bcd151e231687ef3fc3d1e4e4fb956030c5
+  RNReanimated: 0306b533ef8563fe501495571eb645a63bd4819d
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
 
 PODFILE CHECKSUM: ab8c1cc34bc35b754db4e7803df8bdd19239492c

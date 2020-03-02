@@ -6,30 +6,35 @@
 //
 
 #import "NativeProxy.h"
-#import <folly/json.h>
+#include <folly/json.h>
 #import <React/RCTFollyConvert.h>
+#import "IOSScheduler.h"
+#import <jsi/JSCRuntime.h>
 
 @interface NativeProxy()
 
 @end
 
+std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule;
+std::shared_ptr<IOSScheduler> scheduler;
+
 @implementation NativeProxy
 
-+ (void)clear()
++ (void)clear
 {
-  self.nativeReanimatedModule.reset();
-  self.scheduler.reset();
+  nativeReanimatedModule.reset();
+  scheduler.reset();
 }
 
 + (void)setUIManager:(RCTUIManager*)uiManager
 {
-  self.scheduler->setUIManager(uiManager);
+  scheduler->setUIManager(uiManager);
 }
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender
 {
-  self.nativeReanimatedModule->render();
-  return getChangedSharedValues();
+  nativeReanimatedModule->render();
+  return [NativeProxy getChangedSharedValues];
 }
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterEvent:(NSString *)eventName event:(id<RCTEvent>)event
@@ -38,44 +43,46 @@
   
   std::string eventAsString = folly::toJson(convertIdToFollyDynamic(event));
   eventAsString = "{ NativeMap:"  + eventAsString + "} }";
-  
-  std::string eventObjStdString([event UTF8String]);
-  self.NativeReanimatedModule.onEvent(eventName, eventAsString);
-  return getChangedSharedValues();
+  nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
+  return  [NativeProxy getChangedSharedValues];
 }
 
 + (BOOL)shouldEventBeHijacked:(NSString*)eventName
 {
   std::string eventNameStdString([eventName UTF8String]);
-  return self.nativeReanimatedModule->shouldEventBeHijacked(eventNameStdString);
+  return nativeReanimatedModule->applierRegistry->anyApplierRegisteredForEvent(eventNameStdString);
 }
 
 + (BOOL)anyRenderApplier
 {
-  return self.nativeReanimatedModule->anyRenderApplier();
+  return nativeReanimatedModule->applierRegistry->notEmpty();
 }
 
-+ (std::shared_ptr<NativeReanimatedModule>) getNativeReanimatedModule: jsInvoker: (std::shared_ptr<JSCallInvoker>)jsInvoker
++ (void*) getNativeReanimatedModule:(void*)jsInvokerVoidPtr
 {
-  self.scheduler = std::make_shared<IOSScheduler>(jsInvoker);
+  std::shared_ptr<JSCallInvoker> jsInvoker = *(static_cast<std::shared_ptr<JSCallInvoker>*>(jsInvokerVoidPtr));
+  scheduler = std::make_shared<IOSScheduler>(jsInvoker);
   
-  std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)self.scheduler.get());
+  std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)scheduler.get());
   std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
   std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry());
   std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::jsc::makeJSCRuntime().release()));
-  return std::make_shared<NativeReanimatedModule>(std::move(animatedRuntime),
-                                                  applierRegistry,
-                                                  sharedValueRegistry,
-                                                  workletRegistry,
-                                                  schedulerForModule,
-                                                  jsInvoker);
+  
+  nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(std::move(animatedRuntime),
+  applierRegistry,
+  sharedValueRegistry,
+  workletRegistry,
+  schedulerForModule,
+  jsInvoker);
+  
+  return (void*)(&nativeReanimatedModule);
 }
 
-+ (NSArray<NSArray*>*)getChangedSharedValues()
++ (NSArray<NSArray*>*)getChangedSharedValues
 {
   NSMutableArray *changed = [NSMutableArray new];
-  for(auto & sharedValue : nrm->sharedValueRegistry->sharedValueMap) {
+  for(auto & sharedValue : nativeReanimatedModule->sharedValueRegistry->sharedValueMap) {
     int svId = sharedValue.first;
     std::shared_ptr<SharedValue> sv = sharedValue.second;
     if ((!sv->dirty) || (!sv->shouldBeSentToJava)) {
@@ -92,13 +99,13 @@
       case 'D':
       {
         double val = ((SharedDouble*)(sv.get()))->value;
-        y = [NSNumber numberWithDouble:val];
+        value = [NSNumber numberWithDouble:val];
         break;
       }
       case 'S':
       {
         std::string str = ((SharedString*)(sv.get()))->value;
-        y = [NSString stringWithCString:str.c_str()
+        value = [NSString stringWithCString:str.c_str()
         encoding:[NSString defaultCStringEncoding]];
         break;
       }

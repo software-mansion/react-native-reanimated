@@ -7,25 +7,28 @@
 
 #include "IOSScheduler.h"
 
-IOSSCheduler::IOSScheduler(std::shared_ptr<JSCallInvoker> jsInvoker) {
+using namespace facebook;
+using namespace react;
+
+IOSScheduler::IOSScheduler(std::shared_ptr<JSCallInvoker> jsInvoker) {
   this->jsInvoker = jsInvoker;
 }
 
-void IOSSCheduler::scheduleOnUI(std::function<void()> job) {
-  [this.uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+void IOSScheduler::scheduleOnUI(std::function<void()> job) {
+  [this->uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
    triggerUI();
   }];
 }
 
-void IOSSCheduler::scheduleOnJS(std::function<void()> job) {
-  jsInvoker->invokeAsync(std::move([this]{
+void IOSScheduler::scheduleOnJS(std::function<void()> job) {
+  jsInvoker->invokeAsync([this]{
     triggerJS();
-  }));
+  });
 }
 
-void IOSSCheduler::setUIManager(RCTUIManager *uiManager) {
-  this.uiManger = uiManager;
+void IOSScheduler::setUIManager(RCTUIManager *uiManager) {
+  this->uiManager = uiManager;
 }
 
-IOSSCheduler::~IOSScheduler(){}
+IOSScheduler::~IOSScheduler(){}
  
