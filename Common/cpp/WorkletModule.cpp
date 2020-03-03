@@ -3,7 +3,7 @@
 //
 
 #include "WorkletModule.h"
-
+#include "Logger.h"
 
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
@@ -47,9 +47,8 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   } else if (propName == "emit") {
     //TODO
   } else if (propName == "event") {
-
     return event->getObject(rt).getProperty(rt, "NativeMap");
-
+    
   } else if (propName == "log") {
     auto callback = [](
         jsi::Runtime &rt,
@@ -59,11 +58,11 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         ) -> jsi::Value {
       const jsi::Value *value = &args[0];
       if (value->isString()) {
-        // use logger here
+        Logger::log(value->getString(rt).utf8(rt).c_str());
       } else if (value->isNumber()) {
-        // use logger here
+        Logger::log(value->getNumber());
       } else {
-        // use logger here
+        Logger::log("unsupported value type");
       }
       return jsi::Value::undefined();
     };
