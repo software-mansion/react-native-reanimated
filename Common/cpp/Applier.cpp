@@ -4,9 +4,6 @@
 
 #include "Applier.h"
 
-#include <android/log.h>
-#define APPNAME "NATIVE_REANIMATED"
-
 Applier::Applier(std::shared_ptr<jsi::Function> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;

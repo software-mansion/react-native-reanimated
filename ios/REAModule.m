@@ -2,6 +2,7 @@
 
 #import "REANodesManager.h"
 #import "Transitioning/REATransitionManager.h"
+#import "native/NativeProxy.h"
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
@@ -42,6 +43,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   [bridge.eventDispatcher addDispatchObserver:self];
   [bridge.uiManager.observerCoordinator addObserver:self];
+  
+  [NativeProxy setUIManager:self.bridge.uiManager];
 }
 
 #pragma mark -- Transitioning API
@@ -140,6 +143,13 @@ RCT_EXPORT_METHOD(setValue:(nonnull NSNumber *)nodeID
 {
   [self addOperationBlock:^(REANodesManager *nodesManager) {
     [nodesManager setValueForNodeID:nodeID value:newValue];
+  }];
+}
+
+RCT_EXPORT_METHOD(triggerRender)
+{
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager postRunUpdatesAfterAnimation];
   }];
 }
 

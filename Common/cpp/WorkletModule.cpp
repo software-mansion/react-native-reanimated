@@ -3,9 +3,7 @@
 //
 
 #include "WorkletModule.h"
-#include <android/log.h>
-#define APPNAME "NATIVE_REANIMATED"
-
+#include "Logger.h"
 
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
@@ -19,7 +17,6 @@ WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueReg
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   auto propName = name.utf8(rt);
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "pyta o  %s", propName.c_str());
   if (propName == "startWorklet") {
      auto callback = [this](
         jsi::Runtime &rt,
@@ -50,9 +47,8 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   } else if (propName == "emit") {
     //TODO
   } else if (propName == "event") {
-
     return event->getObject(rt).getProperty(rt, "NativeMap");
-
+    
   } else if (propName == "log") {
     auto callback = [](
         jsi::Runtime &rt,
@@ -62,11 +58,11 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         ) -> jsi::Value {
       const jsi::Value *value = &args[0];
       if (value->isString()) {
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %s", value->getString(rt).utf8(rt).c_str());
+        Logger::log(value->getString(rt).utf8(rt).c_str());
       } else if (value->isNumber()) {
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] %f", value->getNumber());
+        Logger::log(value->getNumber());
       } else {
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[Worklet module logger] unhandled value type");
+        Logger::log("unsupported value type");
       }
       return jsi::Value::undefined();
     };

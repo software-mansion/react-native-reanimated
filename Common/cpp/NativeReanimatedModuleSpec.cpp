@@ -1,8 +1,5 @@
 #include "NativeReanimatedModuleSpec.h"
 
-#include <android/log.h>
-#define APPNAME "NATIVE_REANIMATED"
-
 namespace facebook {
 namespace react {
 

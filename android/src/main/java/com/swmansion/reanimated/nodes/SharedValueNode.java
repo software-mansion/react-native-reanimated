@@ -35,6 +35,10 @@ public class SharedValueNode extends Node {
     }
   }
 
+  public void onDrop() {
+    mSharedValueMap.remove(id);
+  }
+
   public void setValue(Object value) {
     mValue = value;
     forceUpdateMemoizedValue(mValue);

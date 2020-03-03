@@ -22,6 +22,9 @@
 #import "Nodes/REAParamNode.h"
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
+#import "Nodes/REASharedValueNode.h"
+
+#import "native/NativeProxy.h"
 
 @interface RCTUIManager ()
 
@@ -144,6 +147,11 @@
 
 - (void)onAnimationFrame:(CADisplayLink *)displayLink
 {
+  NSArray<NSArray*> *changedSharedValues = [NativeProxy getChangedSharedValuesAfterRender];
+  for (NSArray *sv in changedSharedValues) {
+    [REASharedValueNode setSharedValue:sv[0] newValue:sv[1]];
+  }
+  
   // We process all enqueued events first
   _currentAnimationTimestamp = _displayLink.timestamp;
   for (NSUInteger i = 0; i < _eventQueue.count; i++) {
@@ -164,7 +172,7 @@
 
   [self performOperations];
 
-  if (_onAnimationCallbacks.count == 0) {
+  if (_onAnimationCallbacks.count == 0 && (![NativeProxy anyRenderApplier])) {
     [self stopUpdatingOnAnimationFrame];
   }
 }
@@ -236,6 +244,7 @@
             @"param": [REAParamNode class],
             @"func": [REAFunctionNode class],
             @"callfunc": [REACallFuncNode class],
+            @"shared": [REASharedValueNode class]
 //            @"listener": nil,
             };
   });
@@ -246,6 +255,10 @@
   if (!nodeClass) {
     RCTLogError(@"Animated node type %@ not supported natively", nodeType);
     return;
+  }
+  
+  if (nodeClass == [REASharedValueNode class]) {
+    NSLog(@"ok");
   }
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
@@ -258,6 +271,7 @@
 {
   REANode *node = _nodes[nodeID];
   if (node) {
+    [node onDrop];
     [_nodes removeObjectForKey:nodeID];
   }
 }
@@ -380,6 +394,19 @@
   NSString *key = [NSString stringWithFormat:@"%@%@",
                    event.viewTag,
                    RCTNormalizeInputEventName(event.eventName)];
+  
+  NSString *eventHash = [NSString stringWithFormat:@"%@%@",
+  event.viewTag,
+  event.eventName];
+  
+  if ([NativeProxy shouldEventBeHijacked:eventHash]) {
+    NSArray<NSArray*> *changedSharedValues = [NativeProxy getChangedSharedValuesAfterEvent:eventHash event:event];
+    for (NSArray *sv in changedSharedValues) {
+      [REASharedValueNode setSharedValue:sv[0] newValue:sv[1]];
+    }
+    return;
+  }
+  
   REANode *eventNode = [_eventMapping objectForKey:key];
 
   if (eventNode != nil) {

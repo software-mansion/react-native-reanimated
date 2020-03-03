@@ -293,6 +293,10 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dropNode(int tag) {
+    Node node = mAnimatedNodes.get(tag);
+    if (node != null) {
+      node.onDrop();
+    }
     mAnimatedNodes.remove(tag);
   }
 
