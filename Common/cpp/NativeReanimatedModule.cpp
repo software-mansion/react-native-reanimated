@@ -1,5 +1,6 @@
 #include "NativeReanimatedModule.h"
 #include <memory>
+#include "Logger.h"
 
 
 using namespace facebook;
