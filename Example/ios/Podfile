@@ -39,4 +39,6 @@ target 'ReanimatedExample' do
   pod 'RNReanimated', :path => '../../'
 
   use_native_modules!
+  pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
+
 end

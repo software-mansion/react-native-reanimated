@@ -395,8 +395,12 @@
                    event.viewTag,
                    RCTNormalizeInputEventName(event.eventName)];
   
-  if ([NativeProxy shouldEventBeHijacked:key]) {
-    NSArray<NSArray*> *changedSharedValues = [NativeProxy getChangedSharedValuesAfterEvent:key event:event]; // TODO
+  NSString *eventHash = [NSString stringWithFormat:@"%@%@",
+  event.viewTag,
+  event.eventName];
+  
+  if ([NativeProxy shouldEventBeHijacked:eventHash]) {
+    NSArray<NSArray*> *changedSharedValues = [NativeProxy getChangedSharedValuesAfterEvent:eventHash event:event];
     for (NSArray *sv in changedSharedValues) {
       [REASharedValueNode setSharedValue:sv[0] newValue:sv[1]];
     }

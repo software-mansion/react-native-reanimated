@@ -47,8 +47,8 @@ RCTUIManager* uiManagerTemporary;
 {
   std::string eventNameStdString([eventName UTF8String]);
   
-  std::string eventAsString = folly::toJson(convertIdToFollyDynamic(event));
-  eventAsString = "{ NativeMap:"  + eventAsString + "} }";
+  std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+  eventAsString = "{ NativeMap:"  + eventAsString + "}";
   nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
   return  [NativeProxy getChangedSharedValues];
 }
