@@ -256,6 +256,10 @@
     RCTLogError(@"Animated node type %@ not supported natively", nodeType);
     return;
   }
+  
+  if (nodeClass == [REASharedValueNode class]) {
+    NSLog(@"ok");
+  }
 
   REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
   node.nodesManager = self;

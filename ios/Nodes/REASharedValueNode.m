@@ -39,7 +39,7 @@
   static dispatch_once_t once;
   static NSMutableDictionary *sharedValues;
   dispatch_once(&once, ^{
-      sharedValues = [NSMutableDictionary init];
+      sharedValues = [NSMutableDictionary new];
   });
   return sharedValues;
 }

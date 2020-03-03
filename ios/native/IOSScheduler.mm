@@ -15,12 +15,14 @@ IOSScheduler::IOSScheduler(std::shared_ptr<JSCallInvoker> jsInvoker) {
 }
 
 void IOSScheduler::scheduleOnUI(std::function<void()> job) {
-  [this->uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-   triggerUI();
-  }];
+  Scheduler::scheduleOnUI(job);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    triggerUI();
+  });
 }
 
 void IOSScheduler::scheduleOnJS(std::function<void()> job) {
+  Scheduler::scheduleOnJS(job);
   jsInvoker->invokeAsync([this]{
     triggerJS();
   });

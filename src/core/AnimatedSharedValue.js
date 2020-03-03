@@ -10,6 +10,7 @@ export default class AnimatedSharedValue extends AnimatedNode {
             initialValue: sharedValue.initialValue,
         }, [],
     );
+    console.log("init shared value node");
   }  
 
   setValue(value) {
