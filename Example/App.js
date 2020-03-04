@@ -84,7 +84,6 @@ class MainScreen extends React.Component {
 
     this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
 
-    this.eventEmitter = new EventEmitter();
     this.stopVal = new SharedValue(3);
     this.flag = new SharedValue(0);
 
@@ -101,12 +100,6 @@ class MainScreen extends React.Component {
 
   componentDidMount() {
     this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
-
-    var t = this;
-    this.eventEmitter.addListener("worklet5", function() {
-      t.numval.set(11);
-    })
-    this.release = this.worklet5.apply([this.stopVal, this.flag]);
   }
 
   componentWillUnmount() {

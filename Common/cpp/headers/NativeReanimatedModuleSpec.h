@@ -27,7 +27,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
 
   virtual void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) = 0;
   virtual void unregisterWorklet(jsi::Runtime &rt, double id) = 0;
-  virtual void addWorkletListener(jsi::Runtime &rt, std::string message, const jsi::Function &callback) = 0;
+  virtual void setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) = 0;
 
   // SharedValue
 

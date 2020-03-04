@@ -28,4 +28,9 @@ export default class Worklet {
     NativeModule.unregisterWorklet(this.id);
   }
 
+  setListener(listener) {
+    this.listener = listener;
+    NativeModule.setWorkletListener(this.id, this.listener);
+  }
+
 }

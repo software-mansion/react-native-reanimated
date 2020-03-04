@@ -22,15 +22,13 @@ NativeReanimatedModule::NativeReanimatedModule(
   std::shared_ptr<SharedValueRegistry> svr,
   std::shared_ptr<WorkletRegistry> wr,
   std::shared_ptr<Scheduler> scheduler,
-  std::shared_ptr<JSCallInvoker> jsInvoker,
-  std::shared_ptr<ListenerRegistry> listenerRegistry) : NativeReanimatedModuleSpec(jsInvoker) {
+  std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
 
   this->applierRegistry = ar;
   this->scheduler = scheduler;
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
   this->runtime = std::move(rt);
-  this->listenerRegistry = listenerRegistry;
 }
 
 // worklets
@@ -55,20 +53,25 @@ void NativeReanimatedModule::unregisterWorklet( // make it async !!!
 }
 
 
-void NativeReanimatedModule::addWorkletListener(jsi::Runtime &rt, std::string message, const jsi::Function &callbackCreator) {
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "[native reanimated module] add worklet listener works");
-  jsi::Value val = callbackCreator.call(rt);
-  jsi::Function fun = val.getObject(rt).asFunction(rt);
+void NativeReanimatedModule::setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) {
+  if (listener.isUndefined() or listener.isNull()) {
+    scheduler->scheduleOnUI([this, workletId](){
+      workletRegistry->setWorkletListener(workletId, std::shared_ptr<std::function<void()>>(nullptr));
+    });
+    return;
+  }
+
+  jsi::Function fun = listener.getObject(rt).asFunction(rt);
   std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
-  std::function<void(std::string)> stdfun = [&rt, this, funPtr](std::string message) {
-    scheduler->scheduleOnJS([&rt, funPtr, message] () {
-      funPtr->call(rt, jsi::String::createFromAscii(rt, message));
+  std::shared_ptr<std::function<void()>> wrapperFun(new std::function<void()>([this, &rt, funPtr]{
+    scheduler->scheduleOnJS([&rt, funPtr]{
+      funPtr->call(rt);
     });
-  };
+  }));
   
-  scheduler->scheduleOnUI([this, message, stdfun](){
-    this->listenerRegistry->addListener(message, stdfun);
+  scheduler->scheduleOnUI([this, workletId, wrapperFun](){
+    workletRegistry->setWorkletListener(workletId, wrapperFun);
   });
 }
 
@@ -111,12 +114,9 @@ void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, co
 }
 
 void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
-  __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "set shared value enter");
   if (value.isNumber()) {
     std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "set shared value outer number %f => %f", id, value.getNumber());
-    scheduler->scheduleOnUI([this, &value, id, sv](){
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "set shared value inner number %f => %f", id, value.getNumber());
+    scheduler->scheduleOnUI([=](){
       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
       oldSV->setNewValue(sv);
     });
@@ -131,7 +131,7 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
-    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
     std::vector<std::shared_ptr<SharedValue>> svs;
     for (auto &i : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
@@ -151,7 +151,7 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
 
 void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
-    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
     std::vector<std::shared_ptr<SharedValue>> svs;
     for (auto &i : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
@@ -171,12 +171,10 @@ void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id
 
 void NativeReanimatedModule::render() {
   std::shared_ptr<jsi::Value> event(new jsi::Value(*runtime, jsi::Value::undefined()));
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(
+  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
     sharedValueRegistry, 
     applierRegistry, 
-    workletRegistry, 
-    listenerRegistry, 
-    scheduler, 
+    workletRegistry,
     event));
   applierRegistry->render(*runtime, ho);
 }
@@ -184,12 +182,10 @@ void NativeReanimatedModule::render() {
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
   jsi::Value event = eval(*runtime, ("(" + eventAsString + ")").c_str());
   std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime, event));
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(
+  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
     sharedValueRegistry, 
     applierRegistry, 
-    workletRegistry, 
-    listenerRegistry, 
-    scheduler, 
+    workletRegistry,
     eventPtr));
   applierRegistry->event(*runtime, eventName, ho);
 }

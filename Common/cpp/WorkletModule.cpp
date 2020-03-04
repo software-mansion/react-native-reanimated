@@ -4,19 +4,16 @@
 
 #include "WorkletModule.h"
 #include "Logger.h"
-#include "ListenerRegistry.h"
+
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
                                    std::shared_ptr<WorkletRegistry> workletRegistry,
-                                   std::shared_ptr<ListenerRegistry> listenerRegistry,
-                                   std::shared_ptr<Scheduler> scheduler,
                                    std::shared_ptr<jsi::Value> event) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
-  this->listenerRegistry = listenerRegistry;
-  this->scheduler = scheduler;
   this->event = event;
+  this->workletId = -1;
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -32,7 +29,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         int newApplierId = WorkletModule::applierId--;
 
         int workletId = args[0].getNumber();
-        std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+        std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
 
         std::vector<std::shared_ptr<SharedValue>> svs;
         std::string id = "id";
@@ -76,14 +73,21 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         const jsi::Value *args,
         size_t count
         ) -> jsi::Value {
-      std::string str = args[0].getString(rt).utf8(rt).c_str();
-      this->listenerRegistry->notify(str);
+
+      if (this->workletRegistry->getWorklet(workletId)->listener != nullptr) {
+        (*this->workletRegistry->getWorklet(workletId)->listener)();
+      }
+
       return jsi::Value::undefined();
     };
-    return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+    return jsi::Function::createFromHostFunction(rt, name, 0, callback);
   }
 
   return jsi::Value::undefined();
+}
+
+void WorkletModule::setWorkletId(int workletId) {
+  this->workletId = workletId;
 }
 
 int WorkletModule::applierId = INT_MAX;
