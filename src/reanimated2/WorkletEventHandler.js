@@ -1,8 +1,7 @@
 import NativeModule from './NativeReanimated';
+import Worklet from './Worklet';
 
 export default class WorkletEventHandler {
-
-  static id = 0;
 
   constructor(worklet, sharedValues) {
     this.worklet = worklet;
@@ -11,7 +10,7 @@ export default class WorkletEventHandler {
       sharedValueIds.push(sv.id);
     }
     this.sharedValueIds = sharedValueIds;
-    this.id = WorkletEventHandler.id++;
+    this.id = Worklet.applierId++;
   }
 
   registerForEvent(viewTag, eventName) {

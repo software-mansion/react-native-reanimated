@@ -3,6 +3,7 @@
 //
 
 #include<ApplierRegistry.h>
+#include "Logger.h"
 
 void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> applier) {
   renderAppliers[id] = applier;
@@ -24,6 +25,7 @@ void ApplierRegistry::unregisterApplierFromEvent(int id) {
   std::string eventName = eventMapping[id];
   eventMapping.erase(id);
   eventAppliers[eventName].erase(id);
+  Logger::log((int)eventAppliers[eventName].size());
 }
 
 bool ApplierRegistry::notEmpty() {
@@ -32,7 +34,7 @@ bool ApplierRegistry::notEmpty() {
 
 void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
   auto appliersCopy = renderAppliers;
-  for (auto & p : renderAppliers) { // apply can add new appliers
+  for (auto & p : appliersCopy) { // apply can add new appliers
     int id = p.first;
     auto & applier = p.second;
     if (applier->apply(rt, module)) {
@@ -43,8 +45,7 @@ void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule
 
 void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<BaseWorkletModule> module) {
   std::vector<int> idsToRemove;
-  auto appliersCopy = eventAppliers[eventName];
-  for (auto & p : appliersCopy) {  // apply can add new appliers
+  auto appliersCopy = eventAppliers[eventName];  for (auto & p : appliersCopy) {  // apply can add new appliers
     int id = p.first;
     auto & applier = p.second;
     if (applier->apply(rt, module)) {
@@ -58,6 +59,9 @@ void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName, std::shared
 };
 
 bool ApplierRegistry::anyApplierRegisteredForEvent(std::string eventName) {
+  if (eventAppliers.find(eventName) == eventAppliers.end()) {
+    return false;
+  }
   return eventAppliers[eventName].size() > 0;
 }
 

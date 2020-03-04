@@ -138,7 +138,7 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -158,7 +158,7 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }

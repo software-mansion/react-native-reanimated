@@ -4,9 +4,10 @@
 
 #include "Applier.h"
 
-Applier::Applier(std::shared_ptr<Worklet> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues) {
+Applier::Applier(int applierId, std::shared_ptr<Worklet> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;
+  this->applierId = applierId;
 }
 
 Applier::~Applier() {}
@@ -18,6 +19,7 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   }
 
   module->setWorkletId(worklet->workletId);
+  module->setApplierId(applierId);
 
   bool shouldFinish = worklet->body->callWithThis(rt,
                             jsi::Object::createFromHostObject(rt, module),

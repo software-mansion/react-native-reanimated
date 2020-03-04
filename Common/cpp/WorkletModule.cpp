@@ -39,7 +39,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
           svs.push_back(sv);
         }
 
-        std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
         applierRegistry->registerApplierForRender(newApplierId, applier);
 
         return jsi::Value::undefined();
@@ -81,6 +81,10 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 0, callback);
+  } else if(propName == "workletId") {
+    return jsi::Value(workletId);
+  } else if(propName == "applierId") {
+    return jsi::Value(applierId);
   }
 
   return jsi::Value::undefined();
@@ -88,6 +92,10 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
 
 void WorkletModule::setWorkletId(int workletId) {
   this->workletId = workletId;
+}
+
+void WorkletModule::setApplierId(int applierId) {
+  this->applierId = applierId;
 }
 
 int WorkletModule::applierId = INT_MAX;

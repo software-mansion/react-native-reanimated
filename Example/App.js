@@ -76,11 +76,16 @@ class MainScreen extends React.Component {
       this.log(this.event.x);
       viewWidth.set(this.event.x);
 
+      this.log('workletID: ' + this.workletId.toString());
+      this.log('applierID: ' + this.applierId.toString() + " state " + this.event.state.toString());
       if (this.event.state === 5) {
-        return true;
+        this.notify();
+        //return true;
       }
+
       return false;
     });
+    this.worklet4.setListener(function(){ console.warn("koniec eventu"); console.log("koniec")});
 
     this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
 

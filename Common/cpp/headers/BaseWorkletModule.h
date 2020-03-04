@@ -12,8 +12,10 @@ using namespace facebook;
 class BaseWorkletModule : public jsi::HostObject {
   protected:
     int workletId;
+    int applierId;
   public:
     virtual void setWorkletId(int workletId) = 0;
+    virtual void setApplierId(int applierId) = 0;
 };
 
 #endif //REANIMATEDEXAMPLE_BASEWORKLETMODULE_H

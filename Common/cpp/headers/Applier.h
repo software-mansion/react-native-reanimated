@@ -15,10 +15,11 @@
 using namespace facebook;
 
 class Applier {
+  int applierId;
   public:
     std::shared_ptr<Worklet> worklet;
     std::vector<std::shared_ptr<SharedValue>> sharedValues;
-    Applier(std::shared_ptr<Worklet> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues);
+    Applier(int applierId, std::shared_ptr<Worklet> worklet, std::vector<std::shared_ptr<SharedValue>> sharedValues);
     virtual bool apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module);
     virtual ~Applier();
 };

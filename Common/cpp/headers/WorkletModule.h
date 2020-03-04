@@ -36,6 +36,7 @@ class WorkletModule : public BaseWorkletModule {
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override;
 
     void setWorkletId(int workletId) override;
+    void setApplierId(int applierId) override;
 };
 
 #endif //REANIMATEDEXAMPLE_WORKLETMODULE_H
