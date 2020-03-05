@@ -1,3 +1,6 @@
+import React from 'react';
+import { Text } from 'react-native';
+/*
 const panWorkletBody = new Worklet(function(a, prev, total, velocity, cord, numberOfFinished, ruszable) {
     'worklet';
     a.set(this.event['translation' + cord.value]);
@@ -13,8 +16,11 @@ const panWorkletBody = new Worklet(function(a, prev, total, velocity, cord, numb
     }
     total.set(a.value + prev.value);
 });
+*/
+const MichalAppTwoHandlers = () => {
 
-function Screen() {
+    return <Text>MichalAppTwoHandlers works</Text>
+/*
     const x = useSharedValue(0)
     const y = useSharedValue(0)
     const prevX = useSharedValue(0)
@@ -67,4 +73,7 @@ function Screen() {
             </PanGestureHandler>
         </View>
     )
-} 
+    */
+}
+
+export default MichalAppTwoHandlers

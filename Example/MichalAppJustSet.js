@@ -1,6 +1,11 @@
+import React from 'react';
 import { TouchableHighlight } from "react-native";
+import { Text } from 'react-native';
 
-function Screen() {
+const MichalAppJustSet = () => {
+
+    return <Text>MichalAppJustSet works</Text>
+
     const x = useSharedValue(0)
     const y = useSharedValue(0)
     const z = useRef(0);
@@ -34,4 +39,6 @@ function Screen() {
             </TouchableHighlight>    
         </View>
     )
-} 
+}
+
+export default MichalAppJustSet

@@ -1,6 +1,8 @@
+import React from 'react';
+import { Text } from 'react-native';
 import { Dimentions } from 'react-native';
 import { useEffect } from 'react';
-
+/*
 function useSharedValue(initial) {
     const sv = React.useRef(null)
     React.useEffect(() => {
@@ -25,8 +27,11 @@ const workletBody = new Worklet(function(startTime, started, width) {
     }
     width.set(delta * 200);
 });
+*/
+const MichalAppSpeedTest = () => {
 
-function Screen() {
+    return <Text>MichalAppSpeedTest works</Text>
+/*
     const worklets = [];
     const numberOfSquares = 100;
 
@@ -56,8 +61,11 @@ function Screen() {
     }, []);
 
     return (
-        <View style={flex:1, flexDirection:'column'} >
-            { arr.map(item => {item}<View style={{ height: 3, backgroundColor: 'black', width: 100 }}/>) }
+        <View style={ {flex: 1, flexDirection:'column'} } >
+            { //arr.map(item => {item}<View style={{ height: 3, backgroundColor: 'black', width: 100 }}/>) }
         </View>
     )
-} 
+    */
+}
+
+export default MichalAppSpeedTest

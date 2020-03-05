@@ -3,16 +3,26 @@ import {
   Text,
   View,
   YellowBox,
-  TouchableHighlight,
   NativeModules,
+  Platform,
+  Button,
 } from 'react-native';
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
-import Animated, { SharedValue, Worklet } from 'react-native-reanimated';
-import { WorkletEventHandler } from '../src/Animated';
-import AnimatedSharedValue from '../src/core/AnimatedSharedValue';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-const { ReanimatedModule } = NativeModules;
+import MichalApp from './MichalApp'
+import MichalAppJustSet from './MichalAppJustSet'
+import MichalAppNotify from './MichalAppNotify'
+import MichalAppSpeedTest from './MichalAppSpeedTest'
+import MichalAppTwoHandlers from './MichalAppTwoHandlers'
 
+const components = {
+  'MichalApp': MichalApp,
+  'MichalAppJustSet': MichalAppJustSet,
+  'MichalAppNotify': MichalAppNotify,
+  'MichalAppSpeedTest': MichalAppSpeedTest,
+  'MichalAppTwoHandlers': MichalAppTwoHandlers,
+}
 
 YellowBox.ignoreWarnings([
   'Warning: isMounted(...) is deprecated',
@@ -26,125 +36,49 @@ class MainScreen extends React.Component {
     title: '🎬 Reanimated Examples',
   };
 
-  constructor(props) {
-    super(props);
-    this.sv1 = new SharedValue(0);
-    this.sv2 = new SharedValue(1);
-    this.sv3 = new SharedValue(-100);
-
-    this.worklet = new Worklet((sv1, sv2, sv3) => {
-      'worklet';
-      const x = sv1.get();
-      const y = sv2.get();
-      sv3.set(x+y);
-      return true;
-    });
-
-    this.viewWidth = new SharedValue(40);
-    this.animatedViewWidth = new AnimatedSharedValue(this.viewWidth);
-    this.animationStarted = new SharedValue(0);
-    this.animationStart = new SharedValue(0);
-    this.stringVal = new SharedValue("text");
-
-    this.worklet3 = new Worklet(function(viewWidth, animationStarted, animationStart, stringVal) { // cannot be arrow function
-      'worklet';
-      if (animationStarted.get() === 0) {
-        this.log(stringVal.get()); 
-        animationStarted.set(1);
-        animationStart.set(Date.now());    
-      } 
-
-      const duration = 5000;
-      const endTime = animationStart.get() + duration;
-      const progress = (Date.now() - animationStart.get())/duration;
-      const maxWidth = 80;
-
-      this.log((Date.now()-endTime).toString());
-      this.log('delta');
-
-      if (Date.now() > endTime) { // end condtion
-        return true; // end animation
-      }
-
-      viewWidth.set(maxWidth * progress);
-      return false; // continue 
-    });
-
-    this.worklet4 = new Worklet(function(viewWidth){
-      'worklet';
-      this.log('event');
-      this.log(this.event.x);
-      viewWidth.set(this.event.x);
-
-      this.log('workletID: ' + this.workletId.toString());
-      this.log('applierID: ' + this.applierId.toString() + " state " + this.event.state.toString());
-      if (this.event.state === 5) {
-        this.notify();
-        //return true;
-      }
-
-      return false;
-    });
-    this.worklet4.setListener(function(){ console.warn("koniec eventu"); console.log("koniec")});
-
-    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
-
-    this.stopVal = new SharedValue(3);
-    this.flag = new SharedValue(0);
-
-    this.worklet5 = new Worklet(function(stopVal, flag) {
-      'worklet'
-      this.log(stopVal.get())
-      if (flag.get() === 0) {
-        this.notify('worklet5')
-        flag.set(1)
-      }
-      return (stopVal.get() >= 5)
-    });
-  }
-
-  componentDidMount() {
-    this.release = this.worklet3.apply([this.viewWidth, this.animationStarted, this.animationStart, this.stringVal]);
-  }
-
-  componentWillUnmount() {
-    this.sv1.release();
-    this.sv2.release();
-    this.sv3.release();
-    this.viewWidth.release();
-    this.animationStarted.release();
-    this.stringVal.release();
-    this.animationStart.release();
-    this.release();
-    this.worklet.release();
-    this.worklet3.release();
-  }
-
   render() {
     return (
       <View>
-        <Text>dziala</Text>
-        <TouchableHighlight onPress={ async () => {console.warn("ok");}}>
-          <Text> remember callback </Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={ async () => {
-          await ReanimatedModule.custom();
-            console.log("ok byl call");
-          }} >
-          <Text> custom </Text>
-        </TouchableHighlight>
-        <PanGestureHandler
-          maxPointers={1}
-          minDist={10}
-          onGestureEvent={this.workletEventHandler}
-          onHandlerStateChange={this.workletEventHandler}>
-          <Animated.View style={{width: this.animatedViewWidth, height: 100, backgroundColor:'black',}} /> 
-        </PanGestureHandler>
+        <Text>Pick the screen:</Text>
+        {
+          Object.keys(components).map(item => {
+            return <Button title={ item } onPress={ () => { this.props.navigation.navigate(item) } } />
+          })
+        }
       </View>
     );
   }
-
 }
 
+const screens = {}
+console.log('here')
+for (let key in components) {
+  screens[key] = {
+    screen: components[key],
+    title: key,
+  }
+}
 
-export default MainScreen;
+const ExampleApp = createStackNavigator(
+  {
+    MainScreen: { screen: MainScreen },
+    ...screens,
+    /*MichalApp: { screen: MichalApp, title: 'MichalApp' },
+    MichalAppJustSet: { screen: MichalAppJustSet, title: 'MichalAppJustSet' },
+    MichalAppNotify: { screen: MichalAppNotify, title: 'MichalAppNotify' },
+    MichalAppSpeedTest: { screen: MichalAppSpeedTest, title: 'MichalAppSpeedTest' },
+    MichalAppTwoHandlers: { screen: MichalAppTwoHandlers, title: 'MichalAppTwoHandlers' },*/
+  },
+  {
+    initialRouteName: 'MainScreen',
+    headerMode: 'screen',
+  }
+);
+
+const createApp = Platform.select({
+  web: input => createBrowserApp(input, { history: 'hash' }),
+  default: input => createAppContainer(input),
+});
+
+
+export default createApp(ExampleApp);
