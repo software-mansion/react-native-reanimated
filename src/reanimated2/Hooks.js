@@ -26,8 +26,9 @@ function transformArgs(args) {
 
 function commonCode(body, args, deps, createRes) { //TODO fix this
   const res = useRef(null);
+  const firstEffect = useRef(true);
   
-  useEffect(()=>{
+  const init = function() {
     let argsCopy = args.slice();
     const shouldReleaseWorklet = false;
     if (typeof body === "function") {
@@ -43,12 +44,26 @@ function commonCode(body, args, deps, createRes) { //TODO fix this
     res.current.isWorklet = true;
     res.current.body = body;
     res.current.args = argsCopy;
+    return { shouldReleaseWorklet, releaseApplierHolder, release, body };
+  }
+
+  let releaseObj = null;
+
+  if (res.current == null) {
+    releaseObj = init()
+  }
+
+  useEffect(()=>{
+    if (firstEffect.current) {
+      firstEffect.current = false;
+      releaseObj = init();
+    }
 
     return () => {
-      (releaseApplierHolder.get)();
-      release();
-      if (shouldReleaseWorklet) {
-        worklet.current.release();
+      (releaseObj.releaseApplierHolder.get)();
+      releaseObj.release();
+      if (releaseObj.shouldReleaseWorklet) {
+        releaseObj.body.release();
       }
     }
   }, deps);

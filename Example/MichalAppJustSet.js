@@ -18,8 +18,6 @@ const MichalAppJustSet = () => {
         const vec = tab[(z.current++) % 4];
         x.set((await x.get()) + vec[0]);
         y.set((await y.get()) + vec[1]);
-        console.warn("current Poz " + (await x.get()) + " " + (await y.get()));
-        console.warn("should have move : " + vec[0] + " " + vec[1]);
       }} style={{padding:30, backgroundColor:'blue'}}>
         <Text> change position </Text>
       </TouchableHighlight>
@@ -27,14 +25,12 @@ const MichalAppJustSet = () => {
         style={{
           width: 40,
           height: 40,
-          /*transform: [{
+          transform: [{
             translateX: x
           },
           {
             translateY: y
-          }]*/
-          marginLeft: x,
-          marginTop: y,
+          }],
           backgroundColor: "black",
         }}
       />
