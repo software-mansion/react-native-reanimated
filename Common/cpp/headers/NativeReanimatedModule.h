@@ -36,7 +36,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
     void registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void unregisterSharedValue(jsi::Runtime &rt, double id) override;
-    void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &callback) override;
+    void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
     void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;

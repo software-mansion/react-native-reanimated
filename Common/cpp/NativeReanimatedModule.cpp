@@ -97,17 +97,15 @@ void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) 
   });
 }
 
-void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &cb) {
-  jsi::WeakObject * fun = new jsi::WeakObject(rt, cb);
-  std::shared_ptr<jsi::WeakObject> sharedFunction(fun);
+void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Value &value) {
+  jsi::Function fun = value.getObject(rt).asFunction(rt);
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
-  scheduler->scheduleOnUI([&rt, id, sharedFunction, this]() {
+  scheduler->scheduleOnUI([&rt, id, funPtr, this]() {
     auto sv = sharedValueRegistry->getSharedValue(id);
-    scheduler->scheduleOnJS([&rt, sv, sharedFunction] () {
+    scheduler->scheduleOnJS([&rt, sv, funPtr] () {
       jsi::Value val = sv->asValue(rt);
-      jsi::Value functionVal = sharedFunction->lock(rt);
-      jsi::Function cb = functionVal.asObject(rt).asFunction(rt);
-      cb.call(rt, val);
+      funPtr->call(rt, val);
     });
   });
 

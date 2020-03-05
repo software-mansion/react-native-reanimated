@@ -97,7 +97,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync(
     size_t count) {
     static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->getSharedValueAsync(
-          rt, std::move(args[0].getNumber()), std::move(args[1].getObject(rt).getFunction(rt)));
+          rt, std::move(args[0].getNumber()), std::move(args[1]));
     return jsi::Value::undefined();
 }
 
