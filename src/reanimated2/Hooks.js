@@ -24,8 +24,8 @@ function transformArgs(args) {
   };
 }
 
-function commonCode(body, args, deps, createRes) {
-  const res = useRef(()=>{});
+function commonCode(body, args, deps, createRes) { //TODO fix this
+  const res = useRef(null);
   
   useEffect(()=>{
     let argsCopy = args.slice();
@@ -72,9 +72,11 @@ export function useEventWorklet(body, args, deps) {
 
 export function useSharedValue(initial) {
   const sv = useRef(null);
+  if (sv.current === null) {
+    sv.current = new AnimatedSharedValue(new SharedValue(initial))
+  }
   useEffect(() => {
-      sv.current = new AnimatedSharedValue(new SharedValue(initial));
-      return () => sv.current.release();
+      return () => sv.current.sharedValue.release();
   }, []);
   return sv.current;
 }
