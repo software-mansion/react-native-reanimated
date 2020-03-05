@@ -71,6 +71,8 @@ import Worklet from './reanimated2/Worklet';
 import SharedValue from './reanimated2/SharedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
+import { useWorklet, useEventWorklet, useSharedValue } from './reanimated2/Hooks';
+
 export {
   Easing,
   Transitioning,
@@ -92,4 +94,7 @@ export {
   Worklet,
   SharedValue,
   WorkletEventHandler,
+  useWorklet,
+  useEventWorklet,
+  useSharedValue,
 };
