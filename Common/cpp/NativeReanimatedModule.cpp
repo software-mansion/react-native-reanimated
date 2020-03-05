@@ -88,7 +88,25 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
     scheduler->scheduleOnUI([=](){
       sharedValueRegistry->registerSharedValue(id, sv);
     });
-  }  // add here other types
+  } else if(value.isObject()) {
+    jsi::Object obj = value.getObject(rt);
+    
+    if (obj.hasProperty(rt, "isWorklet")) {
+      int workletId = obj.getProperty(rt, "workletId").getNumber();
+      
+      std::vector<int> args;
+      jsi::Array ar = obj.getProperty(rt, "argIds").getObject(rt).asArray(rt);
+      for (int i = 0; i < ar.length(rt); ++i) {
+        int svId = ar.getValueAtIndex(rt, i).getNumber();
+        args.push_back(svId);
+      }
+      
+      std::shared_ptr<SharedWorkletStarter> sv(new SharedWorkletStarter((int)id, workletId, args));
+      scheduler->scheduleOnUI([=](){
+        sharedValueRegistry->registerSharedValue(id, sv);
+      });
+    }
+  } // add here other types
 }
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {

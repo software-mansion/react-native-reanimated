@@ -9,14 +9,14 @@ export default class SharedValue {
     this.initialValue = value;
 
     if (value.isWorklet) {
-      const argsIds = [];
+      const argIds = [];
       for (let arg of value.args) {
-        argsIds.push(arg.id);
+        argIds.push(arg.id);
       }
       this.initialValue = { 
         workletId: value.body.workletId, 
         isWorklet: true,
-        argsIds,
+        argIds,
       };
     }
 
