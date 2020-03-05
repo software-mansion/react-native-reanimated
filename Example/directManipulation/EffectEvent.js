@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
-const { Value, event, dispatch, useCode, createAnimatedComponent, block, cond, not, and, divide, acc, eq, set, View, or, debug, add, call } = Animated;
+const { Value, event, useCode, createAnimatedComponent, set, View, call } = Animated;
 
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
@@ -39,7 +39,7 @@ export default function SyncedScrollViews() {
   );
 
   useCode(() =>
-    call([scroller], ([what]) => console.log(what === 1 ? 'scrolling' : 'no sure about scrolling')),
+    call([scroller], ([what]) => console.log(what === 1 ? 'scrolling' : 'not sure about scrolling')),
     [scroller]
   );
 
