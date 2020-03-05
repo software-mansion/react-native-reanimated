@@ -32,10 +32,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       std::shared_ptr<JSCallInvoker> jsInvoker);
     void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) override;
     void unregisterWorklet(jsi::Runtime &rt, double id) override;
+    void setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) override;
 
     void registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void unregisterSharedValue(jsi::Runtime &rt, double id) override;
-    void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &callback) override;
+    void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
 
     void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;

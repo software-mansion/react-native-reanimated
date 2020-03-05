@@ -39,6 +39,22 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterWorklet(
   return jsi::Value::undefined();
 }
 
+
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_setWorkletListener(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->setWorkletListener(
+          rt,
+          (int)args[0].getNumber(),
+          std::move(args[1]));
+          
+  return jsi::Value::undefined();
+}
+
 // SharedValue
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerSharedValue(
@@ -81,7 +97,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getSharedValueAsync(
     size_t count) {
     static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->getSharedValueAsync(
-          rt, std::move(args[0].getNumber()), std::move(args[1].getObject(rt).getFunction(rt)));
+          rt, std::move(args[0].getNumber()), std::move(args[1]));
     return jsi::Value::undefined();
 }
 
@@ -154,6 +170,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInv
       2, __hostFunction_NativeReanimatedModuleSpec_registerWorklet};
   methodMap_["unregisterWorklet"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_unregisterWorklet};
+  methodMap_["setWorkletListener"] = MethodMetadata{
+      2, __hostFunction_NativeReanimatedModuleSpec_setWorkletListener};
 
   methodMap_["registerSharedValue"] = MethodMetadata{
       2, __hostFunction_NativeReanimatedModuleSpec_registerSharedValue};

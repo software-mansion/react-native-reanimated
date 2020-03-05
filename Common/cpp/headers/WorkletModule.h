@@ -13,22 +13,30 @@
 #include "SharedDouble.h"
 #include "WorkletModule.h"
 #include "ApplierRegistry.h"
+#include "Scheduler.h"
 #include <vector>
+#include "BaseWorkletModule.h"
 
 using namespace facebook;
 
-class WorkletModule : public jsi::HostObject {
+class WorkletModule : public BaseWorkletModule {
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
   std::shared_ptr<ApplierRegistry> applierRegistry;
   std::shared_ptr<WorkletRegistry> workletRegistry;
   std::shared_ptr<jsi::Value> event;
+  int workletId;
   static int applierId;
   public:
     WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                     std::shared_ptr<ApplierRegistry> applierRegistry,
                     std::shared_ptr<WorkletRegistry> workletRegistry,
-                    std::shared_ptr<jsi::Value> event);
+                    std::shared_ptr<jsi::Value> event
+                    );
+                    
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override;
+
+    void setWorkletId(int workletId) override;
+    void setApplierId(int applierId) override;
 };
 
 #endif //REANIMATEDEXAMPLE_WORKLETMODULE_H

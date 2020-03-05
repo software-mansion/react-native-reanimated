@@ -37,6 +37,10 @@ export default {
     InnerNativeModule.registerWorklet(workletId, holder.func.asString);
   },
 
+  setWorkletListener(workletId, callback) {
+    InnerNativeModule.setWorkletListener(workletId, callback);
+  },
+
   registerEventApplier(applierId, eventHash, workletID, sharedValues) {
     InnerNativeModule.registerEventApplier(applierId, eventHash, workletID, sharedValues);
   },

@@ -1,7 +1,7 @@
 #include "NativeReanimatedModule.h"
 #include <memory>
 #include "Logger.h"
-
+#include <functional>
 
 using namespace facebook;
 
@@ -52,6 +52,29 @@ void NativeReanimatedModule::unregisterWorklet( // make it async !!!
   });
 }
 
+
+void NativeReanimatedModule::setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) {
+  if (listener.isUndefined() or listener.isNull()) {
+    scheduler->scheduleOnUI([this, workletId](){
+      workletRegistry->setWorkletListener(workletId, std::shared_ptr<std::function<void()>>(nullptr));
+    });
+    return;
+  }
+
+  jsi::Function fun = listener.getObject(rt).asFunction(rt);
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+
+  std::shared_ptr<std::function<void()>> wrapperFun(new std::function<void()>([this, &rt, funPtr]{
+    scheduler->scheduleOnJS([&rt, funPtr]{
+      funPtr->call(rt);
+    });
+  }));
+  
+  scheduler->scheduleOnUI([this, workletId, wrapperFun](){
+    workletRegistry->setWorkletListener(workletId, wrapperFun);
+  });
+}
+
 // SharedValue
 
 void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
@@ -74,17 +97,15 @@ void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) 
   });
 }
 
-void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Function &cb) {
-  jsi::WeakObject * fun = new jsi::WeakObject(rt, cb);
-  std::shared_ptr<jsi::WeakObject> sharedFunction(fun);
+void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Value &value) {
+  jsi::Function fun = value.getObject(rt).asFunction(rt);
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
-  scheduler->scheduleOnUI([&rt, id, sharedFunction, this]() {
+  scheduler->scheduleOnUI([&rt, id, funPtr, this]() {
     auto sv = sharedValueRegistry->getSharedValue(id);
-    scheduler->scheduleOnJS([&rt, sv, sharedFunction] () {
+    scheduler->scheduleOnJS([&rt, sv, funPtr] () {
       jsi::Value val = sv->asValue(rt);
-      jsi::Value functionVal = sharedFunction->lock(rt);
-      jsi::Function cb = functionVal.asObject(rt).asFunction(rt);
-      cb.call(rt, val);
+      funPtr->call(rt, val);
     });
   });
 
@@ -108,14 +129,14 @@ void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const j
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
-    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
     std::vector<std::shared_ptr<SharedValue>> svs;
     for (auto &i : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -128,14 +149,14 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
 
 void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
-    std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+    std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
     std::vector<std::shared_ptr<SharedValue>> svs;
     for (auto &i : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }
@@ -148,14 +169,22 @@ void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id
 
 void NativeReanimatedModule::render() {
   std::shared_ptr<jsi::Value> event(new jsi::Value(*runtime, jsi::Value::undefined()));
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, event));
+  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
+    sharedValueRegistry, 
+    applierRegistry, 
+    workletRegistry,
+    event));
   applierRegistry->render(*runtime, ho);
 }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
   jsi::Value event = eval(*runtime, ("(" + eventAsString + ")").c_str());
   std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime, event));
-  std::shared_ptr<jsi::HostObject> ho(new WorkletModule(sharedValueRegistry, applierRegistry, workletRegistry, eventPtr));
+  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
+    sharedValueRegistry, 
+    applierRegistry, 
+    workletRegistry,
+    eventPtr));
   applierRegistry->event(*runtime, eventName, ho);
 }
 

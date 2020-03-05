@@ -70,21 +70,37 @@ class MainScreen extends React.Component {
       return false; // continue 
     });
 
-    this.eventString = new SharedValue('event');
-
-    this.worklet4 = new Worklet(function(viewWidth, eventString){
+    this.worklet4 = new Worklet(function(viewWidth){
       'worklet';
       this.log('event');
       this.log(this.event.x);
       viewWidth.set(this.event.x);
 
+      this.log('workletID: ' + this.workletId.toString());
+      this.log('applierID: ' + this.applierId.toString() + " state " + this.event.state.toString());
       if (this.event.state === 5) {
-        return true;
+        this.notify();
+        //return true;
       }
+
       return false;
     });
+    this.worklet4.setListener(function(){ console.warn("koniec eventu"); console.log("koniec")});
 
-    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth, this.eventString]);
+    this.workletEventHandler = new WorkletEventHandler(this.worklet4, [this.viewWidth]);
+
+    this.stopVal = new SharedValue(3);
+    this.flag = new SharedValue(0);
+
+    this.worklet5 = new Worklet(function(stopVal, flag) {
+      'worklet'
+      this.log(stopVal.get())
+      if (flag.get() === 0) {
+        this.notify('worklet5')
+        flag.set(1)
+      }
+      return (stopVal.get() >= 5)
+    });
   }
 
   componentDidMount() {

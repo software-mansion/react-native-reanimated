@@ -13,6 +13,7 @@ WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueReg
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
   this->event = event;
+  this->workletId = -1;
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -28,7 +29,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         int newApplierId = WorkletModule::applierId--;
 
         int workletId = args[0].getNumber();
-        std::shared_ptr<jsi::Function> workletPtr = workletRegistry->getWorklet(workletId);
+        std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
 
         std::vector<std::shared_ptr<SharedValue>> svs;
         std::string id = "id";
@@ -38,14 +39,12 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
           svs.push_back(sv);
         }
 
-        std::shared_ptr<Applier> applier(new Applier(workletPtr, svs));
+        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
         applierRegistry->registerApplierForRender(newApplierId, applier);
 
         return jsi::Value::undefined();
      };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
-  } else if (propName == "emit") {
-    //TODO
   } else if (propName == "event") {
     return event->getObject(rt).getProperty(rt, "NativeMap");
     
@@ -67,9 +66,36 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+  } else if(propName == "notify") {
+    auto callback = [this](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+
+      if (this->workletRegistry->getWorklet(workletId)->listener != nullptr) {
+        (*this->workletRegistry->getWorklet(workletId)->listener)();
+      }
+
+      return jsi::Value::undefined();
+    };
+    return jsi::Function::createFromHostFunction(rt, name, 0, callback);
+  } else if(propName == "workletId") {
+    return jsi::Value(workletId);
+  } else if(propName == "applierId") {
+    return jsi::Value(applierId);
   }
 
   return jsi::Value::undefined();
+}
+
+void WorkletModule::setWorkletId(int workletId) {
+  this->workletId = workletId;
+}
+
+void WorkletModule::setApplierId(int applierId) {
+  this->applierId = applierId;
 }
 
 int WorkletModule::applierId = INT_MAX;
