@@ -13,7 +13,7 @@ class SharedDouble : public SharedValue {
     int id;
     SharedDouble(int id, double value);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Object asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     ~SharedDouble();
 };

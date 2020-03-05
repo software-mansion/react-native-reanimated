@@ -20,7 +20,7 @@ void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->dirty = true;
 }
 
-jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
 
   class HO : public jsi::HostObject {
     public:

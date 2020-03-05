@@ -13,7 +13,7 @@ class SharedString : public SharedValue {
     int id;
     SharedString(int id, std::string value);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Object asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     ~SharedString();
 };
