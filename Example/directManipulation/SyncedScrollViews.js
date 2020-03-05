@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { Image, StyleSheet, ScrollView as RNScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { State, NativeViewGestureHandler, PanGestureHandler } from 'react-native-gesture-handler';
@@ -106,6 +106,20 @@ export default function SyncedScrollViews() {
     [scrollToA, scrollToB]
   );
 
+  const __scrollX = useMemo(() => new Value(0), []);
+  const __scrollY = useMemo(() => new Value(0), []);
+  const attachedEvent = useMemo(() => event([{ nativeEvent: { contentOffset: { x: __scrollX, y: __scrollY } } }]), [scrollX, scrollY]);
+
+  useCode(() =>
+    call([__scrollX, __scrollY], v => console.log('logging second attached event values', v)),
+    [__scrollX, __scrollY]
+  );
+
+  const onScrollFunc = useCallback((e) =>
+    console.log('logging additional `onScroll` function prop', e.nativeEvent.contentOffset),
+    []
+  );
+
   const baseScrollComponent = (
     <ScrollView
       style={styles.scrollView}
@@ -119,6 +133,9 @@ export default function SyncedScrollViews() {
     </ScrollView>
   );
 
+  const scrollerA = onScrollA//[onScrollA, onScrollFunc, attachedEvent];
+  const scrollerB = onScrollB//[onScrollB, onScrollFunc, attachedEvent];
+
   return (
     <PanGestureHandler
       ref={panRef}
@@ -131,10 +148,10 @@ export default function SyncedScrollViews() {
             scrollToA.setNativeView(ref);
             scrollARef.current = ref;
           },
-          onScroll: onScrollA,
+          onScroll: scrollerA,
           onScrollBeginDrag: beginDragA,
           onMomentumScrollBegin: beginDragA,
-          onMomentumScrollEnd: onScrollA,
+          onMomentumScrollEnd: scrollerA,
           onScrollEndDrag: effectEvent
         })}
         {React.cloneElement(baseScrollComponent, {
@@ -142,10 +159,10 @@ export default function SyncedScrollViews() {
             scrollToB.setNativeView(ref);
             scrollBRef.current = ref;
           },
-          onScroll: onScrollB,
+          onScroll: scrollerB,
           onScrollBeginDrag: beginDragB,
           onMomentumScrollBegin: beginDragB,
-          onMomentumScrollEnd: onScrollB,
+          onMomentumScrollEnd: scrollerB,
           onScrollEndDrag: otherOnScroll
         })}
       </View>
