@@ -36,15 +36,15 @@ function commonCode(body, args, deps, createRes) {
 
     res.current.setListener = (fun) => { body.setListener(fun); };
     res.current.isWorklet = true;
-    res.curretn.body = body;
+    res.current.body = body;
     res.current.args = argsCopy;
 
     return () => {
+      (releaseApplierHolder.get)();
+      release();
       if (shouldReleaseWorklet) {
         worklet.current.release();
       }
-      release();
-      (releaseApplierHolder.get)();
     }
   }, deps);
 
