@@ -86,32 +86,6 @@ public class ParamNode extends ValueNode {
     }
     return ((ClockNode) node).isRunning;
   }
-
-  public void start() {
-    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    if (node instanceof ParamNode) {
-      ((ParamNode) node).start();
-    } else {
-      ((ClockNode) node).start();
-    }
-  }
-
-  public void stop() {
-    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    if (node instanceof ParamNode) {
-      ((ParamNode) node).stop();
-    } else {
-      ((ClockNode) node).stop();
-    }
-  }
-
-  public boolean isRunning() {
-    Node node = mNodesManager.findNodeById(mArgsStack.peek(), Node.class);
-    if (node instanceof ParamNode) {
-      return  ((ParamNode) node).isRunning();
-    }
-    return ((ClockNode) node).isRunning;
-  }
 }
 
 
