@@ -18,7 +18,7 @@ WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueReg
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   auto propName = name.utf8(rt);
-  if (propName == "startWorklet") {
+  if (propName == "start") {
      auto callback = [this](
         jsi::Runtime &rt,
         const jsi::Value &thisValue,
@@ -27,20 +27,26 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         ) -> jsi::Value {
 
         int newApplierId = WorkletModule::applierId--;
-
-        int workletId = args[0].getNumber();
+        int sharedStarterId = args[0].getNumber();
+       
+       SharedWorkletStarter *sharedWorkletStarter =  (SharedWorkletStarter*)( sharedValueRegistry->getSharedValue(sharedStarterId).get());
+       
+        int workletId = sharedWorkletStarter->workletId;
         std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
 
         std::vector<std::shared_ptr<SharedValue>> svs;
         std::string id = "id";
-        for (int i = 1; i < count; ++i) {
-          int svId = args[i].getObject(rt).getProperty(rt, id.c_str()).getNumber();
+        for (int svId : sharedWorkletStarter->args) {
           std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(svId);
           svs.push_back(sv);
         }
 
         std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
         applierRegistry->registerApplierForRender(newApplierId, applier);
+        
+        sharedWorkletStarter->addUnregisterListener([=] () {
+          applierRegistry->unregisterApplierFromRender(newApplierId);
+        });
 
         return jsi::Value::undefined();
      };

@@ -39,7 +39,7 @@ function MichalApp() {
             y.set(0)
             velocityX.set(this.event.velocityX)
             velocityY.set(this.event.velocityY)
-            ruszable.start()
+            this.start(ruszable)
         }
         totalX.set(x.value + prevX.value)
         totalY.set(y.value + prevY.value)

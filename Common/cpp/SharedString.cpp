@@ -16,7 +16,7 @@ jsi::Value SharedString::asValue(jsi::Runtime &rt) const {
   return jsi::String::createFromAscii(rt, value);
 }
 
-jsi::Object SharedString::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
   class HO : public jsi::HostObject {
       public:
       std::string * value = nullptr;

@@ -16,6 +16,7 @@
 #include "Scheduler.h"
 #include <vector>
 #include "BaseWorkletModule.h"
+#include "SharedWorkletStarter.h"
 
 using namespace facebook;
 

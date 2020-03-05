@@ -9,6 +9,9 @@ void SharedValueRegistry::registerSharedValue(int id, std::shared_ptr<SharedValu
 }
 
 void SharedValueRegistry::unregisterSharedValue(int id) {
+  if (sharedValueMap.find(id) != sharedValueMap.end()) {
+    sharedValueMap[id]->willUnregister();
+  }
   sharedValueMap.erase(id);
 }
 
