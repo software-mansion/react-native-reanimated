@@ -215,6 +215,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     });
   }
 
+  @ReactMethod
   public void setValue(final int nodeID, final Double newValue) {
     mOperations.add(new UIThreadOperation() {
       @Override
