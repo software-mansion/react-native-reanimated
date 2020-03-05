@@ -1,4 +1,10 @@
-function Screen() {
+import React from 'react';
+import { Text } from "react-native"
+
+function MichalApp() {
+
+    return <Text>MichalApp works</Text>
+
     const x = useSharedValue(0)
     const y = useSharedValue(0)
     const prevX = useSharedValue(0)
@@ -59,4 +65,6 @@ function Screen() {
             </PanGestureHandler>
         </View>
     )
-} 
+}
+
+export default MichalApp

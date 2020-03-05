@@ -1,4 +1,10 @@
-function Screen() {
+import React from 'react';
+import { Text } from 'react-native';
+
+const MichalAppNotify = () => {
+
+    return <Text>MichalAppNotify works</Text>
+
     const x = useSharedValue(0)
     const y = useSharedValue(0)
     const prevX = useSharedValue(0)
@@ -51,4 +57,6 @@ function Screen() {
             </PanGestureHandler>
         </View>
     )
-} 
+}
+
+export default MichalAppNotify
