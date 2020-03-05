@@ -18,7 +18,7 @@ export default class AnimatedCallback extends AnimatedNode {
     super(
       {
         type: 'callback',
-        what: what.__nodeID,
+        what,
       },
       [what]
     );

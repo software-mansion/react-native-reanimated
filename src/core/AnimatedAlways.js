@@ -10,7 +10,7 @@ class AnimatedAlways extends AnimatedNode {
       what instanceof AnimatedNode,
       `Reanimated: Animated.always node argument should be of type AnimatedNode but got ${what}`
     );
-    super({ type: 'always', what: what.__nodeID }, [what]);
+    super({ type: 'always', what }, [what]);
     this._what = what;
   }
 

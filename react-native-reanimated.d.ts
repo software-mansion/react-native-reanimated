@@ -253,11 +253,11 @@ declare module 'react-native-reanimated' {
     export function concat(
       ...args: Array<Adaptable<string> | Adaptable<number>>,
     ): AnimatedNode<string>;
-    export function cond<T extends Value = number>(
+    export function cond<T1 extends Value = number, T2 extends Value = number>(
       conditionNode: Adaptable<number>,
-      ifNode: Adaptable<T>,
-      elseNode?: Adaptable<T>,
-    ): AnimatedNode<T>;
+      ifNode: Adaptable<T1>,
+      elseNode?: Adaptable<T2>,
+    ): AnimatedNode<T1 | T2>;
     export function block<T>(
       items: ReadonlyArray<Adaptable<T>>,
     ): AnimatedNode<T>;
@@ -481,66 +481,61 @@ declare module 'react-native-reanimated' {
     static Sequence: ComponentClass<{}>;
   }
 
-  export var Clock: AnimatedClock;
-  export var Value: AnimatedValue;
-  export var Node: AnimatedNode;
-
-  export var add: add;
-  export var sub: sub;
-  export var multiply: multiply;
-  export var divide: divide;
-  export var pow: pow;
-  export var modulo: modulo;
-  export var sqrt: sqrt;
-  export var log: log;
-  export var sin: sin;
-  export var cos: cos;
-  export var exp: exp;
-  export var round: round;
-  export var lessThan: lessThan;
-  export var eq: eq;
-  export var greaterThan: greaterThan;
-  export var lessOrEq: lessOrEq;
-  export var greaterOrEq: greaterOrEq;
-  export var neq: neq;
-  export var and: and;
-  export var or: or;
-  export var defined: defined;
-  export var not: not;
-  export var tan: tan;
-  export var acos: acos;
-  export var asin: asin;
-  export var atan: atan;
-  export var proc: proc;
-  export var block: block;
-  export var adapt: adapt;
-  export var concat: concat;
-  export var always: always;
-  export var event: event;
-  export var call: call;
-  export var debug: debug;
-  export var clockRunning: clockRunning;
-  export var stopClock: stopClock;
-  export var startClock: startClock;
-  export var set: set;
-  export var cond: cond;
-  export var abs: abs;
-  export var acc: acc;
-  export var color: color;
-  export var diff: diff;
-  export var diffClamp: diffClamp;
-  export var interpolate: interpolate;
-  export var Extrapolate: Extrapolate;
-  export var max: max;
-  export var min: min;
-  export var onChange: onChange;
-  export var floor: floor;
-  export var ceil: ceil;
-  export var useCode: useCode;
-
-  // animations
-  export var decay: decay;
-  export var timing: timing;
-  export var spring: spring;
-  export var SpringUtils: SpringUtils;
+  export class Clock extends Animated.Clock { }
+  export class Value<T extends string | number | boolean> extends Animated.Value<T> { }
+  export class Node<T> extends Animated.Node<T> { }
+  export const add: typeof Animated.add
+  export const sub: typeof Animated.sub
+  export const multiply: typeof Animated.multiply
+  export const divide: typeof Animated.divide
+  export const pow: typeof Animated.pow
+  export const modulo: typeof Animated.modulo
+  export const sqrt: typeof Animated.sqrt
+  export const log: typeof Animated.log
+  export const sin: typeof Animated.sin
+  export const cos: typeof Animated.cos
+  export const exp: typeof Animated.exp
+  export const round: typeof Animated.round
+  export const lessThan: typeof Animated.lessThan
+  export const eq: typeof Animated.eq
+  export const greaterThan: typeof Animated.greaterThan
+  export const lessOrEq: typeof Animated.lessOrEq
+  export const greaterOrEq: typeof Animated.greaterOrEq
+  export const neq: typeof Animated.neq
+  export const and: typeof Animated.and
+  export const or: typeof Animated.or
+  export const defined: typeof Animated.defined
+  export const not: typeof Animated.not
+  export const tan: typeof Animated.tan
+  export const acos: typeof Animated.acos
+  export const asin: typeof Animated.asin
+  export const atan: typeof Animated.atan
+  export const proc: typeof Animated.proc
+  export const block: typeof Animated.block
+  export const concat: typeof Animated.concat
+  export const event: typeof Animated.event
+  export const call: typeof Animated.call
+  export const debug: typeof Animated.debug
+  export const clockRunning: typeof Animated.clockRunning
+  export const stopClock: typeof Animated.stopClock
+  export const startClock: typeof Animated.startClock
+  export const set: typeof Animated.set
+  export const cond: typeof Animated.cond
+  export const abs: typeof Animated.abs
+  export const acc: typeof Animated.acc
+  export const color: typeof Animated.color
+  export const diff: typeof Animated.diff
+  export const diffClamp: typeof Animated.diffClamp
+  export const interpolate: typeof Animated.interpolate
+  export const Extrapolate: typeof Animated.Extrapolate
+  export const max: typeof Animated.max
+  export const min: typeof Animated.min
+  export const onChange: typeof Animated.onChange
+  export const floor: typeof Animated.floor
+  export const ceil: typeof Animated.ceil
+  export const useCode: typeof Animated.useCode
+  export const decay: typeof Animated.decay
+  export const timing: typeof Animated.timing
+  export const spring: typeof Animated.spring
+  export const SpringUtils: typeof Animated.SpringUtils
 }

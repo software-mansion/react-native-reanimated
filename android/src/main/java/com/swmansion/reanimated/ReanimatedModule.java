@@ -22,8 +22,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
-public class ReanimatedModule extends ReactContextBaseJavaModule implements
-        LifecycleEventListener, UIManagerModuleListener {
+public class ReanimatedModule extends ReactContextBaseJavaModule
+    implements LifecycleEventListener, UIManagerModuleListener {
 
   public static final String NAME = "ReanimatedModule";
 
@@ -211,6 +211,15 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       @Override
       public void execute(NodesManager nodesManager) {
         nodesManager.getValue(nodeID, callback);
+      }
+    });
+  }
+
+  public void setValue(final int nodeID, final Double newValue) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.setValue(nodeID, newValue);
       }
     });
   }

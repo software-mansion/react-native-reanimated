@@ -19,7 +19,7 @@ class AnimatedCall extends AnimatedNode {
       args.every(el => el instanceof AnimatedNode),
       `Reanimated: Animated.call node args should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
     );
-    super({ type: 'call', input: args.map(n => n.__nodeID) }, args);
+    super({ type: 'call', input: args }, args);
     this._callback = jsFunction;
     this._args = args;
   }

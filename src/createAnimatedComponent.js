@@ -5,7 +5,7 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
-import AnimatedCallFunc from "./core/AnimatedCallFunc";
+import { AnimatedCallFunc } from "./core/AnimatedCallFunc";
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -33,6 +33,11 @@ function forEachEvent(props, cb) {
       cb(node, key);
     }
   }
+}
+
+function dummyListener() {
+  // empty listener we use to assign to listener properties for which animated
+  // event is used.
 }
 
 export default function createAnimatedComponent(Component) {
@@ -207,6 +212,12 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (value instanceof AnimatedEvent) {
+          // we cannot filter out event listeners completely as some components
+          // rely on having a callback registered in order to generate events
+          // alltogether. Therefore we provide a dummy callback here to allow
+          // native event dispatcher to hijack events.
+          props[key] = dummyListener;
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
@@ -231,6 +242,8 @@ export default function createAnimatedComponent(Component) {
       return this._component;
     }
   }
+
+  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName || Component.name || 'Component'})`
 
   return AnimatedComponent;
 }

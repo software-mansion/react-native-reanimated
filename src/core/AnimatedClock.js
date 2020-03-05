@@ -1,4 +1,4 @@
-import InternalAnimatedValue from './AnimatedValue';
+import InternalAnimatedValue from './InternalAnimatedValue';
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
@@ -89,5 +89,3 @@ export default class AnimatedClock extends AnimatedNode {
   }
 }
 
-const clock = mainClock;
-export { clock };

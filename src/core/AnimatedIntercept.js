@@ -11,7 +11,7 @@ class AnimatedIntercept extends AnimatedNode {
       {
         type: 'intercept',
         event: eventName,
-        what: what.__nodeID,
+        what,
       },
       [what]
     );

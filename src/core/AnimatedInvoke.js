@@ -15,7 +15,7 @@ class AnimatedInvoke extends AnimatedNode {
       {
         type: 'invoke',
         ...invokeConfig,
-        params: params.map(n => n.__nodeID),
+        params,
       },
       params
     );

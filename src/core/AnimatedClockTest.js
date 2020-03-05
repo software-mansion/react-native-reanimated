@@ -1,16 +1,10 @@
 import AnimatedNode from './AnimatedNode';
-import AnimatedClock from './AnimatedClock';
-import invariant from 'fbjs/lib/invariant';
 
 class AnimatedClockTest extends AnimatedNode {
   _clockNode;
 
   constructor(clockNode) {
-    invariant(
-      clockNode instanceof AnimatedClock,
-      `Reanimated: Animated.clockRunning argument should be of type AnimatedClock but got ${clockNode}`
-    );
-    super({ type: 'clockTest', clock: clockNode.__nodeID });
+    super({ type: 'clockTest', clock: clockNode });
     this._clockNode = clockNode;
   }
 

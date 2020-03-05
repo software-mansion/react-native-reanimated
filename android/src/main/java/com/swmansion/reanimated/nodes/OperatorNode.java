@@ -189,6 +189,9 @@ public class OperatorNode extends Node {
   private static final Operator EQ = new CompOperator() {
     @Override
     public boolean eval(Double x, Double y) {
+      if (x == null || y == null) {
+        return x == y;
+      }
       return x.doubleValue() == y.doubleValue();
     }
   };
@@ -213,6 +216,9 @@ public class OperatorNode extends Node {
   private static final Operator NEQ = new CompOperator() {
     @Override
     public boolean eval(Double x, Double y) {
+      if (x == null || y == null) {
+        return x == y;
+      }
       return x.doubleValue() != y.doubleValue();
     }
   };
