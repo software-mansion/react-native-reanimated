@@ -27,11 +27,16 @@ function getEventNode(node) {
 }
 
 function forEachEvent(props, cb) {
+  let prop;
   for (const key in props) {
-    const node = getEventNode(props[key]);
-    if (node && node instanceof AnimatedEvent) {
-      cb(node, key);
-    }
+    prop = props[key];
+    prop = Array.isArray(prop) ? prop : [prop];
+    prop.forEach(element => {
+      const node = getEventNode(element);
+      if (node && node instanceof AnimatedEvent) {
+        cb(node, key);
+      }
+    });
   }
 }
 
@@ -225,14 +230,15 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
+    _platformProps = Platform.select({
+      web: {},
+      default: { collapsable: false },
+    });
+
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      const platformProps = Platform.select({
-        web: {},
-        default: { collapsable: false },
-      });
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component {...props} ref={this._setComponentRef} {...this._platformProps} />
       );
     }
 
