@@ -61,13 +61,8 @@ for (let key in components) {
 
 const ExampleApp = createStackNavigator(
   {
-    MainScreen: { screen: MainScreen },
+    MainScreen: { screen: MichalAppJustSet },
     ...screens,
-    /*MichalApp: { screen: MichalApp, title: 'MichalApp' },
-    MichalAppJustSet: { screen: MichalAppJustSet, title: 'MichalAppJustSet' },
-    MichalAppNotify: { screen: MichalAppNotify, title: 'MichalAppNotify' },
-    MichalAppSpeedTest: { screen: MichalAppSpeedTest, title: 'MichalAppSpeedTest' },
-    MichalAppTwoHandlers: { screen: MichalAppTwoHandlers, title: 'MichalAppTwoHandlers' },*/
   },
   {
     initialRouteName: 'MainScreen',

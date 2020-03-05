@@ -1,3 +1,8 @@
+import { useEffect, useRef } from 'react';
+import AnimatedSharedValue from '../core/AnimatedSharedValue';
+import SharedValue from './SharedValue';
+import Worklet from './Worklet';
+import WorkletEventHandler from './WorkletEventHandler';
 
 function transformArgs(args) {
   const toRelease = [];
@@ -66,10 +71,10 @@ export function useEventWorklet(body, args, deps) {
 }
 
 export function useSharedValue(initial) {
-  const sv = React.useRef(null)
-  React.useEffect(() => {
-      sv.current = new AnimatedSharedValue(new SharedValue(initial))
-      return () => sv.current.release()
-  }, [])
-  return sv.current
+  const sv = useRef(null);
+  useEffect(() => {
+      sv.current = new AnimatedSharedValue(new SharedValue(initial));
+      return () => sv.current.release();
+  }, []);
+  return sv.current;
 }

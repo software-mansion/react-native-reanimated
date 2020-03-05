@@ -14,7 +14,7 @@ export default class AnimatedSharedValue extends AnimatedNode {
   }  
 
   setValue(value) {
-    //TODO
+    this.sharedValue.set(value);
   }
   
   toString() {
