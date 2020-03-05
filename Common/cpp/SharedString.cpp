@@ -32,18 +32,8 @@ jsi::Object SharedString::asParameter(jsi::Runtime &rt) {
       jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         auto propName = name.utf8(rt);
 
-        if (propName == "get") {
-
-          auto callback = [this, &rt](
-            jsi::Runtime &runtime,
-            const jsi::Value &thisValue,
-            const jsi::Value *arguments,
-            size_t count
-          ) -> jsi::Value {
-            return jsi::String::createFromAscii(rt, *value);
-          };
-          return jsi::Function::createFromHostFunction(rt, name, 0, callback);
-
+        if (propName == "value") {
+          return jsi::String::createFromAscii(rt, *value);
         } else if (propName == "set") {
 
           auto callback = [this, &rt](
