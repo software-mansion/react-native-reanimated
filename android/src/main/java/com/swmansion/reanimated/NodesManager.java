@@ -10,7 +10,6 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
@@ -414,6 +413,13 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
       EventNode node = mEventMapping.get(key);
+      // If for some reason name resolution failed try a more generic approach
+      // converting `topEventName` to `onEventName`
+      if (node == null && eventName != null && eventName.startsWith("top")) {
+        eventName = "on" + eventName.substring(3);
+        key = viewTag + eventName;
+        node = mEventMapping.get(key);
+      }
       if (node != null) {
         event.dispatch(node);
       }
