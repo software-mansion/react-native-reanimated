@@ -27,13 +27,11 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 }
 
 void SharedWorkletStarter::willUnregister() {
-  while (this->unregisterListeners.size() > 0) {
-    this->unregisterListeners.back()();
-  }
+  (*this->unregisterListener)();
 }
 
-void SharedWorkletStarter::addUnregisterListener(const std::function<void()> & fun) {
-  this->unregisterListeners.push_back(std::move(fun));
+void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & fun) {
+  this->unregisterListener = std::make_shared<const std::function<void()>>(std::move(fun));
 }
 
 
