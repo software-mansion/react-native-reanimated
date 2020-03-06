@@ -81,7 +81,7 @@ export function useWorklet(body, args, deps) {
 
 export function useEventWorklet(body, args, deps) {
   return commonCode(body, args, deps, (releaseApplierHolder, body, argsCopy) => {
-    return new WorkletEventHandler(body, args);
+    return new WorkletEventHandler(body, argsCopy);
   });
 }
 

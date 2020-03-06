@@ -1,30 +1,30 @@
 import React from 'react';
-import { Text } from "react-native"
+import { Text, View } from "react-native"
+import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 function MichalApp() {
 
-    return <Text>MichalApp works</Text>
-
-    const x = useSharedValue(0)
-    const y = useSharedValue(0)
-    const prevX = useSharedValue(0)
-    const prevY = useSharedValue(0)
-    const totalX = useSharedValue(0)
-    const totalY = useSharedValue(0)
-    const velocityX = useSharedValue(0)
-    const velocityY = useSharedValue(0)
+    const x = useSharedValue(0);
+    const y = useSharedValue(0);
+    const prevX = useSharedValue(0);
+    const prevY = useSharedValue(0);
+    const totalX = useSharedValue(0);
+    const totalY = useSharedValue(0);
+    const velocityX = useSharedValue(0);
+    const velocityY = useSharedValue(0);
     const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY){
         'worklet';
         const cords = [{velocity: velocityX, total: totalX}, {velocity: velocityY, total: totalY}];
         for (const cord of cords) {
             const {velocity, total} = cord;
-            if (velocity.value > 0.01) {
+            if (Math.abs(velocity.value) > 0.01) {
                 total.set(total.value + velocity.value / 60);
                 velocity.set(velocity.value * 0.99);
             }
         }
         
-        if (velocityX.value <= 0.01 && velocityY.value <= 0.01) {
+        if (Math.abs(velocityX.value) < 0.01 && Math.abs(velocityY.value) < 0.01) {
             return true
         }
     }, [velocityX, velocityY, totalX, totalY]);
@@ -32,23 +32,24 @@ function MichalApp() {
         'worklet';
         x.set(this.event.translationX);
         y.set(this.event.translationY);
+        totalX.set(x.value + prevX.value);
+        totalY.set(y.value + prevY.value);
         if (this.event.state === 5) {
-            prevX.set(x.value)
-            prevY.set(y.value)
+            prevX.set(totalX.value)
+            prevY.set(totalY.value)
             x.set(0)
             y.set(0)
             velocityX.set(this.event.velocityX)
             velocityY.set(this.event.velocityY)
             this.start(ruszable)
         }
-        totalX.set(x.value + prevX.value)
-        totalY.set(y.value + prevY.value)
+        
     }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
     return (
-        <View style={style.sth}>
+        <View style={{flex:1}}>
             <PanGestureHandler
-                onGestureEvent={[worklet]}
-                onHandlerStateChange={[worklet]}
+                onGestureEvent={worklet}
+                onHandlerStateChange={worklet}
             >
                 <Animated.View
                     style={{
@@ -59,7 +60,8 @@ function MichalApp() {
                         },
                         {
                             translateY: totalY
-                        }]
+                        }],
+                        backgroundColor: 'black',
                     }}
                 />
             </PanGestureHandler>

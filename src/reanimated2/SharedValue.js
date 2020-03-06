@@ -14,7 +14,7 @@ export default class SharedValue {
         argIds.push(arg.id);
       }
       this.initialValue = { 
-        workletId: value.body.workletId, 
+        workletId: value.body.id, 
         isWorklet: true,
         argIds,
       };
