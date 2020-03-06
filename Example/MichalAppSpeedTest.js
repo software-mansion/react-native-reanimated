@@ -1,71 +1,64 @@
 import React from 'react';
-import { Text } from 'react-native';
-import { Dimentions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import { useEffect } from 'react';
-/*
-function useSharedValue(initial) {
-    const sv = React.useRef(null)
-    React.useEffect(() => {
-        sv.current = new AnimatedSharedValue(new SharedValue(initial))
-        return () => sv.current.release()
-    }, [])
-    return sv.current
-}
+import Animated, { Worklet, useSharedValue, useWorklet } from 'react-native-reanimated';
 
-const workletBody = new Worklet(function(startTime, started, width) {
+const workletBody = new Worklet(function(startTime, started, width, maxWidth, duration) {
     'worklet';
     if (started.value === 0) {
         startTime.set(Date.now());
         started.set(1);
     }
-
-    const duration = 5000;
     const delta = Date.now() - startTime.value;
     
-    if (delta > duration) {
+    if (delta > duration.value) {
         return true;
     }
-    width.set(delta * 200);
+    width.set(delta / duration.value * maxWidth.value);
 });
-*/
-const MichalAppSpeedTest = () => {
 
-    return <Text>MichalAppSpeedTest works</Text>
-/*
+const MichalAppSpeedTest = () => {
     const worklets = [];
     const numberOfSquares = 100;
+    const width = useSharedValue(0);
 
-    const createAnimatedSquare = (widthSharedValue, height) => (<Animated.View
-        style={{
-            width: widthSharedValue,
-            height: height,
-            backgroundColor: "black",
-        }}
-    />);
+    let currKey = 0
+    const createAnimatedSquare = (height) => {
+        return (
+            <Animated.View
+                style={{
+                    width: width,
+                    height: height,
+                    backgroundColor: "black",
+                    marginBottom: 1,
+                }}
+            />
+        )
+    };
 
-    let arr = []
+    let squares = []
+    const maxWidth = useSharedValue(Dimensions.get('window').width * .95)
+    const duration = useSharedValue(1200)
 
-    for (let i = 0; i < numberOfSquares; ++i) {
+    for (var i = 0; i < numberOfSquares; ++i) {
         const startTime = useSharedValue(0);
         const started = useSharedValue(0);
-        const width = useSharedValue(0);
-        worklets.push(useWorklet(workletBody, startTime, started, width));
 
-        arr.push(createAnimatedSquare(width, Dimentions.get('window').height) / numberOfSquares)
+        worklets.push(useWorklet(workletBody, [startTime, started, width, maxWidth, duration]));
+        squares.push(createAnimatedSquare(Dimensions.get('window').height / (numberOfSquares*1.5)))
     }
 
     useEffect(()=>{
-        for (let i = 0; i < numberOfSquares; ++i) {
-            worklets[i]();
+        for (let worklet of worklets) {
+            worklet();
         }
     }, []);
 
     return (
         <View style={ {flex: 1, flexDirection:'column'} } >
-            { //arr.map(item => {item}<View style={{ height: 3, backgroundColor: 'black', width: 100 }}/>) }
+            { squares.map(item => <View key={currKey++}>{ item }</View>) }
         </View>
     )
-    */
 }
 
 export default MichalAppSpeedTest

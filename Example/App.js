@@ -16,6 +16,8 @@ import MichalAppNotify from './MichalAppNotify'
 import MichalAppSpeedTest from './MichalAppSpeedTest'
 import MichalAppTwoHandlers from './MichalAppTwoHandlers'
 
+
+// set components here:
 const components = {
   'MichalApp': MichalApp,
   'MichalAppJustSet': MichalAppJustSet,
@@ -42,7 +44,7 @@ class MainScreen extends React.Component {
         <Text>Pick the screen:</Text>
         {
           Object.keys(components).map(item => {
-            return <Button title={ item } onPress={ () => { this.props.navigation.navigate(item) } } />
+            return <Button title={ item } onPress={ () => { this.props.navigation.navigate(item) } } key={ item } />
           })
         }
       </View>
@@ -51,7 +53,6 @@ class MainScreen extends React.Component {
 }
 
 const screens = {}
-console.log('here')
 for (let key in components) {
   screens[key] = {
     screen: components[key],
@@ -61,7 +62,7 @@ for (let key in components) {
 
 const ExampleApp = createStackNavigator(
   {
-    MainScreen: { screen: MichalAppJustSet },
+    MainScreen: { screen: MainScreen },
     ...screens,
   },
   {

@@ -7,15 +7,13 @@ export default class WorkletEventHandler {
     this.worklet = worklet;
     let sharedValueIds = [];
     for (let sv of sharedValues) {
-      sharedValueIds.push(sv.id);
+      sharedValueIds.push(sv.getId());
     }
     this.sharedValueIds = sharedValueIds;
     this.id = Worklet.applierId++;
   }
 
   registerForEvent(viewTag, eventName) {
-    console.warn("register for ", viewTag+eventName);
-    console.warn("workletID ", this.worklet.id);
     NativeModule.registerEventApplier(this.id, viewTag+eventName, this.worklet.id, this.sharedValueIds);
   }
 

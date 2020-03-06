@@ -24,6 +24,10 @@ export default class SharedValue {
     this.callbacks = {}
   }
 
+  getId = () => {
+    return this.id
+  }
+
   async get() {
     const uid = Math.floor(Math.random()*1e9)
     var _this = this

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Text } from 'react-native';
+import Animated, { useSharedValue, useEventWorklet } from 'react-native-reanimated';
+import { View } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const MichalAppNotify = () => {
-
-    return <Text>MichalAppNotify works</Text>
-
+/*
     const x = useSharedValue(0)
     const y = useSharedValue(0)
     const prevX = useSharedValue(0)
@@ -35,22 +35,41 @@ const MichalAppNotify = () => {
         for (const variable of tab) {
             variable.set(0);
         }
-    });
+    });*/
+
+    const x = useSharedValue(0)
+    const y = useSharedValue(0)
+    const worklet = useEventWorklet(function(x, y) {
+        'worklet'
+        console.log(`worklet: ${this.event.translationX}`)
+        x.set(this.event.translationX)
+        y.set(this.event.translationY)
+        if (this.event.state === 5) {
+            this.notify()
+        }
+    }, [x, y])
+    worklet.setListener(() => {
+        console.log('from listener')
+        x.set(0)
+        y.set(0)
+    })
+
     return (
-        <View style={style.sth}>
+        <View style={{}}>
             <PanGestureHandler
-                onGestureEvent={[worklet]}
-                onHandlerStateChange={[worklet]}
+                onHandlerStateChange={worklet}
+                onGestureEvent={worklet}
             >
                 <Animated.View
                     style={{
-                        width: 40,
-                        height: 40,
+                        width: 100,
+                        height: 100,
+                        backgroundColor: 'green',
                         transform: [{
-                            translateX: totalX
+                            translateX: x
                         },
                         {
-                            translateY: totalY
+                            translateY: y
                         }]
                     }}
                 />

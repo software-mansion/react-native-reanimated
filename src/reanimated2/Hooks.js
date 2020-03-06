@@ -6,9 +6,9 @@ import WorkletEventHandler from './WorkletEventHandler';
 
 function transformArgs(args) {
   const toRelease = [];
-  for (i = 0; i < args.length; i++) {
+  for (let i = 0; i < args.length; i++) {
     if (args[i] instanceof AnimatedSharedValue) {
-      args[i] = args[i].SharedValue;
+      args[i] = args[i].sharedValue;
     } else if (args[i].isWorklet || (!(args[i] instanceof SharedValue))) {
       args[i] = new SharedValue(args[i]);
       const sv = args[i];
@@ -24,13 +24,13 @@ function transformArgs(args) {
   };
 }
 
-function commonCode(body, args, deps, createRes) { //TODO fix this
+function commonCode(body, args, deps, createRes) {
   const res = useRef(null);
   const firstEffect = useRef(true);
-  
+
   const init = function() {
     let argsCopy = args.slice();
-    const shouldReleaseWorklet = false;
+    let shouldReleaseWorklet = false;
     if (typeof body === "function") {
       shouldReleaseWorklet = true;
       body = new Worklet(body);

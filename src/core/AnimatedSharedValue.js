@@ -12,7 +12,11 @@ export default class AnimatedSharedValue extends AnimatedNode {
         }, [],
     );
     this.sharedValue = sharedValue;
-  }  
+  }
+
+  getId = () => {
+    return this.sharedValue.id
+  }
 
   set(value) {
     this.sharedValue.set(value);
