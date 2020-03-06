@@ -15,6 +15,7 @@ function MichalApp() {
     const velocityY = useSharedValue(0);
     const parentWidth = useSharedValue(0);
     const parentHeight = useSharedValue(0);
+    const first = useSharedValue(1);
 
     const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY, parentHeight, parentWidth){
         'worklet';
@@ -43,24 +44,26 @@ function MichalApp() {
             return true
         }
     }, [velocityX, velocityY, totalX, totalY, parentHeight, parentWidth]);
-    const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
+    const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY, first) {
         'worklet';
+        if (first.value) {
+            prevX.set(totalX.value);
+            prevY.set(totalY.value);
+            first.set(0);
+        }
         x.set(this.event.translationX);
         y.set(this.event.translationY);
         totalX.set(x.value + prevX.value);
         totalY.set(y.value + prevY.value);
         if (this.event.state === 5) {
-            prevX.set(totalX.value)
-            prevY.set(totalY.value)
-            x.set(0)
-            y.set(0)
+            first.set(1);
             velocityX.set(this.event.velocityX)
             velocityY.set(this.event.velocityY)
             this.notify();
             this.start(ruszable)
         }
         
-    }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
+    }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY, first])
 
     return (
         <View style={{flex:1}} onLayout={(e) => {parentHeight.set(e.nativeEvent.layout.height); parentWidth.set(e.nativeEvent.layout.width);}}>
