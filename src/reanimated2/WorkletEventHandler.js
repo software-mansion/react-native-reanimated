@@ -7,7 +7,7 @@ export default class WorkletEventHandler {
     this.worklet = worklet;
     let sharedValueIds = [];
     for (let sv of sharedValues) {
-      sharedValueIds.push(sv.getId());
+      sharedValueIds.push(sv.id);
     }
     this.sharedValueIds = sharedValueIds;
     this.id = Worklet.applierId++;

@@ -47,7 +47,7 @@ const MichalAppNotify = () => {
         if (this.event.state === 5) {
             this.notify()
         }
-    }, [x, y])
+    }, [x.sharedValue, y.sharedValue])
     worklet.setListener(() => {
         console.log('from listener')
         x.set(0)
