@@ -30,6 +30,9 @@ function MichalApp() {
     }, [velocityX, velocityY, totalX, totalY]);
     const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
         'worklet';
+        if (this.event.state === 2) {
+            this.stop(ruszable)
+        }
         x.set(this.event.translationX);
         y.set(this.event.translationY);
         totalX.set(x.value + prevX.value);
@@ -39,9 +42,10 @@ function MichalApp() {
             prevY.set(totalY.value)
             x.set(0)
             y.set(0)
-            velocityX.set(this.event.velocityX)
-            velocityY.set(this.event.velocityY)
-            this.start(ruszable)
+            if (this.start(ruszable)) {
+                velocityX.set(this.event.velocityX)
+                velocityY.set(this.event.velocityY)
+            }
         }
         
     }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
