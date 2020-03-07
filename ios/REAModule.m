@@ -174,7 +174,7 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
         /*
         for (id<RCTBridgeMethod> method in moduleData.methods) {
             //SEL s = method_getName((__bridge Method _Nonnull)(method));
-         
+
             [modules setObject:methods forKey:[method JSMethodName]];
         }
          */
@@ -207,7 +207,7 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
         //resolve( @{});
         //return;
     }
-    
+
     id module = [self.bridge moduleForName:moduleName lazilyLoadIfNecessary:RCTTurboModuleEnabled()];
     if (module == nil) {
         // There is all sorts of code in this codebase that drops prefixes.
@@ -221,10 +221,10 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
 - (NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *) getArgumentTypeNames:(Class)cls
 {
     NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *methodArgumentTypeNames = [NSMutableDictionary new];
-    
+
     unsigned int numberOfMethods;
     Method *methods = class_copyMethodList(object_getClass(cls), &numberOfMethods);
-    
+
     if (methods) {
         for (unsigned int i = 0; i < numberOfMethods; i++) {
             SEL s = method_getName(methods[i]);
@@ -233,14 +233,14 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
             if (![mName hasPrefix:@"__rct_export__"]) {
                 continue;
             }
-            
+
             // Message dispatch logic from old infra
             RCTMethodInfo *(*getMethodInfo)(id, SEL) = (__typeof__(getMethodInfo))objc_msgSend;
             RCTMethodInfo *methodInfo = getMethodInfo(cls, s);
-            
+
             NSArray<RCTMethodArgument *> *arguments;
             NSString *otherMethodName = RCTParseMethodSignature(methodInfo->objcName, &arguments);
-            
+
             NSMutableArray *argumentTypes = [NSMutableArray arrayWithCapacity:[arguments count]];
             for (int j = 0; j < [arguments count]; j += 1) {
                 [argumentTypes addObject:@{
@@ -249,7 +249,7 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
                                            @"name": @""
                                            }];
             }
-            
+
             NSString *normalizedOtherMethodName = [otherMethodName componentsSeparatedByString:@":"][0];
             methodArgumentTypeNames[normalizedOtherMethodName] = argumentTypes;
         }
