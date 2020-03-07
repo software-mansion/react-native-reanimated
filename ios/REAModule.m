@@ -170,7 +170,7 @@ RCT_EXPORT_METHOD(getDirectManipulationUtil:
         //RCTModuleData *moduleData = [self.bridge moduleDataForName:RCTBridgeModuleNameForClass(moduleClass)];
         NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *methods = [self getArgumentTypeNames:moduleClass];
         [modules setObject:methods forKey:moduleName];
-        RCTModuleData *moduleData = [[RCTModuleData alloc] initWithModuleClass:moduleClass bridge:self.bridge];
+        //RCTModuleData *moduleData = [[RCTModuleData alloc] initWithModuleClass:moduleClass bridge:self.bridge];
         /*
         for (id<RCTBridgeMethod> method in moduleData.methods) {
             //SEL s = method_getName((__bridge Method _Nonnull)(method));
