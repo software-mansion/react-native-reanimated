@@ -4,6 +4,7 @@ import android.util.SparseArray;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -18,9 +19,11 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
+import com.swmansion.reanimated.bridging.ReanimatedBridgeDelegate;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
+import com.swmansion.reanimated.nodes.CallFuncNode;
 import com.swmansion.reanimated.nodes.CallbackNode;
 import com.swmansion.reanimated.nodes.ClockNode;
 import com.swmansion.reanimated.nodes.ClockOpNode;
@@ -30,19 +33,19 @@ import com.swmansion.reanimated.nodes.ConnectedNode;
 import com.swmansion.reanimated.nodes.DebugNode;
 import com.swmansion.reanimated.nodes.EventNode;
 import com.swmansion.reanimated.nodes.FunctionNode;
-import com.swmansion.reanimated.nodes.JSCallNode;
+import com.swmansion.reanimated.nodes.InterceptNode;
 import com.swmansion.reanimated.nodes.InvokeNode;
+import com.swmansion.reanimated.nodes.JSCallNode;
 import com.swmansion.reanimated.nodes.MapNode;
 import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.NoopNode;
 import com.swmansion.reanimated.nodes.OperatorNode;
+import com.swmansion.reanimated.nodes.ParamNode;
 import com.swmansion.reanimated.nodes.PropsNode;
 import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
-import com.swmansion.reanimated.nodes.ParamNode;
-import com.swmansion.reanimated.nodes.CallFuncNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,6 +77,7 @@ public class NodesManager implements EventDispatcherListener {
   private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
+  private final ReanimatedBridgeDelegate mReanimatedBridgeDelegate;
 
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -101,8 +105,8 @@ public class NodesManager implements EventDispatcherListener {
     mUIImplementation = mUIManager.getUIImplementation();
     mCustomEventNamesResolver = mUIManager.getDirectEventNamesResolver();
     mUIManager.getEventDispatcher().addListener(this);
-
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+    mReanimatedBridgeDelegate = new ReanimatedBridgeDelegate(this);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback = new GuardedFrameCallback(context) {
@@ -115,8 +119,12 @@ public class NodesManager implements EventDispatcherListener {
     mNoopNode = new NoopNode(this);
   }
 
-  public ReactContext getContext(){
+  public final ReactContext getContext(){
     return mContext;
+  }
+
+  public final ReanimatedBridgeDelegate getBridgeDelegate() {
+    return mReanimatedBridgeDelegate;
   }
 
   public void onHostPause() {
@@ -221,13 +229,13 @@ public class NodesManager implements EventDispatcherListener {
       if (type == Node.class || type == ValueNode.class) {
         return (T) mNoopNode;
       }
-      throw new IllegalArgumentException("Requested node with id " + id + " of type " + type +
+      throw new JSApplicationCausedNativeException("Requested node with id " + id + " of type " + type +
               " cannot be found");
     }
     if (type.isInstance(node)) {
       return (T) node;
     }
-    throw new IllegalArgumentException("Node with id " + id + " is of incompatible type " +
+    throw new JSApplicationCausedNativeException("Node with id " + id + " is of incompatible type " +
             node.getClass() + ", requested type was " + type);
   }
 
@@ -276,6 +284,8 @@ public class NodesManager implements EventDispatcherListener {
       node = new CallbackNode(nodeID, config, this);
     } else if ("invoke".equals(type)) {
       node = new InvokeNode(nodeID, config, this);
+    } else if ("intercept".equals(type)) {
+      node = new InterceptNode(nodeID, config, this);
     } else if ("always".equals(type)) {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
@@ -298,10 +308,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void connectNodes(int parentID, int childID) {
     Node parentNode = mAnimatedNodes.get(parentID);
-    if (parentNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + parentID +
-              " does not exists");
-    }
     Node childNode = mAnimatedNodes.get(childID);
     if (childNode == null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
@@ -312,10 +318,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void disconnectNodes(int parentID, int childID) {
     Node parentNode = mAnimatedNodes.get(parentID);
-    if (parentNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + parentID +
-              " does not exists");
-    }
     Node childNode = mAnimatedNodes.get(childID);
     if (childNode == null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
@@ -379,7 +381,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    callback.invoke(mAnimatedNodes.get(nodeID).exportableValue());
   }
 
   public void postRunUpdatesAfterAnimation() {
@@ -411,6 +413,13 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
       EventNode node = mEventMapping.get(key);
+      // If for some reason name resolution failed try a more generic approach
+      // converting `topEventName` to `onEventName`
+      if (node == null && eventName != null && eventName.startsWith("top")) {
+        eventName = "on" + eventName.substring(3);
+        key = viewTag + eventName;
+        node = mEventMapping.get(key);
+      }
       if (node != null) {
         event.dispatch(node);
       }
@@ -419,5 +428,12 @@ public class NodesManager implements EventDispatcherListener {
 
   public void sendEvent(String name, WritableMap body) {
     mEventEmitter.emit(name, body);
+  }
+
+  public void setValue(int nodeID, Double newValue) {
+    Node node = mAnimatedNodes.get(nodeID);
+    if (node != null) {
+        ((ValueNode) node).setValue(newValue);
+    }
   }
 }

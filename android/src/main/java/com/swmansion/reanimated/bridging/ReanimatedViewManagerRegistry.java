@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.ViewManager;
@@ -21,6 +21,7 @@ class ReanimatedViewManagerRegistry {
     private static Map<String, ViewManager> getViewManagers(ViewManagerRegistry viewManagerRegistry) throws NoSuchFieldException, IllegalAccessException {
         Field f = viewManagerRegistry.getClass().getDeclaredField("mViewManagers");
         f.setAccessible(true);
+        //noinspection unchecked
         return ((Map<String, ViewManager>) f.get(viewManagerRegistry));
     }
 }

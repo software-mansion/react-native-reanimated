@@ -9,18 +9,16 @@ import invariant from 'fbjs/lib/invariant';
 class AnimatedInvoke extends AnimatedNode {
   constructor(invokeConfig, ...params) {
     if (Platform.OS !== 'android') {
-      throw new Error('Currently experimental direct manipulation are available only on Android');
+      //throw new Error('Currently experimental direct manipulation are available only on Android');
     }
     super(
       {
         type: 'invoke',
         ...invokeConfig,
-        params: params.map(n => n.__nodeID),
+        params,
       },
       params
     );
-
-    this.__attach();
   }
 
   __onEvaluate() {
@@ -75,8 +73,4 @@ export function createAnimatedInvoke(module, method, ...params) {
 
 export function createAnimatedDispatch(module, command, ...params) {
   return createAnimatedInvokeBase({ module, command }, ...params);
-}
-
-export function getDevUtil() {
-  return ReanimatedModule.getDevUtil();
 }

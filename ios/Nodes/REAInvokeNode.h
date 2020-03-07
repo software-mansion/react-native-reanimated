@@ -1,5 +1,6 @@
 #import "REANode.h"
 
-@interface REAInvokeNode : REANode
+@interface REAInvokeNode : REANode;
+
 
 @end

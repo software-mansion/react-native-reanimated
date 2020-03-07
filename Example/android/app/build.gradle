@@ -132,9 +132,7 @@ android {
     }
 }
 
-dependencies {
-    implementation project(':react-native-reanimated')
-    implementation project(':react-native-gesture-handler')
+    dependencies {
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
@@ -147,3 +145,5 @@ task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
 }
+
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

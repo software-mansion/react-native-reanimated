@@ -33,7 +33,7 @@ function getType(file) {
   return 'md';
 }
 
-const nameToGroupTitle = (name: string) => {
+const nameToGroupTitle = (name) => {
   return name
     .split('.')[1]
     .split(/(?=[A-Z])/)

@@ -1,100 +1,73 @@
 package com.swmansion.reanimated.nodes;
 
-import android.util.Log;
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.ReadableType;
 import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.reflection.ReanimatedWritableCollection;
-import com.swmansion.reanimated.reflection.ReanimatedWritableMap;
+import com.swmansion.reanimated.bridging.BridgingUtils;
+import com.swmansion.reanimated.bridging.ReadableArrayResolver;
+import com.swmansion.reanimated.bridging.ReadableMapResolver;
+import com.swmansion.reanimated.bridging.ReanimatedBridge;
+import com.swmansion.reanimated.bridging.ReanimatedMapBuilder;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 public class MapNode extends ValueNode implements ValueManagingNode {
     public static class ArgMap {
-        protected final int nodeID;
-        private final String[] path;
+        public final int nodeID;
+        private final Object[] path;
 
-        public ArgMap(ReadableArray eventPath) {
+        ArgMap(ReadableArray eventPath) {
             int size = eventPath.size();
             path = new String[size - 1];
             for (int i = 0; i < size - 1; i++) {
-                path[i] = eventPath.getString(i);
+                path[i] = eventPath.getType(i) == ReadableType.Number ? eventPath.getInt(i) : eventPath.getString(i);
             }
             nodeID = eventPath.getInt(size - 1);
         }
 
-        public ArrayList<String> getPath() {
-            ArrayList<String> list = new ArrayList<>();
+        public ArrayList<Object> getPath() {
+            ArrayList<Object> list = new ArrayList<>();
             for (int i = 0; i < path.length; i++) {
                 list.add(i, path[i]);
             }
             return list;
         }
 
-        public Object lookupValue(ReanimatedWritableMap data) {
-            ReanimatedWritableMap map = data;
-            for (int i = 0; map != null && i < path.length - 1; i++) {
-                String key = path[i];
-                map = map.hasKey(key) ? map.getMap(key) : null;
+        Object lookupValue(ReanimatedBridge.ReadableCollection resolver) {
+            ReanimatedBridge.ReadableCollection collection = resolver;
+            Object key;
+            for (int i = 0; collection != null && i < path.length - 1; i++) {
+                key = path[i];
+                collection = collection.has(key) ? collection.value(key, ReanimatedBridge.ReadableCollection.class) : null;
             }
 
-            if (map != null) {
-                String key = path[path.length - 1];
-                return map.value(key);
+            if (collection != null) {
+                key = path[path.length - 1];
+                return collection.value(key);
             }
 
             return null;
         }
 
-        static ReanimatedWritableCollection buildMap(List<ArgMap> mapping, NodesManager nodesManager) {
-            int depth = 0;
-            ArrayList<String> path;
-            List<String> next;
-            List<String> current;
-            String key;
-            ReanimatedWritableCollection collection;
-            ReanimatedWritableCollection map = new ReanimatedWritableCollection();
-            HashMap<List<String>, ReanimatedWritableCollection> accumulator = new HashMap<>();
-
-            for (int i = 0; i < mapping.size(); i++) {
-                depth = Math.max(depth, mapping.get(i).path.length);
+        @NonNull
+        @Override
+        public String toString() {
+            ArrayList<Object> list = new ArrayList<>();
+            for (int i = 0; i < path.length; i++) {
+                list.add(i, path[i]);
             }
-            for (int i = depth; i >= 0; i--) {
-                for (ArgMap argMap: mapping) {
-                    path = argMap.getPath();
-
-                    if (i < path.size()) {
-                        key = path.get(i);
-                        collection = new ReanimatedWritableCollection();
-                        if(i == path.size() - 1) {
-                            collection.putDynamic(key, nodesManager.getNodeValue(argMap.nodeID));
-
-                        } else {
-                            current = path.subList(0, i);
-                            collection.putMap(key, accumulator.get(current).copy());
-                        }
-
-                        if (i == 0) {
-                            map.merge(collection);
-                        } else {
-                            next = path.subList(0, i - 1);
-                            if (accumulator.containsKey(next)) {
-                                collection.merge(accumulator.get(next).copy());
-                            }
-                            accumulator.put(next, collection);
-                        }
-                    }
-                }
-            }
-
-            return map;
+            list.add(String.valueOf(nodeID));
+            return list.toString();
         }
     }
 
@@ -108,10 +81,22 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     }
 
     private List<ArgMap> mMapping;
+    private Boolean mDirty = true;
+    private ReanimatedMapBuilder mBuilder;
+    private ReanimatedMapBuilder.ReanimatedMapBuilderManager mBuilderManager;
+    private final boolean useNativeBuilder = false;
+    private SparseArray<Object> mMemoizedValues = new SparseArray<>();
 
     public MapNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
         super(nodeID, config, nodesManager);
         mMapping = processMapping(config.getArray("argMapping"));
+    }
+
+    private void initMapBuilder() {
+        if (mBuilder == null) {
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, useNativeBuilder);
+            mBuilderManager = new ReanimatedMapBuilder.ReanimatedMapBuilderManager(mBuilder);
+        }
     }
 
     public void setValue(int nodeID) {
@@ -122,9 +107,9 @@ public class MapNode extends ValueNode implements ValueManagingNode {
     @Override
     public void setValue(Object value) {
         if (value instanceof ReadableArray) {
-            setValue(((ReadableArray) value));
+            setValue((ReadableArray) value);
         } else if (value instanceof ReadableMap) {
-            setValue(((ReadableMap) value));
+            setValue((ReadableMap) value);
         } else {
             throw new JSApplicationCausedNativeException(
                     String.format(
@@ -138,35 +123,96 @@ public class MapNode extends ValueNode implements ValueManagingNode {
 
     }
 
-    public void setValue(@Nullable ReadableArray data) {
-        setValue(ReanimatedWritableMap.fromArray(data));
+    void setValue(@Nullable ReadableArray data) {
+        setValue(ReadableArrayResolver.obtain(data));
     }
 
-    public void setValue(@Nullable ReadableMap data) {
-        setValue(ReanimatedWritableMap.fromMap(data));
+    void setValue(@Nullable ReadableMap data) {
+        setValue(ReadableMapResolver.obtain(data));
     }
 
-    private void setValue(@Nullable ReanimatedWritableMap data) {
+    private void setValue(@Nullable ReanimatedBridge.ReadableCollection data) {
         if (data == null) {
-            throw new IllegalArgumentException("Animated maps must have map data.");
+            throw new JSApplicationIllegalArgumentException("Animated maps must have map data.");
         }
 
         Node node;
+        ArgMap map;
+        Object value;
+
+        if (!useNativeBuilder) {
+            // TODO: 08/12/2019 uncomment once set is working 
+            //initMapBuilder();
+        }
+
+        for (int i = 0; i < mMapping.size(); i++) {
+            map = mMapping.get(i);
+
+            if (map.path.length == 0) {
+                //  a case in which the proxy is an effect proxy,
+                //  e.g { nativeEvent: () => set(run, 1) }
+                node = mNodesManager.findNodeById(map.nodeID, Node.class);
+                node.value();
+            } else {
+                value = map.lookupValue(data);
+                if (value != null) {
+                    node = mNodesManager.findNodeById(map.nodeID, Node.class);
+                    ((ValueManagingNode) node).setValue(BridgingUtils.parse(value));
+
+                    if (!value.equals(mMemoizedValues.get(map.nodeID))) {
+                        mDirty = true;
+                        mMemoizedValues.put(map.nodeID, value);
+                        if (!useNativeBuilder) {
+                            // TODO: 08/12/2019 uncomment once set is working 
+                            //mBuilderManager.set(map.getPath(), value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private Boolean isDirty() {
+        if (mDirty) {
+            return true;
+        }
 
         for (int i = 0; i < mMapping.size(); i++) {
             ArgMap map = mMapping.get(i);
-            Object value = map.lookupValue(data);
-            if (value != null) {
-                node = mNodesManager.findNodeById(map.nodeID, Node.class);
-                ((ValueManagingNode) node).setValue(value);
+            Object memoizedNodeValue = map.lookupValue(mBuilder);
+            Object nodeValue = mNodesManager.getNodeValue(map.nodeID);
+            if (!nodeValue.equals(memoizedNodeValue)) {
+                return true;
             }
         }
+
+        mDirty = false;
+        return false;
     }
 
     @Nullable
     @Override
     protected Object evaluate() {
-        return ArgMap.buildMap(mMapping, mNodesManager);
+        //  `buildMap` is extremely expensive, therefore we check if node is dirty
+        /*
+        // TODO: 08/12/2019 once ReanimatedMapBuilder set method will work use this and uncomment the rest
+        if (isDirty() && useNativeBuilder) {
+            mDirty = false;
+            mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, true);
+        } else {
+            initMapBuilder();
+        }
+
+         */
+        
+        //  defaulting // TODO: 08/12/2019 remove  
+        mBuilder = ReanimatedMapBuilder.fromMapping(mMapping, mNodesManager, useNativeBuilder);
+
+        return mBuilder.export(useNativeBuilder);
     }
 
+    @Override
+    public Object exportableValue() {
+        return ReanimatedMapBuilder.exportValue(value());
+    }
 }

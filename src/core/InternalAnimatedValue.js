@@ -72,6 +72,12 @@ export default class InternalAnimatedValue extends AnimatedNode {
     return this._value;
   }
 
+  // AnimatedValue will override this method to modify the value of a native node.
+  setValue(value) {
+    this.__detachAnimation(this._animation);
+    this._updateValue(value);
+  }
+
   _updateValue(value) {
     this._value = value;
     this.__forceUpdateCache(value);

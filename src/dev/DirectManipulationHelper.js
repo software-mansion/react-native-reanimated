@@ -58,14 +58,19 @@ function orderBy(collection, iterator) {
 function useDevUtil() {
   const [data, setData] = useState([]);
   useEffect(() => {
+    //ReanimatedModule.getDirectManipulationUtil().then(console.log);
     ReanimatedModule.getDirectManipulationUtil().then(setData);
   }, []);
 
   return useMemo(() => {
-    const { viewManagers, ...nativeModules } = data;
+    const { viewManagers, nativeModules, JSEvents } = data;
     return [
-      orderBy(map(nativeModules, (methods, key) => ({ methods, key })), 'key'),
-      orderBy(map(viewManagers, ((viewManager) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager).Commands }))), 'key')
+      {
+        nativeModules: orderBy(map(nativeModules, (methods, key) => ({ methods, key })), 'key'),
+        viewManagers: orderBy(map(viewManagers, ((viewManager) => ({ key: viewManager, methods: UIManager.getViewManagerConfig(viewManager)?.Commands }))), 'key'),
+        JSEvents: orderBy(map(JSEvents, (event, key) => ({ event, key })), 'key'),
+      },
+      () => ReanimatedModule.getDirectManipulationUtil().then(setData)
     ];
   }, [data]);
 }
@@ -90,6 +95,24 @@ function toDispatchAnnotation(module, method) {
 
 function toDispatchLegacyAnnotation(module, method) {
   return `Legacy:\nUIManager.dispatchViewManagerCommand(tag, "${method}", args)`;
+}
+
+function toInterceptAnnotation(eventName, eventTemplate) {
+  return `intercept("${eventName}", ${JSON.stringify(eventTemplate, null, '\t')})`;
+}
+
+function ItemManager(props) {
+  switch (props.section.title) {
+    case 'invoke':
+    case 'dispatch':
+      return <Item {...props} />
+      break
+    case 'intercept':
+      return <InterceptCell {...props} />
+      break;
+    default:
+      return null;
+  }
 }
 
 function Item({ item, section }) {
@@ -122,32 +145,45 @@ function Item({ item, section }) {
   );
 }
 
-function InvokeCell({ name, item }) {
+function useHandleDisplay() {
   const [display, setDisplay] = useState(false);
   const _onPress = useCallback(() => setDisplay(!display), [display]);
+  return [display, _onPress];
+}
+
+function InvokeCell({ name, item }) {
+  const [display, _onPress] = useHandleDisplay();
   return (
     <RectButton style={styles.button} onPress={_onPress}>
-      <Text style={[styles.buttonText, styles.methodTitle]}>{!display ? item.key : toFunctionAnnotation(item.key, item.params)}</Text>
+      <Text style={[styles.buttonText, styles.bold]}>{!display ? item.key : toFunctionAnnotation(item.key, item.params)}</Text>
       <Text style={[styles.buttonText, !display && styles.hidden]}>{toInvokeAnnotation(name, item.key, item.params)}</Text>
     </RectButton>
   );
 }
 
 function DispatchCell({ name, item }) {
-  const [display, setDisplay] = useState(false);
-  const _onPress = useCallback(() => setDisplay(!display), [display]);
-
+  const [display, _onPress] = useHandleDisplay();
   return (
     <RectButton style={styles.button} onPress={_onPress} >
-      <Text style={[styles.buttonText, styles.methodTitle]}>{item.key}</Text>
+      <Text style={[styles.buttonText, styles.bold]}>{item.key}</Text>
       <Text style={[styles.buttonText, !display && styles.hidden]}>{toDispatchAnnotation(name, item.key)}</Text>
       <Text style={[styles.buttonText, styles.legacy, !display && styles.hidden]}>{toDispatchLegacyAnnotation(name, item.key)}</Text>
     </RectButton>
   );
 }
 
+function InterceptCell({ item }) {
+  const [display, _onPress] = useHandleDisplay();
+  return (
+    <RectButton style={styles.button} onPress={_onPress} >
+      <Text style={[styles.buttonText, styles.bold]}>{item.key}</Text>
+      <Text style={[styles.buttonText, !display && styles.hidden]}>{toInterceptAnnotation(item.key, item.event)}</Text>
+    </RectButton>
+  );
+}
+
 function DirectManipulationHelper() {
-  const [nativeModules, viewManagers] = useDevUtil();
+  const [{ nativeModules, viewManagers, JSEvents }, invalidate] = useDevUtil();
   const sections = useMemo(() => ([
     {
       key: 'nativeModules',
@@ -160,53 +196,99 @@ function DirectManipulationHelper() {
       title: 'dispatch',
       data: viewManagers,
       keyExtractor: (item, i) => `viewManagers:${item.key}`
+    },
+    {
+      key: 'JSEvents',
+      title: 'intercept',
+      data: JSEvents,
+      keyExtractor: (item, i) => `JSEvents:${item.key}`
     }
   ]), [nativeModules, viewManagers]);
 
   const [displayingSections, setDisplayedSections] = useState(sections);
   const [input, setInput] = useState("");
+  const [displayInfo, setDisplayInfo] = useState(true);
 
   useEffect(() => {
-    setDisplayedSections(sections)
+    setDisplayedSections(sections);
+    const m = setTimeout(() => setDisplayInfo(false), 15000);
+    () => clearTimeout(m);
   }, [sections]);
+
+  const filterResults = useCallback((text) => {
+    text = text.toLowerCase();
+    setInput(text);
+    setDisplayedSections(text === "" ?
+      sections :
+      map(sections, (s) => {
+        const section = {};
+        Object.assign(section, s, {
+          data: s.data.filter(({ key, methods, event }) => {
+            return key.toLowerCase().includes(text) ||
+              Object.keys(methods || {}).some((method) => method.toLowerCase().includes(text)) ||
+              JSON.stringify(event || {}).toLowerCase().includes(text);
+          })
+        });
+        return section;
+      })
+    );
+  })
 
   return (
     <>
-      <Text>
-        Available methods and commands to use with invoke and dispatch respectively.
-        </Text>
-      <Text>
-        The crossed fields indicate it was impossible to positively determine availability.
-        </Text>
       <TextInput
         style={styles.textInput}
-        onChangeText={(text) => {
-          setInput(text);
-          setDisplayedSections(text === "" ?
-            sections :
-            map(sections, (s) => {
-              const section = {};
-              Object.assign(section, s, { data: s.data.filter(({ key }) => key.includes(text)) });
-              return section;
-            })
-          );
-        }}
+        onChangeText={filterResults}
         value={input}
         placeholder="Type here to filter..."
+        autoCapitalize='none'
       />
       <SectionList
         style={styles.list}
         sections={displayingSections}
-        renderItem={(props) => <Item {...props} />}
+        renderItem={(props) => <ItemManager {...props} />}
         ItemSeparatorComponent={ItemSeparator}
         renderSectionHeader={(props) => <SectionHeader {...props} title={props.section.title} />}
         stickySectionHeadersEnabled
       />
+      <TouchableOpacity
+        onPress={() => setDisplayInfo(false)}
+        onLongPress={() => invalidate()}
+        style={[!displayInfo && styles.hidden, styles.infoContainer]}
+      >
+        <Text>
+          This list displays available methods, commands and events to use with direct manipulation nodes.
+        </Text>
+        <Text>
+          The crossed fields indicate it was impossible to positively determine availability.
+        </Text>
+        <Text style={styles.bold}>
+          Intercept:
+        </Text>
+        <Text>
+          Only events that were intercepted during runtime are visible.
+          So if you're looking for something in particular make your app run the event and long press this text
+        </Text>
+        <Text style={styles.bold}>
+          Press to minimize.
+        </Text>
+      </TouchableOpacity>
+      {
+        !displayInfo && <TouchableOpacity
+          style={[styles.infoButton]}
+          onPress={() => setDisplayInfo(!displayInfo)}
+          onLongPress={() => invalidate()}
+        >
+          <Text style={[styles.bold]}>i</Text>
+        </TouchableOpacity>
+      }
+
     </>
   );
 }
 
 const DevUtil = __DEV__ ? DirectManipulationHelper : () => null;
+DevUtil.directManipulationUtil = () => __DEV__ ? ReanimatedModule.getDirectManipulationUtil() : Promise.resolve({});
 
 export default DevUtil;
 
@@ -226,7 +308,7 @@ const styles = StyleSheet.create({
     color: 'grey',
     textDecorationLine: 'line-through'
   },
-  methodTitle: {
+  bold: {
     fontWeight: 'bold'
   },
   legacy: {
@@ -253,5 +335,23 @@ const styles = StyleSheet.create({
   textInput: {
     elevation: 5,
     backgroundColor: '#EFEFF4',
+  },
+  infoButton: {
+    position: 'absolute',
+    bottom: 0,
+    margin: 10,
+    width: 50,
+    height: 50,
+    backgroundColor: 'lightblue',
+    zIndex: 1,
+    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  infoContainer: {
+    padding: 5,
+    margin: 5,
+    borderTopWidth: 2,
+    borderColor: '#EFEFF4'
   }
 });

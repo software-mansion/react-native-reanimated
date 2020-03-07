@@ -16,13 +16,14 @@ import {
   and,
   lessThan,
   greaterThan,
+  proc,
 } from '../base';
 import { min, abs } from '../derived';
 import AnimatedValue from '../core/InternalAnimatedValue';
 
 const MAX_STEPS_MS = 64;
 
-export default function spring(clock, state, config) {
+function spring(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
 
   const deltaTime = min(sub(clock, lastTime), MAX_STEPS_MS);
@@ -127,3 +128,77 @@ export default function spring(clock, state, config) {
     ]),
   ]);
 }
+
+const procSpring = proc(
+  (
+    finished,
+    velocity,
+    position,
+    time,
+    prevPosition,
+    toValue,
+    damping,
+    mass,
+    stiffness,
+    overshootClamping,
+    restSpeedThreshold,
+    restDisplacementThreshold,
+    clock
+  ) =>
+    spring(
+      clock,
+      {
+        finished,
+        velocity,
+        position,
+        time,
+        // @ts-ignore
+        prevPosition,
+      },
+      {
+        toValue,
+        damping,
+        mass,
+        stiffness,
+        overshootClamping,
+        restDisplacementThreshold,
+        restSpeedThreshold,
+      }
+    )
+);
+
+export default (
+  clock,
+  {
+    finished,
+    velocity,
+    position,
+    time,
+    // @ts-ignore
+    prevPosition,
+  },
+  {
+    toValue,
+    damping,
+    mass,
+    stiffness,
+    overshootClamping,
+    restDisplacementThreshold,
+    restSpeedThreshold,
+  }
+) =>
+  procSpring(
+    finished,
+    velocity,
+    position,
+    time,
+    prevPosition,
+    toValue,
+    damping,
+    mass,
+    stiffness,
+    overshootClamping,
+    restSpeedThreshold,
+    restDisplacementThreshold,
+    clock
+  );

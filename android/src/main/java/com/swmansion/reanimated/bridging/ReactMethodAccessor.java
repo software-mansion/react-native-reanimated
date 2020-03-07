@@ -1,6 +1,4 @@
-package com.swmansion.reanimated.reflection;
-
-import android.util.Log;
+package com.swmansion.reanimated.bridging;
 
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.NativeModule;
@@ -15,7 +13,7 @@ import javax.annotation.Nullable;
 
 import static com.swmansion.reanimated.Utils.concat;
 
-class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAccessor {
+class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedBridge.ReanimatedAccessor {
     private NativeModule mCallee;
     private MethodAccessor mMethod;
 
@@ -34,8 +32,18 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
         mMethod = getReactMethod(module, methodName);
     }
 
-    public void call(int[] params, NodesManager nodesManager){
-        invoke(cast(params, nodesManager));
+    public void call(int[] params, NodesManager nodesManager) {
+        final Object[] args = cast(params, nodesManager);
+        nodesManager
+                .getContext()
+                .runOnNativeModulesQueueThread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                invoke(args);
+                            }
+                        });
+
     }
 
     private void invoke(Object[] params) {
@@ -53,7 +61,7 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
                     "Reanimated invoke error\n" +
                             String.format("module: %s,\n", mCallee.getName()) +
                             String.format("method: %s,\n", mMethod.getName()) +
-                            String.format("\nparams: %s\n\n", concat(params, "\n")) +
+                            String.format("\nparams:\n%s\n\n", concat(params, "\n")) +
                             "Details: " + errorMessage,
                     err
             );
@@ -74,8 +82,8 @@ class ReactMethodAccessor extends NativeModuleAccessor implements ReanimatedAcce
                 n = nodesManager.findNodeById(params[k], Node.class);
                 value = n.value();
 
-                if (value != null && ReflectionUtils.isNumber(value)) {
-                    out[k] = ReflectionUtils.fromDouble(((Double) value), paramType);
+                if (value != null && BridgingUtils.isNumber(value)) {
+                    out[k] = BridgingUtils.fromDouble(((Double) value), paramType);
                 } else {
                     out[k] = paramType.cast(value);
                 }

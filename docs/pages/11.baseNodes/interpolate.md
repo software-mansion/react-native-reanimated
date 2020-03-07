@@ -19,4 +19,11 @@ Extrapolate.CLAMP; // Will clamp the input value to the range.
 Extrapolate.IDENTITY; // Will return the input value if the input value is out of range.
 ```
 
-Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range.
+Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range and mapping to strings. For example, if you wanted to animate a rotation you could do:
+
+```js
+concat(
+  interpolate(node, { inputRange: [0, 360], outputRange: [0, 360] }),
+  'deg'
+);
+```

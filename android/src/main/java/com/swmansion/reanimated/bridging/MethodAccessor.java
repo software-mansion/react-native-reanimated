@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import androidx.annotation.NonNull;
 
@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import static com.swmansion.reanimated.Utils.concat;
-import static com.swmansion.reanimated.reflection.ReflectionUtils.inferType;
+import static com.swmansion.reanimated.bridging.BridgingUtils.inferType;
 
 class MethodAccessor {
     private Method mMethod;
@@ -22,7 +22,7 @@ class MethodAccessor {
     private String[] mParamNames;
     private String[] mJSTypes;
 
-    private static String CALLBACK = "Callback";
+    private static final String CALLBACK = "Callback";
 
     static Boolean isReactMethod(Method method) {
         return method.getAnnotation(ReactMethod.class) != null;

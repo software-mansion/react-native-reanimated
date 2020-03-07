@@ -12,10 +12,15 @@
 
 - (void)processEvent:(id<RCTEvent>)event
 {
-  NSArray *args = event.arguments;
   // argMapping is an array of eventPaths, each even path ends with a target node ID
     // Supported events args are in the following order: viewTag, eventName, eventData.
-    [self setValue:args[2]];
+    NSArray *eventData = event.arguments[2];
+    [self setValue:eventData];
+}
+
+-(id)evaluate
+{
+    return @(0);
 }
 
 @end

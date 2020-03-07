@@ -8,17 +8,22 @@ export default class AnimatedCallback extends AnimatedNode {
 
   constructor(what) {
     if (Platform.OS !== 'android') {
-      throw new Error('Currently experimental direct manipulation are available only on Android');
+      //throw new Error('Currently experimental direct manipulation are available only on Android');
     }
+
+    if (!(what instanceof AnimatedNode)) {
+      throw new Error('callback has received illegal arg');
+    }
+
     super(
       {
         type: 'callback',
-        what: what.__nodeID,
+        what,
       },
       [what]
     );
+
     this._what = what;
-    this.__attach();
   }
 
   __onEvaluate() {
@@ -31,12 +36,25 @@ export default class AnimatedCallback extends AnimatedNode {
 }
 
 export function createAnimatedCallback(...args) {
-  let what;
-  if (args.length === 1 && args[0] instanceof AnimatedNode) {
-    what = args[0];
-  } else {
-    what = createAnimatedMap(args);
-  }
-
+  const what = createAnimatedMap(args);
   return new AnimatedCallback(what);
 }
+
+Object.defineProperty(createAnimatedCallback, 'fromMap', {
+  value(map) {
+    return new AnimatedCallback(map);
+  },
+  configurable: false,
+  enumerable: true,
+  writable: false,
+});
+
+Object.defineProperty(createAnimatedCallback, 'fromEnd', {
+  value(...args) {
+    const what = createAnimatedMap(Array.fromEnd(args));
+    return new AnimatedCallback(what);
+  },
+  configurable: false,
+  enumerable: true,
+  writable: false,
+});

@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.nodes;
 
+import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 
@@ -24,9 +25,14 @@ public class FunctionNode extends Node implements ValueManagingNode {
     try {
       ((ValueManagingNode) what).setValue(value);
     } catch (Throwable throwable) {
-      throw new IllegalArgumentException(
+      throw new JSApplicationCausedNativeException(
               "Error while trying to set value on reanimated " + what.getClass().getSimpleName(), throwable);
     }
   }
 
+  @Override
+  public Object exportableValue() {
+    Node what = mNodesManager.findNodeById(mWhatNodeID, Node.class);
+    return what.exportableValue();
+  }
 }

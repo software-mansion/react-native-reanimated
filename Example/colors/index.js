@@ -78,6 +78,7 @@ export default class Example extends Component {
   static navigationOptions = {
     title: 'Colors Example',
   };
+
   constructor(props) {
     super(props);
 
@@ -118,6 +119,7 @@ export default class Example extends Component {
     const v = 1;
     this._color = colorHSV(h, s, v);
   }
+
   render() {
     return (
       <View style={styles.container}>
@@ -132,7 +134,7 @@ export default class Example extends Component {
               {
                 backgroundColor: this._color,
                 transform: [
-                  { translateX: this._transX, translateY: this._transY },
+                  { translateX: this._transX }, { translateY: this._transY },
                 ],
               },
             ]}

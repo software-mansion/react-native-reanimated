@@ -9,7 +9,7 @@ Example:
 const myProc = proc((a, b) => multiply(a, b));
 
 // In your component
-const style = { width: proc(10, 10) };
+const style = { width: myProc(10, 10) };
 ```
 
 A proc node should be declared as a global constant in your code and not recreated from inside components.

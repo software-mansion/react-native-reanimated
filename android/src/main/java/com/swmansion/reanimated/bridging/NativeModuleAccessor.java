@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import com.facebook.react.bridge.JSApplicationCausedNativeException;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -27,7 +27,7 @@ class NativeModuleAccessor {
     private Map<String, NativeModule> getNativeModules(){
         Collection<NativeModule> modules = mContext.getCatalystInstance().getNativeModules();
         Iterator<NativeModule> moduleIterator = modules.iterator();
-        Map<String, NativeModule> moduleMap = new HashMap();
+        Map<String, NativeModule> moduleMap = new HashMap<>();
         NativeModule module;
 
         while (moduleIterator.hasNext()){
@@ -38,7 +38,7 @@ class NativeModuleAccessor {
         return moduleMap;
     }
 
-    public NativeModule getNativeModule(String name) {
+    NativeModule getNativeModule(String name) {
         try {
             return mContext.getCatalystInstance().getNativeModule(name);
         } catch (Throwable err) {
@@ -57,7 +57,7 @@ class NativeModuleAccessor {
     private Map<String, MethodAccessor> getReactMethodsForModule(NativeModule module) {
         Method[] methods = module.getClass().getDeclaredMethods();
         Method m;
-        Map<String, MethodAccessor> methodMap = new HashMap();
+        Map<String, MethodAccessor> methodMap = new HashMap<>();
 
         for (int i = 0; i < methods.length; i++) {
             m = methods[i];
@@ -69,7 +69,7 @@ class NativeModuleAccessor {
         return methodMap;
     }
 
-    public MethodAccessor getReactMethod(NativeModule nativeModule, String name) {
+    MethodAccessor getReactMethod(NativeModule nativeModule, String name) {
         Map<String, MethodAccessor> methods = getReactMethodsForModule(nativeModule);
         if(methods.containsKey(name)) {
             return methods.get(name);
@@ -83,8 +83,9 @@ class NativeModuleAccessor {
         }
     }
 
-    private WritableNativeMap out() {
+    private WritableNativeMap getDevUtil() {
         WritableNativeMap out = new WritableNativeMap();
+        WritableNativeMap nativeModulesMap = new WritableNativeMap();
         WritableNativeMap temp;
         Map<String, NativeModule> modules = getNativeModules();
         Map<String, MethodAccessor> methods;
@@ -98,8 +99,10 @@ class NativeModuleAccessor {
             for (int j = 0; j < mKeys.length; j++) {
                 temp.putArray(mKeys[j], methods.get(mKeys[j]).out());
             }
-            out.putMap(keys[i], temp);
+            nativeModulesMap.putMap(keys[i], temp);
         }
+
+        out.putMap("nativeModules", nativeModulesMap);
 
         //  append view manager names
         try{
@@ -122,6 +125,6 @@ class NativeModuleAccessor {
     }
 
     public static WritableNativeMap getReflectionMap(ReactContext context) {
-        return new NativeModuleAccessor(context).out();
+        return new NativeModuleAccessor(context).getDevUtil();
     }
 }

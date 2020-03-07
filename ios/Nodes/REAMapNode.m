@@ -26,6 +26,10 @@
             } else {
                 REAValueNode *node = (REAValueNode *)[self.nodesManager findNodeByID:eventPath[i]];
                 [node setValue:mValue];
+                if (eventPath.count == 1) {
+                    // effect event
+                    [node value];
+                }
             }
         }
     }

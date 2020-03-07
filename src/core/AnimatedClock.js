@@ -1,4 +1,4 @@
-import InternalAnimatedValue from './AnimatedValue';
+import InternalAnimatedValue from './InternalAnimatedValue';
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
@@ -46,6 +46,10 @@ export default class AnimatedClock extends AnimatedNode {
     super({ type: 'clock' });
   }
 
+  toString() {
+    return `AnimatedClock, id: ${this.__nodeID}`;
+  }
+
   __onEvaluate() {
     return val(mainClock);
   }
@@ -85,5 +89,3 @@ export default class AnimatedClock extends AnimatedNode {
   }
 }
 
-const clock = mainClock;
-export { clock };

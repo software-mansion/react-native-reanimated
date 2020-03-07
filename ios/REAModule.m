@@ -2,6 +2,12 @@
 
 #import "REANodesManager.h"
 #import "Transitioning/REATransitionManager.h"
+#import <React/RCTModuleData.h>
+#import <React/RCTBridgeMethod.h>
+#import <React-Core/React/RCTModuleMethod.h>
+#import <React/RCTModuleMethod.h>
+#import <objc/runtime.h>
+#import <objc/message.h>
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
@@ -134,6 +140,124 @@ RCT_EXPORT_METHOD(configureProps:(nonnull NSArray<NSString *> *)nativeProps
   }];
 }
 
+RCT_EXPORT_METHOD(setValue:(nonnull NSNumber *)nodeID
+                  newValue:(nonnull NSNumber *)newValue
+                  )
+{
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager setValueForNodeID:nodeID value:newValue];
+  }];
+}
+
+
+
+RCT_EXPORT_METHOD(getDirectManipulationUtil:
+                  (RCTPromiseResolveBlock)resolve
+                  rejecter:(__unused RCTPromiseRejectBlock)reject)
+{
+    NSMutableDictionary *modules = [NSMutableDictionary new];
+    NSMutableArray *viewManagers = [NSMutableArray new];
+    NSString *moduleName;
+    for (Class moduleClass in [self.bridge moduleClasses]) {
+        moduleName = NSStringFromClass(moduleClass);
+        if ([moduleClass moduleName] != nil) {
+            //moduleName = [moduleClass moduleName];
+        }
+        BOOL isViewManager = [[self.bridge moduleForClass:moduleClass] isKindOfClass:[RCTViewManager class]];
+        if (isViewManager) {
+            [viewManagers addObject:moduleName];
+        }
+        //RCTModuleData *moduleData = [self.bridge moduleDataForName:RCTBridgeModuleNameForClass(moduleClass)];
+        NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *methods = [self getArgumentTypeNames:moduleClass];
+        [modules setObject:methods forKey:moduleName];
+        RCTModuleData *moduleData = [[RCTModuleData alloc] initWithModuleClass:moduleClass bridge:self.bridge];
+        /*
+        for (id<RCTBridgeMethod> method in moduleData.methods) {
+            //SEL s = method_getName((__bridge Method _Nonnull)(method));
+         
+            [modules setObject:methods forKey:[method JSMethodName]];
+        }
+         */
+    }
+    resolve(@{
+              @"nativeModules": modules,
+              @"viewManagers": viewManagers,
+              @"JSEvents": @[]
+              });
+}
+
+- (void) resolveViewManger
+{
+    //[self.bridge.uiManager methodsToExport]
+    id<RCTBridgeDelegate> delegate = self.bridge.delegate;
+    /*
+     if (![delegate respondsToSelector:@selector(bridge:didNotFindModule:)]) {
+     resolve( @{@"fuck":@true});
+     return;
+     }
+     */
+    NSString *name = @"RCTScrollView";
+    NSString *moduleName = name;
+    BOOL result = [delegate bridge:self.bridge didNotFindModule:moduleName];
+    if (!result) {
+        moduleName = [name stringByAppendingString:@"Manager"];
+        result = [delegate bridge:self.bridge didNotFindModule:moduleName];
+    }
+    if (!result) {
+        //resolve( @{});
+        //return;
+    }
+    
+    id module = [self.bridge moduleForName:moduleName lazilyLoadIfNecessary:RCTTurboModuleEnabled()];
+    if (module == nil) {
+        // There is all sorts of code in this codebase that drops prefixes.
+        //
+        // If we didn't find a module, it's possible because it's stored under a key
+        // which had RCT Prefixes stripped. Lets check one more time...
+        module = [self.bridge moduleForName:RCTDropReactPrefixes(moduleName) lazilyLoadIfNecessary:RCTTurboModuleEnabled()];
+    }
+}
+
+- (NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *) getArgumentTypeNames:(Class)cls
+{
+    NSMutableDictionary<NSString *, NSArray<NSDictionary<NSString *, NSString *> *> *> *methodArgumentTypeNames = [NSMutableDictionary new];
+    
+    unsigned int numberOfMethods;
+    Method *methods = class_copyMethodList(object_getClass(cls), &numberOfMethods);
+    
+    if (methods) {
+        for (unsigned int i = 0; i < numberOfMethods; i++) {
+            SEL s = method_getName(methods[i]);
+            NSString *mName = NSStringFromSelector(s);
+            RCTLog(@"nqme %@ ", mName);
+            if (![mName hasPrefix:@"__rct_export__"]) {
+                continue;
+            }
+            
+            // Message dispatch logic from old infra
+            RCTMethodInfo *(*getMethodInfo)(id, SEL) = (__typeof__(getMethodInfo))objc_msgSend;
+            RCTMethodInfo *methodInfo = getMethodInfo(cls, s);
+            
+            NSArray<RCTMethodArgument *> *arguments;
+            NSString *otherMethodName = RCTParseMethodSignature(methodInfo->objcName, &arguments);
+            
+            NSMutableArray *argumentTypes = [NSMutableArray arrayWithCapacity:[arguments count]];
+            for (int j = 0; j < [arguments count]; j += 1) {
+                [argumentTypes addObject:@{
+                                           @"nativeType": arguments[j].type,
+                                           @"type": @"object",
+                                           @"name": @""
+                                           }];
+            }
+            
+            NSString *normalizedOtherMethodName = [otherMethodName componentsSeparatedByString:@":"][0];
+            methodArgumentTypeNames[normalizedOtherMethodName] = argumentTypes;
+        }
+        free(methods);
+    }
+
+    return methodArgumentTypeNames;
+}
 
 #pragma mark -- Batch handling
 

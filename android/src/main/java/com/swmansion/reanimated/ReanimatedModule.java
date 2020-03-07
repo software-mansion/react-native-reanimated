@@ -13,7 +13,6 @@ import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
-import com.swmansion.reanimated.reflection.ReanimatedReflectionHelper;
 import com.swmansion.reanimated.transitions.TransitionModule;
 
 import java.util.ArrayList;
@@ -23,8 +22,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
-public class ReanimatedModule extends ReactContextBaseJavaModule implements
-        LifecycleEventListener, UIManagerModuleListener {
+public class ReanimatedModule extends ReactContextBaseJavaModule
+    implements LifecycleEventListener, UIManagerModuleListener {
 
   public static final String NAME = "ReanimatedModule";
 
@@ -217,7 +216,17 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @ReactMethod
+  public void setValue(final int nodeID, final Double newValue) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.setValue(nodeID, newValue);
+      }
+    });
+  }
+
+  @ReactMethod
   public void getDirectManipulationUtil(final Promise promise) {
-    promise.resolve(ReanimatedReflectionHelper.getReflectionMap(getReactApplicationContext()));
+    promise.resolve(getNodesManager().getBridgeDelegate().getDevUtil());
   }
 }

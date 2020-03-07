@@ -1,21 +1,13 @@
 import React, { Component } from 'react';
-import {
-  StyleSheet,
-  View,
-  ListView,
-  TouchableOpacity,
-  Text,
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, FlatList, Text } from 'react-native';
 import Interactable from '../../Interactable';
 
 export default class HandleTouches extends Component {
   constructor() {
     super();
-    const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2,
-    });
+
     this.state = {
-      dataSource: ds.cloneWithRows([
+      dataSource: [
         'card1',
         'card2',
         'card3',
@@ -24,18 +16,21 @@ export default class HandleTouches extends Component {
         'card6',
         'card7',
         'card8',
-      ]),
+      ],
     };
   }
+
   render() {
     return (
-      <ListView
+      <FlatList
         contentContainerStyle={styles.container}
-        dataSource={this.state.dataSource}
-        renderRow={this.renderRow.bind(this)}
+        data={this.state.dataSource}
+        renderItem={this.renderRow.bind(this)}
+        keyExtractor={(_, index) => index.toString()}
       />
     );
   }
+
   renderRow(data) {
     return (
       <Interactable.View
@@ -56,9 +51,11 @@ export default class HandleTouches extends Component {
       </Interactable.View>
     );
   }
+
   onCardPress() {
     alert('Card was pressed');
   }
+
   onButtonPress(type) {
     alert(`Button ${type} was pressed`);
   }

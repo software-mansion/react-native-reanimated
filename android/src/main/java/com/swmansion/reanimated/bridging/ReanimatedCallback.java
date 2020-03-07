@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.reflection;
+package com.swmansion.reanimated.bridging;
 
 import android.util.Log;
 
@@ -7,7 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Callback;
-import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -15,7 +14,6 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
 import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.nodes.Node;
 import com.swmansion.reanimated.nodes.ValueManagingNode;
 
 import java.lang.annotation.Retention;
@@ -37,61 +35,49 @@ public class ReanimatedCallback implements Callback, Promise {
             CallbackState.REJECTED,
     })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface CallbackState {
+    @interface CallbackState {
         int READY = -1;
         int PENDING = 0;
         int RESOLVED = 1;
         int REJECTED = 2;
     }
 
-    private @CallbackState int mState = CallbackState.READY;
+    private final ValueManagingNode mWhatNode;
 
-    private final Node mWhatNode;
-
-    public ReanimatedCallback(final Node what) {
+    public ReanimatedCallback(final ValueManagingNode what) {
         mWhatNode = what;
     }
 
-    private ValueManagingNode what() {
-        try {
-            return ((ValueManagingNode) mWhatNode);
-        } catch (ClassCastException e) {
-            throw new JSApplicationIllegalArgumentException(
-                    "Reanimated callback received a wrong node of " + mWhatNode.getClass().getSimpleName(), e);
-        }
-    }
-
-    private void setValue(@Nullable final ReanimatedWritableArray data) {
+    private void setValue(@Nullable final ReanimatedWritableNativeArray data) {
         if (UiThreadUtil.isOnUiThread()) {
-            what().setValue(data);
+            mWhatNode.setValue(data);
         } else {
             UiThreadUtil.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    what().setValue(data);
+                    mWhatNode.setValue(data);
                 }
             });
         }
     }
 
-    public void reject() {
+    private void reject() {
         updateState(CallbackState.REJECTED);
     }
 
     private void updateState(@CallbackState int state) {
-        mState = state;
     }
 
     @Override
     public void invoke(Object... args) {
-        setValue(ReanimatedWritableArray.fromArray(args));
+        setValue(ReanimatedWritableNativeArray.fromArray(args));
     }
 
     @Override
     public void resolve(@Nullable Object value) {
         Object[] params = new Object[1];
         params[0] = value;
-        setValue(ReanimatedWritableArray.fromArray(params));
+        setValue(ReanimatedWritableNativeArray.fromArray(params));
     }
 
     @Override
@@ -193,7 +179,7 @@ public class ReanimatedCallback implements Callback, Promise {
         String message;
         WritableMap useInfo;
 
-        public static RejectionWarning getInstance() {
+        static RejectionWarning getInstance() {
             return new RejectionWarning();
         }
 
@@ -201,17 +187,17 @@ public class ReanimatedCallback implements Callback, Promise {
 
         }
 
-        public RejectionWarning put(Throwable throwable) {
+        RejectionWarning put(Throwable throwable) {
             this.throwable = throwable;
             return this;
         }
 
-        public RejectionWarning putCode(String code) {
+        RejectionWarning putCode(String code) {
             this.code = code;
             return this;
         }
 
-        public RejectionWarning putMessage(String message) {
+        RejectionWarning putMessage(String message) {
             this.message = message;
             return this;
         }
@@ -222,12 +208,12 @@ public class ReanimatedCallback implements Callback, Promise {
             return this;
         }
 
-        public RejectionWarning put(WritableMap useInfo){
+        RejectionWarning put(WritableMap useInfo){
             this.useInfo = useInfo;
             return this;
         }
 
-        public void log(){
+        void log(){
             if(BuildConfig.DEBUG) {
                 Log.w(ReactConstants.TAG, "Reanimated callback was rejected, see details:\n" +
                         (code != null ? "code: " + code + ",\n" : "") +
@@ -242,6 +228,6 @@ public class ReanimatedCallback implements Callback, Promise {
     @NonNull
     @Override
     public String toString() {
-        return String.format("callback(%s)", mWhatNode.value());
+        return "callback";
     }
 }

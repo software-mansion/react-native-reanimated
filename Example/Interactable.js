@@ -27,6 +27,7 @@ const {
   sub,
   Clock,
   Value,
+  onChange,
 } = Animated;
 
 const ANIMATOR_PAUSE_CONSECUTIVE_FRAMES = 10;
@@ -411,11 +412,15 @@ class Interactable extends Component {
       }
       const last = new Value(Number.MAX_SAFE_INTEGER);
       const noMoveFrameCount = noMovementFrames[axis];
-      const testMovementFrames = cond(
-        eq(advance, last),
-        set(noMoveFrameCount, add(noMoveFrameCount, 1)),
-        [set(last, advance), set(noMoveFrameCount, 0)]
-      );
+      const testMovementFrames = block([
+        onChange(snapAnchor.x, set(last, Number.MAX_SAFE_INTEGER)),
+        onChange(snapAnchor.y, set(last, Number.MAX_SAFE_INTEGER)),
+        cond(
+          eq(advance, last),
+          set(noMoveFrameCount, add(noMoveFrameCount, 1)),
+          [set(last, advance), set(noMoveFrameCount, 0)]
+        ),
+      ]);
       const step = cond(
         eq(state, State.ACTIVE),
         [
@@ -429,7 +434,6 @@ class Interactable extends Component {
           cond(dt, dragBehaviors[axis]),
         ],
         [
-          cond(clockRunning(clock), 0, startClock(clock)),
           cond(dragging, [updateSnapTo, set(dragging, 0)]),
           cond(dt, snapBehaviors[axis]),
           testMovementFrames,
@@ -474,10 +478,8 @@ class Interactable extends Component {
             style,
             {
               transform: [
-                {
-                  translateX: verticalOnly ? 0 : this._transX,
-                  translateY: horizontalOnly ? 0 : this._transY,
-                },
+                { translateX: verticalOnly ? 0 : this._transX },
+                { translateY: horizontalOnly ? 0 : this._transY },
               ],
             },
           ]}>

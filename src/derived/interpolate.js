@@ -5,19 +5,35 @@ import {
   add,
   divide,
   greaterThan,
+  lessOrEq,
+  eq,
 } from '../operators';
-
-import { createAnimatedCond as cond } from '../core/AnimatedCond';
 import invariant from 'fbjs/lib/invariant';
+
 import AnimatedNode from '../core/AnimatedNode';
+import { createAnimatedCond as cond } from '../core/AnimatedCond';
+import { createAnimatedFunction as proc } from '../core/AnimatedFunction';
+
+const interpolateInternalSingleProc = proc(function(
+  value,
+  inS,
+  inE,
+  outS,
+  outE
+) {
+  const progress = divide(sub(value, inS), sub(inE, inS));
+  // logic below was made in order to provide a compatibility witn an Animated API
+  const resultForNonZeroRange = add(outS, multiply(progress, sub(outE, outS)));
+  const result = cond(eq(inS, inE), cond(lessOrEq(value, inS), outS, outE), resultForNonZeroRange);
+  return result;
+});
 
 function interpolateInternalSingle(value, inputRange, outputRange, offset) {
   const inS = inputRange[offset];
   const inE = inputRange[offset + 1];
   const outS = outputRange[offset];
   const outE = outputRange[offset + 1];
-  const progress = divide(sub(value, inS), sub(inE, inS));
-  return add(outS, multiply(progress, sub(outE, outS)));
+  return interpolateInternalSingleProc(value, inS, inE, outS, outE);
 }
 
 function interpolateInternal(value, inputRange, outputRange, offset = 0) {

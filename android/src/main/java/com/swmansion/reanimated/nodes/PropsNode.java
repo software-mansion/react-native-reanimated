@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -105,10 +106,10 @@ public class PropsNode extends Node implements FinalNode, ConnectedNode {
               dest.putString(key, style.getString(key));
               break;
             case Array:
-              dest.putArray(key, (WritableArray) style.getArray(key));
+              dest.putArray(key, style.getArray(key));
               break;
             default:
-              throw new IllegalArgumentException("Unexpected type " + type);
+              throw new JSApplicationIllegalArgumentException("Unexpected type " + type);
           }
         }
       } else {
