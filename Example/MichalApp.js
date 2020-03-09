@@ -1,7 +1,8 @@
 import React from 'react';
-import { Text, View } from "react-native"
+import { Text, View, Dimensions } from "react-native"
 import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 function MichalApp() {
 
@@ -13,13 +14,24 @@ function MichalApp() {
     const totalY = useSharedValue(0);
     const velocityX = useSharedValue(0);
     const velocityY = useSharedValue(0);
-    const parentWidth = useSharedValue(0);
-    const parentHeight = useSharedValue(0);
+    const parentWidth = useSharedValue(Dimensions.get('window').width);
+    const parentHeight = useSharedValue(Dimensions.get('window').height - getStatusBarHeight(true));
     const first = useSharedValue(1);
 
-    const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY, parentHeight, parentWidth){
+    const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY, parentHeight, parentWidth) {
         'worklet';
-        const cords = [{velocity: velocityX, total: totalX, dim: parentWidth}, {velocity: velocityY, total: totalY, dim: parentHeight}];
+        const cords = [
+            {
+                velocity: velocityX,
+                total: totalX,
+                dim: parentWidth,
+            },
+            {
+                velocity: velocityY,
+                total: totalY,
+                dim: parentHeight,
+            }
+        ];
         for (const cord of cords) {
             const {velocity, total, dim} = cord;
             if (Math.abs(velocity.value) > 0.01) {
@@ -64,9 +76,8 @@ function MichalApp() {
         }
         
     }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY, first])
-
     return (
-        <View style={{flex:1}} onLayout={(e) => {parentHeight.set(e.nativeEvent.layout.height); parentWidth.set(e.nativeEvent.layout.width);}}>
+        <View style={{flex:1}}>
             <PanGestureHandler
                 onGestureEvent={worklet}
                 onHandlerStateChange={worklet}
