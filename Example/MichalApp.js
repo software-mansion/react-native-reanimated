@@ -51,23 +51,19 @@ function MichalApp() {
             return true
         }
     }, [velocityX, velocityY, totalX, totalY, parentHeight, parentWidth]);
-    const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
+    const worklet = useEventWorklet(function(prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
         'worklet';
         if (this.event.state === 2) {
             prevX.set(totalX.value)
             prevY.set(totalY.value)
-            this.stop(ruszable)
+           // this.stop(ruszable)
         }
-
-        x.set(this.event.translationX);
-        y.set(this.event.translationY);
-        totalX.set(x.value + prevX.value);
-        totalY.set(y.value + prevY.value);
+        totalX.set(this.event.translationX + prevX.value);
+        totalY.set(this.event.translationY + prevY.value);
         if (this.event.state === 5) {
-            if (this.start(ruszable)) {
-                velocityX.set(this.event.velocityX)
-                velocityY.set(this.event.velocityY)
-            }
+            velocityX.set(this.event.velocityX);
+            velocityY.set(this.event.velocityY);
+            this.start(ruszable);
         }
         
     }, [prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
