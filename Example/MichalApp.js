@@ -5,9 +5,6 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 function MichalApp() {
-
-    const x = useSharedValue(0);
-    const y = useSharedValue(0);
     const prevX = useSharedValue(0);
     const prevY = useSharedValue(0);
     const totalX = useSharedValue(0);
@@ -16,7 +13,6 @@ function MichalApp() {
     const velocityY = useSharedValue(0);
     const parentWidth = useSharedValue(Dimensions.get('window').width);
     const parentHeight = useSharedValue(Dimensions.get('window').height - getStatusBarHeight(true));
-    const first = useSharedValue(1);
 
     const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY, parentHeight, parentWidth) {
         'worklet';
@@ -51,31 +47,30 @@ function MichalApp() {
             }
         }
 
-
         if (Math.abs(velocityX.value) < 0.01 && Math.abs(velocityY.value) < 0.01) {
             return true
         }
     }, [velocityX, velocityY, totalX, totalY, parentHeight, parentWidth]);
-    const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY, first) {
+    const worklet = useEventWorklet(function(x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
         'worklet';
-        if (first.value) {
-            prevX.set(totalX.value);
-            prevY.set(totalY.value);
-            first.set(0);
+        if (this.event.state === 2) {
+            prevX.set(totalX.value)
+            prevY.set(totalY.value)
+            this.stop(ruszable)
         }
+
         x.set(this.event.translationX);
         y.set(this.event.translationY);
         totalX.set(x.value + prevX.value);
         totalY.set(y.value + prevY.value);
         if (this.event.state === 5) {
-            first.set(1);
-            velocityX.set(this.event.velocityX)
-            velocityY.set(this.event.velocityY)
-            this.notify();
-            this.start(ruszable)
+            if (this.start(ruszable)) {
+                velocityX.set(this.event.velocityX)
+                velocityY.set(this.event.velocityY)
+            }
         }
         
-    }, [x, y, prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY, first])
+    }, [prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
     return (
         <View style={{flex:1}}>
             <PanGestureHandler
