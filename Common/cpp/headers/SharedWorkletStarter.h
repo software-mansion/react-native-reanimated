@@ -10,10 +10,8 @@
 
 class SharedWorkletStarter : public SharedValue {
   public:
-  //std::vector<std::function<void()>> unregisterListeners;
   int workletId, id;
   std::shared_ptr<const std::function<void()>> unregisterListener;
-  std::shared_ptr<int> applierId;
   std::vector<int> args;
     
   SharedWorkletStarter(int svId, int workletId, std::vector<int> args);
