@@ -56,7 +56,7 @@ function MichalApp() {
         if (this.event.state === 2) {
             prevX.set(totalX.value)
             prevY.set(totalY.value)
-           // this.stop(ruszable)
+            this.stop(ruszable)
         }
         totalX.set(this.event.translationX + prevX.value);
         totalY.set(this.event.translationY + prevY.value);

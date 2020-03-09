@@ -9,17 +9,17 @@
 #include <vector>
 
 class SharedWorkletStarter : public SharedValue {
-  std::vector<std::function<void()>> unregisterListeners;
   public:
   int workletId, id;
   std::vector<int> args;
+  std::shared_ptr<const std::function<void()>> unregisterListener;
     
   SharedWorkletStarter(int svId, int workletId, std::vector<int> args);
   jsi::Value asValue(jsi::Runtime &rt) const override;
   jsi::Value asParameter(jsi::Runtime &rt) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
   void willUnregister() override;
-  void addUnregisterListener(const std::function<void()> & fun);
+  void setUnregisterListener(const std::function<void()> & fun);
   
   ~SharedWorkletStarter();
 };

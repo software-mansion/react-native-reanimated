@@ -29,7 +29,10 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         int newApplierId = WorkletModule::applierId--;
         int sharedStarterId = args[0].getNumber();
        
-       SharedWorkletStarter *sharedWorkletStarter =  (SharedWorkletStarter*)( sharedValueRegistry->getSharedValue(sharedStarterId).get());
+        SharedWorkletStarter *sharedWorkletStarter =  (SharedWorkletStarter*)( sharedValueRegistry->getSharedValue(sharedStarterId).get());
+        if (sharedWorkletStarter->unregisterListener != nullptr) {
+            return false;
+        }
        
         int workletId = sharedWorkletStarter->workletId;
         std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
@@ -44,10 +47,27 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
         applierRegistry->registerApplierForRender(newApplierId, applier);
         
-        sharedWorkletStarter->addUnregisterListener([=] () {
+        sharedWorkletStarter->setUnregisterListener([=] () {
           applierRegistry->unregisterApplierFromRender(newApplierId);
         });
 
+        return true;
+     };
+    return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+  } else if (propName == "stop") {
+    auto callback = [this](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+        int sharedStarterId = args[0].getNumber();
+       
+        SharedWorkletStarter *sharedWorkletStarter = (SharedWorkletStarter*)(sharedValueRegistry->getSharedValue(sharedStarterId).get());
+        if (sharedWorkletStarter->unregisterListener != nullptr) {
+          (*sharedWorkletStarter->unregisterListener)();
+          sharedWorkletStarter->unregisterListener = nullptr;
+        }
         return jsi::Value::undefined();
      };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
