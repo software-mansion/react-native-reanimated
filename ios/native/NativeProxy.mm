@@ -93,7 +93,7 @@ RCTUIManager* uiManagerTemporary;
 + (NSArray<NSArray*>*)getChangedSharedValues
 {
   NSMutableArray *changed = [NSMutableArray new];
-  for(auto & sharedValue : nativeReanimatedModule->sharedValueRegistry->sharedValueMap) {
+  for(auto & sharedValue : nativeReanimatedModule->sharedValueRegistry->getSharedValueMap()) {
     int svId = sharedValue.first;
     std::shared_ptr<SharedValue> sv = sharedValue.second;
     if ((!sv->dirty) || (!sv->shouldBeSentToJava)) {

@@ -17,7 +17,7 @@ const workletBody = new Worklet(function(startTime, started, width, maxWidth, du
     width.set(delta / duration.value * maxWidth.value);
 });
 
-const MichalAppSpeedTest = () => {
+const SpeedTest = () => {
     const worklets = [];
     const numberOfSquares = 100;
     const width = useSharedValue(0);
@@ -61,4 +61,4 @@ const MichalAppSpeedTest = () => {
     )
 }
 
-export default MichalAppSpeedTest
+export default SpeedTest

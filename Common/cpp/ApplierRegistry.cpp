@@ -68,3 +68,13 @@ bool ApplierRegistry::anyApplierRegisteredForEvent(std::string eventName) {
 }
 
 
+std::unordered_map<int, std::shared_ptr<Applier>> ApplierRegistry::getRenderAppliers() const
+{
+  return this->renderAppliers;
+}
+
+std::map<int, std::string> ApplierRegistry::getEventMapping() const
+{
+  return this->eventMapping;
+}
+

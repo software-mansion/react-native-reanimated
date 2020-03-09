@@ -5,7 +5,7 @@ import Animated, { useSharedValue } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
 
-const MichalAppJustSet = () => {
+const SharedValueTest = () => {
 
   const x = useSharedValue(0);
   const y = useSharedValue(0);
@@ -39,4 +39,4 @@ const MichalAppJustSet = () => {
   )
 }
 
-export default MichalAppJustSet
+export default SharedValueTest

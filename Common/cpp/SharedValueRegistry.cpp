@@ -22,3 +22,8 @@ std::shared_ptr<SharedValue> SharedValueRegistry::getSharedValue(int id) {
   }
   return it->second;
 }
+
+
+std::unordered_map<int, std::shared_ptr<SharedValue>> SharedValueRegistry::getSharedValueMap() const {
+  return this->sharedValueMap;
+}

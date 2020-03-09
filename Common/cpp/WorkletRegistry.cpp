@@ -21,3 +21,7 @@ std::shared_ptr<Worklet> WorkletRegistry::getWorklet(int id) {
 void WorkletRegistry::setWorkletListener(int workletId, std::shared_ptr<std::function<void()>> listener) {
   workletMap[workletId]->listener = listener;
 }
+
+std::unordered_map<int, std::shared_ptr<Worklet>> WorkletRegistry::getWorkletMap() const {
+  return this->workletMap;
+}

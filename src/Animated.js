@@ -72,6 +72,7 @@ import SharedValue from './reanimated2/SharedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import { useWorklet, useEventWorklet, useSharedValue } from './reanimated2/Hooks';
+import RegistersState from './reanimated2/RegistersState';
 
 export {
   Easing,
@@ -97,4 +98,5 @@ export {
   useWorklet,
   useEventWorklet,
   useSharedValue,
+  RegistersState,
 };

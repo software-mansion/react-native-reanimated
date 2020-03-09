@@ -37,7 +37,7 @@ void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
   double id,
   std::string functionAsString) {
-  scheduler->scheduleOnUI([functionAsString, id, this]() mutable {
+    scheduler->scheduleOnUI([functionAsString, id, this]() mutable {
     auto fun = function(*runtime, functionAsString.c_str());
     std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
     this->workletRegistry->registerWorklet((int)id, funPtr);
@@ -212,26 +212,53 @@ NativeReanimatedModule::~NativeReanimatedModule() {
 
 // test method
 
-void NativeReanimatedModule::call(
-  jsi::Runtime &rt,
-  const jsi::Function &callback) {
+/*
+  used for tests
+*/
+void NativeReanimatedModule::getRegistersState(jsi::Runtime &rt, int option, const jsi::Value &value) {
+  // option:
+  //  1 - shared values
+  //  2 - worklets
+  //  3 - appliers
+  jsi::Function fun = value.getObject(rt).asFunction(rt);
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
-  jsi::WeakObject * fun = new jsi::WeakObject(rt, callback);
-  std::shared_ptr<jsi::WeakObject> sharedFunction(fun);
-
-  scheduler->scheduleOnUI([&rt, sharedFunction, this] () mutable {
-     scheduler->scheduleOnJS([&rt, sharedFunction] () mutable {
-        jsi::Value val = sharedFunction->lock(rt);
-        jsi::Function cb = val.asObject(rt).asFunction(rt);
-        cb.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));
-     });
+  scheduler->scheduleOnUI([&rt, funPtr, this, option]() {
+    std::string ids;
+    switch(option) {
+      case 1: {
+        for(auto &it : sharedValueRegistry->getSharedValueMap()) {
+          ids += std::to_string(it.first) + " ";
+        }
+        break;
+      }
+      case 2: {
+        for(auto it : workletRegistry->getWorkletMap()) {
+          ids += std::to_string(it.first) + " ";
+        }
+        break;
+      }
+      case 3: {
+        for(auto &it : applierRegistry->getRenderAppliers()) {
+          ids += std::to_string(it.first) + " ";
+        }
+        for(auto &it : applierRegistry->getEventMapping()) {
+          ids += std::to_string(it.first) + " ";
+        }
+        break;
+      }
+      default: {
+        ids = "error: registers state invalid option provided ";
+      }
+    }
+    if (ids.size() > 0) {
+      ids.pop_back();
+    }
+    scheduler->scheduleOnJS([&rt, ids, funPtr] () {
+      funPtr->call(rt, ids.c_str());
+    });
   });
-  /*scheduler->scheduleOnJS([] () mutable {
-    __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "resultt2 OK");
-  });
-  callback.call(rt,  jsi::String::createFromUtf8(rt, "natywny string dla callback-a"));*/
 }
-
 
 }
 }

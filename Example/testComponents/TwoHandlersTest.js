@@ -17,7 +17,7 @@ const panWorkletBody = new Worklet(function(a, prev, total, velocity, cord, numb
     total.set(a.value + prev.value);
 });
 */
-const MichalAppTwoHandlers = () => {
+const TwoHandlersTest = () => {
 
     return <Text>MichalAppTwoHandlers works</Text>
 /*
@@ -76,4 +76,4 @@ const MichalAppTwoHandlers = () => {
     */
 }
 
-export default MichalAppTwoHandlers
+export default TwoHandlersTest

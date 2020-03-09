@@ -10,26 +10,22 @@ import {
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
-import MichalApp from './MichalApp'
-import MichalAppJustSet from './MichalAppJustSet'
-import MichalAppNotify from './MichalAppNotify'
-import MichalAppSpeedTest from './MichalAppSpeedTest'
-import MichalAppTwoHandlers from './MichalAppTwoHandlers'
-import SzymonRotationScreen from './SzymonRotationScreen';
-import SzymonRotationWithResetScreen from './SzymonRotationWithReset'
-import SzymonStartStopScreen from './SzymonStartStopScreen';
+import DragTest from './testComponents/DragTest'
+import SharedValueTest from './testComponents/SharedValuesTest'
+import NotifyTest from './testComponents/NotifyTest'
+import SpeedTest from './testComponents/SpeedTest'
+import TwoHandlersTest from './testComponents/TwoHandlersTest'
+import CleanupTest from './testComponents/CleanUpTest'
 
 
 // set components here:
 const components = {
-  'MichalApp': MichalApp,
-  'MichalAppJustSet': MichalAppJustSet,
-  'MichalAppNotify': MichalAppNotify,
-  'MichalAppSpeedTest': MichalAppSpeedTest,
-  'MichalAppTwoHandlers': MichalAppTwoHandlers,
-  'SzymonRotation': SzymonRotationScreen,
-  'SzymonRotationWithReset': SzymonRotationWithResetScreen,
-  'SzymonStartStop': SzymonStartStopScreen,
+  'DragTest': DragTest,
+  'SharedValueTest': SharedValueTest,
+  'NotifyTest': NotifyTest,
+  'SpeedTest': SpeedTest,
+  'TwoHandlersTest': TwoHandlersTest,
+  'CleanupTest': CleanupTest,
 }
 
 YellowBox.ignoreWarnings([
@@ -50,7 +46,11 @@ class MainScreen extends React.Component {
         <Text>Pick the screen:</Text>
         {
           Object.keys(components).map(item => {
-            return <Button title={ item } onPress={ () => { this.props.navigation.navigate(item) } } key={ item } />
+            return (
+              <View style={ { margin: 10 } } key={ item }>
+                <Button title={ item } onPress={ () => { this.props.navigation.navigate(item) } } />
+              </View>
+              )
           })
         }
       </View>
