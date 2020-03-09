@@ -21,10 +21,11 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   module->setWorkletId(worklet->workletId);
   module->setApplierId(applierId);
 
-  bool shouldFinish = worklet->body->callWithThis(rt,
+  jsi::Value returnValue = worklet->body->callWithThis(rt,
                             jsi::Object::createFromHostObject(rt, module),
                             static_cast<const jsi::Value*>(args),
-                            (size_t)sharedValues.size()).getBool();
+                            (size_t)sharedValues.size());
+  bool shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
 
   delete [] args;
   return shouldFinish;

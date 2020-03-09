@@ -14,8 +14,6 @@ export default class WorkletEventHandler {
   }
 
   registerForEvent(viewTag, eventName) {
-    console.warn("register for ", viewTag+eventName);
-    console.warn("workletID ", this.worklet.id);
     NativeModule.registerEventApplier(this.id, viewTag+eventName, this.worklet.id, this.sharedValueIds);
   }
 

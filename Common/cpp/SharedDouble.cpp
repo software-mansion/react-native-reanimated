@@ -20,7 +20,7 @@ void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->dirty = true;
 }
 
-jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
 
   class HO : public jsi::HostObject {
     public:
@@ -37,18 +37,8 @@ jsi::Object SharedDouble::asParameter(jsi::Runtime &rt) {
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       auto propName = name.utf8(rt);
 
-      if (propName == "get") {
-
-        auto callback = [this](
-          jsi::Runtime &runtime,
-          const jsi::Value &thisValue,
-          const jsi::Value *arguments,
-          size_t count
-        ) -> jsi::Value {
+      if (propName == "value") {
           return jsi::Value(*value);
-        };
-        return jsi::Function::createFromHostFunction(rt, name, 0, callback);
-
       } else if (propName == "set") {
 
         auto callback = [this](

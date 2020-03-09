@@ -441,6 +441,11 @@ public class NodesManager implements EventDispatcherListener {
 
   public void setValue(int nodeID, Double newValue) {
     Node node = mAnimatedNodes.get(nodeID);
-    ((ValueNode) node).setValue(newValue);
+    if (node instanceof  ValueNode) {
+      ((ValueNode) node).setValue(newValue);
+    } else if (node instanceof SharedValueNode) {
+      ((SharedValueNode) node).setValue(newValue);
+    }
+
   }
 }

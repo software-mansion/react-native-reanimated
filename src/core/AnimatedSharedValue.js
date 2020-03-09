@@ -1,4 +1,5 @@
 import AnimatedNode from './AnimatedNode';
+import ReanimatedModule from '../ReanimatedModule';
 
 // Animated value wrapped with extra methods for omit cycle of dependencies
 export default class AnimatedSharedValue extends AnimatedNode {
@@ -10,10 +11,16 @@ export default class AnimatedSharedValue extends AnimatedNode {
             initialValue: sharedValue.initialValue,
         }, [],
     );
-  }  
+    this.sharedValue = sharedValue;
+  }
 
-  setValue(value) {
-    //TODO
+  set(value) {
+    this.sharedValue.set(value);
+    ReanimatedModule.setValue(this.__nodeID, value);
+  }
+
+  async get() {
+    return this.sharedValue.get();
   }
   
   toString() {

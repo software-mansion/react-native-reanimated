@@ -7,7 +7,20 @@ export default class SharedValue {
   constructor(value) {
     this.id = SharedValue.idCounter++;
     this.initialValue = value;
-    NativeModule.registerSharedValue(this.id, value);
+
+    if (value.isWorklet) {
+      const argIds = [];
+      for (let arg of value.args) {
+        argIds.push(arg.id);
+      }
+      this.initialValue = { 
+        workletId: value.body.id, 
+        isWorklet: true,
+        argIds,
+      };
+    }
+
+    NativeModule.registerSharedValue(this.id, this.initialValue);
     this.callbacks = {}
   }
 
