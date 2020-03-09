@@ -15,6 +15,7 @@ import MichalAppJustSet from './MichalAppJustSet'
 import MichalAppNotify from './MichalAppNotify'
 import MichalAppSpeedTest from './MichalAppSpeedTest'
 import MichalAppTwoHandlers from './MichalAppTwoHandlers'
+import SzymonMemoryScreen from './SzymonMemoryScreen';
 
 
 // set components here:
@@ -24,6 +25,7 @@ const components = {
   'MichalAppNotify': MichalAppNotify,
   'MichalAppSpeedTest': MichalAppSpeedTest,
   'MichalAppTwoHandlers': MichalAppTwoHandlers,
+  'SzmyonAppTestingMemoryManagment': SzymonMemoryScreen,
 }
 
 YellowBox.ignoreWarnings([
