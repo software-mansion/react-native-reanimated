@@ -30,10 +30,9 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         int sharedStarterId = args[0].getNumber();
        
         SharedWorkletStarter *sharedWorkletStarter =  (SharedWorkletStarter*)( sharedValueRegistry->getSharedValue(sharedStarterId).get());
-        if (sharedWorkletStarter->applierId != nullptr) {
+        if (sharedWorkletStarter->unregisterListener != nullptr) {
             return false;
         }
-        sharedWorkletStarter->applierId = std::make_shared<int>(newApplierId);
        
         int workletId = sharedWorkletStarter->workletId;
         std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
@@ -63,7 +62,6 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         int sharedStarterId = args[0].getNumber();
        
         SharedWorkletStarter *sharedWorkletStarter = (SharedWorkletStarter*)(sharedValueRegistry->getSharedValue(sharedStarterId).get());
-        sharedWorkletStarter->applierId = nullptr;
         if (sharedWorkletStarter->unregisterListener != nullptr) {
           (*sharedWorkletStarter->unregisterListener)();
           sharedWorkletStarter->unregisterListener = nullptr;
