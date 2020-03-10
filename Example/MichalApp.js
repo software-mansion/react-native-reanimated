@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, View, Dimensions } from "react-native"
 import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
-import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 function MichalApp() {
     const prevX = useSharedValue(0);
@@ -12,7 +11,7 @@ function MichalApp() {
     const velocityX = useSharedValue(0);
     const velocityY = useSharedValue(0);
     const parentWidth = useSharedValue(Dimensions.get('window').width);
-    const parentHeight = useSharedValue(Dimensions.get('window').height - getStatusBarHeight(true));
+    const parentHeight = useSharedValue(Dimensions.get('window').height);
 
     const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY, parentHeight, parentWidth) {
         'worklet';
@@ -68,7 +67,7 @@ function MichalApp() {
         
     }, [prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
     return (
-        <View style={{flex:1}}>
+        <View style={{flex:1}} onLayout={(e)=>{parentHeight.set(e.nativeEvent.layout.height); parentWidth.set(e.nativeEvent.layout.width);}}>
             <PanGestureHandler
                 onGestureEvent={worklet}
                 onHandlerStateChange={worklet}
