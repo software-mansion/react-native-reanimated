@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+// @refresh reset
+import { useEffect, useRef, useLayoutEffect } from 'react';
 import AnimatedSharedValue from '../core/AnimatedSharedValue';
 import SharedValue from './SharedValue';
 import Worklet from './Worklet';
@@ -54,6 +55,13 @@ function commonCode(body, args, createRes) {
     releaseObj.current = init()
   }
 
+  useLayoutEffect(() => {
+    console.log('common useLayoutEffect');
+    return () => {
+      console.log('clear common useLayoutEffect');
+    };
+  }, []);
+
   useEffect(() => {
     return () => {
       if (!releaseObj.current) return;
@@ -106,6 +114,7 @@ export function useSharedValue(initial) {
     return () => {
       if (sv.current) { 
         sv.current.sharedValue.release();
+        sv.current = null;
       }
       console.log("clear");
     }
