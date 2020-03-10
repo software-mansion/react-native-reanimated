@@ -431,10 +431,10 @@
 
   REANode *node = _nodes[nodeID];
 
-  RCTAssertParam(node);
-
-  REAValueNode *valueNode = (REAValueNode *)node;
-  [valueNode setValue:newValue];
+  if (node) {
+    REAValueNode *valueNode = (REAValueNode *)node;
+    [valueNode setValue:newValue];
+  }
 }
 
 @end

@@ -2,6 +2,7 @@ import {
   TurboModuleRegistry,
 } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
+
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
 export default {

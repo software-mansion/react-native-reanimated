@@ -15,7 +15,9 @@ import MichalAppJustSet from './MichalAppJustSet'
 import MichalAppNotify from './MichalAppNotify'
 import MichalAppSpeedTest from './MichalAppSpeedTest'
 import MichalAppTwoHandlers from './MichalAppTwoHandlers'
-import SzymonMemoryScreen from './SzymonMemoryScreen';
+import SzymonRotationScreen from './SzymonRotationScreen';
+import SzymonRotationWithResetScreen from './SzymonRotationWithReset'
+import SzymonStartStopScreen from './SzymonStartStopScreen';
 
 
 // set components here:
@@ -25,7 +27,9 @@ const components = {
   'MichalAppNotify': MichalAppNotify,
   'MichalAppSpeedTest': MichalAppSpeedTest,
   'MichalAppTwoHandlers': MichalAppTwoHandlers,
-  'SzmyonAppTestingMemoryManagment': SzymonMemoryScreen,
+  'SzymonRotation': SzymonRotationScreen,
+  'SzymonRotationWithReset': SzymonRotationWithResetScreen,
+  'SzymonStartStop': SzymonStartStopScreen,
 }
 
 YellowBox.ignoreWarnings([
