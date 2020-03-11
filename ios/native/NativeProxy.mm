@@ -127,5 +127,29 @@ RCTUIManager* uiManagerTemporary;
   return changed;
 }
 
++ (NSObject*)getSharedValue: (double) id
+{
+    std::shared_ptr<SharedValue> sv = nativeReanimatedModule->getSharedValue(id);
+    NSObject *value;
+    
+    switch (sv->type)
+    {
+        case 'D':
+        {
+            double dvalue = ((SharedDouble*)(sv.get()))->value;
+            value = [NSNumber numberWithDouble:dvalue];
+            break;
+        }
+        case 'S':
+        {
+            std::string str = ((SharedString*)(sv.get()))->value;
+            value = [NSString stringWithCString:str.c_str()
+            encoding:[NSString defaultCStringEncoding]];
+            break;
+        }
+    }
+    return value;
+}
+
 @end
 

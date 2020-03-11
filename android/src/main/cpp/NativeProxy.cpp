@@ -154,6 +154,11 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
 }
 
 extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_NativeProxy_getSharedValue(JNIEnv* env, double id) {
+  return nrm->getSharedValue(id)
+}
+
+extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jclass clazz, jbyteArray eventHash, jbyteArray eventObj) {
   std::string eventAsString = byteArrayToString(env, eventObj);
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "event: %s", eventAsString.c_str());
