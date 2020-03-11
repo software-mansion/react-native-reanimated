@@ -64,4 +64,6 @@ public class NativeProxy {
     }
   }
 
+  public static native Object getSharedValue(int id);
+
 }

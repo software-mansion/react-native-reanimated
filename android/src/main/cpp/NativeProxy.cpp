@@ -155,7 +155,29 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getSharedValue(JNIEnv* env, double id) {
-  return nrm->getSharedValue(id)
+  std::shared_ptr<SharedValue> sv = nrm->getSharedValue(id);
+
+  // This is needed to go from double to Double (boxed)
+  jclass doubleClass = env->FindClass("java/lang/Double");
+  jmethodID doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
+
+  jobject result;
+  switch (sv->type)
+  {
+    case 'D':
+    {
+      double val = ((SharedDouble*)(sv.get()))->value;
+      result = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
+      break;
+    }
+    case 'S':
+    {
+      std::string str = ((SharedString*)(sv.get()))->value;
+      result = env->NewStringUTF(str.c_str());
+      break;
+    }
+  }
+  return result;
 }
 
 extern "C" JNIEXPORT jobject JNICALL
