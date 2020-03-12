@@ -49,6 +49,8 @@ public class NativeProxy {
     }
   }
 
+  public static native void clear();
+
   static class EventHijacker implements RCTEventEmitter {
     @Override
     public void receiveEvent(int targetTag, String eventName, @Nullable WritableMap event) {
