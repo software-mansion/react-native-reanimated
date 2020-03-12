@@ -46,7 +46,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
     void render();
     void onEvent(std::string eventName, std::string eventAsString);
-    std::shared_ptr<SharedValue> getSharedValue(double id);
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 

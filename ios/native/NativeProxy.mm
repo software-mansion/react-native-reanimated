@@ -102,25 +102,7 @@ RCTUIManager* uiManagerTemporary;
     sv->dirty = false;
 
     NSNumber *sharedValueId = [NSNumber numberWithInteger: svId];
-    NSObject *value;
-
-    // temporary solution
-    switch (sv->type)
-    {
-      case 'D':
-      {
-        double val = ((SharedDouble*)(sv.get()))->value;
-        value = [NSNumber numberWithDouble:val];
-        break;
-      }
-      case 'S':
-      {
-        std::string str = ((SharedString*)(sv.get()))->value;
-        value = [NSString stringWithCString:str.c_str()
-        encoding:[NSString defaultCStringEncoding]];
-        break;
-      }
-    }
+    NSObject *value = [self sharedValueToNSObject: (void*)(sv.get())];
     [changed addObject:@[sharedValueId, value]];
   }
 
@@ -129,27 +111,39 @@ RCTUIManager* uiManagerTemporary;
 
 + (NSObject*)getSharedValue: (double) id
 {
-    std::shared_ptr<SharedValue> sv = nativeReanimatedModule->getSharedValue(id);
+    std::shared_ptr<SharedValue> sv = nativeReanimatedModule->sharedValueRegistry->getSharedValue(id);
+    return [self sharedValueToNSObject: (void*)(sv.get())];
+}
+
+
++ (NSObject*)sharedValueToNSObject: (void*) sv
+{
+    if (sv == nullptr) {
+        return nullptr;
+    }
+    SharedValue* svptr = (SharedValue*)sv;
     NSObject *value;
     
-    switch (sv->type)
+    switch (svptr->type)
     {
         case 'D':
         {
-            double dvalue = ((SharedDouble*)(sv.get()))->value;
+            double dvalue = ((SharedDouble*)(svptr))->value;
             value = [NSNumber numberWithDouble:dvalue];
             break;
         }
         case 'S':
         {
-            std::string str = ((SharedString*)(sv.get()))->value;
+            std::string str = ((SharedString*)(svptr))->value;
             value = [NSString stringWithCString:str.c_str()
             encoding:[NSString defaultCStringEncoding]];
             break;
+        }
+        default: {
+            return nullptr;
         }
     }
     return value;
 }
 
 @end
-

@@ -129,10 +129,6 @@ void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, co
 
 }
 
-std::shared_ptr<SharedValue> NativeReanimatedModule::getSharedValue(double id) {
-  return sharedValueRegistry->getSharedValue(id);
-}
-
 void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
   if (value.isNumber()) {
     std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
