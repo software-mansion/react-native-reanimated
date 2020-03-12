@@ -16,5 +16,9 @@ void SharedValueRegistry::unregisterSharedValue(int id) {
 }
 
 std::shared_ptr<SharedValue> SharedValueRegistry::getSharedValue(int id) {
-  return sharedValueMap[id];
+  auto it = sharedValueMap.find(id);
+  if (it == sharedValueMap.end()) {
+    return nullptr;
+  }
+  return it->second;
 }

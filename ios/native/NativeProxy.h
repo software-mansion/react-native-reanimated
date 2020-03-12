@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)anyRenderApplier;
 
 + (void*)getNativeReanimatedModule:(void*)jsInvokerVoidPtr;
++ (NSObject*)getSharedValue: (double) id;
++ (NSObject*)sharedValueToNSObject: (void*) sv;
 
 @end
 

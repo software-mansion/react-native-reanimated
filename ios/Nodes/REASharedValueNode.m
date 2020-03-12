@@ -6,6 +6,7 @@
 //
 
 #import "REASharedValueNode.h"
+#import "NativeProxy.h"
 
 @implementation REASharedValueNode {
   NSObject *_value;
@@ -16,8 +17,8 @@
                     config:(NSDictionary<NSString *, id> *)config
 {
   if (self = [super initWithID:nodeID config:config]) {
-    _value = config[@"initialValue"];
-    svId = config[@"sharedValueId"];
+      svId = config[@"sharedValueId"];
+      _value = [NativeProxy getSharedValue:[svId doubleValue]];
     [[REASharedValueNode getSharedValues] setObject:self forKey:svId];
   }
   return self;

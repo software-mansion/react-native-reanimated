@@ -2,6 +2,7 @@ package com.swmansion.reanimated.nodes;
 
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
+import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 
 import java.util.HashMap;
@@ -22,12 +23,13 @@ public class SharedValueNode extends Node {
 
     id = (int) config.getDouble("sharedValueId");
     mSharedValueMap.put(id, this);
-
+    
+    String obtainedSharedValue = NativeProxy.getSharedValue(id).toString();
     ReadableType type = config.getType("initialValue");
     if (type == ReadableType.String) {
-      mValue = config.getString("initialValue");
+      mValue = obtainedSharedValue;
     } else if (type == ReadableType.Number) {
-      mValue = config.getDouble("initialValue");
+      mValue = Double.valueOf(obtainedSharedValue);
     } else if (type == ReadableType.Null) {
       mValue = null;
     } else {
