@@ -45,11 +45,16 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         }
 
         std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
-        applierRegistry->registerApplierForRender(newApplierId, applier);
+        
+        applier->addOnFinishListener([=] {
+          sharedWorkletStarter->setUnregisterListener(nullptr);
+        });
         
         sharedWorkletStarter->setUnregisterListener([=] () {
           applierRegistry->unregisterApplierFromRender(newApplierId);
         });
+       
+        applierRegistry->registerApplierForRender(newApplierId, applier);
 
         return true;
      };
