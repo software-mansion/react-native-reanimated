@@ -103,6 +103,7 @@ RCTUIManager* uiManagerTemporary;
 
     NSNumber *sharedValueId = [NSNumber numberWithInteger: svId];
     NSObject *value = [self sharedValueToNSObject: (void*)(sv.get())];
+    RCTAssert(value != nullptr, @"Shared value not found");
     [changed addObject:@[sharedValueId, value]];
   }
 
