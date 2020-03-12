@@ -21,6 +21,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [_nodesManager invalidate];
   [self.bridge.eventDispatcher removeDispatchObserver:self];
   [self.bridge.uiManager.observerCoordinator removeObserver:self];
+  [NativeProxy clear];
 }
 
 - (dispatch_queue_t)methodQueue

@@ -30,6 +30,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       std::shared_ptr<WorkletRegistry> wr,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<JSCallInvoker> jsInvoker);
+    virtual ~NativeReanimatedModule();
     void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) override;
     void unregisterWorklet(jsi::Runtime &rt, double id) override;
     void setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) override;
@@ -49,10 +50,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
     void call(jsi::Runtime &rt, const jsi::Function &callback) override;
 
+    std::unique_ptr<jsi::Runtime> runtime;
+    std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<WorkletRegistry> workletRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
-    std::shared_ptr<ApplierRegistry> applierRegistry;
-    std::unique_ptr<jsi::Runtime> runtime;
+  
 };
 
 }

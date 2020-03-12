@@ -74,7 +74,7 @@ RCTUIManager* uiManagerTemporary;
     uiManagerTemporary = nullptr;
   }
   
-  std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)scheduler.get());
+  std::shared_ptr<Scheduler> schedulerForModule(scheduler);
   std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
   std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry());
