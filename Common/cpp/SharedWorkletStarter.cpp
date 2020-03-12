@@ -33,6 +33,10 @@ void SharedWorkletStarter::willUnregister() {
 }
 
 void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & fun) {
+  if (fun == nullptr) {
+    this->unregisterListener = nullptr;
+    return;
+  }
   this->unregisterListener = std::make_shared<const std::function<void()>>(std::move(fun));
 }
 

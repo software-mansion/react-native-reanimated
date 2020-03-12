@@ -27,7 +27,22 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
                             (size_t)sharedValues.size());
   bool shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
 
+  if (shouldFinish) {
+    finish();
+  }
+  
   delete [] args;
   return shouldFinish;
+}
+
+void Applier::addOnFinishListener(const std::function<void()> &listener) {
+  onFinishListeners.push_back(listener);
+}
+
+void Applier::finish() {
+  while (onFinishListeners.size() > 0) {
+    onFinishListeners.back()();
+    onFinishListeners.pop_back();
+  }
 }
 
