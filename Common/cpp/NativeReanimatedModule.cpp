@@ -206,6 +206,10 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
   applierRegistry->event(*runtime, eventName, ho);
 }
 
+NativeReanimatedModule::~NativeReanimatedModule() {
+  // noop
+}
+
 // test method
 
 void NativeReanimatedModule::call(
