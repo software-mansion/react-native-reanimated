@@ -71,6 +71,11 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   }
 
   @Override
+  public void onCatalystInstanceDestroy() {
+    NativeProxy.clear();
+  }
+
+  @Override
   public void onHostPause() {
     if (mNodesManager != null) {
       mNodesManager.onHostPause();

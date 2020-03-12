@@ -26,7 +26,6 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 }
 
 std::shared_ptr<Scheduler> scheduler;
-
 std::shared_ptr<NativeReanimatedModule> nrm;
 
 extern "C" JNIEXPORT void JNICALL
@@ -160,6 +159,12 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEn
   nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
 
   return getChangedSharedValues(env);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_swmansion_reanimated_NativeProxy_clear(JNIEnv* env) {
+  nrm.reset();
+  scheduler.reset();
 }
 
 // tests (temporary)
