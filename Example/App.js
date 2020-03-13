@@ -10,6 +10,7 @@ import {
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
+import Menu from './Menu';
 import DragTest from './testComponents/DragTest';
 import SharedValueTest from './testComponents/SharedValuesTest';
 import NotifyTest from './testComponents/NotifyTest';
@@ -23,9 +24,9 @@ import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
 import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
 import { ScrollView } from 'react-native-gesture-handler';
 
-
 // set components here:
 const components = {
+  '3D Menu': Menu,
   'DragTest': DragTest,
   'SharedValueTest': SharedValueTest,
   'NotifyTest': NotifyTest,
@@ -71,12 +72,12 @@ class MainScreen extends React.Component {
   }
 }
 
-const screens = {}
+const screens = {};
 for (let key in components) {
   screens[key] = {
     screen: components[key],
     title: key,
-  }
+  };
 }
 
 const ExampleApp = createStackNavigator(
@@ -95,5 +96,5 @@ const createApp = Platform.select({
   default: input => createAppContainer(input),
 });
 
-
-export default createApp(ExampleApp);
+// export default createApp(ExampleApp);
+export default Menu;

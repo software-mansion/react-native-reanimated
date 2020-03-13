@@ -90,7 +90,7 @@ export default function createAnimatedComponent(Component) {
         } else if (prop instanceof WorkletEventHandler) {
           prop = [prop];
         } 
-        
+
         if (this._isArrayOfWorklets(prop)) {
           for (let handler of prop) {
             handler.registerForEvent(viewTag, key);
@@ -108,8 +108,8 @@ export default function createAnimatedComponent(Component) {
           prop.detachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
           prop = [prop];
-        } 
-        
+        }
+
         if (this._isArrayOfWorklets(prop)) {
           for (let handler of prop) {
             handler.unregisterFromEvent();
