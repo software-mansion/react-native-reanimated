@@ -91,11 +91,17 @@ const Reanimated = {
     IDENTITY: 'identity',
   },
 
-  add: (a, b) => new AnimatedValue(getValue(a) + getValue(b)),
-  sub: (a, b) => new AnimatedValue(getValue(a) - getValue(b)),
-  multiply: (a, b) => new AnimatedValue(getValue(a) * getValue(b)),
-  divide: (a, b) => new AnimatedValue(getValue(a) / getValue(b)),
-  pow: (a, b) => new AnimatedValue(getValue(a) ** getValue(b)),
+  
+  add: (...vals) =>
+    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc + v)),
+  sub: (...vals) =>
+    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc - v)),
+  divide: (...vals) =>
+    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc / v)),
+  multiply: (...vals) =>
+    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc * v)),
+  pow: (...vals) =>
+    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc ** v)),
   modulo: (a, b) => new AnimatedValue(getValue(a) % getValue(b)),
   sqrt: a => new AnimatedValue(Math.sqrt(getValue(a))),
   log: a => new AnimatedValue(Math.log(getValue(a))),
