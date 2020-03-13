@@ -51,7 +51,9 @@ export function sanitizeArgMapping(argMapping) {
 
 
   const traverse = (value, path) => {
-    if (value instanceof AnimatedNode) {
+    if (path[path.length - 1] === '__isProxy') {
+      return;
+    } else if (value instanceof AnimatedNode) {
       children.push(value);
       objectMappings.push(path.concat(getNode(value)));
     } else if (typeof value === 'object' && value.__val) {
