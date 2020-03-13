@@ -1,6 +1,8 @@
 import React from 'react';
-import Animated, { useSharedValue, useWorklet, RegistersState } from 'react-native-reanimated';
+import Animated, { useSharedValue, useWorklet, useEventWorklet, RegistersState } from 'react-native-reanimated';
 import { View, Text } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
+import { color } from '../../src/derived';
 
 const workletBody = function(a, b, c) {
     'worklet'
@@ -11,16 +13,17 @@ const workletBody = function(a, b, c) {
     a.set(oldB)
     return true
 }
-/*
+
 const eventWorkletBody = function(a, b) {
     'worklet'
+    this.log(`event worklet called ${ a.value }/${ b.value }`)
     if (this.event.state === 2) {
         a.set(this.event.translationX)
         b.set(this.event.translationY)
         return true
     }
 }
-*/
+
 
 const Child = (props) => {
 
@@ -32,8 +35,8 @@ const Child = (props) => {
 
     const toBeTested = [
         'sharedValues',
-        //'worklets',
-        //'eventWorklets',
+        'worklets',
+        'eventWorklets',
     ]
 
     ;(() => {
@@ -58,40 +61,59 @@ const Child = (props) => {
 
         if (toBeTested.includes('eventWorklets')) {
             const eStartingIndex = Math.min(i, n - 2)
-            eventWorklets.push(useEventWorklet(eventWorkletBody, [
-                svs[eStartingIndex],
-                svs[eStartingIndex + 1],
-            ]))
+            for (var i = 0; i < n; ++i) {
+              eventWorklets.push(useEventWorklet(eventWorkletBody, [
+                  svs[eStartingIndex],
+                  svs[eStartingIndex + 1],
+              ]))
+            }
         }
 
         for (let worklet of worklets) {
             worklet();
         }
-        
     })();
 
-    /*
+    
     const generateHandlers = function(eventWorklet) {
-        return (
-            <PanGestureHandler
-                onHandlerStateChange={eventWorklet}
-                onGestureEvent={eventWorklet}
-            >
-                <Animated.View
-                    style={{
-                        width: 100,
-                        height: 100,
-                        backgroundColor: 'blue',
-                        margin: 5,
-                    }}
-                />
-            </PanGestureHandler>
-        )
+      if (!toBeTested.includes('eventWorklets')) {
+        return <></>
+      }
+      let elements = []
+      let key = 0
+      const size = 50
+      const colors = ['red', 'green', 'blue', 'yellow']
+      for (let eventWorklet of eventWorklets) {
+        elements.push(
+          <PanGestureHandler
+              onHandlerStateChange={eventWorklet}
+              onGestureEvent={eventWorklet}
+              key={ key++ }
+          >
+              <Animated.View
+                  style={{
+                      width: size,
+                      height: size,
+                      backgroundColor: colors[key % color.length],
+                      margin: 5,
+                      transform: [{
+                          translateX: (size*key)
+                      },
+                      {
+                          translateY: (props.id*size*.05)
+                      }],
+                  }}
+              />
+          </PanGestureHandler>
+      )
+      }
+      return elements.map(item => item)
     }
-    */
+
     return (
         <View>
             <Text>{ props.id }</Text>
+            { generateHandlers() }
         </View>
     )
 }
@@ -171,16 +193,19 @@ class Wrapper extends React.Component {
         await this.obtainState(this.finalState)
         if (JSON.stringify(this.initialState) === JSON.stringify(this.finalState)) {
             console.log('cleanup successful')
-            return
+        } else {
+          console.warn('cleanup failed')
+          console.log(JSON.stringify(this.initialState))
+          console.log(JSON.stringify(this.finalState))
         }
-        console.warn('cleanup failed')
-        console.log(JSON.stringify(this.initialState))
-        console.log(JSON.stringify(this.finalState))
         this.setState({ cleanupPhase: cleanupPhase.checked })
     }
 
     renderChildren = () => {
         if (!this.initialState.obtained || this.state.cleanupPhase !== cleanupPhase.rendering) {
+          if (this.state.cleanupPhase === cleanupPhase.checked) {
+            return <Text>All tests done!</Text>
+          }
             return <></>;
         }
         let cdn = []
