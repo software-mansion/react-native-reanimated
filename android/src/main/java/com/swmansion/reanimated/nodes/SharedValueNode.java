@@ -24,17 +24,11 @@ public class SharedValueNode extends Node {
     id = (int) config.getDouble("sharedValueId");
     mSharedValueMap.put(id, this);
     
-    String obtainedSharedValue = NativeProxy.getSharedValue(id).toString();
-    ReadableType type = config.getType("initialValue");
-    if (type == ReadableType.String) {
-      mValue = obtainedSharedValue;
-    } else if (type == ReadableType.Number) {
-      mValue = Double.valueOf(obtainedSharedValue);
-    } else if (type == ReadableType.Null) {
-      mValue = null;
-    } else {
-      throw new IllegalStateException("Not supported value type. Must be boolean, number or string");
+    Object sharedValue = NativeProxy.getSharedValue(id);
+    if (sharedValue == null) {
+      throw new IllegalStateException("Shared Value for node shouldn't be null");
     }
+    mValue = sharedValue;
   }
 
   public void onDrop() {

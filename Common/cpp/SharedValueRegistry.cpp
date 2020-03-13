@@ -3,6 +3,7 @@
 //
 
 #include "SharedValueRegistry.h"
+#include "Logger.h"
 
 void SharedValueRegistry::registerSharedValue(int id, std::shared_ptr<SharedValue> ptr) {
   sharedValueMap[id] = ptr;

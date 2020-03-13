@@ -11,6 +11,7 @@
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
 #include "ApplierRegistry.h"
+#include "Logger.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -93,6 +94,11 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
   jclass doubleClass = env->FindClass("java/lang/Double");
   jmethodID doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
   jobject result;
+
+  if (sv == nullptr) {
+    return 0;
+  }
+
   switch (sv->type)
   {
     case 'D':
@@ -152,7 +158,7 @@ Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIE
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_swmansion_reanimated_NativeProxy_getSharedValue(JNIEnv* env, double id) {
+Java_com_swmansion_reanimated_NativeProxy_getSharedValue(JNIEnv* env, jclass clazz, int id) {
   std::shared_ptr<SharedValue> sv = nrm->sharedValueRegistry->getSharedValue(id);
 
   return sharedValueToJObject(env, sv);
