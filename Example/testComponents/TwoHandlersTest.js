@@ -1,28 +1,49 @@
 import React from 'react';
-import { Text } from 'react-native';
-/*
-const panWorkletBody = new Worklet(function(a, prev, total, velocity, cord, numberOfFinished, ruszable) {
+import { Text, View, Dimensions } from "react-native"
+import Animated, { useSharedValue, useWorklet, useEventWorklet, Worklet } from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
+
+const panWorkletBody = new Worklet(function(prev, total, velocity, cord, ruszable) { // fix
     'worklet';
-    a.set(this.event['translation' + cord.value]);
+    const a = this.event['translation' + cord.value];
+    if (this.event.state === 2) {
+        prev.set(total.value);
+        this.stop(ruszable);
+    }
+
+    total.set(prev.value + a);
+
     if (this.event.state === 5) {
-        prev.set(a.value);
-        a.set(0);
         velocity.set(this.event['velocity' + cord.value]);
-        numberOfFinished.set(numberOfFinished.value + 1);
-        if (numberOfFinished.value === 2) {
-            ruszable.start();
-            numberOfFinished.set(0);
+        this.start(ruszable);
+        this.log("wystartowal ruszable " + cord.value);
+    }
+});
+
+const ruszableWorklet = new Worklet(function(velocity, total, dim) {
+    'worklet';
+    if (Math.abs(velocity.value) > 0.05) {
+        total.set(total.value + velocity.value / 60);
+        velocity.set(velocity.value * 0.99);
+    }
+
+    if (total.value < 0 || (total.value + 40) > dim.value) {
+        velocity.set(-velocity.value);
+
+        if (total.value < 0) {
+            total.set(-total.value);
+        } else {
+            const excess = total.value + 40 - dim.value;
+            total.set(total.value - 2 * excess);
         }
     }
-    total.set(a.value + prev.value);
-});
-*/
-const TwoHandlersTest = () => {
 
-    return <Text>MichalAppTwoHandlers works</Text>
-/*
-    const x = useSharedValue(0)
-    const y = useSharedValue(0)
+    if (Math.abs(velocity.value) <= 0.05 ) {
+        return true;
+    }
+});
+
+const TwoHandlersTest = () => {
     const prevX = useSharedValue(0)
     const prevY = useSharedValue(0)
     const totalX = useSharedValue(0)
@@ -31,49 +52,40 @@ const TwoHandlersTest = () => {
     const velocityY = useSharedValue(0)
     const X = useSharedValue('X');
     const Y = useSharedValue('Y');
-    const numberOfFinished = useSharedValue(0);
+    const dimX = useSharedValue(100);
+    const dimY = useSharedValue(100);
 
-    const ruszable = useWorklet(function(velocityX, velocityY, totalX, totalY) {
-        'worklet';
-        const cords = [{velocity: velocityX, total: totalX}, {velocity: velocityY, total: totalY}];
-        for (const cord of cords) {
-            const {velocity, total} = cord;
-            if (velocity.value > 0.01) {
-                total.set(total.value + velocity.value / 60);
-                velocity.set(velocity.value * 0.99);
-            }
-        }
-        
-        if (velocityX.value <= 0.01 && velocityY.value <= 0.01) {
-            return true
-        }
-    }, [velocityX, velocityY, totalX, totalY]);
+    const ruszableX = useWorklet(ruszableWorklet, [velocityX, totalX, dimX]); 
+    const ruszableY = useWorklet(ruszableWorklet, [velocityY, totalY, dimY]);
 
-    const xCordAnimation = useEventWorklet(panWorkletBody, [x, prevX, totalX, velocityX, X, numberOfFinished, ruszable]);
-    const yCordAnimation = useEventWorklet(panWorkletBody, [y, prevY, totalY, velocityY, Y, numberOfFinished, ruszable]);
+    const xCordAnimation = useEventWorklet(panWorkletBody, [prevX, totalX, velocityX, X, ruszableX]);
+    const yCordAnimation = useEventWorklet(panWorkletBody, [prevY, totalY, velocityY, Y, ruszableY]);
 
     return (
-        <View style={style.sth}>
+        <View style={{flex:1}} onLayout={(e) => {dimX.set(e.nativeEvent.layout.width); dimY.set(e.nativeEvent.layout.height);}}>
             <PanGestureHandler
                 onGestureEvent={[xCordAnimation, yCordAnimation]}
                 onHandlerStateChange={[xCordAnimation, yCordAnimation]}
             >
                 <Animated.View
-                    style={{
+                    style={[{
                         width: 40,
                         height: 40,
                         transform: [{
-                            translateX: totalX
+                            translateX: totalX,
                         },
                         {
-                            translateY: totalY
+                            translateY: totalY,
                         }]
-                    }}
+                    },
+                    {
+                        backgroundColor: 'black',    
+                    }]
+                }
                 />
             </PanGestureHandler>
         </View>
     )
-    */
 }
 
 export default TwoHandlersTest
