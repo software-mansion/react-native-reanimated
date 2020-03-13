@@ -55,13 +55,6 @@ function commonCode(body, args, createRes) {
     releaseObj.current = init()
   }
 
-  useLayoutEffect(() => {
-    console.log('common useLayoutEffect');
-    return () => {
-      console.log('clear common useLayoutEffect');
-    };
-  }, []);
-
   useEffect(() => {
     return () => {
       if (!releaseObj.current) return;
