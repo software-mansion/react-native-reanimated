@@ -48,12 +48,13 @@ export default () => {
       profileTranslateXMIN
     ) {
       'worklet';
+      this.log('RUN');
 
       let step = 0;
       if (progressTarget.value < openCloseProgress.value) {
-        step = -0.15;
+        step = -0.015;
       } else {
-        step = 0.15;
+        step = 0.015;
       }
       let progress = openCloseProgress.value + step;
       if (progress < 0) {
@@ -74,6 +75,7 @@ export default () => {
       profileTranslateX.set(profileTranslateXMIN.value * (1 - progress));
 
       if (progress >= 1 || progress <= 0) {
+        this.log('STOP');
         return true;
       }
     },
@@ -109,13 +111,11 @@ export default () => {
       />
       <View style={styles.layer} pointerEvents="box-none">
         <Profile
-          close={() => {
-            progressTarget.set(0);
-            openAnimation.start();
-          }}
           translateX={profileTranslateX}
           scale={profileScale}
           rotateY={profileRotateY}
+          hideTarget={progressTarget}
+          hideWorklet={openAnimation}
         />
       </View>
     </View>
