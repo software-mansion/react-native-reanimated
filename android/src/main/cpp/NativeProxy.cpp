@@ -132,7 +132,7 @@ jobject getChangedSharedValues(JNIEnv* env) {
   // The list we're going to return:
   jobject list = env->NewObject(arrayListClass, arrayListConstructor);
 
-  for(auto & sharedValue : nrm->sharedValueRegistry->sharedValueMap) {
+  for(auto & sharedValue : nrm->sharedValueRegistry->getSharedValueMap()) {
     int id = sharedValue.first;
     std::shared_ptr<SharedValue> sv = sharedValue.second;
     if ((!sv->dirty) || (!sv->shouldBeSentToJava)) {

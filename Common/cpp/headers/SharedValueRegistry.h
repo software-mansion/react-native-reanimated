@@ -13,11 +13,13 @@
 using namespace facebook;
 
 class SharedValueRegistry {
-  public:
     std::unordered_map<int, std::shared_ptr<SharedValue>> sharedValueMap;
+  public:
     void registerSharedValue(int id, std::shared_ptr<SharedValue> ptr);
     void unregisterSharedValue(int id);
     std::shared_ptr<SharedValue> getSharedValue(int id);
+
+    std::unordered_map<int, std::shared_ptr<SharedValue>> getSharedValueMap() const;
 };
 
 #endif //REANIMATEDEXAMPLE_SHAREDVALUEREGISTRY_H

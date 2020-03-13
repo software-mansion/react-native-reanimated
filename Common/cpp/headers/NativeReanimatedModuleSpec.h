@@ -21,8 +21,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker);
 
  public:
-  virtual void call(jsi::Runtime &rt, const jsi::Function &callback) = 0;
-
   // worklets
 
   virtual void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) = 0;
@@ -42,6 +40,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual void unregisterApplierFromRender(jsi::Runtime &rt, int id) = 0;
   virtual void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) = 0;
   virtual void unregisterApplierFromEvent(jsi::Runtime &rt, int id) = 0;
+
+  //
+  virtual void getRegistersState(jsi::Runtime &rt, int option, const jsi::Value &value) = 0;
 };
 
 } // namespace react

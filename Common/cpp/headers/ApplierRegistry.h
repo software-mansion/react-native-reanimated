@@ -11,9 +11,9 @@
 #include <unordered_map>
 
 class ApplierRegistry {
-  std::unordered_map<int, std::shared_ptr<Applier>> renderAppliers;
-  std::map<std::string, std::unordered_map<int, std::shared_ptr<Applier>>> eventAppliers;
-  std::map<int, std::string> eventMapping;
+    std::unordered_map<int, std::shared_ptr<Applier>> renderAppliers;
+    std::map<std::string, std::unordered_map<int, std::shared_ptr<Applier>>> eventAppliers;
+    std::map<int, std::string> eventMapping;
   public:
     void registerApplierForRender(int id, std::shared_ptr<Applier> applier);
     void unregisterApplierFromRender(int id);
@@ -23,6 +23,9 @@ class ApplierRegistry {
     void event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<BaseWorkletModule> module);
     bool anyApplierRegisteredForEvent(std::string eventName);
     bool notEmpty();
+
+    std::unordered_map<int, std::shared_ptr<Applier>> getRenderAppliers() const;
+    std::map<int, std::string> getEventMapping() const;
 };
 
 #endif //REANIMATEDEXAMPLE_APPLIERREGISTRY_H

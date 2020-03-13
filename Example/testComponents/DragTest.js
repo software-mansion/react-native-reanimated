@@ -3,7 +3,7 @@ import { Text, View, Dimensions } from "react-native"
 import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
-function MichalApp() {
+function DragTest() {
     const prevX = useSharedValue(0);
     const prevY = useSharedValue(0);
     const totalX = useSharedValue(0);
@@ -90,4 +90,4 @@ function MichalApp() {
     )
 }
 
-export default MichalApp
+export default DragTest

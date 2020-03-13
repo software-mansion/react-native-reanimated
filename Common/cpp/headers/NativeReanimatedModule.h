@@ -20,7 +20,7 @@ namespace facebook {
 namespace react {
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
-  std::shared_ptr<Scheduler> scheduler;
+    std::shared_ptr<Scheduler> scheduler;
 
   public:
     NativeReanimatedModule(
@@ -48,13 +48,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void render();
     void onEvent(std::string eventName, std::string eventAsString);
 
-    void call(jsi::Runtime &rt, const jsi::Function &callback) override;
-
-    std::unique_ptr<jsi::Runtime> runtime;
-    std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<WorkletRegistry> workletRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
-  
+    std::shared_ptr<ApplierRegistry> applierRegistry;
+    std::unique_ptr<jsi::Runtime> runtime;
+
+    /*
+      used for tests
+    */
+    void getRegistersState(jsi::Runtime &rt, int option, const jsi::Value &value) override;
 };
 
 }
