@@ -9,6 +9,7 @@
 #include <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import "IOSScheduler.h"
+#import "IOSErrorHandler.h"
 #import <jsi/JSCRuntime.h>
 
 @interface NativeProxy()
@@ -79,13 +80,15 @@ RCTUIManager* uiManagerTemporary;
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
   std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry());
   std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::jsc::makeJSCRuntime().release()));
+  std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new IOSErrorHandler(schedulerForModule));
   
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(std::move(animatedRuntime),
   applierRegistry,
   sharedValueRegistry,
   workletRegistry,
   schedulerForModule,
-  jsInvoker);
+  jsInvoker,
+  errorHandler);
   
   return (void*)(&nativeReanimatedModule);
 }
@@ -103,7 +106,9 @@ RCTUIManager* uiManagerTemporary;
 
     NSNumber *sharedValueId = [NSNumber numberWithInteger: svId];
     NSObject *value = [self sharedValueToNSObject: (void*)(sv.get())];
-    RCTAssert(value != nullptr, @"Shared value not found");
+    if (value == nullptr) {
+      RCTLogError(@"Shared value not found");
+    }
     [changed addObject:@[sharedValueId, value]];
   }
 
