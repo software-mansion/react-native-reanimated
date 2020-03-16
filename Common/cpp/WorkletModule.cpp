@@ -8,12 +8,14 @@
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
                                    std::shared_ptr<WorkletRegistry> workletRegistry,
-                                   std::shared_ptr<jsi::Value> event) {
+                                   std::shared_ptr<jsi::Value> event,
+                                   std::shared_ptr<ErrorHandler> errorHandler) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
   this->event = event;
   this->workletId = -1;
+  this->errorHandler = errorHandler;
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -44,7 +46,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
           svs.push_back(sv);
         }
 
-        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs));
+        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs, this->errorHandler));
         
         applier->addOnFinishListener([=] {
           sharedWorkletStarter->setUnregisterListener(nullptr);
