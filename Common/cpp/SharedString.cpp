@@ -7,7 +7,7 @@
 SharedString::SharedString(int id, std::string value) {
   this->value = value;
   this->id = id;
-  this->type = 'S';
+  this->type = SharedValueType::shared_string;
 }
 
 SharedString::~SharedString() {}

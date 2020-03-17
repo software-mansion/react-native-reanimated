@@ -1,4 +1,5 @@
 import NativeModule from './NativeReanimated';
+import Worklet from './Worklet';
 
 export default class SharedValue {
 
@@ -7,18 +8,6 @@ export default class SharedValue {
   constructor(value) {
     this.id = SharedValue.idCounter++;
     this.initialValue = value;
-
-    if (value.isWorklet) {
-      const argIds = [];
-      for (let arg of value.args) {
-        argIds.push(arg.id);
-      }
-      this.initialValue = { 
-        workletId: value.body.id, 
-        isWorklet: true,
-        argIds,
-      };
-    }
 
     NativeModule.registerSharedValue(this.id, this.initialValue);
     this.callbacks = {}
@@ -45,6 +34,31 @@ export default class SharedValue {
 
   release() {
     NativeModule.unregisterSharedValue(this.id);
+  }
+
+  static create(value) {
+    console.log('create sv ' + JSON.stringify(value));
+
+    if (value.isWorklet) {
+      const argIds = [];
+      for (let arg of value.args) {
+        argIds.push(arg.id);
+      }
+      value = { 
+        workletId: value.body.id, 
+        isWorklet: true,
+        argIds,
+      };
+    }
+
+    if (value instanceof Worklet) {
+      value = {
+        workletId: value.id,
+        isFunction: true,
+      }
+    }
+
+    return new SharedValue(value);
   }
 
 }

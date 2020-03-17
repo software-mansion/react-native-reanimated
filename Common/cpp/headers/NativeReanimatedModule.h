@@ -14,6 +14,7 @@
 #include "WorkletModule.h"
 #include "ApplierRegistry.h"
 #include "ErrorHandler.h"
+#include "SharedFunction.h"
 
 #include <unistd.h>
 
@@ -41,6 +42,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void unregisterSharedValue(jsi::Runtime &rt, double id) override;
     void getSharedValueAsync(jsi::Runtime &rt, double id, const jsi::Value &value) override;
     void setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) override;
+    void updateSharedValueRegistry(jsi::Runtime &rt, int id, const jsi::Value &value, bool setVal);
 
     void registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;
     void unregisterApplierFromRender(jsi::Runtime &rt, int id) override;

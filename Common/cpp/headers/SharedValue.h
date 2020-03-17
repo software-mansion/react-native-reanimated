@@ -11,9 +11,19 @@
 
 using namespace facebook;
 
+enum class SharedValueType {
+  shared_double,
+  shared_string,
+  shared_boolean,
+  shared_object,
+  shared_function,
+  shared_array,
+  shared_starter,
+};
+
 class SharedValue {
   public:
-    char type;
+    SharedValueType type;
     bool shouldBeSentToJava = true;
     bool dirty = false;
     virtual jsi::Value asValue(jsi::Runtime &rt) const = 0;

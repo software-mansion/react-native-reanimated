@@ -7,7 +7,7 @@
 SharedDouble::SharedDouble(int id, double value) : SharedValue() {
   this->value = value;
   this->id = id;
-  this->type = 'D';
+  this->type = SharedValueType::shared_double;
 }
 
 jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {

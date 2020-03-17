@@ -6,15 +6,17 @@
 #define REANIMATEDEXAMPLE_SHAREDWORKLETSTARTER_H
 
 #include "SharedValue.h"
+#include "Worklet.h"
 #include <vector>
 
 class SharedWorkletStarter : public SharedValue {
   public:
-  int workletId, id;
+  std::shared_ptr<Worklet> worklet;
+  int id;
   std::vector<int> args;
   std::shared_ptr<const std::function<void()>> unregisterListener;
     
-  SharedWorkletStarter(int svId, int workletId, std::vector<int> args);
+  SharedWorkletStarter(int svId, std::shared_ptr<Worklet>, std::vector<int> args);
   jsi::Value asValue(jsi::Runtime &rt) const override;
   jsi::Value asParameter(jsi::Runtime &rt) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;

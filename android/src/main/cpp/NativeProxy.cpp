@@ -104,13 +104,13 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 
   switch (sv->type)
   {
-    case 'D':
+    case SHARED_DOUBLE:
     {
       double val = ((SharedDouble*)(sv.get()))->value;
       result = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
       break;
     }
-    case 'S':
+    case SHARED_STRING:
     {
       std::string str = ((SharedString*)(sv.get()))->value;
       result = env->NewStringUTF(str.c_str());
