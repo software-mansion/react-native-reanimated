@@ -8,15 +8,6 @@ AndroidErrorHandler::AndroidErrorHandler(JNIEnv* env, std::shared_ptr<Scheduler>
 }
 
 void AndroidErrorHandler::raiseSpec(const char *message) {
-  /*
-  std::string str = message;
-  scheduler->scheduleOnUI([this, str]() mutable {
-    jclass targetClass = env->FindClass("com/swmansion/reanimated/Utils");
-    jmethodID targetMethod = env->GetStaticMethodID(targetClass, "raiseException", "(Ljava/lang/String;)V");
-    jobject messageObject = env->NewStringUTF(str.c_str());
-    env->CallStaticVoidMethod(targetClass, targetMethod, messageObject);
-  });
-  */
   jclass targetClass = env->FindClass("com/swmansion/reanimated/Utils");
   jmethodID targetMethod = env->GetStaticMethodID(targetClass, "raiseException", "(Ljava/lang/String;)V");
   jobject messageObject = env->NewStringUTF(message);
