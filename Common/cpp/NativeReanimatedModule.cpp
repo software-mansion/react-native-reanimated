@@ -2,6 +2,7 @@
 #include <memory>
 #include "Logger.h"
 #include <functional>
+#include <thread>
 
 using namespace facebook;
 
@@ -22,13 +23,15 @@ NativeReanimatedModule::NativeReanimatedModule(
   std::shared_ptr<SharedValueRegistry> svr,
   std::shared_ptr<WorkletRegistry> wr,
   std::shared_ptr<Scheduler> scheduler,
-  std::shared_ptr<JSCallInvoker> jsInvoker) : NativeReanimatedModuleSpec(jsInvoker) {
+  std::shared_ptr<JSCallInvoker> jsInvoker,
+  std::shared_ptr<ErrorHandler> errorHandler) : NativeReanimatedModuleSpec(jsInvoker) {
 
   this->applierRegistry = ar;
   this->scheduler = scheduler;
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
   this->runtime = std::move(rt);
+  this->errorHandler = errorHandler;
 }
 
 // worklets
@@ -154,7 +157,7 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs, this->errorHandler));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -174,7 +177,7 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
       svs.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs, this->errorHandler));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }
@@ -191,7 +194,8 @@ void NativeReanimatedModule::render() {
     sharedValueRegistry, 
     applierRegistry, 
     workletRegistry,
-    event));
+    event,
+    this->errorHandler));
   applierRegistry->render(*runtime, ho);
 }
 
@@ -202,7 +206,8 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
     sharedValueRegistry, 
     applierRegistry, 
     workletRegistry,
-    eventPtr));
+    eventPtr,
+    this->errorHandler));
   applierRegistry->event(*runtime, eventName, ho);
 }
 
