@@ -200,7 +200,7 @@ module.exports = {
   },
 
   Transitioning: {
-    View: createMockComponent('Transitioning.View')
+    View: createTransitioningComponent(View)
   },
 
   Transition: {
