@@ -7,7 +7,8 @@
     "test": "npm run format && npm run lint && npm run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint './src/**/*.js'"
+    "lint": "eslint './src/**/*.js'",
+    "release": "release-it"
   },
   "main": "src/Animated.js",
   "types": "react-native-reanimated.d.ts",
@@ -60,7 +61,8 @@
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
-    "react-test-renderer": "16.9.0"
+    "react-test-renderer": "16.9.0",
+    "release-it": "^13.1.1"
   },
   "lint-staged": {
     "*.js": [
@@ -71,6 +73,13 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
+    }
+  },
+  "release-it": {
+    "hooks": {
+      "before:git:bump": [
+        "# check if version corresponds to changes in native files  \n git diff --name-only ${latestVersion} HEAD | egrep \"(android/.*)|(ios/.*)\" -q && egrep '\\.0$' -q <<< ${version}"
+      ]
     }
   }
 }
