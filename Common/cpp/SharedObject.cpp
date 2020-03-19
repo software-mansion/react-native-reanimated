@@ -20,9 +20,13 @@ private:
 };
 
 
-SharedObject::SharedObject(int id, std::vector<std::shared_ptr<SharedValue>> svs) {
+SharedObject::SharedObject(int id,
+                           std::vector<std::shared_ptr<SharedValue>> svs,
+                           std::vector<std::string> names) {
   this->id = id;
-  this->svs = svs;
+  for (int i = 0; i < names.size(); ++i) {
+    properties[names[i]] = svs[i];
+  }
   this->dirty = false;
   this->shouldBeSentToJava = false;
   this->type = SharedValueType::shared_object;
@@ -42,11 +46,33 @@ void SharedObject::setNewValue(std::shared_ptr<SharedValue> sv) {
 }
 
 jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
-  jsi::Array array(rt, svs.size());
-  for (int i = 0; i < svs.size(); ++i) {
-    array.setValueAtIndex(rt, i, svs[i]->asParameter(rt));
-  }
-  jsi::Object obj(std::move(array));
-  obj.setProperty(rt, "id", jsi::Value(id));
-  return obj;
+  
+  class HO : public jsi::HostObject {
+    std::unordered_map<std::string, std::shared_ptr<SharedValue>> props;
+    int id;
+  public:
+    HO(int id, std::unordered_map<std::string, std::shared_ptr<SharedValue>> props) {
+      this->props = props;
+      this->id = id;
+    }
+
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
+      auto propName = name.utf8(rt);
+
+      if (propName == "id") {
+          return jsi::Value(id);
+      }
+      
+      if (props.count(propName) > 0) {
+        return properties[propName]->asParameter(rt);
+      }
+
+      return jsi::Value::undefined();
+    }
+
+  };
+
+  std::shared_ptr<jsi::HostObject> ptr(new HO(id, this->properties));
+
+  return jsi::Object::createFromHostObject(rt, ptr);
 }
