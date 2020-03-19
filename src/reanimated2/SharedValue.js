@@ -1,7 +1,6 @@
 import NativeModule from './NativeReanimated';
 import Worklet from './Worklet';
 import AnimatedNode from '../core/AnimatedNode';
-import SharedObject from './SharedObject';
 
 export default class SharedValue extends AnimatedNode {
 
@@ -87,12 +86,19 @@ export default class SharedValue extends AnimatedNode {
         propNames.push(prop);
         ids.push(value[prop].id);
       }
-      value = {
+      const initValue = {
         isObject: true,
         propNames,
         ids,
       }
-      return SharedObject(value);
+      const sv = new SharedValue(initValue);
+
+      for (let prop in value) {
+        if (!sv[prop]) {
+          sv[prop] = value[prop];
+        }
+      }
+      return sv;
     }
 
     return new SharedValue(value);

@@ -7,19 +7,6 @@
 
 #include "SharedObject.h"
 
-class SharedObject : public SharedValue {
-public:
-    int id;
-    SharedObject(int id, std::vector<std::shared_ptr<SharedValue>> svs);
-    jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Value asParameter(jsi::Runtime &rt) override;
-    void setNewValue(std::shared_ptr<SharedValue> sv) override;
-    ~SharedObject();
-private:
-  std::unordered_map<std::string, std::shared_ptr<SharedValue>> properties;
-};
-
-
 SharedObject::SharedObject(int id,
                            std::vector<std::shared_ptr<SharedValue>> svs,
                            std::vector<std::string> names) {
@@ -64,7 +51,7 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
       }
       
       if (props.count(propName) > 0) {
-        return properties[propName]->asParameter(rt);
+        return props[propName]->asParameter(rt);
       }
 
       return jsi::Value::undefined();
