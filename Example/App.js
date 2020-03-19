@@ -10,12 +10,13 @@ import {
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
-import DragTest from './testComponents/DragTest'
-import SharedValueTest from './testComponents/SharedValuesTest'
-import NotifyTest from './testComponents/NotifyTest'
-import SpeedTest from './testComponents/SpeedTest'
-import TwoHandlersTest from './testComponents/TwoHandlersTest'
-import CleanupTest from './testComponents/CleanUpTest'
+import DragTest from './testComponents/DragTest';
+import SharedValueTest from './testComponents/SharedValuesTest';
+import NotifyTest from './testComponents/NotifyTest';
+import SpeedTest from './testComponents/SpeedTest';
+import TwoHandlersTest from './testComponents/TwoHandlersTest';
+import CleanupTest from './testComponents/CleanUpTest';
+import SharedFunctionTest from './testComponents/SharedFunctionTest';
 
 
 // set components here:
@@ -26,6 +27,7 @@ const components = {
   'SpeedTest': SpeedTest,
   'TwoHandlersTest': TwoHandlersTest,
   'CleanupTest': CleanupTest,
+  'SharedFunctionTest': SharedFunctionTest,
 }
 
 YellowBox.ignoreWarnings([

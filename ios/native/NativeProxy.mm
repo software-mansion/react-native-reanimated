@@ -132,13 +132,13 @@ RCTUIManager* uiManagerTemporary;
     
     switch (svptr->type)
     {
-        case 'D':
+        case SharedValueType::shared_double:
         {
             double dvalue = ((SharedDouble*)(svptr))->value;
             value = [NSNumber numberWithDouble:dvalue];
             break;
         }
-        case 'S':
+        case SharedValueType::shared_string:
         {
             std::string str = ((SharedString*)(svptr))->value;
             value = [NSString stringWithCString:str.c_str()

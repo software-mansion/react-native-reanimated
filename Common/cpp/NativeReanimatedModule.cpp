@@ -55,7 +55,6 @@ void NativeReanimatedModule::unregisterWorklet( // make it async !!!
   });
 }
 
-
 void NativeReanimatedModule::setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) {
   if (listener.isUndefined() or listener.isNull()) {
     scheduler->scheduleOnUI([this, workletId](){
@@ -80,17 +79,15 @@ void NativeReanimatedModule::setWorkletListener(jsi::Runtime &rt, int workletId,
 
 // SharedValue
 
-void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
+void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id, const jsi::Value &value, bool setVal) {
+  std::function<std::shared_ptr<SharedValue>()> create;
+  
   if (value.isNumber()) {
     std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
-    scheduler->scheduleOnUI([=](){
-      sharedValueRegistry->registerSharedValue(id, sv);
-    });
+    create = [=] () {return sv;};
   } else if(value.isString()) {
     std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
-    scheduler->scheduleOnUI([=](){
-      sharedValueRegistry->registerSharedValue(id, sv);
-    });
+    create = [=] () {return sv;};
   } else if(value.isObject()) {
     jsi::Object obj = value.getObject(rt);
     
@@ -104,12 +101,53 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
         args.push_back(svId);
       }
       
-      std::shared_ptr<SharedWorkletStarter> sv(new SharedWorkletStarter((int)id, workletId, args));
-      scheduler->scheduleOnUI([=](){
-        sharedValueRegistry->registerSharedValue(id, sv);
-      });
+      create = [=] () -> std::shared_ptr<SharedValue> {
+        std::shared_ptr<Worklet> worklet = workletRegistry->getWorklet(workletId);
+        if (worklet == nullptr) {
+          return nullptr;
+        }
+        std::shared_ptr<SharedValue> sv(new SharedWorkletStarter((int)id, worklet, args));
+        return sv;
+      };
     }
-  } // add here other types
+    
+    if (obj.hasProperty(rt, "isFunction")) {
+      int workletId = obj.getProperty(rt, "workletId").getNumber();
+      create = [=] () -> std::shared_ptr<SharedValue> {
+        std::shared_ptr<Worklet> worklet = workletRegistry->getWorklet(workletId);
+        if (worklet == nullptr) {
+          return nullptr;
+        }
+        std::shared_ptr<SharedValue> sv(new SharedFunction(id, worklet));
+        return sv;
+      };
+    };
+
+  }
+  
+  scheduler->scheduleOnUI([=](){
+    std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
+    if (oldSV != nullptr and !setVal) {
+      return;
+    }
+    
+    std::shared_ptr<SharedValue> sv = create();
+    if (sv == nullptr) {
+      return;
+    }
+    
+    if (oldSV != nullptr and setVal) {
+      oldSV->setNewValue(sv);
+    }
+    
+    if (oldSV == nullptr) {
+      sharedValueRegistry->registerSharedValue(id, sv);
+    }
+  });
+}
+
+void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
+  updateSharedValueRegistry(rt, (int)id, value, false);
 }
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {
@@ -133,31 +171,17 @@ void NativeReanimatedModule::getSharedValueAsync(jsi::Runtime &rt, double id, co
 }
 
 void NativeReanimatedModule::setSharedValue(jsi::Runtime &rt, double id, const jsi::Value &value) {
-  if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
-    scheduler->scheduleOnUI([=](){
-      std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
-      oldSV->setNewValue(sv);
-    });
-  } else if(value.isString()) {
-    std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
-    scheduler->scheduleOnUI([=](){
-       std::shared_ptr<SharedValue> oldSV = sharedValueRegistry->getSharedValue(id);
-       oldSV->setNewValue(sv);
-    });
-  } // add here other types
+  updateSharedValueRegistry(rt, (int)id, value, true);
 }
 
 void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
     std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
-    std::vector<std::shared_ptr<SharedValue>> svs;
-    for (auto &i : svIds) {
-      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
-      svs.push_back(sv);
+    if (workletPtr == nullptr) {
+      return;
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs, this->errorHandler));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -171,13 +195,11 @@ void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int i
 void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) {
   scheduler->scheduleOnUI([=]() {
     std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
-    std::vector<std::shared_ptr<SharedValue>> svs;
-    for (auto &i : svIds) {
-      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(i);
-      svs.push_back(sv);
+    if (workletPtr == nullptr) {
+      return;
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svs, this->errorHandler));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }

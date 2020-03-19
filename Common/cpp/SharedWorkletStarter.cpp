@@ -3,11 +3,14 @@
 //
 #include "SharedWorkletStarter.h"
 
-SharedWorkletStarter::SharedWorkletStarter(int svId, int workletId, std::vector<int> args) {
+SharedWorkletStarter::SharedWorkletStarter(int svId,
+                                           std::shared_ptr<Worklet> worklet,
+                                           std::vector<int> args) {
   this->id = svId;
-  this->workletId = workletId;
+  this->worklet = worklet;
   this->args = args;
   this->shouldBeSentToJava = false;
+  this->type = SharedValueType::shared_starter;
 }
 
 jsi::Value SharedWorkletStarter::asValue(jsi::Runtime &rt) const {

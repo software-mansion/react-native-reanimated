@@ -15,7 +15,11 @@ void WorkletRegistry::unregisterWorklet(int id) {
 }
 
 std::shared_ptr<Worklet> WorkletRegistry::getWorklet(int id) {
-  return workletMap[id];
+  if (workletMap.count(id) > 0) {
+    return workletMap[id];
+  }
+  
+  return nullptr;
 }
 
 void WorkletRegistry::setWorkletListener(int workletId, std::shared_ptr<std::function<void()>> listener) {

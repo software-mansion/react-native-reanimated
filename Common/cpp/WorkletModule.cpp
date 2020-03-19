@@ -36,17 +36,15 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
             return false;
         }
        
-        int workletId = sharedWorkletStarter->workletId;
-        std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
+        std::shared_ptr<Worklet> workletPtr = sharedWorkletStarter->worklet;
 
-        std::vector<std::shared_ptr<SharedValue>> svs;
+        std::vector<int> svIds;
         std::string id = "id";
         for (int svId : sharedWorkletStarter->args) {
-          std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(svId);
-          svs.push_back(sv);
+          svIds.push_back(svId);
         }
 
-        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svs, this->errorHandler));
+        std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
         
         applier->addOnFinishListener([=] {
           sharedWorkletStarter->setUnregisterListener(nullptr);

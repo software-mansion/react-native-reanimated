@@ -5,19 +5,56 @@ import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 
-function transformArgs(args) {
+// returns [obj, release]
+function makeShareable(obj, wrap) { // reimplement when adding SharedObject, SharedArray 
   const toRelease = [];
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] instanceof AnimatedSharedValue) {
-      args[i] = args[i].sharedValue;
-    } else if (args[i].isWorklet || (!(args[i] instanceof SharedValue))) {
-      args[i] = new SharedValue(args[i]);
-      const sv = args[i];
-      toRelease.push(() => {
-        sv.release();
-      });
+
+  if ((!(obj instanceof SharedValue)) && (!(obj instanceof AnimatedSharedValue))) {
+    let workletHolder = null;
+    if (typeof obj === 'function' && obj.isWorklet == null) {
+      obj = new Worklet(obj);
+      workletHolder = obj;
+    }
+    obj = SharedValue.create(obj);
+    const release = obj.release.bind(obj);
+    toRelease.push(function(){
+      release();
+      if (workletHolder != null) {
+        workletHolder.release();
+      }
+    });
+  } 
+  
+  if (obj instanceof AnimatedSharedValue || obj instanceof SharedValue) {
+    if (wrap && obj instanceof SharedValue) {
+      obj = new AnimatedSharedValue(obj);          
+    } 
+    if ((!wrap) && obj instanceof AnimatedSharedValue) {
+      obj = obj.sharedValue;
+    }
+  } 
+
+  const release = () => {
+    for (let rel of toRelease) {
+      rel();
     }
   }
+
+  return [obj, release];
+}
+
+function transformArgs(args, wrap) {
+  if (!wrap) {
+    wrap = false;
+  }
+
+  const toRelease = [];
+  for (let i = 0; i < args.length; i++) {
+    const [sv, release] = makeShareable(args[i], wrap);
+    args[i] = sv;
+    toRelease.push(release);
+  }
+
   return () => {
     for (let release of toRelease) {
       release();
@@ -91,14 +128,16 @@ export function useEventWorklet(body, args) {
 export function useSharedValue(initial) {
   console.log("useShared"); 
   const sv = useRef(null);
+  let release = () => {};
 
   const init = () => {
     console.log('init');
-    sv.current = new AnimatedSharedValue(new SharedValue(initial));
+    [sv.current, release] = makeShareable(initial, true);
+    return release;
   }
 
   if (sv.current == null) {
-    init();
+    release = init();
   }
 
   useEffect(() => {
@@ -106,7 +145,7 @@ export function useSharedValue(initial) {
 
     return () => {
       if (sv.current) { 
-        sv.current.sharedValue.release();
+        release();
         sv.current = null;
       }
       console.log("clear");
