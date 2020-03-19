@@ -13,6 +13,7 @@
 #include "ApplierRegistry.h"
 #include "Logger.h"
 #include "AndroidErrorHandler.h"
+#include "SharedValue.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -96,7 +97,7 @@ Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
 jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
   jclass doubleClass = env->FindClass("java/lang/Double");
   jmethodID doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
-  jobject result;
+  jobject result = nullptr;
 
   if (sv == nullptr) {
     return 0;
@@ -104,18 +105,19 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 
   switch (sv->type)
   {
-    case SHARED_DOUBLE:
+    case SharedValueType::shared_double:
     {
       double val = ((SharedDouble*)(sv.get()))->value;
       result = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
       break;
     }
-    case SHARED_STRING:
+    case SharedValueType::shared_string:
     {
       std::string str = ((SharedString*)(sv.get()))->value;
       result = env->NewStringUTF(str.c_str());
       break;
     }
+    default: {}
   }
   return result;
 }
