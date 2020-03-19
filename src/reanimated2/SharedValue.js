@@ -1,6 +1,7 @@
 import NativeModule from './NativeReanimated';
 import Worklet from './Worklet';
 import AnimatedNode from '../core/AnimatedNode';
+import SharedObject from './SharedObject';
 
 export default class SharedValue extends AnimatedNode {
 
@@ -91,6 +92,7 @@ export default class SharedValue extends AnimatedNode {
         propNames,
         ids,
       }
+      return SharedObject(value);
     }
 
     return new SharedValue(value);
