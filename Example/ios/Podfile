@@ -1,7 +1,7 @@
 platform :ios, '9.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-target 'ReanimatedExample' do
+def pods()
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"
   pod 'FBReactNativeSpec', :path => "../node_modules/react-native/Libraries/FBReactNativeSpec"
   pod 'RCTRequired', :path => "../node_modules/react-native/Libraries/RCTRequired"
@@ -40,5 +40,12 @@ target 'ReanimatedExample' do
 
   use_native_modules!
   pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
+end
 
+target 'ReanimatedExample' do
+  pods()
+end
+
+target 'ReanimatedExampleTests' do
+  pods()
 end
