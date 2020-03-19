@@ -17,6 +17,10 @@ import SpeedTest from './testComponents/SpeedTest';
 import TwoHandlersTest from './testComponents/TwoHandlersTest';
 import CleanupTest from './testComponents/CleanUpTest';
 import SharedFunctionTest from './testComponents/SharedFunctionTest';
+import SharedArraySharedObject from './testComponents/SharedArraySharedObject';
+import SzymonRotationScreen from './testComponents/SzymonRotationScreen';
+import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
+import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
 
 
 // set components here:
@@ -28,6 +32,10 @@ const components = {
   'TwoHandlersTest': TwoHandlersTest,
   'CleanupTest': CleanupTest,
   'SharedFunctionTest': SharedFunctionTest,
+  'SharedArraySharedObj': SharedArraySharedObject,
+  'SzymonRotation': SzymonRotationScreen,
+  'SzymonRotationWithReset': SzymonRotationWithReset,
+  'SzymonStartStop': SzymonStartStopScreen,
 }
 
 YellowBox.ignoreWarnings([

@@ -1,15 +1,61 @@
 // @refresh reset
 import { useEffect, useRef, useLayoutEffect } from 'react';
-import AnimatedSharedValue from '../core/AnimatedSharedValue';
 import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 
+function isShareable(obj) {
+  if (obj instanceof SharedValue) {
+    return true;
+  }
+
+  // We don't wrap array in SharedValue because we cannot override [] operator. 
+  // We add propery instead
+  if (Array.isArray(obj)) { 
+    if (obj.sharedArray) {
+      return true;
+    }
+  }
+
+  if (obj instanceof SharedValue) {
+    return true;
+  }
+
+  return false;
+}
+
 // returns [obj, release]
-function makeShareable(obj, wrap) { // reimplement when adding SharedObject, SharedArray 
+function makeShareable(obj) { 
   const toRelease = [];
 
-  if ((!(obj instanceof SharedValue)) && (!(obj instanceof AnimatedSharedValue))) {
+  if (isShareable(obj)) {
+    return [obj, () => {}];
+  }
+
+  if (Array.isArray(obj)) {
+    let i = 0;
+    for (let element of obj) {
+      const [res, release] = makeShareable(element);
+      obj[i] = res;
+      toRelease.push(release);
+      i++;
+    }
+
+    const sharedArray = SharedValue.create(obj);
+    toRelease.push(sharedArray.release);
+
+    obj.id = sharedArray.id;
+    obj.sharedArray = sharedArray;
+
+  } else if (typeof obj === 'object' && (! (obj instanceof Worklet))) {
+    for (let property in obj) {
+      const [res, release] = makeShareable(obj[property]);
+      obj[property] = res;
+      toRelease.push(release);
+    }
+    obj = SharedValue.create(obj);
+    toRelease.push(obj.release);
+  } else {
     let workletHolder = null;
     if (typeof obj === 'function' && obj.isWorklet == null) {
       obj = new Worklet(obj);
@@ -23,16 +69,7 @@ function makeShareable(obj, wrap) { // reimplement when adding SharedObject, Sha
         workletHolder.release();
       }
     });
-  } 
-  
-  if (obj instanceof AnimatedSharedValue || obj instanceof SharedValue) {
-    if (wrap && obj instanceof SharedValue) {
-      obj = new AnimatedSharedValue(obj);          
-    } 
-    if ((!wrap) && obj instanceof AnimatedSharedValue) {
-      obj = obj.sharedValue;
-    }
-  } 
+  }
 
   const release = () => {
     for (let rel of toRelease) {
@@ -43,14 +80,11 @@ function makeShareable(obj, wrap) { // reimplement when adding SharedObject, Sha
   return [obj, release];
 }
 
-function transformArgs(args, wrap) {
-  if (!wrap) {
-    wrap = false;
-  }
+function transformArgs(args) {
 
   const toRelease = [];
   for (let i = 0; i < args.length; i++) {
-    const [sv, release] = makeShareable(args[i], wrap);
+    const [sv, release] = makeShareable(args[i]);
     args[i] = sv;
     toRelease.push(release);
   }
@@ -132,7 +166,7 @@ export function useSharedValue(initial) {
 
   const init = () => {
     console.log('init');
-    [sv.current, release] = makeShareable(initial, true);
+    [sv.current, release] = makeShareable(initial);
     return release;
   }
 

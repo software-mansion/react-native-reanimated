@@ -1,7 +1,8 @@
 import NativeModule from './NativeReanimated';
 import Worklet from './Worklet';
+import AnimatedNode from '../core/AnimatedNode';
 
-export default class SharedValue {
+export default class SharedValue extends AnimatedNode {
 
   static idCounter = 0;
 
@@ -11,6 +12,14 @@ export default class SharedValue {
 
     NativeModule.registerSharedValue(this.id, this.initialValue);
     this.callbacks = {}
+
+    super(
+      {
+        type: 'shared',
+        sharedValueId: this.id,
+        initialValue: this.initialValue,
+      }, [],
+    );
   }
 
   async get() {
@@ -36,6 +45,10 @@ export default class SharedValue {
     NativeModule.unregisterSharedValue(this.id);
   }
 
+  toString() {
+    return `AnimatedValue, id: ${this.__nodeID}`;
+  }
+
   static create(value) {
     console.log('create sv ' + JSON.stringify(value));
 
@@ -49,12 +62,34 @@ export default class SharedValue {
         isWorklet: true,
         argIds,
       };
-    }
 
-    if (value instanceof Worklet) {
+    } else if (value instanceof Worklet) {
       value = {
         workletId: value.id,
         isFunction: true,
+      }
+
+    } else if (Array.isArray(value)) {
+      const argIds = [];
+      for (let arg of value) {
+        argIds.push(arg.id);
+      }
+      value = {
+        isArray: true,
+        argIds,
+      }
+
+    } else if (typeof value === 'object') {
+      const propNames = [];
+      const ids = [];
+      for (let prop in value) {
+        propNames.push(prop);
+        ids.push(value[prop].id);
+      }
+      value = {
+        isObject: true,
+        propNames,
+        ids,
       }
     }
 

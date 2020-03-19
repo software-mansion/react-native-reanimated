@@ -122,6 +122,58 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
         return sv;
       };
     };
+    
+    if (obj.hasProperty(rt, "isArray")) {
+      std::vector<int> svIds;
+      jsi::Array ar = obj.getProperty(rt, "argIds").getObject(rt).asArray(rt);
+      for (int i = 0; i < ar.length(rt); ++i) {
+        int svId = ar.getValueAtIndex(rt, i).getNumber();
+        svIds.push_back(svId);
+      }
+      create = [=] () -> std::shared_ptr<SharedValue> {
+        std::vector<std::shared_ptr<SharedValue>> svs;
+        for (auto svId : svIds) {
+          std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(svId);
+          if (sv == nullptr) {
+            return nullptr;
+          }
+          svs.push_back(sv);
+        }
+        std::shared_ptr<SharedValue> sv(new SharedArray(id, svs));
+        return sv;
+      };
+    }
+    
+    if (obj.hasProperty(rt, "isObject")) {
+      std::vector<int> svIds;
+      jsi::Array ar = obj.getProperty(rt, "ids").getObject(rt).asArray(rt);
+      for (int i = 0; i < ar.length(rt); ++i) {
+        int svId = ar.getValueAtIndex(rt, i).getNumber();
+        svIds.push_back(svId);
+      }
+      
+      std::vector<std::string> names;
+      ar = obj.getProperty(rt, "propNames").getObject(rt).asArray(rt);
+      for (int i = 0; i < ar.length(rt); ++i) {
+        std::string name = ar.getValueAtIndex(rt, i).getString(rt).utf8(rt);
+        names.push_back(name);
+      }
+      
+      create = [=] () -> std::shared_ptr<SharedValue> {
+        std::vector<std::shared_ptr<SharedValue>> svs;
+        for (auto svId : svIds) {
+          std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(svId);
+          if (sv == nullptr) {
+            return nullptr;
+          }
+          svs.push_back(sv);
+        }
+        
+        std::shared_ptr<SharedValue> sv(new SharedObject(id, svs, names));
+        return sv;
+      };
+      
+    }
 
   }
   
