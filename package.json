@@ -61,7 +61,8 @@
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
-    "react-test-renderer": "16.9.0"
+    "react-test-renderer": "16.9.0",
+    "release-it": "^13.1.1"
   },
   "lint-staged": {
     "*.js": [
