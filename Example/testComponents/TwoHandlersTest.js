@@ -8,14 +8,14 @@ const panWorkletBody = new Worklet(function(prev, total, velocity, cord, ruszabl
     const a = this.event['translation' + cord.value];
     if (this.event.state === 2) {
         prev.set(total.value);
-        this.stop(ruszable);
+        ruszable.stop();
     }
 
     total.set(prev.value + a);
 
     if (this.event.state === 5) {
         velocity.set(this.event['velocity' + cord.value]);
-        this.start(ruszable);
+        ruszable.start();
         this.log("wystartowal ruszable " + cord.value);
     }
 });
