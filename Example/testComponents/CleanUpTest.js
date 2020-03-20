@@ -52,9 +52,9 @@ const Child = (props) => {
             const startingIndex = Math.min(i, n - 3)
             for (var i = 0; i < n; ++i) {
                 worklets.push(useWorklet(workletBody, [
-                    svs[startingIndex].sharedValue,
-                    svs[startingIndex + 1].sharedValue,
-                    svs[startingIndex + 2].sharedValue,
+                    svs[startingIndex],
+                    svs[startingIndex + 1],
+                    svs[startingIndex + 2],
                 ]));
             }
         }
