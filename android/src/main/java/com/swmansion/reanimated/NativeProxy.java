@@ -32,7 +32,7 @@ public class NativeProxy {
 
   public static native void uiCall();
 
-  public static native boolean anyRenderApplier();
+  public static native boolean shouldRerender();
 
   public static native ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterRender();
 

@@ -63,3 +63,14 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
 
   return jsi::Object::createFromHostObject(rt, ptr);
 }
+
+std::vector<int> SharedObject::getSharedValues() {
+  std::vector<int> res;
+  for (auto p : properties) {
+    std::vector<int> innerRes = p.second->getSharedValues();
+    for (auto id : innerRes) {
+      res.push_back(id);
+    }
+  }
+  return res;
+}

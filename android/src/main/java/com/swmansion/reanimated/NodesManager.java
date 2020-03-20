@@ -4,7 +4,6 @@ import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
 
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -195,7 +194,7 @@ public class NodesManager implements EventDispatcherListener {
     mCallbackPosted.set(false);
     mWantRunUpdates = false;
 
-    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty() || NativeProxy.anyRenderApplier()) {
+    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty() || NativeProxy.shouldRerender()) {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }

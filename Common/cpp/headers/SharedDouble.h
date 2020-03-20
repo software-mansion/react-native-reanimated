@@ -15,6 +15,7 @@ class SharedDouble : public SharedValue {
     jsi::Value asValue(jsi::Runtime &rt) const override;
     jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
+    std::vector<int> getSharedValues() override;
     ~SharedDouble();
 };
 

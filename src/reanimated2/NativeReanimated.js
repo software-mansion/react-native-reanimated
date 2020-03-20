@@ -59,6 +59,16 @@ export default {
     InnerNativeModule.unregisterApplierFromRender(applierId);
   },
 
+  registerMapper(mapperId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {
+    InnerNativeModule.registerMapper(mapperId, workletId, sharedValueIds);
+    ReanimatedModule.triggerRender();
+  },
+
+  unregisterMapper(mapperId) {
+    InnerNativeModule.unregisterMapper(mapperId);
+    ReanimatedModule.triggerRender();
+  },
+
   unregisterWorklet(workletId) {
     InnerNativeModule.unregisterWorklet(workletId);
   },

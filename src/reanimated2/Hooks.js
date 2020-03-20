@@ -121,6 +121,7 @@ function commonCode(body, args, createRes) {
     res.current = createRes(releaseApplierHolder, body, argsCopy);
 
     res.current.start = res.current;
+    res.current.startMapping = res.current;
     res.current.setListener = (fun) => { body.setListener(fun); };
     res.current.isWorklet = true;
     res.current.body = body;
@@ -155,6 +156,15 @@ export function useWorklet(body, args) {
     return () => {
       console.log('startAnimation');
       releaseApplierHolder.get = body.apply(argsCopy);
+    };
+  });
+}
+
+export function useMapper(body, args) {
+  console.log('useMapper');
+  return commonCode(body, args, (releaseApplierHolder, body, argsCopy) => {
+    return () => {
+      releaseApplierHolder.get = body.registerAsMapper(argsCopy);
     };
   });
 }

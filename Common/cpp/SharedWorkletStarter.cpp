@@ -139,4 +139,10 @@ void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & f
 }
 
 
+std::vector<int> SharedWorkletStarter::getSharedValues() {
+  std::vector<int> res;
+  res.push_back(id);
+  return res;
+}
+
 

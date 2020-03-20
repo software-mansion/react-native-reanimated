@@ -23,6 +23,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   std::shared_ptr<SharedValueRegistry> svr,
   std::shared_ptr<WorkletRegistry> wr,
   std::shared_ptr<Scheduler> scheduler,
+  std::shared_ptr<MapperRegistry> mapperRegistry,
   std::shared_ptr<JSCallInvoker> jsInvoker,
   std::shared_ptr<ErrorHandler> errorHandler) : NativeReanimatedModuleSpec(jsInvoker) {
 
@@ -30,6 +31,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->scheduler = scheduler;
   this->workletRegistry = wr;
   this->sharedValueRegistry = svr;
+  this->mapperRegistry = mapperRegistry;
   this->runtime = std::move(rt);
   this->errorHandler = errorHandler;
 }
@@ -265,6 +267,27 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
 void NativeReanimatedModule::unregisterApplierFromEvent(jsi::Runtime &rt, int id) {
   scheduler->scheduleOnUI([=](){
     applierRegistry->unregisterApplierFromEvent(id);
+  });
+}
+
+void NativeReanimatedModule::registerMapper(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) {
+  scheduler->scheduleOnUI([=]() {
+    std::shared_ptr<Worklet> workletPtr = workletRegistry->getWorklet(workletId);
+    if (workletPtr == nullptr) {
+      return;
+    }
+
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Mapper> mapper = Mapper::createMapper(id,
+                                                          applier,
+                                                          sharedValueRegistry);
+    mapperRegistry->addMapper(mapper);
+  });
+}
+
+void NativeReanimatedModule::unregisterMapper(jsi::Runtime &rt, int id) {
+  scheduler->scheduleOnUI([=](){
+    mapperRegistry->removeMapper(id);
   });
 }
 

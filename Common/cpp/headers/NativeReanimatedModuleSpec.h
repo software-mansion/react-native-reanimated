@@ -41,6 +41,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) = 0;
   virtual void unregisterApplierFromEvent(jsi::Runtime &rt, int id) = 0;
 
+  // mappers
+  virtual void registerMapper(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) = 0;
+  virtual void unregisterMapper(jsi::Runtime &rt, int id) = 0;
+  
   //
   virtual void getRegistersState(jsi::Runtime &rt, int option, const jsi::Value &value) = 0;
 };

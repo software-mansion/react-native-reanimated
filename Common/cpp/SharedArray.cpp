@@ -35,3 +35,14 @@ jsi::Value SharedArray::asParameter(jsi::Runtime &rt) {
   }
   return array;
 }
+
+std::vector<int> SharedArray::getSharedValues() {
+  std::vector<int> res;
+  for (auto &sv : svs) {
+    std::vector<int> innerRes = sv->getSharedValues();
+    for (auto id : innerRes) {
+      res.push_back(id);
+    }
+  }
+  return res;
+}

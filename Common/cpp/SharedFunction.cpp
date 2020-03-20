@@ -42,6 +42,12 @@ jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
   return function;
 }
 
+std::vector<int> SharedFunction::getSharedValues() {
+  std::vector<int> res;
+  res.push_back(id);
+  return res;
+}
+
 SharedFunction::~SharedFunction() {
 
 }
