@@ -106,7 +106,13 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
         if (worklet == nullptr) {
           return nullptr;
         }
-        std::shared_ptr<SharedValue> sv(new SharedWorkletStarter((int)id, worklet, args));
+        std::shared_ptr<SharedValue> sv(new SharedWorkletStarter(
+            (int)id,
+            worklet,
+            args,
+            this->sharedValueRegistry,
+            this->applierRegistry,
+            this->errorHandler));
         return sv;
       };
     }

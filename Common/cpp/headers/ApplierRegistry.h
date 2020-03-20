@@ -28,6 +28,7 @@ class ApplierRegistry {
     bool anyApplierRegisteredForEvent(std::string eventName);
     bool notEmpty();
 
+    static int New_Applier_Id;
     std::unordered_map<int, std::shared_ptr<Applier>> getRenderAppliers() const;
     std::map<int, std::string> getEventMapping() const;
 };

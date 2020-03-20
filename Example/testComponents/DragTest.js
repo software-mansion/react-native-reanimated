@@ -55,14 +55,14 @@ function DragTest() {
         if (this.event.state === 2) {
             prevX.set(totalX.value)
             prevY.set(totalY.value)
-            this.stop(ruszable)
+            ruszable.stop();
         }
         totalX.set(this.event.translationX + prevX.value);
         totalY.set(this.event.translationY + prevY.value);
         if (this.event.state === 5) {
             velocityX.set(this.event.velocityX);
             velocityY.set(this.event.velocityY);
-            this.start(ruszable);
+            ruszable.start();
         }
         
     }, [prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
