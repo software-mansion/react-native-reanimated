@@ -28,8 +28,8 @@ class WorkletModule : public BaseWorkletModule {
   std::shared_ptr<jsi::Value> event;
   std::shared_ptr<ErrorHandler> errorHandler;
   int workletId, applierId;
-  static int Applier_Id;
   public:
+  static int Applier_Id;
     WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                     std::shared_ptr<ApplierRegistry> applierRegistry,
                     std::shared_ptr<WorkletRegistry> workletRegistry,

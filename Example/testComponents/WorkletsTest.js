@@ -13,11 +13,11 @@ const WorkletsTest = () => {
     const childw = useWorklet(function(v, turnState) {
         'worklet'
         this.log(`[child] ${ v.value }`)
-        v.set(v.value + 1)
         if (v.value % 3 === 0) {
             turnState.set(3)
             return true
         }
+        v.set(v.value + 1)
     }, [v, turnState])
 
     const parentw = useWorklet(function(v, turnState, child) {
@@ -30,11 +30,11 @@ const WorkletsTest = () => {
             }
         } else if (turnState.value === 1) {
             this.log('--> starting')
-            this.start(child)
+            child.start()
             turnState.set(2)
         } else if(turnState.value === 3) {
             this.log('--> stopping')
-            this.stop(child)
+            child.stop()
             turnState.set(0)
         }
         if (v.value > 20) {

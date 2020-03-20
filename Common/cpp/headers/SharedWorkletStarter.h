@@ -7,6 +7,9 @@
 
 #include "SharedValue.h"
 #include "Worklet.h"
+#include "ApplierRegistry.h"
+#include "SharedValueRegistry.h"
+#include "ErrorHandler.h"
 #include <vector>
 
 class SharedWorkletStarter : public SharedValue {
@@ -15,8 +18,17 @@ class SharedWorkletStarter : public SharedValue {
   int id;
   std::vector<int> args;
   std::shared_ptr<const std::function<void()>> unregisterListener;
+  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
+  std::shared_ptr<ApplierRegistry> applierRegistry;
+  std::shared_ptr<ErrorHandler> errorHandler;
     
-  SharedWorkletStarter(int svId, std::shared_ptr<Worklet>, std::vector<int> args);
+  SharedWorkletStarter(
+      int svId,
+      std::shared_ptr<Worklet> worklet,
+      std::vector<int> args,
+      std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
+      std::shared_ptr<ApplierRegistry> applierRegistry,
+      std::shared_ptr<ErrorHandler> errorHandler);
   jsi::Value asValue(jsi::Runtime &rt) const override;
   jsi::Value asParameter(jsi::Runtime &rt) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
