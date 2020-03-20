@@ -19,6 +19,10 @@ class ApplierRegistry {
     void unregisterApplierFromRender(int id);
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);
     void unregisterApplierFromEvent(int id);
+    void evaluateAppliers(jsi::Runtime &rt,
+                          std::shared_ptr<BaseWorkletModule> module,
+                          std::unordered_map<int, std::shared_ptr<Applier>> appliers,
+                          std::function<void(int)> unregisterApplier);
     void render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module);
     void event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<BaseWorkletModule> module);
     bool anyApplierRegisteredForEvent(std::string eventName);

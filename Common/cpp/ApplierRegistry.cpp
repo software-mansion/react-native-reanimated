@@ -36,30 +36,41 @@ bool ApplierRegistry::notEmpty() {
   return renderAppliers.size() > 0;
 }
 
-void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
-  auto appliersCopy = renderAppliers;
-  for (auto & p : appliersCopy) { // apply can add new appliers
+void ApplierRegistry::evaluateAppliers(
+                                     jsi::Runtime &rt,
+                                     std::shared_ptr<BaseWorkletModule> module,
+                                     std::unordered_map<int, std::shared_ptr<Applier>> appliers,
+                                     std::function<void(int)> unregisterApplier) { // should copy
+  std::vector<int> toRemove;
+  for (auto & p : appliers) {
     int id = p.first;
     auto & applier = p.second;
     if (applier->apply(rt, module)) {
-      unregisterApplierFromRender(id);
+      toRemove.push_back(id);
     }
+  }
+  
+  for (auto id : toRemove) {
+    unregisterApplier(id);
   }
 }
 
-void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<BaseWorkletModule> module) {
-  std::vector<int> idsToRemove;
-  auto appliersCopy = eventAppliers[eventName];  for (auto & p : appliersCopy) {  // apply can add new appliers
-    int id = p.first;
-    auto & applier = p.second;
-    if (applier->apply(rt, module)) {
-      idsToRemove.push_back(id);
-    }
-  }
+void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
+  evaluateAppliers(rt,
+                   module,
+                   renderAppliers,
+                   [=] (int id) {
+    unregisterApplierFromRender(id);
+  });
+}
 
-  for (auto id : idsToRemove) {
+void ApplierRegistry::event(jsi::Runtime &rt, std::string eventName, std::shared_ptr<BaseWorkletModule> module) {
+  evaluateAppliers(rt,
+                   module,
+                   eventAppliers[eventName],
+                   [=] (int id) {
     unregisterApplierFromEvent(id);
-  }
+  });
 };
 
 bool ApplierRegistry::anyApplierRegisteredForEvent(std::string eventName) {

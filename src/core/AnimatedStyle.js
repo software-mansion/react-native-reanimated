@@ -4,7 +4,6 @@ import AnimatedNode from './AnimatedNode';
 import { createOrReuseTransformNode } from './AnimatedTransform';
 
 import deepEqual from 'fbjs/lib/areEqual';
-import AnimatedSharedValue from './AnimatedSharedValue';
 
 function sanitizeStyle(inputStyle) {
   const style = {};

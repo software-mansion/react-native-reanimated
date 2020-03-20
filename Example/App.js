@@ -10,6 +10,7 @@ import {
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
+import Menu from './Menu';
 import DragTest from './testComponents/DragTest';
 import SharedValueTest from './testComponents/SharedValuesTest';
 import NotifyTest from './testComponents/NotifyTest';
@@ -18,10 +19,15 @@ import TwoHandlersTest from './testComponents/TwoHandlersTest';
 import CleanupTest from './testComponents/CleanUpTest';
 import SharedFunctionTest from './testComponents/SharedFunctionTest';
 import WorkletsTest from './testComponents/WorkletsTest'
-
+import SharedArraySharedObject from './testComponents/SharedArraySharedObject';
+import SzymonRotationScreen from './testComponents/SzymonRotationScreen';
+import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
+import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
+import { ScrollView } from 'react-native-gesture-handler';
 
 // set components here:
 const components = {
+  '3D Menu': Menu,
   'DragTest': DragTest,
   'SharedValueTest': SharedValueTest,
   'NotifyTest': NotifyTest,
@@ -30,6 +36,10 @@ const components = {
   'CleanupTest': CleanupTest,
   'SharedFunctionTest': SharedFunctionTest,
   'WorkletsTest': WorkletsTest,
+  'SharedArraySharedObj': SharedArraySharedObject,
+  'SzymonRotation': SzymonRotationScreen,
+  'SzymonRotationWithReset': SzymonRotationWithReset,
+  'SzymonStartStop': SzymonStartStopScreen,
 }
 
 YellowBox.ignoreWarnings([
@@ -48,6 +58,7 @@ class MainScreen extends React.Component {
     return (
       <View>
         <Text>Pick the screen:</Text>
+        <ScrollView>
         {
           Object.keys(components).map(item => {
             return (
@@ -57,17 +68,18 @@ class MainScreen extends React.Component {
               )
           })
         }
+        </ScrollView>
       </View>
     );
   }
 }
 
-const screens = {}
+const screens = {};
 for (let key in components) {
   screens[key] = {
     screen: components[key],
     title: key,
-  }
+  };
 }
 
 const ExampleApp = createStackNavigator(
@@ -85,6 +97,5 @@ const createApp = Platform.select({
   web: input => createBrowserApp(input, { history: 'hash' }),
   default: input => createAppContainer(input),
 });
-
 
 export default createApp(ExampleApp);

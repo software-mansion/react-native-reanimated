@@ -15,6 +15,8 @@
 #include "ApplierRegistry.h"
 #include "ErrorHandler.h"
 #include "SharedFunction.h"
+#include "SharedArray.h"
+#include "SharedObject.h"
 
 #include <unistd.h>
 
