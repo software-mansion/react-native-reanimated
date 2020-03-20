@@ -17,6 +17,7 @@ import SpeedTest from './testComponents/SpeedTest';
 import TwoHandlersTest from './testComponents/TwoHandlersTest';
 import CleanupTest from './testComponents/CleanUpTest';
 import SharedFunctionTest from './testComponents/SharedFunctionTest';
+import WorkletsTest from './testComponents/WorkletsTest'
 
 
 // set components here:
@@ -28,6 +29,7 @@ const components = {
   'TwoHandlersTest': TwoHandlersTest,
   'CleanupTest': CleanupTest,
   'SharedFunctionTest': SharedFunctionTest,
+  'WorkletsTest': WorkletsTest,
 }
 
 YellowBox.ignoreWarnings([

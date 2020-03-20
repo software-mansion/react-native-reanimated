@@ -28,7 +28,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         size_t count
         ) -> jsi::Value {
 
-        int newApplierId = WorkletModule::applierId--;
+        int newApplierId = WorkletModule::Applier_Id--;
         int sharedStarterId = args[0].getNumber();
        
         SharedWorkletStarter *sharedWorkletStarter =  (SharedWorkletStarter*)( sharedValueRegistry->getSharedValue(sharedStarterId).get());
@@ -129,4 +129,4 @@ void WorkletModule::setApplierId(int applierId) {
   this->applierId = applierId;
 }
 
-int WorkletModule::applierId = INT_MAX;
+int WorkletModule::Applier_Id = INT_MAX;
