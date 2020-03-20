@@ -3,6 +3,7 @@ import { TouchableHighlight, View } from "react-native";
 import { Text } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import { SharedValue } from 'react-native-reanimated';
 
 
 const SharedValueTest = () => {

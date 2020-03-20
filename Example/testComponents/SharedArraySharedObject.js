@@ -3,7 +3,7 @@ import Animated, { useSharedValue, useWorklet } from 'react-native-reanimated';
 import { View } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
-const SharedFunctionTest = () => {
+const SharedArraySharedObject = () => {
     
     const isStarted = useSharedValue(0);
     const state = useSharedValue({startTime: 0, isStarted});
@@ -45,7 +45,7 @@ const SharedFunctionTest = () => {
                 key={i}
                 style={{
                     margin: 10,
-                    width: 100,
+                    width: 30,
                     height: heights[i],
                     backgroundColor: 'green',
                 }}
@@ -62,4 +62,4 @@ const SharedFunctionTest = () => {
     )
 }
 
-export default SharedFunctionTest;
+export default SharedArraySharedObject;

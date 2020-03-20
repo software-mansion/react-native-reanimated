@@ -42,19 +42,26 @@ function makeShareable(obj) {
     }
 
     const sharedArray = SharedValue.create(obj);
-    toRelease.push(sharedArray.release);
+    toRelease.push(() => {
+      sharedArray.release();
+      obj.id = undefined;
+      obj.sharedArray = undefined;
+    });
 
     obj.id = sharedArray.id;
     obj.sharedArray = sharedArray;
 
-  } else if (typeof obj === 'object' && (! (obj instanceof Worklet))) {
+  } else if (typeof obj === 'object' && (!(obj instanceof Worklet))) {
     for (let property in obj) {
       const [res, release] = makeShareable(obj[property]);
       obj[property] = res;
       toRelease.push(release);
     }
     obj = SharedValue.create(obj);
-    toRelease.push(obj.release);
+    toRelease.push(() => {
+      obj.release();
+    });
+
   } else {
     let workletHolder = null;
     if (typeof obj === 'function' && obj.isWorklet == null) {

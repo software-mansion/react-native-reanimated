@@ -21,6 +21,7 @@ import SharedArraySharedObject from './testComponents/SharedArraySharedObject';
 import SzymonRotationScreen from './testComponents/SzymonRotationScreen';
 import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
 import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
+import { ScrollView } from 'react-native-gesture-handler';
 
 
 // set components here:
@@ -54,6 +55,7 @@ class MainScreen extends React.Component {
     return (
       <View>
         <Text>Pick the screen:</Text>
+        <ScrollView>
         {
           Object.keys(components).map(item => {
             return (
@@ -63,6 +65,7 @@ class MainScreen extends React.Component {
               )
           })
         }
+        </ScrollView>
       </View>
     );
   }

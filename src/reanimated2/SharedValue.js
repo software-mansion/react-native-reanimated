@@ -1,30 +1,32 @@
 import NativeModule from './NativeReanimated';
 import Worklet from './Worklet';
 import AnimatedNode from '../core/AnimatedNode';
+import ReanimatedModule from '../ReanimatedModule';
 
 export default class SharedValue extends AnimatedNode {
 
   static idCounter = 0;
 
   constructor(value) {
-    this.id = SharedValue.idCounter++;
+    const newId = SharedValue.idCounter++;
+    super(
+      {
+        type: 'shared',
+        sharedValueId: newId,
+        initialValue: value,
+      }, [],
+    );
+
+    this.id = newId;
     this.initialValue = value;
 
     NativeModule.registerSharedValue(this.id, this.initialValue);
     this.callbacks = {}
-
-    super(
-      {
-        type: 'shared',
-        sharedValueId: this.id,
-        initialValue: this.initialValue,
-      }, [],
-    );
   }
 
   async get() {
-    const uid = Math.floor(Math.random()*1e9)
-    var _this = this
+    const uid = Math.floor(Math.random()*1e9);
+    var _this = this;
     return new Promise(function(resolve, reject) {
       _this.callbacks[uid] = (value) => {
         // without setTimeout with timout 0 VM executes resolve before registering the Promise
@@ -39,6 +41,7 @@ export default class SharedValue extends AnimatedNode {
 
   set(newValue) {
     NativeModule.setSharedValue(this.id, newValue);
+    ReanimatedModule.setValue(this.__nodeID, newValue);
   }
 
   release() {
