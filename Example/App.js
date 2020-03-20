@@ -96,5 +96,4 @@ const createApp = Platform.select({
   default: input => createAppContainer(input),
 });
 
-// export default createApp(ExampleApp);
-export default Menu;
+export default createApp(ExampleApp);
