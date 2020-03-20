@@ -33,7 +33,5 @@ jsi::Value SharedArray::asParameter(jsi::Runtime &rt) {
   for (int i = 0; i < svs.size(); ++i) {
     array.setValueAtIndex(rt, i, svs[i]->asParameter(rt));
   }
-  jsi::Object obj(std::move(array));
-  obj.setProperty(rt, "id", jsi::Value(id));
-  return obj;
+  return array;
 }

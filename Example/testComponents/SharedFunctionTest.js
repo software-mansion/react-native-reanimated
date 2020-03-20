@@ -25,8 +25,6 @@ const SharedFunctionTest = () => {
             startTime.set(now);
         }
 
-        this.log("fun id " + fun.id.toString());
-
         const deltaTime = now - startTime.value;
         const progress = deltaTime / duration.value;
 
