@@ -16,8 +16,6 @@ const SharedArraySharedObject = () => {
         'worklet';
         const { isStarted, startTime } = state;
 
-        this.log("state id: " + state.id.toString() + " arrayId: " + heights.id.toString());
-
         const now = Date.now();
         if (isStarted.value === 0) {
             isStarted.set(1);
