@@ -75,5 +75,3 @@ void WorkletModule::setWorkletId(int workletId) {
 void WorkletModule::setApplierId(int applierId) {
   this->applierId = applierId;
 }
-
-int WorkletModule::Applier_Id = INT_MAX;

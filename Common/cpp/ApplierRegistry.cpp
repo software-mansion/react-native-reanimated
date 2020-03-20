@@ -5,6 +5,8 @@
 #include<ApplierRegistry.h>
 #include "Logger.h"
 
+int ApplierRegistry::New_Applier_Id = INT_MAX;
+
 void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> applier) {
   renderAppliers[id] = applier;
 }

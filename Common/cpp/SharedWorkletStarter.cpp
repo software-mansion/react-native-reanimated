@@ -65,7 +65,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
         ) -> jsi::Value {
-          int newApplierId = WorkletModule::Applier_Id--;
+          int newApplierId = ApplierRegistry::New_Applier_Id--;
           
           if (starter->unregisterListener != nullptr) {
               return false;
@@ -93,7 +93,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 
           return true;
         };
-        return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+        return jsi::Function::createFromHostFunction(rt, name, 0, callback);
       } else if (propName == "stop") {
         auto callback = [this](
             jsi::Runtime &rt,
@@ -107,7 +107,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           }
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+        return jsi::Function::createFromHostFunction(rt, name, 0, callback);
       }
       return jsi::Value::undefined();
     }
