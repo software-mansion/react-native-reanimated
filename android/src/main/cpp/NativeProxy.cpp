@@ -159,7 +159,6 @@ jobject getChangedSharedValues(JNIEnv* env) {
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
   nrm->render();
-  Logger::log("render ok");
   return getChangedSharedValues(env);
 }
 
