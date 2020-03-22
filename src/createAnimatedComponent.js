@@ -193,11 +193,15 @@ export default function createAnimatedComponent(Component) {
       }
     };
 
-    _filterNonAnimatedStyle(inputStyle) {
+    _resolveAnimatedStyle(inputStyle) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!(value instanceof AnimatedNode) && key !== 'transform') {
+        if (value instanceof AnimatedNode) {
+          style[key] = value.__getValue();
+        } else if (key === 'transform') {
+          style.transform = value.map(this._resolveAnimatedStyle);
+        } else {
           style[key] = value;
         }
       }
@@ -209,7 +213,7 @@ export default function createAnimatedComponent(Component) {
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+          props[key] = this._resolveAnimatedStyle(StyleSheet.flatten(value));
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
           // rely on having a callback registered in order to generate events
