@@ -10,6 +10,11 @@
 #include <jni.h>
 #include <tuple>
 
+enum class JNIMethodMode {
+    standard_method,
+    static_method,
+};
+
 class JNIRegistry {
     JNIEnv* env;
     // keys are class names
@@ -26,7 +31,9 @@ class JNIRegistry {
     std::tuple<jclass, jmethodID> getClassAndMethod(
         std::string className,
         std::string methodName,
-        std::string methodSignature);
+        std::string methodSignature,
+        JNIMethodMode methodMode = JNIMethodMode::standard_method,
+        JNIEnv *currentEnv = nullptr);
     virtual ~JNIRegistry() {}
 };
 
