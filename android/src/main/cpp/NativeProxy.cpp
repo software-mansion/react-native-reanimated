@@ -14,6 +14,7 @@
 #include "Logger.h"
 #include "AndroidErrorHandler.h"
 #include "SharedValue.h"
+#include "JNIRegistry.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -30,6 +31,7 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 
 std::shared_ptr<Scheduler> scheduler;
 std::shared_ptr<NativeReanimatedModule> nrm;
+std::shared_ptr<JNIRegistry> jniRegistry;
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
@@ -62,6 +64,8 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     jsi::String propName = jsi::String::createFromAscii(runtime, module->name_);
     runtime.global().setProperty(runtime, propName, std::move(object));
+
+    jniRegistry.reset(new JNIRegistry(env));
 }
 
 extern "C" JNIEXPORT void JNICALL
