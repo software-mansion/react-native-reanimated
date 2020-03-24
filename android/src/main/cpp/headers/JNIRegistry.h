@@ -5,7 +5,7 @@
 #ifndef REANIMATEDEXAMPLE_JNI_REGISTRY_H
 #define REANIMATEDEXAMPLE_JNI_REGISTRY_H
 
-#include <unordered_map>
+#include <vector>
 #include <string>
 #include <jni.h>
 #include <tuple>
@@ -15,23 +15,46 @@ enum class JNIMethodMode {
     static_method,
 };
 
+enum JavaClassesUsed {
+    ReanimatedUtils = 0,
+    ReanimatedScheduler = 1,
+    Double = 2,
+    ArrayList = 3,
+    Pair = 4,
+    Integer = 5,
+};
+
+enum JavaMethodsUsed {
+    RaiseException = 0,
+    TriggerOnUI = 1,
+    TriggerOnJS = 2,
+    DoubleValueOf = 3,
+    ArrayListInit = 4,
+    ArrayListAdd = 5,
+    PairInit = 6,
+    IntegerValueOf = 7,
+};
+
+struct JNIRegistryClass {
+    std::string name;
+    jclass clazz;
+};
+
+struct JNIRegistryMethod {
+    JNIRegistryClass *clazz;
+    std::string name;
+    std::string signature;
+    jmethodID methodId;
+};
+
 class JNIRegistry {
     JNIEnv* env;
-    // keys are class names
-    std::unordered_map<std::string, jclass> classes;
-    // keys are: className(methodName(methodSignature))
-    std::unordered_map<std::string, jmethodID> methods;
-
-    std::string generateMethodKey(
-        std::string className,
-        std::string methodName,
-        std::string methodSignature) const;
+    std::vector<JNIRegistryClass> classes;
+    std::vector<JNIRegistryMethod> methods;
   public:
     JNIRegistry(JNIEnv* env);
     std::tuple<jclass, jmethodID> getClassAndMethod(
-        std::string className,
-        std::string methodName,
-        std::string methodSignature,
+        JavaMethodsUsed method,
         JNIMethodMode methodMode = JNIMethodMode::standard_method,
         JNIEnv *currentEnv = nullptr);
     virtual ~JNIRegistry() {}

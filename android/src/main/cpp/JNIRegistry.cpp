@@ -3,56 +3,55 @@
 
 JNIRegistry::JNIRegistry(JNIEnv* env) {
     this->env = env;
-}
 
-std::string JNIRegistry::generateMethodKey(
-        std::string className,
-        std::string methodName,
-        std::string methodSignature) const {
-    return className + "(" + methodName + "(" + methodSignature + "))";
+    classes.push_back({ "com/swmansion/reanimated/Utils", nullptr });
+    classes.push_back({ "com/swmansion/reanimated/Scheduler", nullptr });
+    classes.push_back({ "java/lang/Double", nullptr });
+    classes.push_back({ "java/util/ArrayList", nullptr });
+    classes.push_back({ "android/util/Pair", nullptr });
+    classes.push_back({ "java/lang/Integer", nullptr });
+
+    methods.push_back({ &classes[JavaClassesUsed::ReanimatedUtils], "raiseException", "(Ljava/lang/String;)V", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::ReanimatedScheduler], "scheduleTriggerOnUI", "()Z", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::ReanimatedScheduler], "scheduleTriggerOnJS", "()Z", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::Double], "valueOf", "(D)Ljava/lang/Double;", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::ArrayList], "<init>", "()V", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::ArrayList], "add", "(Ljava/lang/Object;)Z", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::Pair], "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V", nullptr });
+    methods.push_back({ &classes[JavaClassesUsed::Integer], "valueOf", "(I)Ljava/lang/Integer;", nullptr });
 }
 
 std::tuple<jclass, jmethodID> JNIRegistry::getClassAndMethod(
-        std::string className,
-        std::string methodName,
-        std::string methodSignature,
+        JavaMethodsUsed method,
         JNIMethodMode methodMode,
         JNIEnv *currentEnv) {
     currentEnv = (currentEnv == nullptr) ? this->env : currentEnv;
-    jclass classPtr = nullptr;
-    jmethodID methodPtr = nullptr;
-    // check if class is already stored, if not, try to obtain it
-    auto classIt = this->classes.find(className);
-    if (classIt != this->classes.end()) { // found
-        classPtr = classIt->second;
-    } else { // not found
-        classPtr = currentEnv->FindClass(className.c_str());
-        // register obtained class
-        classPtr = (jclass)currentEnv->NewGlobalRef(classPtr);
-        this->classes.insert(std::pair<std::string, jclass>(className, classPtr));
+
+    JNIRegistryClass *classPtr = methods[method].clazz;
+    if (classPtr->clazz == nullptr) {
+        jclass jc = currentEnv->FindClass(classPtr->name.c_str());
+        classPtr->clazz = (jclass)currentEnv->NewGlobalRef(jc);
     }
-    // check if method is already stored, if not, try to obtain it
-    std::string methodKey = this->generateMethodKey(className, methodName, methodSignature);
-    auto methodIt = this->methods.find(methodKey);
-    if (methodIt != this->methods.end()) { // found
-        methodPtr = methodIt->second;
-    } else { // not found
+    if (methods[method].methodId == nullptr) {
         switch(methodMode) {
             case JNIMethodMode::standard_method: {
-                methodPtr = currentEnv->GetMethodID(classPtr, methodName.c_str(), methodSignature.c_str());
+                methods[method].methodId = currentEnv->GetMethodID(
+                    classPtr->clazz,
+                    methods[method].name.c_str(),
+                    methods[method].signature.c_str());
                 break;
             }
             case JNIMethodMode::static_method: {
-                methodPtr = currentEnv->GetStaticMethodID(classPtr, methodName.c_str(), methodSignature.c_str());
+                methods[method].methodId = currentEnv->GetStaticMethodID(
+                    classPtr->clazz,
+                    methods[method].name.c_str(),
+                    methods[method].signature.c_str());
                 break;
             }
             default: {
                 throw std::invalid_argument("unhandled method mode detected");
             }
         }
-        // register obtained method
-        this->methods.insert(std::pair<std::string, jmethodID>(methodKey, methodPtr));
     }
-
-    return std::make_tuple(classPtr, methodPtr);
+    return std::make_tuple(methods[method].clazz->clazz, methods[method].methodId);
 }

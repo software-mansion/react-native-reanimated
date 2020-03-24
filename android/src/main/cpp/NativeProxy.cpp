@@ -104,10 +104,7 @@ Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
 
 jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 
-  auto doubleValueOf = jniRegistry->getClassAndMethod(
-      "java/lang/Double", "valueOf",
-      "(D)Ljava/lang/Double;",
-      JNIMethodMode::static_method);
+  auto doubleValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::DoubleValueOf, JNIMethodMode::static_method);
   
   jobject result = nullptr;
 
@@ -136,16 +133,13 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 
 jobject getChangedSharedValues(JNIEnv* env) {
 
-  auto arrayListConstructor = jniRegistry->getClassAndMethod("java/util/ArrayList", "<init>", "()V");
-  auto arrayListAdd = jniRegistry->getClassAndMethod("java/util/ArrayList", "add", "(Ljava/lang/Object;)Z");
+  auto arrayListConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListInit);
+  auto arrayListAdd = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListAdd);
 
-  auto pairConstructor = jniRegistry->getClassAndMethod(
-      "android/util/Pair",
-      "<init>",
-      "(Ljava/lang/Object;Ljava/lang/Object;)V");
+  auto pairConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::PairInit);
 
   // This is needed to go from double to Double (boxed)
-  auto integerValueOf = jniRegistry->getClassAndMethod("java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", JNIMethodMode::static_method);
+  auto integerValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::IntegerValueOf, JNIMethodMode::static_method);
 
   // The list we're going to return:
   jobject list = env->NewObject(std::get<0>(arrayListConstructor), std::get<1>(arrayListConstructor));

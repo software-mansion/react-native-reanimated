@@ -20,12 +20,7 @@ void AndroidScheduler::scheduleOnUI(std::function<void()> job) { // memorize jcl
   JNIEnv *env;
   vm->AttachCurrentThread(&env, NULL);
 
-  auto scheduleMethod = jniRegistry->getClassAndMethod(
-      "com/swmansion/reanimated/Scheduler",
-      "scheduleTriggerOnUI",
-      "()Z",
-      JNIMethodMode::static_method,
-      env);
+  auto scheduleMethod = jniRegistry->getClassAndMethod(JavaMethodsUsed::TriggerOnUI, JNIMethodMode::static_method, env);
   if (!(env->CallStaticBooleanMethod(std::get<0>(scheduleMethod), std::get<1>(scheduleMethod)))) {
     uiJobs.pop();
   }
@@ -37,12 +32,7 @@ void AndroidScheduler::scheduleOnJS(std::function<void()> job) { // memorize jcl
   JNIEnv *env;
   vm->AttachCurrentThread(&env, NULL);
 
-  auto scheduleMethod = jniRegistry->getClassAndMethod(
-    "com/swmansion/reanimated/Scheduler",
-    "scheduleTriggerOnJS",
-    "()Z",
-    JNIMethodMode::static_method,
-    env);
+  auto scheduleMethod = jniRegistry->getClassAndMethod(JavaMethodsUsed::TriggerOnJS, JNIMethodMode::static_method, env);
   if (!(env->CallStaticBooleanMethod(std::get<0>(scheduleMethod), std::get<1>(scheduleMethod)))) {
     jsJobs.pop();
   }

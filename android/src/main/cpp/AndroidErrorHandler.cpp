@@ -12,11 +12,7 @@ AndroidErrorHandler::AndroidErrorHandler(
 }
 
 void AndroidErrorHandler::raiseSpec(const char *message) {
-  auto jniData = jniRegistry->getClassAndMethod(
-    "com/swmansion/reanimated/Utils",
-    "raiseException",
-    "(Ljava/lang/String;)V",
-    JNIMethodMode::static_method);
+  auto jniData = jniRegistry->getClassAndMethod(JavaMethodsUsed::RaiseException, JNIMethodMode::static_method);
   jobject messageObject = env->NewStringUTF(message);
   env->CallStaticVoidMethod(std::get<0>(jniData), std::get<1>(jniData), messageObject);
 }
