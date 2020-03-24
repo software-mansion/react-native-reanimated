@@ -12,11 +12,7 @@ LOCAL_MODULE := reanimated
 
 PROJECT_FILES := $(wildcard $(LOCAL_PATH)/src/main/cpp/*.cpp)
 PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/*.cpp)
-PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/NativeModules/*.cpp)
-PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/Registries/*.cpp)
-PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/SharedItems/*.cpp)
-PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/SpecTools/*.cpp)
-PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/Tools/*.cpp)
+PROJECT_FILES += $(wildcard $(LOCAL_PATH)/../Common/cpp/**/*.cpp)
 
 PROJECT_FILES := $(PROJECT_FILES:$(LOCAL_PATH)/%=%)
 
