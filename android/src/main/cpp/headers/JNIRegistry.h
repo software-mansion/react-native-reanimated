@@ -38,6 +38,13 @@ enum JavaMethodsUsed {
 struct JNIRegistryClass {
     std::string name;
     jclass clazz;
+    JNIEnv* globalRefEnv;
+
+    ~JNIRegistryClass() {
+        if (clazz != nullptr) {
+            globalRefEnv->DeleteGlobalRef(clazz);
+        }
+    }
 };
 
 struct JNIRegistryMethod {

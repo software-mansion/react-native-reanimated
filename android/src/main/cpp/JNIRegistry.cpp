@@ -4,12 +4,12 @@
 JNIRegistry::JNIRegistry(JNIEnv* env) {
     this->env = env;
 
-    classes.push_back({ "com/swmansion/reanimated/Utils", nullptr });
-    classes.push_back({ "com/swmansion/reanimated/Scheduler", nullptr });
-    classes.push_back({ "java/lang/Double", nullptr });
-    classes.push_back({ "java/util/ArrayList", nullptr });
-    classes.push_back({ "android/util/Pair", nullptr });
-    classes.push_back({ "java/lang/Integer", nullptr });
+    classes.push_back({ "com/swmansion/reanimated/Utils", nullptr, nullptr });
+    classes.push_back({ "com/swmansion/reanimated/Scheduler", nullptr, nullptr });
+    classes.push_back({ "java/lang/Double", nullptr, nullptr });
+    classes.push_back({ "java/util/ArrayList", nullptr, nullptr });
+    classes.push_back({ "android/util/Pair", nullptr, nullptr });
+    classes.push_back({ "java/lang/Integer", nullptr, nullptr });
 
     methods.push_back({ &classes[JavaClassesUsed::ReanimatedUtils], "raiseException", "(Ljava/lang/String;)V", nullptr });
     methods.push_back({ &classes[JavaClassesUsed::ReanimatedScheduler], "scheduleTriggerOnUI", "()Z", nullptr });
@@ -31,6 +31,7 @@ std::tuple<jclass, jmethodID> JNIRegistry::getClassAndMethod(
     if (classPtr->clazz == nullptr) {
         jclass jc = currentEnv->FindClass(classPtr->name.c_str());
         classPtr->clazz = (jclass)currentEnv->NewGlobalRef(jc);
+        classPtr->globalRefEnv = currentEnv;
     }
     if (methods[method].methodId == nullptr) {
         switch(methodMode) {
