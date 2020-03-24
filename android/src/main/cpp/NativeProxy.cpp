@@ -14,6 +14,7 @@
 #include "Logger.h"
 #include "AndroidErrorHandler.h"
 #include "SharedValue.h"
+#include "JNIRegistry.h"
 #define APPNAME "NATIVE_REANIMATED"
 
 using namespace facebook;
@@ -30,6 +31,7 @@ jsi::Value eval(jsi::Runtime &rt, const char *code) {
 
 std::shared_ptr<Scheduler> scheduler;
 std::shared_ptr<NativeReanimatedModule> nrm;
+std::shared_ptr<JNIRegistry> jniRegistry;
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
@@ -37,15 +39,21 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
 
+    jniRegistry.reset(new JNIRegistry(env));
+
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
-    std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM));
+    std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM, jniRegistry));
     scheduler = schedulerForModule;
+
 
     std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
     std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry);
-    std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new AndroidErrorHandler(env, schedulerForModule));
+    std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new AndroidErrorHandler(
+      env,
+      schedulerForModule,
+      jniRegistry));
 
     std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
 
@@ -95,8 +103,9 @@ Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
 }
 
 jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
-  jclass doubleClass = env->FindClass("java/lang/Double");
-  jmethodID doubleValueOf = env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;");
+
+  auto doubleValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::DoubleValueOf, JNIMethodMode::static_method);
+  
   jobject result = nullptr;
 
   if (sv == nullptr) {
@@ -108,7 +117,7 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
     case SharedValueType::shared_double:
     {
       double val = ((SharedDouble*)(sv.get()))->value;
-      result = env->CallStaticObjectMethod(doubleClass, doubleValueOf, val);
+      result = env->CallStaticObjectMethod(std::get<0>(doubleValueOf), std::get<1>(doubleValueOf), val);
       break;
     }
     case SharedValueType::shared_string:
@@ -123,19 +132,17 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 }
 
 jobject getChangedSharedValues(JNIEnv* env) {
-  jclass arrayListClass = env->FindClass("java/util/ArrayList");
-  jmethodID arrayListConstructor = env->GetMethodID(arrayListClass, "<init>", "()V");
-  jmethodID addMethod = env->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
 
-  jclass pairClass = env->FindClass("android/util/Pair");
-  jmethodID pairConstructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+  auto arrayListConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListInit);
+  auto arrayListAdd = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListAdd);
+
+  auto pairConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::PairInit);
 
   // This is needed to go from double to Double (boxed)
-  jclass integerClass = env->FindClass("java/lang/Integer");
-  jmethodID integerValueOf = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+  auto integerValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::IntegerValueOf, JNIMethodMode::static_method);
 
   // The list we're going to return:
-  jobject list = env->NewObject(arrayListClass, arrayListConstructor);
+  jobject list = env->NewObject(std::get<0>(arrayListConstructor), std::get<1>(arrayListConstructor));
 
   for(auto & sharedValue : nrm->sharedValueRegistry->getSharedValueMap()) {
     int id = sharedValue.first;
@@ -145,12 +152,12 @@ jobject getChangedSharedValues(JNIEnv* env) {
     }
     sv->dirty = false;
 
-    jobject x = env->CallStaticObjectMethod(integerClass, integerValueOf, id);
+    jobject x = env->CallStaticObjectMethod(std::get<0>(integerValueOf), std::get<1>(integerValueOf), id);
     jobject y = sharedValueToJObject(env, sv);
     // Create a new pair object
-    jobject pair = env->NewObject(pairClass, pairConstructor, x, y);
+    jobject pair = env->NewObject(std::get<0>(pairConstructor), std::get<1>(pairConstructor), x, y);
     // Add it to the list
-    env->CallBooleanMethod(list, addMethod, pair);
+    env->CallBooleanMethod(list, std::get<1>(arrayListAdd), pair);
   }
 
   return list;

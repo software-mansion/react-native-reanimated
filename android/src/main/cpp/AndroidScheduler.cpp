@@ -7,8 +7,9 @@
 #define APPNAME "NATIVE_REANIMATED"
 #include <android/log.h>
 
-AndroidScheduler::AndroidScheduler(JavaVM *vm) {
+AndroidScheduler::AndroidScheduler(JavaVM *vm, std::shared_ptr<JNIRegistry> jniRegistry) {
   this->vm = vm;
+  this->jniRegistry = jniRegistry;
 }
 
 AndroidScheduler::~AndroidScheduler() {}
@@ -19,9 +20,8 @@ void AndroidScheduler::scheduleOnUI(std::function<void()> job) { // memorize jcl
   JNIEnv *env;
   vm->AttachCurrentThread(&env, NULL);
 
-  jclass schedulerClass = env->FindClass("com/swmansion/reanimated/Scheduler");
-  jmethodID scheduleMethod = env->GetStaticMethodID(schedulerClass, "scheduleTriggerOnUI", "()Z");
-  if (!(env->CallStaticBooleanMethod(schedulerClass, scheduleMethod))) {
+  auto scheduleMethod = jniRegistry->getClassAndMethod(JavaMethodsUsed::TriggerOnUI, JNIMethodMode::static_method, env);
+  if (!(env->CallStaticBooleanMethod(std::get<0>(scheduleMethod), std::get<1>(scheduleMethod)))) {
     uiJobs.pop();
   }
 }
@@ -32,9 +32,8 @@ void AndroidScheduler::scheduleOnJS(std::function<void()> job) { // memorize jcl
   JNIEnv *env;
   vm->AttachCurrentThread(&env, NULL);
 
-  jclass schedulerClass = env->FindClass("com/swmansion/reanimated/Scheduler");
-  jmethodID scheduleMethod = env->GetStaticMethodID(schedulerClass, "scheduleTriggerOnJS", "()Z");
-  if (!(env->CallStaticBooleanMethod(schedulerClass, scheduleMethod))) {
+  auto scheduleMethod = jniRegistry->getClassAndMethod(JavaMethodsUsed::TriggerOnJS, JNIMethodMode::static_method, env);
+  if (!(env->CallStaticBooleanMethod(std::get<0>(scheduleMethod), std::get<1>(scheduleMethod)))) {
     jsJobs.pop();
   }
 }

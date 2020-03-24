@@ -2,16 +2,19 @@
 #include "Logger.h"
 #include <string>
 
-AndroidErrorHandler::AndroidErrorHandler(JNIEnv* env, std::shared_ptr<Scheduler> scheduler) {
-    this->env = env;
-    this->scheduler = scheduler;
+AndroidErrorHandler::AndroidErrorHandler(
+    JNIEnv* env, 
+    std::shared_ptr<Scheduler> scheduler, 
+    std::shared_ptr<JNIRegistry> jniRegistry) {
+  this->env = env;
+  this->scheduler = scheduler;
+  this->jniRegistry = jniRegistry;
 }
 
 void AndroidErrorHandler::raiseSpec(const char *message) {
-  jclass targetClass = env->FindClass("com/swmansion/reanimated/Utils");
-  jmethodID targetMethod = env->GetStaticMethodID(targetClass, "raiseException", "(Ljava/lang/String;)V");
+  auto jniData = jniRegistry->getClassAndMethod(JavaMethodsUsed::RaiseException, JNIMethodMode::static_method);
   jobject messageObject = env->NewStringUTF(message);
-  env->CallStaticVoidMethod(targetClass, targetMethod, messageObject);
+  env->CallStaticVoidMethod(std::get<0>(jniData), std::get<1>(jniData), messageObject);
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {
