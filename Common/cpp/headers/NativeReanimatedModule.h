@@ -17,6 +17,7 @@
 #include "SharedFunction.h"
 #include "SharedArray.h"
 #include "SharedObject.h"
+#include "MapperRegistry.h"
 
 #include <unistd.h>
 
@@ -33,6 +34,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       std::shared_ptr<SharedValueRegistry> svr,
       std::shared_ptr<WorkletRegistry> wr,
       std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<MapperRegistry> mapperRegistry,
       std::shared_ptr<JSCallInvoker> jsInvoker,
       std::shared_ptr<ErrorHandler> errorHandler);
     virtual ~NativeReanimatedModule();
@@ -50,11 +52,15 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void unregisterApplierFromRender(jsi::Runtime &rt, int id) override;
     void registerApplierOnEvent(jsi::Runtime &rt, int id, std::string eventName, int workletId, std::vector<int> svIds) override;
     void unregisterApplierFromEvent(jsi::Runtime &rt, int id) override;
+  
+    virtual void registerMapper(jsi::Runtime &rt, int id, int workletId, std::vector<int> svIds) override;
+    virtual void unregisterMapper(jsi::Runtime &rt, int id) override;
 
     void render();
     void onEvent(std::string eventName, std::string eventAsString);
 
     std::shared_ptr<WorkletRegistry> workletRegistry;
+    std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
     std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<ErrorHandler> errorHandler;

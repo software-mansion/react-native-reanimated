@@ -23,12 +23,16 @@ import SharedArraySharedObject from './testComponents/SharedArraySharedObject';
 import SzymonRotationScreen from './testComponents/SzymonRotationScreen';
 import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
 import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
+import MapperTest from './testComponents/MapperTest';
+import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
 
 // set components here:
 const components = {
   '3D Menu': Menu,
   'DragTest': DragTest,
+  'MapperTest': MapperTest,
+  'MapperTest2': MapperTest2,
   'SharedValueTest': SharedValueTest,
   'NotifyTest': NotifyTest,
   'SpeedTest': SpeedTest,

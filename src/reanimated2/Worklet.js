@@ -24,6 +24,18 @@ export default class Worklet {
     };
   }
 
+  registerAsMapper(sharedValues) {
+    const id = Worklet.applierId++;
+    let sharedValueIds = [];
+    for (let sv of sharedValues) {
+      sharedValueIds.push(sv.id);
+    }
+    NativeModule.registerMapper(id, this.id, sharedValueIds);
+    return () => {
+      NativeModule.unregisterMapper(id);
+    };
+  }
+
   release() {
     NativeModule.unregisterWorklet(this.id);
   }

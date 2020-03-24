@@ -49,6 +49,8 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
+    std::shared_ptr<MapperRegistry> mapperRegistry(new MapperRegistry(sharedValueRegistry));
+    std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry));
     std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry);
     std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new AndroidErrorHandler(
       env,
@@ -63,6 +65,7 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
       sharedValueRegistry,
       workletRegistry,
       schedulerForModule,
+      mapperRegistry,
       nullptr,
       errorHandler);
     nrm = module;
@@ -98,8 +101,11 @@ Java_com_swmansion_reanimated_NativeProxy_shouldEventBeHijacked(JNIEnv* env, jcl
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_swmansion_reanimated_NativeProxy_anyRenderApplier(JNIEnv* env) {
-  return (jboolean)nrm->applierRegistry->notEmpty();
+Java_com_swmansion_reanimated_NativeProxy_shouldRerender(JNIEnv* env) {
+  bool should = nrm->applierRegistry->notEmpty();
+  should = should or nrm->mapperRegistry->updatedSinceLastExecute;
+  return should;
+  return (jboolean)should;
 }
 
 jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {

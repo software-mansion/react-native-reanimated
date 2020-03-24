@@ -60,9 +60,11 @@ RCTUIManager* uiManagerTemporary;
   return nativeReanimatedModule->applierRegistry->anyApplierRegisteredForEvent(eventNameStdString);
 }
 
-+ (BOOL)anyRenderApplier
++ (BOOL)shouldRerender
 {
-  return nativeReanimatedModule->applierRegistry->notEmpty();
+  bool should = nativeReanimatedModule->applierRegistry->notEmpty();
+  should = should or nativeReanimatedModule->mapperRegistry->updatedSinceLastExecute;
+  return should;
 }
 
 + (void*) getNativeReanimatedModule:(void*)jsInvokerVoidPtr
@@ -78,7 +80,8 @@ RCTUIManager* uiManagerTemporary;
   std::shared_ptr<Scheduler> schedulerForModule(scheduler);
   std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
-  std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry());
+  std::shared_ptr<MapperRegistry> mapperRegistry(new MapperRegistry(sharedValueRegistry));
+  std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry));
   std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::jsc::makeJSCRuntime().release()));
   std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new IOSErrorHandler(schedulerForModule));
   
@@ -87,6 +90,7 @@ RCTUIManager* uiManagerTemporary;
   sharedValueRegistry,
   workletRegistry,
   schedulerForModule,
+  mapperRegistry,
   jsInvoker,
   errorHandler);
   

@@ -19,6 +19,7 @@ public:
     jsi::Value asValue(jsi::Runtime &rt) const override;
     jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
+    std::vector<int> getSharedValues() override;
     ~SharedFunction();
 private:
   std::shared_ptr<Worklet> worklet;

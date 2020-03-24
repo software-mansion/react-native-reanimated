@@ -68,3 +68,9 @@ void SharedString::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->value = sharedString->value;
   this->dirty = true;
 }
+
+std::vector<int> SharedString::getSharedValues() {
+  std::vector<int> res;
+  res.push_back(id);
+  return res;
+}

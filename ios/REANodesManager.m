@@ -172,7 +172,7 @@
 
   [self performOperations];
 
-  if (_onAnimationCallbacks.count == 0 && (![NativeProxy anyRenderApplier])) {
+  if (_onAnimationCallbacks.count == 0 && (![NativeProxy shouldRerender])) {
     [self stopUpdatingOnAnimationFrame];
   }
 }

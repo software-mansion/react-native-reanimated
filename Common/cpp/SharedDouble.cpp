@@ -68,6 +68,12 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, ptr);
 }
 
+std::vector<int> SharedDouble::getSharedValues() {
+  std::vector<int> res;
+  res.push_back(id);
+  return res;
+}
+
 SharedDouble::~SharedDouble() {
 
 }

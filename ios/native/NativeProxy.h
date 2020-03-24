@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterEvent:(NSString *)eventName event:(id<RCTEvent>)event;
 
 + (BOOL)shouldEventBeHijacked:(NSString*)eventName;
-+ (BOOL)anyRenderApplier;
++ (BOOL)shouldRerender;
 
 + (void*)getNativeReanimatedModule:(void*)jsInvokerVoidPtr;
 + (NSObject*)getSharedValue: (double) id;
