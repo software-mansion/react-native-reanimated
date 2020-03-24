@@ -22,9 +22,7 @@ Pod::Spec.new do |s|
 
   s.source_files =
       "ios/**/*.{mm,h,m}",
-      "Common/cpp/*.cpp",
       "Common/cpp/**/*.cpp",
-      "Common/cpp/headers/*.h",
       "Common/cpp/headers/**/*.h"
   
   s.pod_target_xcconfig    = {
