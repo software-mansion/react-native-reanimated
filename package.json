@@ -37,7 +37,13 @@
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
-  "dependencies": {},
+  "dependencies": {
+    "fbjs": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
