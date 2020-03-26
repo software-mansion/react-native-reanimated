@@ -32,7 +32,10 @@ jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
          size_t count
          ) -> jsi::Value {
          
-    return worklet->body->call(rt, args, count);
+     return worklet->body->callWithThis(rt,
+                                        thisValue.asObject(rt),
+                                        static_cast<const jsi::Value*>(args),
+                                        (size_t)count);
   };
   
   std::string idAsString = std::to_string(id);

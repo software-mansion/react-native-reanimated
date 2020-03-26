@@ -16,7 +16,6 @@ function UseAnimatedStyleTest() {
   
     const squareStyle = useAnimatedStyle(function(input) {
         'worklet';
-       // this.log("byla evaluacja");
         return {
             position: 'absolute',
             width: 40,

@@ -208,18 +208,11 @@ export function useSharedValue(initial) {
 
 const styleUpdater = new Worklet(function (input, output) {
   'worklet';
-  this.log("jest eval updater");
-  //const newValues = input.body.apply(this, [input.input]);
-  this.log('juz po');
-  
-  this.log('left poz: ' + output.position);
-
-  //this.log("dostal: " + JSON.stringify(newValues));
+  const newValues = input.body.apply(this, [input.input]);
 
   const assign = (left, right) => {
-    this.log('assign: ' + ' LEFT ' + JSON.stringify(left) + ' RIGHT ' + JSON.stringify(right));
     if ((typeof right === 'object') && (!right.value)) {
-      for (let key in Object.keys(right)) {
+      for (let key of Object.keys(right)) {
         if (left[key]) {
           assign(left[key], right[key]);
         }
@@ -233,17 +226,15 @@ const styleUpdater = new Worklet(function (input, output) {
     } else {
       if (left.set) {
         if (right.value) {
-          this.log('ustawiam na: ' + right.value.toString());
           left.set(right.value);
         } else {
-          this.log('ustawiam na: ' + right.toString());
           left.set(right);
         }
       }
     }
   }
 
-  //assign(output, newValues);
+  assign(output, newValues);
 });
 
 function unwrap(obj) {
