@@ -68,7 +68,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       }
     });
 
-    Scheduler.setUIManager(uiManager);
     Scheduler.setContext(reactCtx);
     Scheduler.setHandler(handler);
 

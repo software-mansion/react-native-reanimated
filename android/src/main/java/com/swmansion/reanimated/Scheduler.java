@@ -4,19 +4,13 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.uimanager.UIManagerModule;
 
 import java.lang.ref.WeakReference;
 
 public class Scheduler {
 
-  private static WeakReference<UIManagerModule> mUIManager;
   private static WeakReference<ReactContext> mReactContext;
   private static WeakReference<Handler> mHandler;
-
-  static void setUIManager(UIManagerModule uiManagerModule) {
-    mUIManager = new WeakReference<>(uiManagerModule);
-  }
 
   static void setContext(ReactContext reactContext) {
     mReactContext = new WeakReference<>(reactContext);
