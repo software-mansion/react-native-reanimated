@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
-import android.os.Looper;
 
 import java.lang.ref.WeakReference;
 
@@ -13,6 +12,7 @@ public class Scheduler {
 
   private static WeakReference<UIManagerModule> mUIManager;
   private static WeakReference<ReactContext> mReactContext;
+  private static WeakReference<Handler> mHandler;
 
   static void setUIManager(UIManagerModule uiManagerModule) {
     mUIManager = new WeakReference<>(uiManagerModule);
@@ -22,17 +22,19 @@ public class Scheduler {
     mReactContext = new WeakReference<>(reactContext);
   }
 
+  static void setHandler(Handler handler) {
+    mHandler = new WeakReference<>(handler);
+  }
+
   static native void triggerUI();
 
   static native void triggerJS();
 
   static boolean scheduleTriggerOnUI() {
-    if (mReactContext.get() == null) {
+    if (mReactContext.get() == null || mHandler.get() == null) {
       return false;
     }
-    Looper looper = mReactContext.get().getMainLooper();
-    Handler handler = new Handler(looper);
-    handler.post(new Runnable() {
+    mHandler.get().post(new Runnable() {
       @Override
       public void run() {
         triggerUI();
