@@ -210,6 +210,16 @@ const styleUpdater = new Worklet(function (input, output) {
   'worklet';
   const newValues = input.body.apply(this, [input.input]);
 
+  this.log('newVal: ' + JSON.stringify(newValues));
+
+  if (Array.isArray(newValues)) {
+    if (newValues[0].translateX.value) {
+      this.log('translateX.value:' +  newValues[0].translateX.value.toString());
+    } else {
+      this.log('translateX:' +  newValues[0].translateX.toString()); 
+    }
+  }
+
   const assign = (left, right) => {
     if ((typeof right === 'object') && (!right.value)) {
       for (let key of Object.keys(right)) {
@@ -281,6 +291,9 @@ function copyAndUnwrap(obj) {
   }
 
   if (!obj.initialValue) {
+    if (Object.keys(obj).length == 1 && obj.value) {
+      return obj.value;
+    }
     if (typeof obj === 'object') {
       for (let propName of Object.keys(obj)) {
         obj[propName] = copyAndUnwrap(obj[propName]);

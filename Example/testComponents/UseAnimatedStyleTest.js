@@ -16,6 +16,7 @@ function UseAnimatedStyleTest() {
   
     const squareStyle = useAnimatedStyle(function(input) {
         'worklet';
+        this.log('square');
         return {
             position: 'absolute',
             width: 40,
@@ -29,27 +30,25 @@ function UseAnimatedStyleTest() {
         };
     }, {parentWidth, parentHeight, totalX, totalY});
 
-    /*const transform1 = useAnimatedStyle(function(input) {
+    const transform1 = useAnimatedStyle(function(input) {
         'worklet';
+        this.log('transform1');
         return [
             {
                 translateX: input.parentWidth.value - input.squareStyle.transform[0].translateX.value - 40,
-            }, {
-                translateY: input.squareStyle.transform[1],
-            }
+            }, input.squareStyle.transform[1],
         ];
     }, {parentWidth, parentHeight, squareStyle});
 
     const transform2 = useAnimatedStyle(function(input) {
         'worklet';
+        this.log('transform2');
         return [
-            {
-                translateX: input.squareStyle.transform[0],
-            }, {
+                input.squareStyle.transform[0], {
                 translateY: input.parentHeight.value - input.squareStyle.transform[1].translateY.value - 40,
             }
         ];
-    }, {parentWidth, parentHeight, squareStyle});*/
+    }, {parentWidth, parentHeight, squareStyle});
    
     const worklet = useEventWorklet(function(prevX, prevY, totalX, totalY, velocityX, velocityY) {
         'worklet';
@@ -89,7 +88,7 @@ function UseAnimatedStyleTest() {
             <Animated.View
                 style={[squareStyle, { backgroundColor: 'blue'}]}
             />
-            {/*<Animated.View
+            <Animated.View
                 style={{
                     position: 'absolute',
                     width: 40,
@@ -106,7 +105,7 @@ function UseAnimatedStyleTest() {
                     transform: transform2,
                     backgroundColor: 'yellow',
                 }}
-            />*/}
+            />
         </View>
     )
 }
