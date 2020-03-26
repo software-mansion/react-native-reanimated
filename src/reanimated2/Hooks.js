@@ -207,35 +207,50 @@ export function useSharedValue(initial) {
 }
 
 const styleUpdater = new Worklet(function (input, output) {
-  'workelt';
-  const newValues = input.body.apply(this,[input.input]);
+  'worklet';
+  this.log("jest eval updater");
+  //const newValues = input.body.apply(this, [input.input]);
+  this.log('juz po');
   
+  this.log('left poz: ' + output.position);
+
+  //this.log("dostal: " + JSON.stringify(newValues));
+
   const assign = (left, right) => {
-    if (typeof right === 'object' && (!right.value)) {
+    this.log('assign: ' + ' LEFT ' + JSON.stringify(left) + ' RIGHT ' + JSON.stringify(right));
+    if ((typeof right === 'object') && (!right.value)) {
       for (let key in Object.keys(right)) {
-        if (left.hasOwnProperty(key)) {
+        if (left[key]) {
           assign(left[key], right[key]);
         }
       }
+
     } else if (Array.isArray(right)) {
       for (let i; i < right.length; i++) {
         assign(left[i], right[i]);
       }
+
     } else {
       if (left.set) {
-        left.set(right);
+        if (right.value) {
+          this.log('ustawiam na: ' + right.value.toString());
+          left.set(right.value);
+        } else {
+          this.log('ustawiam na: ' + right.toString());
+          left.set(right);
+        }
       }
     }
   }
 
-  assign(output, newValues);
+  //assign(output, newValues);
 });
 
-export function unwrap(obj, withLeaves) {
+function unwrap(obj) {
   if (Array.isArray(obj)) {
     const res = [];
     for (let ele of obj) {
-      res.push(mockUp(ele));
+      res.push(unwrap(ele));
     }
     return res;
   }
@@ -244,11 +259,11 @@ export function unwrap(obj, withLeaves) {
 
   if (typeof initialValue === 'object') {
   
-    if (initialValue.isWorklet) { // it's also a leaf but it cannot be returned as style
+    if (initialValue.isWorklet) { 
       return {start:()=>{}, stop:()=>{}};
     }
 
-    if (initialValue.isFunction) { // it's also a leaf but it cannot be returned as style
+    if (initialValue.isFunction) {
       return obj._data;
     }
 
@@ -259,20 +274,86 @@ export function unwrap(obj, withLeaves) {
       }
       return res;
     }
+
   } 
 
-  if (withLeaves) {
-    return { value:initialValue };
-  } 
-  return obj;
+  return { value:initialValue };
+}
+
+function copyAndUnwrap(obj) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let ele of obj) {
+      res.push(copyAndUnwrap(ele));
+    }
+    return res;
+  }
+
+  if (!obj.initialValue) {
+    if (typeof obj === 'object') {
+      for (let propName of Object.keys(obj)) {
+        obj[propName] = copyAndUnwrap(obj[propName]);
+      }  
+    }
+    return obj;
+  }
+
+  if (obj.initialValue.isObject) {
+    const res = {};
+      for (let propName of initialValue.propNames) {
+        res[propName] = copyAndUnwrap(obj[propName]);
+      }
+      return res;
+  }
+
+  // it has to be base shared type
+  return obj.initialValue;
 }
 
 export function useAnimatedStyle(body, input) {
-  const mockInput = unwrap(input, true);
-  const output = useSharedValue(body(mockInput));
+  const sharedInput = useSharedValue(input);
+  const mockInput = unwrap(sharedInput, true);
+  console.log("mockInput: " + JSON.stringify(mockInput));
+  const pureOutput = body.apply({log:(e)=>{}},[mockInput]);
+  console.log("pureoutput: " + JSON.stringify(pureOutput));
+  const unwrapedPureOutput  = copyAndUnwrap(pureOutput)
+  console.log("unwrapped: " + JSON.stringify(unwrapedPureOutput));
+  const output = useSharedValue(unwrapedPureOutput);
+  console.log("output: " + JSON.stringify(output));
   const sharedBody = useSharedValue(body);
-  const realInput = { input, body: sharedBody};
+  const realInput = { input: sharedInput, body: sharedBody};
   const mapper = useMapper(styleUpdater, [realInput, output]);
   mapper.startMapping();
   return output;
+}
+
+export function removeSharedObjsAndArrays(obj) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let element of obj) {
+      res.push(removeSharedObjsAndArrays(element));
+    }
+    return res;
+  }
+
+  if (typeof obj === 'object') {
+    if (obj instanceof SharedValue) {
+      if (obj.initialValue.isObject) {
+
+        const res = {};
+        for (let propName of obj.initialValue.propNames) {
+          res[propName] = removeSharedObjsAndArrays(obj[propName]);
+        }
+        return res;
+      } 
+      return obj;
+    } else {
+      for (let propName of Object.keys(obj)) {
+        obj[propName] = removeSharedObjsAndArrays(obj[propName]);
+      }
+      return obj;
+    }
+  }
+
+  return obj;
 }

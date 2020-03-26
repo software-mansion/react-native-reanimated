@@ -17,6 +17,7 @@ function sanitizeStyle(inputStyle) {
 }
 
 export function createOrReuseStyleNode(style, oldNode) {
+  console.log("style: " + JSON.stringify(style));
   style = StyleSheet.flatten(style) || {};
   if (style.transform) {
     style = {

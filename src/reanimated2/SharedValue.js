@@ -100,7 +100,7 @@ export default class SharedValue extends AnimatedNode {
         propNames,
         ids,
       }
-
+      
       const sv = new SharedValue(initValue);
 
       for (let prop in value) {

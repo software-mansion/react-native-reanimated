@@ -6,7 +6,7 @@ import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import Worklet from './reanimated2/Worklet';
-import { unwrap } from './reanimated2/Hooks';
+import { removeSharedObjsAndArrays } from './reanimated2/Hooks';
 import SharedValue from './reanimated2/SharedValue';
 
 import invariant from 'fbjs/lib/invariant';
@@ -230,11 +230,6 @@ export default function createAnimatedComponent(Component) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-
-        if ((value instanceof SharedValue) || (value.sharedArray && (value.sharedArray instanceof SharedValue))) {
-          style[key] = unwrap(value, false);
-        }
-
         if (!(value instanceof AnimatedNode) && key !== 'transform') {
           style[key] = value;
         }
@@ -245,7 +240,7 @@ export default function createAnimatedComponent(Component) {
     _filterNonAnimatedProps(inputProps) {
       const props = {};
       for (const key in inputProps) {
-        const value = inputProps[key];
+        let value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
         } else if (value instanceof AnimatedEvent || value instanceof WorkletEventHandler || this._isArrayOfWorklets(value)) {
