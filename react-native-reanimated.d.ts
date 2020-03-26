@@ -2,8 +2,6 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  type Nullable<T> = T | null | undefined;
-
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
     ViewProps,
@@ -21,6 +19,8 @@ declare module 'react-native-reanimated' {
     ScrollView as ReactNativeScrollView
   } from 'react-native';
   namespace Animated {
+    type Nullable<T> = T | null | undefined;
+
     class AnimatedNode<T> {
       constructor(
         nodeConfig: object,
