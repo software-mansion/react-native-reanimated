@@ -205,3 +205,74 @@ export function useSharedValue(initial) {
   
   return sv.current;
 }
+
+const styleUpdater = new Worklet(function (input, output) {
+  'workelt';
+  const newValues = input.body.apply(this,[input.input]);
+  
+  const assign = (left, right) => {
+    if (typeof right === 'object' && (!right.value)) {
+      for (let key in Object.keys(right)) {
+        if (left.hasOwnProperty(key)) {
+          assign(left[key], right[key]);
+        }
+      }
+    } else if (Array.isArray(right)) {
+      for (let i; i < right.length; i++) {
+        assign(left[i], right[i]);
+      }
+    } else {
+      if (left.set) {
+        left.set(right);
+      }
+    }
+  }
+
+  assign(output, newValues);
+});
+
+export function unwrap(obj, withLeaves) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let ele of obj) {
+      res.push(mockUp(ele));
+    }
+    return res;
+  }
+
+  const initialValue = obj.initialValue;
+
+  if (typeof initialValue === 'object') {
+  
+    if (initialValue.isWorklet) { // it's also a leaf but it cannot be returned as style
+      return {start:()=>{}, stop:()=>{}};
+    }
+
+    if (initialValue.isFunction) { // it's also a leaf but it cannot be returned as style
+      return obj._data;
+    }
+
+    if (initialValue.isObject) {
+      const res = {};
+      for (let propName of initialValue.propNames) {
+        res[propName] = unwrap(obj[propName]);
+      }
+      return res;
+    }
+  } 
+
+  if (withLeaves) {
+    return { value:initialValue };
+  } 
+  return obj;
+}
+
+export function useAnimatedStyle(body, input) {
+  const mockInput = unwrap(input, true);
+  const output = useSharedValue(body(mockInput));
+  const sharedBody = useSharedValue(body);
+  const realInput = { input, body: sharedBody};
+  const mapper = useMapper(styleUpdater, [realInput, output]);
+  mapper.startMapping();
+  return output;
+}

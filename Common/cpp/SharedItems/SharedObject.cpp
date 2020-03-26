@@ -47,8 +47,8 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
       auto propName = name.utf8(rt);
 
       if (propName == "id") {
-          return jsi::Value(id);
-      }
+        return jsi::Value(id);
+      } 
       
       if (props.count(propName) > 0) {
         return props[propName]->asParameter(rt);
