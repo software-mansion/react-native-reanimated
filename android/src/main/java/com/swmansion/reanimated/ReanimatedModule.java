@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
@@ -42,6 +43,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   private @Nullable TransitionModule mTransitionManager;
 
   private UIManagerModule mUIManager;
+  private Handler handler;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -56,6 +58,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     mTransitionManager = new TransitionModule(uiManager);
 
     mUIManager = uiManager;
+    handler = new Handler(reactCtx.getMainLooper());
 
     final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
     uiManager.addUIBlock(new UIBlock() {
@@ -65,8 +68,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       }
     });
 
-    Scheduler.setUIManager(uiManager);
     Scheduler.setContext(reactCtx);
+    Scheduler.setHandler(handler);
 
   }
 

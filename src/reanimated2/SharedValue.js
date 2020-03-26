@@ -21,11 +21,13 @@ export default class SharedValue extends AnimatedNode {
     this.initialValue = value;
 
     NativeModule.registerSharedValue(this.id, this.initialValue);
-    this.callbacks = {}
+    this.callbacks = {};
+    this.currentUid = 0;
+    this.maxCallbacks = 1e9;
   }
 
   async get() {
-    const uid = Math.floor(Math.random()*1e9);
+    const uid = this.generateUid();
     var _this = this;
     return new Promise(function(resolve, reject) {
       _this.callbacks[uid] = (value) => {
@@ -106,6 +108,17 @@ export default class SharedValue extends AnimatedNode {
     }
 
     return new SharedValue(value);
+  }
+
+  generateUid() {
+    if (Object.keys(this.callbacks).length > this.maxCallbacks) {
+      throw 'too many callbacks'
+    }
+    while(this.callbacks[this.currentUid] !== undefined) {
+      ++this.currentUid;
+      this.currentUid %= this.maxCallbacks;
+    }
+    return this.currentUid;
   }
 
 }

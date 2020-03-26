@@ -1,25 +1,23 @@
 package com.swmansion.reanimated;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.uimanager.NativeViewHierarchyManager;
-import com.facebook.react.uimanager.UIBlock;
-import com.facebook.react.uimanager.UIManagerModule;
 
 import java.lang.ref.WeakReference;
 
 public class Scheduler {
 
-  private static WeakReference<UIManagerModule> mUIManager;
   private static WeakReference<ReactContext> mReactContext;
-
-  static void setUIManager(UIManagerModule uiManagerModule) {
-    mUIManager = new WeakReference<>(uiManagerModule);
-  }
+  private static WeakReference<Handler> mHandler;
 
   static void setContext(ReactContext reactContext) {
     mReactContext = new WeakReference<>(reactContext);
+  }
+
+  static void setHandler(Handler handler) {
+    mHandler = new WeakReference<>(handler);
   }
 
   static native void triggerUI();
@@ -27,12 +25,12 @@ public class Scheduler {
   static native void triggerJS();
 
   static boolean scheduleTriggerOnUI() {
-    if (mUIManager.get() == null) {
+    if (mReactContext.get() == null || mHandler.get() == null) {
       return false;
     }
-    mUIManager.get().addUIBlock(new UIBlock() {
+    mHandler.get().post(new Runnable() {
       @Override
-      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+      public void run() {
         triggerUI();
       }
     });
