@@ -69,7 +69,7 @@ export default ({ hideTarget, hideWorklet, scale, rotateY, translateX }) => {
       if (this.event.state === 2) {
         // for animation it'd be convinient to have a way to define a logic that runs
         // when it gets interrupted (ended or cancelled).
-        this.stop(animateWorklet);
+        animateWorklet.stop();
       } else if (this.event.state === 5) {
         totalTranslation.set(translationX);
         if (translationX < -30) {
@@ -78,10 +78,10 @@ export default ({ hideTarget, hideWorklet, scale, rotateY, translateX }) => {
           // maybe "worklet" should just be a "function" and when we want to use
           // it to drive animation we can use some "looper" abstraction?
           hideTarget.set(0);
-          this.start(hideWorklet);
+          hideWorklet.start();
         }
         // would be nice to be able to call worklet.start like we do  in JS thread
-        this.start(animateWorklet);
+        animateWorklet.start();
       }
 
       const sign = translationX < 0 ? -1 : 1;

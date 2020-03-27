@@ -342,10 +342,11 @@ export function removeSharedObjsAndArrays(obj) {
       } 
       return obj;
     } else {
+      let res = {};
       for (let propName of Object.keys(obj)) {
-        obj[propName] = removeSharedObjsAndArrays(obj[propName]);
+        res[propName] = removeSharedObjsAndArrays(obj[propName]);
       }
-      return obj;
+      return res;
     }
   }
 

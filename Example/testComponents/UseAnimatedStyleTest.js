@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text, View, Dimensions } from "react-native"
-import Animated, { useSharedValue, useMapper, useEventWorklet } from 'react-native-reanimated';
+import { View, Dimensions } from "react-native"
+import Animated, { useSharedValue, useEventWorklet } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useAnimatedStyle } from '../../src/reanimated2/Hooks';
 
