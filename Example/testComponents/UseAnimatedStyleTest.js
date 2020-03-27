@@ -16,7 +16,6 @@ function UseAnimatedStyleTest() {
   
     const squareStyle = useAnimatedStyle(function(input) {
         'worklet';
-        this.log('square');
         return {
             position: 'absolute',
             width: 40,
@@ -32,7 +31,6 @@ function UseAnimatedStyleTest() {
 
     const transform1 = useAnimatedStyle(function(input) {
         'worklet';
-        this.log('transform1');
         return [
             {
                 translateX: input.parentWidth.value - input.squareStyle.transform[0].translateX.value - 40,
@@ -42,7 +40,6 @@ function UseAnimatedStyleTest() {
 
     const transform2 = useAnimatedStyle(function(input) {
         'worklet';
-        this.log('transform2');
         return [
                 input.squareStyle.transform[0], {
                 translateY: input.parentHeight.value - input.squareStyle.transform[1].translateY.value - 40,
