@@ -40,6 +40,7 @@ class WorkletModule : public BaseWorkletModule {
 
     void setWorkletId(int workletId) override;
     void setApplierId(int applierId) override;
+    void setJustStarted(bool justStarted) override;
 };
 
 #endif //REANIMATEDEXAMPLE_WORKLETMODULE_H

@@ -59,6 +59,8 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return jsi::Value(workletId);
   } else if(propName == "applierId") {
     return jsi::Value(applierId);
+  } else if(propName == "justStarted") {
+    return jsi::Value(justStarted);
   } else {
     std::string message = "unknown prop called on worklet object: ";
     message += propName;
@@ -74,4 +76,8 @@ void WorkletModule::setWorkletId(int workletId) {
 
 void WorkletModule::setApplierId(int applierId) {
   this->applierId = applierId;
+}
+
+void WorkletModule::setJustStarted(bool justStarted) {
+  this->justStarted = justStarted;
 }

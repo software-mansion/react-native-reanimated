@@ -21,6 +21,7 @@ class Applier {
   std::vector<std::function<void()>> onFinishListeners;
   std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
+  bool justStarted = true;
   public:
     std::shared_ptr<Worklet> worklet;
     std::vector<int> sharedValueIds;
