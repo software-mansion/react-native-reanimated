@@ -40,11 +40,7 @@ struct JNIRegistryClass {
     jclass clazz;
     JNIEnv* globalRefEnv;
 
-    ~JNIRegistryClass() {
-        if (clazz != nullptr) {
-            globalRefEnv->DeleteGlobalRef(clazz);
-        }
-    }
+    ~JNIRegistryClass() {}
 };
 
 struct JNIRegistryMethod {
