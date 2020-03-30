@@ -44,7 +44,6 @@ export default class SharedValue extends AnimatedNode {
 
   set(newValue) {
     NativeModule.setSharedValue(this.id, newValue);
-    ReanimatedModule.setValue(this.__nodeID, newValue);
     ReanimatedModule.triggerRender();
   }
 
