@@ -30,3 +30,9 @@ void WorkletRegistry::setWorkletListener(int workletId, std::shared_ptr<std::fun
 std::unordered_map<int, std::shared_ptr<Worklet>> WorkletRegistry::getWorkletMap() const {
   return this->workletMap;
 }
+
+void WorkletRegistry::unregisterAllWorklets() {
+  for (auto & p : this->workletMap) {
+    p.second = nullptr;
+  }
+}
