@@ -345,7 +345,7 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {
-  this->workletRegistry->unregisterAllWorklets();
+  // noop
 }
 
 // test method

@@ -46,7 +46,6 @@ struct JNIRegistryClass {
             if (vm != nullptr) {
                 vm->AttachCurrentThread(&globalRefEnv, NULL);
                 globalRefEnv->DeleteGlobalRef(clazz);
-                //vm->DetachCurrentThread();
             } else {
                 globalRefEnv->DeleteGlobalRef(clazz);
             }

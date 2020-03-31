@@ -19,7 +19,6 @@ class WorkletRegistry {
     void unregisterWorklet(int id);
     std::shared_ptr<Worklet> getWorklet(int id);
     void setWorkletListener(int workletId, std::shared_ptr<std::function<void()>> listener);
-    void unregisterAllWorklets();
 
     std::unordered_map<int, std::shared_ptr<Worklet>> getWorkletMap() const;
 };
