@@ -44,6 +44,7 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
 
     module->setWorkletId(worklet->workletId);
     module->setApplierId(applierId);
+    module->setJustStarted(justStarted);
 
     try {
       jsi::Value returnValue = worklet->body->callWithThis(rt,
@@ -59,6 +60,8 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
     delete [] args;
   }
 
+  justStarted = false;
+  
   if (shouldFinish) {
     finish();
   }

@@ -13,9 +13,11 @@ class BaseWorkletModule : public jsi::HostObject {
   protected:
     int workletId;
     int applierId;
+    bool justStarted;
   public:
     virtual void setWorkletId(int workletId) = 0;
     virtual void setApplierId(int applierId) = 0;
+    virtual void setJustStarted(bool justStarted) = 0;
 };
 
 #endif //REANIMATEDEXAMPLE_BASEWORKLETMODULE_H
