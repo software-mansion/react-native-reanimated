@@ -41,6 +41,7 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   // event worklet constants
   properties["START"] = jsi::Value(2);
   properties["END"] = jsi::Value(5);
+  properties["ACTIVE"] = jsi::Value(4);
   
   class Animated : public jsi::HostObject {
     std::unordered_map<std::string, jsi::Value> props;
