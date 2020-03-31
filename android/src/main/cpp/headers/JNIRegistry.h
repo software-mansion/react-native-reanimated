@@ -39,8 +39,19 @@ struct JNIRegistryClass {
     std::string name;
     jclass clazz;
     JNIEnv* globalRefEnv;
+    JavaVM *vm;
 
-    ~JNIRegistryClass() {}
+    ~JNIRegistryClass() {
+        if (globalRefEnv != nullptr && clazz != nullptr) {
+            if (vm != nullptr) {
+                vm->AttachCurrentThread(&globalRefEnv, NULL);
+                globalRefEnv->DeleteGlobalRef(clazz);
+                //vm->DetachCurrentThread();
+            } else {
+                globalRefEnv->DeleteGlobalRef(clazz);
+            }
+        }
+    }
 };
 
 struct JNIRegistryMethod {
@@ -59,7 +70,8 @@ class JNIRegistry {
     std::tuple<jclass, jmethodID> getClassAndMethod(
         JavaMethodsUsed method,
         JNIMethodMode methodMode = JNIMethodMode::standard_method,
-        JNIEnv *currentEnv = nullptr);
+        JNIEnv *currentEnv = nullptr,
+        JavaVM *vm = nullptr);
     virtual ~JNIRegistry() {}
 };
 

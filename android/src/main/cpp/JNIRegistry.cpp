@@ -24,7 +24,8 @@ JNIRegistry::JNIRegistry(JNIEnv* env) {
 std::tuple<jclass, jmethodID> JNIRegistry::getClassAndMethod(
         JavaMethodsUsed method,
         JNIMethodMode methodMode,
-        JNIEnv *currentEnv) {
+        JNIEnv *currentEnv,
+        JavaVM *vm) {
     currentEnv = (currentEnv == nullptr) ? this->env : currentEnv;
 
     JNIRegistryClass *classPtr = methods[method].clazz;
@@ -32,6 +33,7 @@ std::tuple<jclass, jmethodID> JNIRegistry::getClassAndMethod(
         jclass jc = currentEnv->FindClass(classPtr->name.c_str());
         classPtr->clazz = (jclass)currentEnv->NewGlobalRef(jc);
         classPtr->globalRefEnv = currentEnv;
+        classPtr->vm = vm;
     }
     if (methods[method].methodId == nullptr) {
         switch(methodMode) {
