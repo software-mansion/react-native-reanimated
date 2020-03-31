@@ -52,9 +52,11 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       auto propName = name.utf8(rt);
+  
+      auto it = props.find(propName);
       
-      if (props.count(propName) > 0) {
-        return jsi::Value(rt,props[propName]);
+      if (it != props.end()) {
+        return jsi::Value(rt, it->second);
       }
 
       return jsi::Value::undefined();
