@@ -11,11 +11,10 @@
 #include "Logger.h"
 
 void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
-  jsi::Function eval = rt.global().getPropertyAsFunction(rt, "eval");
   std::unordered_map<std::string, jsi::Value> properties;
   
   // add assign method
-  std::string assignCode = R"(function assign(left, right) {
+  std::string assignCode = R"((function assign(left, right) {
   if ((typeof right === 'object') && (!right.value)) {
     for (let key of Object.keys(right)) {
       if (left[key]) {
@@ -36,12 +35,8 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
         left.set(right);
       }
     }
-  }})";
+  }}))";
   properties["assign"] = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(assignCode), "");
-  
-  Logger::log("RuntimeDecorator");
-  Logger::log(properties["assign"].isObject());
-  Logger::log(properties["assign"].getObject(rt).isFunction(rt));
   
   // event worklet constants
   properties["START"] = jsi::Value(2);
