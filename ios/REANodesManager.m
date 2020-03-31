@@ -400,6 +400,10 @@
     for (NSArray *sv in changedSharedValues) {
       [REASharedValueNode setSharedValue:sv[0] newValue:sv[1]];
     }
+    
+    if ([NativeProxy shouldRerender]) {
+      [self postRunUpdatesAfterAnimation];
+    }
     return;
   }
   

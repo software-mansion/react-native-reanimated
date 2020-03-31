@@ -7,7 +7,7 @@ export default class SharedValue extends AnimatedNode {
 
   static idCounter = 0;
 
-  constructor(value) {
+  constructor(value, data) {
     const newId = SharedValue.idCounter++;
     super(
       {
@@ -19,6 +19,7 @@ export default class SharedValue extends AnimatedNode {
 
     this.id = newId;
     this.initialValue = value;
+    this._data = data;
 
     NativeModule.registerSharedValue(this.id, this.initialValue);
     this.callbacks = {};
@@ -57,6 +58,7 @@ export default class SharedValue extends AnimatedNode {
 
   static create(value) {
     console.log('create sv ' + JSON.stringify(value));
+    let data = null;
 
     if (value.isWorklet) {
       const argIds = [];
@@ -70,12 +72,15 @@ export default class SharedValue extends AnimatedNode {
       };
 
     } else if (value instanceof Worklet) {
+      data = value.body;
+
       value = {
         workletId: value.id,
         isFunction: true,
       }
 
     } else if (Array.isArray(value)) {
+      data = value;
       const argIds = [];
       for (let arg of value) {
         argIds.push(arg.id);
@@ -97,6 +102,7 @@ export default class SharedValue extends AnimatedNode {
         propNames,
         ids,
       }
+      
       const sv = new SharedValue(initValue);
 
       for (let prop in value) {
@@ -107,7 +113,7 @@ export default class SharedValue extends AnimatedNode {
       return sv;
     }
 
-    return new SharedValue(value);
+    return new SharedValue(value, data);
   }
 
   generateUid() {

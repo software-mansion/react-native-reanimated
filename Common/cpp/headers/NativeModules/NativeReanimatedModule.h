@@ -59,13 +59,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     void render();
     void onEvent(std::string eventName, std::string eventAsString);
 
+    std::unique_ptr<jsi::Runtime> runtime;
     std::shared_ptr<WorkletRegistry> workletRegistry;
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
     std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<ErrorHandler> errorHandler;
-    std::unique_ptr<jsi::Runtime> runtime;
-
+    
     /*
       used for tests
     */

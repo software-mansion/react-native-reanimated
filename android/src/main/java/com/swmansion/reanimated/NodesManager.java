@@ -420,6 +420,11 @@ public class NodesManager implements EventDispatcherListener {
         for (Pair<Integer, Object> sv : changedSharedValues) {
           SharedValueNode.setNewValueFor(sv.first, sv.second);
         }
+
+        if (NativeProxy.shouldRerender()) {
+          postRunUpdatesAfterAnimation();
+        }
+
         return;
       }
     } catch (UnsupportedEncodingException e) {

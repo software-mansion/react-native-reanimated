@@ -47,7 +47,7 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
       auto propName = name.utf8(rt);
 
       if (propName == "id") {
-          return jsi::Value(id);
+        return jsi::Value(id);
       }
       
       if (props.count(propName) > 0) {
@@ -55,6 +55,18 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
       }
 
       return jsi::Value::undefined();
+    }
+    
+    std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) {
+      std::vector<jsi::PropNameID> res;
+      res.push_back(jsi::PropNameID::forAscii(rt, "id"));
+      for (auto &entry : props) {
+        auto &propName = entry.first;
+        if (propName != "id") {
+          res.push_back(jsi::PropNameID::forAscii(rt, propName));
+        }
+      }
+      return res;
     }
 
   };

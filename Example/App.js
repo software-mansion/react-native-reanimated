@@ -26,6 +26,7 @@ import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
 import MapperTest from './testComponents/MapperTest';
 import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
+import UseAnimatedStyleTest from './testComponents/UseAnimatedStyleTest';
 
 // set components here:
 const components = {
@@ -33,6 +34,7 @@ const components = {
   'DragTest': DragTest,
   'MapperTest': MapperTest,
   'MapperTest2': MapperTest2,
+  'UseAnimatedStyle': UseAnimatedStyleTest,
   'SharedValueTest': SharedValueTest,
   'NotifyTest': NotifyTest,
   'SpeedTest': SpeedTest,

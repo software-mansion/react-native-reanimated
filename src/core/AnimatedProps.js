@@ -7,6 +7,7 @@ import { createOrReuseStyleNode } from './AnimatedStyle';
 import invariant from 'fbjs/lib/invariant';
 import deepEqual from 'fbjs/lib/areEqual';
 import { val } from '../val';
+import { removeSharedObjsAndArrays } from './../reanimated2/Hooks';
 
 function sanitizeProps(inputProps) {
   const props = {};
@@ -20,12 +21,11 @@ function sanitizeProps(inputProps) {
 }
 
 export function createOrReusePropsNode(props, callback, oldNode) {
-
   if (props.style) {
     props = {
       ...props,
       style: createOrReuseStyleNode(
-        props.style,
+        removeSharedObjsAndArrays(props.style),
         oldNode && oldNode._props.style
       ),
     };

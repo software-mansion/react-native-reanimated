@@ -44,8 +44,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   [bridge.eventDispatcher addDispatchObserver:self];
   [bridge.uiManager.observerCoordinator addObserver:self];
-  
-  [NativeProxy setUIManager:self.bridge.uiManager];
 }
 
 #pragma mark -- Transitioning API

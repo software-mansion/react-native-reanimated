@@ -205,3 +205,150 @@ export function useSharedValue(initial) {
   
   return sv.current;
 }
+
+const styleUpdater = new Worklet(function (input, output) {
+  'worklet';
+  const newValues = input.body.apply(this, [input.input]);
+
+  const assign = (left, right) => {
+    if ((typeof right === 'object') && (!right.value)) {
+      for (let key of Object.keys(right)) {
+        if (left[key]) {
+          assign(left[key], right[key]);
+        }
+      }
+
+    } else if (Array.isArray(right)) {
+      for (let i; i < right.length; i++) {
+        assign(left[i], right[i]);
+      }
+
+    } else {
+      if (left.set) {
+        if (right.value) {
+          left.set(right.value);
+        } else {
+          left.set(right);
+        }
+      }
+    }
+  }
+
+  assign(output, newValues);
+});
+
+function unwrap(obj) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let ele of obj) {
+      res.push(unwrap(ele));
+    }
+    return res;
+  }
+
+  const initialValue = obj.initialValue;
+
+  if (typeof initialValue === 'object') {
+  
+    if (initialValue.isWorklet) { 
+      return {start:()=>{}, stop:()=>{}};
+    }
+
+    if (initialValue.isFunction) {
+      return obj._data;
+    }
+
+    if (initialValue.isObject) {
+      const res = {};
+      for (let propName of initialValue.propNames) {
+        res[propName] = unwrap(obj[propName]);
+      }
+      return res;
+    }
+
+  } 
+
+  return { value:initialValue };
+}
+
+function copyAndUnwrap(obj) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let ele of obj) {
+      res.push(copyAndUnwrap(ele));
+    }
+    return res;
+  }
+
+  if (!obj.initialValue) {
+    if (Object.keys(obj).length == 1 && obj.value) {
+      return obj.value;
+    }
+    if (typeof obj === 'object') {
+      for (let propName of Object.keys(obj)) {
+        obj[propName] = copyAndUnwrap(obj[propName]);
+      }  
+    }
+    return obj;
+  }
+
+  if (obj.initialValue.isObject) {
+    const res = {};
+      for (let propName of initialValue.propNames) {
+        res[propName] = copyAndUnwrap(obj[propName]);
+      }
+      return res;
+  }
+
+  // it has to be base shared type
+  return obj.initialValue;
+}
+
+export function useAnimatedStyle(body, input) {
+  const sharedInput = useSharedValue(input);
+  const mockInput = unwrap(sharedInput, true);
+  console.log("mockInput: " + JSON.stringify(mockInput));
+  const pureOutput = body.apply({log:(e)=>{}},[mockInput]);
+  console.log("pureoutput: " + JSON.stringify(pureOutput));
+  const unwrapedPureOutput  = copyAndUnwrap(pureOutput)
+  console.log("unwrapped: " + JSON.stringify(unwrapedPureOutput));
+  const output = useSharedValue(unwrapedPureOutput);
+  console.log("output: " + JSON.stringify(output));
+  const sharedBody = useSharedValue(body);
+  const realInput = { input: sharedInput, body: sharedBody};
+  const mapper = useMapper(styleUpdater, [realInput, output]);
+  mapper.startMapping();
+  return output;
+}
+
+export function removeSharedObjsAndArrays(obj) {
+  if (Array.isArray(obj)) {
+    const res = [];
+    for (let element of obj) {
+      res.push(removeSharedObjsAndArrays(element));
+    }
+    return res;
+  }
+
+  if (typeof obj === 'object') {
+    if (obj instanceof SharedValue) {
+      if (obj.initialValue.isObject) {
+
+        const res = {};
+        for (let propName of obj.initialValue.propNames) {
+          res[propName] = removeSharedObjsAndArrays(obj[propName]);
+        }
+        return res;
+      } 
+      return obj;
+    } else {
+      let res = {};
+      for (let propName of Object.keys(obj)) {
+        res[propName] = removeSharedObjsAndArrays(obj[propName]);
+      }
+      return res;
+    }
+  }
+
+  return obj;
+}
