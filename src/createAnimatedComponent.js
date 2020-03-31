@@ -6,8 +6,6 @@ import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import Worklet from './reanimated2/Worklet';
-import { removeSharedObjsAndArrays } from './reanimated2/Hooks';
-import SharedValue from './reanimated2/SharedValue';
 
 import invariant from 'fbjs/lib/invariant';
 import { WorkletEventHandler } from './Animated';
@@ -240,7 +238,7 @@ export default function createAnimatedComponent(Component) {
     _filterNonAnimatedProps(inputProps) {
       const props = {};
       for (const key in inputProps) {
-        let value = inputProps[key];
+        const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
         } else if (value instanceof AnimatedEvent || value instanceof WorkletEventHandler || this._isArrayOfWorklets(value)) {
