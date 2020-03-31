@@ -23,8 +23,8 @@ std::shared_ptr<IOSScheduler> scheduler;
 
 + (void)clear
 {
-  nativeReanimatedModule.reset();
   scheduler.reset();
+  nativeReanimatedModule.reset();
 }
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender
