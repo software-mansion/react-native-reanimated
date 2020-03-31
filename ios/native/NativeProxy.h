@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NativeProxy : NSObject
 
 + (void)clear;
-+ (void)setUIManager:(RCTUIManager *)uiManager;
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender;
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterEvent:(NSString *)eventName event:(id<RCTEvent>)event;

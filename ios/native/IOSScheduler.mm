@@ -28,9 +28,5 @@ void IOSScheduler::scheduleOnJS(std::function<void()> job) {
   });
 }
 
-void IOSScheduler::setUIManager(RCTUIManager *uiManager) {
-  this->uiManager = uiManager;
-}
-
 IOSScheduler::~IOSScheduler(){}
  
