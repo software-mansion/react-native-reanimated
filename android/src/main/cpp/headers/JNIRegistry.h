@@ -9,6 +9,7 @@
 #include <string>
 #include <jni.h>
 #include <tuple>
+#include "Logger.h"
 
 enum class JNIMethodMode {
     standard_method,
@@ -43,12 +44,8 @@ struct JNIRegistryClass {
 
     ~JNIRegistryClass() {
         if (globalRefEnv != nullptr && clazz != nullptr) {
-            if (vm != nullptr) {
-                vm->AttachCurrentThread(&globalRefEnv, NULL);
-                globalRefEnv->DeleteGlobalRef(clazz);
-            } else {
-                globalRefEnv->DeleteGlobalRef(clazz);
-            }
+            vm->AttachCurrentThread(&globalRefEnv, NULL);
+            globalRefEnv->DeleteGlobalRef(clazz);
         }
     }
 };
@@ -61,16 +58,16 @@ struct JNIRegistryMethod {
 };
 
 class JNIRegistry {
+    JavaVM* vm;
     JNIEnv* env;
     std::vector<JNIRegistryClass> classes;
     std::vector<JNIRegistryMethod> methods;
   public:
-    JNIRegistry(JNIEnv* env);
+    JNIRegistry(JNIEnv* env, JavaVM* vm);
     std::tuple<jclass, jmethodID> getClassAndMethod(
         JavaMethodsUsed method,
         JNIMethodMode methodMode = JNIMethodMode::standard_method,
-        JNIEnv *currentEnv = nullptr,
-        JavaVM *vm = nullptr);
+        JNIEnv *currentEnv = nullptr);
     virtual ~JNIRegistry() {}
 };
 

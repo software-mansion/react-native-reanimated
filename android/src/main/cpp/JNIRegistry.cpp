@@ -1,8 +1,9 @@
 #include "JNIRegistry.h"
 #include <memory>
 
-JNIRegistry::JNIRegistry(JNIEnv* env) {
+JNIRegistry::JNIRegistry(JNIEnv* env, JavaVM* vm) {
     this->env = env;
+    this->vm = vm;
 
     classes.push_back({ "com/swmansion/reanimated/Utils", nullptr, nullptr });
     classes.push_back({ "com/swmansion/reanimated/Scheduler", nullptr, nullptr });
@@ -24,16 +25,17 @@ JNIRegistry::JNIRegistry(JNIEnv* env) {
 std::tuple<jclass, jmethodID> JNIRegistry::getClassAndMethod(
         JavaMethodsUsed method,
         JNIMethodMode methodMode,
-        JNIEnv *currentEnv,
-        JavaVM *vm) {
+        JNIEnv *currentEnv) {
     currentEnv = (currentEnv == nullptr) ? this->env : currentEnv;
 
     JNIRegistryClass *classPtr = methods[method].clazz;
     if (classPtr->clazz == nullptr) {
-        jclass jc = currentEnv->FindClass(classPtr->name.c_str());
-        classPtr->clazz = (jclass)currentEnv->NewGlobalRef(jc);
         classPtr->globalRefEnv = currentEnv;
         classPtr->vm = vm;
+        
+        classPtr->vm->AttachCurrentThread(&classPtr->globalRefEnv, NULL);
+        jclass jc = classPtr->globalRefEnv->FindClass(classPtr->name.c_str());
+        classPtr->clazz = (jclass)classPtr->globalRefEnv->NewGlobalRef(jc);
     }
     if (methods[method].methodId == nullptr) {
         switch(methodMode) {
