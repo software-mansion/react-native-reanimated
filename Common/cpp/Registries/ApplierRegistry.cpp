@@ -18,7 +18,6 @@ void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> 
 void ApplierRegistry::unregisterApplierFromRender(int id) {
   if (renderAppliers.size() > 0) {
     if (renderAppliers.find(id) != renderAppliers.end()) {
-      renderAppliers[id]->finish();
       renderAppliers.erase(id);
     }
   }
