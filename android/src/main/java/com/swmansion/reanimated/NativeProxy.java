@@ -3,17 +3,11 @@ package com.swmansion.reanimated;
 import android.util.Pair;
 
 import com.facebook.react.bridge.NativeMap;
-import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.turbomodule.core.JSCallInvokerHolderImpl;
-import com.facebook.react.uimanager.NativeViewHierarchyManager;
-import com.facebook.react.uimanager.UIBlock;
-import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import androidx.annotation.Nullable;
