@@ -10,7 +10,11 @@ export default class AnimatedValue extends InternalAnimatedValue {
   setValue(value) {
     this.__detachAnimation(this._animation);
     if (Platform.OS === 'web') {
-      this._updateValue(value);
+      if (typeof value === "number") {
+        this._updateValue(value);
+      } else {
+        evaluateOnce(set(this, value), this);
+      }
     } else {
       if (ReanimatedModule.setValue && typeof value === "number") {
         // FIXME Remove it after some time
