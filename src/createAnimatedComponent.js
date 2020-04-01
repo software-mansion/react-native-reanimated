@@ -205,18 +205,16 @@ export default function createAnimatedComponent(Component) {
     _filterAnimatedStyle(inputStyle) {
       const style = {};
       for (const key in inputStyle) {
-        const value = inputStyle[key];
+        const value = inputStyle[key];	       
         if (value instanceof AnimatedNode) {
           if (this._setAnimatedStylesInRender) {
             style[key] = value.__getValue();
           }
-        } else if (key === 'transform') {
-          if (this._setAnimatedStylesInRender) {
-            style.transform = value.map(this._filterAnimatedStyle.bind(this));
-          } 
+        } else if (key === 'transform' && Array.isArray(value)) {
+          style.transform = value.map(this._filterAnimatedStyle.bind(this));
         } else {
           style[key] = value;
-        }
+        }	        
       }
       return style;
     }
