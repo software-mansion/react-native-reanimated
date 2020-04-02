@@ -205,9 +205,7 @@ export default function createAnimatedComponent(Component) {
       for (const key in inputStyle) {
         const value = inputStyle[key];
         if (value && typeof value.__getValue === 'function') {
-          if (this._setAnimatedStylesInRender) {
-            style[key] = value.__getValue();
-          }
+          style[key] = value.__getValue();
         } else if (key === 'transform' && Array.isArray(value)) {
           style.transform = value.map(this._filterAnimatedStyle.bind(this));
         } else {
