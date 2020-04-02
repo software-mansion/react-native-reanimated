@@ -34,6 +34,7 @@ class SharedWorkletStarter : public SharedValue {
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
   void willUnregister() override;
   void setUnregisterListener(const std::function<void()> & fun);
+  std::shared_ptr<SharedValue> copy() override;
   std::vector<int> getSharedValues() override;
   
   ~SharedWorkletStarter();

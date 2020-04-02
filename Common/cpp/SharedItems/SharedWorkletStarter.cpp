@@ -56,6 +56,35 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
       this->errorHandler = errorHandler;
     }
 
+    int startTentatively(jsi::Runtime &rt, const jsi::Value *args, int count) {
+      std::vector<std::shared_ptr<SharedValue>> sharedValues;
+      for (int i = 0; i < starter->worklet->length; ++i) {
+        std::shared_ptr<SharedValue> sv;
+        if (i < count and args[i].isObject() and args[i].getObject(rt).hasProperty(rt, "id")) {
+          int svId = args[i].getObject(rt).getProperty(rt, "id").asNumber();
+          sv = sharedValueRegistry->getSharedValue(svId);
+          if (sv == nullptr) return -1;
+          sharedValues.push_back(sv);
+          continue;
+        }
+        std::shared_ptr<SharedValue> defaultSV = sharedValueRegistry->getSharedValue(starter->args[i]);
+        if (defaultSV == nullptr) return -1;
+        sv = defaultSV->copy();
+        sharedValues.push_back(sv);
+        
+        if (i < count) {
+          jsi::Function assign = rt.global().getPropertyAsObject(rt, "Animated").getPropertyAsFunction(rt, "assign");
+          assign.call(rt, sv->asParameter(rt), args[i]);
+        }
+      }
+      
+      int applierId = ApplierRegistry::New_Applier_Id--;
+      std::shared_ptr<Applier> applier(new Applier(applierId, starter->worklet, sharedValues, this->errorHandler, sharedValueRegistry));
+      
+      applierRegistry->registerApplierForRender(applierId, applier);
+      return applierId;
+    }
+    
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       auto propName = name.utf8(rt);
       if (propName == "start") {
@@ -119,6 +148,17 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         };
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
+        
+      } else if (propName == "startTentatively") {
+        auto callback = [this](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count
+        ) -> jsi::Value {
+          return jsi::Value(startTentatively(rt, args, count));
+        };
+        return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
       }
       return jsi::Value::undefined();
     }
@@ -149,6 +189,16 @@ void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & f
   this->unregisterListener = std::make_shared<const std::function<void()>>(std::move(fun));
 }
 
+std::shared_ptr<SharedValue> SharedWorkletStarter::copy() {
+  
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedWorkletStarter>(id,
+                                        worklet,
+                                        args,
+                                        sharedValueRegistry,
+                                        applierRegistry,
+                                        errorHandler);
+}
 
 std::vector<int> SharedWorkletStarter::getSharedValues() {
   std::vector<int> res;

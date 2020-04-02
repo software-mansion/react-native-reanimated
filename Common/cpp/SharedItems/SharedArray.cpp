@@ -6,6 +6,7 @@
 //
 
 #include "SharedArray.h"
+#include "SharedValueRegistry.h"
 
 SharedArray::SharedArray(int id, std::vector<std::shared_ptr<SharedValue>> svs) {
   this->id = id;
@@ -45,4 +46,13 @@ std::vector<int> SharedArray::getSharedValues() {
     }
   }
   return res;
+}
+
+std::shared_ptr<SharedValue> SharedArray::copy() {
+  std::vector<std::shared_ptr<SharedValue>> copiedSvs;
+  for (auto &sv : svs) {
+    copiedSvs.push_back(sv->copy());
+  }
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedArray>(id, copiedSvs);
 }

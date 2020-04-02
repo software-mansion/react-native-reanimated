@@ -28,3 +28,5 @@ std::shared_ptr<SharedValue> SharedValueRegistry::getSharedValue(int id) {
 std::unordered_map<int, std::shared_ptr<SharedValue>> SharedValueRegistry::getSharedValueMap() const {
   return this->sharedValueMap;
 }
+
+int SharedValueRegistry::NEXT_SHARED_VALUE_ID = INT_MAX;

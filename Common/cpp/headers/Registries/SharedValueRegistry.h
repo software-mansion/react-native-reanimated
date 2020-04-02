@@ -20,6 +20,7 @@ class SharedValueRegistry {
     std::shared_ptr<SharedValue> getSharedValue(int id);
 
     std::unordered_map<int, std::shared_ptr<SharedValue>> getSharedValueMap() const;
+    static int NEXT_SHARED_VALUE_ID;
 };
 
 #endif //REANIMATEDEXAMPLE_SHAREDVALUEREGISTRY_H

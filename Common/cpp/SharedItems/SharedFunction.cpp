@@ -6,6 +6,7 @@
 //
 
 #include "SharedFunction.h"
+#include "SharedValueRegistry.h"
 #include "Logger.h"
 
 SharedFunction::SharedFunction(int id, std::shared_ptr<Worklet> w) : SharedValue() {
@@ -62,6 +63,13 @@ std::vector<int> SharedFunction::getSharedValues() {
   std::vector<int> res;
   res.push_back(id);
   return res;
+}
+
+std::shared_ptr<SharedValue> SharedFunction::copy() {
+  
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedFunction>(id,
+                                        worklet);
 }
 
 SharedFunction::~SharedFunction() {

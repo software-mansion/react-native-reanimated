@@ -38,6 +38,14 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   }}))";
   properties["assign"] = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(assignCode), "");
   
+  // add startUpdater method
+  std::string startUpdater = R"((function startUpdater(sv, worklet, params) {
+    params = ([sv]).concat(params);
+    sv.bind(worklet.startTentatively.apply(undefined, params));
+  }))";
+  
+  properties["startUpdater"] = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(startUpdater), "");
+  
   // event worklet constants
   properties["START"] = jsi::Value(2);
   properties["END"] = jsi::Value(5);

@@ -86,7 +86,7 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
   std::function<std::shared_ptr<SharedValue>()> create;
   
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber(), applierRegistry));
+    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber(), applierRegistry, sharedValueRegistry, workletRegistry, errorHandler));
     create = [=] () {return sv;};
   } else if(value.isString()) {
     std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));

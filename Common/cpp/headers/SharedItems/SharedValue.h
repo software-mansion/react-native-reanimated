@@ -31,6 +31,7 @@ class SharedValue {
     virtual std::vector<int> getSharedValues() = 0;
     virtual void setNewValue(std::shared_ptr<SharedValue> sv) = 0;
     virtual void willUnregister(){}
+    virtual std::shared_ptr<SharedValue> copy() = 0;
     virtual ~SharedValue(){};
 };
 

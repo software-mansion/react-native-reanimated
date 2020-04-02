@@ -17,7 +17,6 @@ Applier::Applier(
   this->worklet = worklet;
   this->sharedValues = sharedValues;
   this->applierId = applierId;
-  this->errorHandler = errorHandler;
   this->sharedValueRegistry = sharedValueRegistry;
 }
 
