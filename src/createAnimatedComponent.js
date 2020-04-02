@@ -30,11 +30,6 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-  
-    // As long as this flag is true we set the current values of the animated 
-    // styles manually. Once the animated nodes are active, the styles are set 
-    // via native props. This prevents minimal flickering when first rendered.
-    _setAnimatedStylesInRender = true;
 
     constructor(props) {
       super(props);
@@ -129,10 +124,6 @@ export default function createAnimatedComponent(Component) {
     // If you want to animate a composite component, you need to re-render it.
     // In this case, we have a fallback that uses forceUpdate.
     _animatedPropsCallback = () => {
-      // Stop setting animated styles in render method because they will 
-      // subsequently be set via setNativeProps.
-      this._setAnimatedStylesInRender = false;
-      
       if (this._component == null) {
         // AnimatedProps is created in will-mount because it's used in render.
         // But this callback may be invoked before mount in async mode,
@@ -199,6 +190,13 @@ export default function createAnimatedComponent(Component) {
     _setComponentRef = c => {
       if (c !== this._component) {
         this._component = c;
+
+        // Set initial animated styles to prevent minimal flickering
+        if (this._component && this._component.setNativeProps) {
+          this._component.setNativeProps({
+            style: this._filterAnimatedStyle(StyleSheet.flatten(this.props.style))
+          });
+        }
       }
     };
 
@@ -219,12 +217,23 @@ export default function createAnimatedComponent(Component) {
       return style;
     }
 
+    _filterNonAnimatedStyle(inputStyle) {
+      const style = {};
+      for (const key in inputStyle) {
+        const value = inputStyle[key];
+        if (!(value instanceof AnimatedNode) && key !== 'transform') {
+          style[key] = value;
+        }
+      }
+      return style;
+    }
+
     _filterNonAnimatedProps(inputProps) {
       const props = {};
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          props[key] = this._filterAnimatedStyle(StyleSheet.flatten(value));
+          props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
           // rely on having a callback registered in order to generate events
