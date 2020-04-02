@@ -12,9 +12,16 @@ AndroidErrorHandler::AndroidErrorHandler(
 }
 
 void AndroidErrorHandler::raiseSpec(const char *message) {
-  auto jniData = jniRegistry->getClassAndMethod(JavaMethodsUsed::RaiseException, JNIMethodMode::static_method);
-  jobject messageObject = env->NewStringUTF(message);
-  env->CallStaticVoidMethod(std::get<0>(jniData), std::get<1>(jniData), messageObject);
+  this->error.message = std::string(message);
+}
+
+ErrorWrapper AndroidErrorHandler::getError() {
+  return this->error;
+}
+
+void AndroidErrorHandler::handleError() {
+  this->error.handled = true;
+  this->error.message="";
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {

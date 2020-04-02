@@ -41,10 +41,14 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
                                 (size_t)sharedValues.size());
       shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
     } catch(const std::exception &e) {
-      std::string message = "worklet error: ";
-      message += e.what();
-      this->errorHandler->raise(message.c_str());
-      shouldFinish = true;
+      if (this->errorHandler->getError().message.size() == 0) {
+        std::string message = "worklet error: ";
+        message += e.what();
+        this->errorHandler->raise(message.c_str());
+        if (this->errorHandler->getError().handled) {
+          shouldFinish = true;
+        }
+      }
     }
     delete [] args;
   }

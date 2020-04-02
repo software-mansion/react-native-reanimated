@@ -7,6 +7,7 @@
 #include <android/looper.h>
 #include <unistd.h>
 #include <hermes/hermes.h>
+#include <memory>
 #include "AndroidScheduler.h"
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
@@ -181,6 +182,17 @@ jobject getChangedSharedValues(JNIEnv* env) {
   }
 
   return list;
+}
+
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_NativeProxy_getError(JNIEnv* env) {
+  return (nrm->errorHandler->getError().message.size() > 0) ? env->NewStringUTF(nrm->errorHandler->getError().message.c_str()) : nullptr;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_swmansion_reanimated_NativeProxy_handleError(JNIEnv* env) {
+  nrm->errorHandler->handleError();
 }
 
 extern "C" JNIEXPORT jobject JNICALL

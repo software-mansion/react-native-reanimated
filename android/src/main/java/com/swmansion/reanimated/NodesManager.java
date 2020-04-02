@@ -198,6 +198,12 @@ public class NodesManager implements EventDispatcherListener {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
+
+    String error = NativeProxy.getError();
+    if (error != null) {
+      NativeProxy.handleError();
+      throw new RuntimeException(error);
+    }
   }
 
   /**

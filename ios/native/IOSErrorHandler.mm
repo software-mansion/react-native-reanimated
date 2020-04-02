@@ -15,8 +15,17 @@ IOSErrorHandler::IOSErrorHandler(std::shared_ptr<Scheduler> scheduler) {
 
 void IOSErrorHandler::raiseSpec(const char *message) {
     RCTLogError(@(message));
+    this->error.handled = true;
 }
 
 std::shared_ptr<Scheduler> IOSErrorHandler::getScheduler() {
     return this->scheduler;
+}
+
+ErrorWrapper IOSErrorHandler::getError() {
+    return this->error;
+}
+
+void IOSErrorHandler::handleError() {
+    this->error.handled = true;
 }

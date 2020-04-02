@@ -17,23 +17,21 @@ enum class JNIMethodMode {
 };
 
 enum JavaClassesUsed {
-    ReanimatedUtils = 0,
-    ReanimatedScheduler = 1,
-    Double = 2,
-    ArrayList = 3,
-    Pair = 4,
-    Integer = 5,
+    ReanimatedScheduler = 0,
+    Double = 1,
+    ArrayList = 2,
+    Pair = 3,
+    Integer = 4,
 };
 
 enum JavaMethodsUsed {
-    RaiseException = 0,
-    TriggerOnUI = 1,
-    TriggerOnJS = 2,
-    DoubleValueOf = 3,
-    ArrayListInit = 4,
-    ArrayListAdd = 5,
-    PairInit = 6,
-    IntegerValueOf = 7,
+    TriggerOnUI = 0,
+    TriggerOnJS = 1,
+    DoubleValueOf = 2,
+    ArrayListInit = 3,
+    ArrayListAdd = 4,
+    PairInit = 5,
+    IntegerValueOf = 6,
 };
 
 struct JNIRegistryClass {
