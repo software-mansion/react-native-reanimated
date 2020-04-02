@@ -78,8 +78,19 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           for (int svId : starter->args) {
             svIds.push_back(svId);
           }
+          
+          std::vector<std::shared_ptr<SharedValue>> sharedValues;
+          
+          for (auto id : svIds) {
+            std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+            if (sv == nullptr) {
+              return false;
+              break;
+            }
+            sharedValues.push_back(sv);
+          }
 
-          std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+          std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
           
           applier->addOnFinishListener([=] {
             starter->setUnregisterListener(nullptr);

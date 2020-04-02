@@ -240,8 +240,19 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
     if (workletPtr == nullptr) {
       return;
     }
-
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+    
+    for (auto id : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+      if (sv == nullptr) {
+        return;
+        break;
+      }
+      sharedValues.push_back(sv);
+    }
+    
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -258,8 +269,19 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
     if (workletPtr == nullptr) {
       return;
     }
+    
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+    
+    for (auto id : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+      if (sv == nullptr) {
+        return;
+        break;
+      }
+      sharedValues.push_back(sv);
+    }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }
