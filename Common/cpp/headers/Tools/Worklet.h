@@ -13,6 +13,7 @@ using namespace facebook;
 class Worklet {
   public:
     int workletId;
+    int length;
     std::shared_ptr<jsi::Function> body;
     std::shared_ptr<std::function<void()>> listener;
     virtual ~Worklet(){}

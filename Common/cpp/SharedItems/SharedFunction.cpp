@@ -41,7 +41,11 @@ jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
   std::string idAsString = std::to_string(id);
   jsi::PropNameID name = jsi::PropNameID::forAscii(rt, idAsString);
   
-  jsi::Function function = jsi::Function::createFromHostFunction(rt, name, 1, callback);
+  int length = worklet->length;
+  jsi::Function function = jsi::Function::createFromHostFunction(rt, name, length, callback);
+  
+  function.setProperty(rt, "id", id);
+  
   return function;
 }
 

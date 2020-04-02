@@ -13,7 +13,9 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerWorklet(
 
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerWorklet(
-          rt, std::move(args[0].getNumber()), args[1].asString(rt).utf8(rt));
+          rt, std::move(args[0].getNumber()),
+                        args[1].asString(rt).utf8(rt),
+                        (int)args[2].asNumber());
   return jsi::Value::undefined();
 }
 
@@ -24,7 +26,8 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterWorklet(
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->unregisterWorklet(
-          rt, std::move(args[0].getNumber()));
+                          rt,
+                          std::move(args[0].getNumber()));
   return jsi::Value::undefined();
 }
 
@@ -199,7 +202,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getRegistersState(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["registerWorklet"] = MethodMetadata{
-      2, __hostFunction_NativeReanimatedModuleSpec_registerWorklet};
+      3, __hostFunction_NativeReanimatedModuleSpec_registerWorklet};
   methodMap_["unregisterWorklet"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_unregisterWorklet};
   methodMap_["setWorkletListener"] = MethodMetadata{

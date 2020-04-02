@@ -35,7 +35,7 @@ export default {
   // worklet
 
   registerWorklet(workletId, holder) {
-    InnerNativeModule.registerWorklet(workletId, holder.func.asString);
+    InnerNativeModule.registerWorklet(workletId, holder.func.asString, holder.func.length);
   },
 
   setWorkletListener(workletId, callback) {

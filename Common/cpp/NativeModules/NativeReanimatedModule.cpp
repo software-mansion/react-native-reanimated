@@ -41,11 +41,12 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
   double id,
-  std::string functionAsString) {
-    scheduler->scheduleOnUI([functionAsString, id, this]() mutable {
+  std::string functionAsString,
+  int length) {
+    scheduler->scheduleOnUI([functionAsString, id, length, this]() mutable {
     auto fun = function(*runtime, functionAsString.c_str());
     std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    this->workletRegistry->registerWorklet((int)id, funPtr);
+    this->workletRegistry->registerWorklet((int)id, funPtr, length);
   });
 }
 
@@ -85,7 +86,7 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
   std::function<std::shared_ptr<SharedValue>()> create;
   
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
+    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber(), applierRegistry));
     create = [=] () {return sv;};
   } else if(value.isString()) {
     std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
@@ -299,7 +300,18 @@ void NativeReanimatedModule::registerMapper(jsi::Runtime &rt, int id, int workle
       return;
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+       
+    for (auto id : svIds) {
+     std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+     if (sv == nullptr) {
+       return;
+       break;
+     }
+     sharedValues.push_back(sv);
+    }
+    
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     std::shared_ptr<Mapper> mapper = Mapper::createMapper(id,
                                                           applier,
                                                           sharedValueRegistry);
