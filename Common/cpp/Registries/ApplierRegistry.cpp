@@ -97,3 +97,8 @@ std::map<int, std::string> ApplierRegistry::getEventMapping() const
   return this->eventMapping;
 }
 
+std::shared_ptr<Applier> ApplierRegistry::getRenderApplier(int id) {
+  if (renderAppliers.count(id) == 0) return nullptr;
+  return renderAppliers[id];
+}
+

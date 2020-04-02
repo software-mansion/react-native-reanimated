@@ -92,8 +92,14 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
           if (arguments[0].isNumber()) {
             forceSet(rt, arguments[0]);
           } else {
-            int applierId = arguments[0].asObject(rt).getProperty(rt, "applierId").asNumber();
+            jsi::Value input(rt, arguments[0]);
+            if (input.asObject(rt).hasProperty(rt, "value")) {
+              input = input.asObject(rt).getProperty(rt, "value");
+            }
+            int applierId = input.asObject(rt).getProperty(rt, "applierId").asNumber();
             *bindedApplierId = applierId;
+            std::shared_ptr<Applier> applier = applierRegistry->getRenderApplier(applierId);
+            applier->sharedValues[0] = sharedValueRegistry->getSharedValue(id);
           }
           return jsi::Value::undefined();
         };

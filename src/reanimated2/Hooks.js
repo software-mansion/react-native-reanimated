@@ -4,6 +4,10 @@ import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 
+global.Animated.withWorklet = (worklet, params) => {
+  return 0;
+}
+
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
     return true;

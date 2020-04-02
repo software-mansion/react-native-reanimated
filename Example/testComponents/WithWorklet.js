@@ -10,28 +10,24 @@ function WithWorklet() {
 const transX = useAnimatedStyle( function (input) {
   'worklet';
  
-  const use
+  const spring = useWorklet();
 
-  const interpolation = useWorklet(
-    function(sv, speedCoef, beginTime) {
+  const style = useAnimatedStyle(
+    function(input) {
       'worklet';
-    },
-   [0, 1, 0]); // obj/ sharedArray doesn't matter
-
-  const holder = useSharedValue(0);
-  const cosTam = useSharedValue("sth");
-
-  const animatedValue = useSharedValue(0);
-
-  const eventWorkelt = useEventWorklet(
-    function(cosTam, holder, worklet, animatedValue) {
-      holder.start(worklet, 5, costam);
-      holder.stop();
-      
-      animatedValue.startUpdater(worklet, costam);
-      animatedValue.freeze();
-      animatedValue.set(6);
-    }, [cosTam, holder, worklet, animatedValue]);
+      return {
+        position: 'absolute',
+            width: 40,
+            height: 40,
+            transform: [{
+              translateX: Animated.withWorklet
+            },
+            {
+              translateY: 100
+            }],
+      }
+    }
+  );
 
   return (
     <View style={{ flex: 1 }} onLayout={(e) => { parentWidth.set(e.nativeEvent.layout.width); }}>
@@ -41,15 +37,7 @@ const transX = useAnimatedStyle( function (input) {
       >
         <Animated.View
           style={{
-            position: 'absolute',
-            width: 40,
-            height: 40,
-            transform: [{
-              translateX: translateX
-            },
-            {
-              translateY: 100
-            }],
+            
             backgroundColor: 'black',
           }}
         />

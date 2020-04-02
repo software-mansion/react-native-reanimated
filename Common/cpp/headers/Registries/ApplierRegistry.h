@@ -34,6 +34,7 @@ class ApplierRegistry {
     static int New_Applier_Id;
     std::unordered_map<int, std::shared_ptr<Applier>> getRenderAppliers() const;
     std::map<int, std::string> getEventMapping() const;
+    std::shared_ptr<Applier> getRenderApplier(int id);
 };
 
 #endif //REANIMATEDEXAMPLE_APPLIERREGISTRY_H
