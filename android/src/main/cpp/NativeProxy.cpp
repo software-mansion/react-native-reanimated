@@ -55,7 +55,7 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
     std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
     std::shared_ptr<MapperRegistry> mapperRegistry(new MapperRegistry(sharedValueRegistry));
-    std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry, errorHandler));
+    std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry));
 
     std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
     RuntimeDecorator::addGlobalMethods(*animatedRuntime);

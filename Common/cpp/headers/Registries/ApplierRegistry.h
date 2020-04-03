@@ -8,7 +8,6 @@
 #include "SharedValue.h"
 #include "Applier.h"
 #include "MapperRegistry.h"
-#include "ErrorHandler.h"
 #include <map>
 #include <unordered_map>
 
@@ -17,11 +16,9 @@ class ApplierRegistry {
     std::map<std::string, std::unordered_map<int, std::shared_ptr<Applier>>> eventAppliers;
     std::map<int, std::string> eventMapping;
     std::shared_ptr<MapperRegistry> mapperRegistry;
-    std::shared_ptr<ErrorHandler> errorHandler;
   public:
     ApplierRegistry(
-        std::shared_ptr<MapperRegistry> mapperRegistry,
-        std::shared_ptr<ErrorHandler> errorHandler);
+        std::shared_ptr<MapperRegistry> mapperRegistry);
     void registerApplierForRender(int id, std::shared_ptr<Applier> applier);
     void unregisterApplierFromRender(int id, jsi::Runtime &rt);
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);

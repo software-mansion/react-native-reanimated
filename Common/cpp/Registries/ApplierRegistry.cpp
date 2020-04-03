@@ -8,10 +8,8 @@
 int ApplierRegistry::New_Applier_Id = INT_MAX;
 
 ApplierRegistry::ApplierRegistry(
-    std::shared_ptr<MapperRegistry> mapperRegistry,
-    std::shared_ptr<ErrorHandler> errorHandler) {
+    std::shared_ptr<MapperRegistry> mapperRegistry) {
   this->mapperRegistry = mapperRegistry;
-  this->errorHandler = errorHandler;
 }
 
 void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> applier) {
