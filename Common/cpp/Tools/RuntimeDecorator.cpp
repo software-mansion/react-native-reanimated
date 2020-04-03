@@ -36,15 +36,15 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
       }
     }
   }}))";
-  properties["assign"] = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(assignCode), "");
+  properties["assign"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, assignCode.c_str());
   
   // add withWorklet method
-  std::string withWorklet = R"((function withWorklet(worklet, params) {
-    const params = ([0]).concat(params);
+  std::string withWorklet = R"((function withWorklet(worklet, params, initial) {
+    params = ([0]).concat(params);
     return {value:{applierId:worklet.startTentatively.apply(undefined, params)}};
   }))";
   
-  properties["withWorklet"] = rt.evaluateJavaScript(std::make_shared<jsi::StringBuffer>(withWorklet), "");
+  properties["withWorklet"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorklet.c_str());
   
   // event worklet constants
   properties["START"] = jsi::Value(2);
@@ -84,5 +84,5 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   std::shared_ptr<jsi::HostObject> ptr(new Animated(std::move(properties)));
 
   jsi::Object animated = jsi::Object::createFromHostObject(rt, ptr);
-  rt.global().setProperty(rt, "Animated", animated);
+  rt.global().setProperty(rt, "Reanimated", animated);
 }

@@ -73,7 +73,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
         sharedValues.push_back(sv);
         
         if (i < count) {
-          jsi::Function assign = rt.global().getPropertyAsObject(rt, "Animated").getPropertyAsFunction(rt, "assign");
+          jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
           assign.call(rt, sv->asParameter(rt), args[i]);
         }
       }

@@ -137,11 +137,22 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
         };
         
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
-      }
+      } else if (propName == "forceSet") {
+        auto callback = [this](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *arguments,
+          size_t count
+        ) -> jsi::Value {
 
+          forceSet(rt, arguments[0]);
+          return jsi::Value::undefined();
+        };
+
+        return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+      }
       return jsi::Value::undefined();
     }
-
   };
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(id,
