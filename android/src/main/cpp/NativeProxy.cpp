@@ -199,7 +199,15 @@ Java_com_swmansion_reanimated_NativeProxy_handleError(JNIEnv* env) {
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
-  nrm->render();
+  try {
+    nrm->render();
+  } catch(const std::exception &e) {
+    if (nrm->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nrm->errorHandler->raise(message.c_str());
+    }
+  }
   return getChangedSharedValues(env);
 }
 
@@ -214,7 +222,15 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jclass clazz, jbyteArray eventHash, jbyteArray eventObj) {
   std::string eventAsString = byteArrayToString(env, eventObj);
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "event: %s", eventAsString.c_str());
-  nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
+  try {
+    nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
+  } catch(const std::exception &e) {
+    if (nrm->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nrm->errorHandler->raise(message.c_str());
+    }
+  }
 
   return getChangedSharedValues(env);
 }
