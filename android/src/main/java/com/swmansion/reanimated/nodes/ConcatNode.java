@@ -24,8 +24,7 @@ public class ConcatNode extends Node {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
       Object value = inputNodes.value();
       if (value instanceof Double) {
-        Double valueDouble = (Double) value;
-        value = formatter.format(valueDouble);
+        value = formatter.format((Double) value);
       }
       builder.append(value);
     }
