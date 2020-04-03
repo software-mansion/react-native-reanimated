@@ -8,9 +8,9 @@ import com.swmansion.reanimated.Utils;
 
 public class ConcatNode extends Node {
   private final int[] mInputIDs;
-  private final static NumberFormat formatter = NumberFormat.getInstance();
+  private final static NumberFormat sFormatter = NumberFormat.getInstance();
   static {
-    formatter.setMinimumFractionDigits(0);
+    sFormatter.setMinimumFractionDigits(0);
   }
 
   public ConcatNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
@@ -25,7 +25,7 @@ public class ConcatNode extends Node {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
       Object value = inputNodes.value();
       if (value instanceof Double) {
-        value = formatter.format((Double) value);
+        value = sFormatter.format((Double) value);
       }
       builder.append(value);
     }
