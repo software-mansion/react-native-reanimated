@@ -78,6 +78,7 @@ public class NodesManager implements EventDispatcherListener {
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
   private boolean mWantRunUpdates;
+  private boolean preventOnAnimationFrame = false;
 
   public double currentFrameTimeMs;
   public final UpdateContext updateContext;
@@ -145,6 +146,9 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
+    if (preventOnAnimationFrame) {
+      return;
+    }
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
     // update shared values
@@ -202,6 +206,7 @@ public class NodesManager implements EventDispatcherListener {
     String error = NativeProxy.getError();
     if (error != null) {
       NativeProxy.handleError();
+      preventOnAnimationFrame = true;
       throw new RuntimeException(error);
     }
   }
@@ -403,6 +408,23 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
+    // first check for event worklet error
+    mReactChoreographer.postFrameCallback(
+            ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+            new GuardedFrameCallback(mContext) {
+      @Override
+      protected void doFrameGuarded(long frameTimeNanos) {
+        String error = NativeProxy.getError();
+        if (error != null) {
+          preventOnAnimationFrame = true;
+          throw new RuntimeException(error);
+        }
+      }
+    });
+    if (preventOnAnimationFrame) {
+      mUIManager.getEventDispatcher().removeListener(this);
+      return;
+    }
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {

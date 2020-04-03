@@ -13,7 +13,7 @@
 
 class AndroidErrorHandler : ErrorHandler {
   JNIEnv* env;
-  ErrorWrapper error;
+  std::shared_ptr<ErrorWrapper> error;
   std::shared_ptr<Scheduler> scheduler;
   std::shared_ptr<JNIRegistry> jniRegistry;
   void raiseSpec(const char *message) override;
@@ -23,7 +23,7 @@ class AndroidErrorHandler : ErrorHandler {
         std::shared_ptr<Scheduler> scheduler,
         std::shared_ptr<JNIRegistry> jniRegistry);
     std::shared_ptr<Scheduler> getScheduler() override;
-    ErrorWrapper getError() override;
+    std::shared_ptr<ErrorWrapper> getError() override;
     void handleError() override;
     virtual ~AndroidErrorHandler() {}
 };

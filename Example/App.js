@@ -23,6 +23,7 @@ import SharedArraySharedObject from './testComponents/SharedArraySharedObject';
 import SzymonRotationScreen from './testComponents/SzymonRotationScreen';
 import SzymonRotationWithReset from './testComponents/SzymonRotationWithReset';
 import SzymonStartStopScreen from './testComponents/SzymonStartStopScreen';
+import WorkletFailureTest from './testComponents/WorkletFailureTest';
 import MapperTest from './testComponents/MapperTest';
 import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -48,6 +49,7 @@ const components = {
   'SzymonRotation': SzymonRotationScreen,
   'SzymonRotationWithReset': SzymonRotationWithReset,
   'SzymonStartStop': SzymonStartStopScreen,
+  'WorkletFailureTest': WorkletFailureTest,
 }
 
 YellowBox.ignoreWarnings([

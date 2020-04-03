@@ -12,16 +12,18 @@ AndroidErrorHandler::AndroidErrorHandler(
 }
 
 void AndroidErrorHandler::raiseSpec(const char *message) {
-  this->error.message = std::string(message);
+  this->error = std::make_shared<ErrorWrapper>();
+  this->error->message = std::string(message);
 }
 
-ErrorWrapper AndroidErrorHandler::getError() {
+std::shared_ptr<ErrorWrapper> AndroidErrorHandler::getError() {
   return this->error;
 }
 
 void AndroidErrorHandler::handleError() {
-  this->error.handled = true;
-  this->error.message="";
+  if (this->error != nullptr) {
+    this->error->handled = true;
+  }
 }
 
 std::shared_ptr<Scheduler> AndroidErrorHandler::getScheduler() {

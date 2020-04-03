@@ -187,7 +187,9 @@ jobject getChangedSharedValues(JNIEnv* env) {
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getError(JNIEnv* env) {
-  return (nrm->errorHandler->getError().message.size() > 0) ? env->NewStringUTF(nrm->errorHandler->getError().message.c_str()) : nullptr;
+  return (nrm->errorHandler->getError() != nullptr) ?
+      env->NewStringUTF(nrm->errorHandler->getError()->message.c_str()) :
+      nullptr;
 }
 
 extern "C" JNIEXPORT void JNICALL

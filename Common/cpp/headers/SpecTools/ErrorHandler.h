@@ -22,7 +22,7 @@ class ErrorHandler {
       });
     }
     virtual std::shared_ptr<Scheduler> getScheduler() = 0;
-    virtual ErrorWrapper getError() = 0;
+    virtual std::shared_ptr<ErrorWrapper> getError() = 0;
     virtual void handleError() = 0;
     virtual ~ErrorHandler() {}
   protected:
