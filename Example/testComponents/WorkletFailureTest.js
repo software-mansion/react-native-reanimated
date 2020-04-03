@@ -8,6 +8,7 @@ const SingleWorkletTest = () => {
     // this worklet should simply fire an error
     (useWorklet(function() {
         'worklet'
+        this.log('worklet working')
         xxx.set(5)
     }, []))();
 
@@ -26,12 +27,12 @@ const PreventMultipleWorklets = () => {
     ;(useWorklet(function() {
         'worklet'
         this.log('[worklet 1]')
-        xxx.set(5)
     }, []))();
     // below worklet should not be called anymore once above worklet fires an error
     ;(useWorklet(function() {
         'worklet'
         this.log('[worklet 2]')
+        xxx.set(5)
     }, []))();
 
     return (

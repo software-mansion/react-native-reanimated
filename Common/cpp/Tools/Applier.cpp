@@ -34,20 +34,13 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   module->setApplierId(applierId);
   module->setJustStarted(justStarted);
 
-    try {
-      jsi::Value returnValue = worklet->body->callWithThis(rt,
-                                jsi::Object::createFromHostObject(rt, module),
-                                static_cast<const jsi::Value*>(args),
-                                (size_t)sharedValues.size());
-      shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
-    } catch(const std::exception &e) {
-      if (this->errorHandler->getError() == nullptr) {
-        std::string message = "worklet error: ";
-        message += e.what();
-        this->errorHandler->raise(message.c_str());
-      } else if (this->errorHandler->getError()->handled) {
-        shouldFinish = true;
-      }
+    jsi::Value returnValue = worklet->body->callWithThis(rt,
+                              jsi::Object::createFromHostObject(rt, module),
+                              static_cast<const jsi::Value*>(args),
+                              (size_t)sharedValues.size());
+    shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
+    if (this->errorHandler->getError() != nullptr && this->errorHandler->getError()->handled) {
+      shouldFinish = true;
     }
     delete [] args;
   }
