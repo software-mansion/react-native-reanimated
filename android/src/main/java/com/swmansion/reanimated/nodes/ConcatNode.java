@@ -21,7 +21,6 @@ public class ConcatNode extends Node {
   @Override
   protected String evaluate() {
     StringBuilder builder = new StringBuilder();
-
     for (int i = 0; i < mInputIDs.length; i++) {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
       Object value = inputNodes.value();
