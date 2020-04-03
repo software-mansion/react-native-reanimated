@@ -21,7 +21,7 @@ const SingleWorkletTest = () => {
 }
 
 // prevent running worklets after at least one fails
-const preventMultipleWorklets = () => {
+const PreventMultipleWorklets = () => {
 
     ;(useWorklet(function() {
         'worklet'
@@ -103,10 +103,16 @@ const PreventMultipleEventWorklets = () => {
 
 const WorkletFailureTest = () => {
 
+    const currentTestComponent = 
+            //<SingleWorkletTest />;
+            //<PreventMultipleWorklets />;
+            //<EventWorkletTest />;
+            <PreventMultipleEventWorklets />;
+
     return (
         <View>
             { /* just load one of above test components */ }
-            <PreventMultipleEventWorklets />
+            { currentTestComponent }
         </View>
     )
 }
