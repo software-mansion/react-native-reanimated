@@ -17,14 +17,14 @@ public class ConcatNode extends Node {
   @Override
   protected String evaluate() {
     StringBuilder builder = new StringBuilder();
+    NumberFormat formatter = NumberFormat.getInstance();
+    formatter.setMinimumFractionDigits(0);
+
     for (int i = 0; i < mInputIDs.length; i++) {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
       Object value = inputNodes.value();
       if (value instanceof Double) {
         Double valueDouble = (Double) value;
-
-        NumberFormat formatter = NumberFormat.getInstance();
-        formatter.setMinimumFractionDigits(0);
         value = formatter.format(valueDouble);
       }
       builder.append(value);
