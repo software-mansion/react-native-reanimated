@@ -20,6 +20,7 @@ SharedWorkletStarter::SharedWorkletStarter(
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->errorHandler = errorHandler;
+  this->applierId = ApplierRegistry::New_Applier_Id--;
 }
 
 jsi::Value SharedWorkletStarter::asValue(jsi::Runtime &rt) const {
@@ -39,13 +40,13 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
   class HO : public jsi::HostObject {
     public:
     int id;
-    SharedWorkletStarter *starter;
+    std::shared_ptr<SharedWorkletStarter> starter;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
     std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<ErrorHandler> errorHandler;
 
     HO(int id,
-        SharedWorkletStarter *starter,
+        std::shared_ptr<SharedWorkletStarter> starter,
         std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
         std::shared_ptr<ApplierRegistry> applierRegistry,
         std::shared_ptr<ErrorHandler> errorHandler) {
@@ -94,11 +95,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
         ) -> jsi::Value {
-          int newApplierId = ApplierRegistry::New_Applier_Id--;
-          
-          if (starter->unregisterListener != nullptr) {
-              return false;
-          }
+          int applierId = starter->applierId;
         
           std::shared_ptr<Worklet> workletPtr = starter->worklet;
 
@@ -119,21 +116,18 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             sharedValues.push_back(sv);
           }
 
-          std::shared_ptr<Applier> applier(new Applier(newApplierId, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+          std::shared_ptr<Applier> applier(new Applier(applierId, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
           
-          applier->addOnFinishListener([=] {
-            starter->setUnregisterListener(nullptr);
-          });
-          
-          starter->setUnregisterListener([=] () {
-            applierRegistry->unregisterApplierFromRender(newApplierId);
+          starter->setUnregisterListener([=, &rt] () {
+            applierRegistry->unregisterApplierFromRender(applierId, rt);
           });
         
-          applierRegistry->registerApplierForRender(newApplierId, applier);
+          applierRegistry->registerApplierForRender(applierId, applier);
 
           return true;
         };
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
+        
       } else if (propName == "stop") {
         auto callback = [this](
             jsi::Runtime &rt,
@@ -167,7 +161,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(
       id,
-      this,
+std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry->getSharedValue(id)),
       this->sharedValueRegistry,
       this->applierRegistry,
       this->errorHandler));
@@ -175,7 +169,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, ptr);
 }
 
-void SharedWorkletStarter::willUnregister() {
+void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
   if (this->unregisterListener != nullptr) {
     (*this->unregisterListener)();
   }

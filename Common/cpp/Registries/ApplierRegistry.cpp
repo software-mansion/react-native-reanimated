@@ -15,9 +15,10 @@ void ApplierRegistry::registerApplierForRender(int id, std::shared_ptr<Applier> 
   renderAppliers[id] = applier;
 }
 
-void ApplierRegistry::unregisterApplierFromRender(int id) {
+void ApplierRegistry::unregisterApplierFromRender(int id, jsi::Runtime &rt) {
   if (renderAppliers.size() > 0) {
     if (renderAppliers.find(id) != renderAppliers.end()) {
+      renderAppliers[id]->finish(rt);
       renderAppliers.erase(id);
     }
   }
@@ -65,8 +66,8 @@ void ApplierRegistry::render(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule
   evaluateAppliers(rt,
                    module,
                    renderAppliers,
-                   [=] (int id) {
-    unregisterApplierFromRender(id);
+                   [=, &rt] (int id) {
+    unregisterApplierFromRender(id, rt);
   });
 }
 

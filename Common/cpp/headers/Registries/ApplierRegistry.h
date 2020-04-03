@@ -19,7 +19,7 @@ class ApplierRegistry {
   public:
     ApplierRegistry(std::shared_ptr<MapperRegistry> mapperRegistry);
     void registerApplierForRender(int id, std::shared_ptr<Applier> applier);
-    void unregisterApplierFromRender(int id);
+    void unregisterApplierFromRender(int id, jsi::Runtime &rt);
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);
     void unregisterApplierFromEvent(int id);
     void evaluateAppliers(jsi::Runtime &rt,

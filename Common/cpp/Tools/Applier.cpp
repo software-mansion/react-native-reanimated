@@ -51,7 +51,7 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   justStarted = false;
   
   if (shouldFinish) {
-    finish();
+    finish(rt);
   }
   
   return shouldFinish;
@@ -61,10 +61,16 @@ void Applier::addOnFinishListener(const std::function<void()> &listener) {
   onFinishListeners.push_back(listener);
 }
 
-void Applier::finish() {
+void Applier::finish(jsi::Runtime &rt) {
   while (onFinishListeners.size() > 0) {
     onFinishListeners.back()();
     onFinishListeners.pop_back();
+  }
+  
+  jsi::Object reanimated = rt.global().getPropertyAsObject(rt, "Reanimated");
+  std::string propName = std::to_string(this->applierId);
+  if (reanimated.hasProperty(rt, propName.c_str())) {
+    reanimated.setProperty(rt, propName.c_str(), jsi::Value::undefined());
   }
 }
 

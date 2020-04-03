@@ -33,8 +33,7 @@ class Applier {
     virtual bool apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module);
     void addOnFinishListener(const std::function<void()> &listener);
     virtual ~Applier();
-  private:
-    void finish(); // should be called only by [applier] when it finished
+    void finish(jsi::Runtime &rt); 
 };
 
 #endif //REANIMATEDEXAMPLE_APPLIER_H

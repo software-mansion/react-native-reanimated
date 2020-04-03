@@ -46,6 +46,18 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   
   properties["withWorklet"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorklet.c_str());
   
+  
+  // add memory method
+  std::string memory = R"((function memory(context) {
+    const applierId = context.id.applierId;
+    if (!(global.Reanimated[applierId])) {
+      global.Reanimated[applierId] = {};
+    }
+    return global.Reanimated[applierId];
+  }))";
+  
+  properties["memory"] = rt.global().getPropertyAsFunction(rt, "memory").call(rt, memory.c_str());
+  
   // event worklet constants
   properties["START"] = jsi::Value(2);
   properties["END"] = jsi::Value(5);

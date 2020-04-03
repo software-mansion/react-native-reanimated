@@ -61,9 +61,9 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
       this->errorHandler = errorHandler;
     }
     
-    void cleanBeforeSet() {
+    void cleanBeforeSet(jsi::Runtime &rt) {
       if ((*bindedApplierId) != -1) {
-        applierRegistry->unregisterApplierFromRender(*bindedApplierId);
+        applierRegistry->unregisterApplierFromRender(*bindedApplierId, rt);
         *bindedApplierId = -1;
       }
     }
@@ -87,7 +87,7 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
           size_t count
         ) -> jsi::Value {
 
-          cleanBeforeSet();
+          cleanBeforeSet(rt);
           
           if (arguments[0].isNumber()) {
             forceSet(rt, arguments[0]);
@@ -116,7 +116,7 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
            size_t count
          ) -> jsi::Value {
 
-          cleanBeforeSet();
+          cleanBeforeSet(rt);
           *bindedApplierId = arguments[0].asNumber();
            
           return jsi::Value::undefined();
@@ -131,7 +131,7 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
           size_t count
         ) -> jsi::Value {
 
-         cleanBeforeSet();
+         cleanBeforeSet(rt);
         
          return jsi::Value::undefined();
         };
@@ -184,9 +184,9 @@ std::shared_ptr<SharedValue> SharedDouble::copy() {
                                         errorHandler);
 }
 
-void SharedDouble::willUnregister() {
+void SharedDouble::willUnregister(jsi::Runtime &rt) {
   if (bindedApplierId != -1) {
-    applierRegistry->unregisterApplierFromRender(bindedApplierId);
+    applierRegistry->unregisterApplierFromRender(bindedApplierId, rt);
     bindedApplierId = -1;
   }
 }

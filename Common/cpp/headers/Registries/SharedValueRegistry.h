@@ -16,7 +16,7 @@ class SharedValueRegistry {
     std::unordered_map<int, std::shared_ptr<SharedValue>> sharedValueMap;
   public:
     void registerSharedValue(int id, std::shared_ptr<SharedValue> ptr);
-    void unregisterSharedValue(int id);
+    void unregisterSharedValue(int id, jsi::Runtime &rt);
     std::shared_ptr<SharedValue> getSharedValue(int id);
 
     std::unordered_map<int, std::shared_ptr<SharedValue>> getSharedValueMap() const;

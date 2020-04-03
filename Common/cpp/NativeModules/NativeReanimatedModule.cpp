@@ -213,7 +213,7 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {
   scheduler->scheduleOnUI([=](){
-    sharedValueRegistry->unregisterSharedValue(id);
+    sharedValueRegistry->unregisterSharedValue(id, *runtime);
   });
 }
 
@@ -260,7 +260,7 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
 
 void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int id) {
   scheduler->scheduleOnUI([=](){
-    applierRegistry->unregisterApplierFromRender(id);
+    applierRegistry->unregisterApplierFromRender(id, *runtime);
   });
 }
 
