@@ -67,10 +67,13 @@ void Applier::finish(jsi::Runtime &rt) {
     onFinishListeners.pop_back();
   }
   
-  jsi::Object reanimated = rt.global().getPropertyAsObject(rt, "Reanimated");
+  jsi::Object container = rt
+  .global()
+  .getPropertyAsObject(rt, "Reanimated")
+  .getPropertyAsObject(rt, "container");
   std::string propName = std::to_string(this->applierId);
-  if (reanimated.hasProperty(rt, propName.c_str())) {
-    reanimated.setProperty(rt, propName.c_str(), jsi::Value::undefined());
+  if (container.hasProperty(rt, propName.c_str())) {
+    container.setProperty(rt, propName.c_str(), jsi::Value::undefined());
   }
 }
 

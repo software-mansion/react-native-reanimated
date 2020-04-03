@@ -115,8 +115,16 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             }
             sharedValues.push_back(sv);
           }
+          
+          for (int i = 0; i < count; ++i) {
+            jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
+            assign.call(rt, sharedValues[i]->asParameter(rt), args[i]);
+          }
 
           std::shared_ptr<Applier> applier(new Applier(applierId, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+          
+          // remove previous instance
+          applierRegistry->unregisterApplierFromRender(applierId, rt);
           
           starter->setUnregisterListener([=, &rt] () {
             applierRegistry->unregisterApplierFromRender(applierId, rt);
@@ -126,7 +134,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 
           return true;
         };
-        return jsi::Function::createFromHostFunction(rt, name, 0, callback);
+        return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
         
       } else if (propName == "stop") {
         auto callback = [this](
@@ -136,7 +144,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             size_t count
         ) -> jsi::Value {
           if (starter->unregisterListener != nullptr) {
-            (*starter->unregisterListener)();
+            (*(starter->unregisterListener))();
             starter->unregisterListener = nullptr;
           }
           return jsi::Value::undefined();
