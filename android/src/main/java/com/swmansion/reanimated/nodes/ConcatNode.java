@@ -8,6 +8,10 @@ import com.swmansion.reanimated.Utils;
 
 public class ConcatNode extends Node {
   private final int[] mInputIDs;
+  private final static NumberFormat formatter = NumberFormat.getInstance();
+  static {
+    formatter.setMinimumFractionDigits(0);
+  }
 
   public ConcatNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
@@ -17,8 +21,6 @@ public class ConcatNode extends Node {
   @Override
   protected String evaluate() {
     StringBuilder builder = new StringBuilder();
-    NumberFormat formatter = NumberFormat.getInstance();
-    formatter.setMinimumFractionDigits(0);
 
     for (int i = 0; i < mInputIDs.length; i++) {
       Node inputNodes = mNodesManager.findNodeById(mInputIDs[i], Node.class);
