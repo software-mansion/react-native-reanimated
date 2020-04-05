@@ -10,10 +10,18 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-navigation/web": "^1.0.0-alpha.9",
+    "babel-plugin-module-resolver": "^4.0.0",
+    "glob-to-regexp": "^0.4.1",
     "husky": "^4.2.3",
     "lint-staged": "^10.1.2",
     "react": "16.11.0",
-    "react-native": "0.62.1"
+    "react-native": "0.62.1",
+    "react-native-gesture-handler": "^1.5.0",
+    "react-native-screens": "^1.0.0-alpha.23",
+    "react-native-web": "^0.12.2",
+    "react-navigation": "^4.3.7",
+    "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
