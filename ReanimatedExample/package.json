@@ -10,6 +10,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.2",
     "react": "16.11.0",
     "react-native": "0.62.1"
   },
@@ -25,5 +27,15 @@
   },
   "jest": {
     "preset": "react-native"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
