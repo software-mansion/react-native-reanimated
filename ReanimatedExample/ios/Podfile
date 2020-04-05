@@ -54,6 +54,8 @@ target 'ReanimatedExample' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
+  pod "RNReanimated", :path => '../../'
+
   target 'ReanimatedExampleTests' do
     inherit! :complete
     # Pods for testing
