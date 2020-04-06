@@ -6,6 +6,7 @@
 #define REANIMATEDEXAMPLE_WORKLETMODULE_H
 
 #include <memory>
+#include <string>
 #include <jsi/jsi.h>
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
@@ -28,6 +29,7 @@ class WorkletModule : public BaseWorkletModule {
   std::shared_ptr<jsi::Value> event;
   std::shared_ptr<ErrorHandler> errorHandler;
   int workletId, applierId;
+  std::string getStringRepresentation(jsi::Runtime &rt, const jsi::Value *value);
   public:
     WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                     std::shared_ptr<ApplierRegistry> applierRegistry,

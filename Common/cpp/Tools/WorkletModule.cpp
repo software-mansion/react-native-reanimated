@@ -4,6 +4,8 @@
 
 #include "WorkletModule.h"
 #include "Logger.h"
+#include "SharedObject.h"
+#include "SharedArray.h"
 
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
@@ -23,20 +25,14 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   if (propName == "event") {
     return event->getObject(rt).getProperty(rt, "NativeMap");
   } else if (propName == "log") {
-    auto callback = [](
+    auto callback = [this](
         jsi::Runtime &rt,
         const jsi::Value &thisValue,
         const jsi::Value *args,
         size_t count
         ) -> jsi::Value {
-      const jsi::Value *value = &args[0];
-      if (value->isString()) {
-        Logger::log(value->getString(rt).utf8(rt).c_str());
-      } else if (value->isNumber()) {
-        Logger::log(value->getNumber());
-      } else {
-        Logger::log("unsupported value type");
-      }
+        const jsi::Value *value = &args[0];
+      Logger::log(this->getStringRepresentation(rt, value).c_str());
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);
@@ -68,6 +64,50 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   }
 
   return jsi::Value::undefined();
+}
+
+std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::Value *value) {
+  if (value->isString()) {
+    return value->getString(rt).utf8(rt);
+  } else if (value->isNumber()) {
+    return std::to_string(value->getNumber());
+  }  else if (value->isObject()) {
+      jsi::Object obj = value->getObject(rt);
+      // obtain shared object
+      jsi::Value id = obj.getProperty(rt, "id");
+      std::string type = obj.getProperty(rt, "type").getString(rt).utf8(rt);
+      std::string result;
+      if (type == "array") {
+          result = "[";
+          std::shared_ptr<SharedValue> sharedArray = sharedValueRegistry->getSharedValue(id.getNumber());
+          // manage obtained shared object object
+          for (auto & item : (std::dynamic_pointer_cast<SharedArray>(sharedArray))->svs) {
+              jsi::Value value = item->asValue(rt);
+              result += getStringRepresentation(rt, &value) + ",";
+          }
+          result[result.size() - 1] = ']';
+      } else if (type == "object") {
+          // this is an object
+          result = "{";
+          std::shared_ptr<SharedValue> sharedObject = sharedValueRegistry->getSharedValue(id.getNumber());
+          // manage obtained shared object object
+          for (auto & pair : (std::dynamic_pointer_cast<SharedObject>(sharedObject))->properties) {
+              std::string label = pair.first;
+              result += label + ": ";
+              std::shared_ptr<SharedValue> sv = pair.second;
+              jsi::Value value = sv->asValue(rt);
+              result += getStringRepresentation(rt, &value) + ",";
+              if (label == "d") {
+                  volatile int i = 9; // todo nested objects not working
+              }
+          }
+          result[result.size() - 1] = '}';
+      } else {
+          result = "unsupported type";
+      }
+      return result;
+  }
+    return "unsupported value type";
 }
 
 void WorkletModule::setWorkletId(int workletId) {

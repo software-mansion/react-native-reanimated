@@ -27,6 +27,7 @@ import MapperTest from './testComponents/MapperTest';
 import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
 import UseAnimatedStyleTest from './testComponents/UseAnimatedStyleTest';
+import StringifyTest from './testComponents/StringifyTest';
 
 // set components here:
 const components = {
@@ -46,6 +47,7 @@ const components = {
   'SzymonRotation': SzymonRotationScreen,
   'SzymonRotationWithReset': SzymonRotationWithReset,
   'SzymonStartStop': SzymonStartStopScreen,
+  'StringifyTest': StringifyTest,
 }
 
 YellowBox.ignoreWarnings([

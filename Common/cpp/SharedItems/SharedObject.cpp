@@ -24,6 +24,15 @@ SharedObject::~SharedObject() {
 }
 
 jsi::Value SharedObject::asValue(jsi::Runtime &rt) const {
+  /*
+    jsi::Object obj(rt);
+    for (auto & pair : this->properties) {
+        obj.setProperty(rt, pair.first, pair.second);
+    }
+    jsi::Value result(rt, obj);
+    return result;
+  */
+  // todo
   return jsi::Value::undefined();
 }
 
@@ -48,6 +57,9 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
 
       if (propName == "id") {
         return jsi::Value(id);
+      }
+      if (propName == "type") {
+          return jsi::Value(jsi::String::createFromAscii(rt, std::string("object")));
       }
       
       if (props.count(propName) > 0) {

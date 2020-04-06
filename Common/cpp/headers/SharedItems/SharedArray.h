@@ -22,8 +22,7 @@ public:
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
     ~SharedArray();
-private:
-  std::vector<std::shared_ptr<SharedValue>> svs;
+    std::vector<std::shared_ptr<SharedValue>> svs;
 };
 
 #endif /* SharedArray_h */

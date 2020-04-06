@@ -6,6 +6,7 @@
 //
 
 #include "SharedArray.h"
+#include <jsi/jsi.h>
 
 SharedArray::SharedArray(int id, std::vector<std::shared_ptr<SharedValue>> svs) {
   this->id = id;
@@ -29,11 +30,38 @@ void SharedArray::setNewValue(std::shared_ptr<SharedValue> sv) {
 }
 
 jsi::Value SharedArray::asParameter(jsi::Runtime &rt) {
-  jsi::Array array(rt, svs.size());
-  for (int i = 0; i < svs.size(); ++i) {
-    array.setValueAtIndex(rt, i, svs[i]->asParameter(rt));
-  }
-  return array;
+
+  class HO : public jsi::HostObject {
+    std::vector<std::shared_ptr<SharedValue>> svs;
+    int id;
+  public:
+    HO(int id, std::vector<std::shared_ptr<SharedValue>> svs) {
+      this->svs = svs;
+      this->id = id;
+    }
+
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
+      auto propName = name.utf8(rt);
+
+      if (propName == "id") {
+        return jsi::Value(id);
+      }
+      if (propName == "type") {
+        return jsi::Value(jsi::String::createFromAscii(rt, std::string("array")));
+      }
+      
+      jsi::Array array(rt, svs.size());
+        for (int i = 0; i < svs.size(); ++i) {
+          array.setValueAtIndex(rt, i, svs[i]->asParameter(rt));
+        }
+        return array;
+      }
+
+  };
+
+  std::shared_ptr<jsi::HostObject> ptr(new HO(id, this->svs));
+
+  return jsi::Object::createFromHostObject(rt, ptr);
 }
 
 std::vector<int> SharedArray::getSharedValues() {
