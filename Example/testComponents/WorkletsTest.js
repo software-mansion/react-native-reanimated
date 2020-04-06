@@ -46,7 +46,6 @@ const WorkletsTest = () => {
     parentw()
 
     // check different ways of passing shared values to worklet
-    const v = useSharedValue(123)
     const v2 = useSharedValue(456)
 
     ;(useWorklet(function() {
