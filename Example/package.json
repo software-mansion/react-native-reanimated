@@ -3,39 +3,52 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "web": "expo start --web-only --web",
     "start": "react-native start",
     "test": "jest",
-    "link-web": "npm link react-native-reanimated",
-    "web": "expo start --web-only --web",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "rm -rf node_modules/react-native-reanimated/{.git,node_modules,ReanimatedExample}"
   },
   "dependencies": {
     "@react-navigation/web": "^1.0.0-alpha.9",
-    "react": "16.9.0",
-    "react-dom": "16.9.0",
-    "react-native": "0.61.1",
-    "react-native-gesture-handler": "^1.5.0",
-    "react-native-web": "^0.11.7",
-    "react-navigation": "4.0.3",
-    "react-navigation-stack": "^1.7.3",
-    "reanimated-bottom-sheet": "osdnk/react-native-reanimated-bottom-sheet#reanimated-example"
+    "babel-plugin-module-resolver": "^4.0.0",
+    "expo": "^37.0.5",
+    "glob-to-regexp": "^0.4.1",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.2",
+    "react": "16.11.0",
+    "react-dom": "^16.13.1",
+    "react-native": "0.62.1",
+    "react-native-gesture-handler": "^1.6.1",
+    "react-native-reanimated": "file:..",
+    "react-native-screens": "^1.0.0-alpha.23",
+    "react-native-web": "^0.12.2",
+    "react-navigation": "^4.3.7",
+    "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
     "@babel/runtime": "^7.6.2",
     "@react-native-community/eslint-config": "^0.0.5",
     "babel-jest": "^24.9.0",
-    "babel-plugin-module-resolver": "^3.2.0",
-    "babel-preset-expo": "^7.0.0",
-    "eslint": "^6.4.0",
-    "glob-to-regexp": "^0.4.0",
+    "eslint": "^6.5.1",
     "jest": "^24.9.0",
-    "react-test-renderer": "16.9.0"
+    "metro-react-native-babel-preset": "^0.58.0",
+    "react-test-renderer": "16.11.0"
   },
   "jest": {
     "preset": "react-native"
   },
-  "resolutions": {
-    "@babel/runtime": "7.6.0"
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }

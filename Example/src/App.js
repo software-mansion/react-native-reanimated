@@ -1,4 +1,4 @@
-import { createBrowserApp } from '@react-navigation/web';
+import {createBrowserApp} from '@react-navigation/web';
 import React from 'react';
 import {
   FlatList,
@@ -8,10 +8,9 @@ import {
   View,
   YellowBox,
 } from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-import BottomSheetPlayground from 'reanimated-bottom-sheet/Example/App'
+import {RectButton, ScrollView} from 'react-native-gesture-handler';
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
 
 import ChatHeads from './chatHeads';
 import Code from './code';
@@ -43,18 +42,17 @@ YellowBox.ignoreWarnings([
 // https://github.com/react-navigation/react-navigation/issues/3956
 
 const SCREENS = {
-  Snappable: { screen: Snappable, title: 'Snappable' },
-  Test: { screen: Test, title: 'Test' },
-  ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
-  Interactable: { screen: InteractablePlayground, title: 'Interactable' },
-  BottomSheet: { screen: BottomSheetPlayground, title: 'BottomSheet Playground' },
-  Interpolate: { screen: Interpolate, title: 'Interpolate' },
-  Colors: { screen: Colors, title: 'Colors' },
-  StartAPI: { screen: StartAPI, title: 'Start API' },
-  chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  code: { screen: Code, title: 'Animated.Code component' },
-  width: { screen: WidthAndHeight, title: 'width & height & more' },
-  rotations: { screen: Rotations, title: 'rotations (concat node)' },
+  Snappable: {screen: Snappable, title: 'Snappable'},
+  Test: {screen: Test, title: 'Test'},
+  ImageViewer: {screen: ImageViewer, title: 'Image Viewer'},
+  Interactable: {screen: InteractablePlayground, title: 'Interactable'},
+  Interpolate: {screen: Interpolate, title: 'Interpolate'},
+  Colors: {screen: Colors, title: 'Colors'},
+  StartAPI: {screen: StartAPI, title: 'Start API'},
+  chatHeads: {screen: ChatHeads, title: 'Chat heads (iOS only)'},
+  code: {screen: Code, title: 'Animated.Code component'},
+  width: {screen: WidthAndHeight, title: 'width & height & more'},
+  rotations: {screen: Rotations, title: 'rotations (concat node)'},
   imperative: {
     screen: Imperative,
     title: 'imperative (set value / toggle visibility)',
@@ -95,7 +93,7 @@ class MainScreen extends React.Component {
   };
 
   render() {
-    const data = Object.keys(SCREENS).map(key => ({ key }));
+    const data = Object.keys(SCREENS).map(key => ({key}));
     return (
       <FlatList
         style={styles.list}
@@ -104,7 +102,7 @@ class MainScreen extends React.Component {
         renderItem={props => (
           <MainScreenItem
             {...props}
-            onPressItem={({ key }) => this.props.navigation.navigate(key)}
+            onPressItem={({key}) => this.props.navigation.navigate(key)}
           />
         )}
         renderScrollComponent={props => <ScrollView {...props} />}
@@ -118,7 +116,7 @@ const ItemSeparator = () => <View style={styles.separator} />;
 class MainScreenItem extends React.Component {
   _onPress = () => this.props.onPressItem(this.props.item);
   render() {
-    const { key } = this.props.item;
+    const {key} = this.props.item;
     return (
       <RectButton style={styles.button} onPress={this._onPress}>
         <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
@@ -129,14 +127,14 @@ class MainScreenItem extends React.Component {
 
 const ExampleApp = createStackNavigator(
   {
-    Main: { screen: MainScreen },
+    Main: {screen: MainScreen},
     ...SCREENS,
     ...INTERACTABLE_SCREENS,
   },
   {
     initialRouteName: 'Main',
     headerMode: 'screen',
-  }
+  },
 );
 
 const styles = StyleSheet.create({
@@ -161,7 +159,7 @@ const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: input => createBrowserApp(input, { history: 'hash' }),
+  web: input => createBrowserApp(input, {history: 'hash'}),
   default: input => createAppContainer(input),
 });
 
