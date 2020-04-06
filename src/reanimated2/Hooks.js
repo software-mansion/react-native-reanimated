@@ -114,7 +114,14 @@ function commonCode(body, args, createRes) {
 
   const init = function() {
     console.log('init common code');
-    let argsCopy = args.slice();
+    let argsCopy = [];
+    if (args !== undefined) {
+      if (Array.isArray(args)) {
+        argsCopy = args.slice();
+      } else if (typeof args === 'object' && args !== null) {
+        argsCopy = Object.keys(args).map(key => args[key])
+      }
+    }
     let shouldReleaseWorklet = false;
     if (typeof body === "function") {
       shouldReleaseWorklet = true;

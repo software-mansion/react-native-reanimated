@@ -45,6 +45,28 @@ const WorkletsTest = () => {
 
     parentw()
 
+    // check different ways of passing shared values to worklet
+    const v = useSharedValue(123)
+    const v2 = useSharedValue(456)
+
+    ;(useWorklet(function() {
+        'worklet';
+        this.log('[worklet 1]');
+        return true;
+    }))();
+
+    ;(useWorklet(function(v, vv) {
+        'worklet'
+        this.log('[worklet 2] ' + v.value + '/' + vv.value)
+        return true
+    }, [v, v2]))();
+
+    ;(useWorklet(function(v, vv) {
+        'worklet'
+        this.log('[worklet 3] ' + v.value + '/' + vv.value)
+        return true
+    }, {v, v2}))();
+
     return (
         <View>
             <Text>
