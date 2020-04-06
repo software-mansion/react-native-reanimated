@@ -19,7 +19,7 @@
     "react": "16.11.0",
     "react-native": "0.62.1",
     "react-native-reanimated": "file:..",
-    "react-native-gesture-handler": "^1.5.0",
+    "react-native-gesture-handler": "^1.6.1",
     "react-native-screens": "^1.0.0-alpha.23",
     "react-native-web": "^0.12.2",
     "react-navigation": "^4.3.7",
