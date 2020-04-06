@@ -149,7 +149,7 @@ declare module 'react-native-reanimated' {
 
     export type TransformStyleTypes = TransformsStyle['transform'] extends readonly (infer T)[] ? T : never
     export type AdaptTransforms<T> = { [P in keyof T]: Animated.Adaptable<T[P]> }
-    export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>
+    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[]
 
     export type AnimateStyle<S extends object> = {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
