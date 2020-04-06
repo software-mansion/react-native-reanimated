@@ -39,6 +39,7 @@ yarn-error.log
 buck-out/
 \.buckd/
 *.keystore
+!debug.keystore
 
 # fastlane
 #
@@ -56,7 +57,3 @@ buck-out/
 
 # CocoaPods
 /ios/Pods/
-
-# Expo
-/.expo
-/web-build

@@ -9,6 +9,7 @@ def add_flipper_pods!
   pod 'FlipperKit/FlipperKitUserDefaultsPlugin', version, :configuration => 'Debug'
   pod 'FlipperKit/FlipperKitReactPlugin', version, :configuration => 'Debug'
 end
+
 # Post Install processing for Flipper
 def flipper_post_install(installer)
   installer.pods_project.targets.each do |target|
@@ -21,6 +22,7 @@ def flipper_post_install(installer)
 end
 
 target 'ReanimatedExample' do
+  # Pods for ReanimatedExample
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"
   pod 'FBReactNativeSpec', :path => "../node_modules/react-native/Libraries/FBReactNativeSpec"
   pod 'RCTRequired', :path => "../node_modules/react-native/Libraries/RCTRequired"
@@ -52,11 +54,15 @@ target 'ReanimatedExample' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
-  pod 'RNReanimated', :path => '../../'
+  pod "RNReanimated", :path => '../../'
+
+  target 'ReanimatedExampleTests' do
+    inherit! :complete
+    # Pods for testing
+  end
 
   use_native_modules!
-  
-  
+
   # Enables Flipper.
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
@@ -64,5 +70,14 @@ target 'ReanimatedExample' do
   add_flipper_pods!
   post_install do |installer|
     flipper_post_install(installer)
+  end
+end
+
+target 'ReanimatedExample-tvOS' do
+  # Pods for ReanimatedExample-tvOS
+
+  target 'ReanimatedExample-tvOSTests' do
+    inherit! :search_paths
+    # Pods for testing
   end
 end
