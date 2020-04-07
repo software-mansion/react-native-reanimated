@@ -8,7 +8,7 @@
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint": "eslint './src/**/*.js'",
-    "release": "release-it"
+    "release": "npm login && release-it"
   },
   "main": "src/Animated.js",
   "types": "react-native-reanimated.d.ts",
