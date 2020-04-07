@@ -95,10 +95,10 @@ std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::
           for (auto & pair : (std::dynamic_pointer_cast<SharedObject>(sharedObject))->properties) {
               std::string label = pair.first;
               result += label + ":";
-              std::shared_ptr<SharedValue> so = pair.second;
-              jsi::Value val = so->asValue(rt);
+              std::shared_ptr<SharedValue> sv = pair.second;
+              jsi::Value val = sv->asValue(rt);
               if (val.isObject()) {
-                  val = so->asParameter(rt);
+                  val = sv->asParameter(rt);
               }
               result += getStringRepresentation(rt, &val) + ",";
           }

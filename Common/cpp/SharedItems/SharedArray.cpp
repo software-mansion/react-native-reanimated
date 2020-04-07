@@ -21,7 +21,11 @@ SharedArray::~SharedArray() {
 }
 
 jsi::Value SharedArray::asValue(jsi::Runtime &rt) const {
-  return jsi::Value::undefined();
+  jsi::Array array(rt, svs.size());
+  for (int i = 0; i < svs.size(); ++i) {
+    array.setValueAtIndex(rt, i, svs[i]->asValue(rt));
+  }
+  return array;
 }
 
 void SharedArray::setNewValue(std::shared_ptr<SharedValue> sv) {
