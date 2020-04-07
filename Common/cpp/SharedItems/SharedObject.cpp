@@ -24,16 +24,15 @@ SharedObject::~SharedObject() {
 }
 
 jsi::Value SharedObject::asValue(jsi::Runtime &rt) const {
-  /*
     jsi::Object obj(rt);
     for (auto & pair : this->properties) {
-        obj.setProperty(rt, pair.first, pair.second);
+        if (pair.first == "id") {
+            continue;
+        }
+        obj.setProperty(rt, pair.first.c_str(), pair.second->asValue(rt));
     }
     jsi::Value result(rt, obj);
     return result;
-  */
-  // todo
-  return jsi::Value::undefined();
 }
 
 void SharedObject::setNewValue(std::shared_ptr<SharedValue> sv) {

@@ -75,12 +75,13 @@ std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::
       jsi::Object obj = value->getObject(rt);
       // obtain shared object
       jsi::Value id = obj.getProperty(rt, "id");
+      jsi::Value typeval = obj.getProperty(rt, "type");
       std::string type = obj.getProperty(rt, "type").getString(rt).utf8(rt);
       std::string result;
       if (type == "array") {
           result = "[";
           std::shared_ptr<SharedValue> sharedArray = sharedValueRegistry->getSharedValue(id.getNumber());
-          // manage obtained shared object object
+          // manage obtained shared object
           for (auto & item : (std::dynamic_pointer_cast<SharedArray>(sharedArray))->svs) {
               jsi::Value value = item->asValue(rt);
               result += getStringRepresentation(rt, &value) + ",";
@@ -93,13 +94,13 @@ std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::
           // manage obtained shared object object
           for (auto & pair : (std::dynamic_pointer_cast<SharedObject>(sharedObject))->properties) {
               std::string label = pair.first;
-              result += label + ": ";
-              std::shared_ptr<SharedValue> sv = pair.second;
-              jsi::Value value = sv->asValue(rt);
-              result += getStringRepresentation(rt, &value) + ",";
-              if (label == "d") {
-                  volatile int i = 9; // todo nested objects not working
+              result += label + ":";
+              std::shared_ptr<SharedValue> so = pair.second;
+              jsi::Value val = so->asValue(rt);
+              if (val.isObject()) {
+                  val = so->asParameter(rt);
               }
+              result += getStringRepresentation(rt, &val) + ",";
           }
           result[result.size() - 1] = '}';
       } else {
