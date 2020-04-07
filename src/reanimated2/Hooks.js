@@ -114,7 +114,20 @@ function commonCode(body, args, createRes) {
 
   const init = function() {
     console.log('init common code');
-    let argsCopy = args.slice();
+    let argsCopy = [];
+    if (args !== undefined) {
+      if (Array.isArray(args)) {
+        argsCopy = (isShareable(args)) ? args : args.slice();
+      } else if (typeof args === 'object' && args !== null) {
+        if (isShareable(args)) {
+          argsCopy = [args];
+        } else {
+          // force object copy operation
+          argsCopy = [{ ...args, '__________reanimated_object_unreachable_field_name':0 }];
+          delete argsCopy[0]['__________reanimated_object_unreachable_field_name'];
+        }
+      }
+    }
     let shouldReleaseWorklet = false;
     if (typeof body === "function") {
       shouldReleaseWorklet = true;

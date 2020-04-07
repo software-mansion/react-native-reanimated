@@ -45,6 +45,63 @@ const WorkletsTest = () => {
 
     parentw()
 
+    // check different ways of passing shared values to worklet
+    const v2 = useSharedValue(456)
+
+    // no args
+    ;(useWorklet(function() {
+        'worklet';
+        this.log('[worklet 1]');
+        return true;
+    }))();
+
+    // args in array
+    ;(useWorklet(function(v, vv) {
+        'worklet'
+        this.log('[worklet 2] ' + v.value + '/' + vv.value)
+        return true
+    }, [v, v2]))();
+
+    // args in object
+    ;(useWorklet(function(input) {
+        'worklet'
+        this.log('[worklet 3] ' + input.v.value + '/' + input.v2.value)
+        return true
+    }, {v, v2}))();
+
+    // args in object, mixed order
+    // order should not matter, worklet 3 and 4 should produce the same output
+    ;(useWorklet(function(input) {
+        'worklet'
+        this.log('[worklet 4] ' + input.v.value + '/' + input.v2.value)
+        return true
+    }, {v2, v}))();
+
+    // args in shared object
+    const so = useSharedValue({v, v2});
+    ;(useWorklet(function(input) {
+        'worklet'
+        this.log('[worklet 5] ' + input.v.value + '/' + input.v2.value)
+        return true
+    }, so))();
+
+    // args in shared object, mixed order
+    // order should not matter, worklet 5 and 6 should produce the same output
+    const so2 = useSharedValue({v, v2});
+    ;(useWorklet(function(input) {
+        'worklet'
+        this.log('[worklet 6] ' + input.v.value + '/' + input.v2.value)
+        return true
+    }, so2))();
+
+    // args in shared array
+    const sa = useSharedValue([v, v2]);
+    ;(useWorklet(function(v, vv) {
+        'worklet'
+        this.log('[worklet 7] ' + v.value + '/' + vv.value)
+        return true
+    }, sa))();
+
     return (
         <View>
             <Text>
