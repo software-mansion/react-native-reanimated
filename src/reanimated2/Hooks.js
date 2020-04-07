@@ -117,11 +117,15 @@ function commonCode(body, args, createRes) {
     let argsCopy = [];
     if (args !== undefined) {
       if (Array.isArray(args)) {
-        argsCopy = args.slice();
+        argsCopy = (isShareable(args)) ? args : args.slice();
       } else if (typeof args === 'object' && args !== null) {
-        // force object copy operation
-        argsCopy = [{ ...args, '__________reanimated_object_unreachable_field_name':0 }];
-        delete argsCopy[0]['__________reanimated_object_unreachable_field_name'];
+        if (isShareable(args)) {
+          argsCopy = args
+        } else {
+          // force object copy operation
+          argsCopy = [{ ...args, '__________reanimated_object_unreachable_field_name':0 }];
+          delete argsCopy[0]['__________reanimated_object_unreachable_field_name'];
+        }
       }
     }
     let shouldReleaseWorklet = false;
