@@ -119,7 +119,9 @@ function commonCode(body, args, createRes) {
       if (Array.isArray(args)) {
         argsCopy = args.slice();
       } else if (typeof args === 'object' && args !== null) {
-        argsCopy = [JSON.parse(JSON.stringify(args))];
+        // force object copy operation
+        argsCopy = [{ ...args, '__________reanimated_object_unreachable_field_name':0 }];
+        delete argsCopy[0]['__________reanimated_object_unreachable_field_name'];
       }
     }
     let shouldReleaseWorklet = false;
