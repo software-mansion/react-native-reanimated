@@ -52,8 +52,6 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   @Override
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
-    final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
-    NativeProxy.install(runtimePtr);
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
@@ -61,6 +59,14 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
 
     mUIManager = uiManager;
     handler = new Handler(reactCtx.getMainLooper());
+
+    final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
+      uiManager.addUIBlock(new UIBlock() {
+      @Override
+      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+        NativeProxy.install(runtimePtr);
+      }
+    });
 
     Scheduler.setContext(reactCtx);
     Scheduler.setHandler(handler);

@@ -9,7 +9,6 @@
 #include <string>
 #include <jni.h>
 #include <tuple>
-#include "Logger.h"
 
 enum class JNIMethodMode {
     standard_method,
@@ -56,12 +55,11 @@ struct JNIRegistryMethod {
 };
 
 class JNIRegistry {
-    JavaVM* vm;
     JNIEnv* env;
     std::vector<JNIRegistryClass> classes;
     std::vector<JNIRegistryMethod> methods;
   public:
-    JNIRegistry(JNIEnv* env, JavaVM* vm);
+    JNIRegistry(JNIEnv* env);
     std::tuple<jclass, jmethodID> getClassAndMethod(
         JavaMethodsUsed method,
         JNIMethodMode methodMode = JNIMethodMode::standard_method,

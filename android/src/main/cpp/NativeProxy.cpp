@@ -7,7 +7,6 @@
 #include <android/looper.h>
 #include <unistd.h>
 #include <hermes/hermes.h>
-#include <memory>
 #include "AndroidScheduler.h"
 #include "WorkletRegistry.h"
 #include "SharedValueRegistry.h"
@@ -43,7 +42,7 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
-    jniRegistry.reset(new JNIRegistry(env, javaVM));
+    jniRegistry.reset(new JNIRegistry(env));
     std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM, jniRegistry));
     scheduler = schedulerForModule;
 
