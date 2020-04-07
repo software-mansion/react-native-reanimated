@@ -97,3 +97,8 @@ std::vector<int> SharedObject::getSharedValues() {
   }
   return res;
 }
+
+
+std::unordered_map<std::string, std::shared_ptr<SharedValue>> SharedObject::getProperties() const {
+  return this->properties;
+}

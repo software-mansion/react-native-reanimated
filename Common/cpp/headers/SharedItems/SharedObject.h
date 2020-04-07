@@ -21,7 +21,9 @@ public:
     jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
+    std::unordered_map<std::string, std::shared_ptr<SharedValue>> getProperties() const;
     ~SharedObject();
+private:
     std::unordered_map<std::string, std::shared_ptr<SharedValue>> properties;
 };
 

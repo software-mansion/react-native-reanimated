@@ -78,3 +78,8 @@ std::vector<int> SharedArray::getSharedValues() {
   }
   return res;
 }
+
+
+std::vector<std::shared_ptr<SharedValue>> SharedArray::getSvs() const {
+  return this->svs;
+}

@@ -73,30 +73,26 @@ std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::
     return std::to_string(value->getNumber());
   }  else if (value->isObject()) {
       jsi::Object obj = value->getObject(rt);
-      // obtain shared object
       jsi::Value id = obj.getProperty(rt, "id");
-      jsi::Value typeval = obj.getProperty(rt, "type");
       std::string type = obj.getProperty(rt, "type").getString(rt).utf8(rt);
       std::string result;
       if (type == "array") {
           result = "[";
           std::shared_ptr<SharedValue> sharedArray = sharedValueRegistry->getSharedValue(id.getNumber());
-          // manage obtained shared object
-          for (auto & item : (std::dynamic_pointer_cast<SharedArray>(sharedArray))->svs) {
+          for (auto & item : (std::dynamic_pointer_cast<SharedArray>(sharedArray))->getSvs()) {
               jsi::Value value = item->asValue(rt);
               result += getStringRepresentation(rt, &value) + ",";
           }
           result[result.size() - 1] = ']';
       } else if (type == "object") {
-          // this is an object
           result = "{";
           std::shared_ptr<SharedValue> sharedObject = sharedValueRegistry->getSharedValue(id.getNumber());
-          // manage obtained shared object object
-          for (auto & pair : (std::dynamic_pointer_cast<SharedObject>(sharedObject))->properties) {
+          for (auto & pair : (std::dynamic_pointer_cast<SharedObject>(sharedObject))->getProperties()) {
               std::string label = pair.first;
               result += label + ":";
               std::shared_ptr<SharedValue> sv = pair.second;
               jsi::Value val = sv->asValue(rt);
+              // for asValue() reading properties such as id or type does not work in further recursion
               if (val.isObject()) {
                   val = sv->asParameter(rt);
               }
@@ -108,7 +104,7 @@ std::string WorkletModule::getStringRepresentation(jsi::Runtime &rt, const jsi::
       }
       return result;
   }
-    return "unsupported value type";
+  return "unsupported value type";
 }
 
 void WorkletModule::setWorkletId(int workletId) {
