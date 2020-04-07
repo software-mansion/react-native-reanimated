@@ -120,7 +120,7 @@ function commonCode(body, args, createRes) {
         argsCopy = (isShareable(args)) ? args : args.slice();
       } else if (typeof args === 'object' && args !== null) {
         if (isShareable(args)) {
-          argsCopy = args
+          argsCopy = [args];
         } else {
           // force object copy operation
           argsCopy = [{ ...args, '__________reanimated_object_unreachable_field_name':0 }];

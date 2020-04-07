@@ -76,7 +76,7 @@ const WorkletsTest = () => {
         this.log('[worklet 4] ' + input.v.value + '/' + input.v2.value)
         return true
     }, {v2, v}))();
-/* TODO * /
+
     // args in shared object
     const so = useSharedValue({v, v2});
     ;(useWorklet(function(input) {
@@ -84,7 +84,7 @@ const WorkletsTest = () => {
         this.log('[worklet 5] ' + input.v.value + '/' + input.v2.value)
         return true
     }, so))();
-/* TODO * /
+
     // args in shared object, mixed order
     // order should not matter, worklet 5 and 6 should produce the same output
     const so2 = useSharedValue({v, v2});
@@ -93,7 +93,7 @@ const WorkletsTest = () => {
         this.log('[worklet 6] ' + input.v.value + '/' + input.v2.value)
         return true
     }, so2))();
-/**/
+
     // args in shared array
     const sa = useSharedValue([v, v2]);
     ;(useWorklet(function(v, vv) {
