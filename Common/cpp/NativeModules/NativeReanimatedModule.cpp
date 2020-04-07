@@ -41,11 +41,12 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::registerWorklet( // make it async !!!
   jsi::Runtime &rt,
   double id,
-  std::string functionAsString) {
-    scheduler->scheduleOnUI([functionAsString, id, this]() mutable {
+  std::string functionAsString,
+  int length) {
+    scheduler->scheduleOnUI([functionAsString, id, length, this]() mutable {
     auto fun = function(*runtime, functionAsString.c_str());
     std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    this->workletRegistry->registerWorklet((int)id, funPtr);
+    this->workletRegistry->registerWorklet((int)id, funPtr, length);
   });
 }
 
@@ -85,7 +86,7 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
   std::function<std::shared_ptr<SharedValue>()> create;
   
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber()));
+    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber(), applierRegistry, sharedValueRegistry, workletRegistry, errorHandler));
     create = [=] () {return sv;};
   } else if(value.isString()) {
     std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
@@ -212,7 +213,7 @@ void NativeReanimatedModule::registerSharedValue(jsi::Runtime &rt, double id, co
 
 void NativeReanimatedModule::unregisterSharedValue(jsi::Runtime &rt, double id) {
   scheduler->scheduleOnUI([=](){
-    sharedValueRegistry->unregisterSharedValue(id);
+    sharedValueRegistry->unregisterSharedValue(id, *runtime);
   });
 }
 
@@ -240,15 +241,24 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
     if (workletPtr == nullptr) {
       return;
     }
-
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+    
+    for (auto id : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+      if (sv == nullptr) {
+        return;      }
+      sharedValues.push_back(sv);
+    }
+    
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
 
 void NativeReanimatedModule::unregisterApplierFromRender(jsi::Runtime &rt, int id) {
   scheduler->scheduleOnUI([=](){
-    applierRegistry->unregisterApplierFromRender(id);
+    applierRegistry->unregisterApplierFromRender(id, *runtime);
   });
 }
 
@@ -258,8 +268,18 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
     if (workletPtr == nullptr) {
       return;
     }
+    
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+    
+    for (auto id : svIds) {
+      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+      if (sv == nullptr) {
+        return;
+      }
+      sharedValues.push_back(sv);
+    }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }
@@ -277,7 +297,17 @@ void NativeReanimatedModule::registerMapper(jsi::Runtime &rt, int id, int workle
       return;
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, svIds, this->errorHandler, sharedValueRegistry));
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
+       
+    for (auto id : svIds) {
+     std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+     if (sv == nullptr) {
+       return;
+     }
+     sharedValues.push_back(sv);
+    }
+    
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
     std::shared_ptr<Mapper> mapper = Mapper::createMapper(id,
                                                           applier,
                                                           sharedValueRegistry);
@@ -338,7 +368,7 @@ void NativeReanimatedModule::getRegistersState(jsi::Runtime &rt, int option, con
         for(auto &it : sharedValueRegistry->getSharedValueMap()) {
           ids += std::to_string(it.first) + " ";
         }
-        break;
+          ;
       }
       case 2: {
         for(auto it : workletRegistry->getWorkletMap()) {

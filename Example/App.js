@@ -27,10 +27,12 @@ import MapperTest from './testComponents/MapperTest';
 import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
 import UseAnimatedStyleTest from './testComponents/UseAnimatedStyleTest';
+import WithWorklet from './testComponents/WithWorklet';
 
 // set components here:
 const components = {
   '3D Menu': Menu,
+  'WithWorklet': WithWorklet,
   'DragTest': DragTest,
   'MapperTest': MapperTest,
   'MapperTest2': MapperTest2,

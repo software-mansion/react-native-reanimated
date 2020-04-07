@@ -6,6 +6,8 @@
 //
 
 #include "SharedFunction.h"
+#include "SharedValueRegistry.h"
+#include "Logger.h"
 
 SharedFunction::SharedFunction(int id, std::shared_ptr<Worklet> w) : SharedValue() {
   this->worklet = w;
@@ -31,17 +33,29 @@ jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
          const jsi::Value *args,
          size_t count
          ) -> jsi::Value {
-         
-     return worklet->body->callWithThis(rt,
-                                        thisValue.asObject(rt),
-                                        static_cast<const jsi::Value*>(args),
-                                        (size_t)count);
+
+     if (count > 0 and
+         args[0].isString() and
+         args[0].asString(rt).utf8(rt) == "thisIsAHackToGetWorkletId") {
+       return jsi::Value(worklet->workletId);
+     }
+
+     if (thisValue.isObject()) {
+        return worklet->body->callWithThis(rt,
+                                                thisValue.asObject(rt),
+                                                static_cast<const jsi::Value*>(args),
+                                                (size_t)count);
+     } else {
+        return worklet->body->call(rt, static_cast<const jsi::Value*>(args), (size_t)count);
+     }
   };
   
   std::string idAsString = std::to_string(id);
   jsi::PropNameID name = jsi::PropNameID::forAscii(rt, idAsString);
   
-  jsi::Function function = jsi::Function::createFromHostFunction(rt, name, 1, callback);
+  int length = worklet->length;
+  jsi::Function function = jsi::Function::createFromHostFunction(rt, name, length, callback);
+  
   return function;
 }
 
@@ -49,6 +63,13 @@ std::vector<int> SharedFunction::getSharedValues() {
   std::vector<int> res;
   res.push_back(id);
   return res;
+}
+
+std::shared_ptr<SharedValue> SharedFunction::copy() {
+  
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedFunction>(id,
+                                        worklet);
 }
 
 SharedFunction::~SharedFunction() {

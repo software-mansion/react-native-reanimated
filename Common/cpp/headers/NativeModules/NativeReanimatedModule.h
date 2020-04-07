@@ -38,7 +38,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       std::shared_ptr<JSCallInvoker> jsInvoker,
       std::shared_ptr<ErrorHandler> errorHandler);
     virtual ~NativeReanimatedModule();
-    void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString) override;
+    void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString, int length) override;
     void unregisterWorklet(jsi::Runtime &rt, double id) override;
     void setWorkletListener(jsi::Runtime &rt, int workletId, const jsi::Value &listener) override;
 

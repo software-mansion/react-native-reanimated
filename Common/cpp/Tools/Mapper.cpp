@@ -25,14 +25,12 @@ void Mapper::execute(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module
 std::shared_ptr<Mapper> Mapper::createMapper(int id,
                                      std::shared_ptr<Applier> applier,
                                      std::shared_ptr<SharedValueRegistry> sharedValueRegistry) {
-  if (applier->sharedValueIds.size() < 2) {
+  if (applier->sharedValues.size() < 2) {
     return nullptr;
   }
-  int inputId = applier->sharedValueIds[0];
-  int outputId = applier->sharedValueIds[1];
   
-  std::shared_ptr<SharedValue> input = sharedValueRegistry->getSharedValue(inputId);
-  std::shared_ptr<SharedValue> output = sharedValueRegistry->getSharedValue(outputId);
+  std::shared_ptr<SharedValue> input = applier->sharedValues[0];
+  std::shared_ptr<SharedValue> output = applier->sharedValues[1];
   
   if (input == nullptr or output == nullptr) {
     return nullptr;

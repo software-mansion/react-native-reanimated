@@ -21,6 +21,7 @@ public:
     jsi::Value asParameter(jsi::Runtime &rt) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
+    std::shared_ptr<SharedValue> copy() override;
     ~SharedArray();
 private:
   std::vector<std::shared_ptr<SharedValue>> svs;

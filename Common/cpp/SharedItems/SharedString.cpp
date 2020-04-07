@@ -3,6 +3,7 @@
 //
 
 #include "SharedString.h"
+#include "SharedValueRegistry.h"
 
 SharedString::SharedString(int id, std::string value) {
   this->value = value;
@@ -67,6 +68,13 @@ void SharedString::setNewValue(std::shared_ptr<SharedValue> sv) {
   SharedString * sharedString = (SharedString*)sv.get();
   this->value = sharedString->value;
   this->dirty = true;
+}
+
+std::shared_ptr<SharedValue> SharedString::copy() {
+  
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedString>(id,
+                                        value);
 }
 
 std::vector<int> SharedString::getSharedValues() {

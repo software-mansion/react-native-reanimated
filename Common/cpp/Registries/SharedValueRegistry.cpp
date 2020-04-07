@@ -9,9 +9,9 @@ void SharedValueRegistry::registerSharedValue(int id, std::shared_ptr<SharedValu
   sharedValueMap[id] = ptr;
 }
 
-void SharedValueRegistry::unregisterSharedValue(int id) {
+void SharedValueRegistry::unregisterSharedValue(int id, jsi::Runtime &rt) {
   if (sharedValueMap.find(id) != sharedValueMap.end()) {
-    sharedValueMap[id]->willUnregister();
+    sharedValueMap[id]->willUnregister(rt);
   }
   sharedValueMap.erase(id);
 }
@@ -28,3 +28,5 @@ std::shared_ptr<SharedValue> SharedValueRegistry::getSharedValue(int id) {
 std::unordered_map<int, std::shared_ptr<SharedValue>> SharedValueRegistry::getSharedValueMap() const {
   return this->sharedValueMap;
 }
+
+int SharedValueRegistry::NEXT_SHARED_VALUE_ID = INT_MAX;

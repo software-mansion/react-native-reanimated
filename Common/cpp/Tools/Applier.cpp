@@ -10,14 +10,13 @@
 Applier::Applier(
       int applierId,
       std::shared_ptr<Worklet> worklet,
-      std::vector<int> sharedValueIds,
+      std::vector<std::shared_ptr<SharedValue>> sharedValues,
       std::shared_ptr<ErrorHandler> errorHandler,
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry
       ) {
   this->worklet = worklet;
-  this->sharedValueIds = sharedValueIds;
+  this->sharedValues = sharedValues;
   this->applierId = applierId;
-  this->errorHandler = errorHandler;
   this->sharedValueRegistry = sharedValueRegistry;
 }
 
@@ -25,45 +24,34 @@ Applier::~Applier() {}
 
 bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
   bool shouldFinish = false;
-  std::vector<std::shared_ptr<SharedValue>> sharedValues;
   
-  for (auto id : sharedValueIds) {
-    std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
-    if (sv == nullptr) {
-      shouldFinish = true;
-      break;
-    }
-    sharedValues.push_back(sv);
+  jsi::Value * args = new jsi::Value[sharedValues.size()];
+  for (int i = 0; i < sharedValues.size(); ++i) {
+    args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
   }
+
+  module->setWorkletId(worklet->workletId);
+  module->setApplierId(applierId);
+  module->setJustStarted(justStarted);
+
+  try {
+    jsi::Value returnValue = worklet->body->callWithThis(rt,
+                              jsi::Object::createFromHostObject(rt, module),
+                              static_cast<const jsi::Value*>(args),
+                              (size_t)sharedValues.size());
+    shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
+  } catch(const std::exception &e) {
+    std::string message = "worklet error: ";
+    message += e.what();
+    this->errorHandler->raise(message.c_str());
+  }
+  delete [] args;
   
-  if (!shouldFinish) {
-    jsi::Value * args = new jsi::Value[sharedValues.size()];
-    for (int i = 0; i < sharedValues.size(); ++i) {
-      args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
-    }
-
-    module->setWorkletId(worklet->workletId);
-    module->setApplierId(applierId);
-    module->setJustStarted(justStarted);
-
-    try {
-      jsi::Value returnValue = worklet->body->callWithThis(rt,
-                                jsi::Object::createFromHostObject(rt, module),
-                                static_cast<const jsi::Value*>(args),
-                                (size_t)sharedValues.size());
-      shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
-    } catch(const std::exception &e) {
-      std::string message = "worklet error: ";
-      message += e.what();
-      this->errorHandler->raise(message.c_str());
-    }
-    delete [] args;
-  }
 
   justStarted = false;
   
   if (shouldFinish) {
-    finish();
+    finish(rt);
   }
   
   return shouldFinish;
@@ -73,10 +61,19 @@ void Applier::addOnFinishListener(const std::function<void()> &listener) {
   onFinishListeners.push_back(listener);
 }
 
-void Applier::finish() {
+void Applier::finish(jsi::Runtime &rt) {
   while (onFinishListeners.size() > 0) {
     onFinishListeners.back()();
     onFinishListeners.pop_back();
+  }
+  
+  jsi::Object container = rt
+  .global()
+  .getPropertyAsObject(rt, "Reanimated")
+  .getPropertyAsObject(rt, "container");
+  std::string propName = std::to_string(this->applierId);
+  if (container.hasProperty(rt, propName.c_str())) {
+    container.setProperty(rt, propName.c_str(), jsi::Value::undefined());
   }
 }
 

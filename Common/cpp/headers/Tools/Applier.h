@@ -24,17 +24,16 @@ class Applier {
   bool justStarted = true;
   public:
     std::shared_ptr<Worklet> worklet;
-    std::vector<int> sharedValueIds;
+    std::vector<std::shared_ptr<SharedValue>> sharedValues;
     Applier(int applierId,
             std::shared_ptr<Worklet> worklet,
-            std::vector<int> sharedValueIds,
+            std::vector<std::shared_ptr<SharedValue>> sharedValues,
             std::shared_ptr<ErrorHandler> errorHandler,
             std::shared_ptr<SharedValueRegistry> sharedValueRegistry);
     virtual bool apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module);
     void addOnFinishListener(const std::function<void()> &listener);
     virtual ~Applier();
-  private:
-    void finish(); // should be called only by [applier] when it finished
+    void finish(jsi::Runtime &rt); 
 };
 
 #endif //REANIMATEDEXAMPLE_APPLIER_H

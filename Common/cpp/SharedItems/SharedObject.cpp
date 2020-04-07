@@ -6,6 +6,7 @@
 //
 
 #include "SharedObject.h"
+#include "SharedValueRegistry.h"
 
 SharedObject::SharedObject(int id,
                            std::vector<std::shared_ptr<SharedValue>> svs,
@@ -85,4 +86,15 @@ std::vector<int> SharedObject::getSharedValues() {
     }
   }
   return res;
+}
+
+std::shared_ptr<SharedValue> SharedObject::copy() {
+  std::vector<std::shared_ptr<SharedValue>> copiedSvs;
+  std::vector<std::string> copiedNames;
+  for (auto &entry : properties) {
+    copiedSvs.push_back(entry.second->copy());
+    copiedNames.push_back(entry.first);
+  }
+  int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
+  return std::make_shared<SharedObject>(id, copiedSvs, copiedNames);
 }

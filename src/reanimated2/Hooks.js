@@ -4,6 +4,11 @@ import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 
+global.Reanimated = {};
+global.Reanimated.withWorklet = (worklet, params, initial) => {
+  return (initial)? initial : 0;
+}
+
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
     return true;
@@ -209,7 +214,7 @@ export function useSharedValue(initial) {
 const styleUpdater = new Worklet(function (input, output) {
   'worklet';
   const newValues = input.body.apply(this, [input.input]);
-  Animated.assign(output, newValues);
+  Reanimated.assign(output, newValues);
 });
 
 function unwrap(obj) {

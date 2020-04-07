@@ -2,14 +2,11 @@ import React from 'react';
 import { Text, View, Dimensions } from "react-native"
 import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import ReanimatedModule from '../../src/ReanimatedModule';
 
 function DragTest() {
-    const prevX = useSharedValue(0);
-    const prevY = useSharedValue(0);
     const totalX = useSharedValue(0);
     const totalY = useSharedValue(0);
-    const velocityX = useSharedValue(0);
-    const velocityY = useSharedValue(0);
     const parentWidth = useSharedValue(Dimensions.get('window').width);
     const parentHeight = useSharedValue(Dimensions.get('window').height);
 
@@ -46,26 +43,30 @@ function DragTest() {
             }
         }
 
-        if (Math.abs(velocityX.value) < 0.01 && Math.abs(velocityY.value) < 0.01) {
+        if (Math.abs(velocityX.value) < 0.01 && Math.abs(velocityY.value) < 0.1) {
             return true
         }
-    }, [velocityX, velocityY, totalX, totalY, parentHeight, parentWidth]);
-    const worklet = useEventWorklet(function(prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY) {
+    }, [0, 0, totalX, totalY, parentHeight, parentWidth]);
+
+    const worklet = useEventWorklet(function(totalX, totalY, ruszable) {
         'worklet';
+        this.log("przed memory");
+        const memory = Reanimated.memory(this);
+        this.log("po memory");
         if (this.event.state === 2) {
-            prevX.set(totalX.value)
-            prevY.set(totalY.value)
+            memory.prevX = totalX.value;
+            memory.prevY = totalY.value;
             ruszable.stop();
         }
-        totalX.set(this.event.translationX + prevX.value);
-        totalY.set(this.event.translationY + prevY.value);
+
+        totalX.set(this.event.translationX + memory.prevX);
+        totalY.set(this.event.translationY + memory.prevY);
         if (this.event.state === 5) {
-            velocityX.set(this.event.velocityX);
-            velocityY.set(this.event.velocityY);
-            ruszable.start();
+            ruszable.start(this.event.velocityX, this.event.velocityY);
         }
         
-    }, [prevX, prevY, totalX, totalY, ruszable, velocityX, velocityY])
+    }, [totalX, totalY, ruszable]);
+
     return (
         <View style={{flex:1}} onLayout={(e)=>{parentHeight.set(e.nativeEvent.layout.height); parentWidth.set(e.nativeEvent.layout.width);}}>
             <PanGestureHandler
