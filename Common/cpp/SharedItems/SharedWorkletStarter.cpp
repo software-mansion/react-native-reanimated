@@ -111,7 +111,6 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
             if (sv == nullptr) {
               return false;
-              break;
             }
             sharedValues.push_back(sv);
           }

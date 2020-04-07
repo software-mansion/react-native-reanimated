@@ -247,9 +247,7 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
     for (auto id : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
       if (sv == nullptr) {
-        return;
-        break;
-      }
+        return;      }
       sharedValues.push_back(sv);
     }
     
@@ -277,7 +275,6 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
       if (sv == nullptr) {
         return;
-        break;
       }
       sharedValues.push_back(sv);
     }
@@ -306,7 +303,6 @@ void NativeReanimatedModule::registerMapper(jsi::Runtime &rt, int id, int workle
      std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
      if (sv == nullptr) {
        return;
-       break;
      }
      sharedValues.push_back(sv);
     }
@@ -372,7 +368,7 @@ void NativeReanimatedModule::getRegistersState(jsi::Runtime &rt, int option, con
         for(auto &it : sharedValueRegistry->getSharedValueMap()) {
           ids += std::to_string(it.first) + " ";
         }
-        break;
+          ;
       }
       case 2: {
         for(auto it : workletRegistry->getWorkletMap()) {
