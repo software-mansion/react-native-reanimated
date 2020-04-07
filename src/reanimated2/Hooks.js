@@ -119,7 +119,7 @@ function commonCode(body, args, createRes) {
       if (Array.isArray(args)) {
         argsCopy = args.slice();
       } else if (typeof args === 'object' && args !== null) {
-        argsCopy = Object.keys(args).map(key => args[key])
+        argsCopy = [JSON.parse(JSON.stringify(args))];
       }
     }
     let shouldReleaseWorklet = false;

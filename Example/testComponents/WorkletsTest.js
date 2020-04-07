@@ -60,11 +60,18 @@ const WorkletsTest = () => {
         return true
     }, [v, v2]))();
 
-    ;(useWorklet(function(v, vv) {
+    ;(useWorklet(function(input) {
         'worklet'
-        this.log('[worklet 3] ' + v.value + '/' + vv.value)
+        this.log('[worklet 3] ' + input.v.value + '/' + input.v2.value)
         return true
     }, {v, v2}))();
+
+    // order should not matter, worklet 3 and 4 should produce the same output
+    ;(useWorklet(function(input) {
+        'worklet'
+        this.log('[worklet 4] ' + input.v.value + '/' + input.v2.value)
+        return true
+    }, {v2, v}))();
 
     return (
         <View>
