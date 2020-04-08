@@ -191,10 +191,12 @@ export default function createAnimatedComponent(Component) {
       if (c !== this._component) {
         this._component = c;
 
-        // Set initial animated styles to prevent minimal flickering
-        if (this._component && this._component.setNativeProps) {
+        // Set initial animated styles to prevent minimal flickering in browsers
+        if (Platform.OS === 'web' && this._component && this._component.setNativeProps) {
+          const initialStyle = this._getInitialStyle(StyleSheet.flatten(this.props.style))
+
           this._component.setNativeProps({
-            style: this._getInitialStyle(StyleSheet.flatten(this.props.style))
+            style: initialStyle,
           });
         }
       }
@@ -204,10 +206,10 @@ export default function createAnimatedComponent(Component) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (value && typeof value.__getValue === 'function') {
+        if (value instanceof AnimatedNode) {
           style[key] = value.__getValue();
         } else if (Array.isArray(value)) {
-          style.transform = value.map(this._getInitialStyle.bind(this));
+          style[key] = value.map(this._getInitialStyle.bind(this))
         } else {
           style[key] = value;
         }
