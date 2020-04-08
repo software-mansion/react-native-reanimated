@@ -16,6 +16,7 @@ Applier::Applier(
       ) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;
+  this->errorHandler = errorHandler;
   this->applierId = applierId;
   this->sharedValueRegistry = sharedValueRegistry;
 }
@@ -38,9 +39,9 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
       args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
     }
 
-  module->setWorkletId(worklet->workletId);
-  module->setApplierId(applierId);
-  module->setJustStarted(justStarted);
+    module->setWorkletId(worklet->workletId);
+    module->setApplierId(applierId);
+    module->setJustStarted(justStarted);
 
     jsi::Value returnValue = worklet->body->callWithThis(rt,
                               jsi::Object::createFromHostObject(rt, module),
@@ -49,8 +50,6 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
     shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
     delete [] args;
   }
-  delete [] args;
-  
 
   justStarted = false;
   
