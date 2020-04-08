@@ -6,7 +6,7 @@ class AnimatedMainClock extends InternalAnimatedValue {
   _frameCallback;
 
   constructor() {
-    super();
+    super(Date.now());
   }
 
   __onEvaluate() {
