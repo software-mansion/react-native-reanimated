@@ -194,20 +194,20 @@ export default function createAnimatedComponent(Component) {
         // Set initial animated styles to prevent minimal flickering
         if (this._component && this._component.setNativeProps) {
           this._component.setNativeProps({
-            style: this._filterAnimatedStyle(StyleSheet.flatten(this.props.style))
+            style: this._getInitialStyle(StyleSheet.flatten(this.props.style))
           });
         }
       }
     };
 
-    _filterAnimatedStyle(inputStyle) {
+    _getInitialStyle(inputStyle) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
         if (value && typeof value.__getValue === 'function') {
           style[key] = value.__getValue();
         } else if (Array.isArray(value)) {
-          style.transform = value.map(this._filterAnimatedStyle.bind(this));
+          style.transform = value.map(this._getInitialStyle.bind(this));
         } else {
           style[key] = value;
         }
