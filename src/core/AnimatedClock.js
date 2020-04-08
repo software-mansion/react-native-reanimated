@@ -6,11 +6,11 @@ class AnimatedMainClock extends InternalAnimatedValue {
   _frameCallback;
 
   constructor() {
-    super({ type: 'MAIN_CLOCK' });
+    super(Date.now());
   }
 
   __onEvaluate() {
-    return +new Date();
+    return Date.now();
   }
 
   _runFrame = () => {
