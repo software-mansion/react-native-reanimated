@@ -18,6 +18,7 @@
     "android/src/main/java/",
     "android/build.gradle",
     "ios/",
+    "!ios/build/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
