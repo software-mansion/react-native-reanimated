@@ -16,9 +16,11 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    Animated as ReactNativeAnimated,
   } from 'react-native';
   namespace Animated {
+    import AnimatedInterpolation = ReactNativeAnimated.AnimatedInterpolation;
     type Nullable<T> = T | null | undefined;
 
     class AnimatedNode<T> {
@@ -198,7 +200,32 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent<T>(component: T): T;
+
+    export type ComponentProps<T> = T extends React.ComponentType<infer P> | React.Component<infer P> ? P : never
+
+    export interface WithAnimatedValue<T>
+      extends ThisType<
+        T extends object
+          ? { [K in keyof T]?: WithAnimatedValue<T[K]> }
+          : T extends (infer P)[]
+          ? WithAnimatedValue<P>[]
+          : T | Value | AnimatedInterpolation
+        > {}
+
+    export type AnimatedProps<T> = { [key in keyof T]: WithAnimatedValue<T[key]> }
+
+    export interface AnimatedComponent<
+      T extends React.ComponentType<ComponentProps<T>> | React.Component<ComponentProps<T>>
+      > extends React.FC<AnimatedProps<ComponentProps<T>>> {
+      getNode: () => T
+    }
+
+    /**
+     * Make any React component Animatable.  Used to create `Animated.View`, etc.
+     */
+    export function createAnimatedComponent<
+      T extends React.ComponentType<ComponentProps<T>> | React.Component<ComponentProps<T>>
+      >(component: T): AnimatedComponent<T extends React.ComponentClass<ComponentProps<T>> ? InstanceType<T> : T>
 
     // classes
     export {
