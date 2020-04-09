@@ -30,9 +30,6 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   for (int i = 0; i < sharedValues.size(); ++i) {
     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
   }
-  if (this->errorHandler->getError() != nullptr && this->errorHandler->getError()->handled) {
-    shouldFinish = true;
-  }
   if (!shouldFinish) {
     jsi::Value * args = new jsi::Value[sharedValues.size()];
     for (int i = 0; i < sharedValues.size(); ++i) {

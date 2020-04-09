@@ -31,7 +31,10 @@ std::shared_ptr<IOSScheduler> scheduler;
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender
 {
   try {
-    nativeReanimatedModule->render();
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr ||
+        !nativeReanimatedModule->errorHandler->getError()->handled) {
+      nativeReanimatedModule->render();
+    }
   } catch(const std::exception &e) {
     if (nativeReanimatedModule->errorHandler->getError() == nullptr) {
       std::string message = "error occured: ";
@@ -49,7 +52,10 @@ std::shared_ptr<IOSScheduler> scheduler;
   std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
   eventAsString = "{ NativeMap:"  + eventAsString + "}";
   try {
-    nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr || 
+        !nativeReanimatedModule->errorHandler->getError()->handled) {
+      nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
+    }
   } catch(const std::exception &e) {
     if (nativeReanimatedModule->errorHandler->getError() == nullptr) {
       std::string message = "error occured: ";
