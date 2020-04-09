@@ -36,6 +36,20 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->errorHandler = errorHandler;
 }
 
+typedef jsi::Value KeyType;
+
+void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const jsi::Value &func) {
+  auto rea = this->runtime->global().getProperty(*this->runtime, "Reanimated");
+  if (rea.isUndefined()) {
+    Logger::log(std::string("global.Reanimated has not been initialized, adding " + label + " cancelled").c_str());
+    return;
+  }
+  jsi::PropNameID labelId = jsi::PropNameID::forAscii(*this->runtime, label);
+  auto ho = rea.asObject(*this->runtime).getHostObject(*this->runtime);
+  jsi::Value funcStr = jsi::String::createFromUtf8(rt, std::string("(" + func.toString(rt).utf8(rt) + ")"));
+  ho->set(*this->runtime, labelId, funcStr);
+}
+
 // worklets
 
 void NativeReanimatedModule::registerWorklet( // make it async !!!

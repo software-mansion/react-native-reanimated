@@ -2,10 +2,17 @@ import {
   TurboModuleRegistry,
 } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
+import installFunctions from './InstallFunctions'
 
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
+installFunctions(InnerNativeModule);
+
 export default {
+
+  install(label, func) {
+    InnerNativeModule.install(label, func)
+  },
 
   // shared value
   registerSharedValue(valueId, value) {
