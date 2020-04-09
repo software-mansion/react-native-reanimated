@@ -73,6 +73,7 @@ import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import { useWorklet, useEventWorklet, useSharedValue, useMapper, useAnimatedStyle } from './reanimated2/Hooks';
 import RegistersState from './reanimated2/RegistersState';
+import useSpring from './reanimated2/helpingHooks/Spring';
 
 export {
   Easing,
@@ -101,4 +102,5 @@ export {
   useSharedValue,
   useAnimatedStyle,
   RegistersState,
+  useSpring,
 };
