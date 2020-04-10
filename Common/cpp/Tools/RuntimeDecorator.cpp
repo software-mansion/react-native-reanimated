@@ -15,6 +15,7 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   
   // add assign method
   std::string assignCode = R"((function assign(left, right) {
+  if (right == null) return;
   if ((typeof right === 'object') && (!right.value)) {
     for (let key of Object.keys(right)) {
       if (left[key]) {
@@ -41,10 +42,18 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   // add withWorklet method
   std::string withWorklet = R"((function withWorklet(worklet, params, initial) {
     params = ([0]).concat(params);
-    return {value:{applierId:worklet.startTentatively.apply(undefined, params)}};
+    return {value:{applierId:worklet.start.apply(undefined, params)}};
   }))";
   
   properties["withWorklet"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorklet.c_str());
+  
+  // add withWorkletCopy method
+  std::string withWorkletCopy = R"((function withWorkletCopy(worklet, params, initial) {
+    params = ([0]).concat(params);
+    return {value:{applierId:worklet.startTentatively.apply(undefined, params)}};
+  }))";
+  
+  properties["withWorkletCopy"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorkletCopy.c_str());
   
   // add container
   properties["container"] = jsi::Object(rt);

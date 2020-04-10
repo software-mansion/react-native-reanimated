@@ -34,6 +34,8 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         Logger::log(value->getString(rt).utf8(rt).c_str());
       } else if (value->isNumber()) {
         Logger::log(value->getNumber());
+      } else if (value->isBool()){
+        Logger::log(value->getBool());
       } else {
         Logger::log("unsupported value type");
       }

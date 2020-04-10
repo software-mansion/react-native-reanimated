@@ -1,4 +1,5 @@
 import { useWorklet, useSharedValue } from "../Hooks";
+import Worklet from "../Worklet";
 
 const defaultState = {
   finished: 0,
@@ -19,7 +20,7 @@ const workletBody = new Worklet(
   function (sv, state, config) {
     'worklet';
     const memory = Reanimated.memory(this);
-    
+
     if (this.justStarted) {
       memory.time = Date.now();
       memory.prevPosition = 0;
@@ -27,7 +28,7 @@ const workletBody = new Worklet(
     }
 
     const now = Date.now();
-    const deltaTime = now - memory.time;
+    const deltaTime = Math.min(now - memory.time, 64);
     memory.time = now;
 
     memory.prevPosition = sv.value;
@@ -36,10 +37,10 @@ const workletBody = new Worklet(
     const m = config.mass.value;
     const k = config.stiffness.value;
 
-    const v0 = -state.velocity;
-    const xo = config.toValue.value - sv.value;
+    const v0 = -state.velocity.value;
+    const x0 = config.toValue.value - sv.value;
 
-    const zeta = x / (2 * Math.sqrt(k * m)); // damping ratio
+    const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
     const omega0 = Math.sqrt(k/m); // undamped angular frequency of the oscillator (rad/ms)
     const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
 
@@ -50,12 +51,12 @@ const workletBody = new Worklet(
 
      // under damped
     const underDampedEnvelope = Math.exp(-zeta * omega0 * t);
-    const underDampedFrag1 = underDampedEnvelope * (sin1 * ((vo + zeta * omega0 * x0)/ omega1) + xo * cos1);
-    
+    const underDampedFrag1 = underDampedEnvelope * (sin1 * ((v0 + zeta * omega0 * x0)/ omega1) + x0 * cos1);
+
     const underDampedPosition = config.toValue.value - underDampedFrag1;
     // This looks crazy -- it's actually just the derivative of the oscillation function
     const underDampedVelocity = zeta * omega0 * underDampedFrag1 - underDampedEnvelope * (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
-     
+
     // critically damped
     const criticallyDampedEnvelope = Math.exp((-omega0) * t);
     const criticallyDampedPosition = config.toValue.value - (criticallyDampedEnvelope * (x0 + ((v0 + omega0 * x0) * t)));
@@ -64,14 +65,14 @@ const workletBody = new Worklet(
     
     const isOvershooting = () => {
       if (config.overshootClamping.value && (config.stiffness.value != 0)) {
-        return (memory.prevPosition < config.toValue.value)? (sv.value > config.toValue.value):(cv.value < config.toValue.value);
+        return (memory.prevPosition < config.toValue.value)? (sv.value > config.toValue.value):(sv.value < config.toValue.value);
       } else {
         return false;
       }
     }
 
     const isVelocity = Math.abs(state.velocity.value) < config.restSpeedThreshold.value;
-    const isDisplacement = (config.stiffness.value == 0) || ( Math.abs(config.toValue -state.position) < config.restDisplacementThreshold.value );
+    const isDisplacement = (config.stiffness.value == 0) || ( Math.abs(config.toValue.value - sv.value) < config.restDisplacementThreshold.value );
 
     if (zeta < 1) {
       sv.forceSet(underDampedPosition);
@@ -85,10 +86,10 @@ const workletBody = new Worklet(
       if (config.stiffness.value != 0) {
         state.velocity.set(0);
         sv.forceSet(config.toValue.value);
-      } else {
-        state.finished.set(1);
-        return true;
-      }
+      } 
+      state.finished.set(1);
+      this.log("self finish ")
+      return true;
     }
   }
 );
@@ -102,8 +103,8 @@ export default function useSpring(state, config) {
   return useSharedValue(
     {
       worklet,
-      state,
-      config,
+      state: properState,
+      config: properConfig,
     }
   );
 }

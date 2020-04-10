@@ -110,7 +110,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           for (auto id : svIds) {
             std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
             if (sv == nullptr) {
-              return false;
+              return -1;
             }
             sharedValues.push_back(sv);
           }
@@ -131,7 +131,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
         
           applierRegistry->registerApplierForRender(applierId, applier);
 
-          return true;
+          return this->starter->applierId;
         };
         return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
         
