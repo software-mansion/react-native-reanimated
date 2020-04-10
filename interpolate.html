@@ -21,7 +21,11 @@
 Extrapolate<span class="token punctuation">.</span><span class="token constant">EXTEND</span><span class="token punctuation">;</span> <span class="token comment">// Will extend the range linearly.</span>
 Extrapolate<span class="token punctuation">.</span><span class="token constant">CLAMP</span><span class="token punctuation">;</span> <span class="token comment">// Will clamp the input value to the range.</span>
 Extrapolate<span class="token punctuation">.</span><span class="token constant">IDENTITY</span><span class="token punctuation">;</span> <span class="token comment">// Will return the input value if the input value is out of range.</span></code></pre>
-<p>Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range.</p>
+<p>Maps an input value within a range to an output value within a range. Also supports different types of extrapolation for when the value falls outside the range and mapping to strings. For example, if you wanted to animate a rotation you could do:</p>
+<pre><code class="language-js"><span class="token function">concat</span><span class="token punctuation">(</span>
+  <span class="token function">interpolate</span><span class="token punctuation">(</span>node<span class="token punctuation">,</span> <span class="token punctuation">{</span> inputRange<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">360</span><span class="token punctuation">]</span><span class="token punctuation">,</span> outputRange<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">360</span><span class="token punctuation">]</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+  <span class="token string">'deg'</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
 </div></div></main></div></div>
     <script>
       window.__INITIAL_PATH__ = 'interpolate';

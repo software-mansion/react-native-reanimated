@@ -20,7 +20,10 @@
 <pre><code class="language-bash">  yarn add react-native-reanimated</code></pre>
 <p>II. Link native code with <code>react-native</code> cli:</p>
 <pre><code class="language-bash">  react-native <span class="token function">link</span> react-native-reanimated</code></pre>
-<p>III. When you want to use "reanimated" in your project import it from the <code>react-native-reanimated</code> package:</p>
+<p>III. For iOS, go to <code>ios</code> folder and run <code>pod install</code>:</p>
+<pre><code class="language-bash">  <span class="token function">cd</span> ios
+  pod <span class="token function">install</span></code></pre>
+<p>IV. When you want to use "reanimated" in your project import it from the <code>react-native-reanimated</code> package:</p>
 <pre><code class="language-js"><span class="token keyword">import</span> Animated <span class="token keyword">from</span> <span class="token string">'react-native-reanimated'</span><span class="token punctuation">;</span></code></pre>
 <p>Similarly when you need <code>Easing</code> import it from the <code>react-native-reanimated</code> package instead of <code>react-native</code>:</p>
 <pre><code class="language-js"><span class="token keyword">import</span> Animated<span class="token punctuation">,</span> <span class="token punctuation">{</span> Easing <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'react-native-reanimated'</span><span class="token punctuation">;</span></code></pre>
