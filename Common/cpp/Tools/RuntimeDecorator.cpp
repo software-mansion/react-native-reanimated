@@ -6,11 +6,14 @@
 //
 
 #include "RuntimeDecorator.h"
-#include <unordered_map>
 #include <memory>
 #include "Logger.h"
 
-void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
+void RuntimeDecorator::addGlobal(jsi::Runtime &rt) {
+  // ...
+}
+
+void RuntimeDecorator::addReanimated(jsi::Runtime &rt) {
   std::unordered_map<std::string, jsi::Value> properties;
   
   // add container
@@ -21,45 +24,45 @@ void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
   properties["END"] = jsi::Value(5);
   properties["ACTIVE"] = jsi::Value(4);
   
-  class Animated : public jsi::HostObject {
-    std::unordered_map<std::string, jsi::Value> props;
-  public:
-    Animated(std::unordered_map<std::string, jsi::Value> && props) {
-      this->props = std::move(props);
-    }
-    void set(jsi::Runtime &rt, const jsi::PropNameID &functionName, const jsi::Value &functionStr) {
-      std::string label = functionName.utf8(rt);
-      if (props.find(label) != props.end()) {
-        return;
-      }
-      props[label] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, functionStr.asString(rt).utf8(rt).c_str());
-    }
+  obtainHostObject(rt, "Reanimated", std::move(properties));
 
-    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
-      auto propName = name.utf8(rt);
-  
-      auto it = props.find(propName);
-      
-      if (it != props.end()) {
-        return jsi::Value(rt, it->second);
+  // this should bo moved to separate method addGlobal or something
+  auto callback = [](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+      const jsi::Value *value = &args[0];
+      if (value->isString()) {
+        Logger::log(value->getString(rt).utf8(rt).c_str());
+      } else if (value->isNumber()) {
+        Logger::log(value->getNumber());
+      } else {
+        Logger::log("unsupported value type");
       }
-
       return jsi::Value::undefined();
-    }
-    
-    std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) {
-      std::vector<jsi::PropNameID> res;
-      for (auto &entry : props) {
-        auto &propName = entry.first;
-        res.push_back(jsi::PropNameID::forAscii(rt, propName));
-      }
-      return res;
-    }
+    };
+  jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
+	rt.global().setProperty(rt, "_log", log);
 
-  };
+}
 
-  std::shared_ptr<jsi::HostObject> ptr(new Animated(std::move(properties)));
+// WARNING: this works only for one level path e.g. a.b(), c.d()
+// TODO make it work for any level: a.b.c.d(), a.b.c() etc.
+std::shared_ptr<jsi::HostObject> RuntimeDecorator::obtainHostObject(
+    jsi::Runtime &rt, 
+    std::string path, 
+    std::unordered_map<std::string, jsi::Value> properties) {
+  // check for existence
+  auto rea = rt.global().getProperty(rt, path.c_str());
+  if (!rea.isUndefined() && rea.asObject(rt).isHostObject(rt)) {
+    return rea.asObject(rt).getHostObject(rt);
+  }
+  // if does not exist, create
+  std::shared_ptr<jsi::HostObject> ptr(new DecoratorHO(std::move(properties)));
 
-  jsi::Object animated = jsi::Object::createFromHostObject(rt, ptr);
-  rt.global().setProperty(rt, "Reanimated", animated);
+  jsi::Object ho = jsi::Object::createFromHostObject(rt, ptr);
+  rt.global().setProperty(rt, path.c_str(), ho);
+  return ptr;
 }

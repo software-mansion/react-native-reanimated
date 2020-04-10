@@ -1,6 +1,7 @@
 #include "NativeReanimatedModule.h"
 #include <memory>
 #include "Logger.h"
+#include "RuntimeDecorator.h"
 #include <functional>
 #include <thread>
 
@@ -38,14 +39,10 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 typedef jsi::Value KeyType;
 
-void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const jsi::Value &func) {
-  auto rea = this->runtime->global().getProperty(*this->runtime, "Reanimated");
-  if (rea.isUndefined()) {
-    Logger::log(std::string("global.Reanimated has not been initialized, adding " + label + " cancelled").c_str());
-    return;
-  }
+void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const jsi::Value &func, std::string path) {
   jsi::PropNameID labelId = jsi::PropNameID::forAscii(*this->runtime, label);
-  auto ho = rea.asObject(*this->runtime).getHostObject(*this->runtime);
+  std::unordered_map<std::string, jsi::Value> properties;
+  std::shared_ptr<jsi::HostObject> ho = RuntimeDecorator::obtainHostObject(*this->runtime, path, std::move(properties));
   jsi::Value funcStr = jsi::String::createFromUtf8(rt, std::string("(" + func.toString(rt).utf8(rt) + ")"));
   ho->set(*this->runtime, labelId, funcStr);
 }

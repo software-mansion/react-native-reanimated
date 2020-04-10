@@ -10,8 +10,9 @@ installFunctions(InnerNativeModule);
 
 export default {
 
-  install(label, func) {
-    InnerNativeModule.install(label, func)
+  install(label, func, path) {
+    path = (path === undefined) ? 'Reanimated' : path;
+    InnerNativeModule.install(label, func, path)
   },
 
   // shared value

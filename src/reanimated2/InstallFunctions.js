@@ -21,7 +21,7 @@ function installFunctions(innerNativeModule) {
         }
       }
     }
-  });
+  }, 'Reanimated');
 
   // install withWorklet
   innerNativeModule.install('withWorklet', function (worklet, params, initial) {
@@ -30,7 +30,7 @@ function installFunctions(innerNativeModule) {
     return {
       value: { applierId: worklet.startTentatively.apply(undefined, params) },
     };
-  });
+  }, 'Reanimated');
 
   // install memory
   innerNativeModule.install('memory', function (context) {
@@ -40,7 +40,38 @@ function installFunctions(innerNativeModule) {
       Reanimated.container[applierId] = {};
     }
     return Reanimated.container[applierId];
-  });
+  }, 'Reanimated');
+
+  innerNativeModule.install('log', function(data) {
+    'worklet'
+
+    function stringRepresentation(obj) {
+      if (Array.isArray(obj)) {
+        let result = '[';
+        for (let item of obj) {
+          result += stringRepresentation(item.value);
+          result += ','
+        }
+        result = result.substr(0, result.length - 1) + ']'
+        return result
+      } else if (typeof obj === 'object') {
+        _log('etner obj world')
+        let result = '{';
+        for (let key of Object.keys(obj)) {
+          if (key === 'id') {
+            continue;
+          }
+          _log('obj loop: ')
+          result += key + ':' + stringRepresentation(obj[key].value);
+          result += ','
+        }
+        result = result.substr(0, result.length - 1) + '}'
+        return result
+      }
+      return obj
+    }
+    _log(stringRepresentation(data))
+  }, 'console')
 }
 
 export default installFunctions;
