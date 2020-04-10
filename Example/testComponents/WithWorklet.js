@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Dimensions, TouchableHighlight, Text } from "react-native"
-import Animated, { useSharedValue, useEventWorklet, Worklet, useWorklet } from 'react-native-reanimated';
+import Animated, { useSharedValue, useEventWorklet, Worklet, useWorklet, useSpring } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useAnimatedStyle } from '../../src/reanimated2/Hooks';
 
@@ -14,28 +14,8 @@ const toggleWorklet = new Worklet(
       target.set(20);
     }
     this.log("ustawiam target na: " + target.value.toString()); 
-    x.set(Reanimated.withWorklet(spring, [target, 0]));
+    x.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: target}]));
     return true;
-  }
-);
-
-const springWorklet = new Worklet( 
-  function (sv, target, velocity, mass) { //ToDo
-    'worklet';
-    this.log(velocity.value);
-    const delta = target.value - sv.value;
-    if (Math.abs(delta) < 0.2) {
-      sv.forceSet(target.value);
-      return true;
-    } else {
-      velocity.set(velocity.value + Math.sign(delta) * 0.9);
-      velocity.set(velocity.value * 0.93);
-      if (Math.sign(velocity.value) * Math.sign(delta) === -1) {
-        velocity.set(velocity.value * (Math.min(Math.abs(delta), 100)/100));
-      }
-      
-      sv.forceSet(sv.value + velocity.value);
-    }
   }
 );
 
@@ -43,27 +23,25 @@ function WithWorkletScreen() {
   const parentWidth = useSharedValue(100);
   const targetX = useSharedValue(20);
 
-  const spring = useWorklet( 
-    springWorklet
-    ,[0, targetX, 0, 1]
-  );
+  const spring = useSpring({},{});
 
   const style = useAnimatedStyle(
-    function(input) {
+    function(input, accessories) {
       'worklet';
-      const {targetX, spring} = input;
+      const { targetX } = input;
+      const { spring } = accessories;
       return {
         position: 'absolute',
         width: 40,
         height: 40,
         transform: [{
-          translateX: Reanimated.withWorklet(spring, [targetX], 20),
+          translateX: Reanimated.withWorklet(spring.worklet, [{}, {toValue: targetX}], 20),
         },
         {
           translateY: 200
         }],
       }
-    }, {targetX, spring}
+    }, { targetX }, { spring }
   );
 
   const toggle = useWorklet(toggleWorklet, [style.transform[0].translateX, targetX, parentWidth, spring]);
@@ -74,7 +52,7 @@ function WithWorkletScreen() {
       x.set(this.event.absoluteX);
 
       if (this.event.state === Reanimated.END) {
-        x.set(Reanimated.withWorklet(spring, [target, this.event.velocityX]));
+        x.set(Reanimated.withWorklet(spring.worklet, [{velocity: this.event.velocityX}, {toValue: target}]));
       }
     }, [style.transform[0].translateX, spring, targetX]
   );
