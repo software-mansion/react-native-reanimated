@@ -52,6 +52,8 @@ jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
 
         } else if (propName == "id") {
           return jsi::Value((double)id);
+        } else if (propName == "__baseType") {
+          return jsi::Value((bool)true);
         }
 
         return jsi::Value::undefined();

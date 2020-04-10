@@ -49,26 +49,26 @@ function installFunctions(innerNativeModule) {
       if (Array.isArray(obj)) {
         let result = '[';
         for (let item of obj) {
-          result += stringRepresentation(item.value);
+          const next = item.__baseType === true ? item.value : item
+          result += stringRepresentation(next);
           result += ','
         }
         result = result.substr(0, result.length - 1) + ']'
         return result
       } else if (typeof obj === 'object') {
-        _log('etner obj world')
         let result = '{';
         for (let key of Object.keys(obj)) {
           if (key === 'id') {
             continue;
           }
-          _log('obj loop: ')
-          result += key + ':' + stringRepresentation(obj[key].value);
+          const next = obj[key].__baseType === true ? obj[key].value : obj[key];
+          result += key + ':' + stringRepresentation(next);
           result += ','
         }
         result = result.substr(0, result.length - 1) + '}'
         return result
       }
-      return obj
+      return obj.__baseType === true ? obj.value : obj;
     }
     _log(stringRepresentation(data))
   }, 'console')
