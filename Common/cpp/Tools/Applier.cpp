@@ -16,6 +16,7 @@ Applier::Applier(
       ) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;
+  this->errorHandler = errorHandler;
   this->applierId = applierId;
   this->sharedValueRegistry = sharedValueRegistry;
 }
@@ -29,24 +30,23 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   for (int i = 0; i < sharedValues.size(); ++i) {
     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
   }
+  if (!shouldFinish) {
+    jsi::Value * args = new jsi::Value[sharedValues.size()];
+    for (int i = 0; i < sharedValues.size(); ++i) {
+      args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
+    }
 
-  module->setWorkletId(worklet->workletId);
-  module->setApplierId(applierId);
-  module->setJustStarted(justStarted);
+    module->setWorkletId(worklet->workletId);
+    module->setApplierId(applierId);
+    module->setJustStarted(justStarted);
 
-  try {
     jsi::Value returnValue = worklet->body->callWithThis(rt,
                               jsi::Object::createFromHostObject(rt, module),
                               static_cast<const jsi::Value*>(args),
                               (size_t)sharedValues.size());
     shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
-  } catch(const std::exception &e) {
-    std::string message = "worklet error: ";
-    message += e.what();
-    this->errorHandler->raise(message.c_str());
+    delete [] args;
   }
-  delete [] args;
-  
 
   justStarted = false;
   

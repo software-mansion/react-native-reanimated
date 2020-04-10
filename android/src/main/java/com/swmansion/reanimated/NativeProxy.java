@@ -28,6 +28,10 @@ public class NativeProxy {
 
   public static native boolean shouldRerender();
 
+  public static native String getError();
+
+  public static native void handleError();
+
   public static native ArrayList<Pair<Integer, Object>> getChangedSharedValuesAfterRender();
 
   public static native boolean shouldEventBeHijacked(byte[] eventHash);

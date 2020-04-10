@@ -198,6 +198,13 @@ public class NodesManager implements EventDispatcherListener {
       // enqueue next frame
       startUpdatingOnAnimationFrame();
     }
+
+    String error = NativeProxy.getError();
+    if (error != null) {
+      NativeProxy.handleError();
+      stopUpdatingOnAnimationFrame();
+      throw new RuntimeException(error);
+    }
   }
 
   /**
@@ -397,6 +404,18 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
+    // first check for event worklet error
+    mReactChoreographer.postFrameCallback(
+            ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+            new GuardedFrameCallback(mContext) {
+      @Override
+      protected void doFrameGuarded(long frameTimeNanos) {
+        String error = NativeProxy.getError();
+        if (error != null) {
+          throw new RuntimeException(error);
+        }
+      }
+    });
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {

@@ -40,22 +40,21 @@ Java_com_swmansion_reanimated_NativeProxy_install(JNIEnv* env,
 
     auto &runtime = *(facebook::jsi::Runtime *)runtimePtr;
 
-    jniRegistry.reset(new JNIRegistry(env));
-
     JavaVM* javaVM = nullptr;
     env->GetJavaVM(&javaVM);
+    jniRegistry.reset(new JNIRegistry(env));
     std::shared_ptr<Scheduler> schedulerForModule((Scheduler*)new AndroidScheduler(javaVM, jniRegistry));
     scheduler = schedulerForModule;
 
 
+    std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new AndroidErrorHandler(
+        env,
+        schedulerForModule,
+        jniRegistry));
     std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
     std::shared_ptr<MapperRegistry> mapperRegistry(new MapperRegistry(sharedValueRegistry));
     std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry));
-    std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new AndroidErrorHandler(
-      env,
-      schedulerForModule,
-      jniRegistry));
 
     std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::hermes::makeHermesRuntime().release()));
     RuntimeDecorator::addGlobalMethods(*animatedRuntime);
@@ -111,7 +110,10 @@ Java_com_swmansion_reanimated_NativeProxy_shouldRerender(JNIEnv* env) {
 
 jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 
-  auto doubleValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::DoubleValueOf, JNIMethodMode::static_method);
+  auto doubleValueOf = jniRegistry->getClassAndMethod(
+    JavaMethodsUsed::DoubleValueOf,
+    JNIMethodMode::static_method,
+    env);
   
   jobject result = nullptr;
 
@@ -139,14 +141,25 @@ jobject sharedValueToJObject(JNIEnv* env, std::shared_ptr<SharedValue> sv) {
 }
 
 jobject getChangedSharedValues(JNIEnv* env) {
+  auto arrayListConstructor = jniRegistry->getClassAndMethod(
+    JavaMethodsUsed::ArrayListInit,
+    JNIMethodMode::standard_method,
+    env);
+  auto arrayListAdd = jniRegistry->getClassAndMethod(
+    JavaMethodsUsed::ArrayListAdd,
+    JNIMethodMode::standard_method,
+    env);
 
-  auto arrayListConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListInit);
-  auto arrayListAdd = jniRegistry->getClassAndMethod(JavaMethodsUsed::ArrayListAdd);
-
-  auto pairConstructor = jniRegistry->getClassAndMethod(JavaMethodsUsed::PairInit);
+  auto pairConstructor = jniRegistry->getClassAndMethod(
+    JavaMethodsUsed::PairInit,
+    JNIMethodMode::standard_method,
+    env);
 
   // This is needed to go from double to Double (boxed)
-  auto integerValueOf = jniRegistry->getClassAndMethod(JavaMethodsUsed::IntegerValueOf, JNIMethodMode::static_method);
+  auto integerValueOf = jniRegistry->getClassAndMethod(
+    JavaMethodsUsed::IntegerValueOf,
+    JNIMethodMode::static_method,
+    env);
 
   // The list we're going to return:
   jobject list = env->NewObject(std::get<0>(arrayListConstructor), std::get<1>(arrayListConstructor));
@@ -170,9 +183,32 @@ jobject getChangedSharedValues(JNIEnv* env) {
   return list;
 }
 
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_swmansion_reanimated_NativeProxy_getError(JNIEnv* env) {
+  return (nrm->errorHandler->getError() != nullptr) ?
+      env->NewStringUTF(nrm->errorHandler->getError()->message.c_str()) :
+      nullptr;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_swmansion_reanimated_NativeProxy_handleError(JNIEnv* env) {
+  nrm->errorHandler->handleError();
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterRender(JNIEnv* env) {
-  nrm->render();
+  try {
+    if (nrm->errorHandler->getError() == nullptr || !nrm->errorHandler->getError()->handled) {
+      nrm->render();
+    }
+  } catch(const std::exception &e) {
+    if (nrm->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nrm->errorHandler->raise(message.c_str());
+    }
+  }
   return getChangedSharedValues(env);
 }
 
@@ -187,7 +223,17 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_com_swmansion_reanimated_NativeProxy_getChangedSharedValuesAfterEvent(JNIEnv* env, jclass clazz, jbyteArray eventHash, jbyteArray eventObj) {
   std::string eventAsString = byteArrayToString(env, eventObj);
   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "event: %s", eventAsString.c_str());
-  nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
+  try {
+    if (nrm->errorHandler->getError() == nullptr || !nrm->errorHandler->getError()->handled) {
+      nrm->onEvent(byteArrayToString(env, eventHash), eventAsString);
+    }
+  } catch(const std::exception &e) {
+    if (nrm->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nrm->errorHandler->raise(message.c_str());
+    }
+  }
 
   return getChangedSharedValues(env);
 }

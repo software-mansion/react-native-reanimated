@@ -7,7 +7,8 @@
 
 int ApplierRegistry::New_Applier_Id = INT_MAX;
 
-ApplierRegistry::ApplierRegistry(std::shared_ptr<MapperRegistry> mapperRegistry) {
+ApplierRegistry::ApplierRegistry(
+    std::shared_ptr<MapperRegistry> mapperRegistry) {
   this->mapperRegistry = mapperRegistry;
 }
 

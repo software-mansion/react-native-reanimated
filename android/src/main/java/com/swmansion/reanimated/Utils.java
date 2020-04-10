@@ -28,8 +28,4 @@ public class Utils {
     }
     return res;
   }
-
-  static void raiseException(String message) {
-    throw new RuntimeException(message);
-  }
 }

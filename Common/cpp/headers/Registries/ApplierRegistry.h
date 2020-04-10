@@ -17,7 +17,8 @@ class ApplierRegistry {
     std::map<int, std::string> eventMapping;
     std::shared_ptr<MapperRegistry> mapperRegistry;
   public:
-    ApplierRegistry(std::shared_ptr<MapperRegistry> mapperRegistry);
+    ApplierRegistry(
+        std::shared_ptr<MapperRegistry> mapperRegistry);
     void registerApplierForRender(int id, std::shared_ptr<Applier> applier);
     void unregisterApplierFromRender(int id, jsi::Runtime &rt);
     void registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier);

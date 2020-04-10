@@ -30,7 +30,18 @@ std::shared_ptr<IOSScheduler> scheduler;
 
 + (NSArray<NSArray*>*) getChangedSharedValuesAfterRender
 {
-  nativeReanimatedModule->render();
+  try {
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr ||
+        !nativeReanimatedModule->errorHandler->getError()->handled) {
+      nativeReanimatedModule->render();
+    }
+  } catch(const std::exception &e) {
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nativeReanimatedModule->errorHandler->raise(message.c_str());
+    }
+  }
   return [NativeProxy getChangedSharedValues];
 }
 
@@ -40,7 +51,18 @@ std::shared_ptr<IOSScheduler> scheduler;
   
   std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
   eventAsString = "{ NativeMap:"  + eventAsString + "}";
-  nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
+  try {
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr || 
+        !nativeReanimatedModule->errorHandler->getError()->handled) {
+      nativeReanimatedModule->onEvent(eventNameStdString, eventAsString);
+    }
+  } catch(const std::exception &e) {
+    if (nativeReanimatedModule->errorHandler->getError() == nullptr) {
+      std::string message = "error occured: ";
+      message += e.what();
+      nativeReanimatedModule->errorHandler->raise(message.c_str());
+    }
+  }
   return  [NativeProxy getChangedSharedValues];
 }
 
@@ -64,12 +86,12 @@ std::shared_ptr<IOSScheduler> scheduler;
   scheduler = std::make_shared<IOSScheduler>(jsInvoker);
   
   std::shared_ptr<Scheduler> schedulerForModule(scheduler);
+  std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new IOSErrorHandler(schedulerForModule));
   std::shared_ptr<WorkletRegistry> workletRegistry(new WorkletRegistry());
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry(new SharedValueRegistry());
   std::shared_ptr<MapperRegistry> mapperRegistry(new MapperRegistry(sharedValueRegistry));
   std::shared_ptr<ApplierRegistry> applierRegistry(new ApplierRegistry(mapperRegistry));
   std::unique_ptr<jsi::Runtime> animatedRuntime(static_cast<jsi::Runtime*>(facebook::jsc::makeJSCRuntime().release()));
-  std::shared_ptr<ErrorHandler> errorHandler((ErrorHandler*)new IOSErrorHandler(schedulerForModule));
   RuntimeDecorator::addGlobalMethods(*animatedRuntime);
   
   nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(std::move(animatedRuntime),
