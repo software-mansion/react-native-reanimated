@@ -40,7 +40,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       std::shared_ptr<ErrorHandler> errorHandler);
     virtual ~NativeReanimatedModule();
 
-    void install(jsi::Runtime &rt, std::string label, const jsi::Value &func, std::string path) override;
+    void install(jsi::Runtime &rt, std::string label, const jsi::Value &value, std::string path) override;
 
     void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString, int length) override;
     void unregisterWorklet(jsi::Runtime &rt, double id) override;

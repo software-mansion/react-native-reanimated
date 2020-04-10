@@ -22,7 +22,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
 
  public:
 
-  virtual void install(jsi::Runtime &rt, std::string label, const jsi::Value &func, std::string path) = 0;
+  virtual void install(jsi::Runtime &rt, std::string label, const jsi::Value &value, std::string path) = 0;
 
   // worklets
 

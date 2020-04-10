@@ -10,7 +10,26 @@
 #include "Logger.h"
 
 void RuntimeDecorator::addGlobal(jsi::Runtime &rt) {
-  // ...
+  auto callback = [](
+        jsi::Runtime &rt,
+        const jsi::Value &thisValue,
+        const jsi::Value *args,
+        size_t count
+        ) -> jsi::Value {
+      const jsi::Value *value = &args[0];
+      if (value->isString()) {
+        Logger::log(value->getString(rt).utf8(rt).c_str());
+      } else if (value->isNumber()) {
+        Logger::log(value->getNumber());
+      } else if (value->isUndefined()) {
+        Logger::log("undefined");
+      } else {
+        Logger::log("unsupported value type");
+      }
+      return jsi::Value::undefined();
+    };
+  jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
+	rt.global().setProperty(rt, "_log", log);
 }
 
 void RuntimeDecorator::addReanimated(jsi::Runtime &rt) {
@@ -25,31 +44,10 @@ void RuntimeDecorator::addReanimated(jsi::Runtime &rt) {
   properties["ACTIVE"] = jsi::Value(4);
   
   obtainHostObject(rt, "Reanimated", std::move(properties));
-
-  // this should bo moved to separate method addGlobal or something
-  auto callback = [](
-        jsi::Runtime &rt,
-        const jsi::Value &thisValue,
-        const jsi::Value *args,
-        size_t count
-        ) -> jsi::Value {
-      const jsi::Value *value = &args[0];
-      if (value->isString()) {
-        Logger::log(value->getString(rt).utf8(rt).c_str());
-      } else if (value->isNumber()) {
-        Logger::log(value->getNumber());
-      } else {
-        Logger::log("unsupported value type");
-      }
-      return jsi::Value::undefined();
-    };
-  jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
-	rt.global().setProperty(rt, "_log", log);
-
 }
 
 // WARNING: this works only for one level path e.g. a.b(), c.d()
-// TODO make it work for any level: a.b.c.d(), a.b.c() etc.
+// TODO (if necessary) make it work for any level: a.b.c.d(), a.b.c() etc.
 std::shared_ptr<jsi::HostObject> RuntimeDecorator::obtainHostObject(
     jsi::Runtime &rt, 
     std::string path, 

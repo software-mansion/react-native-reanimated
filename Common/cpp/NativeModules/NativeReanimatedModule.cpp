@@ -39,12 +39,24 @@ NativeReanimatedModule::NativeReanimatedModule(
 
 typedef jsi::Value KeyType;
 
-void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const jsi::Value &func, std::string path) {
+void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const jsi::Value &value, std::string path) {
   jsi::PropNameID labelId = jsi::PropNameID::forAscii(*this->runtime, label);
   std::unordered_map<std::string, jsi::Value> properties;
   std::shared_ptr<jsi::HostObject> ho = RuntimeDecorator::obtainHostObject(*this->runtime, path, std::move(properties));
-  jsi::Value funcStr = jsi::String::createFromUtf8(rt, std::string("(" + func.toString(rt).utf8(rt) + ")"));
-  ho->set(*this->runtime, labelId, funcStr);
+  std::string strRepr = value.toString(rt).utf8(rt);
+  if (value.isObject()) {
+    if (value.getObject(rt).isFunction(rt)) {
+      // this is a function
+      strRepr = "(" + strRepr + ")";
+    } else {
+      // this is an object
+      ho->set(*this->runtime, labelId, value);
+    }
+  } else if (value.isString()) {
+    strRepr = "\"" + strRepr + "\"";
+  }
+  jsi::Value valueStr = jsi::String::createFromUtf8(*this->runtime, strRepr);
+  ho->set(*this->runtime, labelId, valueStr);
 }
 
 // worklets

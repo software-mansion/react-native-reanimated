@@ -23,9 +23,14 @@ class RuntimeDecorator {
     DecoratorHO(std::unordered_map<std::string, jsi::Value> && props) {
       this->props = std::move(props);
     }
-    void set(jsi::Runtime &rt, const jsi::PropNameID &functionName, const jsi::Value &functionStr) {
-      std::string label = functionName.utf8(rt);
-      props[label] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, functionStr.asString(rt).utf8(rt).c_str());
+    void set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value) {
+      std::string label = name.utf8(rt);
+        if (value.isString()) {
+            std::string str = value.asString(rt).utf8(rt);
+            props[label] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, str.c_str());
+        } else {
+            // todo for objects to work
+        }
     }
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {

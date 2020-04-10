@@ -55,7 +55,7 @@ function installFunctions(innerNativeModule) {
         }
         result = result.substr(0, result.length - 1) + ']'
         return result
-      } else if (typeof obj === 'object') {
+      } else if (typeof obj === 'object' && obj.__baseType === undefined) {
         let result = '{';
         for (let key of Object.keys(obj)) {
           if (key === 'id') {

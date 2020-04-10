@@ -11,8 +11,8 @@ installFunctions(InnerNativeModule);
 export default {
 
   // users will be able to install custom functions only in Reanimated namespace
-  install(label, func) {
-    InnerNativeModule.install(label, func, 'Reanimated')
+  install(label, obj) {
+    InnerNativeModule.install(label, obj, 'Reanimated')
   },
 
   // shared value
