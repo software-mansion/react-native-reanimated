@@ -100,9 +100,10 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
             if (applierId != (*bindedApplierId)) {
               cleanBeforeSet(rt);
               *bindedApplierId = applierId;
-              std::shared_ptr<Applier> applier = applierRegistry->getRenderApplier(applierId);
-              applier->sharedValues[0] = sharedValueRegistry->getSharedValue(id);
             }
+            
+            std::shared_ptr<Applier> applier = applierRegistry->getRenderApplier(applierId);
+            applier->sharedValues[0] = sharedValueRegistry->getSharedValue(id);
           }
           return jsi::Value::undefined();
         };

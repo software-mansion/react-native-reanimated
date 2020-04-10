@@ -88,7 +88,6 @@ const workletBody = new Worklet(
         sv.forceSet(config.toValue.value);
       } 
       state.finished.set(1);
-      this.log("self finish ")
       return true;
     }
   }
