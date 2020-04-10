@@ -10,9 +10,9 @@ installFunctions(InnerNativeModule);
 
 export default {
 
-  install(label, func, path) {
-    path = (path === undefined) ? 'Reanimated' : path;
-    InnerNativeModule.install(label, func, path)
+  // users will be able to install custom functions only in Reanimated namespace
+  install(label, func) {
+    InnerNativeModule.install(label, func, 'Reanimated')
   },
 
   // shared value

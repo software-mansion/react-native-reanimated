@@ -25,9 +25,6 @@ class RuntimeDecorator {
     }
     void set(jsi::Runtime &rt, const jsi::PropNameID &functionName, const jsi::Value &functionStr) {
       std::string label = functionName.utf8(rt);
-      if (props.find(label) != props.end()) {
-        return;
-      }
       props[label] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, functionStr.asString(rt).utf8(rt).c_str());
     }
 

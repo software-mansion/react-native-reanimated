@@ -3,6 +3,7 @@ import { useEffect, useRef, useLayoutEffect } from 'react';
 import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
+import NativeModule from './NativeReanimated';
 
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
@@ -363,4 +364,8 @@ export function removeSharedObjsAndArrays(obj) {
   }
 
   return obj;
+}
+
+export function install(label, func) {
+  NativeModule.install(label, func)
 }
