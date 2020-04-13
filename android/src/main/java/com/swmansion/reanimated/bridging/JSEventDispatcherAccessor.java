@@ -42,8 +42,12 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
                     @Override
                     public void emit(@NonNull String eventName, @Nullable Object data) {
                         JSEventDispatcherAccessor.this.emit(eventName, data);
-                        assert deviceEventEmitter != null;
-                        deviceEventEmitter.emit(eventName, data);
+                        try {
+                          assert deviceEventEmitter != null;
+                          deviceEventEmitter.emit(eventName, data);
+                        } catch (Throwable throwable) {
+                          Log.e(TAG, "intercept node error: ", throwable);
+                        }
                     }
                 }
         );
@@ -54,8 +58,12 @@ public class JSEventDispatcherAccessor implements RCTDeviceEventEmitter, RCTNati
                     @Override
                     public void emit(String eventName, @Nullable Object data) {
                         JSEventDispatcherAccessor.this.emit(eventName, data);
-                        assert appEventEmitter != null;
-                        appEventEmitter.emit(eventName, data);
+                        try {
+                          assert appEventEmitter != null;
+                          appEventEmitter.emit(eventName, data);
+                        } catch (Throwable throwable) {
+                          Log.e(TAG, "intercept node error: ", throwable);
+                        }
                     }
                 }
         );
