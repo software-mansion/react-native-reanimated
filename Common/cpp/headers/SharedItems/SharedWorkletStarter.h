@@ -18,7 +18,6 @@ class SharedWorkletStarter : public SharedValue {
   int id;
   int applierId;
   std::vector<int> args;
-  std::shared_ptr<const std::function<void()>> unregisterListener;
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
   std::shared_ptr<ApplierRegistry> applierRegistry;
   std::shared_ptr<ErrorHandler> errorHandler;
@@ -34,7 +33,6 @@ class SharedWorkletStarter : public SharedValue {
   jsi::Value asParameter(jsi::Runtime &rt) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
   void willUnregister(jsi::Runtime &rt) override;
-  void setUnregisterListener(const std::function<void()> & fun);
   std::shared_ptr<SharedValue> copy() override;
   std::vector<int> getSharedValues() override;
   

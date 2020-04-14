@@ -137,10 +137,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
         ) -> jsi::Value {
-          if (starter->unregisterListener != nullptr) {
-            (*(starter->unregisterListener))();
-            starter->unregisterListener = nullptr;
-          }
+          applierRegistry->unregisterApplierFromRender(starter->applierId, rt);
           return jsi::Value::undefined();
         };
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
@@ -172,21 +169,9 @@ std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry->getSharedVa
 }
 
 void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
-  if (this->unregisterListener != nullptr) {
-    (*this->unregisterListener)();
-  }
-  
   // unregister applier
   // it's important [Do not remove]    
   applierRegistry->unregisterApplierFromRender(applierId, rt);
-}
-
-void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & fun) {
-  if (fun == nullptr) {
-    this->unregisterListener = nullptr;
-    return;
-  }
-  this->unregisterListener = std::make_shared<const std::function<void()>>(std::move(fun));
 }
 
 std::shared_ptr<SharedValue> SharedWorkletStarter::copy() {
