@@ -6,7 +6,7 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 const toggleWorklet = new Worklet(
   function(x, parentWidth, spring) {
     'worklet';
-    
+    this.log('jestem');
     let target = spring.config.toValue.value;
     if (target < 100)
     {

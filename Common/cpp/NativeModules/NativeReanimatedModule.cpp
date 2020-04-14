@@ -247,7 +247,8 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
     for (auto id : svIds) {
       std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
       if (sv == nullptr) {
-        return;      }
+        return;
+      }
       sharedValues.push_back(sv);
     }
     

@@ -25,6 +25,7 @@ const workletBody = new Worklet(
       memory.time = Date.now();
       memory.prevPosition = 0;
       state.finished.set(0);
+      this.log('start spring');
     }
 
     const now = Date.now();
@@ -88,14 +89,17 @@ const workletBody = new Worklet(
         sv.forceSet(config.toValue.value);
       } 
       state.finished.set(1);
+      this.log('finish spring');
       return true;
     }
   }
 );
 
 export default function useSpring(state, config) {
-  const properState = useSharedValue(Object.assign(defaultState, state));
-  const properConfig = useSharedValue(Object.assign(defaultConfig, config));
+  console.log("defaults: " + JSON.stringify(state) + " " + JSON.stringify(config));
+
+  const properState = useSharedValue(Object.assign({}, defaultState, state));
+  const properConfig = useSharedValue(Object.assign({}, defaultConfig, config));
   
   const worklet = useWorklet(workletBody, [0, properState, properConfig]); 
 

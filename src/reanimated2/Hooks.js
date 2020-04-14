@@ -41,6 +41,7 @@ function makeShareable(obj) {
   }
 
   if (Array.isArray(obj)) {
+    obj = obj.slice();
     let i = 0;
     for (let element of obj) {
       const [res, release] = makeShareable(element);
@@ -60,6 +61,8 @@ function makeShareable(obj) {
     obj.sharedArray = sharedArray;
 
   } else if (typeof obj === 'object' && (!(obj instanceof Worklet))) {
+    obj = Object.assign({}, obj);
+
     for (let property in obj) {
       const [res, release] = makeShareable(obj[property]);
       obj[property] = res;
@@ -334,7 +337,7 @@ export function useAnimatedStyle(body, input, accessories) {
     mapper = useMapper(styleUpdater2, [realInput, output]);
   }
   
-  mapper.startMapping();
+  useEffect(()=>{mapper.startMapping();},[]); //start animation 
   return output;
 }
 
