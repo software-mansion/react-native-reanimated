@@ -8,7 +8,7 @@ export function useSnapProgress(value, state, isBack, point) {
       damping: 26,
       mass: 1,
       stiffness: 170,
-      overshootClamping: false,
+      overshootClamping: 0,
       restSpeedThreshold: 0.01,
       restDisplacementThreshold: 0.01,
     }
@@ -20,18 +20,19 @@ export function useSnapProgress(value, state, isBack, point) {
        if (input.finish.value) {
           output.isBack.set(input.point.value);
        }
-    }, [{finish: spring.state.finish, point}, { isBack }]
+    }, [{finish: spring.state.finished, point}, { isBack }]
   );
 
   const mapper = useMapper(
-    function(input, output) {
+    function(input, output, accessories) {
       'worklet';
       const { state, value, point } = input;
-      const { position, spring } = output;
+      const { position } = output;
+      const { spring } = accessories;
       let memory = Reanimated.memory(this);
 
       if (state.value == Reanimated.START) {
-        memory.offset = position;
+        memory.offset = position.value;
         position.stop();
       }
       if (state.value == Reanimated.ACTIVE) {
@@ -47,7 +48,7 @@ export function useSnapProgress(value, state, isBack, point) {
       if (state.value == Reanimated.END) {
         position.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: point.value}]));
       }
-    }, [{ state, value, point }, { position, spring }]
+    }, [{ state, value, point }, { position }, { spring }]
   );
 
   mapper();

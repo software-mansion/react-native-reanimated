@@ -1,7 +1,7 @@
 import React from "react";
-import { Dimensions } from "react-native";
+import { Dimensions, Text } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { Feather as Icon } from "@expo/vector-icons";
+//import { Feather as Icon } from "@expo/vector-icons";
 
 const { sub, interpolate, Extrapolate } = Animated;
 const { width } = Dimensions.get("window");
@@ -48,7 +48,7 @@ export default ({ progress, y }) => {
         alignItems: "center",
       }, style]}
     >
-      <Icon name="chevron-left" color="black" size={40} />
+      {/*<Icon name="chevron-left" color="black" size={40} />*/}
     </Animated.View>
   );
 };

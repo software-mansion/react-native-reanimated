@@ -20,13 +20,18 @@ export function useSideWidth(progress) {
       'worklet';
       const { progress, initialSideWidth, width } = input;
       const { sideWidth } = output;
-      if (progress.value <= 0.2) {
+      const p1 = 0.2;
+      const p2 = 0.8;
+
+      if (progress.value <= p1) {
         sideWidth.set(initialSideWidth.value);
-      } else if (progress.value >= 0.2) {
+      } else if (progress.value >= p2) {
         sideWidth.set(width.value);
       } else {
-        sideWidth.set(initialSideWidth.value + (width.value - initialSideWidth.value)/(progress.value - 0.2) * (0.6));
+        sideWidth.set(initialSideWidth.value + (width.value - initialSideWidth.value) * (progress.value - p1) / (p2 - p1));
       }
+
+      this.log("progress: " + progress.value.toString() + " sideWidth: " + sideWidth.value.toString());
     }, [{ progress, initialSideWidth, width }, { sideWidth }]
   );
   mapper();
@@ -34,7 +39,7 @@ export function useSideWidth(progress) {
 }
 
 export function useWaveVertRadius(progress) {
-  const waveVertRadius = useSharedValue(0);
+  const waveVertRadius = useSharedValue(initialVertRadius);
   const mapper = useMapper(
     function(input, output) {
       'worklet';
@@ -54,7 +59,7 @@ export function useWaveVertRadius(progress) {
 }
 
 export function useWaveHorR(progress, isBack) {
-  const waveHorR = useSharedValue(useWaveHorR);
+  const waveHorR = useSharedValue(initialHorRadius);
   const coefs = useSharedValue([{A: maxHorRadius, B: maxHorRadius - initialHorRadius}, {A: 2 * initialHorRadius, B: initialHorRadius}]);
   const mapper = useMapper(
     function(input, output) {
@@ -70,7 +75,7 @@ export function useWaveHorR(progress, isBack) {
       const omega = (-(beta ** 2) + omega0 ** 2) ** 0.5;
       const t = (progress.value - p1)/(1-p1);
       const { A, B } = coefs[isBack.value];
-
+ 
       if (progress.value <= 0) {
         waveHorR.set(initialHorRadius.value);
       } else if (progress.value >= 1) {
@@ -79,7 +84,7 @@ export function useWaveHorR(progress, isBack) {
         if (progress.value <= p1) {
           waveHorR.set(initialHorRadius.value + progress.value/p1 * B.value);
         } else {
-          waveHorR.set(A.value * (t * (-beta) ** Math.cos(omega * t)));
+          waveHorR.set(A.value * (Math.exp(t * (-beta)) * Math.cos(omega * t)));
         }
       }
 

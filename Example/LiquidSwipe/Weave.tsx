@@ -25,15 +25,15 @@ export default ({
       'worklet';
       const { centerY, vertRadius, width, sideWidth, horRadius, height } = input;
       const curveStartY = centerY.value + vertRadius.value;
-      const maskWidth = width.value + sideWidth.value;
+      const maskWidth = width.value - sideWidth.value;
 
       let commands = `
-        M${maskWidth - sideWidth.value} ${0}
+        M${maskWidth} ${0}
         L${0} ${0}
         L${0} ${height.value}
         L${maskWidth} ${height.value}
         L${maskWidth} ${curveStartY}
-        C${maskWidth} ${curveStartY - horRadius.value *  0.1346194756} 
+        C${maskWidth} ${curveStartY - horRadius.value * 0.1346194756} 
         ${maskWidth - horRadius.value * 0.05341339583} ${curveStartY - vertRadius.value * 0.2412779634} 
         ${maskWidth - horRadius.value * 0.1561501458} ${curveStartY - vertRadius.value * 0.3322374268}
         C${maskWidth - horRadius.value * 0.2361659167} ${curveStartY - vertRadius.value * 0.4030805244}

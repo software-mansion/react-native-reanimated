@@ -25,21 +25,18 @@ const styles = StyleSheet.create({
 });
 
 export default () => {
-  const y = useSharedValue(initialWaveCenter);
   const isBack = useSharedValue(0);
   const state = useSharedValue(0);
   const gestureProgress = useSharedValue(0);
   const maxDist = useSharedValue(width - initialSideWidth);
   const snapPoint = useSharedValue(0);
-  const centerY = useSharedValue(0);
+  const centerY = useSharedValue(initialWaveCenter);
   const spring = useSpring({},{});
 
   const handler = useEventWorklet(
-    function(gestureProgress, isBack, y, state, maxDist, snapPoint, spring, centerY) {
+    function(gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY) {
       'worklet';
-      state.set(this.event.state);
-      y.set(this.event.y);
-      let { velocityX , translationX } = this.event;
+      let { velocityX, translationX, y } = this.event;
 
       const interpolate = (l, r, ll, rr) => {
         const progress = translationX/(r-l);
@@ -63,11 +60,11 @@ export default () => {
         snapPoint.set(1);
       }
       // centerY
-      centerY.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: y.value}]));
-    }, [gestureProgress, isBack, y, state, maxDist, snapPoint, spring, centerY]
+      centerY.set(y);//Reanimated.withWorklet(spring.worklet, [{}, {toValue: y}])); 
+    }, [gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY]
   );
 
-  const progress = useSnapProgress(gestureProgress, state, isBack, snapPoint);
+  const progress = useSharedValue(0.2);//useSnapProgress(gestureProgress, state, isBack, snapPoint); 
 
   return (
     <View style={styles.container}>
@@ -80,7 +77,7 @@ export default () => {
       />
       <PanGestureHandler onGestureEvent={handler} onHandlerStateChange={handler} >
         <Animated.View style={StyleSheet.absoluteFill}>
-          <Weave {...{progress, isBack}}>
+          <Weave {...{progress, centerY, isBack}}>
             <Content
               backgroundColor="#4d1168"
               source={assets[1]}
