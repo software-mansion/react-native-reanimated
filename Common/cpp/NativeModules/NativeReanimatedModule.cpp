@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include <functional>
 #include <thread>
+#include "SpeedChecker.h"
 
 using namespace facebook;
 
@@ -365,7 +366,9 @@ void NativeReanimatedModule::render() {
     workletRegistry,
     event,
     this->errorHandler));
-  applierRegistry->render(*runtime, ho);
+  SpeedChecker::checkSpeed("Render:", [=] () {
+    applierRegistry->render(*runtime, ho);
+  });
 }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
@@ -377,7 +380,11 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
     workletRegistry,
     eventPtr,
     this->errorHandler));
-  applierRegistry->event(*runtime, eventName, ho);
+  
+  SpeedChecker::checkSpeed("Event:", [=] () {
+    applierRegistry->event(*runtime, eventName, ho);
+  });
+  
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {

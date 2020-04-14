@@ -4,6 +4,7 @@
 
 #include<ApplierRegistry.h>
 #include "Logger.h"
+#include "SpeedChecker.h"
 
 int ApplierRegistry::New_Applier_Id = INT_MAX;
 
@@ -56,7 +57,10 @@ void ApplierRegistry::evaluateAppliers(
     }
   }
   
-  mapperRegistry->execute(rt, module);
+  SpeedChecker::checkSpeed("mappers: ", [=, &rt](){
+     mapperRegistry->execute(rt, module);
+  });
+ 
   
   for (auto id : toRemove) {
     unregisterApplier(id);

@@ -6,6 +6,7 @@
 #include <string>
 #include "Logger.h"
 #include <thread>
+#include "SpeedChecker.h"
 
 Applier::Applier(
       int applierId,
@@ -27,26 +28,28 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   bool shouldFinish = false;
   
   jsi::Value * args = new jsi::Value[sharedValues.size()];
-  for (int i = 0; i < sharedValues.size(); ++i) {
-    args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
-  }
-  if (!shouldFinish) {
-    jsi::Value * args = new jsi::Value[sharedValues.size()];
+  
+  SpeedChecker::checkSpeed("prepare values: ", [=, &rt](){
     for (int i = 0; i < sharedValues.size(); ++i) {
-      args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
+       args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
     }
+  });
 
-    module->setWorkletId(worklet->workletId);
-    module->setApplierId(applierId);
-    module->setJustStarted(justStarted);
+  module->setWorkletId(worklet->workletId);
+  module->setApplierId(applierId);
+  module->setJustStarted(justStarted);
 
-    jsi::Value returnValue = worklet->body->callWithThis(rt,
-                              jsi::Object::createFromHostObject(rt, module),
-                              static_cast<const jsi::Value*>(args),
-                              (size_t)sharedValues.size());
-    shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
-    delete [] args;
-  }
+  jsi::Value returnValue;
+  
+  SpeedChecker::checkSpeed("worklet exec: ", [=, &rt, &returnValue](){
+     returnValue = worklet->body->callWithThis(rt,
+     jsi::Object::createFromHostObject(rt, module),
+     static_cast<const jsi::Value*>(args),
+     (size_t)sharedValues.size());
+  });
+  
+  shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
+  delete [] args;
 
   justStarted = false;
   

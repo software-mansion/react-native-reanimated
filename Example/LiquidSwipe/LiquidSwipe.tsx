@@ -60,7 +60,7 @@ export default () => {
         snapPoint.set(1);
       }
       // centerY
-      centerY.set(y);//Reanimated.withWorklet(spring.worklet, [{}, {toValue: y}])); 
+      centerY.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: y}])); 
     }, [gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY]
   );
 
