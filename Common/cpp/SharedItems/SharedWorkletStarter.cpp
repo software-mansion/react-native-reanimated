@@ -176,9 +176,9 @@ void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
     (*this->unregisterListener)();
   }
   
-  applierRegistry->unregisterApplierFromRender(applierId, rt);
   // unregister applier
-  // it's important [Do not remove]
+  // it's important [Do not remove]    
+  applierRegistry->unregisterApplierFromRender(applierId, rt);
 }
 
 void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & fun) {
