@@ -96,8 +96,6 @@ const workletBody = new Worklet(
 );
 
 export default function useSpring(state, config) {
-  console.log("defaults: " + JSON.stringify(state) + " " + JSON.stringify(config));
-
   const properState = useSharedValue(Object.assign({}, defaultState, state));
   const properConfig = useSharedValue(Object.assign({}, defaultConfig, config));
   
