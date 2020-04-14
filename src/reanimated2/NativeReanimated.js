@@ -12,8 +12,7 @@ export default {
 
   // users will be able to install custom functions only in Reanimated namespace
   installFunction(label, fun) {
-    const funStr = fun.toString()//(fun.asString === undefined) ? fun : fun.asString;
-    InnerNativeModule.install(label, `(${funStr})`, 'Reanimated')
+    InnerNativeModule.install(label, `(${fun})`, 'Reanimated')
   },
 
   // users will be able to install custom constants only in Reanimated namespace
