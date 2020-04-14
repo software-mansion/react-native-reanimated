@@ -1,4 +1,4 @@
-function installFunctions(innerNativeModule) {
+export function installFunctions(innerNativeModule) {
   
   function install(label, fun, path) {
     innerNativeModule.install(label, `(${fun.asString})`, path);
@@ -79,4 +79,9 @@ function installFunctions(innerNativeModule) {
   }, 'console')
 }
 
-export default installFunctions;
+export function installConstants(innerNativeModule) {
+  // event worklet constants
+  innerNativeModule.install('START', 2, 'Reanimated');
+  innerNativeModule.install('ACTIVE', 4, 'Reanimated');
+  innerNativeModule.install('END', 5, 'Reanimated');
+}

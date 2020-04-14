@@ -7,28 +7,37 @@ const FunctionInstall = () => {
     const sa = useSharedValue([1,2,3, { r: 88, f: 'uuu' }, ['a','b',6,7,8, sv]])
     const so = useSharedValue({ o: { a: { d: { u: ['a', 456]}}}, x: 6, d: 12, arr: sa, plainarr: [5,6,7,8], strarr:['a','b','sdfsdf']})
 
-    ;(useWorklet(function(sv, so, sa) {
+    ;(useWorklet(function() {
+        'worklet'
+        console.log('[worklet] testing event worklet constants')
+        console.log(Reanimated.START)
+        console.log(Reanimated.ACTIVE)
+        console.log(Reanimated.END)
+        return true
+    }))();
+
+    ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing assign')
         // todo write test for assign
         return true
-    }, [sv, so, sa]))();
+    }))();
 
-    ;(useWorklet(function(sv, so, sa) {
+    ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing memory')
         const memory = Reanimated.memory(this);
         memory.x = 99;
         console.log(`[worklet] memory check: ${ memory.x }`)
         return true
-    }, [sv, so, sa]))();
+    }))();
 
-    ;(useWorklet(function(sv, so, sa) {
+    ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing withWorklet')
         // todo write test for withWorklet
         return true
-    }, [sv, so, sa]))();
+    }))();
 
     ;(useWorklet(function(sv, so, sa) {
         'worklet'
@@ -54,13 +63,13 @@ const FunctionInstall = () => {
         return `${ Reanimated.hello(name) }, you are ${ label }`
     })
 
-    ;(useWorklet(function(sv, so, sa) {
+    ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing custom functions')
         console.log(Reanimated.hello('john'))
         console.log(Reanimated.validateAge('samantha', 65))
         return true
-    }, [sv, so, sa]))();
+    }))();
 
     // test constants installation
     installConst('minimum', -5);

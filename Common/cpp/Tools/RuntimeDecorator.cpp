@@ -38,11 +38,6 @@ void RuntimeDecorator::addReanimated(jsi::Runtime &rt) {
   // add container
   properties["container"] = jsi::Object(rt);
   
-  // event worklet constants
-  properties["START"] = jsi::Value(2);
-  properties["END"] = jsi::Value(5);
-  properties["ACTIVE"] = jsi::Value(4);
-  
   obtainHostObject(rt, "Reanimated", std::move(properties));
 }
 

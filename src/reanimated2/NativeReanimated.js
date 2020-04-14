@@ -2,11 +2,12 @@ import {
   TurboModuleRegistry,
 } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
-import installFunctions from './InstallFunctions'
+import { installFunctions, installConstants } from './InstallFunctions'
 
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
 installFunctions(InnerNativeModule);
+installConstants(InnerNativeModule);
 
 export default {
 
