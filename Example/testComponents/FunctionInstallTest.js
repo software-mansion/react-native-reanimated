@@ -77,8 +77,8 @@ const FunctionInstall = () => {
         v.set(v.value + 1)
     }, [currentsv]))();
 
-    // test object installation
-    /*
+    // test object installation - not implemented yet
+/* * /
     install('box', {
         x: 23,
         y: 54,
@@ -99,20 +99,21 @@ const FunctionInstall = () => {
         }
         console.log(Reanimated.box.name + ': ' + coords.x.value + ', ' + coords.y.value)
     }, [currentCoords]))();
-*/
-    // test array installation
-
-    const arr = useSharedValue([1, 2, 3, 5, 8, 13, 21])
+/* */
+    // test array installation - not implemented yet
+/* * /
+    //const arr = useSharedValue([1, 2, 3, 5, 8, 13, 21])
+    install('arr', [1, 2, 3, 4, 5, 6, 9])
     const currentIndex = useSharedValue(0)
-    ;(useWorklet(function(arr, index) {
+    ;(useWorklet(function(index) {
         'worklet'
-        if (index.value > arr.length - 1) {
-            return true;
-        }
-        console.log('array test ' + arr[index.value].value)
-        index.set(index.value + 1)
-    }, [arr, currentIndex]))();
-
+        console.log('array test')
+        console.log(Reanimated.arr)
+        console.log(Reanimated.arr[0])
+        console.log(Reanimated.arr[0].value)
+        console.log(Reanimated.arr[index.value].value)
+    }, [currentIndex]))();
+/* */
     return (
         <View>
             <Text>Testing function install...</Text>
