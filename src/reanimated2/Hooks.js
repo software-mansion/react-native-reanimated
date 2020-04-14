@@ -8,6 +8,9 @@ global.Reanimated = {};
 global.Reanimated.withWorklet = (worklet, params, initial) => {
   return (initial)? initial : 0;
 }
+global.Reanimated.withWorkletCopy = (worklet, params, initial) => {
+  return (initial)? initial : 0;
+}
 
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
@@ -38,6 +41,7 @@ function makeShareable(obj) {
   }
 
   if (Array.isArray(obj)) {
+    obj = obj.slice();
     let i = 0;
     for (let element of obj) {
       const [res, release] = makeShareable(element);
@@ -57,6 +61,8 @@ function makeShareable(obj) {
     obj.sharedArray = sharedArray;
 
   } else if (typeof obj === 'object' && (!(obj instanceof Worklet))) {
+    obj = Object.assign({}, obj);
+
     for (let property in obj) {
       const [res, release] = makeShareable(obj[property]);
       obj[property] = res;
@@ -224,9 +230,15 @@ export function useSharedValue(initial) {
   return sv.current;
 }
 
-const styleUpdater = new Worklet(function (input, output) {
+const styleUpdater2 = new Worklet(function (input, output) {
   'worklet';
   const newValues = input.body.apply(this, [input.input]);
+  Reanimated.assign(output, newValues);
+});
+
+const styleUpdater3 = new Worklet(function (input, output, accessories) {
+  'worklet';
+  const newValues = input.body.apply(this, [input.input, accessories]);
   Reanimated.assign(output, newValues);
 });
 
@@ -297,20 +309,35 @@ function copyAndUnwrap(obj) {
   return obj.initialValue;
 }
 
-export function useAnimatedStyle(body, input) {
+export function useAnimatedStyle(body, input, accessories) {
+  if (accessories != null) {
+    input = [input, accessories];
+  }
+
   const sharedInput = useSharedValue(input);
   const mockInput = unwrap(sharedInput, true);
   console.log("mockInput: " + JSON.stringify(mockInput));
-  const pureOutput = body.apply({log:(e)=>{}},[mockInput]);
+  const array = (Array.isArray(mockInput))? mockInput : [mockInput];
+  const pureOutput = body.apply({log:(e)=>{}},array);
   console.log("pureoutput: " + JSON.stringify(pureOutput));
   const unwrapedPureOutput  = copyAndUnwrap(pureOutput)
   console.log("unwrapped: " + JSON.stringify(unwrapedPureOutput));
   const output = useSharedValue(unwrapedPureOutput);
   console.log("output: " + JSON.stringify(output));
   const sharedBody = useSharedValue(body);
-  const realInput = { input: sharedInput, body: sharedBody};
-  const mapper = useMapper(styleUpdater, [realInput, output]);
-  mapper.startMapping();
+
+  let realInput;
+  let mapper;
+
+  if (Array.isArray(sharedInput)) {
+    realInput = { input: sharedInput[0], body: sharedBody};
+    mapper = useMapper(styleUpdater3, [realInput, output, sharedInput[1]]);
+  } else {
+    realInput = { input: sharedInput, body: sharedBody};
+    mapper = useMapper(styleUpdater2, [realInput, output]);
+  }
+  
+  useEffect(()=>{mapper.startMapping();},[]); //start animation 
   return output;
 }
 

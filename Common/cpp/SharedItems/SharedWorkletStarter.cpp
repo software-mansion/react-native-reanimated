@@ -110,7 +110,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           for (auto id : svIds) {
             std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
             if (sv == nullptr) {
-              return false;
+              return -1;
             }
             sharedValues.push_back(sv);
           }
@@ -124,14 +124,9 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           
           // remove previous instance
           applierRegistry->unregisterApplierFromRender(applierId, rt);
-          
-          starter->setUnregisterListener([=, &rt] () {
-            applierRegistry->unregisterApplierFromRender(applierId, rt);
-          });
-        
           applierRegistry->registerApplierForRender(applierId, applier);
 
-          return true;
+          return this->starter->applierId;
         };
         return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
         
@@ -180,6 +175,10 @@ void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
   if (this->unregisterListener != nullptr) {
     (*this->unregisterListener)();
   }
+  
+  // unregister applier
+  // it's important [Do not remove]    
+  applierRegistry->unregisterApplierFromRender(applierId, rt);
 }
 
 void SharedWorkletStarter::setUnregisterListener(const std::function<void()> & fun) {

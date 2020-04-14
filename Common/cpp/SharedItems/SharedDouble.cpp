@@ -86,10 +86,9 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
           const jsi::Value *arguments,
           size_t count
         ) -> jsi::Value {
-
-          cleanBeforeSet(rt);
           
           if (arguments[0].isNumber()) {
+            cleanBeforeSet(rt);
             forceSet(rt, arguments[0]);
           } else {
             jsi::Value input(rt, arguments[0]);
@@ -97,7 +96,12 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
               input = input.asObject(rt).getProperty(rt, "value");
             }
             int applierId = input.asObject(rt).getProperty(rt, "applierId").asNumber();
-            *bindedApplierId = applierId;
+            
+            if (applierId != (*bindedApplierId)) {
+              cleanBeforeSet(rt);
+              *bindedApplierId = applierId;
+            }
+            
             std::shared_ptr<Applier> applier = applierRegistry->getRenderApplier(applierId);
             applier->sharedValues[0] = sharedValueRegistry->getSharedValue(id);
           }
@@ -116,9 +120,13 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
            size_t count
          ) -> jsi::Value {
 
-          cleanBeforeSet(rt);
-          *bindedApplierId = arguments[0].asNumber();
-           
+          int applierId = arguments[0].asNumber();
+          
+          if (applierId != (*bindedApplierId)) {
+            cleanBeforeSet(rt);
+            *bindedApplierId = applierId;
+          }
+          
           return jsi::Value::undefined();
          };
          
