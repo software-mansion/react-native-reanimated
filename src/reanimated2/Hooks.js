@@ -366,6 +366,13 @@ export function removeSharedObjsAndArrays(obj) {
   return obj;
 }
 
-export function install(label, obj) {
-  NativeModule.install(label, obj)
+export function installFunction(label, fun) {
+  NativeModule.installFunction(label, fun.asString)
+}
+
+export function installConst(label, val) {
+  if (typeof val === 'string') {
+    val = `"${val}"`;
+  }
+  NativeModule.installConst(label, val)
 }

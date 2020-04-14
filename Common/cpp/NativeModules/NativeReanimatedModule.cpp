@@ -44,17 +44,6 @@ void NativeReanimatedModule::install(jsi::Runtime &rt, std::string label, const 
   std::unordered_map<std::string, jsi::Value> properties;
   std::shared_ptr<jsi::HostObject> ho = RuntimeDecorator::obtainHostObject(*this->runtime, path, std::move(properties));
   std::string strRepr = value.toString(rt).utf8(rt);
-  if (value.isObject()) {
-    if (value.getObject(rt).isFunction(rt)) {
-      // this is a function
-      strRepr = "(" + strRepr + ")";
-    } else {
-      // this is an object
-      ho->set(*this->runtime, labelId, value);
-    }
-  } else if (value.isString()) {
-    strRepr = "\"" + strRepr + "\"";
-  }
   jsi::Value valueStr = jsi::String::createFromUtf8(*this->runtime, strRepr);
   ho->set(*this->runtime, labelId, valueStr);
 }

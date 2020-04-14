@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View } from "react-native"
-import { useSharedValue, useWorklet, useEventWorklet, install } from 'react-native-reanimated';
+import { useSharedValue, useWorklet, useEventWorklet, installFunction, installConst } from 'react-native-reanimated';
 
 const FunctionInstall = () => {
     const sv = useSharedValue(33)
@@ -16,15 +16,17 @@ const FunctionInstall = () => {
 
     ;(useWorklet(function(sv, so, sa) {
         'worklet'
-        console.log('[worklet] testing withWorklet')
-        // todo write test for withWorklet
+        console.log('[worklet] testing memory')
+        const memory = Reanimated.memory(this);
+        memory.x = 99;
+        console.log(`[worklet] memory check: ${ memory.x }`)
         return true
     }, [sv, so, sa]))();
 
     ;(useWorklet(function(sv, so, sa) {
         'worklet'
-        console.log('[worklet] testing memory')
-        // todo write test for memory
+        console.log('[worklet] testing withWorklet')
+        // todo write test for withWorklet
         return true
     }, [sv, so, sa]))();
 
@@ -39,12 +41,14 @@ const FunctionInstall = () => {
     }, [sv, so, sa]))();
 
     // test custom functions installation
-    install('hello', function(name) {
+    installFunction('hello', function(name) {
+        'worklet'
         console.log('inside hello')
         return `hello ${ name }`
     });
 
-    install('validateAge', function(name, age) {
+    installFunction('validateAge', function(name, age) {
+        'worklet'
         console.log('inside validate age')
         label = (age > 50) ? 'old' : 'young';
         return `${ Reanimated.hello(name) }, you are ${ label }`
@@ -59,9 +63,9 @@ const FunctionInstall = () => {
     }, [sv, so, sa]))();
 
     // test constants installation
-    install('minimum', -5);
-    install('maximum', 12);
-    install('label', '[const string works] -> ');
+    installConst('minimum', -5);
+    installConst('maximum', 12);
+    installConst('label', '[const string works] -> ');
 
     const currentsv = useSharedValue(-100)
     ;(useWorklet(function(v) {

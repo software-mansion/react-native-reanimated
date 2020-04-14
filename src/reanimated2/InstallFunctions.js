@@ -1,6 +1,11 @@
 function installFunctions(innerNativeModule) {
+  
+  function install(label, fun, path) {
+    innerNativeModule.install(label, `(${fun.asString})`, path);
+  }
+
   // install assign
-  innerNativeModule.install('assign', function (left, right) {
+  install('assign', function (left, right) {
     'worklet';
     if (typeof right === 'object' && !right.value) {
       for (let key of Object.keys(right)) {
@@ -24,7 +29,7 @@ function installFunctions(innerNativeModule) {
   }, 'Reanimated');
 
   // install withWorklet
-  innerNativeModule.install('withWorklet', function (worklet, params, initial) {
+  install('withWorklet', function (worklet, params, initial) {
     'worklet';
     params = [0].concat(params);
     return {
@@ -33,7 +38,7 @@ function installFunctions(innerNativeModule) {
   }, 'Reanimated');
 
   // install memory
-  innerNativeModule.install('memory', function (context) {
+  install('memory', function (context) {
     'worklet';
     const applierId = context.applierId;
     if (!Reanimated.container[applierId]) {
@@ -42,7 +47,7 @@ function installFunctions(innerNativeModule) {
     return Reanimated.container[applierId];
   }, 'Reanimated');
 
-  innerNativeModule.install('log', function(data) {
+  install('log', function (data) {
     'worklet'
 
     function stringRepresentation(obj) {
