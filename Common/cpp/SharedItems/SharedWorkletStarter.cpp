@@ -126,6 +126,10 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           applierRegistry->unregisterApplierFromRender(applierId, rt);
           applierRegistry->registerApplierForRender(applierId, applier);
 
+          starter->setUnregisterListener([this, applierId, &rt](){
+              this->applierRegistry->unregisterApplierFromRender(applierId, rt);
+          });
+
           return this->starter->applierId;
         };
         return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
