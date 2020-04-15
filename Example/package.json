@@ -8,8 +8,7 @@
     "web": "expo start --web-only --web",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint .",
-    "postinstall": "rm -rf node_modules/react-native-reanimated/{.git,node_modules,ReanimatedExample}"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@react-navigation/web": "^1.0.0-alpha.9",
@@ -22,7 +21,6 @@
     "react-dom": "^16.13.1",
     "react-native": "0.62.1",
     "react-native-gesture-handler": "^1.6.1",
-    "react-native-reanimated": "file:..",
     "react-native-screens": "^1.0.0-alpha.23",
     "react-native-web": "^0.12.2",
     "react-navigation": "^4.3.7",
