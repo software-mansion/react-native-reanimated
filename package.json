@@ -1,13 +1,14 @@
 {
   "name": "react-native-reanimated",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "npm run format && npm run lint && npm run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint './src/**/*.js'"
+    "lint": "eslint './src/**/*.js'",
+    "release": "npm login && release-it"
   },
   "main": "src/Animated.js",
   "types": "react-native-reanimated.d.ts",
@@ -17,6 +18,7 @@
     "android/src/main/java/",
     "android/build.gradle",
     "ios/",
+    "!ios/build/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
@@ -36,7 +38,13 @@
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
-  "dependencies": {},
+  "dependencies": {
+    "fbjs": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@babel/core": "^7.7.5",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
@@ -60,7 +68,8 @@
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
-    "react-test-renderer": "16.9.0"
+    "react-test-renderer": "16.9.0",
+    "release-it": "^13.1.1"
   },
   "lint-staged": {
     "*.js": [
@@ -71,6 +80,13 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
+    }
+  },
+  "release-it": {
+    "hooks": {
+      "before:git:bump": [
+        "# check if version corresponds to changes in native files  \n git diff --name-only ${latestVersion} HEAD | egrep \"(android/.*)|(ios/.*)\" -q && egrep '\\.0$' -q <<< ${version}"
+      ]
     }
   }
 }

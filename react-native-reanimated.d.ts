@@ -1,8 +1,6 @@
 // Project: https://github.com/software-mansion/react-native-reanimated
 // TypeScript Version: 2.8
 
-type Nullable<T> = T | null | undefined;
-
 declare module 'react-native-reanimated' {
   import { ComponentClass, ReactNode, Component } from 'react';
   import {
@@ -32,6 +30,8 @@ declare module 'react-native-reanimated' {
   }
 
   namespace Animated {
+    type Nullable<T> = T | null | undefined;
+
     class AnimatedNode<T> {
       constructor(
         nodeConfig: object,
@@ -157,7 +157,9 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils
 
-    export type AnimatedTransform = { [P in keyof TransformsStyle["transform"]]: Animated.Adaptable<TransformsStyle["transform"][P]> };
+    export type TransformStyleTypes = TransformsStyle['transform'] extends readonly (infer T)[] ? T : never
+    export type AdaptTransforms<T> = { [P in keyof T]: Animated.Adaptable<T[P]> }
+    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[]
 
     export type AnimateStyle<S extends object> = {
       [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
@@ -206,7 +208,7 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> { }
-    export function createAnimatedComponent(component: any): any;
+    export function createAnimatedComponent<T>(component: T): T;
 
     // classes
     export {
@@ -258,9 +260,9 @@ declare module 'react-native-reanimated' {
       ifNode: Adaptable<T1>,
       elseNode?: Adaptable<T2>,
     ): AnimatedNode<T1 | T2>;
-    export function block<T>(
-      items: ReadonlyArray<Adaptable<T>>,
-    ): AnimatedNode<T>;
+    export function block<T1 extends Value = number, T2 extends Value = any>(
+      items: ReadonlyArray<Adaptable<T2>>,
+    ): AnimatedNode<T1>;
     export function call<T>(
       args: ReadonlyArray<T | AnimatedNode<T>>,
       callback: (args: ReadonlyArray<T>) => void,

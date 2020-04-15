@@ -11,7 +11,6 @@ import {
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
-import BottomSheetPlayground from 'reanimated-bottom-sheet/Example/App'
 
 import ChatHeads from './chatHeads';
 import Code from './code';
@@ -47,16 +46,14 @@ const SCREENS = {
   Test: { screen: Test, title: 'Test' },
   ImageViewer: { screen: ImageViewer, title: 'Image Viewer' },
   Interactable: { screen: InteractablePlayground, title: 'Interactable' },
-  BottomSheet: { screen: BottomSheetPlayground, title: 'BottomSheet Playground' },
   Interpolate: { screen: Interpolate, title: 'Interpolate' },
   Colors: { screen: Colors, title: 'Colors' },
   StartAPI: { screen: StartAPI, title: 'Start API' },
   chatHeads: { screen: ChatHeads, title: 'Chat heads (iOS only)' },
-  directManipulation: { screen: require('./directManipulation').default, title: 'Direct Manipulation (invoke, dispatch & intercept)'  },
   code: { screen: Code, title: 'Animated.Code component' },
-
   width: { screen: WidthAndHeight, title: 'width & height & more' },
   rotations: { screen: Rotations, title: 'rotations (concat node)' },
+  directManipulation: { screen: require('./directManipulation').default, title: 'Direct Manipulation (invoke, dispatch & intercept)' },
   imperative: {
     screen: Imperative,
     title: 'imperative (set value / toggle visibility)',
@@ -139,7 +136,7 @@ const ExampleApp = createStackNavigator(
   {
     initialRouteName: 'Main',
     headerMode: 'screen',
-  }
+  },
 );
 
 const styles = StyleSheet.create({
@@ -163,7 +160,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const createApp = Platform.select({ web: input => createBrowserApp(input, { history: 'hash' }),
+const createApp = Platform.select({
+  web: input => createBrowserApp(input, { history: 'hash' }),
   default: input => createAppContainer(input),
 });
 
