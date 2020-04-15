@@ -11,10 +11,15 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerWorklet(
     const jsi::Value *args,
     size_t count) {
 
+  std::string funcStr = "";
+  if (args[1].isString()) {
+    funcStr = args[1].asString(rt).utf8(rt);
+  }
+
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
       ->registerWorklet(
           rt, std::move(args[0].getNumber()),
-                        args[1].asString(rt).utf8(rt),
+                        funcStr,
                         (int)args[2].asNumber());
   return jsi::Value::undefined();
 }
