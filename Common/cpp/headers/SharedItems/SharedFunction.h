@@ -24,6 +24,7 @@ public:
     ~SharedFunction();
 private:
   std::shared_ptr<Worklet> worklet;
+  jsi::Value parameter;
 };
 
 #endif /* SharedFunction_h */

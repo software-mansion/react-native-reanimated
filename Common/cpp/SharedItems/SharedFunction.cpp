@@ -15,6 +15,7 @@ SharedFunction::SharedFunction(int id, std::shared_ptr<Worklet> w) : SharedValue
   this->type = SharedValueType::shared_function;
   this->dirty = false;
   this->shouldBeSentToJava = false;
+  this->parameter = jsi::Value::undefined();
 }
 
 jsi::Value SharedFunction::asValue(jsi::Runtime &rt) const {
@@ -27,6 +28,10 @@ void SharedFunction::setNewValue(std::shared_ptr<SharedValue> sv) {
 }
 
 jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
+  if (!parameter.isUndefined()) {
+    return parameter.getObject(rt);
+  }
+
    auto callback = [this](
          jsi::Runtime &rt,
          const jsi::Value &thisValue,
@@ -54,9 +59,9 @@ jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
   jsi::PropNameID name = jsi::PropNameID::forAscii(rt, idAsString);
   
   int length = worklet->length;
-  jsi::Function function = jsi::Function::createFromHostFunction(rt, name, length, callback);
+  this->parameter = jsi::Function::createFromHostFunction(rt, name, length, callback);
   
-  return function;
+  return parameter.getObject(rt);
 }
 
 std::vector<int> SharedFunction::getSharedValues() {
