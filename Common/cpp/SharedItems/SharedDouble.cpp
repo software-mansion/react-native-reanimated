@@ -18,6 +18,7 @@ SharedDouble::SharedDouble(int id,
   this->sharedValueregistry = sharedValueregistry;
   this->workletRegistry = workletRegistry;
   this->errorHandler = errorHandler;
+  this->parameter = jsi::Value::undefined();
 }
 
 jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
@@ -31,6 +32,10 @@ void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
 }
 
 jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
+  
+  if (!parameter.isUndefined()) {
+    return parameter.getObject(rt);
+  }
 
   class HO : public jsi::HostObject {
     public:
@@ -172,7 +177,8 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
                                               workletRegistry,
                                               errorHandler));
 
-  return jsi::Object::createFromHostObject(rt, ptr);
+  this->parameter = jsi::Object::createFromHostObject(rt, ptr);
+  return parameter.getObject(rt);
 }
 
 std::vector<int> SharedDouble::getSharedValues() {
