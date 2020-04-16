@@ -44,6 +44,10 @@ end
 
 target 'ReanimatedExample' do
   pods()
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
+
+  pod 'RNCMaskedView', :path => '../node_modules/@react-native-community/masked-view'
+
 end
 
 target 'ReanimatedExampleTests' do
