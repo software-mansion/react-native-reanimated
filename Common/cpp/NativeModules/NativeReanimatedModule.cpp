@@ -34,6 +34,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->mapperRegistry = mapperRegistry;
   this->runtime = std::move(rt);
   this->errorHandler = errorHandler;
+  this->dummyEvent = std::shared_ptr<jsi::Value>(new jsi::Value(*runtime, jsi::Value::undefined()));
 }
 
 // worklets
@@ -323,26 +324,32 @@ void NativeReanimatedModule::unregisterMapper(jsi::Runtime &rt, int id) {
 }
 
 void NativeReanimatedModule::render() {
-  std::shared_ptr<jsi::Value> event(new jsi::Value(*runtime, jsi::Value::undefined()));
-  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
-    sharedValueRegistry, 
-    applierRegistry, 
-    workletRegistry,
-    event,
-    this->errorHandler));
-  applierRegistry->render(*runtime, ho);
+  if (this->workletModule == nullptr) {
+    this->workletModule = std::shared_ptr<BaseWorkletModule>(new WorkletModule(
+      sharedValueRegistry,
+      applierRegistry,
+      workletRegistry,
+      this->dummyEvent,
+      this->errorHandler));
+  }
+  applierRegistry->render(*runtime, this->workletModule);
 }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
   jsi::Value event = eval(*runtime, ("(" + eventAsString + ")").c_str());
   std::shared_ptr<jsi::Value> eventPtr(new jsi::Value(*runtime, event));
-  std::shared_ptr<BaseWorkletModule> ho(new WorkletModule(
-    sharedValueRegistry, 
-    applierRegistry, 
-    workletRegistry,
-    eventPtr,
-    this->errorHandler));
-  applierRegistry->event(*runtime, eventName, ho);
+    
+  if (this->workletModule == nullptr) {
+    this->workletModule = std::shared_ptr<BaseWorkletModule>(new WorkletModule(
+      sharedValueRegistry,
+      applierRegistry,
+      workletRegistry,
+      eventPtr,
+      this->errorHandler));
+  } else {
+      std::dynamic_pointer_cast<WorkletModule>(this->workletModule)->setEvent(eventPtr);
+  }
+  applierRegistry->event(*runtime, eventName, this->workletModule);
 }
 
 NativeReanimatedModule::~NativeReanimatedModule() {

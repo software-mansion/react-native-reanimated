@@ -26,6 +26,8 @@ namespace react {
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::shared_ptr<Scheduler> scheduler;
+    std::shared_ptr<jsi::Value> dummyEvent;
+    std::shared_ptr<BaseWorkletModule> workletModule;
 
   public:
     NativeReanimatedModule(
