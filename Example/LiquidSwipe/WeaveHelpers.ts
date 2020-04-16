@@ -30,8 +30,6 @@ export function useSideWidth(progress) {
       } else {
         sideWidth.set(initialSideWidth.value + (width.value - initialSideWidth.value) * (progress.value - p1) / (p2 - p1));
       }
-
-      this.log("progress: " + progress.value.toString() + " sideWidth: " + sideWidth.value.toString());
     }, [{ progress, initialSideWidth, width }, { sideWidth }]
   );
   mapper();

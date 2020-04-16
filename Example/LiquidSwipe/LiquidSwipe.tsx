@@ -37,14 +37,16 @@ export default () => {
     function(gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY) {
       'worklet';
       let { velocityX, translationX, y } = this.event;
+      state.set(this.event.state);
 
       const interpolate = (l, r, ll, rr) => {
-        const progress = translationX/(r-l);
+        const progress = (translationX-l)/(r-l);
         return ll + (rr-ll) * progress;
       }
 
-      if (isBack.value) {
+      if (isBack.value === 1) {
         gestureProgress.set(interpolate(0, maxDist.value, 1, 0));
+        this.log('back');
       } else {
         gestureProgress.set(interpolate(-maxDist.value, 0, 0.4, 0));
       }
@@ -64,7 +66,7 @@ export default () => {
     }, [gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY]
   );
 
-  const progress = useSharedValue(0.2);//useSnapProgress(gestureProgress, state, isBack, snapPoint); 
+  const progress = useSnapProgress(gestureProgress, state, isBack, snapPoint); 
 
   return (
     <View style={styles.container}>

@@ -14,7 +14,7 @@ export default ({ progress, y }) => {
       const { progress, y, size, width } = input;
 
       const interpolate = (l, r, ll, rr, clamp) => {
-        const coef = progress.value/(r-l);
+        const coef = (l-progress.value)/(r-l);
         const ans = ll + (rr-ll) * coef;
         if (clamp && (ans > Math.max(ll, rr))) return Math.max(ll, rr);
         if (clamp && (ans < Math.min(ll, rr))) return Math.min(ll, rr);
