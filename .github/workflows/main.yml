@@ -16,8 +16,8 @@ jobs:
         run: cd docs && yarn && yarn deploy
 
       - name: Publish generated content to GitHub Pages
-        uses: tsunematsu21/actions-publish-gh-pages@v1.0.0
+        uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          dir: dist
-          branch: gh-pages
-          token: ${{ secrets.ACCESS_TOKEN }}
+          FOLDER: dist
+          BRANCH: gh-pages
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
