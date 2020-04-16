@@ -9,11 +9,19 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - name: Set publishing name & email
+        run: >-
+          git config --local user.email "action@github.com"
+          && git config --local user.name "GitHub Action"
+
       - name: Check out
         uses: actions/checkout@v1
 
       - name: Generate awesome content
-        run: cd docs && yarn && yarn deploy
+        run: >-
+          cd docs
+          && yarn
+          && yarn deploy
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
