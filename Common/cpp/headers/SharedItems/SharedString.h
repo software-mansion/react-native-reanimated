@@ -8,6 +8,7 @@
 #include "SharedValue.h"
 
 class SharedString : public SharedValue {
+    jsi::Value parameter;
   public:
     std::string value;
     int id;

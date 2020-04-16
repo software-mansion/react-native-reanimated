@@ -13,7 +13,8 @@
 #include <vector>
 
 class SharedWorkletStarter : public SharedValue {
-  public:
+  jsi::Value parameter;
+public:
   std::shared_ptr<Worklet> worklet;
   int id;
   int applierId;

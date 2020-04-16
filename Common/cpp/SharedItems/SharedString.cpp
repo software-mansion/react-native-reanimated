@@ -9,6 +9,7 @@ SharedString::SharedString(int id, std::string value) {
   this->value = value;
   this->id = id;
   this->type = SharedValueType::shared_string;
+  this->parameter = jsi::Value::undefined();
 }
 
 SharedString::~SharedString() {}
@@ -18,6 +19,10 @@ jsi::Value SharedString::asValue(jsi::Runtime &rt) const {
 }
 
 jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
+  if (!parameter.isUndefined()) {
+    return parameter.getObject(rt);
+  }
+
   class HO : public jsi::HostObject {
       public:
       std::string * value = nullptr;
@@ -61,7 +66,8 @@ jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
 
     std::shared_ptr<jsi::HostObject> ptr(new HO(id, &value, &dirty));
 
-    return jsi::Object::createFromHostObject(rt, ptr);
+    this->parameter = jsi::Object::createFromHostObject(rt, ptr);
+    return parameter.getObject(rt);
 }
 
 void SharedString::setNewValue(std::shared_ptr<SharedValue> sv) {

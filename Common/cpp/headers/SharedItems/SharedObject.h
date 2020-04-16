@@ -25,6 +25,7 @@ public:
     ~SharedObject();
 private:
   std::unordered_map<std::string, std::shared_ptr<SharedValue>> properties;
+  jsi::Value parameter;
 };
 
 #endif /* SharedObject_h */

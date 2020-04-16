@@ -18,6 +18,7 @@ SharedObject::SharedObject(int id,
   this->dirty = false;
   this->shouldBeSentToJava = false;
   this->type = SharedValueType::shared_object;
+  this->parameter = jsi::Value::undefined();
 }
 
 SharedObject::~SharedObject() {
@@ -34,6 +35,9 @@ void SharedObject::setNewValue(std::shared_ptr<SharedValue> sv) {
 }
 
 jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
+  if (!parameter.isUndefined()) {
+    return parameter.getObject(rt);
+  }
   
   class HO : public jsi::HostObject {
     std::unordered_map<std::string, std::shared_ptr<SharedValue>> props;
@@ -74,7 +78,8 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(id, this->properties));
 
-  return jsi::Object::createFromHostObject(rt, ptr);
+  this->parameter = jsi::Object::createFromHostObject(rt, ptr);
+  return parameter.getObject(rt);
 }
 
 std::vector<int> SharedObject::getSharedValues() {
