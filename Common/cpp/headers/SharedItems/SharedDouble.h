@@ -14,6 +14,7 @@ class SharedDouble : public SharedValue {
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
   std::shared_ptr<WorkletRegistry> workletRegistry;
   std::shared_ptr<ErrorHandler> errorHandler;
+  jsi::Value parameter;
   public:
     double value;
     int id;

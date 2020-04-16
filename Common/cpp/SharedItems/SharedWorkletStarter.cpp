@@ -21,6 +21,7 @@ SharedWorkletStarter::SharedWorkletStarter(
   this->applierRegistry = applierRegistry;
   this->errorHandler = errorHandler;
   this->applierId = ApplierRegistry::New_Applier_Id--;
+  this->parameter = jsi::Value::undefined();
 }
 
 jsi::Value SharedWorkletStarter::asValue(jsi::Runtime &rt) const {
@@ -36,6 +37,9 @@ SharedWorkletStarter::~SharedWorkletStarter() {
 }
 
 jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
+  if (!parameter.isUndefined()) {
+    return parameter.getObject(rt);
+  }
   
   class HO : public jsi::HostObject {
     public:
@@ -165,7 +169,8 @@ std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry->getSharedVa
       this->applierRegistry,
       this->errorHandler));
 
-  return jsi::Object::createFromHostObject(rt, ptr);
+  this->parameter = jsi::Object::createFromHostObject(rt, ptr);
+  return parameter.getObject(rt);
 }
 
 void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
