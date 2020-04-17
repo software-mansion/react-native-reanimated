@@ -46,11 +46,10 @@ export default () => {
 
       if (isBack.value === 1) {
         gestureProgress.set(interpolate(0, maxDist.value, 1, 0));
-        this.log('back');
       } else {
         gestureProgress.set(interpolate(-maxDist.value, 0, 0.4, 0));
       }
-
+      
       // snapPoint
       velocityX = (-velocityX)/(isBack.value * maxDist.value + (1-isBack.value) * 0.4 * maxDist.value);
       const point = gestureProgress.value + 0.2 * velocityX;

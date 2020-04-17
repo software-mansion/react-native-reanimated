@@ -14,7 +14,7 @@ export default ({ progress, y }) => {
       const { progress, y, size, width } = input;
 
       const interpolate = (l, r, ll, rr, clamp) => {
-        const coef = (l-progress.value)/(r-l);
+        const coef = (progress.value - l)/(r-l);
         const ans = ll + (rr-ll) * coef;
         if (clamp && (ans > Math.max(ll, rr))) return Math.max(ll, rr);
         if (clamp && (ans < Math.min(ll, rr))) return Math.min(ll, rr);
@@ -23,7 +23,7 @@ export default ({ progress, y }) => {
 
       return {
         opacity: interpolate(0, 0.1, 1, 0, true),
-        trasform: [
+        transform: [
           {
             translateX: interpolate(0, 0.4, width.value - size.value - 8, 0, false),
           },
@@ -48,6 +48,7 @@ export default ({ progress, y }) => {
         alignItems: "center",
       }, style]}
     >
+      <Text>(</Text>
       {/*<Icon name="chevron-left" color="black" size={40} />*/}
     </Animated.View>
   );

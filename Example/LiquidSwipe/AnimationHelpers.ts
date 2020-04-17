@@ -17,8 +17,9 @@ export function useSnapProgress(value, state, isBack, point) {
   const onSpringFinish = useMapper(
     function(input, output) {
       'worklet';
-       if (input.finish.value) {
+       if (input.finish.value == 1) {
           output.isBack.set(input.point.value);
+          input.finish.set(0);
        }
     }, [{finish: spring.state.finished, point}, { isBack }]
   );
