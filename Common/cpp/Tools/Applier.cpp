@@ -28,12 +28,10 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   bool shouldFinish = false;
   
   jsi::Value * args = new jsi::Value[sharedValues.size()];
-  
-  SpeedChecker::checkSpeed("prepare values: ", [=, &rt](){
-    for (int i = 0; i < sharedValues.size(); ++i) {
-       args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
-    }
-  });
+ 
+  for (int i = 0; i < sharedValues.size(); ++i) {
+     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
+  }
 
   module->setWorkletId(worklet->workletId);
   module->setApplierId(applierId);
@@ -41,12 +39,10 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
 
   jsi::Value returnValue;
   
-  SpeedChecker::checkSpeed("worklet exec: ", [=, &rt, &returnValue](){
-     returnValue = worklet->body->callWithThis(rt,
-     jsi::Object::createFromHostObject(rt, module),
-     static_cast<const jsi::Value*>(args),
-     (size_t)sharedValues.size());
-  });
+  returnValue = worklet->body->callWithThis(rt,
+  jsi::Object::createFromHostObject(rt, module),
+  static_cast<const jsi::Value*>(args),
+  (size_t)sharedValues.size());
   
   shouldFinish = (returnValue.isBool()) ? returnValue.getBool() : false;
   delete [] args;

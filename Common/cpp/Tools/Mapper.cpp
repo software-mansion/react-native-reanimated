@@ -8,6 +8,7 @@
 #include "Mapper.h"
 
 Mapper::Mapper(int id,
+              std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
               std::shared_ptr<Applier> applier,
               std::vector<int> inputIds,
               std::vector<int> outputIds) {
@@ -15,10 +16,12 @@ Mapper::Mapper(int id,
   this->applier = applier;
   this->inputIds = std::move(inputIds);
   this->outputIds = std::move(outputIds);
+  this->sharedValueRegistry = sharedValueRegistry;
 }
 
 void Mapper::execute(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
   initialized = true;
+  dirty = false;
   applier->apply(rt, module);
 }
 
@@ -36,5 +39,21 @@ std::shared_ptr<Mapper> Mapper::createMapper(int id,
     return nullptr;
   }
   
-  return std::shared_ptr<Mapper>(new Mapper(id, applier, input->getSharedValues(), output->getSharedValues()));
+  std::vector<int> inputSharedValues = input->getSharedValues();
+  
+  std::shared_ptr<Mapper> mapper(new Mapper(id, sharedValueRegistry, applier, inputSharedValues, output->getSharedValues()));
+  
+  for (int svId : inputSharedValues) {
+    sharedValueRegistry->getSharedValue(svId)->registerForDirty(id, [=](){
+      mapper->dirty = true;
+    });
+  }
+  
+  return mapper;
+}
+
+Mapper::~Mapper() {
+  for (int svId : inputIds) {
+    sharedValueRegistry->getSharedValue(svId)->unregisterFromDirty(id);
+  }
 }

@@ -38,16 +38,21 @@ def pods()
 
   pod 'RNReanimated', :path => '../../'
 
+
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
+  pod 'RNCMaskedView', :path => '../node_modules/@react-native-community/masked-view'
+
   use_native_modules!
   pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
 end
 
 target 'ReanimatedExample' do
+  project 'ReanimatedExample',
+  'Debug (Staging)' => :debug,
+  'Debug (Production)' => :debug,
+  'Release (Staging)' => :release,
+  'Release (Production)' => :release
   pods()
-  pod 'RNSVG', :path => '../node_modules/react-native-svg'
-
-  pod 'RNCMaskedView', :path => '../node_modules/@react-native-community/masked-view'
-
 end
 
 target 'ReanimatedExampleTests' do

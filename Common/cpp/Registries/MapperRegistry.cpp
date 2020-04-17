@@ -38,17 +38,7 @@ void MapperRegistry::removeMapper(int id) {
 
 void MapperRegistry::execute(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module) {
   for (auto & mapper : sortedMappers) {
-    bool isInputDirty = false;
-    
-    for (auto svId : mapper->inputIds) {
-      auto sv = sharedValueRegistry->getSharedValue(svId);
-      if (sv != nullptr and sv->dirty) {
-        isInputDirty = true;
-        break;
-      }
-    }
-    
-    if ( (!(mapper->initialized)) or isInputDirty ) {
+    if ( (!(mapper->initialized)) or mapper->dirty ) {
       mapper->execute(rt, module);
     }
   }

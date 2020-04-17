@@ -11,7 +11,7 @@
 
 class SharedDouble : public SharedValue {
   std::shared_ptr<ApplierRegistry> applierRegistry;
-  std::shared_ptr<SharedValueRegistry> sharedValueregistry;
+  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
   std::shared_ptr<WorkletRegistry> workletRegistry;
   std::shared_ptr<ErrorHandler> errorHandler;
   public:
@@ -21,7 +21,7 @@ class SharedDouble : public SharedValue {
     SharedDouble(int id,
                  double value,
                  std::shared_ptr<ApplierRegistry> applierRegistry,
-                 std::shared_ptr<SharedValueRegistry> sharedValueregistry,
+                 std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                  std::shared_ptr<WorkletRegistry> workletRegistry,
                  std::shared_ptr<ErrorHandler> errorHandler);
     jsi::Value asValue(jsi::Runtime &rt) const override;

@@ -7,7 +7,7 @@
 SharedDouble::SharedDouble(int id,
                            double value,
                            std::shared_ptr<ApplierRegistry> applierRegistry,
-                           std::shared_ptr<SharedValueRegistry> sharedValueregistry,
+                           std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                            std::shared_ptr<WorkletRegistry> workletRegistry,
                            std::shared_ptr<ErrorHandler> errorHandler
                            ) : SharedValue() {
@@ -15,7 +15,7 @@ SharedDouble::SharedDouble(int id,
   this->id = id;
   this->type = SharedValueType::shared_double;
   this->applierRegistry = applierRegistry;
-  this->sharedValueregistry = sharedValueregistry;
+  this->sharedValueRegistry = sharedValueRegistry;
   this->workletRegistry = workletRegistry;
   this->errorHandler = errorHandler;
 }
@@ -27,34 +27,25 @@ jsi::Value SharedDouble::asValue(jsi::Runtime &rt) const {
 void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   SharedDouble * sd = (SharedDouble*) sv.get();
   this->value = sd->value;
-  this->dirty = true;
+  makeDirty();
 }
 
 jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
 
   class HO : public jsi::HostObject {
     public:
-    double * value = nullptr;
-    bool * dirty = nullptr;
-    int id;
-    int * bindedApplierId;
+    std::shared_ptr<SharedDouble> sd;
     std::shared_ptr<ApplierRegistry> applierRegistry;
     std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
     std::shared_ptr<WorkletRegistry> workletRegistry;
     std::shared_ptr<ErrorHandler> errorHandler;
 
-    HO(int id,
-       double * val,
-       bool * dirty,
-       int *bindedApplierId,
+    HO(std::shared_ptr<SharedDouble> sd,
        std::shared_ptr<ApplierRegistry> applierRegistry,
        std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
        std::shared_ptr<WorkletRegistry> workletRegistry,
        std::shared_ptr<ErrorHandler> errorHandler) {
-      this->value = val;
-      this->dirty = dirty;
-      this->id = id;
-      this->bindedApplierId = bindedApplierId;
+      this->sd = sd;
       this->applierRegistry = applierRegistry;
       this->sharedValueRegistry = sharedValueRegistry;
       this->workletRegistry = workletRegistry;
@@ -62,22 +53,22 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
     }
     
     void cleanBeforeSet(jsi::Runtime &rt) {
-      if ((*bindedApplierId) != -1) {
-        applierRegistry->unregisterApplierFromRender(*bindedApplierId, rt);
-        *bindedApplierId = -1;
+      if (sd->bindedApplierId != -1) {
+        applierRegistry->unregisterApplierFromRender(sd->bindedApplierId, rt);
+        sd->bindedApplierId = -1;
       }
     }
     
     void forceSet(jsi::Runtime &rt, const jsi::Value & newValue) {
-      (*dirty) = true;
-      (*value) = newValue.asNumber();
+      sd->makeDirty();
+      sd->value = newValue.asNumber();
     }
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
       auto propName = name.utf8(rt);
 
       if (propName == "value") {
-          return jsi::Value(*value);
+          return jsi::Value(sd->value);
       } else if (propName == "set") {
 
         auto callback = [this](
@@ -97,13 +88,13 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
             }
             int applierId = input.asObject(rt).getProperty(rt, "applierId").asNumber();
             
-            if (applierId != (*bindedApplierId)) {
+            if (applierId != sd->bindedApplierId) {
               cleanBeforeSet(rt);
-              *bindedApplierId = applierId;
+              sd->bindedApplierId = applierId;
             }
             
             std::shared_ptr<Applier> applier = applierRegistry->getRenderApplier(applierId);
-            applier->sharedValues[0] = sharedValueRegistry->getSharedValue(id);
+            applier->sharedValues[0] = sharedValueRegistry->getSharedValue(sd->id);
           }
           return jsi::Value::undefined();
         };
@@ -111,7 +102,7 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
         return jsi::Function::createFromHostFunction(rt, name, 1, callback);
 
       } else if (propName == "id") {
-        return jsi::Value((double)id);
+        return jsi::Value((double)sd->id);
       } else if (propName == "bind") {
         auto callback = [this](
            jsi::Runtime &rt,
@@ -122,9 +113,9 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
 
           int applierId = arguments[0].asNumber();
           
-          if (applierId != (*bindedApplierId)) {
+          if (applierId != (sd->bindedApplierId)) {
             cleanBeforeSet(rt);
-            *bindedApplierId = applierId;
+            sd->bindedApplierId = applierId;
           }
           
           return jsi::Value::undefined();
@@ -165,12 +156,9 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
     }
   };
 
-  std::shared_ptr<jsi::HostObject> ptr(new HO(id,
-                                              &value,
-                                              &dirty,
-                                              &bindedApplierId,
+  std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedDouble>(sharedValueRegistry->getSharedValue(id)),
                                               applierRegistry,
-                                              sharedValueregistry,
+                                              sharedValueRegistry,
                                               workletRegistry,
                                               errorHandler));
 
@@ -189,7 +177,7 @@ std::shared_ptr<SharedValue> SharedDouble::copy() {
   return std::make_shared<SharedDouble>(id,
                                         value,
                                         applierRegistry,
-                                        sharedValueregistry,
+                                        sharedValueRegistry,
                                         workletRegistry,
                                         errorHandler);
 }

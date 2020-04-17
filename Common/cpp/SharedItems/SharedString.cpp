@@ -5,10 +5,13 @@
 #include "SharedString.h"
 #include "SharedValueRegistry.h"
 
-SharedString::SharedString(int id, std::string value) {
+SharedString::SharedString(int id,
+                           std::string value,
+                           std::shared_ptr<SharedValueRegistry> sharedValueRegistry) {
   this->value = value;
   this->id = id;
   this->type = SharedValueType::shared_string;
+  this->sharedValueRegistry = sharedValueRegistry;
 }
 
 SharedString::~SharedString() {}
@@ -20,21 +23,17 @@ jsi::Value SharedString::asValue(jsi::Runtime &rt) const {
 jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
   class HO : public jsi::HostObject {
       public:
-      std::string * value = nullptr;
-      bool * dirty = nullptr;
-      int id;
+      std::shared_ptr<SharedString> ss;
 
-      HO(int id, std::string * val, bool * dirty) {
-        this->value = val;
-        this->dirty = dirty;
-        this->id = id;
+      HO(std::shared_ptr<SharedString> ss) {
+        this->ss = ss;
       }
 
       jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         auto propName = name.utf8(rt);
 
         if (propName == "value") {
-          return jsi::String::createFromAscii(rt, *value);
+          return jsi::String::createFromAscii(rt, ss->value);
         } else if (propName == "set") {
 
           auto callback = [this, &rt](
@@ -43,15 +42,15 @@ jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
             const jsi::Value *arguments,
             size_t count
           ) -> jsi::Value {
-            (*dirty) = true;
+            ss->makeDirty();
             std::string newValue = arguments[0].asString(rt).utf8(rt);
-            (*value) = newValue;
+            ss->value = newValue;
             return jsi::Value::undefined();
           };
           return jsi::Function::createFromHostFunction(rt, name, 1, callback);
 
         } else if (propName == "id") {
-          return jsi::Value((double)id);
+          return jsi::Value((double)ss->id);
         } else if (propName == "__baseType") {
           return jsi::Value((bool)true);
         }
@@ -61,7 +60,7 @@ jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
 
     };
 
-    std::shared_ptr<jsi::HostObject> ptr(new HO(id, &value, &dirty));
+    std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedString>(sharedValueRegistry->getSharedValue(id))));
 
     return jsi::Object::createFromHostObject(rt, ptr);
 }
@@ -76,7 +75,8 @@ std::shared_ptr<SharedValue> SharedString::copy() {
   
   int id = SharedValueRegistry::NEXT_SHARED_VALUE_ID--;
   return std::make_shared<SharedString>(id,
-                                        value);
+                                        value,
+                                        sharedValueRegistry);
 }
 
 std::vector<int> SharedString::getSharedValues() {

@@ -122,11 +122,15 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
   std::function<std::shared_ptr<SharedValue>()> create;
   
   if (value.isNumber()) {
-    std::shared_ptr<SharedValue> sv(new SharedDouble(id, value.getNumber(), applierRegistry, sharedValueRegistry, workletRegistry, errorHandler));
-    create = [=] () {return sv;};
+    double number = value.getNumber();
+    create = [=] () {
+      return std::shared_ptr<SharedValue>(new SharedDouble(id, number, applierRegistry, sharedValueRegistry, workletRegistry, errorHandler));
+    };
   } else if(value.isString()) {
-    std::shared_ptr<SharedValue> sv(new SharedString(id, value.getString(rt).utf8(rt)));
-    create = [=] () {return sv;};
+    std::string str = value.getString(rt).utf8(rt);
+    create = [=] () {
+      return std::shared_ptr<SharedValue>(new SharedString(id, str, sharedValueRegistry));
+    };
   } else if(value.isObject()) {
     jsi::Object obj = value.getObject(rt);
     
