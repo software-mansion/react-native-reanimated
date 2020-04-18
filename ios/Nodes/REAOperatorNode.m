@@ -54,6 +54,11 @@ return @(OP); \
             @"atan": REA_SINGLE(atan(a)),
             @"exp": REA_SINGLE(exp(a)),
             @"round": REA_SINGLE(round(a)),
+            @"abs": REA_SINGLE(fabs(a)),
+            @"ceil": REA_SINGLE(ceil(a)),
+            @"floor": REA_SINGLE(floor(a)),
+            @"max": REA_REDUCE(MAX(a, b)),
+            @"min": REA_REDUCE(MIN(a, b)),
 
             // logical
             @"and": ^(NSArray<REANode *> *inputNodes) {
