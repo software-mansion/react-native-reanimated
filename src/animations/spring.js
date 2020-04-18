@@ -17,8 +17,9 @@ import {
   lessThan,
   greaterThan,
   proc,
+  min,
+  abs,
 } from '../base';
-import { min, abs } from '../derived';
 import AnimatedValue from '../core/InternalAnimatedValue';
 
 const MAX_STEPS_MS = 64;
