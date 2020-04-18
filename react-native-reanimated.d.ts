@@ -147,12 +147,70 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils
 
-    export type TransformStyleTypes = TransformsStyle['transform'] extends readonly (infer T)[] ? T : never
-    export type AdaptTransforms<T> = { [P in keyof T]: Animated.Adaptable<T[P]> }
-    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[]
+    interface PerpectiveTransform {
+      perspective: Adaptable<number>;
+    }
+
+    interface RotateTransform {
+      rotate: Adaptable<number | string>;
+    }
+
+    interface RotateXTransform {
+      rotateX: Adaptable<number | string>;
+    }
+
+    interface RotateYTransform {
+      rotateY: Adaptable<number | string>;
+    }
+
+    interface RotateZTransform {
+      rotateZ: Adaptable<number | string>;
+    }
+
+    interface ScaleTransform {
+      scale: Adaptable<number>;
+    }
+
+    interface ScaleXTransform {
+      scaleX: Adaptable<number>;
+    }
+
+    interface ScaleYTransform {
+      scaleY: Adaptable<number>;
+    }
+
+    interface TranslateXTransform {
+      translateX: Adaptable<number>;
+    }
+
+    interface TranslateYTransform {
+      translateY: Adaptable<number>;
+    }
+
+    interface SkewXTransform {
+      skewX: Adaptable<number>;
+    }
+
+    interface SkewYTransform {
+      skewY: Adaptable<number>;
+    }
+
+    export type AnimatedTransform =
+      | PerpectiveTransform
+      | RotateTransform
+      | RotateXTransform
+      | RotateYTransform
+      | RotateZTransform
+      | ScaleTransform
+      | ScaleXTransform
+      | ScaleYTransform
+      | TranslateXTransform
+      | TranslateYTransform
+      | SkewXTransform
+      | SkewYTransform;
 
     export type AnimateStyle<S extends object> = {
-      [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
+      [K in keyof S]: K extends 'transform' ? AnimatedTransform[] : (S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
           ? AnimateStyle<S[K]>
