@@ -63,7 +63,7 @@ void NativeReanimatedModule::workletEval(jsi::Runtime &rt, std::string path, std
       subPath = path.substr(prev, std::string::npos);
       std::shared_ptr<jsi::StringBuffer> buff(new jsi::StringBuffer(code));
       jsi::Value val = this->runtime->evaluateJavaScript(buff, "Native Reanimated Module");
-      if (val.isUndefined() || code.size() == 0) {
+      if (val.isUndefined() || code == "{}") {
           // if value provided in `code` could not be recognized just initialize with empty object
           val = jsi::Object(*this->runtime);
       }

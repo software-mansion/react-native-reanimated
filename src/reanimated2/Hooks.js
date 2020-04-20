@@ -366,20 +366,18 @@ export function removeSharedObjsAndArrays(obj) {
   return obj;
 }
 
-
-export function installFunction(path, code) {
-  NativeModule.workletEval(path, `(${code.asString})`)
-}
-
-
-export function installConst(path, val='') {
-  if (!['string', 'number', 'boolean'].includes(typeof val)) {
+export function install(path, val) {
+  if (!['string', 'number', 'boolean', 'function'].includes(typeof val) && val !== undefined) {
     return;
   }
-  if (typeof val === 'string') {
-    val = (val.length > 0) ? `"${val}"` : val;
+  if (typeof val === 'function') {
+    NativeModule.workletEval(path, `(${val.asString})`)
+    return
+  }
+  if (val === undefined) {
+    val = '{}'
   } else {
-    val = val.toString()
+    val = (typeof val === 'string') ? `"${val}"` : val.toString();
   }
   NativeModule.workletEval(path, val)
 }

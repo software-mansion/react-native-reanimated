@@ -81,7 +81,7 @@ export function installFunctions(innerNativeModule) {
 
 export function installConstants(innerNativeModule) {
   // event worklet constants
-  innerNativeModule.workletEval('Reanimated.container', '');
+  innerNativeModule.workletEval('Reanimated.container', '{}');
   innerNativeModule.workletEval('Reanimated.START', '2');
   innerNativeModule.workletEval('Reanimated.ACTIVE', '4');
   innerNativeModule.workletEval('Reanimated.END', '5');

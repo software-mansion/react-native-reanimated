@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View } from "react-native"
-import { useSharedValue, useWorklet, useEventWorklet, installFunction, installConst } from 'react-native-reanimated';
+import { useSharedValue, useWorklet, install } from 'react-native-reanimated';
 
 const FunctionInstallTest = () => {
 /* */
@@ -51,13 +51,13 @@ const FunctionInstallTest = () => {
     }, [sv, so, sa]))();
 
     // test custom functions installation
-    installFunction('Reanimated.hello', function(name) {
+    install('Reanimated.hello', function(name) {
         'worklet'
         console.log('inside hello')
         return `hello ${ name }`
     });
 
-    installFunction('Reanimated.validateAge', function(name, age) {
+    install('Reanimated.validateAge', function(name, age) {
         'worklet'
         console.log('inside validate age')
         label = (age > 50) ? 'old' : 'young';
@@ -73,9 +73,9 @@ const FunctionInstallTest = () => {
     }))();
 
     // test constants installation
-    installConst('Reanimated.minimum', -5.178);
-    installConst('Reanimated.maximum', 12);
-    installConst('Reanimated.label', '[const string works] -> ');
+    install('Reanimated.minimum', -5.178);
+    install('Reanimated.maximum', 12);
+    install('Reanimated.label', '[const string works] -> ');
 
     const currentsv = useSharedValue(-100)
     ;(useWorklet(function(v) {
@@ -92,26 +92,30 @@ const FunctionInstallTest = () => {
     }, [currentsv]))();
 /* */
     // test weird paths
-    installFunction('a.b.z.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z', function(a, b) {
+    install('a.b.z.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z', function(a, b) {
         'worklet'
         console.log(`long path working on ${a} ${b}`)
         return a+b*b
     });
-    installConst('qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm', 661)
+    install('qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm', 661)
     ;(useWorklet(function() {
         'worklet'
         
         console.log('[worklet] testing long paths, should execute function and be 21: ' + a.b.z.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z(5,4))
         console.log('[worklet] testing long paths, should be 661:' + qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm)
+        qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm++;
+        console.log('[worklet] testing long paths, should be 662:' + qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm)
         return true;
     }))();
 /* */
     //test install custom empty container
-    installConst('my.custom.container')
+    install('my.custom.container')
     ;(useWorklet(function() {
         'worklet'
         my.custom.container.val = 345
         console.log('[worklet] testing custom container should be 345: ' + my.custom.container.val);
+        my.custom.container.val += 5
+        console.log('[worklet] testing custom container should be 350: ' + my.custom.container.val);
         return true;
     }))();
 /* */
