@@ -1,4 +1,4 @@
-import { Image, ScrollView, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
@@ -24,6 +24,7 @@ import {
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
+import ScrollView from "./component/ScrollView"
 
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
@@ -34,7 +35,7 @@ const Animated = {
   View: createAnimatedComponent(View),
   Text: createAnimatedComponent(Text),
   Image: createAnimatedComponent(Image),
-  ScrollView: createAnimatedComponent(ScrollView),
+  ScrollView,
   Code: AnimatedCode,
   createAnimatedComponent,
 
@@ -68,7 +69,7 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
+  createTransitioningComponent,
 
   // classes
   AnimatedClock as Clock,
