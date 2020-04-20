@@ -1,5 +1,5 @@
 import React, {useCallback} from "react"
-import {RNScrollView} from "react-native";
+import {ScrollView as RNScrollView} from "react-native";
 import createAnimatedComponent from "../createAnimatedComponent";
 
 const DefaultScrollView = createAnimatedComponent(RNScrollView);
