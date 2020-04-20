@@ -29,6 +29,7 @@ function setRef(refProp, instance){
 
 const mixin = {
 	scrollTo: function scrollTo(...params){
-		this.current.getNode().scrollTo(...params);
+		if (this._component)
+			this._component.scrollTo(...params);
 	}
 };
