@@ -29,9 +29,11 @@ import MapperTest2 from './testComponents/MapperTest2';
 import { ScrollView } from 'react-native-gesture-handler';
 import UseAnimatedStyleTest from './testComponents/UseAnimatedStyleTest';
 import WithWorklet from './testComponents/WithWorklet';
+import TabApp from './testComponents/comp/TabApp';
 
 // set components here:
 const components = {
+  'TabApp': TabApp,
   '3D Menu': Menu,
   'WithWorklet': WithWorklet,
   'DragTest': DragTest,
@@ -94,7 +96,7 @@ for (let key in components) {
 
 const ExampleApp = createStackNavigator(
   {
-    MainScreen: { screen: MainScreen },
+    MainScreen: { screen: TabApp },
     ...screens,
   },
   {
