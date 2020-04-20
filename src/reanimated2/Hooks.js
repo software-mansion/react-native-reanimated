@@ -367,6 +367,19 @@ export function removeSharedObjsAndArrays(obj) {
 }
 
 
-export function workletEval(path, code) {
-  NativeModule.workletEval(path, code)
+export function installFunction(path, code) {
+  NativeModule.workletEval(path, `(${code.asString})`)
+}
+
+
+export function installConst(path, val='') {
+  if (!['string', 'number', 'boolean'].includes(typeof val)) {
+    return;
+  }
+  if (typeof val === 'string') {
+    val = (val.length > 0) ? `"${val}"` : val;
+  } else {
+    val = val.toString()
+  }
+  NativeModule.workletEval(path, val)
 }

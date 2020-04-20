@@ -158,6 +158,8 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
         };
 
         return jsi::Function::createFromHostFunction(rt, name, 1, callback);
+      } else if (propName == "__baseType") {
+        return jsi::Value((bool)true);
       }
       return jsi::Value::undefined();
     }

@@ -29,7 +29,7 @@ const FunctionInstallTest = () => {
         console.log('[worklet] testing memory')
         const memory = Reanimated.memory(this);
         memory.x = 99;
-        console.log(`[worklet] memory check: ${ memory.x }`)
+        console.log(`[worklet] memory check should be 99: ${ memory.x }`)
         return true
     }))();
 
@@ -49,15 +49,15 @@ const FunctionInstallTest = () => {
         console.log(sa)
         return true
     }, [sv, so, sa]))();
-/*
+
     // test custom functions installation
-    installFunction('hello', function(name) {
+    installFunction('Reanimated.hello', function(name) {
         'worklet'
         console.log('inside hello')
         return `hello ${ name }`
     });
 
-    installFunction('validateAge', function(name, age) {
+    installFunction('Reanimated.validateAge', function(name, age) {
         'worklet'
         console.log('inside validate age')
         label = (age > 50) ? 'old' : 'young';
@@ -73,9 +73,9 @@ const FunctionInstallTest = () => {
     }))();
 
     // test constants installation
-    installConst('minimum', -5);
-    installConst('maximum', 12);
-    installConst('label', '[const string works] -> ');
+    installConst('Reanimated.minimum', -5.178);
+    installConst('Reanimated.maximum', 12);
+    installConst('Reanimated.label', '[const string works] -> ');
 
     const currentsv = useSharedValue(-100)
     ;(useWorklet(function(v) {
@@ -88,8 +88,32 @@ const FunctionInstallTest = () => {
             return true
         }
         console.log(Reanimated.label + v.value)
-        v.set(v.value + 1)
+        v.set(v.value + 1.037)
     }, [currentsv]))();
+/* */
+    // test weird paths
+    installFunction('a.b.z.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z', function(a, b) {
+        'worklet'
+        console.log(`long path working on ${a} ${b}`)
+        return a+b*b
+    });
+    installConst('qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm', 661)
+    ;(useWorklet(function() {
+        'worklet'
+        
+        console.log('[worklet] testing long paths, should execute function and be 21: ' + a.b.z.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z(5,4))
+        console.log('[worklet] testing long paths, should be 661:' + qwe.rty.uio.p.asd.fgh.jkl.zxc.vbn.mmm)
+        return true;
+    }))();
+/* */
+    //test install custom empty container
+    installConst('my.custom.container')
+    ;(useWorklet(function() {
+        'worklet'
+        my.custom.container.val = 345
+        console.log('[worklet] testing custom container should be 345: ' + my.custom.container.val);
+        return true;
+    }))();
 /* */
     // test object installation - not implemented yet
 /* * /
