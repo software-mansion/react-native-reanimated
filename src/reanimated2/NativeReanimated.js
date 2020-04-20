@@ -2,10 +2,19 @@ import {
   TurboModuleRegistry,
 } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
+import { installFunctions, installConstants } from './InstallFunctions'
 
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
+installFunctions(InnerNativeModule);
+installConstants(InnerNativeModule);
+
 export default {
+
+  // function install
+  workletEval(path, code) {
+    InnerNativeModule.workletEval(path, code);
+  },
 
   // shared value
   registerSharedValue(valueId, value) {

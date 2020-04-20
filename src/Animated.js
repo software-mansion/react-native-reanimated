@@ -71,7 +71,7 @@ import Worklet from './reanimated2/Worklet';
 import SharedValue from './reanimated2/SharedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
-import { useWorklet, useEventWorklet, useSharedValue, useMapper, useAnimatedStyle } from './reanimated2/Hooks';
+import { useWorklet, useEventWorklet, useSharedValue, useMapper, useAnimatedStyle, workletEval } from './reanimated2/Hooks';
 import RegistersState from './reanimated2/RegistersState';
 import useSpring from './reanimated2/helpingHooks/Spring';
 
@@ -103,4 +103,5 @@ export {
   useAnimatedStyle,
   RegistersState,
   useSpring,
+  workletEval,
 };
