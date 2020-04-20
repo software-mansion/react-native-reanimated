@@ -98,7 +98,7 @@ for (let key in components) {
 
 const ExampleApp = createStackNavigator(
   {
-    MainScreen: { screen: MainScreen },
+    MainScreen: { screen: TabApp },
     ...screens,
   },
   {
