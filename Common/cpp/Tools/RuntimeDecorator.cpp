@@ -10,7 +10,7 @@
 #include <memory>
 #include "Logger.h"
 
-void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
+void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt) {
   auto callback = [](
       jsi::Runtime &rt,
       const jsi::Value &thisValue,
