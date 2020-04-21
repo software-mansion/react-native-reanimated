@@ -148,7 +148,7 @@ declare module 'react-native-reanimated' {
     export const SpringUtils: SpringUtils
 
     export type TransformStyleTypes = TransformsStyle['transform'] extends (readonly (infer T)[] | undefined) ? T : never
-    export type AdaptTransforms<T> = { [P in keyof T]: Animated.Adaptable<T[P]> }
+    export type AdaptTransforms<T> = { [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]> }
     export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[]
 
     export type AnimateStyle<S extends object> = {
