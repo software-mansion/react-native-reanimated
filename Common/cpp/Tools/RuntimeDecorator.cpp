@@ -10,102 +10,25 @@
 #include <memory>
 #include "Logger.h"
 
-void RuntimeDecorator::addGlobalMethods(jsi::Runtime &rt) {
-  std::unordered_map<std::string, jsi::Value> properties;
-  
-  // add assign method
-  std::string assignCode = R"((function assign(left, right) {
-  if (right == null) return;
-  if ((typeof right === 'object') && (!right.value)) {
-    for (let key of Object.keys(right)) {
-      if (left[key]) {
-        assign(left[key], right[key]);
-      }
+void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt) {
+  auto callback = [](
+      jsi::Runtime &rt,
+      const jsi::Value &thisValue,
+      const jsi::Value *args,
+      size_t count
+      ) -> jsi::Value {
+    const jsi::Value *value = &args[0];
+    if (value->isString()) {
+      Logger::log(value->getString(rt).utf8(rt).c_str());
+    } else if (value->isNumber()) {
+      Logger::log(value->getNumber());
+    } else if (value->isUndefined()) {
+      Logger::log("undefined");
+    } else {
+      Logger::log("unsupported value type");
     }
-
-  } else if (Array.isArray(right)) {
-    for (let i; i < right.length; i++) {
-      assign(left[i], right[i]);
-    }
-
-  } else {
-    if (left.set) {
-      if (right.value) {
-        left.set(right.value);
-      } else {
-        left.set(right);
-      }
-    }
-  }}))";
-  properties["assign"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, assignCode.c_str());
-  
-  // add withWorklet method
-  std::string withWorklet = R"((function withWorklet(worklet, params, initial) {
-    params = ([0]).concat(params);
-    return {value:{applierId:worklet.start.apply(undefined, params)}};
-  }))";
-  
-  properties["withWorklet"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorklet.c_str());
-  
-  // add withWorkletCopy method
-  std::string withWorkletCopy = R"((function withWorkletCopy(worklet, params, initial) {
-    params = ([0]).concat(params);
-    return {value:{applierId:worklet.startTentatively.apply(undefined, params)}};
-  }))";
-  
-  properties["withWorkletCopy"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, withWorkletCopy.c_str());
-  
-  // add container
-  properties["container"] = jsi::Object(rt);
-  
-  // add memory method
-  std::string memory = R"((function memory(context) {
-    const applierId = context.applierId;
-    if (!(Reanimated.container[applierId])) {
-      Reanimated.container[applierId] = {};
-    }
-    return Reanimated.container[applierId];
-  }))";
-  
-  properties["memory"] = rt.global().getPropertyAsFunction(rt, "eval").call(rt, memory.c_str());
-  
-  // event worklet constants
-  properties["START"] = jsi::Value(2);
-  properties["END"] = jsi::Value(5);
-  properties["ACTIVE"] = jsi::Value(4);
-  
-  class Animated : public jsi::HostObject {
-    std::unordered_map<std::string, jsi::Value> props;
-  public:
-    Animated(std::unordered_map<std::string, jsi::Value> && props) {
-      this->props = std::move(props);
-    }
-
-    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {
-      auto propName = name.utf8(rt);
-  
-      auto it = props.find(propName);
-      
-      if (it != props.end()) {
-        return jsi::Value(rt, it->second);
-      }
-
-      return jsi::Value::undefined();
-    }
-    
-    std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) {
-      std::vector<jsi::PropNameID> res;
-      for (auto &entry : props) {
-        auto &propName = entry.first;
-        res.push_back(jsi::PropNameID::forAscii(rt, propName));
-      }
-      return res;
-    }
-
-  };
-
-  std::shared_ptr<jsi::HostObject> ptr(new Animated(std::move(properties)));
-
-  jsi::Object animated = jsi::Object::createFromHostObject(rt, ptr);
-  rt.global().setProperty(rt, "Reanimated", animated);
+    return jsi::Value::undefined();
+    };
+  jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
+	rt.global().setProperty(rt, "_log", log);
 }

@@ -3,6 +3,21 @@
 namespace facebook {
 namespace react {
 
+// function install
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_workletEval(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->workletEval(
+          rt,
+          args[0].asString(rt).utf8(rt),
+          args[1].asString(rt).utf8(rt));
+  return jsi::Value::undefined();
+}
+
 // worklets
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerWorklet(
@@ -201,6 +216,10 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getRegistersState(
 
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
+
+  methodMap_["workletEval"] = MethodMetadata{
+      2, __hostFunction_NativeReanimatedModuleSpec_workletEval};
+
   methodMap_["registerWorklet"] = MethodMetadata{
       3, __hostFunction_NativeReanimatedModuleSpec_registerWorklet};
   methodMap_["unregisterWorklet"] = MethodMetadata{

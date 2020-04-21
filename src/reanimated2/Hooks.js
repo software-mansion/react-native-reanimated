@@ -3,14 +3,7 @@ import { useEffect, useRef, useLayoutEffect } from 'react';
 import SharedValue from './SharedValue';
 import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
-
-global.Reanimated = {};
-global.Reanimated.withWorklet = (worklet, params, initial) => {
-  return (initial)? initial : 0;
-}
-global.Reanimated.withWorkletCopy = (worklet, params, initial) => {
-  return (initial)? initial : 0;
-}
+import NativeModule from './NativeReanimated';
 
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
@@ -371,4 +364,20 @@ export function removeSharedObjsAndArrays(obj) {
   }
 
   return obj;
+}
+
+export function install(path, val) {
+  if (!['string', 'number', 'boolean', 'function'].includes(typeof val) && val !== undefined) {
+    return;
+  }
+  if (typeof val === 'function') {
+    NativeModule.workletEval(path, `(${val.asString})`)
+    return
+  }
+  if (val === undefined) {
+    val = '{}'
+  } else {
+    val = (typeof val === 'string') ? `"${val}"` : val.toString();
+  }
+  NativeModule.workletEval(path, val)
 }

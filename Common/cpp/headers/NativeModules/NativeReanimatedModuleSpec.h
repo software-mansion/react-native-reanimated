@@ -21,6 +21,10 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   NativeReanimatedModuleSpec(std::shared_ptr<JSCallInvoker> jsInvoker);
 
  public:
+
+  // function install
+  virtual void workletEval(jsi::Runtime &rt, std::string path, std::string code) = 0;
+
   // worklets
 
   virtual void registerWorklet(jsi::Runtime &rt, double id, std::string functionAsString, int length) = 0;

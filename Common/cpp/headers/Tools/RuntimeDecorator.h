@@ -15,7 +15,7 @@ using namespace facebook;
 
 class RuntimeDecorator {
 public:
-  static void addGlobalMethods(jsi::Runtime &rt);
+  static void addNativeObjects(jsi::Runtime &rt);
 };
 
 #endif /* RuntimeDecorator_h */

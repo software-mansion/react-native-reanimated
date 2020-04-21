@@ -36,6 +36,41 @@ NativeReanimatedModule::NativeReanimatedModule(
   this->errorHandler = errorHandler;
 }
 
+// function install
+// path can be whatever You want to use in worklets, examples:
+//  Reanimated.count
+//  console.log
+//  a.b.c.d
+// note: functions provided in `code` must be wrapped in ()
+void NativeReanimatedModule::workletEval(jsi::Runtime &rt, std::string path, std::string code) {
+  scheduler->scheduleOnJS([this, path, code]() {
+      // create structure of objects(for those which do not exist)
+      jsi::Object currentObject = this->runtime->global();
+      size_t prev = 0;
+      size_t curr = path.find(".");
+      std::string subPath;
+      while(curr != std::string::npos) {
+          subPath = path.substr(prev, curr - prev);
+          // for current subpath initialize with {} if does not exist
+          if (currentObject.getProperty(*this->runtime, subPath.c_str()).isUndefined()) {
+              currentObject.setProperty(*this->runtime, subPath.c_str(), jsi::Object(*this->runtime));
+          }
+          currentObject = currentObject.getProperty(*this->runtime, subPath.c_str()).asObject(*this->runtime);
+          prev = curr + 1;
+          curr = path.find(".", prev);
+      }
+      // this is the last part of the subpath - initialize it with value provided in `code`
+      subPath = path.substr(prev, std::string::npos);
+      std::shared_ptr<jsi::StringBuffer> buff(new jsi::StringBuffer(code));
+      jsi::Value val = this->runtime->evaluateJavaScript(buff, "Native Reanimated Module");
+      if (val.isUndefined() || code == "{}") {
+          // if value provided in `code` could not be recognized just initialize with empty object
+          val = jsi::Object(*this->runtime);
+      }
+      currentObject.setProperty(*this->runtime, subPath.c_str(), val);
+  });
+}
+
 // worklets
 
 void NativeReanimatedModule::registerWorklet( // make it async !!!
