@@ -1,6 +1,65 @@
 import React from 'react';
 import { Text, View } from "react-native"
-import { useSharedValue, useWorklet, install } from 'react-native-reanimated';
+import Animated, { useSharedValue, useWorklet, install } from 'react-native-reanimated';
+
+const WithWorkletTest = () => {
+    const dummy = useSharedValue(0)
+    const obj = {
+        r: {
+            curr: 30,
+            max: 100,
+        },
+        g: {
+            curr: 20,
+            max: 200,
+        },
+        b: {
+            curr: 10,
+            max: 300,
+        },
+    }
+    const so = useSharedValue(obj)
+    // this does not work with new Worklet(...)
+    const w = useWorklet(function(targetSV, maxx, max) {
+        'worklet'
+        console.log('[worklet with] ' + targetSV.value + '/' + max.value + '/' + maxx.value)
+        if (targetSV.value > max.value) {
+        targetSV.forceSet(max.value)
+        return true
+        }
+        targetSV.forceSet(targetSV.value + 3)
+    }, [dummy, dummy, dummy])
+    //
+    ;(useWorklet(function(obj, w) {
+        'worklet'
+        console.log(`[worklet] start ${obj.r.curr.value}/${obj.g.curr.value}/${obj.b.curr.value}`)
+        obj.r.curr.set(Reanimated.withWorklet(w, [obj.r.curr, obj.r.max, obj.r.max]))
+        obj.g.curr.set(Reanimated.withWorklet(w, [obj.g.curr, obj.g.max, obj.g.max]))
+        obj.b.curr.set(Reanimated.withWorklet(w, [obj.b.curr, obj.b.max, obj.b.max]))
+        return true
+    }, [so, w,]))();
+
+    return (
+        <View>
+        <Text>TESTING</Text>
+        <Animated.View style={ {
+            backgroundColor: 'red',
+            height: 10,
+            width: so.r.curr,
+        } } />
+        <Animated.View style={ {
+            backgroundColor: 'green',
+            height: 10,
+            width: so.g.curr,
+        } } />
+        <Animated.View style={ {
+            backgroundColor: 'blue',
+            height: 10,
+            width: so.b.curr,
+        } } />
+        </View>
+    )
+}
 
 const FunctionInstallTest = () => {
 /* */
@@ -33,12 +92,15 @@ const FunctionInstallTest = () => {
         return true
     }))();
 
+    /*
+    // tested in separate component
     ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing withWorklet')
         // todo write test for withWorklet
         return true
     }))();
+    */
 
     ;(useWorklet(function(sv, so, sa) {
         'worklet'
@@ -171,6 +233,7 @@ const FunctionInstallTest = () => {
     return (
         <View>
             <Text>Testing function install...</Text>
+            <WithWorkletTest />
         </View>
     )
 }
