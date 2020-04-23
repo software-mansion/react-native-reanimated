@@ -3,7 +3,6 @@ import { Dimensions, Text } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 //import { Feather as Icon } from "@expo/vector-icons";
 
-const { sub, interpolate, Extrapolate } = Animated;
 const { width } = Dimensions.get("window");
 const size = 50;
 
@@ -13,19 +12,11 @@ export default ({ progress, y }) => {
       'worklet';
       const { progress, y, size, width } = input;
 
-      const interpolate = (l, r, ll, rr, clamp) => {
-        const coef = (progress.value - l)/(r-l);
-        const ans = ll + (rr-ll) * coef;
-        if (clamp && (ans > Math.max(ll, rr))) return Math.max(ll, rr);
-        if (clamp && (ans < Math.min(ll, rr))) return Math.min(ll, rr);
-        return ans;
-      }
-
       return {
-        opacity: interpolate(0, 0.1, 1, 0, true),
+        opacity: Reanimated.interpolate(0, 0.1, 1, 0, Extrapolate.CLAMP),
         transform: [
           {
-            translateX: interpolate(0, 0.4, width.value - size.value - 8, 0, false),
+            translateX: Reanimated.interpolate(0, 0.4, width.value - size.value - 8, 0),
           },
           {
             translateY: y.value - size.value / 2,

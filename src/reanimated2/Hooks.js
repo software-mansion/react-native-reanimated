@@ -5,14 +5,6 @@ import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 import NativeModule from './NativeReanimated';
 
-global.Reanimated = {};	
-global.Reanimated.withWorklet = (worklet, params, initial) => {	
-  return (initial)? initial : 0;	
-}	
-global.Reanimated.withWorkletCopy = (worklet, params, initial) => {	
-  return (initial)? initial : 0;	
-}
-
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
     return true;
