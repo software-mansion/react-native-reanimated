@@ -50,9 +50,9 @@ function DragTest() {
 
     const worklet = useEventWorklet(function(totalX, totalY, ruszable) {
         'worklet';
-        this.log("przed memory");
+        console.log("przed memory");
         const memory = Reanimated.memory(this);
-        this.log("po memory");
+        console.log("po memory");
         if (this.event.state === 2) {
             memory.prevX = totalX.value;
             memory.prevY = totalY.value;

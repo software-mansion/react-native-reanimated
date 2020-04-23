@@ -8,7 +8,7 @@ const SingleWorkletTest = () => {
     // this worklet should simply fire an error
     (useWorklet(function() {
         'worklet'
-        this.log('worklet working')
+        console.log('worklet working')
         xxx.set(5)
     }, []))();
 
@@ -26,12 +26,12 @@ const PreventMultipleWorklets = () => {
 
     ;(useWorklet(function() {
         'worklet'
-        this.log('[worklet 1]')
+        console.log('[worklet 1]')
     }, []))();
     // below worklet should not be called anymore once above worklet fires an error
     ;(useWorklet(function() {
         'worklet'
-        this.log('[worklet 2]')
+        console.log('[worklet 2]')
         xxx.set(5)
     }, []))();
 
@@ -49,7 +49,7 @@ const EventWorkletTest = () => {
     // first event should cause an error in the worklet below
     const worklet = useEventWorklet(function() {
         'worklet'
-        this.log('[event worklet] ' + this.event.state)
+        console.log('[event worklet] ' + this.event.state)
         asdasd.set(8)
     }, [])
 
@@ -75,13 +75,13 @@ const EventWorkletTest = () => {
 const PreventMultipleEventWorklets = () => {
     const worklet = useEventWorklet(function() {
         'worklet'
-        this.log('[event worklet] ' + this.event.state)
+        console.log('[event worklet] ' + this.event.state)
         asdasd.set(8)
     }, [])
     // the loop worklet below should stop being called once an error from above event worklet is triggered
     ;(useWorklet(function() {
         'worklet'
-        this.log('[regular worklet loop]')
+        console.log('[regular worklet loop]')
     }, []))();
 
     return (

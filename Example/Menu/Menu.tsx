@@ -48,7 +48,7 @@ export default () => {
       profileTranslateXMIN
     ) {
       'worklet';
-      this.log('RUN');
+      console.log('RUN');
 
       let step = 0;
       if (progressTarget.value < openCloseProgress.value) {
@@ -75,7 +75,7 @@ export default () => {
       profileTranslateX.set(profileTranslateXMIN.value * (1 - progress));
 
       if (progress >= 1 || progress <= 0) {
-        this.log('STOP');
+        console.log('STOP');
         return true;
       }
     },

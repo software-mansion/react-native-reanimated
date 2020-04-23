@@ -6,7 +6,7 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 const toggleWorklet = new Worklet(
   function(x, parentWidth, spring) {
     'worklet';
-    this.log('jestem');
+    console.log('jestem');
     let target = spring.config.toValue.value;
     if (target < 100)
     {
@@ -14,7 +14,7 @@ const toggleWorklet = new Worklet(
     } else {
       target = 20;
     }
-    this.log("new target: " + target.toString()); 
+    console.log("new target: " + target.toString()); 
     x.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: target}]));
     return true;
   }

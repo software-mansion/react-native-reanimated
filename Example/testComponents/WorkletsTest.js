@@ -12,7 +12,7 @@ const WorkletsTest = () => {
 
     const childw = useWorklet(function(v, turnState) {
         'worklet'
-        this.log(`[child] ${ v.value }`)
+        console.log(`[child] ${ v.value }`)
         if (v.value % 3 === 0) {
             turnState.set(3)
             return true
@@ -22,23 +22,23 @@ const WorkletsTest = () => {
 
     const parentw = useWorklet(function(v, turnState, child) {
         'worklet'
-        this.log(`[parent] ${ v.value }`)
+        console.log(`[parent] ${ v.value }`)
         if (turnState.value === 0) {
             v.set(v.value + 1)
             if (v.value % 5 === 0) {
                 turnState.set(1)
             }
         } else if (turnState.value === 1) {
-            this.log('--> starting')
+            console.log('--> starting')
             child.start()
             turnState.set(2)
         } else if(turnState.value === 3) {
-            this.log('--> stopping')
+            console.log('--> stopping')
             child.stop()
             turnState.set(0)
         }
         if (v.value > 20) {
-            this.log('[parent] too much, exiting')
+            console.log('[parent] too much, exiting')
             return true
         }
     }, [v, turnState, childw])
@@ -51,21 +51,21 @@ const WorkletsTest = () => {
     // no args
     ;(useWorklet(function() {
         'worklet';
-        this.log('[worklet 1]');
+        console.log('[worklet 1]');
         return true;
     }))();
 
     // args in array
     ;(useWorklet(function(v, vv) {
         'worklet'
-        this.log('[worklet 2] ' + v.value + '/' + vv.value)
+        console.log('[worklet 2] ' + v.value + '/' + vv.value)
         return true
     }, [v, v2]))();
 
     // args in object
     ;(useWorklet(function(input) {
         'worklet'
-        this.log('[worklet 3] ' + input.v.value + '/' + input.v2.value)
+        console.log('[worklet 3] ' + input.v.value + '/' + input.v2.value)
         return true
     }, {v, v2}))();
 
@@ -73,7 +73,7 @@ const WorkletsTest = () => {
     // order should not matter, worklet 3 and 4 should produce the same output
     ;(useWorklet(function(input) {
         'worklet'
-        this.log('[worklet 4] ' + input.v.value + '/' + input.v2.value)
+        console.log('[worklet 4] ' + input.v.value + '/' + input.v2.value)
         return true
     }, {v2, v}))();
 
@@ -81,7 +81,7 @@ const WorkletsTest = () => {
     const so = useSharedValue({v, v2});
     ;(useWorklet(function(input) {
         'worklet'
-        this.log('[worklet 5] ' + input.v.value + '/' + input.v2.value)
+        console.log('[worklet 5] ' + input.v.value + '/' + input.v2.value)
         return true
     }, so))();
 
@@ -90,7 +90,7 @@ const WorkletsTest = () => {
     const so2 = useSharedValue({v, v2});
     ;(useWorklet(function(input) {
         'worklet'
-        this.log('[worklet 6] ' + input.v.value + '/' + input.v2.value)
+        console.log('[worklet 6] ' + input.v.value + '/' + input.v2.value)
         return true
     }, so2))();
 
@@ -98,7 +98,7 @@ const WorkletsTest = () => {
     const sa = useSharedValue([v, v2]);
     ;(useWorklet(function(v, vv) {
         'worklet'
-        this.log('[worklet 7] ' + v.value + '/' + vv.value)
+        console.log('[worklet 7] ' + v.value + '/' + vv.value)
         return true
     }, sa))();
 

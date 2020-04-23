@@ -6,7 +6,7 @@ import { color } from '../../src/derived';
 
 const workletBody = function(a, b, c) {
     'worklet'
-    this.log(`worklet called ${ a.value }/${ b.value }/${ c.value }`)
+    console.log(`worklet called ${ a.value }/${ b.value }/${ c.value }`)
     c.set(a.value + b.value + c.value)
     const oldB = b.value
     b.set(a.value + b.value)
@@ -16,7 +16,7 @@ const workletBody = function(a, b, c) {
 
 const eventWorkletBody = function(a, b) {
     'worklet'
-    this.log(`event worklet called ${ a.value }/${ b.value }`)
+    console.log(`event worklet called ${ a.value }/${ b.value }`)
     if (this.event.state === 2) {
         a.set(this.event.translationX)
         b.set(this.event.translationY)

@@ -261,13 +261,13 @@ const FunctionInstallTest = () => {
 /* * /
     ;(useWorklet(function() {
         'worklet'
-        this.log('[worklet] begin')
+        console.log('[worklet] begin')
         const x = 9
-        this.log('[worklet] int ' + x)
+        console.log('[worklet] int ' + x)
         const y = Reanimated.xs(x)
-        this.log('[worklet] int installed function ' + y)
-        this.log('[worklet] int installed const ' + Reanimated.cnst)
-        this.log('[worklet] int installed weird ' + a.beee.ece.dyy.eeEeeEEE.ffff.granade.hulajnoga)
+        console.log('[worklet] int installed function ' + y)
+        console.log('[worklet] int installed const ' + Reanimated.cnst)
+        console.log('[worklet] int installed weird ' + a.beee.ece.dyy.eeEeeEEE.ffff.granade.hulajnoga)
         return true
     }))();
 /* */
