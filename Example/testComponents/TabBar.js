@@ -1,14 +1,10 @@
 import React from 'react';
-import Animated, { useSharedValue, useWorklet, useEventWorklet, useAnimatedStyle } from 'react-native-reanimated';
-import { View, Text, Dimensions, StyleSheet, SafeAreaView, TouchableWithoutFeedback } from 'react-native';
-import Svg, { Path } from "react-native-svg";
-import * as shape from "d3-shape";
+import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
+import { View, Dimensions, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faCoffee, faTrash, faUser, faList, faReply } from '@fortawesome/free-solid-svg-icons'
 import { TapGestureHandler } from 'react-native-gesture-handler';
 
-
-const AnimatedSvg = Animated.createAnimatedComponent(Path);
 const { width, height } = Dimensions.get("window");
 const tabHeight = 64;
 
@@ -36,46 +32,6 @@ let tabs = [
 ];
 const tabWidth = width / tabs.length;
 
-const getPath = (): string => {
-const left = shape.line().x(d => d.x).y(d => d.y)([
-        { x: 0, y: 0 },
-        { x: width, y: 0 },
-    ]);
-    const tab = shape.line().x(d => d.x).y(d => d.y).curve(shape.curveBasis)([
-        { x: width, y: 0 },
-        { x: width + 5, y: 0 },
-        { x: width + 10, y: 10 },
-        { x: width + 15, y: tabHeight },
-        { x: width + tabWidth - 15, y: tabHeight },
-        { x: width + tabWidth - 10, y: 10 },
-        { x: width + tabWidth - 5, y: 0 },
-        { x: width + tabWidth, y: 0 },
-    ]);
-    const right = shape.line().x(d => d.x).y(d => d.y)([
-        { x: width + tabWidth, y: 0 },
-        { x: width * 2, y: 0 },
-        { x: width * 2, y: tabHeight },
-        { x: 0, y: tabHeight },
-        { x: 0, y: 0 },
-    ]);
-    return `${left} ${tab} ${right}`;
-};
-const d = getPath()
-console.log('here path')
-console.log(d)
-
-const tabBarStyles = StyleSheet.create({
-    dummyPusher: {
-        flex: 1,
-    },
-    container: {
-        backgroundColor: 'orange',
-        width,
-        height,
-        flex: 1,
-    }
-})
-
 const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
@@ -86,6 +42,8 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
       height: 64,
+      zIndex: 2,
+      backgroundColor: 'white',
     },
     activeIcon: {
       backgroundColor: "white",
@@ -126,7 +84,7 @@ const styles = StyleSheet.create({
       backgroundColor: 'white',
       borderRadius: 500,
       width: 20,
-      height: 30,
+      height: 25,
       position: 'absolute',
       top: 0,
       zIndex: 4,
@@ -231,18 +189,6 @@ const Bar = () => {
         const index = Math.floor(this.event.absoluteX / input.tabWidthSV.value)
         this.log('[event] index: ' + index + '/' + input.activeIndex.value)
         if (index !== input.activeIndex.value) {
-          /*
-            input.tabsSA[input.activeIndex.value].active.set(0)
-            input.tabsSA[input.activeIndex.value].opacity.set(1)
-            input.tabsSA[input.activeIndex.value].opacityReverse.set(0)
-            input.tabsSA[input.activeIndex.value].translateY.set(64)
-
-            input.tabsSA[index].active.set(1)
-            input.tabsSA[index].opacity.set(0)
-            input.tabsSA[index].opacityReverse.set(1)
-            input.tabsSA[index].translateY.set(0)
-
-            input.activeIndex.set(index)*/
             if (input.newIndex.value === -1) {
               input.newIndex.set(index)
               input.changeActive.start()
@@ -269,9 +215,7 @@ const Bar = () => {
                     <Animated.View style={[
                           styles.tab,
                           {
-                            backgroundColor: 'white',
                             opacity: tabsSA[key].opacity,
-                            zIndex: 1,
                           }
                     ]}>
                       <FontAwesomeIcon icon={ tab.item } color="black" size={25} />
@@ -302,6 +246,19 @@ const Bar = () => {
         </View>
     )
 }
+
+const tabBarStyles = StyleSheet.create({
+    dummyPusher: {
+        flex: 1,
+    },
+    container: {
+        backgroundColor: 'orange',
+        width,
+        height,
+        flex: 1,
+    }
+})
+
 const TabBar = () => {
 
     return (
