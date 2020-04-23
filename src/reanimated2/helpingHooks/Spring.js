@@ -4,6 +4,7 @@ import Worklet from "../Worklet";
 const defaultState = {
   finished: 0,
   velocity: 0,
+  time: 0,
 };
 
 const defaultConfig = {
@@ -22,15 +23,13 @@ const workletBody = new Worklet(
     const memory = Reanimated.memory(this);
 
     if (this.justStarted) {
-      memory.time = Date.now();
       memory.prevPosition = 0;
       state.finished.set(0);
-      this.log('start spring');
     }
 
     const now = Date.now();
-    const deltaTime = Math.min(now - memory.time, 64);
-    memory.time = now;
+    const deltaTime = Math.min(now - state.time.value, 64);
+    state.time.set(now);
 
     memory.prevPosition = sv.value;
 
@@ -89,7 +88,6 @@ const workletBody = new Worklet(
         sv.forceSet(config.toValue.value);
       } 
       state.finished.set(1);
-      this.log('finish spring');
       return true;
     }
   }

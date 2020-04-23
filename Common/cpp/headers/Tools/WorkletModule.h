@@ -38,6 +38,7 @@ class WorkletModule : public BaseWorkletModule {
                     
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override;
 
+    void setEvent(std::shared_ptr<jsi::Value> event);
     void setWorkletId(int workletId) override;
     void setApplierId(int applierId) override;
     void setJustStarted(bool justStarted) override;

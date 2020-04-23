@@ -20,6 +20,8 @@ import android.view.Window;
 import com.facebook.react.NativeModuleRegistryBuilder;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactApplication;
+import org.reactnative.maskedview.RNCMaskedViewPackage;
+import com.horcrux.svg.SvgPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactInstanceManagerBuilder;
 import com.facebook.react.bridge.CatalystInstance;
@@ -59,6 +61,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNCMaskedViewPackage(),
+            new SvgPackage(),
           new ReanimatedPackage(),
           new RNGestureHandlerPackage()
       );

@@ -19,7 +19,7 @@ const workletBody = new Worklet(function(startTime, started, width, maxWidth, du
 
 const SpeedTest = () => {
     const worklets = [];
-    const numberOfSquares = 100;
+    const numberOfSquares = 10;
     const width = useSharedValue(0);
 
     let currKey = 0

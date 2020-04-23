@@ -72,6 +72,10 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   return jsi::Value::undefined();
 }
 
+void WorkletModule::setEvent(std::shared_ptr<jsi::Value> event) {
+  this->event = event;
+}
+
 void WorkletModule::setWorkletId(int workletId) {
   this->workletId = workletId;
 }

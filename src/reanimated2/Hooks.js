@@ -5,6 +5,14 @@ import Worklet from './Worklet';
 import WorkletEventHandler from './WorkletEventHandler';
 import NativeModule from './NativeReanimated';
 
+global.Reanimated = {};	
+global.Reanimated.withWorklet = (worklet, params, initial) => {	
+  return (initial)? initial : 0;	
+}	
+global.Reanimated.withWorkletCopy = (worklet, params, initial) => {	
+  return (initial)? initial : 0;	
+}
+
 function isShareable(obj) {
   if (obj instanceof SharedValue) {
     return true;
@@ -46,8 +54,6 @@ function makeShareable(obj) {
     const sharedArray = SharedValue.create(obj);
     toRelease.push(() => {
       sharedArray.release();
-      obj.id = undefined;
-      obj.sharedArray = undefined;
     });
 
     obj.id = sharedArray.id;
@@ -302,7 +308,7 @@ function copyAndUnwrap(obj) {
   return obj.initialValue;
 }
 
-export function useAnimatedStyle(body, input, accessories) {
+export function useAnimatedStyle(body, input, accessories) { // ToDo: it should execute only the first time
   if (accessories != null) {
     input = [input, accessories];
   }

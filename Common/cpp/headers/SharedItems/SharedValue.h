@@ -22,6 +22,7 @@ enum class SharedValueType {
 };
 
 class SharedValue {
+  std::unordered_map<int, std::function<void()>> listeners;
   public:
     SharedValueType type;
     bool shouldBeSentToJava = true;
@@ -32,6 +33,9 @@ class SharedValue {
     virtual void setNewValue(std::shared_ptr<SharedValue> sv) = 0;
     virtual void willUnregister(jsi::Runtime &rt){}
     virtual std::shared_ptr<SharedValue> copy() = 0;
+    virtual void registerForDirty(int id, std::function<void()> fun);
+    virtual void unregisterFromDirty(int id);
+    virtual void makeDirty();
     virtual ~SharedValue(){};
 };
 
