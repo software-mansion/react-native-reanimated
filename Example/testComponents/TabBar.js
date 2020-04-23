@@ -104,15 +104,15 @@ const styles = StyleSheet.create({
       width: tabWidth,
       height: tabWidth,
     },
-    lowerFollower: {
+    upperFollower: {
       backgroundColor: 'orange',
-      width: tabWidth,
+      width: tabWidth + 20,
       height: 20,
-      left: 0,
+      left: -10,
       position: 'absolute',
       zIndex: 4,
     },
-    upperFollower: {
+    lowerFollower: {
       borderRadius: 500,
       backgroundColor: 'orange',
       width: tabWidth,
@@ -121,7 +121,16 @@ const styles = StyleSheet.create({
       top: -tabWidth/3.5,
       left: 0,
       zIndex: 3,
-    }
+    },
+    littleFollower: {
+      backgroundColor: 'white',
+      borderRadius: 500,
+      width: 20,
+      height: 30,
+      position: 'absolute',
+      top: 0,
+      zIndex: 4,
+    },
   });
 
 const Bar = () => {
@@ -247,6 +256,8 @@ const Bar = () => {
           <Animated.View style={ { ...styles.followerWrapper, left: followerPosition, } }>
             <View style={ styles.lowerFollower } />
             <View style={ styles.upperFollower } />
+            <View style={ [ styles.littleFollower, { left: tabWidth, } ] } />
+            <View style={ [ styles.littleFollower, { left: -20, } ] } />
           </Animated.View>
           {
             tabs.map((tab, key) => {
