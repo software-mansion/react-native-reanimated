@@ -7,15 +7,16 @@ export function installFunctions(innerNativeModule) {
   // install assign
   install('Reanimated.assign', function (left, right) {
     'worklet';
+    if (right == null) return;
     if (typeof right === 'object' && !right.value) {
       for (let key of Object.keys(right)) {
         if (left[key]) {
-          assign(left[key], right[key]);
+          Reanimated.assign(left[key], right[key]);
         }
       }
     } else if (Array.isArray(right)) {
       for (let i; i < right.length; i++) {
-        assign(left[i], right[i]);
+        Reanimated.assign(left[i], right[i]);
       }
     } else {
       if (left.set) {
@@ -30,6 +31,15 @@ export function installFunctions(innerNativeModule) {
 
   // install withWorklet
   install('Reanimated.withWorklet', function (worklet, params, initial) {
+    'worklet';
+    params = [0].concat(params);
+    return {
+      value: { applierId: worklet.start.apply(undefined, params) },
+    };
+  });
+
+  // install withWorkletCopy
+  install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
     'worklet';
     params = [0].concat(params);
     return {
