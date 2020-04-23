@@ -86,13 +86,44 @@ const FunctionInstallTest = () => {
         console.log(Reanimated.END)
         return true
     }))();
+/* */
+    const obA = useSharedValue({
+        a: 1,
+        b: 2,
+        d: 3,
+    })
+    const obB = useSharedValue({
+        a: 11,
+        b: 12,
+        c: 13,
+    })
 
-    ;(useWorklet(function() {
+    ;(useWorklet(function(input) {
         'worklet'
-        console.log('[worklet] testing assign')
-        // todo write test for assign
+        console.log('[worklet] testing assign before')
+        this.inspectPath('Reanimated')
+        console.log(input.obA)
+        console.log(input.obB)
+        Reanimated.assign(input.obA, input.obB)
+        console.log('[worklet] testing assign after')
+        console.log(input.obA)
+        console.log(input.obB)
+        let result = 'success';
+        const obAKeys = Object.keys(input.obA)
+        if (JSON.stringify(obAKeys.sort()) === JSON.stringify(['id', 'a', 'b', 'd'].sort())) {
+            for (let key of Object.keys(input.obB)) {
+                if (key === 'id') continue
+                if (obAKeys.includes(key)) {
+                    if (input.obB[key].value !== input.obA[key].value) {
+                        result = 'fail'
+                        break
+                    }
+                }
+            }
+        }
+        console.log('[worklet] testing assign result: ' + result)
         return true
-    }))();
+    }, {obA, obB}))();
 
     ;(useWorklet(function() {
         'worklet'

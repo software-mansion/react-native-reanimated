@@ -4,8 +4,10 @@ export function installFunctions(innerNativeModule) {
     innerNativeModule.workletEval(path, `(${fun.asString})`);
   }
 
-
-  // install assign
+  /**
+   * install assign
+   * updates every field in [left] object with values for [right] object(for those which exist in both)
+   */
   install('Reanimated.assign', function (left, right) {
     'worklet';
     if (right == null) return;
