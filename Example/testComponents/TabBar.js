@@ -95,15 +95,33 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
     },
-    follower: {
+    followerWrapper: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      backgroundColor: 'white',
+      zIndex: 3,
+      width: tabWidth,
+      height: tabWidth,
+    },
+    lowerFollower: {
+      backgroundColor: 'orange',
+      width: tabWidth,
+      height: 20,
+      left: 0,
+      position: 'absolute',
+      zIndex: 4,
+    },
+    upperFollower: {
       borderRadius: 500,
       backgroundColor: 'orange',
-      width: 50,
-      height: 50,
+      width: tabWidth,
+      height: tabWidth,
       position: 'absolute',
-      bottom: 16,
-      zIndex: 2,
-    },
+      top: -tabWidth/3.5,
+      left: 0,
+      zIndex: 3,
+    }
   });
 
 const Bar = () => {
@@ -111,7 +129,7 @@ const Bar = () => {
     const tabHeightSV = useSharedValue(tabHeight)
     
     const activeIndex = useSharedValue(0)
-    const followerPosition = useSharedValue((tabWidth - 50)/2)
+    const followerPosition = useSharedValue(0)
     const newIndex = useSharedValue(-1)
     const tabsSA = useSharedValue(tabs.map((item, index) => {
         return {
@@ -165,7 +183,7 @@ const Bar = () => {
         changed = true
       }
 
-      const newFollowerDest = input.newIndex.value * input.tabWidthSV.value + ((input.tabWidthSV.value - 50)/2)
+      const newFollowerDest = input.newIndex.value * input.tabWidthSV.value
       if (input.newIndex.value > input.activeIndex.value) {
         // inc
         if (input.followerPosition.value < newFollowerDest) {
@@ -226,9 +244,10 @@ const Bar = () => {
     
     return (
         <View style={styles.container}>
-          <Animated.View style={ [ styles.follower , {
-            left: followerPosition,
-          }] } />
+          <Animated.View style={ { ...styles.followerWrapper, left: followerPosition, } }>
+            <View style={ styles.lowerFollower } />
+            <View style={ styles.upperFollower } />
+          </Animated.View>
           {
             tabs.map((tab, key) => {
               const tabWidth = width / tabs.length;
@@ -258,7 +277,7 @@ const Bar = () => {
                       alignItems: "center",
                       opacity: tabsSA[key].opacityReverse,
                       transform: [{ translateY: tabsSA[key].translateY }],
-                      zIndex: 3,
+                      zIndex: 5,
                     }}
                   >
                     <View style={styles.activeIcon}>
