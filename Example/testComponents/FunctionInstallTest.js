@@ -101,7 +101,6 @@ const FunctionInstallTest = () => {
     ;(useWorklet(function(input) {
         'worklet'
         console.log('[worklet] testing assign before')
-        this.inspectPath('Reanimated')
         console.log(input.obA)
         console.log(input.obB)
         Reanimated.assign(input.obA, input.obB)
