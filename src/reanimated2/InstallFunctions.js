@@ -30,14 +30,24 @@ export function installFunctions(innerNativeModule) {
     }
   });
 
-   /**
-    * install withWorklet
-    * connects shared double(sd) with worklet
-    * passed worklet keeps changing [sd] value until it is finished or [sd].set is called
-    * IMPORTANT: first worklet parameter must be a binded [sd]
-    * IMPORTANT: when setting binded [sd] inside provided worklet use forceSet instead of set
-    */
-  install('Reanimated.withWorklet', function (worklet, params) {
+  /**
+  * install withWorklet
+  * connects shared double(sd) with worklet
+  * passed worklet keeps changing [sd] value until it is finished or [sd].set is called
+  * IMPORTANT: first worklet parameter must be a binded [sd]
+  * IMPORTANT: when setting binded [sd] inside provided worklet use forceSet instead of set
+  * IMPORTANT: first argument to the worklet passed as an argument here is provided automatically(and that's [sd])
+  */
+  install('Reanimated.withWorklet', function (worklet, params, initial) {
+    'worklet';
+    params = [0].concat(params);
+    return {
+      value: { applierId: worklet.start.apply(undefined, params) },
+    };
+  });
+
+  // install withWorkletCopy
+  install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
     'worklet';
     params = [0].concat(params);
     return {

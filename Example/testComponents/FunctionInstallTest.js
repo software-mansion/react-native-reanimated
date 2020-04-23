@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, View } from "react-native"
-import Animated, { useSharedValue, useWorklet, install } from 'react-native-reanimated';
+import Animated, { useSharedValue, useWorklet, install, Worklet } from 'react-native-reanimated';
 
 const WithWorkletTest = () => {
     const dummy = useSharedValue(0)
@@ -19,23 +19,34 @@ const WithWorkletTest = () => {
         },
     }
     const so = useSharedValue(obj)
-    // this does not work with new Worklet(...)
-    const w = useWorklet(function(targetSV, maxx, max) {
+    const w = useWorklet(function(targetSV, max) {
         'worklet'
-        console.log('[worklet with] ' + targetSV.value + '/' + max.value + '/' + maxx.value)
+        console.log('[worklet with] ' + targetSV.value + '/' + max.value)
         if (targetSV.value > max.value) {
         targetSV.forceSet(max.value)
         return true
         }
         targetSV.forceSet(targetSV.value + 3)
-    }, [dummy, dummy, dummy])
+    }, [dummy, dummy])
+    // this does not work with new Worklet(...)
+    /*
+    const w = new Worklet(function(targetSV, max) {
+        'worklet'
+        console.log('[worklet with] ' + targetSV.value + '/' + max.value)
+        if (targetSV.value > max.value) {
+            targetSV.forceSet(max.value)
+            return true
+        }
+        targetSV.forceSet(targetSV.value + 3)
+    })
+    */
     //
     ;(useWorklet(function(obj, w) {
         'worklet'
         console.log(`[worklet] start ${obj.r.curr.value}/${obj.g.curr.value}/${obj.b.curr.value}`)
-        obj.r.curr.set(Reanimated.withWorklet(w, [obj.r.curr, obj.r.max, obj.r.max]))
-        obj.g.curr.set(Reanimated.withWorklet(w, [obj.g.curr, obj.g.max, obj.g.max]))
-        obj.b.curr.set(Reanimated.withWorklet(w, [obj.b.curr, obj.b.max, obj.b.max]))
+        obj.r.curr.set(Reanimated.withWorkletCopy(w, [obj.r.max]))
+        obj.g.curr.set(Reanimated.withWorkletCopy(w, [obj.g.max]))
+        obj.b.curr.set(Reanimated.withWorkletCopy(w, [obj.b.max]))
         return true
     }, [so, w,]))();
 
