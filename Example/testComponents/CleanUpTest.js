@@ -174,13 +174,13 @@ class Wrapper extends React.Component {
         stateObject.obtained = true
         try {
             let ids = await RegistersState.getRegisteredSharedValuesIds();
-            stateObject.svIds = ids.split(' ')
+            stateObject.svIds = ids.split(' ').sort()
 
             ids = await RegistersState.getRegisteredWorkletsIds();
-            stateObject.workletIds = ids.split(' ')
+            stateObject.workletIds = ids.split(' ').sort()
 
             ids = await RegistersState.getRegisteredAppliersIds();
-            stateObject.appliersIds = ids.split(' ')
+            stateObject.appliersIds = ids.split(' ').sort()
         } catch(e) {
             console.warn(`obtain state rejected: ${e}`)
         }
