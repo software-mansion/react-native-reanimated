@@ -7,17 +7,17 @@ const SharedFunctionTest = () => {
     
     const startTime = useSharedValue(0);
     const isStarted = useSharedValue(0);
-    const viewWidth = useSharedValue(0);
+    const x = useSharedValue(0);
     const duration = useSharedValue(5000);
 
     const fun = useSharedValue(
-        function(progress, viewWidth) {
+        function(progress, x) {
             'worklet';
-            viewWidth.set(progress * 100);
+            x.set(progress * 100 - 100);
         }
     );
     
-    const worklet = useWorklet(function(startTime, isStarted, viewWidth, fun, duration) {
+    const worklet = useWorklet(function(startTime, isStarted, x, fun, duration) {
         'worklet';
         const now = Date.now();
         if (isStarted.value === 0) {
@@ -32,9 +32,9 @@ const SharedFunctionTest = () => {
             return true;
         }
 
-        fun(progress, viewWidth);
+        fun(progress, x);
         
-    }, [startTime, isStarted, viewWidth, fun, duration]);
+    }, [startTime, isStarted, x, fun, duration]);
 
     worklet();
 
@@ -46,9 +46,10 @@ const SharedFunctionTest = () => {
             >
                 <Animated.View
                     style={{
-                        width: viewWidth,
+                        width: 100,
                         height: 100,
                         backgroundColor: 'green',
+                        transform: [{translateX: x}]
                     }}
                 />
             </PanGestureHandler>
