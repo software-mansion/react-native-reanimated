@@ -1,5 +1,5 @@
 import React from 'react';
-import Animated, { useSharedValue, useWorklet, useEventWorklet } from 'react-native-reanimated';
+import Animated, { useSharedValue, useEventWorklet, useSpring } from 'react-native-reanimated';
 import { View, Dimensions, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faCoffee, faTrash, faUser, faList, faReply } from '@fortawesome/free-solid-svg-icons'
@@ -120,86 +120,67 @@ const Bar = () => {
       },
     }
 
-    const changeActive = useWorklet(function(input) {
-      'worklet'
-      this.log('[change active] begin ' + input.newIndex.value)
-      let changed = false
-      input.tabsSA[input.activeIndex.value].active.set(0)
-      input.tabsSA[input.newIndex.value].active.set(1)
-
-      
-      if (input.tabsSA[input.activeIndex.value].translateY.value < input.values.translateY.max.value) {
-        input.tabsSA[input.activeIndex.value].translateY.set(input.tabsSA[input.activeIndex.value].translateY.value + input.values.translateY.step.value)
-        changed = true
-      }
-
-      if (input.tabsSA[input.newIndex.value].opacity.value > input.values.opacity.min.value) {
-        input.tabsSA[input.activeIndex.value].opacityReverse.set(input.tabsSA[input.activeIndex.value].opacityReverse.value - input.values.opacity.step.value)
-        input.tabsSA[input.newIndex.value].opacity.set(input.tabsSA[input.newIndex.value].opacity.value - input.values.opacity.step.value)
-        changed = true
-      }
-
-      if (input.tabsSA[input.activeIndex.value].opacity.value < input.values.opacity.max.value) {
-        input.tabsSA[input.activeIndex.value].opacity.set(input.tabsSA[input.activeIndex.value].opacity.value + input.values.opacity.step.value)
-        input.tabsSA[input.newIndex.value].opacityReverse.set(input.tabsSA[input.newIndex.value].opacityReverse.value + input.values.opacity.step.value)
-        changed = true
-      }
-
-      if (input.tabsSA[input.newIndex.value].translateY.value > input.values.translateY.min.value) {
-        input.tabsSA[input.newIndex.value].translateY.set(input.tabsSA[input.newIndex.value].translateY.value - input.values.translateY.step.value)
-        changed = true
-      }
-
-      const newFollowerDest = input.newIndex.value * input.tabWidthSV.value
-      if (input.newIndex.value > input.activeIndex.value) {
-        // inc
-        if (input.followerPosition.value < newFollowerDest) {
-          input.followerPosition.set(input.followerPosition.value + 10)
-          changed = true
-        } else if (input.followerPosition.value !== newFollowerDest) {
-          input.followerPosition.set(newFollowerDest)
-          changed = true
-        }
-      } else {
-        // dec
-        if (input.followerPosition.value > newFollowerDest) {
-          input.followerPosition.set(input.followerPosition.value - 10)
-          changed = true
-        } else if (input.followerPosition.value !== newFollowerDest) {
-          input.followerPosition.set(newFollowerDest)
-          changed = true
-        }
-      }
-
-      //input.activeIndex.set(index)
-      if (!changed) { // here condition when all values reached destinations
-        this.log('[change active] end ' + input.newIndex.value)
-        input.activeIndex.set(input.newIndex.value)
-        input.newIndex.set(-1)
-        return true
-      }
-    }, {tabsSA, activeIndex, newIndex, values, tabWidthSV, followerPosition})
+    const spring = useSpring({},{});
 
     const opWorklet = useEventWorklet(function(input) {
-        'worklet'
-        this.log('[event] state' + this.event.state)
-        if (this.event.state !== 2) {
-            return true
-        }
-        const index = Math.floor(this.event.absoluteX / input.tabWidthSV.value)
-        this.log('[event] index: ' + index + '/' + input.activeIndex.value)
-        if (index !== input.activeIndex.value) {
-            if (input.newIndex.value === -1) {
-              input.newIndex.set(index)
-              input.changeActive.start()
-            }
-        }
+      'worklet'
+      if (this.event.state !== 2) {
+          return true
+      }
+      const index = Math.floor(this.event.absoluteX / input.tabWidthSV.value)
+      if (index !== input.activeIndex.value && input.newIndex.value === -1) {
+        input.newIndex.set(index)
 
-    }, { tabWidthSV, tabsSA, activeIndex, tabHeightSV, values, changeActive, newIndex })
+        this.log('[event worklet] index switch: ' + input.activeIndex.value + ' -> ' + index)
+        const newFollowerDest = index * input.tabWidthSV.value
+        input.followerPosition.set(Reanimated.withWorkletCopy(input.spring.worklet, [{}, {
+          toValue: newFollowerDest,
+          damping: 100,
+        }]));
+            
+
+        // move down item that's being deactivated
+        input.tabsSA[input.activeIndex.value].translateY.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.translateY.max.value }
+        ]))
+
+        // move down item that's being activated
+        input.tabsSA[input.newIndex.value].translateY.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.translateY.min.value }
+        ]))
+
+        // make visible item that's being activated
+        input.tabsSA[input.newIndex.value].opacity.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.opacity.min.value }
+        ]))
+        input.tabsSA[input.newIndex.value].opacityReverse.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.opacity.max.value }
+        ]))
+
+        // make invisible item that's being deactivated
+        input.tabsSA[input.activeIndex.value].opacity.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.opacity.max.value }
+        ]))
+        input.tabsSA[input.activeIndex.value].opacityReverse.set(Reanimated.withWorkletCopy(input.spring.worklet, [
+          {},
+          { toValue: input.values.opacity.min.value }
+        ]))
+
+
+        input.activeIndex.set(index)
+        input.newIndex.set(-1)
+      }
+
+    }, { tabWidthSV, tabsSA, activeIndex, tabHeightSV, values, newIndex, spring, followerPosition })
     
     return (
         <View style={styles.container}>
-          <Animated.View style={ { ...styles.followerWrapper, left: followerPosition, } }>
+        <Animated.View style={ { ...styles.followerWrapper, left: followerPosition, } }>
             <View style={ styles.lowerFollower } />
             <View style={ styles.upperFollower } />
             <View style={ [ styles.littleFollower, { left: tabWidth, } ] } />
