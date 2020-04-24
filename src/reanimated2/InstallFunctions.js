@@ -114,13 +114,14 @@ export function installFunctions(innerNativeModule) {
     if ((r-l) === 0) return ll;
     const progress = (x-l)/(r-l);
     const val = ll + progress * (rr-ll);
+    const coef = (rr >= ll)? 1 : -1;
 
-    if (val < ll || val > rr) {
+    if (coef * val < coef * ll || coef * val > coef * rr) {
       switch (type) {
         case Extrapolate.IDENTITY:
           return x;
         case Extrapolate.CLAMP: 
-          if(val < ll) {
+          if(coef * val < coef * ll) {
             return ll;
           }
           return rr;

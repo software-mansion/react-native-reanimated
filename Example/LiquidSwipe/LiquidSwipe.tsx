@@ -40,9 +40,9 @@ export default () => {
       state.set(this.event.state);
 
       if (isBack.value === 1) {
-        gestureProgress.set(Reanimated.interpolate(0, maxDist.value, 1, 0));
+        gestureProgress.set(Reanimated.interpolate(translationX, 0, maxDist.value, 1, 0));
       } else {
-        gestureProgress.set(Reanimated.interpolate(-maxDist.value, 0, 0.4, 0));
+        gestureProgress.set(Reanimated.interpolate(translationX, -maxDist.value, 0, 0.4, 0));
       }
       
       // snapPoint

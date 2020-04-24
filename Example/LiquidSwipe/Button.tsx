@@ -11,12 +11,14 @@ export default ({ progress, y }) => {
     function(input) {
       'worklet';
       const { progress, y, size, width } = input;
+      
+      console.log('progress: ' + progress.value);
 
       return {
-        opacity: Reanimated.interpolate(0, 0.1, 1, 0, Extrapolate.CLAMP),
+        opacity: Reanimated.interpolate(progress.value, 0, 0.1, 1, 0, Extrapolate.CLAMP),
         transform: [
           {
-            translateX: Reanimated.interpolate(0, 0.4, width.value - size.value - 8, 0),
+            translateX: Reanimated.interpolate(progress.value, 0, 0.4, width.value - size.value - 8, 0),
           },
           {
             translateY: y.value - size.value / 2,
