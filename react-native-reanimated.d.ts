@@ -252,7 +252,19 @@ declare module 'react-native-reanimated' {
     export function proc<P1, P2, P3, P4, P5, P6>(
       cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>
     ): typeof cb;
-    export function proc <P>(
+    export function proc<P1, P2, P3, P4, P5, P6, P7>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) => AnimatedNode<number>
+    ): typeof cb;
+    export function proc<P1, P2, P3, P4, P5, P6, P7, P8>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8) => AnimatedNode<number>
+    ): typeof cb;
+    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9) => AnimatedNode<number>
+    ): typeof cb;
+    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>(
+      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9, p10: P10) => AnimatedNode<number>
+    ): typeof cb;
+    export function proc(
       cb: (...params: Adaptable<number>[]) => AnimatedNode<number>
     ): typeof cb;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
