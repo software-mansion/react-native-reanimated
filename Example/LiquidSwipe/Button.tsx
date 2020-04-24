@@ -11,8 +11,6 @@ export default ({ progress, y }) => {
     function(input) {
       'worklet';
       const { progress, y, size, width } = input;
-      
-      console.log('progress: ' + progress.value);
 
       return {
         opacity: Reanimated.interpolate(progress.value, [0, 0.1], [1, 0], Extrapolate.CLAMP),
