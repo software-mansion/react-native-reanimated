@@ -35,14 +35,7 @@ export function useSnapProgress(value, state, isBack, point) {
         position.stop();
       }
       if ((state.value == Reanimated.ACTIVE) || (state.value == Reanimated.START)) {
-        const positionCandidate = value.value;
-        if (positionCandidate <= 0) {
-          position.set(0);
-        } else if (positionCandidate >= 1) {
-          position.set(1);
-        } else {
-          position.set(positionCandidate);
-        }
+        position.set(Reanimated.interpolate(value.value, [0, 1], [0, 1], Extrapolate.CLAMP));
       }
       if (state.value == Reanimated.END) {
         position.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: point.value}]));

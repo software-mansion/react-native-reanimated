@@ -39,27 +39,16 @@ export default () => {
       let { velocityX, translationX, y } = this.event;
       state.set(this.event.state);
 
-      const interpolate = (l, r, ll, rr) => {
-        const progress = (translationX-l)/(r-l);
-        return ll + (rr-ll) * progress;
-      }
-
       if (isBack.value === 1) {
-        gestureProgress.set(interpolate(0, maxDist.value, 1, 0));
+        gestureProgress.set(Reanimated.interpolate(translationX, [0, maxDist.value], [1, 0]));
       } else {
-        gestureProgress.set(interpolate(-maxDist.value, 0, 0.4, 0));
+        gestureProgress.set(Reanimated.interpolate(translationX, [-maxDist.value, 0], [0.4, 0]));
       }
       
       // snapPoint
       velocityX = (-velocityX)/(isBack.value * maxDist.value + (1-isBack.value) * 0.4 * maxDist.value);
       const point = gestureProgress.value + 0.2 * velocityX;
-      const diff0 = Math.abs(point);
-      const diff1 = Math.abs(point - 1);
-      if (diff0 < diff1) {
-        snapPoint.set(0);
-      } else {
-        snapPoint.set(1);
-      }
+      snapPoint.set(Reanimated.clamp(point,[0, 1]));
       // centerY
       centerY.set(Reanimated.withWorklet(spring.worklet, [{}, {toValue: y}])); 
     }, [gestureProgress, isBack, state, maxDist, snapPoint, spring, centerY]

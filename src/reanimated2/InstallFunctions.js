@@ -4,6 +4,7 @@ export function installFunctions(innerNativeModule) {
     innerNativeModule.workletEval(path, `(${fun.asString})`);
   }
 
+
   // install assign
   install('Reanimated.assign', function (left, right) {
     'worklet';
@@ -38,6 +39,10 @@ export function installFunctions(innerNativeModule) {
     };
   });
 
+  global.Reanimated.withWorklet = (worklet, params, initial) => {	
+    return (initial)? initial : 0;	
+  }	
+
   // install withWorkletCopy
   install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
     'worklet';
@@ -46,6 +51,10 @@ export function installFunctions(innerNativeModule) {
       value: { applierId: worklet.startTentatively.apply(undefined, params) },
     };
   });
+
+  global.Reanimated.withWorkletCopy = (worklet, params, initial) => {	
+    return (initial)? initial : 0;	
+  }
 
   // install memory
   install('Reanimated.memory', function (context) {
@@ -87,12 +96,86 @@ export function installFunctions(innerNativeModule) {
     }
     _log(stringRepresentation(data))
   })
+
+  // clamp
+  const clamp = function (x, values) {
+    'worklet';
+    const diffs = values.map((it) => Math.abs(it - x));
+    const index = diffs.indexOf(Math.min(...diffs));
+    return values[index];
+  }
+
+  global.Reanimated.clamp = clamp;
+  install('Reanimated.clamp', clamp);
+
+  // interpolate
+  const internalInterpolate = function (x, l, r, ll, rr, type) {
+    'worklet';
+    if ((r-l) === 0) return ll;
+    const progress = (x-l)/(r-l);
+    const val = ll + progress * (rr-ll);
+    const coef = (rr >= ll)? 1 : -1;
+
+    if (coef * val < coef * ll || coef * val > coef * rr) {
+      switch (type) {
+        case Extrapolate.IDENTITY:
+          return x;
+        case Extrapolate.CLAMP: 
+          if(coef * val < coef * ll) {
+            return ll;
+          }
+          return rr;
+        case Extrapolate.EXTEND:  
+        default: 
+          return val;
+      }
+    } 
+    return val;
+  }
+  global.Reanimated.internalInterpolate = internalInterpolate;
+  install('Reanimated.internalInterpolate', internalInterpolate);
+
+  const interpolate = function(x, input, output, type) {
+    'worklet';
+    const length = input.length;
+    let narrowedInput = [];
+    if (x < input[0]) {
+      narrowedInput = [input[0], input[1], output[0], output[1]];
+
+    } else if (x > input[length - 1]) {
+      narrowedInput = [input[length - 2], input[length - 1], output[length - 2], output[length - 1]];
+
+    } else {
+      for (let i = 1; i < length; ++i) {
+        if (x <= input[i]) {
+          narrowedInput = [input[i - 1], input[i], output[i - 1], output[i]];
+          break;
+        }
+      }
+    }
+    return Reanimated.internalInterpolate(x, ...narrowedInput, type);
+  }
+  
+  global.Reanimated.interpolate = interpolate;
+  install('Reanimated.interpolate', interpolate);
 }
 
 export function installConstants(innerNativeModule) {
+  const install = (path, obj) => {
+    eval('global.' + path + '=' + obj);
+    innerNativeModule.workletEval(path, obj);
+  }
+
   // event worklet constants
-  innerNativeModule.workletEval('Reanimated.container', '{}');
-  innerNativeModule.workletEval('Reanimated.START', '2');
-  innerNativeModule.workletEval('Reanimated.ACTIVE', '4');
-  innerNativeModule.workletEval('Reanimated.END', '5');
+  install('Reanimated', '{}');
+  install('Reanimated.container', '{}');
+  install('Reanimated.START', '2');
+  install('Reanimated.ACTIVE', '4');
+  install('Reanimated.END', '5');
+
+  // Extrapolate
+  install('Extrapolate', '{}');
+  install('Extrapolate.EXTEND', '0');
+  install('Extrapolate.CLAMP', '1');
+  install('Extrapolate.IDENTITY', '2');
 }

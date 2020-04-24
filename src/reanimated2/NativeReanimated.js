@@ -6,8 +6,8 @@ import { installFunctions, installConstants } from './InstallFunctions'
 
 const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
 
-installFunctions(InnerNativeModule);
 installConstants(InnerNativeModule);
+installFunctions(InnerNativeModule);
 
 export default {
 
