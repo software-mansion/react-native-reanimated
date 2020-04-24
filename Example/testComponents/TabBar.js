@@ -111,12 +111,10 @@ const Bar = () => {
       opacity: {
         min: 0,
         max: 1,
-        step: .07,
       },
       translateY: {
         min: 0,
         max: 64,
-        step: 4,
       },
     }
 
@@ -180,10 +178,10 @@ const Bar = () => {
     
     return (
         <View style={styles.container}>
-        <Animated.View style={ { ...styles.followerWrapper, left: followerPosition, } }>
+        <Animated.View style={ { ...styles.followerWrapper, transform: [{ translateX: followerPosition }], } }>
             <View style={ styles.lowerFollower } />
             <View style={ styles.upperFollower } />
-            <View style={ [ styles.littleFollower, { left: tabWidth, } ] } />
+            <View style={ [ styles.littleFollower, { transform: [{ translateX: tabWidth }], } ] } />
             <View style={ [ styles.littleFollower, { left: -20, } ] } />
           </Animated.View>
           {
