@@ -253,8 +253,8 @@ declare module 'react-native-reanimated' {
       cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>
     ): typeof cb;
     export function proc <P>(
-      cb: (...params: AnimatedValue<number>[]) => AnimatedNode<number>
-    ): (...params: Adaptable<number>[]) => AnimatedNode<number>;
+      cb: (...params: Adaptable<number>[]) => AnimatedNode<number>
+    ): typeof cb;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set<T extends Value>(
