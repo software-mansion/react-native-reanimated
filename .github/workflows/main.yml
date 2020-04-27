@@ -18,7 +18,7 @@ jobs:
           && git config --local user.name "GitHub Action"
           && cd docs
           && yarn
-          && yarn deploy
+          && yarn component-docs build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
