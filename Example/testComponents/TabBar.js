@@ -1,9 +1,10 @@
 import React from 'react';
-import Animated, { useSharedValue, useEventWorklet, useSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useEventWorklet, useSpring, useMapper } from 'react-native-reanimated';
 import { View, Dimensions, StyleSheet } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faCoffee, faTrash, faUser, faList, faReply } from '@fortawesome/free-solid-svg-icons'
 import { TapGestureHandler } from 'react-native-gesture-handler';
+import Svg, { Path } from "react-native-svg";
 
 const { width, height } = Dimensions.get("window");
 const tabHeight = 64;
@@ -53,6 +54,7 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
     },
+    /*
     followerWrapper: {
       position: 'absolute',
       left: 0,
@@ -88,15 +90,18 @@ const styles = StyleSheet.create({
       position: 'absolute',
       top: 0,
       zIndex: 4,
-    },
+    },*/
   });
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const Bar = () => {
     const tabWidthSV = useSharedValue(tabWidth)
+    const widthSV = useSharedValue(width)
     const tabHeightSV = useSharedValue(tabHeight)
     
     const activeIndex = useSharedValue(0)
-    const followerPosition = useSharedValue(0)
+    const followerPosition = useSharedValue(-width + tabWidth/2)
     const newIndex = useSharedValue(-1)
     const tabsSA = useSharedValue(tabs.map((item, index) => {
         return {
@@ -118,6 +123,41 @@ const Bar = () => {
       },
     }
 
+    const commands = useSharedValue('');
+    const mapper = useMapper(
+      function(input, output) {
+        'worklet';
+        
+        const { width, tabWidth, tabHeight } = input;
+        const height = 30//tabHeight.value
+
+        // todo replace pos with current tab position
+        const curveWidth = width.value * 2
+        const pos = curveWidth / 2 - tabWidth.value/2;
+        const left = `
+          M${ 0 } ${ 0 }
+          L${ 0 } ${ height }
+          L${ pos } ${ height }
+        `;
+
+        const bezierCurve = `
+          C
+          ${ pos } ${ height }
+          ${ pos + tabWidth.value / 2 } ${ 180 }
+          ${ pos + tabWidth.value } ${ height }
+        `;
+
+        const right = `
+          L${ curveWidth } ${ height }
+          L${ curveWidth } ${ 0 }
+          L${ 0 } ${ 0 }
+        `;
+
+        output.commands.set(`${ left } ${ bezierCurve } ${ right }`);
+      }, [{ width, tabWidth, tabHeight }, { commands }]
+    );
+    mapper();
+
     const spring = useSpring({},{});
 
     const opWorklet = useEventWorklet(function(input) {
@@ -130,7 +170,7 @@ const Bar = () => {
         input.newIndex.set(index)
 
         this.log('[event worklet] index switch: ' + input.activeIndex.value + ' -> ' + index)
-        const newFollowerDest = index * input.tabWidthSV.value
+        const newFollowerDest = (-input.widthSV.value + input.tabWidthSV.value / 2) + index * input.tabWidthSV.value
         input.followerPosition.set(Reanimated.withWorkletCopy(input.spring.worklet, [{}, {
           toValue: newFollowerDest,
           damping: 100,
@@ -174,16 +214,23 @@ const Bar = () => {
         input.newIndex.set(-1)
       }
 
-    }, { tabWidthSV, tabsSA, activeIndex, tabHeightSV, values, newIndex, spring, followerPosition })
+    }, { tabWidthSV, tabsSA, activeIndex, tabHeightSV, values, newIndex, spring, followerPosition, widthSV })
     
     return (
         <View style={styles.container}>
+          {/*}
         <Animated.View style={ { ...styles.followerWrapper, transform: [{ translateX: followerPosition }], } }>
             <View style={ styles.lowerFollower } />
             <View style={ styles.upperFollower } />
             <View style={ [ styles.littleFollower, { transform: [{ translateX: tabWidth }], } ] } />
             <View style={ [ styles.littleFollower, { left: -20, } ] } />
           </Animated.View>
+    {*/}
+          <Svg {...{ width: width * 2, height: 100, position: 'absolute', bottom: 0, zIndex: 3 }}>
+            <AnimatedPath d={commands} fill="orange" style={ { transform: [{
+              translateX: followerPosition,
+            }] } } />
+          </Svg>
           {
             tabs.map((tab, key) => {
               const tabWidth = width / tabs.length;
@@ -227,25 +274,25 @@ const Bar = () => {
 }
 
 const tabBarStyles = StyleSheet.create({
-    dummyPusher: {
-        flex: 1,
-    },
-    container: {
-        backgroundColor: 'orange',
-        width,
-        height,
-        flex: 1,
-    }
+  container: {
+    width,
+    height,
+    flex: 1,
+    backgroundColor: 'orange',
+  },
+  dummyPusher: {
+      flex: 1,
+  },
 })
 
-const TabBar = () => {
 
-    return (
-          <View style={ tabBarStyles.container }>
-              <View style={ tabBarStyles.dummyPusher } />
-              <Bar />
-        </View>
-    )
+const TabBar = () => {
+  return (
+    <View style={ tabBarStyles.container }>
+      <View style={ tabBarStyles.dummyPusher } />
+      <Bar />
+    </View>
+  )
 }
 
 export default TabBar
