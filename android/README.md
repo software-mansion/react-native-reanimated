@@ -11,5 +11,5 @@ ndk.dir=/Users/{username}/Library/Android/sdk/ndk-bundle
 sdk.dir=/Users/{username}/Library/Android/sdk
 ```
 3. Delete the `maven` folder
-4. Run `sudo ./gradlew installArchives`
+4. Run `./gradlew publish`
 5. Verify that latest set of generated files is in the maven folder with the correct version number

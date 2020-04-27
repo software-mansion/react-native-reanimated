@@ -18,7 +18,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
@@ -52,34 +52,6 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-}
-
-def configureReactNativePom(def pom) {
-    def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
-
-    pom.project {
-        name packageJson.title
-        artifactId packageJson.name
-        version = packageJson.version
-        group = "com.swmansion.reanimated"
-        description packageJson.description
-        url packageJson.repository.baseUrl
-
-        licenses {
-            license {
-                name packageJson.license
-                url packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
-                distribution 'repo'
-            }
-        }
-
-        developers {
-            developer {
-                id packageJson.author.username
-                name packageJson.author.name
-            }
-        }
-    }
 }
 
 afterEvaluate { project ->
@@ -116,18 +88,45 @@ afterEvaluate { project ->
         }
     }
 
-    artifacts {
-        archives androidSourcesJar
-        archives androidJavadocJar
-    }
+    publishing {
+        publications {
+            reanimated(MavenPublication) {
+                def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
 
-    task installArchives(type: Upload) {
-        configuration = configurations.archives
-        repositories.mavenDeployer {
-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
-            repository url: "file://${projectDir}/../android/maven"
+                artifactId = packageJson.name
 
-            configureReactNativePom pom
+                artifact androidJavadocJar
+                artifact androidSourcesJar
+
+                pom {
+                    name = packageJson.title
+                    artifactId = packageJson.name
+                    version = packageJson.version
+                    group = "com.swmansion.reanimated"
+                    description = packageJson.description
+                    url = packageJson.repository.baseUrl
+                    
+                    licenses {
+                        license {
+                            name = packageJson.license
+                            url = packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
+                            distribution = 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = packageJson.author.username
+                            name = packageJson.author.name
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                url = "file://${projectDir}/../android/maven"
+            }
         }
     }
 }
