@@ -101,7 +101,7 @@ export function installFunctions(innerNativeModule) {
   const clamp = function (x, values) {
     'worklet';
     const diffs = values.map((it) => Math.abs(it - x));
-    const index = diffs.indexOf(Math.min(...diffs));
+    const index = diffs.indexOf(Math.min.apply(Math, diffs));
     return values[index];
   }
 
@@ -153,7 +153,7 @@ export function installFunctions(innerNativeModule) {
         }
       }
     }
-    return Reanimated.internalInterpolate(x, ...narrowedInput, type);
+    return Reanimated.internalInterpolate.apply(Reanimated, [x].concat(narrowedInput).concat(type))
   }
   
   global.Reanimated.interpolate = interpolate;
@@ -162,7 +162,7 @@ export function installFunctions(innerNativeModule) {
 
 export function installConstants(innerNativeModule) {
   const install = (path, obj) => {
-    eval('global.' + path + '=' + obj);
+    eval('this.' + path + '=' + obj);
     innerNativeModule.workletEval(path, obj);
   }
 
