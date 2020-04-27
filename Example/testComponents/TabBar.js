@@ -54,43 +54,6 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
     },
-    /*
-    followerWrapper: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      backgroundColor: 'white',
-      zIndex: 3,
-      width: tabWidth,
-      height: tabWidth,
-    },
-    upperFollower: {
-      backgroundColor: 'orange',
-      width: tabWidth + 20,
-      height: 20,
-      left: -10,
-      position: 'absolute',
-      zIndex: 4,
-    },
-    lowerFollower: {
-      borderRadius: 500,
-      backgroundColor: 'orange',
-      width: tabWidth,
-      height: tabWidth,
-      position: 'absolute',
-      top: -tabWidth/3.5,
-      left: 0,
-      zIndex: 3,
-    },
-    littleFollower: {
-      backgroundColor: 'white',
-      borderRadius: 500,
-      width: 20,
-      height: 25,
-      position: 'absolute',
-      top: 0,
-      zIndex: 4,
-    },*/
   });
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -137,23 +100,33 @@ const Bar = () => {
         const left = `
           M${ 0 } ${ 0 }
           L${ 0 } ${ height }
-          L${ pos } ${ height }
         `;
 
-        const bezierCurve = `
+        const bezierCurves = `
           C
           ${ pos } ${ height }
-          ${ pos + tabWidth.value / 2 } ${ 180 }
-          ${ pos + tabWidth.value } ${ height }
+          ${ pos + 10 } ${ height }
+          ${ pos + 10 } ${ height + 20 }
+          C
+          ${ pos + 10 } ${ height + 20 }
+          ${ pos + 10} ${ height + 60 }
+          ${ pos + tabWidth.value/2 } ${ height + 60 }
+          C
+          ${ pos + tabWidth.value/2 } ${ height + 60 }
+          ${ pos + tabWidth.value - 10 } ${ height + 60 }
+          ${ pos + tabWidth.value - 10 } ${ height + 20 }
+          C
+          ${ pos + tabWidth.value - 10 } ${ height + 20 }
+          ${ pos + tabWidth.value - 10 } ${ height }
+          ${ curveWidth - 350 } ${ height }
         `;
 
         const right = `
-          L${ curveWidth } ${ height }
           L${ curveWidth } ${ 0 }
           L${ 0 } ${ 0 }
         `;
 
-        output.commands.set(`${ left } ${ bezierCurve } ${ right }`);
+        output.commands.set(`${ left } ${ bezierCurves } ${ right }`);
       }, [{ width, tabWidth, tabHeight }, { commands }]
     );
     mapper();
@@ -218,16 +191,8 @@ const Bar = () => {
     
     return (
         <View style={styles.container}>
-          {/*}
-        <Animated.View style={ { ...styles.followerWrapper, transform: [{ translateX: followerPosition }], } }>
-            <View style={ styles.lowerFollower } />
-            <View style={ styles.upperFollower } />
-            <View style={ [ styles.littleFollower, { transform: [{ translateX: tabWidth }], } ] } />
-            <View style={ [ styles.littleFollower, { left: -20, } ] } />
-          </Animated.View>
-    {*/}
           <Svg {...{ width: width * 2, height: 100, position: 'absolute', bottom: 0, zIndex: 3 }}>
-            <AnimatedPath d={commands} fill="orange" style={ { transform: [{
+            <AnimatedPath d={commands} fill="red" style={ { transform: [{
               translateX: followerPosition,
             }] } } />
           </Svg>
@@ -278,7 +243,7 @@ const tabBarStyles = StyleSheet.create({
     width,
     height,
     flex: 1,
-    backgroundColor: 'orange',
+    backgroundColor: 'red',
   },
   dummyPusher: {
       flex: 1,
