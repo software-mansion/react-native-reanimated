@@ -43,9 +43,14 @@ std::shared_ptr<Mapper> Mapper::createMapper(int id,
   
   std::shared_ptr<Mapper> mapper(new Mapper(id, sharedValueRegistry, applier, inputSharedValues, output->getSharedValues()));
   
+  std::weak_ptr<Mapper> weakMapper = mapper;
+  
   for (int svId : inputSharedValues) {
     sharedValueRegistry->getSharedValue(svId)->registerForDirty(id, [=](){
-      mapper->dirty = true;
+      std::shared_ptr<Mapper> mapper = weakMapper.lock();
+      if (mapper != nullptr) {
+        mapper->dirty = true;
+      }
     });
   }
   
