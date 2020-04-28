@@ -12,12 +12,10 @@ Applier::Applier(
       int applierId,
       std::shared_ptr<Worklet> worklet,
       std::vector<std::shared_ptr<SharedValue>> sharedValues,
-      std::shared_ptr<ErrorHandler> errorHandler,
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry
       ) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;
-  this->errorHandler = errorHandler;
   this->applierId = applierId;
   this->sharedValueRegistry = sharedValueRegistry;
 }

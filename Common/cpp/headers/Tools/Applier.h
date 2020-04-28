@@ -19,16 +19,15 @@ using namespace facebook;
 class Applier {
   int applierId;
   std::vector<std::function<void()>> onFinishListeners;
-  std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
   bool justStarted = true;
   public:
     std::shared_ptr<Worklet> worklet;
     std::vector<std::shared_ptr<SharedValue>> sharedValues;
+  
     Applier(int applierId,
             std::shared_ptr<Worklet> worklet,
             std::vector<std::shared_ptr<SharedValue>> sharedValues,
-            std::shared_ptr<ErrorHandler> errorHandler,
             std::shared_ptr<SharedValueRegistry> sharedValueRegistry);
     virtual bool apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module);
     void addOnFinishListener(const std::function<void()> &listener);
