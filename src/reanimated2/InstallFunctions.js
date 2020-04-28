@@ -162,7 +162,9 @@ export function installFunctions(innerNativeModule) {
 
 export function installConstants(innerNativeModule) {
   const install = (path, obj) => {
-    eval('this.' + path + '=' + obj);
+    // in hermes global is binded to this in eval
+    const globalAlias = (Platform.OS === 'android') ? 'this' : 'global';
+    eval(globalAlias + '.' + path + '=' + obj);
     innerNativeModule.workletEval(path, obj);
   }
 
