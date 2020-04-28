@@ -24,7 +24,7 @@ class SharedDouble : public SharedValue {
                  std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                  std::shared_ptr<WorkletRegistry> workletRegistry);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Value asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
     std::shared_ptr<SharedValue> copy() override;

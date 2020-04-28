@@ -28,7 +28,7 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   jsi::Value * args = new jsi::Value[sharedValues.size()];
  
   for (int i = 0; i < sharedValues.size(); ++i) {
-     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
+     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt, sharedValues[i]));
   }
 
   module->setWorkletId(worklet->workletId);

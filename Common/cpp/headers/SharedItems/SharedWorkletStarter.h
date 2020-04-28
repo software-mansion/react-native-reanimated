@@ -29,7 +29,7 @@ public:
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
       std::shared_ptr<ApplierRegistry> applierRegistry);
   jsi::Value asValue(jsi::Runtime &rt) const override;
-  jsi::Value asParameter(jsi::Runtime &rt) override;
+  jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
   void willUnregister(jsi::Runtime &rt) override;
   std::shared_ptr<SharedValue> copy() override;

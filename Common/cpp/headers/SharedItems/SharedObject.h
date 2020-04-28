@@ -18,7 +18,7 @@ public:
     int id;
     SharedObject(int id, std::vector<std::shared_ptr<SharedValue>> svs, std::vector<std::string> names);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Value asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
     std::shared_ptr<SharedValue> copy() override;
