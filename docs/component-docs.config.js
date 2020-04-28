@@ -64,10 +64,11 @@ const mapToObject = (filePath, group) =>
     .flat();
 
 const docs = mapToObject(path.join(__dirname, 'pages'));
-
+const assets = [path.join(__dirname, 'assets')];
 module.exports = {
   root,
   styles,
+  assets,
   pages: docs,
   output: dist,
   github,
