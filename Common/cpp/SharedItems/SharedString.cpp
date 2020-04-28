@@ -21,7 +21,7 @@ jsi::Value SharedString::asValue(jsi::Runtime &rt) const {
   return jsi::String::createFromAscii(rt, value);
 }
 
-jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedString::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
   }
@@ -65,7 +65,7 @@ jsi::Value SharedString::asParameter(jsi::Runtime &rt) {
 
     };
 
-  std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedString>(sharedValueRegistry.lock()->getSharedValue(id))));
+  std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedString>(sv)));
 
     this->parameter = jsi::Object::createFromHostObject(rt, ptr);
     return parameter.getObject(rt);

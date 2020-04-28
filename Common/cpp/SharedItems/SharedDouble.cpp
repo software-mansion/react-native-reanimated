@@ -29,7 +29,7 @@ void SharedDouble::setNewValue(std::shared_ptr<SharedValue> sv) {
   makeDirty();
 }
 
-jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedDouble::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
@@ -156,7 +156,7 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
     }
   };
 
-  std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedDouble>(sharedValueRegistry.lock()->getSharedValue(id)),
+  std::shared_ptr<jsi::HostObject> ptr(new HO(std::dynamic_pointer_cast<SharedDouble>(sv),
                                               applierRegistry,
                                               sharedValueRegistry,
                                               workletRegistry));

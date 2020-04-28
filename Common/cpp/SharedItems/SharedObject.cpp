@@ -34,7 +34,7 @@ void SharedObject::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->properties = other->properties;
 }
 
-jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedObject::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
   }
@@ -56,7 +56,7 @@ jsi::Value SharedObject::asParameter(jsi::Runtime &rt) {
       }
       
       if (props.count(propName) > 0) {
-        return props[propName]->asParameter(rt);
+        return props[propName]->asParameter(rt, props[propName]);
       }
 
       return jsi::Value::undefined();

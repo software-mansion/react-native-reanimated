@@ -34,7 +34,7 @@ SharedWorkletStarter::~SharedWorkletStarter() {
   
 }
 
-jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
   }
@@ -74,7 +74,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
         
         if (i < count) {
           jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
-          assign.call(rt, sv->asParameter(rt), args[i]);
+          assign.call(rt, sv->asParameter(rt, sv), args[i]);
         }
       }
       
@@ -116,7 +116,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           
           for (int i = 0; i < count; ++i) {
             jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
-            assign.call(rt, sharedValues[i]->asParameter(rt), args[i]);
+            assign.call(rt, sharedValues[i]->asParameter(rt, sharedValues[i]), args[i]);
           }
 
           std::shared_ptr<Applier> applier(new Applier(applierId, workletPtr, sharedValues, sharedValueRegistry.lock()));
@@ -159,7 +159,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(
       id,
-                                              std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry.lock()->getSharedValue(id)),
+                                              std::dynamic_pointer_cast<SharedWorkletStarter>(sv),
       this->sharedValueRegistry,
       this->applierRegistry));
 
