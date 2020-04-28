@@ -10,7 +10,7 @@
 
 class SharedString : public SharedValue {
   jsi::Value parameter;
-  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
+  std::weak_ptr<SharedValueRegistry> sharedValueRegistry;
   public:
     std::string value;
     int id;

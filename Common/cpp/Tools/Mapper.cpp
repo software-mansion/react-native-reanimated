@@ -54,6 +54,9 @@ std::shared_ptr<Mapper> Mapper::createMapper(int id,
 
 Mapper::~Mapper() {
   for (int svId : inputIds) {
-    sharedValueRegistry->getSharedValue(svId)->unregisterFromDirty(id);
+    std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(svId);
+    if (sv != nullptr) {
+      sv->unregisterFromDirty(id);
+    }
   }
 }
