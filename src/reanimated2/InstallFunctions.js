@@ -48,18 +48,9 @@ export function installFunctions(innerNativeModule) {
     };
   });
 
-  // install withWorkletCopy
-  install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
-    'worklet';
-    params = [0].concat(params);
-    return {
-      value: { applierId: worklet.start.apply(undefined, params) },
-    };
-  });
-
   global.Reanimated.withWorklet = (worklet, params, initial) => {	
     return (initial)? initial : 0;	
-  }	
+  } 
 
   // install withWorkletCopy
   install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
@@ -89,25 +80,32 @@ export function installFunctions(innerNativeModule) {
 
     function stringRepresentation(obj) {
       if (Array.isArray(obj)) {
-        let result = '[';
-        for (let item of obj) {
-          const next = item.__baseType === true ? item.value : item
-          result += stringRepresentation(next);
-          result += ','
+        let result = '[]'
+        if (obj.length > 0) {
+          result = '[';
+          for (let item of obj) {
+            const next = item.__baseType === true ? item.value : item
+            result += stringRepresentation(next);
+            result += ','
+          }
+          result = result.substr(0, result.length - 1) + ']'
         }
-        result = result.substr(0, result.length - 1) + ']'
         return result
       } else if (typeof obj === 'object' && obj.__baseType === undefined) {
-        let result = '{';
-        for (let key of Object.keys(obj)) {
-          if (key === 'id') {
-            continue;
+        const keys = Object.keys(obj)
+        let result = '{}';
+        if (keys.length > 0) {
+          result = '{'
+          for (let key of keys) {
+            if (key === 'id') {
+              continue;
+            }
+            const next = obj[key].__baseType === true ? obj[key].value : obj[key];
+            result += key + ':' + stringRepresentation(next);
+            result += ','
           }
-          const next = obj[key].__baseType === true ? obj[key].value : obj[key];
-          result += key + ':' + stringRepresentation(next);
-          result += ','
+          result = result.substr(0, result.length - 1) + '}'
         }
-        result = result.substr(0, result.length - 1) + '}'
         return result
       }
       return obj.__baseType === true ? obj.value : obj;
