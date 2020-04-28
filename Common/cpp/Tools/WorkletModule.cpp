@@ -29,16 +29,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         const jsi::Value *args,
         size_t count
         ) -> jsi::Value {
-      const jsi::Value *value = &args[0];
-      if (value->isString()) {
-        Logger::log(value->getString(rt).utf8(rt).c_str());
-      } else if (value->isNumber()) {
-        Logger::log(value->getNumber());
-      } else if (value->isBool()){
-        Logger::log(value->getBool());
-      } else {
-        Logger::log("unsupported value type");
-      }
+      rt.global().getProperty(rt, "_log").getObject(rt).asFunction(rt).call(rt, args, count);
       return jsi::Value::undefined();
     };
     return jsi::Function::createFromHostFunction(rt, name, 1, callback);

@@ -58,15 +58,17 @@ jsi::Value SharedDouble::asParameter(jsi::Runtime &rt) {
     }
     
     void cleanBeforeSet(jsi::Runtime &rt) {
-      if (sd->bindedApplierId != -1) {
+      if (sd != nullptr && sd->bindedApplierId != -1) {
         applierRegistry->unregisterApplierFromRender(sd->bindedApplierId, rt);
         sd->bindedApplierId = -1;
       }
     }
     
     void forceSet(jsi::Runtime &rt, const jsi::Value & newValue) {
-      sd->makeDirty();
-      sd->value = newValue.asNumber();
+      if (sd != nullptr) {
+        sd->makeDirty();
+        sd->value = newValue.asNumber();
+      }
     }
 
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) {

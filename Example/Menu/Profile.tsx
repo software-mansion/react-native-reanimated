@@ -73,7 +73,7 @@ export default ({ hideTarget, hideWorklet, scale, rotateY, translateX }) => {
       } else if (this.event.state === 5) {
         totalTranslation.set(translationX);
         if (translationX < -30) {
-          this.log('FINAL TRANSLATION ' + translationX);
+          console.log('FINAL TRANSLATION ' + translationX);
           // we need to paste hide logic here, would be nice to be able to use function
           // maybe "worklet" should just be a "function" and when we want to use
           // it to drive animation we can use some "looper" abstraction?

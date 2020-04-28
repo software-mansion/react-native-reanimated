@@ -16,7 +16,7 @@ const panWorkletBody = new Worklet(function(prev, total, velocity, cord, ruszabl
     if (this.event.state === 5) {
         velocity.set(this.event['velocity' + cord.value]);
         ruszable.start();
-        this.log("wystartowal ruszable " + cord.value);
+        console.log("wystartowal ruszable " + cord.value);
     }
 });
 

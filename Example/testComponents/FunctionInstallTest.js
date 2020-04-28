@@ -1,6 +1,76 @@
 import React from 'react';
 import { Text, View } from "react-native"
-import { useSharedValue, useWorklet, install } from 'react-native-reanimated';
+import Animated, { useSharedValue, useWorklet, install, Worklet } from 'react-native-reanimated';
+
+const WithWorkletTest = () => {
+    const dummy = useSharedValue(0)
+    const obj = {
+        r: {
+            curr: 30,
+            max: 100,
+        },
+        g: {
+            curr: 20,
+            max: 200,
+        },
+        b: {
+            curr: 10,
+            max: 300,
+        },
+    }
+    const so = useSharedValue(obj)
+    const w = useWorklet(function(targetSV, max) {
+        'worklet'
+        console.log('[worklet with] ' + targetSV.value + '/' + max.value)
+        if (targetSV.value > max.value) {
+        targetSV.forceSet(max.value)
+        return true
+        }
+        targetSV.forceSet(targetSV.value + 3)
+    }, [dummy, dummy])
+    // this does not work with new Worklet(...)
+    /*
+    const w = new Worklet(function(targetSV, max) {
+        'worklet'
+        console.log('[worklet with] ' + targetSV.value + '/' + max.value)
+        if (targetSV.value > max.value) {
+            targetSV.forceSet(max.value)
+            return true
+        }
+        targetSV.forceSet(targetSV.value + 3)
+    })
+    */
+    //
+    ;(useWorklet(function(obj, w) {
+        'worklet'
+        console.log(`[worklet] start ${obj.r.curr.value}/${obj.g.curr.value}/${obj.b.curr.value}`)
+        obj.r.curr.set(Reanimated.withWorkletCopy(w, [obj.r.max]))
+        obj.g.curr.set(Reanimated.withWorkletCopy(w, [obj.g.max]))
+        obj.b.curr.set(Reanimated.withWorkletCopy(w, [obj.b.max]))
+        return true
+    }, [so, w,]))();
+
+    return (
+        <View>
+        <Text>TESTING</Text>
+        <Animated.View style={ {
+            backgroundColor: 'red',
+            height: 10,
+            width: so.r.curr,
+        } } />
+        <Animated.View style={ {
+            backgroundColor: 'green',
+            height: 10,
+            width: so.g.curr,
+        } } />
+        <Animated.View style={ {
+            backgroundColor: 'blue',
+            height: 10,
+            width: so.b.curr,
+        } } />
+        </View>
+    )
+}
 
 const FunctionInstallTest = () => {
 /* */
@@ -16,13 +86,43 @@ const FunctionInstallTest = () => {
         console.log(Reanimated.END)
         return true
     }))();
+/* */
+    const obA = useSharedValue({
+        a: 1,
+        b: 2,
+        d: 3,
+    })
+    const obB = useSharedValue({
+        a: 11,
+        b: 12,
+        c: 13,
+    })
 
-    ;(useWorklet(function() {
+    ;(useWorklet(function(input) {
         'worklet'
-        console.log('[worklet] testing assign')
-        // todo write test for assign
+        console.log('[worklet] testing assign before')
+        console.log(input.obA)
+        console.log(input.obB)
+        Reanimated.assign(input.obA, input.obB)
+        console.log('[worklet] testing assign after')
+        console.log(input.obA)
+        console.log(input.obB)
+        let result = 'success';
+        const obAKeys = Object.keys(input.obA)
+        if (JSON.stringify(obAKeys.sort()) === JSON.stringify(['id', 'a', 'b', 'd'].sort())) {
+            for (let key of Object.keys(input.obB)) {
+                if (key === 'id') continue
+                if (obAKeys.includes(key)) {
+                    if (input.obB[key].value !== input.obA[key].value) {
+                        result = 'fail'
+                        break
+                    }
+                }
+            }
+        }
+        console.log('[worklet] testing assign result: ' + result)
         return true
-    }))();
+    }, {obA, obB}))();
 
     ;(useWorklet(function() {
         'worklet'
@@ -33,12 +133,15 @@ const FunctionInstallTest = () => {
         return true
     }))();
 
+    /*
+    // tested in separate component
     ;(useWorklet(function() {
         'worklet'
         console.log('[worklet] testing withWorklet')
         // todo write test for withWorklet
         return true
     }))();
+    */
 
     ;(useWorklet(function(sv, so, sa) {
         'worklet'
@@ -158,19 +261,20 @@ const FunctionInstallTest = () => {
 /* * /
     ;(useWorklet(function() {
         'worklet'
-        this.log('[worklet] begin')
+        console.log('[worklet] begin')
         const x = 9
-        this.log('[worklet] int ' + x)
+        console.log('[worklet] int ' + x)
         const y = Reanimated.xs(x)
-        this.log('[worklet] int installed function ' + y)
-        this.log('[worklet] int installed const ' + Reanimated.cnst)
-        this.log('[worklet] int installed weird ' + a.beee.ece.dyy.eeEeeEEE.ffff.granade.hulajnoga)
+        console.log('[worklet] int installed function ' + y)
+        console.log('[worklet] int installed const ' + Reanimated.cnst)
+        console.log('[worklet] int installed weird ' + a.beee.ece.dyy.eeEeeEEE.ffff.granade.hulajnoga)
         return true
     }))();
 /* */
     return (
         <View>
             <Text>Testing function install...</Text>
+            <WithWorkletTest />
         </View>
     )
 }

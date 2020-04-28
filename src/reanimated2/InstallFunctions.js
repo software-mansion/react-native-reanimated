@@ -4,8 +4,10 @@ export function installFunctions(innerNativeModule) {
     innerNativeModule.workletEval(path, `(${fun.asString})`);
   }
 
-
-  // install assign
+  /**
+   * install assign
+   * updates every field in [left] object with values for [right] object(for those which exist in both)
+   */
   install('Reanimated.assign', function (left, right) {
     'worklet';
     if (right == null) return;
@@ -30,7 +32,14 @@ export function installFunctions(innerNativeModule) {
     }
   });
 
-  // install withWorklet
+  /**
+  * install withWorklet
+  * connects shared double(sd) with worklet
+  * passed worklet keeps changing [sd] value until it is finished or [sd].set is called
+  * IMPORTANT: first worklet parameter must be a binded [sd]
+  * IMPORTANT: when setting binded [sd] inside provided worklet use forceSet instead of set
+  * IMPORTANT: first argument to the worklet passed as an argument here is provided automatically(and that's [sd])
+  */
   install('Reanimated.withWorklet', function (worklet, params, initial) {
     'worklet';
     params = [0].concat(params);
@@ -41,7 +50,7 @@ export function installFunctions(innerNativeModule) {
 
   global.Reanimated.withWorklet = (worklet, params, initial) => {	
     return (initial)? initial : 0;	
-  }	
+  } 
 
   // install withWorkletCopy
   install('Reanimated.withWorkletCopy', function (worklet, params, initial) {
@@ -71,25 +80,32 @@ export function installFunctions(innerNativeModule) {
 
     function stringRepresentation(obj) {
       if (Array.isArray(obj)) {
-        let result = '[';
-        for (let item of obj) {
-          const next = item.__baseType === true ? item.value : item
-          result += stringRepresentation(next);
-          result += ','
+        let result = '[]'
+        if (obj.length > 0) {
+          result = '[';
+          for (let item of obj) {
+            const next = item.__baseType === true ? item.value : item
+            result += stringRepresentation(next);
+            result += ','
+          }
+          result = result.substr(0, result.length - 1) + ']'
         }
-        result = result.substr(0, result.length - 1) + ']'
         return result
       } else if (typeof obj === 'object' && obj.__baseType === undefined) {
-        let result = '{';
-        for (let key of Object.keys(obj)) {
-          if (key === 'id') {
-            continue;
+        const keys = Object.keys(obj)
+        let result = '{}';
+        if (keys.length > 0) {
+          result = '{'
+          for (let key of keys) {
+            if (key === 'id') {
+              continue;
+            }
+            const next = obj[key].__baseType === true ? obj[key].value : obj[key];
+            result += key + ':' + stringRepresentation(next);
+            result += ','
           }
-          const next = obj[key].__baseType === true ? obj[key].value : obj[key];
-          result += key + ':' + stringRepresentation(next);
-          result += ','
+          result = result.substr(0, result.length - 1) + '}'
         }
-        result = result.substr(0, result.length - 1) + '}'
         return result
       }
       return obj.__baseType === true ? obj.value : obj;
