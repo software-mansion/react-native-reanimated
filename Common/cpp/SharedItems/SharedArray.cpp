@@ -29,10 +29,10 @@ void SharedArray::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->svs = other->svs;
 }
 
-jsi::Value SharedArray::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedArray::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   jsi::Array array(rt, svs.size());
   for (int i = 0; i < svs.size(); ++i) {
-    array.setValueAtIndex(rt, i, svs[i]->asParameter(rt));
+    array.setValueAtIndex(rt, i, svs[i]->asParameter(rt, svs[i]));
   }
   return array;
 }

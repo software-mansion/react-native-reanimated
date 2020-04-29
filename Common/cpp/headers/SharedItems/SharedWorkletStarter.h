@@ -19,19 +19,17 @@ public:
   int id;
   int applierId;
   std::vector<int> args;
-  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
-  std::shared_ptr<ApplierRegistry> applierRegistry;
-  std::shared_ptr<ErrorHandler> errorHandler;
+  std::weak_ptr<SharedValueRegistry> sharedValueRegistry;
+  std::weak_ptr<ApplierRegistry> applierRegistry;
     
   SharedWorkletStarter(
       int svId,
       std::shared_ptr<Worklet> worklet,
       std::vector<int> args,
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
-      std::shared_ptr<ApplierRegistry> applierRegistry,
-      std::shared_ptr<ErrorHandler> errorHandler);
+      std::shared_ptr<ApplierRegistry> applierRegistry);
   jsi::Value asValue(jsi::Runtime &rt) const override;
-  jsi::Value asParameter(jsi::Runtime &rt) override;
+  jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
   void setNewValue(std::shared_ptr<SharedValue> sv) override;
   void willUnregister(jsi::Runtime &rt) override;
   std::shared_ptr<SharedValue> copy() override;

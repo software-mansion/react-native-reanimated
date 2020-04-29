@@ -10,7 +10,7 @@
 
 class SharedString : public SharedValue {
   jsi::Value parameter;
-  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
+  std::weak_ptr<SharedValueRegistry> sharedValueRegistry;
   public:
     std::string value;
     int id;
@@ -18,7 +18,7 @@ class SharedString : public SharedValue {
                  std::string value,
                  std::shared_ptr<SharedValueRegistry> sharedValueRegistry);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Value asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
     std::shared_ptr<SharedValue> copy() override;

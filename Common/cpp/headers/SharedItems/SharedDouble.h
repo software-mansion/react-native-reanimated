@@ -10,10 +10,9 @@
 #include "WorkletRegistry.h"
 
 class SharedDouble : public SharedValue {
-  std::shared_ptr<ApplierRegistry> applierRegistry;
-  std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
-  std::shared_ptr<WorkletRegistry> workletRegistry;
-  std::shared_ptr<ErrorHandler> errorHandler;
+  std::weak_ptr<ApplierRegistry> applierRegistry;
+  std::weak_ptr<SharedValueRegistry> sharedValueRegistry;
+  std::weak_ptr<WorkletRegistry> workletRegistry;
   jsi::Value parameter;
   public:
     double value;
@@ -23,10 +22,9 @@ class SharedDouble : public SharedValue {
                  double value,
                  std::shared_ptr<ApplierRegistry> applierRegistry,
                  std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
-                 std::shared_ptr<WorkletRegistry> workletRegistry,
-                 std::shared_ptr<ErrorHandler> errorHandler);
+                 std::shared_ptr<WorkletRegistry> workletRegistry);
     jsi::Value asValue(jsi::Runtime &rt) const override;
-    jsi::Value asParameter(jsi::Runtime &rt) override;
+    jsi::Value asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) override;
     void setNewValue(std::shared_ptr<SharedValue> sv) override;
     std::vector<int> getSharedValues() override;
     std::shared_ptr<SharedValue> copy() override;

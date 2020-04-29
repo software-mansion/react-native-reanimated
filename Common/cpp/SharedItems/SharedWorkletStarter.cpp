@@ -10,8 +10,7 @@ SharedWorkletStarter::SharedWorkletStarter(
       std::shared_ptr<Worklet> worklet,
       std::vector<int> args,
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
-      std::shared_ptr<ApplierRegistry> applierRegistry,
-      std::shared_ptr<ErrorHandler> errorHandler) {
+      std::shared_ptr<ApplierRegistry> applierRegistry) {
   this->id = svId;
   this->worklet = worklet;
   this->args = args;
@@ -19,7 +18,6 @@ SharedWorkletStarter::SharedWorkletStarter(
   this->type = SharedValueType::shared_starter;
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
-  this->errorHandler = errorHandler;
   this->applierId = ApplierRegistry::New_Applier_Id--;
   this->parameter = jsi::Value::undefined();
 }
@@ -36,7 +34,7 @@ SharedWorkletStarter::~SharedWorkletStarter() {
   
 }
 
-jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
   }
@@ -44,49 +42,46 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
   class HO : public jsi::HostObject {
     public:
     int id;
-    std::shared_ptr<SharedWorkletStarter> starter;
-    std::shared_ptr<SharedValueRegistry> sharedValueRegistry;
-    std::shared_ptr<ApplierRegistry> applierRegistry;
-    std::shared_ptr<ErrorHandler> errorHandler;
+    std::weak_ptr<SharedWorkletStarter> starter;
+    std::weak_ptr<SharedValueRegistry> sharedValueRegistry;
+    std::weak_ptr<ApplierRegistry> applierRegistry;
 
     HO(int id,
         std::shared_ptr<SharedWorkletStarter> starter,
-        std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
-        std::shared_ptr<ApplierRegistry> applierRegistry,
-        std::shared_ptr<ErrorHandler> errorHandler) {
+        std::weak_ptr<SharedValueRegistry> sharedValueRegistry,
+        std::weak_ptr<ApplierRegistry> applierRegistry) {
       this->id = id;
       this->starter = starter;
       this->sharedValueRegistry = sharedValueRegistry;
       this->applierRegistry = applierRegistry;
-      this->errorHandler = errorHandler;
     }
 
     int startTentatively(jsi::Runtime &rt, const jsi::Value *args, int count) {
       std::vector<std::shared_ptr<SharedValue>> sharedValues;
-      for (int i = 0; i < starter->worklet->length; ++i) {
+      for (int i = 0; i < starter.lock()->worklet->length; ++i) {
         std::shared_ptr<SharedValue> sv;
         if (i < count and args[i].isObject() and args[i].getObject(rt).hasProperty(rt, "id")) {
           int svId = args[i].getObject(rt).getProperty(rt, "id").asNumber();
-          sv = sharedValueRegistry->getSharedValue(svId);
+          sv = sharedValueRegistry.lock()->getSharedValue(svId);
           if (sv == nullptr) return -1;
           sharedValues.push_back(sv);
           continue;
         }
-        std::shared_ptr<SharedValue> defaultSV = sharedValueRegistry->getSharedValue(starter->args[i]);
+        std::shared_ptr<SharedValue> defaultSV = sharedValueRegistry.lock()->getSharedValue(starter.lock()->args[i]);
         if (defaultSV == nullptr) return -1;
         sv = defaultSV->copy();
         sharedValues.push_back(sv);
         
         if (i < count) {
           jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
-          assign.call(rt, sv->asParameter(rt), args[i]);
+          assign.call(rt, sv->asParameter(rt, sv), args[i]);
         }
       }
       
       int applierId = ApplierRegistry::New_Applier_Id--;
-      std::shared_ptr<Applier> applier(new Applier(applierId, starter->worklet, sharedValues, this->errorHandler, sharedValueRegistry));
+      std::shared_ptr<Applier> applier(new Applier(applierId, starter.lock()->worklet, sharedValues, sharedValueRegistry.lock()));
       
-      applierRegistry->registerApplierForRender(applierId, applier);
+      applierRegistry.lock()->registerApplierForRender(applierId, applier);
       return applierId;
     }
     
@@ -99,20 +94,20 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
         ) -> jsi::Value {
-          int applierId = starter->applierId;
+          int applierId = starter.lock()->applierId;
         
-          std::shared_ptr<Worklet> workletPtr = starter->worklet;
+          std::shared_ptr<Worklet> workletPtr = starter.lock()->worklet;
 
           std::vector<int> svIds;
           std::string id = "id";
-          for (int svId : starter->args) {
+          for (int svId : starter.lock()->args) {
             svIds.push_back(svId);
           }
           
           std::vector<std::shared_ptr<SharedValue>> sharedValues;
           
           for (auto id : svIds) {
-            std::shared_ptr<SharedValue> sv = sharedValueRegistry->getSharedValue(id);
+            std::shared_ptr<SharedValue> sv = sharedValueRegistry.lock()->getSharedValue(id);
             if (sv == nullptr) {
               return -1;
             }
@@ -121,18 +116,18 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
           
           for (int i = 0; i < count; ++i) {
             jsi::Function assign = rt.global().getPropertyAsObject(rt, "Reanimated").getPropertyAsFunction(rt, "assign");
-            assign.call(rt, sharedValues[i]->asParameter(rt), args[i]);
+            assign.call(rt, sharedValues[i]->asParameter(rt, sharedValues[i]), args[i]);
           }
 
-          std::shared_ptr<Applier> applier(new Applier(applierId, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+          std::shared_ptr<Applier> applier(new Applier(applierId, workletPtr, sharedValues, sharedValueRegistry.lock()));
           
           // remove previous instance
-          applierRegistry->unregisterApplierFromRender(applierId, rt);
-          applierRegistry->registerApplierForRender(applierId, applier);
+          applierRegistry.lock()->unregisterApplierFromRender(applierId, rt);
+          applierRegistry.lock()->registerApplierForRender(applierId, applier);
 
-          return this->starter->applierId;
+          return this->starter.lock()->applierId;
         };
-        return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
+        return jsi::Function::createFromHostFunction(rt, name, starter.lock()->args.size(), callback);
         
       } else if (propName == "stop") {
         auto callback = [this](
@@ -141,7 +136,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
         ) -> jsi::Value {
-          applierRegistry->unregisterApplierFromRender(starter->applierId, rt);
+          applierRegistry.lock()->unregisterApplierFromRender(starter.lock()->applierId, rt);
           return jsi::Value::undefined();
         };
         return jsi::Function::createFromHostFunction(rt, name, 0, callback);
@@ -155,7 +150,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
         ) -> jsi::Value {
           return jsi::Value(startTentatively(rt, args, count));
         };
-        return jsi::Function::createFromHostFunction(rt, name, starter->args.size(), callback);
+        return jsi::Function::createFromHostFunction(rt, name, starter.lock()->args.size(), callback);
       }
       return jsi::Value::undefined();
     }
@@ -164,10 +159,9 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt) {
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(
       id,
-std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry->getSharedValue(id)),
+      std::dynamic_pointer_cast<SharedWorkletStarter>(sv),
       this->sharedValueRegistry,
-      this->applierRegistry,
-      this->errorHandler));
+      this->applierRegistry));
 
   this->parameter = jsi::Object::createFromHostObject(rt, ptr);
   return parameter.getObject(rt);
@@ -176,7 +170,7 @@ std::dynamic_pointer_cast<SharedWorkletStarter>(sharedValueRegistry->getSharedVa
 void SharedWorkletStarter::willUnregister(jsi::Runtime &rt) {
   // unregister applier
   // it's important [Do not remove]    
-  applierRegistry->unregisterApplierFromRender(applierId, rt);
+  applierRegistry.lock()->unregisterApplierFromRender(applierId, rt);
 }
 
 std::shared_ptr<SharedValue> SharedWorkletStarter::copy() {
@@ -185,9 +179,8 @@ std::shared_ptr<SharedValue> SharedWorkletStarter::copy() {
   return std::make_shared<SharedWorkletStarter>(id,
                                         worklet,
                                         args,
-                                        sharedValueRegistry,
-                                        applierRegistry,
-                                        errorHandler);
+                                        sharedValueRegistry.lock(),
+                                        applierRegistry.lock());
 }
 
 std::vector<int> SharedWorkletStarter::getSharedValues() {

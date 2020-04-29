@@ -12,12 +12,10 @@ Applier::Applier(
       int applierId,
       std::shared_ptr<Worklet> worklet,
       std::vector<std::shared_ptr<SharedValue>> sharedValues,
-      std::shared_ptr<ErrorHandler> errorHandler,
       std::shared_ptr<SharedValueRegistry> sharedValueRegistry
       ) {
   this->worklet = worklet;
   this->sharedValues = sharedValues;
-  this->errorHandler = errorHandler;
   this->applierId = applierId;
   this->sharedValueRegistry = sharedValueRegistry;
 }
@@ -30,7 +28,7 @@ bool Applier::apply(jsi::Runtime &rt, std::shared_ptr<BaseWorkletModule> module)
   jsi::Value * args = new jsi::Value[sharedValues.size()];
  
   for (int i = 0; i < sharedValues.size(); ++i) {
-     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt));
+     args[i] = jsi::Value(rt, sharedValues[i]->asParameter(rt, sharedValues[i]));
   }
 
   module->setWorkletId(worklet->workletId);

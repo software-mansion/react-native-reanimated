@@ -125,7 +125,7 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
   if (value.isNumber()) {
     double number = value.getNumber();
     create = [=] () {
-      return std::shared_ptr<SharedValue>(new SharedDouble(id, number, applierRegistry, sharedValueRegistry, workletRegistry, errorHandler));
+      return std::shared_ptr<SharedValue>(new SharedDouble(id, number, applierRegistry, sharedValueRegistry, workletRegistry));
     };
   } else if(value.isString()) {
     std::string str = value.getString(rt).utf8(rt);
@@ -155,8 +155,7 @@ void NativeReanimatedModule::updateSharedValueRegistry(jsi::Runtime &rt, int id,
             worklet,
             args,
             this->sharedValueRegistry,
-            this->applierRegistry,
-            this->errorHandler));
+            this->applierRegistry));
         return sv;
       };
     }
@@ -293,7 +292,7 @@ void NativeReanimatedModule::registerApplierOnRender(jsi::Runtime &rt, int id, i
       sharedValues.push_back(sv);
     }
     
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, sharedValueRegistry));
     applierRegistry->registerApplierForRender(id, applier);
   });
 }
@@ -321,7 +320,7 @@ void NativeReanimatedModule::registerApplierOnEvent(jsi::Runtime &rt, int id, st
       sharedValues.push_back(sv);
     }
 
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, sharedValueRegistry));
     applierRegistry->registerApplierForEvent(id, eventName, applier);
    });
 }
@@ -349,7 +348,7 @@ void NativeReanimatedModule::registerMapper(jsi::Runtime &rt, int id, int workle
      sharedValues.push_back(sv);
     }
     
-    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, this->errorHandler, sharedValueRegistry));
+    std::shared_ptr<Applier> applier(new Applier(id, workletPtr, sharedValues, sharedValueRegistry));
     std::shared_ptr<Mapper> mapper = Mapper::createMapper(id,
                                                           applier,
                                                           sharedValueRegistry);
@@ -370,8 +369,7 @@ void NativeReanimatedModule::render() {
       sharedValueRegistry,
       applierRegistry,
       workletRegistry,
-      this->dummyEvent,
-      this->errorHandler));
+      this->dummyEvent));
   }
   SpeedChecker::checkSpeed("Render:", [=] () {
     applierRegistry->render(*runtime, this->workletModule);
@@ -388,8 +386,7 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
       sharedValueRegistry,
       applierRegistry,
       workletRegistry,
-      eventPtr,
-      this->errorHandler));
+      eventPtr));
   } else {
       std::dynamic_pointer_cast<WorkletModule>(this->workletModule)->setEvent(eventPtr);
   }

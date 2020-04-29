@@ -27,7 +27,7 @@ void SharedFunction::setNewValue(std::shared_ptr<SharedValue> sv) {
   this->worklet = sd->worklet;
 }
 
-jsi::Value SharedFunction::asParameter(jsi::Runtime &rt) {
+jsi::Value SharedFunction::asParameter(jsi::Runtime &rt, std::shared_ptr<SharedValue> sv) {
   if (!parameter.isUndefined()) {
     return parameter.getObject(rt);
   }

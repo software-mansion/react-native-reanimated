@@ -8,14 +8,12 @@
 WorkletModule::WorkletModule(std::shared_ptr<SharedValueRegistry> sharedValueRegistry,
                                    std::shared_ptr<ApplierRegistry> applierRegistry,
                                    std::shared_ptr<WorkletRegistry> workletRegistry,
-                                   std::shared_ptr<jsi::Value> event,
-                                   std::shared_ptr<ErrorHandler> errorHandler) {
+                                   std::shared_ptr<jsi::Value> event) {
   this->sharedValueRegistry = sharedValueRegistry;
   this->applierRegistry = applierRegistry;
   this->workletRegistry = workletRegistry;
   this->event = event;
   this->workletId = -1;
-  this->errorHandler = errorHandler;
 }
 
 jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -41,8 +39,8 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
         size_t count
         ) -> jsi::Value {
 
-      if (this->workletRegistry->getWorklet(workletId)->listener != nullptr) {
-        (*this->workletRegistry->getWorklet(workletId)->listener)();
+      if (this->workletRegistry.lock()->getWorklet(workletId)->listener != nullptr) {
+        (*this->workletRegistry.lock()->getWorklet(workletId)->listener)();
       }
 
       return jsi::Value::undefined();
@@ -54,11 +52,7 @@ jsi::Value WorkletModule::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return jsi::Value(applierId);
   } else if(propName == "justStarted") {
     return jsi::Value(justStarted);
-  } else {
-    std::string message = "unknown prop called on worklet object: ";
-    message += propName;
-    this->errorHandler->raise(message.c_str());
-  }
+  } 
 
   return jsi::Value::undefined();
 }
