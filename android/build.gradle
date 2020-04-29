@@ -12,7 +12,7 @@ buildscript {
             jcenter()
         }
         dependencies {
-            classpath 'com.android.tools.build:gradle:3.5.2'
+            classpath 'com.android.tools.build:gradle:3.6.3'
         }
     }
 }
@@ -94,6 +94,8 @@ afterEvaluate { project ->
                 def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
 
                 artifactId = packageJson.name
+
+                from components.release
 
                 artifact androidJavadocJar
                 artifact androidSourcesJar
