@@ -159,7 +159,7 @@ jsi::Value SharedWorkletStarter::asParameter(jsi::Runtime &rt, std::shared_ptr<S
 
   std::shared_ptr<jsi::HostObject> ptr(new HO(
       id,
-                                              std::dynamic_pointer_cast<SharedWorkletStarter>(sv),
+      std::dynamic_pointer_cast<SharedWorkletStarter>(sv),
       this->sharedValueRegistry,
       this->applierRegistry));
 
@@ -179,8 +179,8 @@ std::shared_ptr<SharedValue> SharedWorkletStarter::copy() {
   return std::make_shared<SharedWorkletStarter>(id,
                                         worklet,
                                         args,
-                                                sharedValueRegistry.lock(),
-                                                applierRegistry.lock());
+                                        sharedValueRegistry.lock(),
+                                        applierRegistry.lock());
 }
 
 std::vector<int> SharedWorkletStarter::getSharedValues() {
