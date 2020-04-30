@@ -53,6 +53,7 @@ target 'ReanimatedExample' do
   'Release (Staging)' => :release,
   'Release (Production)' => :release
   pods()
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
 end
 
 target 'ReanimatedExampleTests' do

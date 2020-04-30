@@ -31,10 +31,12 @@ import UseAnimatedStyleTest from './testComponents/UseAnimatedStyleTest';
 import WithWorklet from './testComponents/WithWorklet';
 import FunctionInstallTest from './testComponents/FunctionInstallTest';
 import LiquidSwipe from './LiquidSwipe/index';
+import TabBar from './testComponents/TabBar.js'
 
 // set components here:
 const components = {
   'LiquidSwipe': LiquidSwipe,
+  'TabBar': TabBar,
   '3D Menu': Menu,
   'WithWorklet': WithWorklet,
   'DragTest': DragTest,
