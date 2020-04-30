@@ -6,6 +6,9 @@ export default class Worklet {
   static applierId = 0;
   
   constructor(func) {
+    if (func.asString === undefined) {
+      throw "invalid function passed as worklet, did you forget to use 'worklet'?"
+    }
     this.id = Worklet.idCounter++;
     this.func = func;
     NativeModule.registerWorklet(this.id, this);

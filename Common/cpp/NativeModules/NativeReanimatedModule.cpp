@@ -81,10 +81,10 @@ void NativeReanimatedModule::registerWorklet( // make it async !!!
   std::string functionAsString,
   int length) {
     scheduler->scheduleOnUI([functionAsString, id, length, this]() mutable {
-    auto fun = function(*runtime, functionAsString.c_str());
-    std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    this->workletRegistry->registerWorklet((int)id, funPtr, length);
-  });
+      auto fun = function(*runtime, functionAsString.c_str());
+      std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+      this->workletRegistry->registerWorklet((int)id, funPtr, length);
+    });
 }
 
 void NativeReanimatedModule::unregisterWorklet( // make it async !!!
