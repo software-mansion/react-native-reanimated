@@ -4,7 +4,6 @@ import AnimatedNode from '../core/AnimatedNode';
 import ReanimatedModule from '../ReanimatedModule';
 
 export default class SharedValue extends AnimatedNode {
-
   static idCounter = 0;
 
   constructor(value, data) {
@@ -14,7 +13,8 @@ export default class SharedValue extends AnimatedNode {
         type: 'shared',
         sharedValueId: newId,
         initialValue: value,
-      }, [],
+      },
+      []
     );
 
     this.id = newId;
@@ -31,13 +31,13 @@ export default class SharedValue extends AnimatedNode {
     const uid = this.generateUid();
     var _this = this;
     return new Promise(function(resolve, reject) {
-      _this.callbacks[uid] = (value) => {
+      _this.callbacks[uid] = value => {
         // without setTimeout with timout 0 VM executes resolve before registering the Promise
         setTimeout(() => {
-          delete _this.callbacks[uid]
+          delete _this.callbacks[uid];
           resolve(value);
-        }, 0)
-      }
+        }, 0);
+      };
       NativeModule.getSharedValueAsync(_this.id, _this.callbacks[uid]);
     });
   }
@@ -64,20 +64,18 @@ export default class SharedValue extends AnimatedNode {
       for (let arg of value.args) {
         argIds.push(arg.id);
       }
-      value = { 
-        workletId: value.body.id, 
+      value = {
+        workletId: value.body.id,
         isWorklet: true,
         argIds,
       };
-
     } else if (value instanceof Worklet) {
       data = value.body;
 
       value = {
         workletId: value.id,
         isFunction: true,
-      }
-
+      };
     } else if (Array.isArray(value)) {
       data = value;
       const argIds = [];
@@ -87,8 +85,7 @@ export default class SharedValue extends AnimatedNode {
       value = {
         isArray: true,
         argIds,
-      }
-
+      };
     } else if (typeof value === 'object') {
       const propNames = [];
       const ids = [];
@@ -100,8 +97,8 @@ export default class SharedValue extends AnimatedNode {
         isObject: true,
         propNames,
         ids,
-      }
-      
+      };
+
       const sv = new SharedValue(initValue);
 
       for (let prop in value) {
@@ -117,13 +114,12 @@ export default class SharedValue extends AnimatedNode {
 
   generateUid() {
     if (Object.keys(this.callbacks).length > this.maxCallbacks) {
-      throw 'too many callbacks'
+      throw 'too many callbacks';
     }
-    while(this.callbacks[this.currentUid] !== undefined) {
+    while (this.callbacks[this.currentUid] !== undefined) {
       ++this.currentUid;
       this.currentUid %= this.maxCallbacks;
     }
     return this.currentUid;
   }
-
 }

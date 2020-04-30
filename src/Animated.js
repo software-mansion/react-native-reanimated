@@ -13,7 +13,7 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
-import { custom } from './ReanimatedModule'
+import { custom } from './ReanimatedModule';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -25,7 +25,6 @@ import {
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
-
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
 const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
@@ -57,7 +56,7 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-  
+
   custom,
 };
 
@@ -71,7 +70,14 @@ import Worklet from './reanimated2/Worklet';
 import SharedValue from './reanimated2/SharedValue';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
-import { useWorklet, useEventWorklet, useSharedValue, useMapper, useAnimatedStyle, install } from './reanimated2/Hooks';
+import {
+  useWorklet,
+  useEventWorklet,
+  useSharedValue,
+  useMapper,
+  useAnimatedStyle,
+  install,
+} from './reanimated2/Hooks';
 import RegistersState from './reanimated2/RegistersState';
 import useSpring from './reanimated2/helpingHooks/Spring';
 
@@ -79,19 +85,16 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
-
+  createTransitioningComponent,
   // classes
   AnimatedClock as Clock,
   AnimatedValue as Value,
   AnimatedNode as Node,
-
   // animations
   decayWrapper as decay,
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
-  
   // Reanimated 2.0
   Worklet,
   SharedValue,

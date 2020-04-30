@@ -67,7 +67,7 @@ export default function createAnimatedComponent(Component) {
         : this._component;
     }
 
-    _isArrayOfWorklets = (x) => {
+    _isArrayOfWorklets = x => {
       if (!Array.isArray(x)) {
         return false;
       }
@@ -77,7 +77,7 @@ export default function createAnimatedComponent(Component) {
         }
       }
       return true;
-    }
+    };
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
@@ -89,7 +89,7 @@ export default function createAnimatedComponent(Component) {
           prop.attachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
           prop = [prop];
-        } 
+        }
 
         if (this._isArrayOfWorklets(prop)) {
           for (let handler of prop) {
@@ -241,8 +241,11 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
-        } else if (value instanceof AnimatedEvent || value instanceof WorkletEventHandler || this._isArrayOfWorklets(value)) {
-
+        } else if (
+          value instanceof AnimatedEvent ||
+          value instanceof WorkletEventHandler ||
+          this._isArrayOfWorklets(value)
+        ) {
           // we cannot filter out event listeners completely as some components
           // rely on having a callback registered in order to generate events
           // alltogether. Therefore we provide a dummy callback here to allow
