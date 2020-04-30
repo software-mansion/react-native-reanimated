@@ -136,7 +136,7 @@ const Bar = () => {
     const opWorklet = useEventWorklet(function(input) {
       'worklet'
       if (this.event.state !== 2) {
-          return true
+          return false
       }
       const index = Math.floor(this.event.absoluteX / input.tabWidthSV.value)
       if (index !== input.activeIndex.value && input.newIndex.value === -1) {
