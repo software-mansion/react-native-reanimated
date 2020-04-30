@@ -1,6 +1,7 @@
 package com.swmansion.reanimated;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
@@ -22,6 +23,9 @@ import com.swmansion.reanimated.transitions.TransitionModule;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.Nullable;
 
@@ -58,19 +62,28 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     mTransitionManager = new TransitionModule(uiManager);
 
     mUIManager = uiManager;
+
     handler = new Handler(reactCtx.getMainLooper());
-
-    final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
-    uiManager.addUIBlock(new UIBlock() {
-      @Override
-      public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
-        NativeProxy.install(runtimePtr);
-      }
-    });
-
     Scheduler.setContext(reactCtx);
     Scheduler.setHandler(handler);
 
+    final long runtimePtr = reactCtx.getJavaScriptContextHolder().get();
+
+    final CountDownLatch latch = new CountDownLatch(1);
+
+    handler.post(new Runnable() {
+      @Override
+      public void run() {
+        NativeProxy.install(runtimePtr);
+        latch.countDown();
+      }
+    });
+
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      // noop
+    }
   }
 
   @Override

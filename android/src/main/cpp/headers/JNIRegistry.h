@@ -40,7 +40,7 @@ struct JNIRegistryClass {
     JavaVM *vm;
 
     ~JNIRegistryClass() {
-        if (globalRefEnv != nullptr && clazz != nullptr) {
+        if (vm != nullptr && globalRefEnv != nullptr && clazz != nullptr) {
             vm->AttachCurrentThread(&globalRefEnv, NULL);
             globalRefEnv->DeleteGlobalRef(clazz);
         }

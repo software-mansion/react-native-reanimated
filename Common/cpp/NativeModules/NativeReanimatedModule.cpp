@@ -45,7 +45,7 @@ NativeReanimatedModule::NativeReanimatedModule(
 //  a.b.c.d
 // note: functions provided in `code` must be wrapped in ()
 void NativeReanimatedModule::workletEval(jsi::Runtime &rt, std::string path, std::string code) {
-  scheduler->scheduleOnJS([this, path, code]() {
+  scheduler->scheduleOnUI([this, path, code]() {
       // create structure of objects(for those which do not exist)
       jsi::Object currentObject = this->runtime->global();
       size_t prev = 0;
