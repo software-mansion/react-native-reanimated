@@ -80,11 +80,6 @@ void NativeReanimatedModule::registerWorklet( // make it async !!!
   double id,
   std::string functionAsString,
   int length) {
-    if (functionAsString.size() == 0) {
-        this->errorHandler->raise("invalid function passed as worklet, did You forget to use 'worklet'?");
-        return;
-    }
-
     scheduler->scheduleOnUI([functionAsString, id, length, this]() mutable {
       auto fun = function(*runtime, functionAsString.c_str());
       std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
