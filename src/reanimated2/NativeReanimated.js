@@ -1,16 +1,14 @@
-import {
-  TurboModuleRegistry,
-} from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
-import { installFunctions, installConstants } from './InstallFunctions'
+import { installFunctions, installConstants } from './InstallFunctions';
 
-const InnerNativeModule = global.NativeReanimated || TurboModuleRegistry.get("NativeReanimated");
+const InnerNativeModule =
+  global.NativeReanimated || TurboModuleRegistry.get('NativeReanimated');
 
 installConstants(InnerNativeModule);
 installFunctions(InnerNativeModule);
 
 export default {
-
   // function install
   workletEval(path, code) {
     InnerNativeModule.workletEval(path, code);
@@ -44,7 +42,11 @@ export default {
   // worklet
 
   registerWorklet(workletId, holder) {
-    InnerNativeModule.registerWorklet(workletId, holder.func.asString, holder.func.length);
+    InnerNativeModule.registerWorklet(
+      workletId,
+      holder.func.asString,
+      holder.func.length
+    );
   },
 
   setWorkletListener(workletId, callback) {
@@ -52,15 +54,28 @@ export default {
   },
 
   registerEventApplier(applierId, eventHash, workletID, sharedValues) {
-    InnerNativeModule.registerEventApplier(applierId, eventHash, workletID, sharedValues);
+    InnerNativeModule.registerEventApplier(
+      applierId,
+      eventHash,
+      workletID,
+      sharedValues
+    );
   },
 
   unregisterEventApplier(applierId) {
     InnerNativeModule.unregisterEventApplier(applierId);
   },
 
-  registerApplier(applierId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {
-    InnerNativeModule.registerApplierOnRender(applierId, workletId, sharedValueIds);
+  registerApplier(
+    applierId,
+    workletId,
+    sharedValueIds /* shared values (worklet ID) */
+  ) {
+    InnerNativeModule.registerApplierOnRender(
+      applierId,
+      workletId,
+      sharedValueIds
+    );
     ReanimatedModule.triggerRender();
   },
 
@@ -68,7 +83,11 @@ export default {
     InnerNativeModule.unregisterApplierFromRender(applierId);
   },
 
-  registerMapper(mapperId, workletId, sharedValueIds /* shared values (worklet ID) */ ) {
+  registerMapper(
+    mapperId,
+    workletId,
+    sharedValueIds /* shared values (worklet ID) */
+  ) {
     InnerNativeModule.registerMapper(mapperId, workletId, sharedValueIds);
     ReanimatedModule.triggerRender();
   },
@@ -85,5 +104,4 @@ export default {
   getRegistersState(option, callback) {
     InnerNativeModule.getRegistersState(option, callback);
   },
-
 };

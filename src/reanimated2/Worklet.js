@@ -1,13 +1,12 @@
 import NativeModule from './NativeReanimated';
 
 export default class Worklet {
-    
   static idCounter = 0;
   static applierId = 0;
-  
+
   constructor(func) {
     if (func.asString === undefined) {
-      throw "invalid function passed as worklet, did you forget to use 'worklet'?"
+      throw "invalid function passed as worklet, did you forget to use 'worklet'?";
     }
     this.id = Worklet.idCounter++;
     this.func = func;
@@ -47,5 +46,4 @@ export default class Worklet {
     this.listener = listener;
     NativeModule.setWorkletListener(this.id, this.listener);
   }
-
 }
