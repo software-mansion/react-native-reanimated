@@ -10,11 +10,12 @@
 #include "MapperRegistry.h"
 #include <map>
 #include <unordered_map>
+#include <set>
 
 class ApplierRegistry {
     std::unordered_map<int, std::shared_ptr<Applier>> renderAppliers;
     std::map<std::string, std::unordered_map<int, std::shared_ptr<Applier>>> eventAppliers;
-    std::map<int, std::string> eventMapping;
+    std::map<int, std::set<std::string>> eventMapping;
     std::shared_ptr<MapperRegistry> mapperRegistry;
   public:
     ApplierRegistry(
@@ -34,7 +35,7 @@ class ApplierRegistry {
 
     static int New_Applier_Id;
     std::unordered_map<int, std::shared_ptr<Applier>> getRenderAppliers() const;
-    std::map<int, std::string> getEventMapping() const;
+    std::map<int, std::set<std::string>> getEventMapping() const;
     std::shared_ptr<Applier> getRenderApplier(int id);
 };
 

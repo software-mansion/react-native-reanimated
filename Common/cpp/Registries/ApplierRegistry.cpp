@@ -27,16 +27,18 @@ void ApplierRegistry::unregisterApplierFromRender(int id, jsi::Runtime &rt) {
 }
 
 void ApplierRegistry::registerApplierForEvent(int id, std::string eventName, std::shared_ptr<Applier> applier) {
-  eventMapping[id] = eventName;
+  eventMapping[id].insert(eventName);
   eventAppliers[eventName][id] = applier;
 }
 
 void ApplierRegistry::unregisterApplierFromEvent(int id) {
-  if (eventMapping.find(id) == eventMapping.end()) return;
-  std::string eventName = eventMapping[id];
+  auto mappingIt = eventMapping.find(id);
+  if (mappingIt == eventMapping.end()) return;
+
+  for(auto it = mappingIt->second.begin(); it != mappingIt->second.end(); ++it) {
+    eventAppliers[*it].erase(id);
+  }
   eventMapping.erase(id);
-  eventAppliers[eventName].erase(id);
-  Logger::log((int)eventAppliers[eventName].size());
 }
 
 bool ApplierRegistry::notEmpty() {
@@ -98,7 +100,7 @@ std::unordered_map<int, std::shared_ptr<Applier>> ApplierRegistry::getRenderAppl
   return this->renderAppliers;
 }
 
-std::map<int, std::string> ApplierRegistry::getEventMapping() const
+std::map<int, std::set<std::string>> ApplierRegistry::getEventMapping() const
 {
   return this->eventMapping;
 }
