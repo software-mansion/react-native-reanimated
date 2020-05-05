@@ -328,6 +328,16 @@ declare module 'react-native-reanimated' {
       value: Adaptable<number>,
       config: InterpolationConfig,
     ): AnimatedNode<number>;
+    export function interpolateColors(
+      animationValue: Adaptable<number>,
+      {
+        inputRange,
+        outputRgbaRange: rgbaColors
+      }: {
+        inputRange: ReadonlyArray<Adaptable<number>>;
+        outputRgbaRange: [number, number, number, number][];
+      }
+    ): AnimatedNode<number>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
@@ -471,6 +481,7 @@ declare module 'react-native-reanimated' {
   export const abs: typeof Animated.abs
   export const acc: typeof Animated.acc
   export const color: typeof Animated.color
+  export const interpolateColors: typeof Animated.interpolateColors
   export const diff: typeof Animated.diff
   export const diffClamp: typeof Animated.diffClamp
   export const interpolate: typeof Animated.interpolate
