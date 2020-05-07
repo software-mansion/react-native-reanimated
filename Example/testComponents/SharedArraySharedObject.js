@@ -4,60 +4,57 @@ import { View } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const SharedArraySharedObject = () => {
-    
-    const isStarted = useSharedValue(0);
-    const state = useSharedValue({startTime: 0, isStarted});
-    
-    const zero = useSharedValue(0); // only for test
-    const heights = useSharedValue([0, 0, 0, zero]);
-    const duration = useSharedValue(5000);
-    
-    const worklet = useWorklet(function(state, heights, duration) {
-        'worklet';
-        const { isStarted, startTime } = state;
+  const isStarted = useSharedValue(0);
+  const state = useSharedValue({ startTime: 0, isStarted });
 
-        const now = Date.now();
-        if (isStarted.value === 0) {
-            isStarted.set(1);
-            startTime.set(now);
-        }
+  const zero = useSharedValue(0); // only for test
+  const heights = useSharedValue([0, 0, 0, zero]);
+  const duration = useSharedValue(5000);
 
-        const deltaTime = now - startTime.value;
-        const progress = deltaTime / duration.value;
+  const worklet = useWorklet(
+    function(state, heights, duration) {
+      'worklet';
+      const { isStarted, startTime } = state;
 
-        if (deltaTime > duration.value) {
-            return true;
-        }
+      const now = Date.now();
+      if (isStarted.value === 0) {
+        isStarted.set(1);
+        startTime.set(now);
+      }
 
-        for (let height of heights) {
-            height.set(progress * 200);
-        }
-        
-    }, [state, heights, duration]);
+      const deltaTime = now - startTime.value;
+      const progress = deltaTime / duration.value;
 
-    const views = [];
+      if (deltaTime > duration.value) {
+        return true;
+      }
 
-    for (let i = 0; i < 4; ++i) {
-        views.push(
-            <Animated.View
-                key={i}
-                style={{
-                    margin: 10,
-                    width: 30,
-                    height: heights[i],
-                    backgroundColor: 'green',
-                }}
-            />
-        );
-    } 
+      for (let height of heights) {
+        height.set(progress * 200);
+      }
+    },
+    [state, heights, duration]
+  );
 
-    worklet();
+  const views = [];
 
-    return (
-        <View style={{flex: 1, flexDirection: "row"}}>
-            {views}
-        </View>
-    )
-}
+  for (let i = 0; i < 4; ++i) {
+    views.push(
+      <Animated.View
+        key={i}
+        style={{
+          margin: 10,
+          width: 30,
+          height: heights[i],
+          backgroundColor: 'green',
+        }}
+      />
+    );
+  }
+
+  worklet();
+
+  return <View style={{ flex: 1, flexDirection: 'row' }}>{views}</View>;
+};
 
 export default SharedArraySharedObject;
