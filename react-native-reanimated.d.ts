@@ -332,10 +332,10 @@ declare module 'react-native-reanimated' {
       animationValue: Adaptable<number>,
       {
         inputRange,
-        outputRgbaRange: rgbaColors
+        outputColorRange
       }: {
         inputRange: ReadonlyArray<Adaptable<number>>;
-        outputRgbaRange: [number, number, number, number][];
+        outputColorRange: (string | number)[];
       }
     ): AnimatedNode<number>;
     export const max: BinaryOperator;

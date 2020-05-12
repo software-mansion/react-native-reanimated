@@ -1,4 +1,18 @@
+import { processColor } from 'react-native';
 import { round, color, interpolate, Extrapolate } from '../base';
+
+function red(c) {
+  return (c >> 16) & 255;
+}
+function green(c) {
+  return (c >> 8) & 255;
+}
+function blue(c) {
+  return c & 255;
+}
+function opacity(c) {
+  return ((c >> 24) & 255) / 255;
+}
 
 /**
  * Use this if you want to interpolate an `Animated.Value` into color values.
@@ -12,32 +26,33 @@ import { round, color, interpolate, Extrapolate } from '../base';
  * So, for now you can just use this helper instead.
  */
 export default function interpolateColors(animationValue, options) {
-  const { inputRange, outputRgbaRange: rgbaColors } = options;
+  const { inputRange, outputColorRange } = options;
+  const colors = outputColorRange.map(processColor);
 
   const r = round(
     interpolate(animationValue, {
       inputRange,
-      outputRange: rgbaColors.map(c => c[0]),
+      outputRange: colors.map(red),
       extrapolate: Extrapolate.CLAMP,
     })
   );
   const g = round(
     interpolate(animationValue, {
       inputRange,
-      outputRange: rgbaColors.map(c => c[1]),
+      outputRange: colors.map(green),
       extrapolate: Extrapolate.CLAMP,
     })
   );
   const b = round(
     interpolate(animationValue, {
       inputRange,
-      outputRange: rgbaColors.map(c => c[2]),
+      outputRange: colors.map(blue),
       extrapolate: Extrapolate.CLAMP,
     })
   );
   const a = interpolate(animationValue, {
     inputRange,
-    outputRange: rgbaColors.map(c => c[3]),
+    outputRange: colors.map(opacity),
     extrapolate: Extrapolate.CLAMP,
   });
 
