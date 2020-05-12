@@ -1,5 +1,7 @@
 import { processColor } from 'react-native';
-import { round, color, interpolate, Extrapolate } from '../base';
+import { round } from '../base';
+import color from './color';
+import interpolate, { Extrapolate } from './interpolate';
 
 function red(c) {
   return (c >> 16) & 255;
