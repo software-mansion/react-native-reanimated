@@ -366,6 +366,9 @@ declare module 'react-native-reanimated' {
       exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
       deps: Array<any>,
     ): void
+    export function useValue<T extends Value>(
+      initialValue: T
+    ): AnimatedValue<T>;
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
@@ -485,4 +488,5 @@ declare module 'react-native-reanimated' {
   export const timing: typeof Animated.timing
   export const spring: typeof Animated.spring
   export const SpringUtils: typeof Animated.SpringUtils
+  export const useValue: typeof Animated.useValue
 }
