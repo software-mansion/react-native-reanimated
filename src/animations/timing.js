@@ -51,6 +51,10 @@ const internalTiming = proc(function(
 });
 
 export default function(clock, state, config) {
+  if (config.duration === 0) {
+    // when duration is zero we end the timing immediately
+    return block([set(state.position, config.toValue), set(state.finished, 1)]);
+  }
   const lastTime = cond(state.time, state.time, clock);
   const newFrameTime = add(state.frameTime, sub(clock, lastTime));
   const nextProgress = config.easing(divide(newFrameTime, config.duration));
