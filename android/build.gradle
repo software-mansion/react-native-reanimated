@@ -55,7 +55,6 @@ dependencies {
 }
 
 afterEvaluate { project ->
-
     task androidJavadoc(type: Javadoc) {
         source = android.sourceSets.main.java.srcDirs
         classpath += files(android.bootClasspath)
@@ -95,8 +94,6 @@ afterEvaluate { project ->
 
                 artifactId = packageJson.name
 
-                from components.release
-
                 artifact androidJavadocJar
                 artifact androidSourcesJar
 
@@ -106,12 +103,12 @@ afterEvaluate { project ->
                     version = packageJson.version
                     group = "com.swmansion.reanimated"
                     description = packageJson.description
-                    url = packageJson.repository.baseUrl
-                    
+                    url = packageJson.repository.url
+
                     licenses {
                         license {
                             name = packageJson.license
-                            url = packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
+                            url = packageJson.homepage
                             distribution = 'repo'
                         }
                     }
