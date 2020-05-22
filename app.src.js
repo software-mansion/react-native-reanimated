@@ -2,12 +2,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import RedBox from 'redbox-react';
-import App from '/Users/osdnk/work/react-native-reanimated/docs/node_modules/component-docs/dist/templates/App.js';
+import App from '/home/runner/work/react-native-reanimated/react-native-reanimated/docs/node_modules/component-docs/dist/templates/App.js';
 import data from './app.data';
-import '/Users/osdnk/work/react-native-reanimated/docs/node_modules/component-docs/dist/styles/reset.css';
-import '/Users/osdnk/work/react-native-reanimated/docs/node_modules/component-docs/dist/styles/globals.css';
+import '/home/runner/work/react-native-reanimated/react-native-reanimated/docs/node_modules/component-docs/dist/styles/reset.css';
+import '/home/runner/work/react-native-reanimated/react-native-reanimated/docs/node_modules/component-docs/dist/styles/globals.css';
 
-import '/Users/osdnk/work/react-native-reanimated/docs/assets/styles.css';
+import '/home/runner/work/react-native-reanimated/react-native-reanimated/docs/assets/styles.css';
 
 const root = document.getElementById('root');
 const render = () => {
