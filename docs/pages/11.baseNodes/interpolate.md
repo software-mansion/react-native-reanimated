@@ -27,3 +27,5 @@ concat(
   'deg'
 );
 ```
+
+##### Note: In order to interpolate color output values, use [`interpolateColors`](interpolate-colors.html) instead.

@@ -1,10 +1,16 @@
 import React from 'react';
-import { Text, View, FlatList, StyleSheet } from 'react-native';
+import {Text, View, FlatList, StyleSheet} from 'react-native';
 import Basic from './Basic';
 import WithDrag from './WithDrag';
 import AnimatedBounds from './AnimatedBounds';
+import InterpolateColorsExample from './InterpolateColorsExample';
 
-const examples = [Basic, WithDrag, AnimatedBounds].map(v => ({
+const examples = [
+  Basic,
+  WithDrag,
+  AnimatedBounds,
+  InterpolateColorsExample,
+].map(v => ({
   key: v.displayName,
   title: v.displayName,
   Component: v,
