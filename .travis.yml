@@ -56,10 +56,12 @@ jobs:
 
       install:
         - nvm --version
+        - rvm --version
         - echo $NODE_VERSION
         - xcodebuild -version
         - sudo launchctl limit maxfiles 2048 unlimited
         - sudo ulimit -n 10000
+        - gem install xcpretty
         - nvm install $NODE_VERSION
         - nvm use $NODE_VERSION
         - nvm alias default $NODE_VERSION
@@ -70,7 +72,7 @@ jobs:
         - cd ios && pod install && cd ..
 
       script:
-        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO -quiet | sed -nE '/error:/,/^[[:digit:]] errors? generated/ p'
+        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO -quiet | xcpretty
 
     - language: node_js
       node_js:
