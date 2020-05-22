@@ -1,7 +1,10 @@
-matrix:
+os: linux
+language: node_js
+dist: xenial
+
+jobs:
   include:
     - language: android
-      sudo: required
       jdk: oraclejdk8
       env:
         - NODE_VERSION=10.15.3
@@ -67,7 +70,7 @@ matrix:
         - cd ios && pod install && cd ..
 
       script:
-        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO
+        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -quiet |  egrep '^(/.+:[0-9+:[0-9]+:.error:|fatal|===)' || [[ $? == 1 ]] | uniq && exit ${PIPESTATUS[0]}
 
     - language: node_js
       node_js:
