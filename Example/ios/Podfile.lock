@@ -294,7 +294,7 @@ PODS:
     - ReactCommon/callinvoker (= 0.62.1)
   - RNGestureHandler (1.6.1):
     - React
-  - RNReanimated (1.7.1):
+  - RNReanimated (1.9.0):
     - React
   - RNScreens (1.0.0-alpha.23):
     - React
@@ -450,11 +450,11 @@ SPEC CHECKSUMS:
   React-RCTVibration: 072c3b427dd29e730c2ee5bfc509cf5054741a50
   ReactCommon: 3585806280c51d5c2c0d3aa5a99014c3badb629d
   RNGestureHandler: 8f09cd560f8d533eb36da5a6c5a843af9f056b38
-  RNReanimated: 4e102df74a9674fa943e05f97f3362b6e44d0b48
+  RNReanimated: b5ccb50650ba06f6e749c7c329a1bc3ae0c88b43
   RNScreens: f28b48b8345f2f5f39ed6195518291515032a788
   Yoga: 50fb6eb13d2152e7363293ff603385db380815b1
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 1e4c4494e50da4a7407c3afd59e7b91a4df45654
+PODFILE CHECKSUM: aa5963440c2c27ef05661ddc9581b02eac8776a7
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.1
