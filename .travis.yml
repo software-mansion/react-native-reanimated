@@ -72,7 +72,7 @@ jobs:
         - cd ios && pod install && cd ..
 
       script:
-        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO -quiet | xcpretty
+        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -UseModernBuildSystem=NO -quiet | xcpretty && exit ${PIPESTATUS[0]}
 
     - language: node_js
       node_js:
