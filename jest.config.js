@@ -1,4 +1,4 @@
 module.exports = {
   preset: 'react-native',
-  modulePathIgnorePatterns: ['Example', 'docs'],
+  modulePathIgnorePatterns: ['Example', 'docs', 'lib'],
 };
