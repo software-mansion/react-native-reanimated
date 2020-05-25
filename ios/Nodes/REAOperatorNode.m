@@ -6,22 +6,22 @@
 typedef id (^REAOperatorBlock)(NSArray<REANode *> *inputNodes);
 
 #define REA_REDUCE(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat acc = [[inputNodes[0] value] doubleValue]; \
+double acc = [[inputNodes[0] value] doubleValue]; \
 for (NSUInteger i = 1; i < inputNodes.count; i++) { \
-  CGFloat a = acc, b = [[inputNodes[i] value] doubleValue]; \
+  double a = acc, b = [[inputNodes[i] value] doubleValue]; \
   acc = OP; \
 } \
 return @(acc); \
 }
 
 #define REA_SINGLE(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat a = [[inputNodes[0] value] doubleValue]; \
+double a = [[inputNodes[0] value] doubleValue]; \
 return @(OP); \
 }
 
 #define REA_INFIX(OP) ^(NSArray<REANode *> *inputNodes) { \
-CGFloat a = [[inputNodes[0] value] doubleValue]; \
-CGFloat b = [[inputNodes[1] value] doubleValue]; \
+double a = [[inputNodes[0] value] doubleValue]; \
+double b = [[inputNodes[1] value] doubleValue]; \
 return @(OP); \
 }
 
@@ -43,7 +43,7 @@ return @(OP); \
             @"multiply": REA_REDUCE(a * b),
             @"divide": REA_REDUCE(a / b),
             @"pow": REA_REDUCE(pow(a, b)),
-            @"modulo": REA_REDUCE(fmodf(fmodf(a, b) + b, b)),
+            @"modulo": REA_REDUCE(fmod(fmod(a, b) + b, b)),
             @"sqrt": REA_SINGLE(sqrt(a)),
             @"log": REA_SINGLE(log(a)),
             @"sin": REA_SINGLE(sin(a)),
