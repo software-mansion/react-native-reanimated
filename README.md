@@ -25,9 +25,29 @@ If you want to play with the API but don't feel like trying it on a real app, yo
 yarn install
 ```
 
-Then run `react-native run-android` or `react-native run-ios` (depending on which platform you want to run the example app on).
+### Running on iOS
 
-You will need to have an Android or iOS device or emulator connected as well as react-native-cli package installed globally.
+Before running the app, install the cocoapods dependencies:
+
+```
+cd ios && pod install && cd ..
+```
+
+Now, you can start the app:
+
+```
+react-native run-ios
+```
+
+### Running on Android
+
+Run the react native's cli command:
+
+```
+react-native run-android
+```
+
+**Important:** You will need to have an Android or iOS device or emulator connected as well as react-native-cli package installed globally.
 
 ## License
 
