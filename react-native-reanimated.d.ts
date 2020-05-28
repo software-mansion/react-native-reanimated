@@ -324,7 +324,7 @@ declare module 'react-native-reanimated' {
       minVal: Adaptable<number>,
       maxVal: Adaptable<number>,
     ): AnimatedNode<number>;
-    export function interpolate(
+    export function interpolateNode(
       value: Adaptable<number>,
       config: InterpolationConfig,
     ): AnimatedNode<number>;
@@ -487,7 +487,7 @@ declare module 'react-native-reanimated' {
   export const interpolateColors: typeof Animated.interpolateColors
   export const diff: typeof Animated.diff
   export const diffClamp: typeof Animated.diffClamp
-  export const interpolate: typeof Animated.interpolate
+  export const interpolateNode: typeof Animated.interpolateNode
   export const Extrapolate: typeof Animated.Extrapolate
   export const max: typeof Animated.max
   export const min: typeof Animated.min
