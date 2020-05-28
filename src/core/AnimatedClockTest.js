@@ -1,17 +1,15 @@
 import AnimatedNode from './AnimatedNode';
-import AnimatedClock from './AnimatedClock';
-import invariant from 'fbjs/lib/invariant';
 
 class AnimatedClockTest extends AnimatedNode {
   _clockNode;
 
   constructor(clockNode) {
-    super({ type: 'clockTest', clock: clockNode.__nodeID });
-    invariant(
-      clockNode instanceof AnimatedClock,
-      'Node is not of an AnimatedClock type'
-    );
+    super({ type: 'clockTest', clock: clockNode });
     this._clockNode = clockNode;
+  }
+
+  toString() {
+    return `AnimatedClockTest, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

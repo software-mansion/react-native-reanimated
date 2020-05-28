@@ -2,16 +2,30 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+buildscript {
+    if (project == rootProject) {
+        // The Android Gradle plugin is only required when opening the android folder stand-alone.
+        // This avoids unnecessary downloads and potential conflicts when the library is included as a
+        // module dependency in an application project.
+        repositories {
+            google()
+            jcenter()
+        }
+        dependencies {
+            classpath 'com.android.tools.build:gradle:3.5.2'
+        }
+    }
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 25)
-    buildToolsVersion safeExtGet('buildToolsVersion', '25.0.2')
-
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
+    buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 22)
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
     }
@@ -21,18 +35,23 @@ android {
 }
 
 repositories {
+    mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        // Matches the RN Hello World template
-        // https://github.com/facebook/react-native/blob/1e8f3b11027fe0a7514b4fc97d0798d3c64bc895/local-cli/templates/HelloWorld/android/build.gradle#L21
-        url "$projectDir/../node_modules/react-native/android"
+        url "$rootDir/../node_modules/react-native/android"
     }
-    mavenCentral()
+    maven {
+        // Android JSC is installed from npm
+        url "$rootDir/../node_modules/jsc-android/dist"
+    }
+    google()
+    jcenter()
 }
 
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
-    implementation "com.android.support:transition:${rootProject.ext.supportLibVersion}"
+    //noinspection GradleDynamicVersion
+    implementation 'com.facebook.react:react-native:+'  // From node_modules
+    implementation "androidx.transition:transition:1.1.0"
 }
 
 def configureReactNativePom(def pom) {
@@ -84,9 +103,16 @@ afterEvaluate { project ->
     }
 
     android.libraryVariants.all { variant ->
+        def compileTask
+        if (variant.hasProperty('javaCompileProvider')){
+            compileTask = variant.javaCompileProvider.get()
+        }else{
+            compileTask = variant.javaCompile
+        }
+
         def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompileProvider.get()) {
-            from variant.javaCompileProvider.get().destinationDir
+        task "jar${name}"(type: Jar, dependsOn: compileTask) {
+            from compileTask.destinationDir
         }
     }
 

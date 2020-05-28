@@ -3,6 +3,7 @@ package com.swmansion.reanimated.nodes;
 import android.graphics.PointF;
 
 import com.facebook.react.bridge.ReadableMap;
+import com.swmansion.reanimated.MapUtils;
 import com.swmansion.reanimated.NodesManager;
 
 public class BezierNode extends Node {
@@ -15,13 +16,7 @@ public class BezierNode extends Node {
     protected PointF b = new PointF();
     protected PointF c = new PointF();
 
-    public CubicBezierInterpolator(PointF start, PointF end) throws IllegalArgumentException {
-      if (start.x < 0 || start.x > 1) {
-        throw new IllegalArgumentException("startX value must be in the range [0, 1]");
-      }
-      if (end.x < 0 || end.x > 1) {
-        throw new IllegalArgumentException("endX value must be in the range [0, 1]");
-      }
+    public CubicBezierInterpolator(PointF start, PointF end) {
       this.start = start;
       this.end = end;
     }
@@ -72,7 +67,7 @@ public class BezierNode extends Node {
   public BezierNode(int nodeID, ReadableMap config, NodesManager nodesManager) {
     super(nodeID, config, nodesManager);
 
-    mInputID = config.getInt("input");
+    mInputID = MapUtils.getInt(config, "input", "Reanimated: Argument passed to bezier node is either of wrong type or is missing.");
 
     float startX = (float) config.getDouble("mX1");
     float startY = (float) config.getDouble("mY1");

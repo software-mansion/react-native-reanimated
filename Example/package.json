@@ -3,26 +3,52 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start --config ./metro.config.js",
-    "test": "jest"
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "web": "expo start --web-only --web",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint .",
+    "postinstall": "rm -rf node_modules/react-native-reanimated/{.git,node_modules,ReanimatedExample}"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.2",
-    "react": "16.8.6",
-    "react-native": "0.59.3",
-    "react-native-gesture-handler": "1.0.15",
-    "react-navigation": "2.17.0"
+    "@react-navigation/web": "^1.0.0-alpha.9",
+    "babel-plugin-module-resolver": "^4.0.0",
+    "expo": "^37.0.5",
+    "glob-to-regexp": "^0.4.1",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.2",
+    "react": "16.11.0",
+    "react-dom": "^16.13.1",
+    "react-native": "0.62.1",
+    "react-native-gesture-handler": "^1.6.1",
+    "react-native-reanimated": "file:..",
+    "react-native-screens": "^1.0.0-alpha.23",
+    "react-native-web": "^0.12.2",
+    "react-navigation": "^4.3.7",
+    "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
-    "@babel/core": "7.1.2",
-    "babel-core": "7.0.0-bridge.0",
-    "babel-plugin-module-resolver": "^3.1.1",
-    "glob-to-regexp": "^0.4.0",
-    "jest": "23.6.0",
-    "metro-react-native-babel-preset": "^0.48.0",
-    "react-test-renderer": "16.5.0"
+    "@babel/core": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
+    "@react-native-community/eslint-config": "^0.0.5",
+    "babel-jest": "^24.9.0",
+    "eslint": "^6.5.1",
+    "jest": "^24.9.0",
+    "metro-react-native-babel-preset": "^0.58.0",
+    "react-test-renderer": "16.11.0"
   },
   "jest": {
     "preset": "react-native"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }

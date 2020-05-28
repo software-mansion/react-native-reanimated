@@ -29,6 +29,7 @@ const OPERATIONS = {
   pow: reduce((a, b) => Math.pow(a, b)),
   modulo: reduce((a, b) => ((a % b) + b) % b),
   sqrt: single(a => Math.sqrt(a)),
+  log: single(a => Math.log(a)),
   sin: single(a => Math.sin(a)),
   cos: single(a => Math.cos(a)),
   tan: single(a => Math.tan(a)),
@@ -36,6 +37,7 @@ const OPERATIONS = {
   asin: single(a => Math.asin(a)),
   atan: single(a => Math.atan(a)),
   exp: single(a => Math.exp(a)),
+  round: single(a => Math.round(a)),
 
   // logical
   and: reduceFrom((a, b) => a && b, true),
@@ -60,12 +62,29 @@ class AnimatedOperator extends AnimatedNode {
   _operation;
 
   constructor(operator, input) {
+    invariant(
+      typeof operator === 'string',
+      `Reanimated: Animated.operator node first argument should be of type String, but got: ${operator}`
+    );
+    invariant(
+      input.every(
+        el =>
+          el instanceof AnimatedNode ||
+          typeof el === 'string' ||
+          typeof el === 'number'
+      ),
+      `Reanimated: Animated.operator node second argument should be one or more of type AnimatedNode, String or Number but got ${input}`
+    );
     super(
-      { type: 'op', op: operator, input: input.map(n => n.__nodeID) },
+      { type: 'op', op: operator, input },
       input
     );
     this._op = operator;
     this._input = input;
+  }
+
+  toString() {
+    return `AnimatedOperator, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

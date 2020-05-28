@@ -37,6 +37,9 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
+import com.swmansion.reanimated.nodes.ParamNode;
+import com.swmansion.reanimated.nodes.FunctionNode;
+import com.swmansion.reanimated.nodes.CallFuncNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -264,6 +267,12 @@ public class NodesManager implements EventDispatcherListener {
       node = new AlwaysNode(nodeID, config, this);
     } else if ("concat".equals(type)) {
       node = new ConcatNode(nodeID, config, this);
+    } else if ("param".equals(type)) {
+      node = new ParamNode(nodeID, config, this);
+    } else if ("func".equals(type)) {
+      node = new FunctionNode(nodeID, config, this);
+    } else if ("callfunc".equals(type)) {
+      node = new CallFuncNode(nodeID, config, this);
     } else {
       throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
     }
@@ -276,10 +285,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void connectNodes(int parentID, int childID) {
     Node parentNode = mAnimatedNodes.get(parentID);
-    if (parentNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + parentID +
-              " does not exists");
-    }
     Node childNode = mAnimatedNodes.get(childID);
     if (childNode == null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
@@ -290,10 +295,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void disconnectNodes(int parentID, int childID) {
     Node parentNode = mAnimatedNodes.get(parentID);
-    if (parentNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + parentID +
-              " does not exists");
-    }
     Node childNode = mAnimatedNodes.get(childID);
     if (childNode == null) {
       throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
@@ -397,5 +398,12 @@ public class NodesManager implements EventDispatcherListener {
 
   public void sendEvent(String name, WritableMap body) {
     mEventEmitter.emit(name, body);
+  }
+
+  public void setValue(int nodeID, Double newValue) {
+    Node node = mAnimatedNodes.get(nodeID);
+    if (node != null) {
+        ((ValueNode) node).setValue(newValue);
+    }
   }
 }

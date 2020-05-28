@@ -1,5 +1,5 @@
 import React from 'react';
-import { findNodeHandle, StyleSheet } from 'react-native';
+import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
@@ -15,6 +15,11 @@ function listener(data) {
   component && component._updateFromNative(data.props);
 }
 
+function dummyListener() {
+  // empty listener we use to assign to listener properties for which animated
+  // event is used.
+}
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -26,6 +31,11 @@ export default function createAnimatedComponent(Component) {
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
 
+    constructor(props) {
+      super(props);
+      this._attachProps(this.props);
+    }
+
     componentWillUnmount() {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
@@ -34,10 +44,6 @@ export default function createAnimatedComponent(Component) {
 
     setNativeProps(props) {
       this._component.setNativeProps(props);
-    }
-
-    componentWillMount() {
-      this._attachProps(this.props);
     }
 
     componentDidMount() {
@@ -204,6 +210,12 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+        } else if (value instanceof AnimatedEvent) {
+          // we cannot filter out event listeners completely as some components
+          // rely on having a callback registered in order to generate events
+          // alltogether. Therefore we provide a dummy callback here to allow
+          // native event dispatcher to hijack events.
+          props[key] = dummyListener;
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
@@ -213,8 +225,12 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      const platformProps = Platform.select({
+        web: {},
+        default: { collapsable: false },
+      });
       return (
-        <Component {...props} ref={this._setComponentRef} collapsable={false} />
+        <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
 
@@ -224,6 +240,8 @@ export default function createAnimatedComponent(Component) {
       return this._component;
     }
   }
+
+  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName || Component.name || 'Component'})`
 
   return AnimatedComponent;
 }

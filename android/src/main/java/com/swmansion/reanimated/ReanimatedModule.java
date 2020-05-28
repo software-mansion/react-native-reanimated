@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 public class ReanimatedModule extends ReactContextBaseJavaModule implements
         LifecycleEventListener, UIManagerModuleListener {
 
-  protected static final String NAME = "ReanimatedModule";
+  public static final String NAME = "ReanimatedModule";
 
   private interface UIThreadOperation {
     void execute(NodesManager nodesManager);
@@ -210,6 +210,16 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       @Override
       public void execute(NodesManager nodesManager) {
         nodesManager.getValue(nodeID, callback);
+      }
+    });
+  }
+
+  @ReactMethod
+  public void setValue(final int nodeID, final Double newValue) {
+    mOperations.add(new UIThreadOperation() {
+      @Override
+      public void execute(NodesManager nodesManager) {
+        nodesManager.setValue(nodeID, newValue);
       }
     });
   }

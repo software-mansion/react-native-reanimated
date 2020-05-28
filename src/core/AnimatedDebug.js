@@ -1,16 +1,29 @@
+import invariant from 'fbjs/lib/invariant';
 import { val } from '../val';
-import AnimatedNode from './AnimatedNode';
-import { createAnimatedBlock as block, adapt } from './AnimatedBlock';
+import { adapt, createAnimatedBlock as block } from './AnimatedBlock';
 import { createAnimatedCall as call } from './AnimatedCall';
+import AnimatedNode from './AnimatedNode';
 
 class AnimatedDebug extends AnimatedNode {
   _message;
   _value;
 
   constructor(message, value) {
-    super({ type: 'debug', message, value: value.__nodeID }, [value]);
+    invariant(
+      typeof message === 'string',
+      `Reanimated: Animated.debug node first argument should be of type string but got ${message}`
+    );
+    invariant(
+      value instanceof AnimatedNode,
+      `Reanimated: Animated.debug node second argument should be of type AnimatedNode but got ${value}`
+    );
+    super({ type: 'debug', message, value }, [value]);
     this._message = message;
     this._value = value;
+  }
+
+  toString() {
+    return `AnimatedDebug, id: ${this.__nodeID}`;
   }
 
   __onEvaluate() {

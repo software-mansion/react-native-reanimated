@@ -25,12 +25,15 @@ describe('Reanimated backward compatible API', () => {
         this.transX = new Value(0);
         this.anim = animation.node(this.transX, animation.config);
       }
+
       start(method) {
         this.anim.start(method);
       }
+
       stop(res) {
         this.anim.__stopImmediately_testOnly(res);
       }
+
       render() {
         return (
           <Animated.View style={{ transform: [{ translateX: this.transX }] }} />
@@ -118,12 +121,15 @@ describe('Reanimated backward compatible API', () => {
         this.anim = timing(this.transX, config);
         this.anim2 = timing(this.transX, config);
       }
+
       start1(method) {
         this.anim.start(method);
       }
+
       start2(method) {
         this.anim2.start(method);
       }
+
       render() {
         return (
           <Animated.View style={{ transform: [{ translateX: this.transX }] }} />

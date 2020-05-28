@@ -19,18 +19,9 @@
 #import "REAModule.h"
 #import "Nodes/REAAlwaysNode.h"
 #import "Nodes/REAConcatNode.h"
-#import "REAModule.h"
-
-@interface RCTUIManager ()
-
-- (void)updateView:(nonnull NSNumber *)reactTag
-          viewName:(NSString *)viewName
-             props:(NSDictionary *)props;
-
-- (void)setNeedsLayout;
-
-@end
-
+#import "Nodes/REAParamNode.h"
+#import "Nodes/REAFunctionNode.h"
+#import "Nodes/REACallFuncNode.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in 
@@ -57,6 +48,7 @@
   CADisplayLink *_displayLink;
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
+  BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
 }
@@ -111,7 +103,9 @@
 - (void)postRunUpdatesAfterAnimation
 {
   _wantRunUpdates = YES;
-  [self startUpdatingOnAnimationFrame];
+  if (!_processingDirectEvent) {
+    [self startUpdatingOnAnimationFrame];
+  }
 }
 
 - (void)startUpdatingOnAnimationFrame
@@ -228,6 +222,9 @@
             @"event": [REAEventNode class],
             @"always": [REAAlwaysNode class],
             @"concat": [REAConcatNode class],
+            @"param": [REAParamNode class],
+            @"func": [REAFunctionNode class],
+            @"callfunc": [REACallFuncNode class],
 //            @"listener": nil,
             };
   });
@@ -262,7 +259,6 @@
   REANode *parentNode = _nodes[parentID];
   REANode *childNode = _nodes[childID];
 
-  RCTAssertParam(parentNode);
   RCTAssertParam(childNode);
 
   [parentNode addChild:childNode];
@@ -276,7 +272,6 @@
   REANode *parentNode = _nodes[parentID];
   REANode *childNode = _nodes[childID];
 
-  RCTAssertParam(parentNode);
   RCTAssertParam(childNode);
 
   [parentNode removeChild:childNode];
@@ -315,7 +310,9 @@
   REANode *eventNode = _nodes[eventNodeID];
   RCTAssert([eventNode isKindOfClass:[REAEventNode class]], @"Event node is of an invalid type");
 
-  NSString *key = [NSString stringWithFormat:@"%@%@", viewTag, eventName];
+  NSString *key = [NSString stringWithFormat:@"%@%@",
+                   viewTag,
+                   RCTNormalizeInputEventName(eventName)];
   RCTAssert([_eventMapping objectForKey:key] == nil, @"Event handler already set for the given view and event type");
   [_eventMapping setObject:eventNode forKey:key];
 }
@@ -324,26 +321,64 @@
           eventName:(NSString *)eventName
         eventNodeID:(REANodeID)eventNodeID
 {
-  NSString *key = [NSString stringWithFormat:@"%@%@", viewTag, eventName];
+  NSString *key = [NSString stringWithFormat:@"%@%@",
+                   viewTag,
+                   RCTNormalizeInputEventName(eventName)];
   [_eventMapping removeObjectForKey:key];
 }
 
 - (void)processEvent:(id<RCTEvent>)event
 {
-  NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, event.eventName];
+  NSString *key = [NSString stringWithFormat:@"%@%@",
+                   event.viewTag,
+                   RCTNormalizeInputEventName(event.eventName)];
   REAEventNode *eventNode = [_eventMapping objectForKey:key];
   [eventNode processEvent:event];
 }
 
+- (void)processDirectEvent:(id<RCTEvent>)event
+{
+  _processingDirectEvent = YES;
+  [self processEvent:event];
+  [self performOperations];
+  _processingDirectEvent = NO;
+}
+
+- (BOOL)isDirectEvent:(id<RCTEvent>)event
+{
+  static NSArray<NSString *> *directEventNames;
+  static dispatch_once_t directEventNamesToken;
+  dispatch_once(&directEventNamesToken, ^{
+    directEventNames = @[
+      @"topContentSizeChange",
+      @"topMomentumScrollBegin",
+      @"topMomentumScrollEnd",
+      @"topScroll",
+      @"topScrollBeginDrag",
+      @"topScrollEndDrag"
+    ];
+  });
+  
+  return [directEventNames containsObject:RCTNormalizeInputEventName(event.eventName)];
+}
+
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
-  NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, event.eventName];
+  NSString *key = [NSString stringWithFormat:@"%@%@",
+                   event.viewTag,
+                   RCTNormalizeInputEventName(event.eventName)];
   REANode *eventNode = [_eventMapping objectForKey:key];
 
   if (eventNode != nil) {
-    // enqueue node to be processed
-    [_eventQueue addObject:event];
-    [self startUpdatingOnAnimationFrame];
+    if ([self isDirectEvent:event]) {
+      // Bypass the event queue/animation frames and process scroll events
+      // immediately to avoid getting out of sync with the scroll position
+      [self processDirectEvent:event];
+    } else {
+      // enqueue node to be processed
+      [_eventQueue addObject:event];
+      [self startUpdatingOnAnimationFrame];
+    }
   }
 }
 
@@ -352,6 +387,16 @@
 {
   _uiProps = uiProps;
   _nativeProps = nativeProps;
+}
+
+- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
+{
+  RCTAssertParam(nodeID);
+
+  REANode *node = _nodes[nodeID];
+
+  REAValueNode *valueNode = (REAValueNode *)node;
+  [valueNode setValue:newValue];
 }
 
 @end

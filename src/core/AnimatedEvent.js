@@ -1,4 +1,4 @@
-import { findNodeHandle } from 'react-native';
+import { Platform, findNodeHandle } from 'react-native';
 import ReanimatedModule from '../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
@@ -14,15 +14,22 @@ function sanitizeArgMapping(argMapping) {
   const eventMappings = [];
   const alwaysNodes = [];
 
+  const getNode = node => {
+    if (Platform.OS === 'web') {
+      return node;
+    }
+    return node.__nodeID;
+  };
+
   const traverse = (value, path) => {
     if (value instanceof InternalAnimatedValue) {
-      eventMappings.push(path.concat(value.__nodeID));
+      eventMappings.push(path.concat(getNode(value)));
     } else if (typeof value === 'object' && value.__val) {
-      eventMappings.push(path.concat(value.__val.__nodeID));
+      eventMappings.push(path.concat(getNode(value.__val)));
     } else if (typeof value === 'function') {
       const node = new InternalAnimatedValue(0);
       alwaysNodes.push(createAnimatedAlways(value(node)));
-      eventMappings.push(path.concat(node.__nodeID));
+      eventMappings.push(path.concat(getNode(node)));
     } else if (typeof value === 'object') {
       for (const key in value) {
         traverse(value[key], path.concat(key));
@@ -53,7 +60,9 @@ function sanitizeArgMapping(argMapping) {
       set: function(target, prop, value) {
         if (prop === '__val') {
           target[prop] = value;
+          return true;
         }
+        return false;
       },
     };
 
@@ -75,6 +84,10 @@ export default class AnimatedEvent extends AnimatedNode {
     this._alwaysNodes = alwaysNodes;
   }
 
+  toString() {
+    return `AnimatedEvent, id: ${this.__nodeID}`;
+  }
+
   // The below field is a temporary workaround to make AnimatedEvent object be recognized
   // as Animated.event event callback and therefore filtered out from being send over the
   // bridge which was causing the object to be frozen in JS.
@@ -87,6 +100,10 @@ export default class AnimatedEvent extends AnimatedNode {
     this.__attach();
     const viewTag = findNodeHandle(viewRef);
     ReanimatedModule.attachEvent(viewTag, eventName, this.__nodeID);
+  }
+
+  __onEvaluate() {
+    return 0;
   }
 
   detachEvent(viewRef, eventName) {

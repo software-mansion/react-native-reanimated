@@ -2,6 +2,7 @@ import interpolate from './interpolate';
 import AnimatedValue from '../core/AnimatedValue';
 
 jest.mock('../ReanimatedEventEmitter');
+jest.mock('../ReanimatedModule');
 
 const value = new AnimatedValue(0);
 

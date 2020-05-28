@@ -8,12 +8,13 @@ import {
   block,
   set,
   lessThan,
+  proc,
 } from '../base';
 import { abs } from '../derived';
 
 const VELOCITY_EPS = 5;
 
-export default function decay(clock, state, config) {
+function decay(clock, state, config) {
   const lastTime = cond(state.time, state.time, clock);
   const deltaTime = sub(clock, lastTime);
 
@@ -38,3 +39,14 @@ export default function decay(clock, state, config) {
     cond(lessThan(abs(v), VELOCITY_EPS), set(state.finished, 1)),
   ]);
 }
+
+const procDecay = proc(
+  (clock, time, velocity, position, finished, deceleration) =>
+    decay(clock, { time, velocity, position, finished }, { deceleration })
+);
+
+export default (
+  clock,
+  { time, velocity, position, finished },
+  { deceleration }
+) => procDecay(clock, time, velocity, position, finished, deceleration);
