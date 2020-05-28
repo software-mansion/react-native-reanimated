@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[27],{161:function(a){a.exports=JSON.parse('{"allTagsPath":"https://docs.swmansion.com/react-native-reanimated/blog/tags","slug":"facebook","name":"facebook","count":1,"permalink":"https://docs.swmansion.com/react-native-reanimated/blog/tags/facebook"}')}}]);
