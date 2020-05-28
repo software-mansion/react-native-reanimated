@@ -24,6 +24,7 @@ import {
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
+import useValue from './useValue';
 
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
@@ -56,6 +57,9 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+
+  // hooks
+  useValue,
 };
 
 export default Animated;
@@ -80,4 +84,7 @@ export {
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
+
+  // hooks
+  useValue,
 };
