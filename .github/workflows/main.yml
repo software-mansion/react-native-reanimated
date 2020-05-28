@@ -18,11 +18,11 @@ jobs:
           && git config --local user.name "GitHub Action"
           && cd docs
           && yarn
-          && yarn component-docs build
+          && yarn build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: docs/dist
+          FOLDER: docs/build
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

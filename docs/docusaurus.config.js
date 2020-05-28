@@ -1,0 +1,175 @@
+module.exports = {
+  title: 'React Native Reanimated',
+  tagline: "React Native's Animated library reimplemented",
+  url: 'https://docs.swmansion.com/react-native-reanimated/',
+  baseUrl: '/react-native-reanimated/',
+  favicon: 'img/SWM_Fav_192x192.png',
+  organizationName: 'software-mansion', // Usually your GitHub org/user name.
+  projectName: 'react-native-reanimated', // Usually your repo name.
+  themeConfig: {
+    disableDarkMode: true,
+    announcementBar: {
+      id: 'old_version', // Any value that will identify this message.
+      content:
+        'This is a documentation website for Reanimated 2.0 alpha release. If you are looking for Reanimated 1 docs <a target="_blank" rel="noopener noreferrer" href="https://docs.swmansion.com/react-native-reanimated-docs/">here is a link</a>',
+      backgroundColor: '#ffaaa8', // Defaults to `#fff`.
+      textColor: '#001a72', // Defaults to `#000`.
+    },
+    navbar: {
+      title: 'React Native Reanimated',
+      links: [
+        {
+          to: 'docs/about',
+          activeBasePath: 'docs',
+          label: 'Docs',
+          position: 'left',
+        },
+        // {to: 'blog', label: 'Blog', position: 'left'},
+        {
+          href: 'https://github.com/software-mansion/react-native-reanimated',
+          label: '',
+          position: 'right',
+        },
+      ],
+    },
+    prism: {
+      theme: {
+        plain: {
+          color: '#ffffff',
+          backgroundColor: '#001a72',
+        },
+        styles: [
+          {
+            types: ['comment'],
+            style: {
+              color: '#aaaaaa',
+              fontStyle: 'italic',
+            },
+          },
+          {
+            types: ['string'],
+            style: {
+              color: '#ffffff',
+            },
+          },
+          {
+            types: ['punctuation'],
+            style: {
+              color: '#ffee86',
+            },
+          },
+          {
+            types: ['variable', 'constant', 'builtin', 'attr-name'],
+            style: {
+              color: '#a3b8ff',
+            },
+          },
+          {
+            types: ['number', 'operator'],
+            style: {
+              color: '#ffaaa8',
+            },
+          },
+          {
+            types: ['keyword'],
+            style: {
+              color: '#8ed3ef',
+            },
+          },
+          {
+            types: ['char'],
+            style: {
+              color: '#a3b8ff',
+            },
+          },
+          {
+            types: ['tag'],
+            style: {
+              color: '#ffaaa8',
+            },
+          },
+          {
+            types: ['function'],
+            style: {
+              color: '#a3b8ff',
+            },
+          },
+        ],
+      },
+      // darkTheme: require('prism-react-renderer/themes/dracula'),
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        // {
+        //   title: 'Docs',
+        //   items: [
+        //     {
+        //       label: 'Style Guide',
+        //       to: 'docs/',
+        //     },
+        //     {
+        //       label: 'Second Doc',
+        //       to: 'docs/doc2/',
+        //     },
+        //   ],
+        // },
+        // {
+        //   title: 'Community',
+        //   items: [
+        //     {
+        //       label: 'Stack Overflow',
+        //       href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+        //     },
+        //     {
+        //       label: 'Discord',
+        //       href: 'https://discordapp.com/invite/docusaurus',
+        //     },
+        //     {
+        //       label: 'Twitter',
+        //       href: 'https://twitter.com/docusaurus',
+        //     },
+        //   ],
+        // },
+        // {
+        //   title: 'More',
+        //   items: [
+        //     {
+        //       label: 'Blog',
+        //       to: 'blog',
+        //     },
+        //     {
+        //       label: 'GitHub',
+        //       href: 'https://github.com/facebook/docusaurus',
+        //     },
+        //   ],
+        // },
+      ],
+      // copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+    },
+  },
+  presets: [
+    [
+      '@docusaurus/preset-classic',
+      {
+        docs: {
+          // It is recommended to set document id as docs home page (`docs/` path).
+          homePageId: 'docs',
+          sidebarPath: require.resolve('./sidebars.js'),
+          // Please change this to your repo.
+          editUrl:
+            'https://github.com/software-mansion/react-native-reanimated/tree/master/docs',
+        },
+        blog: {
+          showReadingTime: true,
+          // Please change this to your repo.
+          editUrl:
+            'https://github.com/facebook/docusaurus/edit/master/website/blog/',
+        },
+        theme: {
+          customCss: require.resolve('./src/css/custom.css'),
+        },
+      },
+    ],
+  ],
+};
