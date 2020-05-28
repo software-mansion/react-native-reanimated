@@ -1,5 +1,5 @@
 import { Image, ScrollView, Text, View } from 'react-native';
-import Easing from './Easing';
+import EasingNode from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
 import AnimatedNode from './core/AnimatedNode';
@@ -13,6 +13,7 @@ import spring from './animations/spring';
 import TimingAnimation from './animations/TimingAnimation';
 import SpringAnimation from './animations/SpringAnimation';
 import DecayAnimation from './animations/DecayAnimation';
+import { custom } from './ReanimatedModule';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -24,7 +25,6 @@ import {
   createTransitioningComponent,
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
-
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
 const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
@@ -56,6 +56,8 @@ const Animated = {
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+
+  custom,
 };
 
 export default Animated;
@@ -64,17 +66,17 @@ export default Animated;
 export * from './base';
 export * from './derived';
 
+export * from './reanimated2';
+
 export {
-  Easing,
+  EasingNode,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
-
+  createTransitioningComponent,
   // classes
   AnimatedClock as Clock,
   AnimatedValue as Value,
   AnimatedNode as Node,
-
   // animations
   decayWrapper as decay,
   timingWrapper as timing,

@@ -35,6 +35,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
   private @Nullable NodesManager mNodesManager;
   private @Nullable TransitionModule mTransitionManager;
 
+  private UIManagerModule mUIManager;
+
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -46,6 +48,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);
     mTransitionManager = new TransitionModule(uiManager);
+
+    mUIManager = uiManager;
   }
 
   @Override
@@ -90,7 +94,7 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     return NAME;
   }
 
-  private NodesManager getNodesManager() {
+  /*package*/ NodesManager getNodesManager() {
     if (mNodesManager == null) {
       mNodesManager = new NodesManager(getReactApplicationContext());
     }
@@ -223,4 +227,5 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
       }
     });
   }
+
 }

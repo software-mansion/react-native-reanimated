@@ -5,28 +5,32 @@ module.exports = api => {
     presets: ['babel-preset-expo'],
     plugins: [
       '@babel/plugin-transform-modules-commonjs',
-      isWeb ? [
-        'module-resolver',
-        {
-          alias: {
-            'react-native-reanimated': './Animated/Animated.js',
-          },
-        },
-      ] : [
-        'module-resolver',
-        {
-          alias: {
-            'react-native-reanimated': '../src/Animated',
-            react: './node_modules/react',
-            'react-native': './node_modules/react-native',
-            '@babel': './node_modules/@babel',
-            fbjs: './node_modules/fbjs',
-            'hoist-non-react-statics': './node_modules/hoist-non-react-statics',
-            invariant: './node_modules/invariant',
-            'prop-types': './node_modules/prop-types',
-          },
-        },
-      ],
+      '../plugin',
+      isWeb
+        ? [
+            'module-resolver',
+            {
+              alias: {
+                'react-native-reanimated': './Animated/Animated.js',
+              },
+            },
+          ]
+        : [
+            'module-resolver',
+            {
+              alias: {
+                'react-native-reanimated': '../src/Animated',
+                react: './node_modules/react',
+                'react-native': './node_modules/react-native',
+                '@babel': './node_modules/@babel',
+                fbjs: './node_modules/fbjs',
+                'hoist-non-react-statics':
+                  './node_modules/hoist-non-react-statics',
+                invariant: './node_modules/invariant',
+                'prop-types': './node_modules/prop-types',
+              },
+            },
+          ],
     ].filter(Boolean),
   };
 };

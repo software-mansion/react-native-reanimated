@@ -20,21 +20,21 @@ class Code extends React.Component {
 }
 
 const getValue = node => {
-  if (typeof node === "number") {
+  if (typeof node === 'number') {
     return node;
   }
-  return node[" __value"];
+  return node[' __value'];
 };
 
 class AnimatedValue {
-  " __value": number;
+  ' __value': number;
 
   constructor(val: number) {
-    this[" __value"] = val;
+    this[' __value'] = val;
   }
 
   setValue(val: number) {
-    this[" __value"] = val;
+    this[' __value'] = val;
   }
 }
 
@@ -94,8 +94,9 @@ module.exports = {
     neq: (a, b) => new AnimatedValue(getValue(a) !== getValue(b)),
     and: (a, b) => new AnimatedValue(getValue(a) && getValue(b)),
     or: (a, b) => new AnimatedValue(getValue(a) || getValue(b)),
-    defined: (a) => new AnimatedValue(getValue(a) !== null && getValue(a) !== undefined),
-    not: (a) => new AnimatedValue(!getValue(a)),
+    defined: a =>
+      new AnimatedValue(getValue(a) !== null && getValue(a) !== undefined),
+    not: a => new AnimatedValue(!getValue(a)),
     set: (a, b) => {
       a.setValue(getValue(b));
       return a;
@@ -105,10 +106,10 @@ module.exports = {
       if (getValue(a)) {
         return b;
       } else {
-        return c; 
+        return c;
       }
     },
-    block: (a) => a[a.length - 1],
+    block: a => a[a.length - 1],
     call: (a, b) => b(a),
     debug: NOOP,
     onChange: NOOP,
@@ -116,12 +117,13 @@ module.exports = {
     stopClock: NOOP,
     clockRunning: NOOP,
     event: NOOP,
-    abs: (a) => Math.abs(getValue(a)),
+    abs: a => Math.abs(getValue(a)),
     acc: NOOP,
     color: NOOP,
     diff: NOOP,
     diffClamp: NOOP,
     interpolate: NOOP,
+    interpolateNode: NOOP,
     max: (a, b) => Math.max(getValue(a), getValue(b)),
     min: (a, b) => Math.min(getValue(a), getValue(b)),
 

@@ -24,7 +24,11 @@ const interpolateInternalSingleProc = proc(function(
   const progress = divide(sub(value, inS), sub(inE, inS));
   // logic below was made in order to provide a compatibility witn an Animated API
   const resultForNonZeroRange = add(outS, multiply(progress, sub(outE, outS)));
-  const result = cond(eq(inS, inE), cond(lessOrEq(value, inS), outS, outE), resultForNonZeroRange);
+  const result = cond(
+    eq(inS, inE),
+    cond(lessOrEq(value, inS), outS, outE),
+    resultForNonZeroRange
+  );
   return result;
 });
 

@@ -3,7 +3,7 @@ export { default as acc } from './acc';
 export { default as color } from './color';
 export { default as diff } from './diff';
 export { default as diffClamp } from './diffClamp';
-export { default as interpolate, Extrapolate } from './interpolate';
+export { default as interpolate2, Extrapolate } from './interpolate';
 export { default as max } from './max';
 export { default as min } from './min';
 export { default as onChange } from './onChange';

@@ -9,10 +9,13 @@ import deepEqual from 'fbjs/lib/areEqual';
 import { val } from '../val';
 
 function sanitizeProps(inputProps) {
-  const props = {};
+  let props;
   for (const key in inputProps) {
     const value = inputProps[key];
     if (value instanceof AnimatedNode && !(value instanceof AnimatedEvent)) {
+      if (props === undefined) {
+        props = {};
+      }
       props[key] = value.__nodeID;
     }
   }
@@ -21,15 +24,18 @@ function sanitizeProps(inputProps) {
 
 export function createOrReusePropsNode(props, callback, oldNode) {
   if (props.style) {
-    props = {
-      ...props,
-      style: createOrReuseStyleNode(
-        props.style,
-        oldNode && oldNode._props.style
-      ),
-    };
+    const style = createOrReuseStyleNode(props.style, oldNode && oldNode._props.style);
+    if (style) {
+      props = {
+        ...props,
+        style,
+      };
+    }
   }
   const config = sanitizeProps(props);
+  if (config === undefined) {
+    return undefined;
+  }
   if (oldNode && deepEqual(config, oldNode._config)) {
     return oldNode;
   }
