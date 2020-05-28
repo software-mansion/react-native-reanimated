@@ -17,4 +17,7 @@ module.exports = {
     'react/jsx-uses-vars': 2,
     'react/jsx-uses-react': 2,
   },
+  settings: {
+    'import/core-modules': ['react-native-reanimated'],
+  },
 };

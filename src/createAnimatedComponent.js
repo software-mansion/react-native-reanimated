@@ -5,6 +5,7 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
 import { createOrReusePropsNode } from './core/AnimatedProps';
+import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -18,6 +19,19 @@ function listener(data) {
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
+}
+
+function hasAnimatedNodes(value) {
+  if (value instanceof AnimatedNode) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some(item => hasAnimatedNodes(item));
+  }
+  if (typeof value === 'object') {
+    return Object.keys(value).some(key => hasAnimatedNodes(value[key]));
+  }
+  return false;
 }
 
 export default function createAnimatedComponent(Component) {
@@ -52,9 +66,10 @@ export default function createAnimatedComponent(Component) {
         this._animatedPropsCallback();
       }
 
-      this._propsAnimated.setNativeView(this._component);
+      this._propsAnimated && this._propsAnimated.setNativeView(this._component);
       this._attachNativeEvents();
       this._attachPropUpdater();
+      this._attachAnimatedStyles();
     }
 
     _getEventViewRef() {
@@ -67,11 +82,14 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
+      const viewTag = findNodeHandle(node);
 
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
+        } else if (prop instanceof WorkletEventHandler) {
+          prop.registerForEvents(viewTag, key);
         }
       }
     }
@@ -83,6 +101,8 @@ export default function createAnimatedComponent(Component) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
+        } else if (prop instanceof WorkletEventHandler) {
+          prop.unregisterFromEvents();
         }
       }
     }
@@ -172,6 +192,22 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
+    _attachAnimatedStyles() {
+      const styles = Array.isArray(this.props.style)
+        ? this.props.style
+        : [this.props.style];
+      const viewTag = findNodeHandle(this);
+      styles.forEach(style => {
+        if (style && style.viewTag !== undefined) {
+          style.viewTag.value = viewTag;
+        }
+      });
+      // attach animatedProps property
+      if (this.props.animatedProps) {
+        this.props.animatedProps.viewTag.value = viewTag;
+      }
+    }
+
     _detachPropUpdater() {
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.delete(viewTag);
@@ -184,7 +220,7 @@ export default function createAnimatedComponent(Component) {
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
 
-      this._propsAnimated.setNativeView(this._component);
+      this._propsAnimated && this._propsAnimated.setNativeView(this._component);
     }
 
     _setComponentRef = c => {
@@ -197,7 +233,7 @@ export default function createAnimatedComponent(Component) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!(value instanceof AnimatedNode) && key !== 'transform') {
+        if (!hasAnimatedNodes(value)) {
           style[key] = value;
         }
       }
@@ -209,13 +245,36 @@ export default function createAnimatedComponent(Component) {
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          props[key] = this._filterNonAnimatedStyle(StyleSheet.flatten(value));
+          const styles = Array.isArray(value) ? value : [value];
+          const processedStyle = styles.map(style => {
+            if (style.viewTag) {
+              // this is how we recognize styles returned by useAnimatedStyle
+              return style.initial;
+            } else {
+              return style;
+            }
+          });
+          props[key] = this._filterNonAnimatedStyle(
+            StyleSheet.flatten(processedStyle)
+          );
+        } else if (key === 'animatedProps') {
+          Object.keys(value.initial).forEach(key => {
+            props[key] = value.initial[key];
+          });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
           // rely on having a callback registered in order to generate events
           // alltogether. Therefore we provide a dummy callback here to allow
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
+        } else if (value instanceof WorkletEventHandler) {
+          if (value.eventNames.length > 0) {
+            value.eventNames.forEach(
+              eventName => (props[eventName] = dummyListener)
+            );
+          } else {
+            props[key] = dummyListener;
+          }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }

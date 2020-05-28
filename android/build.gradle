@@ -82,6 +82,17 @@ def configureReactNativePom(def pom) {
     }
 }
 
+/*task copyCppCodeToReactNative() {
+    println("copy reanimated code")
+    copy {
+        from "$projectDir/src/main/cpp/"
+        from "$projectDir/src/main/cpp/headers/"
+        include '*.cpp'
+        include '*.h'
+        into "$rootDir/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/jscexecutor/"
+    }
+}*/
+
 afterEvaluate { project ->
 
     task androidJavadoc(type: Javadoc) {

@@ -1,4 +1,4 @@
-import {createBrowserApp} from '@react-navigation/web';
+import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
 import {
   FlatList,
@@ -8,134 +8,117 @@ import {
   View,
   YellowBox,
 } from 'react-native';
-import {RectButton, ScrollView} from 'react-native-gesture-handler';
-import {createAppContainer} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
+import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
 
-import ChatHeads from './chatHeads';
-import Code from './code';
-import Colors from './colors';
-import DifferentSpringConfigs from './differentSpringConfigs';
-import ImageViewer from './imageViewer';
-import Imperative from './imperative';
-import InteractablePlayground, {
-  SCREENS as INTERACTABLE_SCREENS,
-} from './interactablePlayground';
-import PanRotateAndZoom from './PanRotateAndZoom';
-import ProgressBar from './progressBar';
-import Rotations from './rotations';
-import Snappable from './snappable';
-import Interpolate from './src/interpolate';
-import StartAPI from './startAPI';
-import Test from './test';
-import TransitionsProgress from './transitions/progress';
-import TransitionsSequence from './transitions/sequence';
-import TransitionsShuffle from './transitions/shuffle';
-import TransitionsTicket from './transitions/ticket';
-import WidthAndHeight from './widthAndHeight';
+import Reanimated1 from '../reanimated1/App';
 
-YellowBox.ignoreWarnings([
-  'Warning: isMounted(...) is deprecated',
-  'Module RCTImageLoader',
-]);
-// refers to bug in React Navigation which should be fixed soon
-// https://github.com/react-navigation/react-navigation/issues/3956
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import DragAndSnapExample from './DragAndSnapExample';
+import ScrollEventExample from './ScrollEventExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import SwipeableListExample from './SwipeableListExample';
+import AnimatedTabBarExample from './AnimatedTabBarExample';
+import LiquidSwipe from './LiquidSwipe';
+
+YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
 const SCREENS = {
-  Snappable: {screen: Snappable, title: 'Snappable'},
-  Test: {screen: Test, title: 'Test'},
-  ImageViewer: {screen: ImageViewer, title: 'Image Viewer'},
-  Interactable: {screen: InteractablePlayground, title: 'Interactable'},
-  Interpolate: {screen: Interpolate, title: 'Interpolate'},
-  Colors: {screen: Colors, title: 'Colors'},
-  StartAPI: {screen: StartAPI, title: 'Start API'},
-  chatHeads: {screen: ChatHeads, title: 'Chat heads (iOS only)'},
-  code: {screen: Code, title: 'Animated.Code component'},
-  width: {screen: WidthAndHeight, title: 'width & height & more'},
-  rotations: {screen: Rotations, title: 'rotations (concat node)'},
-  imperative: {
-    screen: Imperative,
-    title: 'imperative (set value / toggle visibility)',
+  AnimatedStyleUpdate: {
+    screen: AnimatedStyleUpdateExample,
+    title: '🆕 Animated Style Update',
   },
-  panRotateAndZoom: {
-    screen: PanRotateAndZoom,
-    title: 'Pan, rotate and zoom (via native event function)',
+  DragAndSnapExample: {
+    screen: DragAndSnapExample,
+    title: '🆕 Drag and Snap',
   },
-  progressBar: {
-    screen: ProgressBar,
-    title: 'Progress bar',
+  ScrollEventExample: {
+    screen: ScrollEventExample,
+    title: '🆕 Scroll Events',
   },
-  differentSpringConfigs: {
-    screen: DifferentSpringConfigs,
-    title: 'Different Spring Configs',
+  ChatHeadsExample: {
+    screen: ChatHeadsExample,
+    title: '🆕 Chat Heads',
   },
-  transitionsSequence: {
-    screen: TransitionsSequence,
-    title: 'Transitions sequence',
+  SwipeableListExample: {
+    screen: SwipeableListExample,
+    title: '🆕 (advanced) Swipeable List',
   },
-  transitionsShuffle: {
-    screen: TransitionsShuffle,
-    title: 'Transitions shuffle',
+  AnimatedTabBarExample: {
+    screen: AnimatedTabBarExample,
+    title: '🆕 (advanced) Tab Bar Example',
   },
-  transitionsProgress: {
-    screen: TransitionsProgress,
-    title: 'Transitions progress bar',
-  },
-  transitionsTicket: {
-    screen: TransitionsTicket,
-    title: 'Transitions – flight ticket demo',
+  LiquidSwipe: {
+    screen: LiquidSwipe,
+    title: '🆕 (iOS ONLY) Liquid Swipe Example',
   },
 };
 
-class MainScreen extends React.Component {
-  static navigationOptions = {
-    title: '🎬 Reanimated Examples',
-  };
-
-  render() {
-    const data = Object.keys(SCREENS).map(key => ({key}));
-    return (
-      <FlatList
-        style={styles.list}
-        data={data}
-        ItemSeparatorComponent={ItemSeparator}
-        renderItem={props => (
-          <MainScreenItem
-            {...props}
-            onPressItem={({key}) => this.props.navigation.navigate(key)}
-          />
-        )}
-        renderScrollComponent={props => <ScrollView {...props} />}
-      />
-    );
-  }
+function MainScreen({ navigation }) {
+  const data = Object.keys(SCREENS).map(key => ({ key }));
+  return (
+    <FlatList
+      style={styles.list}
+      data={data}
+      ItemSeparatorComponent={ItemSeparator}
+      renderItem={props => (
+        <MainScreenItem
+          {...props}
+          onPressItem={({ key }) => navigation.navigate(key)}
+        />
+      )}
+      renderScrollComponent={props => <ScrollView {...props} />}
+      ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
+    />
+  );
 }
 
-const ItemSeparator = () => <View style={styles.separator} />;
+MainScreen.navigationOptions = {
+  title: '🎬 Reanimated 2.x Examples',
+};
 
-class MainScreenItem extends React.Component {
-  _onPress = () => this.props.onPressItem(this.props.item);
-  render() {
-    const {key} = this.props.item;
-    return (
-      <RectButton style={styles.button} onPress={this._onPress}>
-        <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
+function MainScreenItem({ item, onPressItem }) {
+  const { key } = item;
+  return (
+    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
+      <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
+    </RectButton>
+  );
+}
+
+function LaunchReanimated1({ navigation }) {
+  return (
+    <>
+      <ItemSeparator />
+      <RectButton
+        style={styles.button}
+        onPress={() => navigation.navigate('Reanimated1')}>
+        <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
       </RectButton>
-    );
-  }
+    </>
+  );
 }
 
-const ExampleApp = createStackNavigator(
+const Reanimated2App = createStackNavigator(
   {
-    Main: {screen: MainScreen},
+    Main: { screen: MainScreen },
     ...SCREENS,
-    ...INTERACTABLE_SCREENS,
   },
   {
     initialRouteName: 'Main',
     headerMode: 'screen',
-  },
+  }
 );
+
+const ExampleApp = createSwitchNavigator({
+  Reanimated2App,
+  Reanimated1,
+});
 
 const styles = StyleSheet.create({
   list: {
@@ -159,7 +142,7 @@ const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: input => createBrowserApp(input, {history: 'hash'}),
+  web: input => createBrowserApp(input, { history: 'hash' }),
   default: input => createAppContainer(input),
 });
 

@@ -17,17 +17,20 @@
   "source": "src/Animated",
   "types": "react-native-reanimated.d.ts",
   "files": [
+    "Common/",
     "src/",
     "lib/",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
+    "android/",
     "ios/",
     "!ios/build/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
-    "mock.js"
+    "mock.js",
+    "plugin.js"
   ],
   "repository": {
     "type": "git",

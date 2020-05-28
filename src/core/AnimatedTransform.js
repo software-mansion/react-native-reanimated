@@ -4,10 +4,12 @@ import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeTransform(inputTransform) {
   const outputTransform = [];
+  let hasAnimatedTransform = false;
   inputTransform.forEach(transform => {
     for (const key in transform) {
       const value = transform[key];
       if (value instanceof AnimatedNode) {
+        hasAnimatedTransform = true;
         outputTransform.push({
           property: key,
           nodeID: value.__nodeID,
@@ -20,7 +22,7 @@ function sanitizeTransform(inputTransform) {
       }
     }
   });
-  return outputTransform;
+  return hasAnimatedTransform ? outputTransform : undefined;
 }
 
 function extractAnimatedParentNodes(transform) {
@@ -38,6 +40,9 @@ function extractAnimatedParentNodes(transform) {
 
 export function createOrReuseTransformNode(transform, oldNode) {
   const config = sanitizeTransform(transform);
+  if (config === undefined) {
+    return undefined;
+  }
   if (oldNode && deepEqual(config, oldNode._config)) {
     return oldNode;
   }

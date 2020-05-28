@@ -6,10 +6,13 @@ import { createOrReuseTransformNode } from './AnimatedTransform';
 import deepEqual from 'fbjs/lib/areEqual';
 
 function sanitizeStyle(inputStyle) {
-  const style = {};
+  let style;
   for (const key in inputStyle) {
     const value = inputStyle[key];
     if (value instanceof AnimatedNode) {
+      if (style === undefined) {
+        style = {};
+      }
       style[key] = value.__nodeID;
     }
   }
@@ -19,15 +22,21 @@ function sanitizeStyle(inputStyle) {
 export function createOrReuseStyleNode(style, oldNode) {
   style = StyleSheet.flatten(style) || {};
   if (style.transform) {
-    style = {
-      ...style,
-      transform: createOrReuseTransformNode(
-        style.transform,
-        oldNode && oldNode._style.transform
-      ),
-    };
+    const transform = createOrReuseTransformNode(
+      style.transform,
+      oldNode && oldNode._style.transform
+    );
+    if (transform) {
+      style = {
+        ...style,
+        transform,
+      };
+    }
   }
   const config = sanitizeStyle(style);
+  if (config === undefined) {
+    return undefined;
+  }
   if (oldNode && deepEqual(config, oldNode._config)) {
     return oldNode;
   }

@@ -1,6 +1,15 @@
 import { Platform } from 'react-native';
 
-import { add, cond, concat, lessThan, multiply, round, sub, proc } from '../base';
+import {
+  add,
+  cond,
+  concat,
+  lessThan,
+  multiply,
+  round,
+  sub,
+  proc,
+} from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
 const procColor = proc(function(r, g, b, a) {
@@ -10,7 +19,7 @@ const procColor = proc(function(r, g, b, a) {
     multiply(round(g), 1 << 8),
     round(b)
   );
-  
+
   if (Platform.OS === 'android') {
     // on Android color is represented as signed 32 bit int
     return cond(

@@ -151,4 +151,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   context.loopID = [[NSNumber alloc] initWithLong:context.loopID.longValue + 1];
 }
 
+- (void)onDrop
+{
+  //noop
+}
+
 @end

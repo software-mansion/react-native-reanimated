@@ -1,0 +1,46 @@
+diff --git a/node_modules/react-native/ReactAndroid/build.gradle b/node_modules/react-native/ReactAndroid/build.gradle
+index 42675dd..09e327f 100644
+--- a/node_modules/react-native/ReactAndroid/build.gradle
++++ b/node_modules/react-native/ReactAndroid/build.gradle
+@@ -302,8 +302,9 @@ def buildReactNdkLib = tasks.register("buildReactNdkLib", Exec) {
+     inputs.dir("src/main/jni")
+     inputs.dir("src/main/java/com/facebook/react/modules/blob")
+     outputs.dir("$buildDir/react-ndk/all")
++    outputs.upToDateWhen { false }
+     commandLine(getNdkBuildFullPath(),
+-            "NDK_DEBUG=" + (nativeBuildType.equalsIgnoreCase("debug") ? "1" : "0"),
++            "NDK_DEBUG=0",
+             "NDK_PROJECT_PATH=null",
+             "NDK_APPLICATION_MK=$projectDir/src/main/jni/Application.mk",
+             "NDK_OUT=" + temporaryDir,
+@@ -311,6 +312,7 @@ def buildReactNdkLib = tasks.register("buildReactNdkLib", Exec) {
+             "THIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk",
+             "REACT_COMMON_DIR=$projectDir/../ReactCommon",
+             "REACT_SRC_DIR=$projectDir/src/main/java/com/facebook/react",
++            "REANIMATED=$projectDir/../../../../",
+             "-C", file("src/main/jni/react/jni").absolutePath,
+             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors()
+     )
+diff --git a/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk b/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
+index 84eae80..a672190 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
++++ b/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
+@@ -22,7 +22,7 @@ APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+ # Where are APP_MK_DIR, THIRD_PARTY_NDK_DIR, etc. defined?
+ #   The directories inside NDK_MODULE_PATH (ex: APP_MK_DIR, THIRD_PARTY_NDK_DIR,
+ #   etc.) are defined inside build.gradle.
+-NDK_MODULE_PATH := $(APP_MK_DIR)$(HOST_DIRSEP)$(THIRD_PARTY_NDK_DIR)$(HOST_DIRSEP)$(REACT_COMMON_DIR)$(HOST_DIRSEP)$(APP_MK_DIR)first-party$(HOST_DIRSEP)$(REACT_SRC_DIR)
++NDK_MODULE_PATH := $(APP_MK_DIR)$(HOST_DIRSEP)$(THIRD_PARTY_NDK_DIR)$(HOST_DIRSEP)$(REACT_COMMON_DIR)$(HOST_DIRSEP)$(APP_MK_DIR)first-party$(HOST_DIRSEP)$(REANIMATED)$(HOST_DIRSEP)$(REACT_SRC_DIR)
+ 
+ APP_STL := c++_shared
+ 
+diff --git a/node_modules/react-native/ReactAndroid/src/main/jni/react/jni/Android.mk b/node_modules/react-native/ReactAndroid/src/main/jni/react/jni/Android.mk
+index ed19e7f..e9081fd 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/jni/react/jni/Android.mk
++++ b/node_modules/react-native/ReactAndroid/src/main/jni/react/jni/Android.mk
+@@ -81,3 +81,5 @@ include $(REACT_SRC_DIR)/jscexecutor/Android.mk
+ include $(REACT_SRC_DIR)/../hermes/reactexecutor/Android.mk
+ include $(REACT_SRC_DIR)/../hermes/instrumentation/Android.mk
+ include $(REACT_SRC_DIR)/modules/blob/jni/Android.mk
++include $(REANIMATED)/android/Android.mk
++
