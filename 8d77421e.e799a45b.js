@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[28],{162:function(a){a.exports=JSON.parse('{"allTagsPath":"https://docs.swmansion.com/react-native-reanimated/blog/tags","slug":"docusaurus","name":"docusaurus","count":3,"permalink":"https://docs.swmansion.com/react-native-reanimated/blog/tags/docusaurus"}')}}]);
