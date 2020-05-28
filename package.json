@@ -8,8 +8,7 @@
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint": "eslint './src/**/*.js'",
-    "release": "npm login && release-it",
-    "prepare": "bob build"
+    "release": "npm login && release-it"
   },
   "main": "lib/commonjs/Animated",
   "module": "lib/module/Animated",

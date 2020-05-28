@@ -45,8 +45,8 @@ mv android-npm android
 
 npm pack
 
-mv android android-npm
-mv android-temp android
+#mv android android-npm
+#mv android-temp android
 
 
 echo "Done!"
