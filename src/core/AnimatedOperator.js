@@ -38,6 +38,11 @@ const OPERATIONS = {
   atan: single(a => Math.atan(a)),
   exp: single(a => Math.exp(a)),
   round: single(a => Math.round(a)),
+  abs: single(a => Math.abs(a)),
+  ceil: single(a => Math.ceil(a)),
+  floor: single(a => Math.floor(a)),
+  max: reduce((a,b) => Math.max(a, b)),
+  min: reduce((a,b) => Math.min(a, b)),
 
   // logical
   and: reduceFrom((a, b) => a && b, true),

@@ -1,7 +1,5 @@
-import { cond, defined, set, add, proc } from '../base';
+import { cond, defined, set, add, proc, min, max } from '../base';
 import AnimatedValue from '../core/InternalAnimatedValue';
-import min from './min';
-import max from './max';
 import diff from './diff';
 
 const procAcc = proc(function(a, minVal, maxVal, value) {
