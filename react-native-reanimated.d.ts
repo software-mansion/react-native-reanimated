@@ -380,6 +380,11 @@ declare module 'react-native-reanimated' {
       initialValue: T
     ): AnimatedValue<T>;
 
+    // reanimated2 hooks
+    export function useSharedValue<T extends Value>(
+      initialValue: T
+    ): AnimatedValue<T>;
+
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
   }
