@@ -51,7 +51,7 @@ function Footer() {
 
   const logoLink = 'https://www.swmansion.com/';
   const logoAlt = 'Software Mansion logo';
-  const logoImageUrl = 'img/swmLogo.svg';
+  const logoImageUrl = useBaseUrl('/img/swmLogo.svg');
 
   if (!footer) {
     return null;
