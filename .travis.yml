@@ -34,6 +34,12 @@ jobs:
         - npm install -g react-native-cli
         - cd Example
         - yarn
+        - echo y | sdkmanager "ndk-bundle"
+        - echo y | sdkmanager "ndk;21.2.6472646"
+        - echo y | sdkmanager "cmake;3.10.2.4988404"
+      before_script:
+        - export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk-bundle
+        - export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
 
       script:
         - cd ./android && ./gradlew assembleDebug
