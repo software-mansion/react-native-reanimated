@@ -15,7 +15,7 @@ const boxes = [
     title: <>Animate with more ease than ever before👍</>,
     description: (
       <>
-        Complexity reduced from tens to just a few methods. Try it out today: Check out our <a href="docs">Documentation</a>.
+        Complexity reduced from tens to just a few methods. Try it out today: Check out our <a href="docs/about">Documentation</a>.
       </>
     ),
   },
