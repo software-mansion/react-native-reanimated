@@ -19,6 +19,11 @@ declare module 'react-native-reanimated' {
     Image as ReactNativeImage,
     ScrollView as ReactNativeScrollView
   } from 'react-native';
+  import {
+    GestureHandlerGestureEventNativeEvent,
+    PanGestureHandlerGestureEvent,
+    PanGestureHandlerEventExtra,
+  } from 'react-native-gesture-handler';
   namespace Animated {
     type Nullable<T> = T | null | undefined;
 
@@ -393,9 +398,27 @@ declare module 'react-native-reanimated' {
     export function useAnimatedStyle<T extends FlexStyle, TransformsStyle = ViewStyle>(
       updater: () => T
     ): T;
+    export function useAnimatedGestureHandler<TContext extends object>(
+      handlers: GestureHandlers<TContext>
+    ): OnGestureEvent;
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
+
+    // gesture-handler
+    type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
+
+    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
+    type Handler<TContext extends object> = (event: NativeEvent, context: TContext) => void;
+
+    export interface GestureHandlers<TContext extends object> {
+      onStart?: Handler<TContext>;
+      onActive?: Handler<TContext>;
+      onEnd?: Handler<TContext>;
+      onFail?: Handler<TContext>;
+      onCancel?: Handler<TContext>;
+      onFinish?: (event: NativeEvent, context: TContext, isCanceledOrFailed: boolean) => void;
+    }
   }
 
   export default Animated;
@@ -517,4 +540,5 @@ declare module 'react-native-reanimated' {
   export const useSharedValue: typeof Animated.useSharedValue
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
   export const useDerivedValue: typeof Animated.useDerivedValue
+  export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
 }

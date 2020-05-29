@@ -50,7 +50,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-gesture-handler": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.7.5",
@@ -76,6 +77,7 @@
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
+    "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
     "release-it": "^13.1.1"
   },
