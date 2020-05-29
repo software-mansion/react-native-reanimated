@@ -80,16 +80,16 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
     private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
     ...
 
-    @Override
-    protected String getJSMainModuleName() {
-      return "index";
-    }
+      @Override
+      protected String getJSMainModuleName() {
+        return "index";
+      }
 
-    @Override
-    protected JSIModulePackage getJSIModulePackage() {
-      return new ReanimatedJSIModulePackage(); // <- add
-    }
-  };
+      @Override
+      protected JSIModulePackage getJSIModulePackage() {
+        return new ReanimatedJSIModulePackage(); // <- add
+      }
+    };
   ...
   ```
 
