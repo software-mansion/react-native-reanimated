@@ -49,7 +49,7 @@ function ScrollableView({ children }) {
     },
 
     onActive: (evt, ctx) => {
-      let nextTranslate = ctx.startY + evt.translationY;
+      const nextTranslate = ctx.startY + evt.translationY;
 
       if (nextTranslate < loverBound.value) {
         translateY.value =
