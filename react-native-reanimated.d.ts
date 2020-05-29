@@ -387,6 +387,9 @@ declare module 'react-native-reanimated' {
     export function useSharedValue<T extends Value>(
       initialValue: T
     ): AnimatedValue<T>;
+    export function useDerivedValue<T extends Value>(
+      processor: () => T
+    ): AnimatedValue<T>;
     export function useAnimatedStyle<T extends FlexStyle, TransformsStyle = ViewStyle>(
       updater: () => T
     ): T;
@@ -513,4 +516,5 @@ declare module 'react-native-reanimated' {
   export const useValue: typeof Animated.useValue
   export const useSharedValue: typeof Animated.useSharedValue
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
+  export const useDerivedValue: typeof Animated.useDerivedValue
 }
