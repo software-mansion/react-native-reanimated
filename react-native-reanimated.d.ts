@@ -56,6 +56,8 @@ declare module 'react-native-reanimated' {
     class AnimatedValue<T extends Value> extends AnimatedNode<T> {
       constructor(value?: T);
 
+      value: T;
+
       setValue(value: Adaptable<T>): void;
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
@@ -505,4 +507,5 @@ declare module 'react-native-reanimated' {
   export const spring: typeof Animated.spring
   export const SpringUtils: typeof Animated.SpringUtils
   export const useValue: typeof Animated.useValue
+  export const useSharedValue: typeof Animated.useSharedValue
 }
