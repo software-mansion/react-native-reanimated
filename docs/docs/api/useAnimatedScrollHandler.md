@@ -75,7 +75,8 @@ function ScrollExample() {
       <Animated.View style={[styles.box, stylez]} />
       <Animated.ScrollView
         style={styles.scroll}
-        onScroll={scrollHandler}>
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}>
         <Content />
       </Animated.ScrollView>
     </View>
