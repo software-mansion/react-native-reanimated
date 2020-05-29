@@ -239,6 +239,7 @@ section > .container {
 
 .row-hero {
   width: 100%;
+  margin: 0;
 }
 
 .hero-content {
@@ -254,6 +255,10 @@ section > .container {
 
 .hero__p {
   text-align: left;
+}
+
+.hero-buttons {
+  margin-top: 2rem;
 }
 
 .button--primary {
