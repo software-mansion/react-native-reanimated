@@ -4,7 +4,7 @@ title: useDerivedValue
 sidebar_label: useDerivedValue
 ---
 
-This hook allows for creating shared value reference that can change in response to update of one or more other shared values.
+This hook allows for creating shared value reference that can change in response to updating of one or more other shared values.
 
 The hook returns the same type of a shared value reference instance as [`useSharedValue`](useSharedValue) hook.
 
