@@ -7,7 +7,7 @@ sidebar_label: Installation
 Reanimated 2 is primarily build in C++ using [Turbo Modules](https://github.com/react-native-community/discussions-and-proposals/issues/40) infrastructure which is not yet completely deployed in React Native (specifically on Android).
 Because of that the installation of new Reanimated requires additional steps apart from just adding a dependency to `package.json` .
 
-As a consequence of the above the minimum suppoorted version of React Native is [v0.62](https://github.com/facebook/react-native/releases/tag/v0.62.0).
+As a consequence of the above the minimum supported version of React Native is [v0.62](https://github.com/facebook/react-native/releases/tag/v0.62.0).
 Before you continue with the installation, make sure that you are running the supported version of React Native.
 
 Please follow the below instructions for Android and iOS.
@@ -50,7 +50,7 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
 
 ## Android
 
-1. Turn on Hermes engine by editting `android/app/build.gradle`
+1. Turn on Hermes engine by editing `android/app/build.gradle`
 
   ```java {2}
   project.ext.react = [
@@ -58,7 +58,7 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
   ]
   ```
 
-2. Turn on TurboModules by editting `MainApplication.java`
+2. Turn on TurboModules by editing `MainApplication.java`
 
   ```java {1,5-7}
   import com.facebook.react.config.ReactFeatureFlags; // <- add
@@ -147,9 +147,14 @@ If not, after making those changes your app will be compatible with Turbo Module
       RCTEnableTurboModule(YES);
       // RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
       // RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
+      //                                                  moduleName:@"_YourAppNameHere_"
+      //                                           initialProperties:nil];
       // NOTE: we now use _bridge with an underscore to create a rootView
       _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+      // NOTE: use your app name instead of _YourAppNameHere_
       RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
+                                                       moduleName:@"_YourAppNameHere_"
+                                                initialProperties:nil];
       ...
   ```
 
