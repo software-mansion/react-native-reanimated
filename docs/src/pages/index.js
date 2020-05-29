@@ -15,7 +15,7 @@ const boxes = [
     title: <>Animate with more ease than ever before👍</>,
     description: (
       <>
-        Complexity reduced from tens to just a few methods. Try it out today: Check out our <a href="docs">Documentation</a>.
+        Complexity reduced from tens to just a few methods. Try it out today: Check out our <a href="docs/about">Documentation</a>.
       </>
     ),
   },
@@ -23,7 +23,7 @@ const boxes = [
     title: <>Native Performance and Precise Animations</>,
     description: (
       <>
-        Declare your animations in JS, but have them run on the native thread! 🧙‍♂️The API affords new levels of precision and detailed control of your animations. 🕹
+        Declare your animations in JS, but have them run on the native thread! 🧙‍♂️ The API affords new levels of precision and detailed control of your animations. 🕹
       </>
     )
   }

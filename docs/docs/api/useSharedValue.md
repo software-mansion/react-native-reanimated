@@ -25,14 +25,13 @@ The value then can be read from the Shared Value reference using `.value` attrib
 ### Returns
 
 The hook returns a reference to shared value initialized with the provided data.
-The reference is an object with `.value` property, that can be accessed and modified from worklets, but also updated direclty from the main JS thread.
+The reference is an object with `.value` property, that can be accessed and modified from worklets, but also updated directly from the main JS thread.
 
 ## Example
 
 In the below example we render a button, which triggers random updates of a shared value directly from the React Native JS thread.
 
 ```js {6}
-
 import { Button } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -46,6 +45,4 @@ function App() {
     </View>
   );
 }
-
 ```
-

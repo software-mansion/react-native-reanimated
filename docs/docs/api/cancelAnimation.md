@@ -4,7 +4,7 @@ title: cancelAnimation
 sidebar_label: cancelAnimation
 ---
 
-Starts a time based animation.
+Starts a time-based animation.
 
 ### Arguments
 
@@ -23,6 +23,4 @@ const gestureHandler = useAnimatedGestureHandler({
     cancelAnimation(someValue);
   },
 });
-
 ```
-
