@@ -4,7 +4,7 @@ title: About React Native Reanimated
 sidebar_label: About
 ---
 
-> This is a documentation webside of Reanimated 2 alpha release.
+> This is a documentation website of Reanimated 2 alpha release.
 > If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated-docs/).
 
 Reanimated is a React Native library that allows for creating smooth animations and interactions that runs on the UI thread.
@@ -29,21 +29,21 @@ In version 2 we decided to change the approach in order to address some limitati
 Below we present an overview of things that are new in Reanimated 2 and different from Reanimated 1.
 This is a tl;dr of the remaining parts of the documentation.
 We recommend that you check the full articles to learn the details about each of the listed aspects:
+
 1. interactions and animations are no longer written using unintuitive declarative API, instead they can be written in pure JS, in a form of so-called “worklets”.
-Worklets are pieces of JS code that we extract from the main react-native code and run in a separate JS context on the main thread.
-Because of that, worklets have some limitations as to what part of the JS context they can access (we don’t want to load the entire JS bundle into the context which runs on the UI thread).
+   Worklets are pieces of JS code that we extract from the main react-native code and run in a separate JS context on the main thread.
+   Because of that, worklets have some limitations as to what part of the JS context they can access (we don’t want to load the entire JS bundle into the context which runs on the UI thread).
 2. It is still possible to define and pass around “Animated Values”, however thanks to the new API, we expect that you’ll create much fewer of those for a single animation.
-Also, now, they are actually called “Shared Values” and can carry not only primitive types but also arrays, objects and functions.
+   Also, now, they are actually called “Shared Values” and can carry not only primitive types but also arrays, objects and functions.
 3. Shared Values are no longer directly connected to view props.
-Instead, we expose a `useAnimatedStyle` hook that returns a style object which can be passed as a View’s style param.
-The `useAnimatedStyle` hook takes a worklet that, when executed, should return styles that will be applied to the connected View.
-The style worklet will update whenever shared values used by that worklet change (we detect dependencies on shared values automatically).
+   Instead, we expose a `useAnimatedStyle` hook that returns a style object which can be passed as a View’s style param.
+   The `useAnimatedStyle` hook takes a worklet that, when executed, should return styles that will be applied to the connected View.
+   The style worklet will update whenever shared values used by that worklet change (we detect dependencies on shared values automatically).
 4. Animations can be started in two ways: by triggering animated change on a shared value, or by returning animated value from `useAnimatedStyle` hook.
 5. With reanimated, we can hook worklets to serve as event handlers.
-Most common case for an event worklet is to modify some shared values.
-As a result, changes made to those values will be reflected in the animated style worklet being triggered, which in turn will result in some view properties being updated.
-For convenience, Reanimated provides event hook that is tailored to work together with Gesture Handler library and allow you to define a separate worklet for handling different handler states (e.g., onStart, onActive, etc.)
-
+   Most common case for an event worklet is to modify some shared values.
+   As a result, changes made to those values will be reflected in the animated style worklet being triggered, which in turn will result in some view properties being updated.
+   For convenience, Reanimated provides event hook that is tailored to work together with Gesture Handler library and allow you to define a separate worklet for handling different handler states (e.g., onStart, onActive, etc.)
 
 ### Known problems and limitations
 
@@ -53,21 +53,18 @@ Unfortunately some of the limitations come from maturity of React Native’s Tur
 As a consequence we won’t be able to support older versions of React Native and some issues that we yet plan to resolve may require full support of TurboModules which is not yet available to the public.
 
 Below we highlight some of the problems that we are aware of (in most of the cases we actively work on improving these):
- - Installation of the library requires many steps and is complicated.
-This comes from the fact that TurboModules are not yet rolled out in the React Native app template.
-But even without that there are a few ways how we can simplify the installation.
- - We currently only support Hermes JS VM on Android.
- - As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
-You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.
- - The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
-We are looking into this problem and hope to have it resolved really soon.
- - JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.
- - Recursive worklets aren’t supported (however there are simple workarounds for this problem)
- - Objects passed to worklets from React Native don’t have the correct prototype set in JavaScript.
-As a result, such objects aren’t enumerable, that is you can’t use “for in” constructs, spread operator (three dots), or functions like Object.assign with them.
- - Expo support is not ready yet, next SDK release will support React Native 0.62 – this will allow you to use Reanimated 2 in the ejected Expo app.
- - Web support is missing for now as well, we plan to work on adding react-native-web support in the near future.
 
-
-
-
+- Installation of the library requires many steps and is complicated.
+  This comes from the fact that TurboModules are not yet rolled out in the React Native app template.
+  But even without that there are a few ways how we can simplify the installation.
+- We currently only support Hermes JS VM on Android.
+- As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
+  You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.
+- The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
+  We are looking into this problem and hope to have it resolved really soon.
+- JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.
+- Recursive worklets aren’t supported (however there are simple workarounds for this problem)
+- Objects passed to worklets from React Native don’t have the correct prototype set in JavaScript.
+  As a result, such objects aren’t enumerable, that is you can’t use “for in” constructs, spread operator (three dots), or functions like Object.assign with them.
+- Expo support is not ready yet, next SDK release will support React Native 0.62 – this will allow you to use Reanimated 2 in the ejected Expo app.
+- Web support is missing for now as well, we plan to work on adding react-native-web support in the near future.

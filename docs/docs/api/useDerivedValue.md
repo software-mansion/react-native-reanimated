@@ -4,7 +4,7 @@ title: useDerivedValue
 sidebar_label: useDerivedValue
 ---
 
-This hook allows for creating shared value reference that can change in response of updating one or more other shared values.
+This hook allows for creating shared value reference that can change in response to updating of one or more other shared values.
 
 The hook returns the same type of a shared value reference instance as [`useSharedValue`](useSharedValue) hook.
 
@@ -19,17 +19,16 @@ The `updaterWorklet` will be triggered immediately upon use of this hook in orde
 ### Returns
 
 The hook returns a reference to a shared value initialized with the provided data.
-The reference is an object with `.value` property, that can be accessed and modified from worklets, but also updated direclty from the main JS thread.
+The reference is an object with `.value` property, that can be accessed and modified from worklets, but also updated directly from the main JS thread.
 
 ## Example
 
 In the below example we define a shared value named `progress` that can go from 0 to 1.
 Then defined a derived shared value `width` that will respond to progress changes.
-We calulate `width`'s value in the `useDerivedValue` worklet as a product of `progress`'s value times 250.
+We calculate `width`'s value in the `useDerivedValue` worklet as a product of `progress`'s value times 250.
 As a result `width`'s value will always stay in sync with changes made to `progress` shared value and will be equal to the `progress`s value times 250.
 
 ```js {6}
-
 import { Button } from 'react-native';
 import { useSharedValue, useDerivedValue } from 'react-native-reanimated';
 
@@ -37,7 +36,7 @@ function App() {
   const progress = useSharedValue(0);
   const width = useDerivedValue(() => {
     return progress.value * 250;
-  })
+  });
 
   return (
     <View>
@@ -46,5 +45,4 @@ function App() {
     </View>
   );
 }
-
 ```

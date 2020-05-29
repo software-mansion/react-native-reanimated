@@ -17,14 +17,14 @@ The target value at which the animation should conclude.
 Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options | Default | Description |
-| --- | --- | --- |
-| duration | 300 | How long the animation should last |
-| easing | in-out quad easing | Worklet that drives the easing curve for the animation |
+| Options  | Default            | Description                                            |
+| -------- | ------------------ | ------------------------------------------------------ |
+| duration | 300                | How long the animation should last                     |
+| easing   | in-out quad easing | Worklet that drives the easing curve for the animation |
 
-For `easing` parameter we recommend to use one of the pre-configured worklets defined in `Easing` module.
+For `easing` parameter we recommend using one of the pre-configured worklets defined in `Easing` module.
 
-#### `callback` [function] (optional)
+#### `callback` [function](optional)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
@@ -36,7 +36,6 @@ This method returns an animation object. It can be either assigned directly to a
 ## Example
 
 ```js
-
 import { Button } from 'react-native';
 import {
   useSharedValue,
@@ -64,7 +63,4 @@ function App() {
     </View>
   );
 }
-
 ```
-
-
