@@ -6,6 +6,7 @@ import renderer from 'react-test-renderer';
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
+jest.mock('./reanimated2/NativeReanimated.js');
 jest.mock('./derived/evaluateOnce');
 jest.mock('./core/AnimatedProps');
 
