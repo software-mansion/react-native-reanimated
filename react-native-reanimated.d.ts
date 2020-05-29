@@ -13,6 +13,7 @@ declare module 'react-native-reanimated' {
     TextStyle,
     ImageStyle,
     TransformsStyle,
+    FlexStyle,
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
@@ -386,6 +387,9 @@ declare module 'react-native-reanimated' {
     export function useSharedValue<T extends Value>(
       initialValue: T
     ): AnimatedValue<T>;
+    export function useAnimatedStyle<T extends FlexStyle, TransformsStyle = ViewStyle>(
+      updater: () => T
+    ): T;
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
@@ -508,4 +512,5 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils
   export const useValue: typeof Animated.useValue
   export const useSharedValue: typeof Animated.useSharedValue
+  export const useAnimatedStyle: typeof Animated.useAnimatedStyle
 }
