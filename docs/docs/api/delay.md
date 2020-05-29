@@ -28,6 +28,5 @@ This method returns an animation object. It can be either assigned directly to a
 Timing animation will start on the `sharedValue` after one second.
 
 ```js
-sharedValue.value = delay(1000, withTiming(70))
+sharedValue.value = delay(1000, withTiming(70));
 ```
-

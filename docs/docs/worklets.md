@@ -8,7 +8,6 @@ sidebar_label: Worklets
 > We will be posting more content online about worklets in new Reanimated and also [host a webinar](https://swmansion.com/academy).
 > The content that we prepare for the posts and webinars will be later made available here.
 
-
 The ultimate goal of worklets was for them to define small pieces of JavaScript code that we run when updating view properties or reacting to events on the UI thread. A natural construct in JavaScript for such a purpose was a simple method. With Reanimated 2 we spawn a secondary JS context on the UI thread that then is able to run JavaScript functions. The only thing that is needed is for that function to have “worklet” directive at the top:
 
 ```js
@@ -42,7 +41,7 @@ function otherWorklet() {
 }
 ```
 
-Worklets can capture (or take as arguments) from other worklets, in which case when called, they  will execute synchronously on the UI thread:
+Worklets can capture (or take as arguments) from other worklets, in which case when called, they will execute synchronously on the UI thread:
 
 ```js
 function returningWorklet() {
