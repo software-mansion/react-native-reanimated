@@ -24,11 +24,13 @@ jobs:
           - platform-tools
           - android-${ANDROID_API}
           - build-tools-${ANDROID_BUILD_TOOLS}
+        licences:
+          - '.+'
 
       before_install:
-        - yes | sdkmanager "ndk-bundle"
-        - yes | sdkmanager "ndk;21.2.6472646"
-        - yes | sdkmanager "cmake;3.10.2.4988404"
+        - sdkmanager "ndk-bundle"
+        - sdkmanager "ndk;21.2.6472646"
+        - sdkmanager "cmake;3.10.2.4988404"
 
       install:
         - nvm install $NODE_VERSION
