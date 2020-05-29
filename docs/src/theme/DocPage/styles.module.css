@@ -12,7 +12,7 @@
 .docSidebarContainer {
   border-right: 1px solid var(--ifm-toc-border-color);
   box-sizing: border-box;
-  width: 300px;
+  width: 22rem;
   position: relative;
   margin-top: calc(-1 * var(--ifm-navbar-height));
 }
