@@ -1,3 +1,5 @@
+const versions = require('./versions.json');
+
 module.exports = {
   title: 'React Native Reanimated',
   tagline: "React Native's Animated library reimplemented",
@@ -19,10 +21,26 @@ module.exports = {
       title: 'React Native Reanimated',
       links: [
         {
-          to: 'docs/about',
-          activeBasePath: 'docs',
           label: 'Docs',
+          to: 'docs/about',
           position: 'left',
+          activeBaseRegex: `docs/(?!next)`,
+          items: [
+            {
+              label: 'Master',
+              to: 'docs/next/',
+              activeBasePath: 'docs/next',
+            },
+            {
+              label: versions[0],
+              to: 'docs/',
+              activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
+            },
+            ...versions.slice(1).map(version => ({
+              label: version,
+              to: `docs/${version}/`,
+            })),
+          ],
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
         {
@@ -153,8 +171,8 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
-          // It is recommended to set document id as docs home page (`docs/` path).
-          homePageId: 'docs',
+          homePageId: 'about',
+          path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl:

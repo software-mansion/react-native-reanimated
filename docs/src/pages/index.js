@@ -63,7 +63,7 @@ function Hero() {
                     'button button--primary button--lg',
                     styles.getStarted,
                   )}
-                  to={useBaseUrl('docs/about')}>
+                  to={useBaseUrl('docs/')}>
                   View Docs
                 </Link>
                 <Link
