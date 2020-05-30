@@ -20,6 +20,7 @@ import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import SwipeableListExample from './SwipeableListExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
@@ -44,6 +45,10 @@ const SCREENS = {
   SwipeableListExample: {
     screen: SwipeableListExample,
     title: '🆕 (advanced) Swipeable List',
+  },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '🆕 (advanced) Lightbox',
   },
   AnimatedTabBarExample: {
     screen: AnimatedTabBarExample,
