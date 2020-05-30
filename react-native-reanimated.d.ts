@@ -399,6 +399,10 @@ declare module 'react-native-reanimated' {
       delayMS: number,
       delayedAnimation: number,
     ): number;
+    export function loop(
+      loopedAnimation: number,
+      numberOfLoops?: number,
+    ): number;
 
     // hooks
     export function useCode(
@@ -586,4 +590,5 @@ declare module 'react-native-reanimated' {
   export const withSpring: typeof Animated.withSpring
   export const cancelAnimation: typeof Animated.cancelAnimation
   export const delay: typeof Animated.delay
+  export const loop: typeof Animated.loop
 }
