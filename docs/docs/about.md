@@ -20,7 +20,7 @@ In React Native by default all updates are delayed by at least one frame as the 
 On top of the lag with JavaScript playing many roles like running react diffing and updates, executing app’s business logic, processing network requests, etc., it is often the case that events can’t be immediately processed thus causing even more significant delays.
 Reanimated aims to provide ways of offloading animation and event handling logic off of the JavaScript thread and onto the UI thread.
 This is achieved by defining Reanimated worklets – a tiny chunks of JavaScript code that can be moved to a separate JavaScript VM and executed synchronously on the UI thread.
-This makes it possible to respond to touch events immediately and update the UI within the same frame when the even happens without worrying about the load that is put on the main JavaScript thread.
+This makes it possible to respond to touch events immediately and update the UI within the same frame when the event happens without worrying about the load that is put on the main JavaScript thread.
 
 ### Library overview
 
