@@ -65,7 +65,7 @@ function ScrollExample() {
     return {
       transform: [
         {
-          translateY: transY.value,
+          translateY: translationY.value,
         },
       ],
     };

@@ -17,7 +17,9 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
   } from 'react-native';
   import {
     GestureHandlerGestureEventNativeEvent,
@@ -401,6 +403,12 @@ declare module 'react-native-reanimated' {
     export function useAnimatedGestureHandler<TContext extends object>(
       handlers: GestureHandlers<TContext>
     ): OnGestureEvent;
+    export function useAnimatedScrollHandler(
+      handler: ScrollHandler
+    ): OnScroll;
+    export function useAnimatedScrollHandler(
+      handlers: ScrollHandlers
+    ): OnScroll;
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
@@ -418,6 +426,19 @@ declare module 'react-native-reanimated' {
       onFail?: Handler<TContext>;
       onCancel?: Handler<TContext>;
       onFinish?: (event: NativeEvent, context: TContext, isCanceledOrFailed: boolean) => void;
+    }
+
+    // scroll view
+    type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+    type ScrollHandler = (event: NativeScrollEvent) => void;
+
+    export interface ScrollHandlers {
+      onScroll?:ScrollHandler;
+      onBeginDrag?:ScrollHandler;
+      onEndDrag?: ScrollHandler;
+      onMomentumBegin?: ScrollHandler;
+      onMomentumEnd?: ScrollHandler;
     }
   }
 
@@ -541,4 +562,5 @@ declare module 'react-native-reanimated' {
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
   export const useDerivedValue: typeof Animated.useDerivedValue
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
+  export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
 }
