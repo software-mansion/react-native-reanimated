@@ -395,6 +395,10 @@ declare module 'react-native-reanimated' {
     export function cancelAnimation<T extends Value>(
       sharedValue: AnimatedValue<T>
     ): void;
+    export function delay(
+      delayMS: number,
+      delayedAnimation: number,
+    ): number;
 
     // hooks
     export function useCode(
@@ -581,4 +585,5 @@ declare module 'react-native-reanimated' {
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
   export const cancelAnimation: typeof Animated.cancelAnimation
+  export const delay: typeof Animated.delay
 }
