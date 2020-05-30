@@ -392,6 +392,9 @@ declare module 'react-native-reanimated' {
       userConfig?: Omit<SpringConfig, 'toValue'>,
       callback?: (isCancelled: boolean) => void,
     ): number;
+    export function cancelAnimation<T extends Value>(
+      sharedValue: AnimatedValue<T>
+    ): void;
 
     // hooks
     export function useCode(
@@ -577,4 +580,5 @@ declare module 'react-native-reanimated' {
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
+  export const cancelAnimation: typeof Animated.cancelAnimation
 }
