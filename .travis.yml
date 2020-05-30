@@ -47,7 +47,7 @@ jobs:
         - export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
 
       script:
-        - cd ./android && ./gradlew assembleDebug --console=plain
+        - cd ./android && ./gradlew clean &&./gradlew assembleDebug --console=plain
 
     - language: objective-c
       os: osx
