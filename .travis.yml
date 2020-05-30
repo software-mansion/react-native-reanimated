@@ -5,7 +5,7 @@ dist: xenial
 jobs:
   include:
     - language: android
-      jdk: oraclejdk8
+      jdk: openjdk8
       env:
         - NODE_VERSION=10.15.3
         - ANDROID_API=28
