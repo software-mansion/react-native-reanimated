@@ -382,9 +382,14 @@ declare module 'react-native-reanimated' {
     ): BackwardCompatibleWrapper;
 
     // reanimated2 animations
-    export function withTiming<T extends Value>(
-      toValue: T,
+    export function withTiming(
+      toValue: number,
       userConfig?: Omit<TimingConfig, 'toValue'>,
+      callback?: (isCancelled: boolean) => void,
+    ): number;
+    export function withSpring(
+      toValue: number,
+      userConfig?: Omit<SpringConfig, 'toValue'>,
       callback?: (isCancelled: boolean) => void,
     ): number;
 
@@ -571,4 +576,5 @@ declare module 'react-native-reanimated' {
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
   export const withTiming: typeof Animated.withTiming
+  export const withSpring: typeof Animated.withSpring
 }
