@@ -28,9 +28,9 @@ jobs:
           - '.+'
 
       before_install:
-        - sdkmanager "ndk-bundle"
-        - sdkmanager "ndk;21.2.6472646"
-        - sdkmanager "cmake;3.10.2.4988404"
+        - sdkmanager "ndk-bundle" > /dev/null
+        - sdkmanager "ndk;21.2.6472646" > /dev/null
+        - sdkmanager "cmake;3.10.2.4988404" > /dev/null
 
       install:
         - nvm install $NODE_VERSION
