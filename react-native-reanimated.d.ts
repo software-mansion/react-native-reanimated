@@ -381,6 +381,13 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
+    // reanimated2 animations
+    export function withTiming<T extends Value>(
+      toValue: T,
+      userConfig?: Omit<TimingConfig, 'toValue'>,
+      callback?: (isCancelled: boolean) => void,
+    ): number;
+
     // hooks
     export function useCode(
       exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
@@ -563,4 +570,5 @@ declare module 'react-native-reanimated' {
   export const useDerivedValue: typeof Animated.useDerivedValue
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
+  export const withTiming: typeof Animated.withTiming
 }
