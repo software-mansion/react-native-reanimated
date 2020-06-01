@@ -4,6 +4,23 @@
 
 namespace reanimated {
 
+const char *HIDDEN_PROPERTY_NAME = "__reanimatedSharedRef";
+const char *HIDDEN_CAN_BE_ADPTED = "__reanimatedAdaptable";
+const char *HIDDEN_SHOULD_BE_CACHED = "__reanimatedShouldBeCached";
+
+void addHiddenProperty(jsi::Runtime &rt,
+                       jsi::Value &&value,
+                       jsi::Object &obj,
+                       const char *name) {
+  jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
+  jsi::Function defineProperty = globalObject.getPropertyAsFunction(rt, "defineProperty");
+  jsi::String internalPropName = jsi::String::createFromUtf8(rt, name);
+  jsi::Object paramForDefineProperty(rt);
+  paramForDefineProperty.setProperty(rt, "enumerable", false);
+  paramForDefineProperty.setProperty(rt, "value", value);
+  defineProperty.call(rt, obj, internalPropName, paramForDefineProperty);
+}
+
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
@@ -15,6 +32,28 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
+  if (value.isObject()) {
+    jsi::Object object = value.asObject(rt);
+    
+    if (!object.getProperty(rt, HIDDEN_PROPERTY_NAME).isUndefined()) {
+      jsi::Object hiddenProperty = object.getProperty(rt, HIDDEN_PROPERTY_NAME).asObject(rt);
+      bool canBeAdapted = object.getProperty(rt, HIDDEN_CAN_BE_ADPTED).getBool();
+      
+      if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
+        type = ObjectType;
+        frozenObject = hiddenProperty.getHostObject<FrozenObject>(rt);
+      } else if (hiddenProperty.isHostObject<MutableValue>(rt)) {
+        type = MutableValueType;
+        mutableValue = hiddenProperty.getHostObject<MutableValue>(rt);
+      }
+    
+      if (canBeAdapted) {
+        adaptCache(rt, value);
+      }
+      return;
+    }
+  }
+  
   if (objectType == MutableValueType) {
     type = MutableValueType;
     mutableValue = std::make_shared<MutableValue>(rt, value, module);
@@ -54,14 +93,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = MutableValueType;
       mutableValue = object.getHostObject<MutableValue>(rt);
       adaptCache(rt, value);
-    } else if (object.isHostObject<RemoteObject>(rt)) {
-      type = RemoteObjectType;
-      remoteObject = object.getHostObject<RemoteObject>(rt);
-      adaptCache(rt, value);
-    } else if (object.isHostObject<FrozenObject>(rt)) {
-      type = ObjectType;
-      frozenObject = object.getHostObject<FrozenObject>(rt);
-      adaptCache(rt, value);
     } else if (objectType == RemoteObjectType) {
       type = RemoteObjectType;
       remoteObject = std::make_shared<RemoteObject>(rt, object, module);
@@ -72,6 +103,30 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     }
   } else {
     throw "Invalid value type";
+  }
+  
+  if (value.isObject()) {
+    jsi::Object object = value.asObject(rt);
+    
+    if (!object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).isBool() or
+        !object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).getBool()) {
+      return;
+    }
+    
+    if (type == MutableValueType) {
+      jsi::Object hostObject = createHost(rt, mutableValue);
+      addHiddenProperty(rt, std::move(hostObject), object, HIDDEN_PROPERTY_NAME);
+      addHiddenProperty(rt, false, object, HIDDEN_CAN_BE_ADPTED);
+    } else if (type == ObjectType) {
+      jsi::Object hostObject = createHost(rt, frozenObject);
+      addHiddenProperty(rt, std::move(hostObject), object, HIDDEN_PROPERTY_NAME);
+      addHiddenProperty(rt, false, object, HIDDEN_CAN_BE_ADPTED);
+    } else if (type == RemoteObjectType) {
+      jsi::Object hostObject = createHost(rt, remoteObject);
+      addHiddenProperty(rt, std::move(hostObject), object, HIDDEN_PROPERTY_NAME);
+      addHiddenProperty(rt, false, object, HIDDEN_CAN_BE_ADPTED);
+    }
+    
   }
 }
 
@@ -101,6 +156,17 @@ jsi::Object ShareableValue::createHost(jsi::Runtime &rt, std::shared_ptr<jsi::Ho
   return jsi::Object::createFromHostObject(rt, host);
 }
 
+jsi::Value createFrozenWrapper(ShareableValue *sv, jsi::Runtime &rt, std::shared_ptr<FrozenObject> frozenObject) {
+  jsi::Object __reanimatedSharedRef = sv->createHost(rt, frozenObject);
+  jsi::Object obj = std::move(*frozenObject->shallowClone(rt));
+  jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
+  jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
+  addHiddenProperty(rt, std::move(__reanimatedSharedRef), obj, HIDDEN_PROPERTY_NAME);
+  addHiddenProperty(rt, true, obj, HIDDEN_CAN_BE_ADPTED);
+  
+  return freeze.call(rt, obj);
+}
+
 jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
   switch (type) {
     case UndefinedType:
@@ -114,7 +180,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case StringType:
       return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
     case ObjectType:
-      return createHost(rt, frozenObject);
+      return createFrozenWrapper(this, rt, frozenObject);
     case ArrayType: {
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {
@@ -123,10 +189,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return array;
     }
     case RemoteObjectType:
-      if (module->isUIRuntime(rt)) {
-        remoteObject->maybeInitializeOnUIRuntime(rt);
+      if (this->module->isUIRuntime(rt)) {
+        return jsi::Value(rt, *remoteObject->initializer->shallowClone(rt));
       }
-      return createHost(rt, remoteObject);
+      return jsi::Object(rt);
     case MutableValueType:
       return createHost(rt, mutableValue);
     case HostFunctionType:
@@ -231,10 +297,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             jsi::Value returnedValue;
             
             returnedValue = funPtr->callWithThis(rt,
-                                             jsThis,
-                                             static_cast<const jsi::Value*>(args),
-                                             (size_t)params.size());
-            
+                                                 jsThis,
+                                                 static_cast<const jsi::Value*>(args),
+                                                 (size_t)params.size());
+
             delete [] args;
             // ToDo use returned value to return promise
           });
@@ -386,36 +452,6 @@ std::vector<jsi::PropNameID> FrozenObject::getPropertyNames(jsi::Runtime &rt) {
     result.push_back(jsi::PropNameID::forUtf8(rt, it->first));
   }
   return result;
-}
-
-void RemoteObject::maybeInitializeOnUIRuntime(jsi::Runtime &rt) {
-  if (initializer.get() != nullptr) {
-    backing = initializer->shallowClone(rt);
-    initializer = nullptr;
-  }
-}
-
-jsi::Value RemoteObject::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
-  if (module->isUIRuntime(rt)) {
-    return backing->getProperty(rt, name);
-  }
-  return jsi::Value::undefined();
-}
-
-void RemoteObject::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value) {
-  if (module->isUIRuntime(rt)) {
-    backing->setProperty(rt, name, value);
-  }
-  // TODO: we should throw if trying to update remote from host runtime
-}
-
-std::vector<jsi::PropNameID> RemoteObject::getPropertyNames(jsi::Runtime &rt) {
-  std::vector<jsi::PropNameID> res;
-  auto propertyNames = backing->getPropertyNames(rt);
-  for (size_t i = 0, size = propertyNames.size(rt); i < size; i++) {
-    res.push_back(jsi::PropNameID::forString(rt, propertyNames.getValueAtIndex(rt, i).asString(rt)));
-  }
-  return res;
 }
 
 }

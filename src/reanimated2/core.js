@@ -17,6 +17,16 @@ export function makeShareable(value) {
   return NativeReanimated.makeShareable(value);
 }
 
+export function makeCacheable(obj) {
+  if (typeof obj === 'object') {
+    Object.defineProperty(obj, '__reanimatedShouldBeCached', {
+      value: true,
+      enumerable: false,
+    });
+  }
+  return obj;
+}
+
 function workletValueSetter(value) {
   'worklet';
   const previousAnimation = this._animation;

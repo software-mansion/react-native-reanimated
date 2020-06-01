@@ -1,5 +1,6 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
+import { makeCacheable } from './core';
 
 export function cancelAnimation(value) {
   'worklet';
@@ -59,6 +60,8 @@ export function withTiming(toValue, userConfig, callback) {
     callback,
   };
 }
+
+makeCacheable(withTiming);
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
