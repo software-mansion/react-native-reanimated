@@ -19,11 +19,11 @@ jsi::Function function(jsi::Runtime &rt, const std::string& code) {
 }
 
 std::shared_ptr<jsi::Function> WorkletsCache::getFunction(jsi::Runtime & rt, std::shared_ptr<FrozenObject> frozenObj) {
-  int id = frozenObj->map["__workletID"]->numberValue;
-  if (worklets.count(id) == 0) {
+  int workletId = frozenObj->map["__workletID"]->numberValue;
+  if (worklets.count(workletId) == 0) {
     jsi::Function fun = function(rt, frozenObj->map["asString"]->stringValue);
     std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    worklets[id] = funPtr;
+    worklets[workletId] = funPtr;
   }
-  return worklets[id];
+  return worklets[workletId];
 }

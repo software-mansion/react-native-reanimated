@@ -153,6 +153,7 @@ function processWorkletFunction(t, fun) {
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
   const funString = buildWorkletString(t, fun, variables);
+  const workletID = fun.start;
 
   const newFun = t.functionExpression(
     fun.id,
@@ -190,6 +191,17 @@ function processWorkletFunction(t, fun) {
             false
           ),
           t.stringLiteral(funString)
+        )
+      ),
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__workletID'),
+            false
+          ),
+          t.numericLiteral(workletID)
         )
       ),
       t.expressionStatement(
