@@ -26,9 +26,9 @@ jobs:
           - build-tools-${ANDROID_BUILD_TOOLS}
 
       before_install:
-        - sdkmanager "ndk-bundle"
-        - sdkmanager "ndk;21.2.6472646"
-        - sdkmanager "cmake;3.10.2.4988404"
+        - yes | sdkmanager "ndk-bundle"
+        - yes | sdkmanager "ndk;21.2.6472646"
+        - yes | sdkmanager "cmake;3.10.2.4988404"
 
       install:
         - nvm install $NODE_VERSION
