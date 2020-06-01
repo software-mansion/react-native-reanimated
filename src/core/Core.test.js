@@ -5,6 +5,7 @@ import renderer from 'react-test-renderer';
 
 jest.mock('../ReanimatedEventEmitter');
 jest.mock('../ReanimatedModule');
+jest.mock('../reanimated2/NativeReanimated.js');
 
 describe('Core Animated components', () => {
   xit('fails if something other then a node or function that returns a node is passed to Animated.Code exec prop', () => {
