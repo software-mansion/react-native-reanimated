@@ -26,9 +26,9 @@ jobs:
           - build-tools-${ANDROID_BUILD_TOOLS}
 
       before_install:
-        - yes | sdkmanager "ndk-bundle"
-        - yes | sdkmanager "ndk;21.2.6472646"
-        - yes | sdkmanager "cmake;3.10.2.4988404"
+        - yes | sdkmanager "ndk-bundle" > /dev/null
+        - yes | sdkmanager "ndk;21.2.6472646" > /dev/null
+        - yes | sdkmanager "cmake;3.10.2.4988404" > /dev/null
 
       install:
         - nvm install $NODE_VERSION
@@ -45,7 +45,7 @@ jobs:
         - export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
 
       script:
-        - cd ./android && ./gradlew clean &&./gradlew assembleDebug --console=plain
+        - cd ./android &&./gradlew assembleDebug --console=plain
 
     - language: objective-c
       os: osx
