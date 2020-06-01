@@ -6,6 +6,7 @@
 #include "NativeReanimatedModuleSpec.h"
 #include "Scheduler.h"
 #include "ErrorHandler.h"
+#include "WorkletsCache.h"
 
 #include <unistd.h>
 
@@ -58,6 +59,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
   public:
+  std::shared_ptr<WorkletsCache> workletsCache;
   std::shared_ptr<ShareableValue> valueSetter;
   std::shared_ptr<Scheduler> scheduler;
 };

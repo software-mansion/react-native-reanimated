@@ -1,149 +1,176 @@
-import { createBrowserApp } from '@react-navigation/web';
-import React from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  YellowBox,
-} from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
 
-import Reanimated1 from '../reanimated1/App';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  runOnUI,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import { TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
 
-import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import DragAndSnapExample from './DragAndSnapExample';
-import ScrollEventExample from './ScrollEventExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import SwipeableListExample from './SwipeableListExample';
-import AnimatedTabBarExample from './AnimatedTabBarExample';
-import LiquidSwipe from './LiquidSwipe';
+const { width } = Dimensions.get('window');
 
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
-
-const SCREENS = {
-  AnimatedStyleUpdate: {
-    screen: AnimatedStyleUpdateExample,
-    title: '🆕 Animated Style Update',
+const s = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    width: Dimensions.get('window').width,
   },
-  DragAndSnapExample: {
-    screen: DragAndSnapExample,
-    title: '🆕 Drag and Snap',
-  },
-  ScrollEventExample: {
-    screen: ScrollEventExample,
-    title: '🆕 Scroll Events',
-  },
-  ChatHeadsExample: {
-    screen: ChatHeadsExample,
-    title: '🆕 Chat Heads',
-  },
-  SwipeableListExample: {
-    screen: SwipeableListExample,
-    title: '🆕 (advanced) Swipeable List',
-  },
-  AnimatedTabBarExample: {
-    screen: AnimatedTabBarExample,
-    title: '🆕 (advanced) Tab Bar Example',
-  },
-  LiquidSwipe: {
-    screen: LiquidSwipe,
-    title: '🆕 (iOS ONLY) Liquid Swipe Example',
-  },
-};
-
-function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map(key => ({ key }));
-  return (
-    <FlatList
-      style={styles.list}
-      data={data}
-      ItemSeparatorComponent={ItemSeparator}
-      renderItem={props => (
-        <MainScreenItem
-          {...props}
-          onPressItem={({ key }) => navigation.navigate(key)}
-        />
-      )}
-      renderScrollComponent={props => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
-    />
-  );
-}
-
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Examples',
-};
-
-function ItemSeparator() {
-  return <View style={styles.separator} />;
-}
-
-function MainScreenItem({ item, onPressItem }) {
-  const { key } = item;
-  return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
-      <Text style={styles.buttonText}>{SCREENS[key].title || key}</Text>
-    </RectButton>
-  );
-}
-
-function LaunchReanimated1({ navigation }) {
-  return (
-    <>
-      <ItemSeparator />
-      <RectButton
-        style={styles.button}
-        onPress={() => navigation.navigate('Reanimated1')}>
-        <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
-      </RectButton>
-    </>
-  );
-}
-
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
-);
-
-const ExampleApp = createSwitchNavigator({
-  Reanimated2App,
-  Reanimated1,
-});
-
-const styles = StyleSheet.create({
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
-  buttonText: {
-    backgroundColor: 'transparent',
-  },
-  button: {
+  card: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: -2, height: 2 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
     flex: 1,
-    height: 60,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    elevation: 4,
+  },
+  header: {
+    height: 50 + 20,
+    paddingTop: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
   },
 });
 
-const createApp = Platform.select({
-  web: input => createBrowserApp(input, { history: 'hash' }),
-  default: input => createAppContainer(input),
-});
+function AnimatedStyleUpdateExample(props) {
+ const randomWidth = useSharedValue(10);
 
-export default createApp(ExampleApp);
+  const config = {
+    duration: 500,
+    easing: Easing.bezier(0.5, 0.01, 0, 1),
+  };
+
+  const style = useAnimatedStyle(() => {
+    return {
+      //width: randomWidth.value, // this works
+      width: withTiming(randomWidth.value, config), // this drops frames
+    };
+  });
+
+  return (
+    <View
+      style={{
+        // flex: 1,
+        flexDirection: 'column',
+      }}>
+      <Animated.View
+        style={[
+          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
+          style
+        ]}
+      />
+      <Button
+        title="toggle"
+        onPress={() => {
+          randomWidth.value = Math.random() * 350;
+        }}
+      />
+    </View>
+  );
+}
+
+function Button({ title, onPress }) {
+  return (
+    <TouchableOpacity onPress={(onPress)}>
+      <Text style={{ color: 'black', fontSize: 18 }}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+export default function KindaNavigation() {
+  const [show, setShow] = useState(false);
+
+  function handleNavigate() {
+    setShow(true);
+  }
+
+  function onBach() {
+    setShow(false);
+  }
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Button title="Navigate" onPress={handleNavigate} />
+
+      {show && <Screen onBack={onBach} />}
+    </View>
+  );
+}
+
+function runTiming(sharedValue, toValue, callback) {
+  return runOnUI(() => {
+    'worklet';
+
+    //console.log('navigate');
+
+    sharedValue.value = withTiming(
+      toValue,
+      {
+        duration: 450,
+      },
+      callback
+    );
+  })();
+}
+
+function Screen({ onBack }) {
+  const translateX = useSharedValue(width);
+  const [show, setState] = useState(false);
+
+  if (!show) {
+    runTiming(translateX, 0);
+  }
+
+  setTimeout(() => {
+    setState(true);
+    console.log('render');
+  }, 100);
+
+  function handleBack() {
+    runTiming(translateX, width, onBack);
+  }
+
+  const styles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: translateX.value,
+        },
+      ],
+    };
+  });
+
+  return (
+    <View style={s.container}>
+      <Animated.View style={[styles, s.card]}>
+        <View style={s.header}>
+          <Button title="Back" onPress={handleBack} />
+        </View>
+        <ScrollView>
+          {show && (
+            <>
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+              <AnimatedStyleUpdateExample />
+            </>
+          )}
+        </ScrollView>
+      </Animated.View>
+    </View>
+  );
+}
+
