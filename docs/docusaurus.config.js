@@ -1,3 +1,5 @@
+const versions = require('./versions.json');
+
 module.exports = {
   title: 'React Native Reanimated',
   tagline: "React Native's Animated library reimplemented",
@@ -11,7 +13,7 @@ module.exports = {
     announcementBar: {
       id: 'old_version', // Any value that will identify this message.
       content:
-        'This is a documentation website for Reanimated 2.0 alpha release. If you are looking for Reanimated 1 docs <a target="_blank" rel="noopener noreferrer" href="https://docs.swmansion.com/react-native-reanimated-docs/">here is a link</a>',
+        'This is a documentation website for Reanimated 2.0 alpha release. If you are looking for Reanimated 1 docs <a target="_blank" rel="noopener noreferrer" href="https://docs.swmansion.com/react-native-reanimated/docs/1.x.x/">here is a link</a>',
       backgroundColor: '#ffaaa8', // Defaults to `#fff`.
       textColor: '#001a72', // Defaults to `#000`.
     },
@@ -19,10 +21,26 @@ module.exports = {
       title: 'React Native Reanimated',
       links: [
         {
-          to: 'docs/about',
-          activeBasePath: 'docs',
           label: 'Docs',
+          to: 'docs/about',
           position: 'left',
+          activeBaseRegex: `docs/(?!next)`,
+          items: [
+            {
+              label: 'Master',
+              to: 'docs/next/',
+              activeBasePath: 'docs/next',
+            },
+            {
+              label: versions[0],
+              to: 'docs/',
+              activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
+            },
+            ...versions.slice(1).map(version => ({
+              label: version,
+              to: `docs/${version}/`,
+            })),
+          ],
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
         {
@@ -153,8 +171,8 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
-          // It is recommended to set document id as docs home page (`docs/` path).
-          homePageId: 'docs',
+          homePageId: 'about',
+          path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl:
