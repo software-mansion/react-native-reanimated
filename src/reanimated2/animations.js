@@ -226,7 +226,6 @@ export function withDecay(userConfig, callback) {
 
     if (Math.abs(v) < VELOCITY_EPS || toValueIsReached !== null) {
       if (toValueIsReached !== null) {
-        console.log(toValueIsReached);
         animation.current = toValueIsReached;
       }
 
