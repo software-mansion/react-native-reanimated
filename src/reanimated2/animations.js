@@ -161,7 +161,6 @@ export function withSpring(toValue, userConfig, callback) {
       animation.velocity = previousAnimation.velocity || 0;
       animation.lastTimestamp = previousAnimation.lastTimestamp || now;
     } else {
-      animation.velocity = 0;
       animation.lastTimestamp = now;
     }
   }
