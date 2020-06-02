@@ -195,7 +195,6 @@ export function withDecay(userConfig, callback) {
 
   function decay(animation, now) {
     const {
-      toValue,
       lastTimestamp,
       initialVelocity,
       current,
@@ -235,7 +234,7 @@ export function withDecay(userConfig, callback) {
     }
   }
 
-  function start(animation, value, now, previousAnimation) {
+  function start(animation, value, now) {
     animation.current = value;
     animation.lastTimestamp = now;
     animation.initialVelocity = config.velocity;
