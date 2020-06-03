@@ -30,6 +30,9 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 
 export function interpolate(x, input, output, type) {
   'worklet';
+  if (x && x.__nodeID) {
+    throw new Error('Reanimated: interpolate from V1 has been renamed to interpolateNode.')
+  }
   const length = input.length;
   let narrowedInput = [];
   if (x < input[0]) {
