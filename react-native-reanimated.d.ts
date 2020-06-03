@@ -13,7 +13,6 @@ declare module 'react-native-reanimated' {
     TextStyle,
     ImageStyle,
     TransformsStyle,
-    FlexStyle,
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
@@ -64,11 +63,15 @@ declare module 'react-native-reanimated' {
     class AnimatedValue<T extends Value> extends AnimatedNode<T> {
       constructor(value?: T);
 
-      value: T;
-
       setValue(value: Adaptable<T>): void;
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
+    }
+
+    class SharedValue<T extends Value> extends AnimatedNode<T> {
+      constructor(value?: T);
+
+      value: T;
     }
 
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
@@ -351,6 +354,14 @@ declare module 'react-native-reanimated' {
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
+    // reanimated2 derived operations
+    export function interpolate(
+      x: number,
+      input: Array<number>,
+      output: Array<number>,
+      type: Extrapolate
+    ): number;
+
     // animations
     export function decay(
       clock: AnimatedClock,
@@ -416,14 +427,14 @@ declare module 'react-native-reanimated' {
     // reanimated2 hooks
     export function useSharedValue<T extends Value>(
       initialValue: T
-    ): AnimatedValue<T>;
+    ): SharedValue<T>;
     export function useDerivedValue<T extends Value>(
       processor: () => T
-    ): AnimatedValue<T>;
-    export function useAnimatedStyle<T extends FlexStyle, TransformsStyle = ViewStyle>(
+    ): SharedValue<T>;
+    export function useAnimatedStyle<T extends ViewStyle, TextStyle, ImageStyle>(
       updater: () => T
     ): T;
-    export function useAnimatedGestureHandler<TContext extends object>(
+    export function useAnimatedGestureHandler<TContext extends Context>(
       handlers: GestureHandlers<TContext>
     ): OnGestureEvent;
     export function useAnimatedScrollHandler(
@@ -439,10 +450,12 @@ declare module 'react-native-reanimated' {
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
-    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
-    type Handler<TContext extends object> = (event: NativeEvent, context: TContext) => void;
+    type Context = { [key: string]: any };
 
-    export interface GestureHandlers<TContext extends object> {
+    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
+    type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
+
+    export interface GestureHandlers<TContext extends Context> {
       onStart?: Handler<TContext>;
       onActive?: Handler<TContext>;
       onEnd?: Handler<TContext>;
@@ -591,4 +604,5 @@ declare module 'react-native-reanimated' {
   export const cancelAnimation: typeof Animated.cancelAnimation
   export const delay: typeof Animated.delay
   export const loop: typeof Animated.loop
+  export const interpolate: typeof Animated.interpolate
 }
