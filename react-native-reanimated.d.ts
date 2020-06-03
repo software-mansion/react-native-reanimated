@@ -404,7 +404,7 @@ declare module 'react-native-reanimated' {
       callback?: (isCancelled: boolean) => void,
     ): number;
     export function cancelAnimation<T extends Value>(
-      sharedValue: AnimatedValue<T>
+      sharedValue: SharedValue<T>
     ): void;
     export function delay(
       delayMS: number,
