@@ -25,6 +25,7 @@ import {
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
 import useValue from './useValue';
+import * as reanimated2 from './reanimated2'
 
 const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
 const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
@@ -59,6 +60,9 @@ const Animated = {
 
   // hooks
   useValue,
+
+  // reanimated2
+  ...reanimated2
 };
 
 export default Animated;
