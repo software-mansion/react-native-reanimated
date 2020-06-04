@@ -68,8 +68,9 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    type SharedValueTypes = number | string | boolean | object | Function;
-    interface SharedValue<T extends SharedValueTypes | SharedValueTypes[]> {
+    type RawSharedValue = number | string | boolean | object | Function;
+    type SharedValueType = RawSharedValue | RawSharedValue[];
+    interface SharedValue<T extends SharedValueType> {
       value: T;
     }
 
@@ -424,10 +425,10 @@ declare module 'react-native-reanimated' {
     ): AnimatedValue<T>;
 
     // reanimated2 hooks
-    export function useSharedValue<T extends Value>(
+    export function useSharedValue<T extends SharedValueType>(
       initialValue: T
     ): SharedValue<T>;
-    export function useDerivedValue<T extends Value>(
+    export function useDerivedValue<T extends SharedValueType>(
       processor: () => T
     ): SharedValue<T>;
     export function useAnimatedStyle<T extends ViewStyle, TextStyle, ImageStyle>(
