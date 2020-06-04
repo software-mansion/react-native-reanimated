@@ -23,7 +23,7 @@ const getValue = node => {
   if (typeof node === "number") {
     return node;
   }
-  return node && node[" __value"];
+  return node && node[" __value"] || 0;
 };
 
 class AnimatedValue {
