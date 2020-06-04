@@ -119,6 +119,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 ```
 
 3. Rename `AppDelegate.m` to `AppDelegate.mm`.
+  > **_NOTE:_** It's important to do it with Xcode.
 4. Add AppDelegate category in `AppDelegate.mm`.
 
 ```objectivec {1-2,4-7}
