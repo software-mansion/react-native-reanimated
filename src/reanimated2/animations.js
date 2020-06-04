@@ -158,10 +158,9 @@ export function withSpring(toValue, userConfig, callback) {
   function start(animation, value, now, previousAnimation) {
     animation.current = value;
     if (previousAnimation) {
-      animation.velocity = previousAnimation.velocity || 0;
+      animation.velocity = previousAnimation.velocity || animation.velocity || 0;
       animation.lastTimestamp = previousAnimation.lastTimestamp || now;
     } else {
-      animation.velocity = 0;
       animation.lastTimestamp = now;
     }
   }
