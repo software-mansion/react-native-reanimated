@@ -138,7 +138,7 @@ const Reanimated = {
     }
   },
   block: (a) => a[a.length - 1],
-  call: (a, b) => b(a),
+  call: (a, b) => b(a.map(getValue)),
   debug: NOOP,
   onChange: NOOP,
   startClock: NOOP,
