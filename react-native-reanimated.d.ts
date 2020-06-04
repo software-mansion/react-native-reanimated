@@ -68,9 +68,8 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    class SharedValue<T extends Value> {
-      constructor(value?: T);
-
+    type SharedValueTypes = number | string | boolean | object | Function;
+    interface SharedValue<T extends SharedValueTypes | SharedValueTypes[]> {
       value: T;
     }
 
@@ -450,6 +449,7 @@ declare module 'react-native-reanimated' {
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
+    // @TODO: refactor this once worket parse Typescript syntax
     type Context = { [key: string]: any };
 
     type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
