@@ -149,6 +149,7 @@ function processWorkletFunction(t, fun) {
   // if we don't clone other modules won't process parts of newFun defined below
   // this is weird but couldn't find a better way to force transform helper to
   // process the function
+  const workletID = Math.random() * 1e18;
   const clone = t.cloneNode(fun.node);
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
@@ -190,6 +191,17 @@ function processWorkletFunction(t, fun) {
             false
           ),
           t.stringLiteral(funString)
+        )
+      ),
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__workletID'),
+            false
+          ),
+          t.numericLiteral(workletID)
         )
       ),
       t.expressionStatement(
