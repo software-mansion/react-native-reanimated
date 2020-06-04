@@ -15,7 +15,8 @@ jobs:
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
       cache:
         directories:
-          - $HOME/.yarn-cache
+          - $HOME/build/software-mansion/react-native-reanimated/Example/android/app/build
+          - $HOME/.cache/yarn
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       android:
@@ -39,7 +40,6 @@ jobs:
         - npm install -g react-native-cli
         - cd Example
         - yarn
-        - rm -rf ./node_modules/react-native-reanimated/android/build
 
       before_script:
         - export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk-bundle
