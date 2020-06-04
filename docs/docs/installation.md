@@ -118,8 +118,8 @@ If not, after making those changes your app will be compatible with Turbo Module
 @end
 ```
 
-3. Rename `AppDelegate.m` to `AppDelagate.mm`.
-4. Add AppDelegate category in `AppDelagate.mm`.
+3. Rename `AppDelegate.m` to `AppDelegate.mm`.
+4. Add AppDelegate category in `AppDelegate.mm`.
 
 ```objectivec {1-2,4-7}
 #import <React/RCTCxxBridgeDelegate.h>
@@ -131,7 +131,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 @end
 ```
 
-5. Enable TurboModules in `AppDelagate.mm`.
+5. Enable TurboModules in `AppDelegate.mm`.
 
 ```objectivec {3}
   + (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -139,7 +139,7 @@ If not, after making those changes your app will be compatible with Turbo Module
     RCTEnableTurboModule(YES); // <- add
 ```
 
-6. Replace bridge initialization in `AppDelagate.mm`.
+6. Replace bridge initialization in `AppDelegate.mm`.
 
 ```objectivec {4-8}
   - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -158,7 +158,7 @@ If not, after making those changes your app will be compatible with Turbo Module
     ...
 ```
 
-7. Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `AppDelagate.mm`.
+7. Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `AppDelegate.mm`.
 
 ```objectivec
 // add headers
