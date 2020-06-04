@@ -450,7 +450,7 @@ declare module 'react-native-reanimated' {
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
-    // @TODO: refactor this once worket parse Typescript syntax
+    // @TODO: refactor this once worklet parse Typescript syntax
     type Context = { [key: string]: any };
 
     type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
