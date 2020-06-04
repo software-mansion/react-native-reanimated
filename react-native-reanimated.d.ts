@@ -68,7 +68,7 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    class SharedValue<T extends Value> extends AnimatedNode<T> {
+    class SharedValue<T extends Value> {
       constructor(value?: T);
 
       value: T;
