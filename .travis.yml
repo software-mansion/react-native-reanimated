@@ -15,8 +15,8 @@ jobs:
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
       cache:
         directories:
-          - $HOME/build/software-mansion/react-native-reanimated/Example/android/app/build
-          - $HOME/.cache/yarn
+          - $HOME/build/software-mansion/react-native-reanimated/Example/android/app/build/
+          - $HOME/.cache/yarn/
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       android:
