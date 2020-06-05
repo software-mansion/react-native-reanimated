@@ -164,9 +164,18 @@ const Reanimated = {
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
-  decay: NOOP,
-  timing: NOOP,
-  spring: NOOP,
+  decay: () => ({
+    start: NOOP,
+    stop: NOOP,
+  }),
+  timing: () => ({
+    start: NOOP,
+    stop: NOOP,
+  }),
+  spring: () => ({
+    start: NOOP,
+    stop: NOOP,
+  }),
 
   proc: cb => cb,
 
