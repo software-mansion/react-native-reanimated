@@ -17,6 +17,10 @@ module.exports = {
       backgroundColor: '#ffaaa8', // Defaults to `#fff`.
       textColor: '#001a72', // Defaults to `#000`.
     },
+    googleAnalytics: {
+      trackingID: 'UA-41044622-6',
+      anonymizeIP: true, // Should IPs be anonymized?
+    },
     navbar: {
       title: 'React Native Reanimated',
       links: [
