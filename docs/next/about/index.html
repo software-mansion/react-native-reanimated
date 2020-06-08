@@ -8,14 +8,14 @@
 <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-41044622-6","auto"),ga("send","pageview")</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script><title data-react-helmet="true">About React Native Reanimated | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="next"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="About React Native Reanimated | React Native Reanimated"><meta data-react-helmet="true" name="description" content="This is a documentation website of Reanimated 2 alpha release."><meta data-react-helmet="true" property="og:description" content="This is a documentation website of Reanimated 2 alpha release."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/next/about"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/next/about"><link rel="stylesheet" href="/react-native-reanimated/styles.47a24eb7.css">
 <link rel="preload" href="/react-native-reanimated/styles.b8ee3cc8.js" as="script">
-<link rel="preload" href="/react-native-reanimated/runtime~main.5e5a0eeb.js" as="script">
+<link rel="preload" href="/react-native-reanimated/runtime~main.bd2df002.js" as="script">
 <link rel="preload" href="/react-native-reanimated/main.2dfc8d96.js" as="script">
 <link rel="preload" href="/react-native-reanimated/1.e14ce8f3.js" as="script">
 <link rel="preload" href="/react-native-reanimated/2.6c511618.js" as="script">
 <link rel="preload" href="/react-native-reanimated/3.c2ea76c2.js" as="script">
 <link rel="preload" href="/react-native-reanimated/1be78505.0b145775.js" as="script">
 <link rel="preload" href="/react-native-reanimated/73e55cea.6d94dd01.js" as="script">
-<link rel="preload" href="/react-native-reanimated/3d8d21df.ec7c9acd.js" as="script">
+<link rel="preload" href="/react-native-reanimated/3d8d21df.f4c00626.js" as="script">
 </head>
 <body>
 <div id="__docusaurus">
@@ -29,7 +29,7 @@ In React Native by default all updates are delayed by at least one frame as the 
 On top of the lag with JavaScript playing many roles like running react diffing and updates, executing app’s business logic, processing network requests, etc., it is often the case that events can’t be immediately processed thus causing even more significant delays.
 Reanimated aims to provide ways of offloading animation and event handling logic off of the JavaScript thread and onto the UI thread.
 This is achieved by defining Reanimated worklets – a tiny chunks of JavaScript code that can be moved to a separate JavaScript VM and executed synchronously on the UI thread.
-This makes it possible to respond to touch events immediately and update the UI within the same frame when the even happens without worrying about the load that is put on the main JavaScript thread.</p><h3><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="library-overview"></a>Library overview<a aria-hidden="true" tabindex="-1" class="hash-link" href="#library-overview" title="Direct link to heading">#</a></h3><p>Version 1 of Reanimated has been designed to match React Native&#x27;s Animated API while providing a more complete set of primitives for defining interactions.
+This makes it possible to respond to touch events immediately and update the UI within the same frame when the event happens without worrying about the load that is put on the main JavaScript thread.</p><h3><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="library-overview"></a>Library overview<a aria-hidden="true" tabindex="-1" class="hash-link" href="#library-overview" title="Direct link to heading">#</a></h3><p>Version 1 of Reanimated has been designed to match React Native&#x27;s Animated API while providing a more complete set of primitives for defining interactions.
 In version 2 we decided to change the approach in order to address some limitation of version 1 that comes from the declarative API design.
 Below we present an overview of things that are new in Reanimated 2 and different from Reanimated 1.
 This is a tl;dr of the remaining parts of the documentation.
@@ -52,13 +52,13 @@ You can use Flipper for debugging your JS code, however connecting debugger to J
 We are looking into this problem and hope to have it resolved really soon.</li><li>JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.</li><li>Recursive worklets aren’t supported (however there are simple workarounds for this problem)</li><li>Objects passed to worklets from React Native don’t have the correct prototype set in JavaScript.
 As a result, such objects aren’t enumerable, that is you can’t use “for in” constructs, spread operator (three dots), or functions like Object.assign with them.</li><li>Expo support is not ready yet, next SDK release will support React Native 0.62 – this will allow you to use Reanimated 2 in the ejected Expo app.</li><li>Web support is missing for now as well, we plan to work on adding react-native-web support in the near future.</li></ul></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a class="navbar__brand footer-image-link" to="https://www.swmansion.com/" href="https://www.swmansion.com/"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
 <script src="/react-native-reanimated/styles.b8ee3cc8.js"></script>
-<script src="/react-native-reanimated/runtime~main.5e5a0eeb.js"></script>
+<script src="/react-native-reanimated/runtime~main.bd2df002.js"></script>
 <script src="/react-native-reanimated/main.2dfc8d96.js"></script>
 <script src="/react-native-reanimated/1.e14ce8f3.js"></script>
 <script src="/react-native-reanimated/2.6c511618.js"></script>
 <script src="/react-native-reanimated/3.c2ea76c2.js"></script>
 <script src="/react-native-reanimated/1be78505.0b145775.js"></script>
 <script src="/react-native-reanimated/73e55cea.6d94dd01.js"></script>
-<script src="/react-native-reanimated/3d8d21df.ec7c9acd.js"></script>
+<script src="/react-native-reanimated/3d8d21df.f4c00626.js"></script>
 </body>
 </html>
