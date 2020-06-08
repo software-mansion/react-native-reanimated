@@ -4,16 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
 <meta name="generator" content="Docusaurus v2.0.0-alpha.55">
-<title data-react-helmet="true">About React Native Reanimated | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="1.x.x"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="About React Native Reanimated | React Native Reanimated"><meta data-react-helmet="true" name="description" content="React Native&#x27;s Animated library reimplemented."><meta data-react-helmet="true" property="og:description" content="React Native&#x27;s Animated library reimplemented."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/1.x.x/about"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/1.x.x/about"><link rel="stylesheet" href="/react-native-reanimated/styles.47a24eb7.css">
-<link rel="preload" href="/react-native-reanimated/styles.b1cfc298.js" as="script">
-<link rel="preload" href="/react-native-reanimated/runtime~main.8ef847fc.js" as="script">
-<link rel="preload" href="/react-native-reanimated/main.d235f2d2.js" as="script">
-<link rel="preload" href="/react-native-reanimated/1.58846a3b.js" as="script">
-<link rel="preload" href="/react-native-reanimated/2.9c95489a.js" as="script">
-<link rel="preload" href="/react-native-reanimated/3.10e6d8c5.js" as="script">
-<link rel="preload" href="/react-native-reanimated/1be78505.2a6dd3c4.js" as="script">
-<link rel="preload" href="/react-native-reanimated/59d4a3fc.c2983a2b.js" as="script">
-<link rel="preload" href="/react-native-reanimated/887824e7.7fb8cb27.js" as="script">
+<link rel="preconnect" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-41044622-6","auto"),ga("send","pageview")</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script><title data-react-helmet="true">About React Native Reanimated | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="1.x.x"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="About React Native Reanimated | React Native Reanimated"><meta data-react-helmet="true" name="description" content="React Native&#x27;s Animated library reimplemented."><meta data-react-helmet="true" property="og:description" content="React Native&#x27;s Animated library reimplemented."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/1.x.x/about"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/1.x.x/about"><link rel="stylesheet" href="/react-native-reanimated/styles.47a24eb7.css">
+<link rel="preload" href="/react-native-reanimated/styles.b8ee3cc8.js" as="script">
+<link rel="preload" href="/react-native-reanimated/runtime~main.5e5a0eeb.js" as="script">
+<link rel="preload" href="/react-native-reanimated/main.2dfc8d96.js" as="script">
+<link rel="preload" href="/react-native-reanimated/1.e14ce8f3.js" as="script">
+<link rel="preload" href="/react-native-reanimated/2.6c511618.js" as="script">
+<link rel="preload" href="/react-native-reanimated/3.c2ea76c2.js" as="script">
+<link rel="preload" href="/react-native-reanimated/1be78505.0b145775.js" as="script">
+<link rel="preload" href="/react-native-reanimated/59d4a3fc.8d444a70.js" as="script">
+<link rel="preload" href="/react-native-reanimated/887824e7.ac54179a.js" as="script">
 </head>
 <body>
 <div id="__docusaurus">
@@ -34,14 +36,14 @@ This notion also helps with performance as we can try to evaluate as few nodes a
 The current algorithm for making decisions of which nodes to evaluate works as follows:</p><ol><li>For each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.</li><li>Then we update values that correspond to <a href="clock-and-the-algorithm.html">clock</a> nodes that are &quot;running&quot;.</li><li>We traverse the node&#x27;s tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.</li><li>If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.</li><li>After everything is done we check if some &quot;running&quot; clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.</li></ol><h3><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="100-declarative-gesture-interactions"></a>100% declarative gesture interactions<a aria-hidden="true" tabindex="-1" class="hash-link" href="#100-declarative-gesture-interactions" title="Direct link to heading">#</a></h3><p><code>react-native-reanimated</code> works best with the <a href="https://kmagiera.github.io/react-native-gesture-handler">Gesture Handler</a>
 library. Currently all the examples are made using that library, including the ultimate
 <a href="https://github.com/software-mansion/react-native-reanimated/blob/master/Example/src/imageViewer">ImagePreview app</a>.</p></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a class="navbar__brand footer-image-link" to="https://www.swmansion.com/" href="https://www.swmansion.com/"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
-<script src="/react-native-reanimated/styles.b1cfc298.js"></script>
-<script src="/react-native-reanimated/runtime~main.8ef847fc.js"></script>
-<script src="/react-native-reanimated/main.d235f2d2.js"></script>
-<script src="/react-native-reanimated/1.58846a3b.js"></script>
-<script src="/react-native-reanimated/2.9c95489a.js"></script>
-<script src="/react-native-reanimated/3.10e6d8c5.js"></script>
-<script src="/react-native-reanimated/1be78505.2a6dd3c4.js"></script>
-<script src="/react-native-reanimated/59d4a3fc.c2983a2b.js"></script>
-<script src="/react-native-reanimated/887824e7.7fb8cb27.js"></script>
+<script src="/react-native-reanimated/styles.b8ee3cc8.js"></script>
+<script src="/react-native-reanimated/runtime~main.5e5a0eeb.js"></script>
+<script src="/react-native-reanimated/main.2dfc8d96.js"></script>
+<script src="/react-native-reanimated/1.e14ce8f3.js"></script>
+<script src="/react-native-reanimated/2.6c511618.js"></script>
+<script src="/react-native-reanimated/3.c2ea76c2.js"></script>
+<script src="/react-native-reanimated/1be78505.0b145775.js"></script>
+<script src="/react-native-reanimated/59d4a3fc.8d444a70.js"></script>
+<script src="/react-native-reanimated/887824e7.ac54179a.js"></script>
 </body>
 </html>
