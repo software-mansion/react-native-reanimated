@@ -424,6 +424,15 @@ declare module 'react-native-reanimated' {
       initialValue: T
     ): AnimatedValue<T>;
 
+    // reanimated2 functions
+    export function runOnUI<ReturnType>(fn: () => ReturnType): () => ReturnType;
+    export function runOnUI<P1, ReturnType>(fn: (p1: P1) => ReturnType): (p1: P1) => ReturnType;
+    export function runOnUI<P1, P2, ReturnType>(fn: (p1: P1, p2: P2) => ReturnType): (p1: P1, p2: P2) => ReturnType;
+    export function runOnUI<P1, P2, P3, ReturnType>(fn: (p1: P1, p2: P2, p3: P3) => ReturnType): (p1: P1, p2: P2, p3: P3) => ReturnType;
+    export function runOnUI<P1, P2, P3, P4, ReturnType>(fn: (p1: P1, p2: P2, p3: P3, p4: P4) => ReturnType): (p1: P1, p2: P2, p3: P3, p4: P4) => ReturnType;
+    export function runOnUI<P1, P2, P3, P4, P5, ReturnType>(fn: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType): (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType;
+    export function runOnUI<A, ReturnType>(fn: (...args: A[]) => ReturnType): (...args: A[]) => ReturnType;
+
     // reanimated2 hooks
     export function useSharedValue<T extends SharedValueType>(
       initialValue: T
@@ -594,6 +603,7 @@ declare module 'react-native-reanimated' {
   export const timing: typeof Animated.timing
   export const spring: typeof Animated.spring
   export const SpringUtils: typeof Animated.SpringUtils
+  export const runOnUI: typeof Animated.runOnUI
   export const useValue: typeof Animated.useValue
   export const useSharedValue: typeof Animated.useSharedValue
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
