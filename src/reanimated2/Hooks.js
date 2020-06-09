@@ -316,22 +316,13 @@ export function useAnimatedGestureHandler(handlers) {
       if (event.state === ACTIVE && handlers.onActive) {
         handlers.onActive(event, context);
       }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state === END && handlers.onEnd
-      ) {
+      if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
         handlers.onEnd(event, context);
       }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state === FAILED && handlers.onFail
-      ) {
+      if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
         handlers.onFail(event, context);
       }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state === CANCELLED && handlers.onCancel
-      ) {
+      if (event.oldState === ACTIVE && event.state === CANCELLED && handlers.onCancel) {
         handlers.onCancel(event, context);
       }
       if (
