@@ -2,7 +2,7 @@ import React from 'react';
 import { createAnimatedAlways } from './AnimatedAlways';
 import AnimatedNode from './AnimatedNode';
 
-class Code extends React.PureComponent {
+class Code extends React.Component {
   static resolveNode = maybeNode => {
     if (typeof maybeNode === 'function') {
       return Code.resolveNode(maybeNode());
@@ -39,11 +39,6 @@ class Code extends React.PureComponent {
 
   componentWillUnmount() {
     this.always.__detach();
-  }
-  
-  componentDidUpdate() {
-    this.componentWillUnmount();
-    this.componentDidMount();
   }
   
   render() {
