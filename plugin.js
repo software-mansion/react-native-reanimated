@@ -306,7 +306,9 @@ module.exports = function ({ types: t }) {
           }
         },
         exit(path) {
-          if (path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')) {
+          if (
+            path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')
+          ) {
             // @babel/plugin-transform-object-assign
             path.node.callee.object.name = 'Object';
           }
