@@ -302,11 +302,11 @@ module.exports = function ({ types: t }) {
         enter(path) {
           if (path.get('callee').matchesPattern('Object.assign')) {
             // @babel/plugin-transform-object-assign
-            path.node.callee.object.name = 'random_temp_name';
+            path.node.callee.object.name = 'Object__DO_NOT_TRANSFORM';
           }
         },
         exit(path) {
-          if (path.get('callee').matchesPattern('random_temp_name.assign')) {
+          if (path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')) {
             // @babel/plugin-transform-object-assign
             path.node.callee.object.name = 'Object';
           }
