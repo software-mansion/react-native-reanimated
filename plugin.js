@@ -40,7 +40,7 @@ const globals = new Set([
   'global',
 ]);
 
-function buildWorkletString(t, fun, closureVariables) {
+function buildWorkletString(t, fun, closureVariables, name) {
   fun.traverse({
     enter(path) {
       t.removeComments(path.node);
@@ -50,7 +50,7 @@ function buildWorkletString(t, fun, closureVariables) {
   let workletFunction;
   if (closureVariables.length > 0) {
     workletFunction = t.functionExpression(
-      null,
+      t.identifier(name),
       fun.node.params,
       t.blockStatement([
         t.variableDeclaration('const', [
@@ -65,7 +65,7 @@ function buildWorkletString(t, fun, closureVariables) {
                 )
               )
             ),
-            t.memberExpression(t.thisExpression(), t.identifier('_closure'))
+            t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
           ),
         ]),
         fun.get('body').node,
@@ -73,7 +73,7 @@ function buildWorkletString(t, fun, closureVariables) {
     );
   } else {
     workletFunction = t.functionExpression(
-      null,
+      t.identifier(name),
       fun.node.params,
       fun.get('body').node
     );
@@ -85,6 +85,12 @@ function buildWorkletString(t, fun, closureVariables) {
 function processWorkletFunction(t, fun) {
   if (!t.isFunctionParent(fun)) {
     return;
+  }
+
+  let functionName = '_f';
+
+  if (fun.node.id) {
+    functionName = fun.node.id.name;
   }
 
   const closure = new Map();
@@ -156,7 +162,7 @@ function processWorkletFunction(t, fun) {
   const clone = t.cloneNode(fun.node);
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
-  const funString = buildWorkletString(t, fun, variables);
+  const funString = buildWorkletString(t, fun, variables, functionName);
   const workletHash = hash(funString);
 
   const newFun = t.functionExpression(
