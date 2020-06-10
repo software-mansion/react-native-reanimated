@@ -314,17 +314,7 @@ module.exports = function ({ types: t }) {
           processWorklets(t, path, processWorkletFunction);
         },
       },
-      FunctionDeclaration: {
-        exit(path) {
-          processIfWorkletNode(t, path);
-        },
-      },
-      FunctionExpression: {
-        exit(path) {
-          processIfWorkletNode(t, path);
-        },
-      },
-      ArrowFunctionExpression: {
+      'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         exit(path) {
           processIfWorkletNode(t, path);
         },
