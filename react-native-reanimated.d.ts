@@ -425,14 +425,7 @@ declare module 'react-native-reanimated' {
     ): AnimatedValue<T>;
 
     // reanimated2 functions
-    export function runOnUI<ReturnType>(fn: () => ReturnType): () => ReturnType;
-    export function runOnUI<P1, ReturnType>(fn: (p1: P1) => ReturnType): (p1: P1) => ReturnType;
-    export function runOnUI<P1, P2, ReturnType>(fn: (p1: P1, p2: P2) => ReturnType): (p1: P1, p2: P2) => ReturnType;
-    export function runOnUI<P1, P2, P3, ReturnType>(fn: (p1: P1, p2: P2, p3: P3) => ReturnType): (p1: P1, p2: P2, p3: P3) => ReturnType;
-    export function runOnUI<P1, P2, P3, P4, ReturnType>(fn: (p1: P1, p2: P2, p3: P3, p4: P4) => ReturnType): (p1: P1, p2: P2, p3: P3, p4: P4) => ReturnType;
-    export function runOnUI<P1, P2, P3, P4, P5, ReturnType>(fn: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType): (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType;
-    export function runOnUI<A, ReturnType>(fn: (...args: A[]) => ReturnType): (...args: A[]) => ReturnType;
-
+    export function runOnUI<A, R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
                         
     // reanimated2 hooks
