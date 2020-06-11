@@ -433,6 +433,8 @@ declare module 'react-native-reanimated' {
     export function runOnUI<P1, P2, P3, P4, P5, ReturnType>(fn: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType): (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => ReturnType;
     export function runOnUI<A, ReturnType>(fn: (...args: A[]) => ReturnType): (...args: A[]) => ReturnType;
 
+    export function processColor(color: number | string): number;
+                        
     // reanimated2 hooks
     export function useSharedValue<T extends SharedValueType>(
       initialValue: T
@@ -604,6 +606,7 @@ declare module 'react-native-reanimated' {
   export const spring: typeof Animated.spring
   export const SpringUtils: typeof Animated.SpringUtils
   export const runOnUI: typeof Animated.runOnUI
+  export const processColor: typeof Animated.processColor
   export const useValue: typeof Animated.useValue
   export const useSharedValue: typeof Animated.useSharedValue
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
