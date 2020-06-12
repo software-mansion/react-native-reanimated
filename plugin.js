@@ -149,6 +149,7 @@ function processWorkletFunction(t, fun) {
   const variables = Array.from(closure.values());
 
   const privateFunctionId = t.identifier('_f');
+  const workletHash = hash(funString);
 
   // if we don't clone other modules won't process parts of newFun defined below
   // this is weird but couldn't find a better way to force transform helper to
@@ -157,7 +158,6 @@ function processWorkletFunction(t, fun) {
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
   const funString = buildWorkletString(t, fun, variables);
-  const workletID = hash(funString);
 
   const newFun = t.functionExpression(
     fun.id,
@@ -202,10 +202,10 @@ function processWorkletFunction(t, fun) {
           '=',
           t.memberExpression(
             privateFunctionId,
-            t.identifier('__workletID'),
+            t.identifier('__workletHash'),
             false
           ),
-          t.numericLiteral(workletID)
+          t.numericLiteral(workletHash)
         )
       ),
       t.expressionStatement(
