@@ -425,7 +425,7 @@ declare module 'react-native-reanimated' {
     ): AnimatedValue<T>;
 
     // reanimated2 functions
-    export function runOnUI<A, R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
+    export function runOnUI<A extends any[], R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
                         
     // reanimated2 hooks
