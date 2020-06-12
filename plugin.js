@@ -31,9 +31,12 @@ const globals = new Set([
   'UIManager',
   'requestAnimationFrame',
   '_WORKLET',
+  'arguments',
   '_log',
   '_updateProps',
   'RegExp',
+  'Error',
+  'global',
 ]);
 
 function buildWorkletString(t, fun, closureVariables) {
@@ -52,7 +55,7 @@ function buildWorkletString(t, fun, closureVariables) {
         t.variableDeclaration('const', [
           t.variableDeclarator(
             t.objectPattern(
-              closureVariables.map(variable =>
+              closureVariables.map((variable) =>
                 t.objectProperty(
                   t.identifier(variable.name),
                   t.identifier(variable.name),
@@ -171,7 +174,7 @@ function processWorkletFunction(t, fun) {
             false
           ),
           t.objectExpression(
-            variables.map(variable =>
+            variables.map((variable) =>
               t.objectProperty(
                 t.identifier(variable.name),
                 variable,
@@ -238,10 +241,6 @@ function processWorkletFunction(t, fun) {
 function processIfWorkletNode(t, path) {
   const fun = path;
 
-  if (path.node.type === 'FuncionDeclaration' && path.node.id.name === 'siakaka') {
-    console.log(fun.toString());
-  }
-
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -254,52 +253,59 @@ function processIfWorkletNode(t, path) {
           directives &&
           directives.length > 0 &&
           directives.some(
-            directive =>
+            (directive) =>
               t.isDirectiveLiteral(directive.value) &&
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun)
+          processWorkletFunction(t, fun);
         }
       }
     },
   });
 }
 
-module.exports = function({ types: t }) {
+function processWorklets(t, path, processor) {
+  const name = path.node.callee.name;
+  if (
+    objectHooks.has(name) &&
+    path.get('arguments.0').type === 'ObjectExpression'
+  ) {
+    const objectPath = path.get('arguments.0.properties.0');
+    for (let i = 0; i < objectPath.container.length; i++) {
+      processor(t, objectPath.getSibling(i).get('value'));
+    }
+  } else if (functionHooks.has(name)) {
+    processor(t, path.get('arguments.0'));
+  }
+}
+
+module.exports = function ({ types: t }) {
   return {
     visitor: {
       CallExpression: {
-        exit(path) {
-          const name = path.node.callee.name;
-          if (
-            objectHooks.has(name) &&
-            path.get('arguments.0').type === 'ObjectExpression'
-          ) {
-            const objectPath = path.get('arguments.0.properties.0');
-            for (let i = 0; i < objectPath.container.length; i++) {
-              processWorkletFunction(t, objectPath.getSibling(i).get('value'))
-            }
-          } else if (functionHooks.has(name)) {
-            processWorkletFunction(t, path.get('arguments.0'))
+        enter(path) {
+          if (path.get('callee').matchesPattern('Object.assign')) {
+            // @babel/plugin-transform-object-assign
+            path.node.callee.object.name = 'Object__DO_NOT_TRANSFORM';
           }
-        }
+        },
+        exit(path) {
+          if (
+            path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')
+          ) {
+            // @babel/plugin-transform-object-assign
+            path.node.callee.object.name = 'Object';
+          }
+
+          processWorklets(t, path, processWorkletFunction);
+        },
       },
-      FunctionDeclaration: {
+      'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         exit(path) {
           processIfWorkletNode(t, path);
-        }
+        },
       },
-      FunctionExpression: {
-        exit(path) {
-          processIfWorkletNode(t, path);
-        }
-      },
-      ArrowFunctionExpression: {
-        exit(path) {
-          processIfWorkletNode(t,path);
-        }
-      }
     },
   };
 };
