@@ -7,6 +7,20 @@ namespace reanimated {
 
 void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt, UpdaterFunction updater, RequestFrameFunction requestFrame) {
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
+  
+  jsi::Object dummyGlobal(rt);
+  auto dummyFunction = [requestFrame](
+     jsi::Runtime &rt,
+     const jsi::Value &thisValue,
+     const jsi::Value *args,
+     size_t count
+     ) -> jsi::Value {
+   return jsi::Value::undefined();
+  };
+  jsi::Function __reanimatedWorkletInit = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction);
+  
+  dummyGlobal.setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
+  rt.global().setProperty(rt, "global", dummyGlobal);
 
   auto callback = [](
       jsi::Runtime &rt,
