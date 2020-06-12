@@ -36,6 +36,7 @@ const globals = new Set([
   '_updateProps',
   'RegExp',
   'Error',
+  'global',
 ]);
 
 function buildWorkletString(t, fun, closureVariables) {
@@ -279,22 +280,6 @@ function processWorklets(t, path, processor) {
   }
 }
 
-function removeWorkletLabelFromSubtrees(path) {
-  const parentFunction = path.getFunctionParent();
-  if (parentFunction != null) {
-    parentFunction.traverse({
-      Directive(innerPath) {
-        if (
-          innerPath.node.value != path.node &&
-          innerPath.node.value.value === 'worklet'
-        ) {
-          innerPath.remove();
-        }
-      },
-    });
-  }
-}
-
 module.exports = function ({ types: t }) {
   return {
     visitor: {
@@ -319,13 +304,6 @@ module.exports = function ({ types: t }) {
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         exit(path) {
           processIfWorkletNode(t, path);
-        },
-      },
-      DirectiveLiteral: {
-        enter(path) {
-          if (path.node.value === 'worklet') {
-            removeWorkletLabelFromSubtrees(path);
-          }
         },
       },
     },
