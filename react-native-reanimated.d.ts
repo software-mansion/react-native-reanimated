@@ -382,6 +382,7 @@ declare module 'react-native-reanimated' {
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
+    export function addWhitelistedUIProps(props: { [key: string]: true }): void;
   }
 
   export default Animated;
