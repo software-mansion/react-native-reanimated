@@ -23,7 +23,7 @@ const getValue = node => {
   if (typeof node === "number") {
     return node;
   }
-  return node && node[" __value"];
+  return node && node[" __value"] || 0;
 };
 
 class AnimatedValue {
@@ -138,7 +138,7 @@ const Reanimated = {
     }
   },
   block: (a) => a[a.length - 1],
-  call: (a, b) => b(a),
+  call: (a, b) => b(a.map(getValue)),
   debug: NOOP,
   onChange: NOOP,
   startClock: NOOP,
