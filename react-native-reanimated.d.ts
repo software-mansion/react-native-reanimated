@@ -429,15 +429,9 @@ declare module 'react-native-reanimated' {
     export function processColor(color: number | string): number;
 
     // reanimated2 hooks
-    // lets not use extends on the function generic, which causes it to be more specific
-    // but let's do it on the return type instead
     export function useSharedValue<T>(
         initialValue: T
-    ): T extends SharedValueType ? SharedValue<T> : never {
-      return {
-        value: initialValue
-      } as any;
-    }
+    ): T extends SharedValueType ? SharedValue<T> : never;
 
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T
