@@ -68,11 +68,11 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    type RawSharedValue = number | string | boolean | object | Function;
+    type RawSharedValue = number | string | boolean | object;
     type SharedValueType = RawSharedValue | RawSharedValue[];
-    interface SharedValue<T extends SharedValueType> {
+    type SharedValue<T extends SharedValueType> = {
       value: T;
-    }
+    };
 
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
@@ -427,11 +427,18 @@ declare module 'react-native-reanimated' {
     // reanimated2 functions
     export function runOnUI<A extends any[], R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
-                        
+
     // reanimated2 hooks
-    export function useSharedValue<T extends SharedValueType>(
-      initialValue: T
-    ): SharedValue<T>;
+    // lets not use extends on the function generic, which causes it to be more specific
+    // but let's do it on the return type instead
+    export function useSharedValue<T>(
+        initialValue: T
+    ): T extends SharedValueType ? SharedValue<T> : never {
+      return {
+        value: initialValue
+      } as any;
+    }
+
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T
     ): SharedValue<T>;
