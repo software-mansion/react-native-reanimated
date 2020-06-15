@@ -403,7 +403,7 @@ declare module 'react-native-reanimated' {
       userConfig?: Omit<SpringConfig, 'toValue'>,
       callback?: (isCancelled: boolean) => void,
     ): number;
-    export function cancelAnimation<T extends SharedValue>(
+    export function cancelAnimation<T extends SharedValue<any>>(
       sharedValue: SharedValue<T>
     ): void;
     export function delay(
