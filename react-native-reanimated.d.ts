@@ -455,9 +455,6 @@ declare module 'react-native-reanimated' {
       handlers: ScrollHandlers
     ): OnScroll;
 
-    // configuration
-    export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
-
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
@@ -488,6 +485,10 @@ declare module 'react-native-reanimated' {
       onMomentumBegin?: ScrollHandler;
       onMomentumEnd?: ScrollHandler;
     }
+
+    // configuration
+    export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
+    export function addWhitelistedUIProps(props: { [key: string]: true }): void;
   }
 
   export default Animated;

@@ -5,7 +5,7 @@ dist: xenial
 jobs:
   include:
     - language: android
-      jdk: oraclejdk8
+      jdk: openjdk8
       env:
         - NODE_VERSION=10.15.3
         - ANDROID_API=28
@@ -15,7 +15,7 @@ jobs:
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
       cache:
         directories:
-          - $HOME/.yarn-cache
+          - $HOME/.cache/yarn/
           - $HOME/.gradle/caches/
           - $HOME/.gradle/wrapper/
       android:
@@ -24,6 +24,11 @@ jobs:
           - platform-tools
           - android-${ANDROID_API}
           - build-tools-${ANDROID_BUILD_TOOLS}
+
+      before_install:
+        - yes | sdkmanager "ndk-bundle" > /dev/null
+        - yes | sdkmanager "ndk;21.2.6472646" > /dev/null
+        - yes | sdkmanager "cmake;3.10.2.4988404" > /dev/null
 
       install:
         - nvm install $NODE_VERSION
@@ -35,8 +40,12 @@ jobs:
         - cd Example
         - yarn
 
+      before_script:
+        - export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk-bundle
+        - export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
+
       script:
-        - cd ./android && ./gradlew assembleDebug
+        - cd ./android &&./gradlew assembleDebug --console=plain
 
     - language: objective-c
       os: osx

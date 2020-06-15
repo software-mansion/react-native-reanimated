@@ -57,6 +57,7 @@ runtime(std::move(rt)),
 mapperRegistry(new MapperRegistry()),
 eventHandlerRegistry(new EventHandlerRegistry()),
 requestRender(requestRender),
+workletsCache(new WorkletsCache()),
 scheduler(scheduler) {
   RuntimeDecorator::addNativeObjects(*runtime, propUpdater, [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
