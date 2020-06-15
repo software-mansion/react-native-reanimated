@@ -70,7 +70,7 @@ declare module 'react-native-reanimated' {
 
     type RawSharedValue = number | string | boolean | object;
     type SharedValueType = RawSharedValue | RawSharedValue[];
-    type SharedValue<T extends SharedValueType> = {
+    export type SharedValue<T extends SharedValueType> = {
       value: T;
     };
 
