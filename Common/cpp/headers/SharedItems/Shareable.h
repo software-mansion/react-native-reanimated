@@ -125,7 +125,6 @@ class FrozenObject : public jsi::HostObject {
 };
 
 class RemoteObject: public jsi::HostObject {
-  friend class ShareableValue;
 private:
   NativeReanimatedModule *module;
   std::shared_ptr<jsi::Object> backing;
