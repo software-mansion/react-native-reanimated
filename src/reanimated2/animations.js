@@ -1,6 +1,5 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
-import { makeCacheable } from './core';
 
 export function cancelAnimation(value) {
   'worklet';
