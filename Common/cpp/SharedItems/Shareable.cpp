@@ -32,8 +32,14 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
+  bool shouldBeCached  = false;
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
+    
+    if (object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).isBool() and
+        object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).getBool()) {
+      shouldBeCached = true;
+    }
     
     if (!(object.getProperty(rt, HIDDEN_PROPERTY_NAME).isUndefined())) {
       jsi::Object hiddenProperty = object.getProperty(rt, HIDDEN_PROPERTY_NAME).asObject(rt);
@@ -85,6 +91,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         // a worklet
         type = WorkletFunctionType;
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+        shouldBeCached = true;
       }
     } else if (object.isArray(rt)) {
       type = ArrayType;
@@ -115,8 +122,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
     
-    if (!object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).isBool() or
-        !object.getProperty(rt, HIDDEN_SHOULD_BE_CACHED).getBool()) {
+    if (!shouldBeCached) {
       return;
     }
     

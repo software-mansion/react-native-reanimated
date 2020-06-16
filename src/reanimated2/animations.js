@@ -61,8 +61,6 @@ export function withTiming(toValue, userConfig, callback) {
   };
 }
 
-makeCacheable(withTiming);
-
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
   if (!_WORKLET) {
