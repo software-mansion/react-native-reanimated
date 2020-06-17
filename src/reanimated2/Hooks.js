@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
 import updateProps from './UpdateProps';
+import { initialUpdaterRun } from './animations';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -245,7 +246,7 @@ export function useAnimatedStyle(updater) {
 
   const initRef = useRef(null);
   if (initRef.current === null) {
-    const initial = updater();
+    const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -273,7 +274,7 @@ export function useDerivedValue(processor) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = {
-      sharedValue: makeMutable(processor()),
+      sharedValue: makeMutable(initialUpdaterRun(processor)),
       inputs: Object.values(processor._closure),
     };
   }
