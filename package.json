@@ -46,7 +46,8 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "fbjs": "^1.0.0"
+    "fbjs": "^1.0.0",
+    "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "react": "*",
