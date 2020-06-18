@@ -292,14 +292,15 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
 
   if (module->isHostRuntime(rt)) {
     if (propName == "value") {
-      {
-        std::lock_guard<std::mutex> lock(readWriteMutex);
-        value = ShareableValue::adapt(rt, newValue, module);
-      }
-      module->scheduler->scheduleOnUI([this] {
-        for (auto listener : listeners) {
-          listener.second();
-        }
+      auto shareable = ShareableValue::adapt(rt, newValue, module);
+      module->scheduler->scheduleOnUI([this, shareable] {
+        jsi::Runtime &rt = *this->module->runtime.get();
+        auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
+        jsi::Value newValue = shareable->getValue(rt);
+        module->valueSetter->getValue(rt)
+          .asObject(rt)
+          .asFunction(rt)
+          .callWithThis(rt, setterProxy, newValue);
       });
     }
     return;
