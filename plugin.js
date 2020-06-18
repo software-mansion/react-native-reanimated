@@ -158,12 +158,7 @@ function processWorkletFunction(t, fun) {
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
   const funString = buildWorkletString(t, fun, variables);
-<<<<<<< HEAD
-||||||| constructed merge base
-  const workletID = hash(funString);
-=======
   const workletHash = hash(funString);
->>>>>>> workletID -> workletHash
 
   const newFun = t.functionExpression(
     fun.id,
