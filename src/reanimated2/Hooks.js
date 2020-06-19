@@ -249,16 +249,22 @@ function styleUpdater(viewTag, updater, state) {
   }
 }
 
-export function useAnimatedStyle(updater) {
+export function useAnimatedStyle(updater, exclude = []) {
   const viewTag = useSharedValue(-1);
 
   const initRef = useRef(null);
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
+
+    const toExclude = new Set(exclude);
+    const filteredInput = Object.values(updater._closure).filter(
+      (x) => !toExclude.has(x)
+    );
+
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
-      inputs: Object.values(updater._closure),
+      inputs: filteredInput,
     };
   }
   const { initial, remoteState, inputs } = initRef.current;
@@ -278,12 +284,17 @@ export function useAnimatedStyle(updater) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor) {
+export function useDerivedValue(processor, exclude = []) {
   const initRef = useRef(null);
   if (initRef.current === null) {
+    const toExclude = new Set(exclude);
+    const filteredInput = Object.values(updater._closure).filter(
+      (x) => !toExclude.has(x)
+    );
+
     initRef.current = {
       sharedValue: makeMutable(initialUpdaterRun(processor)),
-      inputs: Object.values(processor._closure),
+      inputs: filteredInput,
     };
   }
 
