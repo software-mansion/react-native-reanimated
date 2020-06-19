@@ -86,9 +86,13 @@ function runAnimations(animation, timestamp, key, result) {
   function runAnimations(animation, timestamp, key, result) {
     if (Array.isArray(animation)) {
       result[key] = [];
-      return animation.every((entry, index) =>
-        runAnimations(entry, timestamp, index, result[key])
-      );
+      let allFinished = true;
+      animation.forEach((entry, index) => {
+        if (!runAnimations(entry, timestamp, index, result[key])) {
+          allFinished = false;
+        }
+      });
+      return allFinished;
     } else if (typeof animation === 'object' && animation.animation) {
       if (animation.callStart) {
         animation.callStart(timestamp);
@@ -105,9 +109,13 @@ function runAnimations(animation, timestamp, key, result) {
       return finished;
     } else if (typeof animation === 'object') {
       result[key] = {};
-      return Object.keys(animation).every(k =>
-        runAnimations(animation[k], timestamp, k, result[key])
-      );
+      let allFinished = true;
+      Object.keys(animation).forEach(k => {
+        if (!runAnimations(animation[k], timestamp, k, result[key])) {
+          allFinished = false;
+        }
+      });
+      return allFinished;
     } else {
       result[key] = animation;
       return true;
