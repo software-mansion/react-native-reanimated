@@ -63,12 +63,25 @@ export function withTiming(toValue, userConfig, callback) {
     }
 
     function start(animation, value, now, previousAnimation) {
-      animation.startTime = now;
-      animation.progress = 0;
+      if (
+        previousAnimation &&
+        previousAnimation.type === 'timing' &&
+        previousAnimation.toValue === toValue
+      ) {
+        // to maintain continuity of timing animations we check if we are starting
+        // new timing over the old one with the same parameters. If so, we want
+        // to copy animation timeline properties
+        animation.startTime = previousAnimation.startTime;
+        animation.progress = previousAnimation.progress;
+      } else {
+        animation.startTime = now;
+        animation.progress = 0;
+      }
       animation.current = value;
     }
 
     return {
+      type: 'timing',
       animation: timing,
       start,
       progress: 0,
