@@ -19,6 +19,7 @@ Allowed parameters are listed below:
 
 | Options                   | Default | Description |
 | ------------------------- | ------- | ----------- |
+| velocity                  | 0       |             |
 | damping                   | 10      |             |
 | mass                      | 1       |             |
 | stiffness                 | 100     |             |
