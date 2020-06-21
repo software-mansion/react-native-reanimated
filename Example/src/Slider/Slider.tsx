@@ -12,8 +12,8 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
-import Cursor from "./Cursor";
-import CircularProgress from "./CircularProgress";
+import Test from "./Test";
+
 import { canvas2Polar } from "./Coordinates";
 
 const { width } = Dimensions.get("window");
@@ -35,22 +35,7 @@ const styles = StyleSheet.create({
 const CircularSlider = () => {
   const theta = useSharedValue(canvas2Polar({ x: 0, y: 0 }, { x: r, y: r }).theta);
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Animated.View style={StyleSheet.absoluteFill}>
-          <CircularProgress
-            strokeWidth={STROKE_WIDTH}
-            {...{ r }}
-            {...{ theta }}
-          />
-        </Animated.View>
-        <Cursor
-          strokeWidth={STROKE_WIDTH}
-          r={r - STROKE_WIDTH / 2}
-          {...{ theta }}
-        />
-      </View>
-    </View>
+    <Test />
   );
 };
 
