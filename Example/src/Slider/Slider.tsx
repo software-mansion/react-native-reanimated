@@ -10,11 +10,12 @@ import Animated, {
   useSharedValue,
   useDerivedValue,
   interpolate,
+  useAnimatedGestureHandler,
+  useAnimatedStyle
 } from "react-native-reanimated";
 
-import Test from "./Test";
-
-import { canvas2Polar } from "./Coordinates";
+import { canvas2Polar, polar2Canvas } from "./Coordinates";
+import { PanGestureHandler } from "react-native-gesture-handler";
 
 const { width } = Dimensions.get("window");
 const size = width - 32;
@@ -33,9 +34,22 @@ const styles = StyleSheet.create({
 });
 
 const CircularSlider = () => {
-  const theta = useSharedValue(canvas2Polar({ x: 0, y: 0 }, { x: r, y: r }).theta);
+  const theta = useSharedValue(0);
+  const onGestureEvent = useAnimatedGestureHandler({
+    onActive: (event, ctx) => {
+      theta.value = canvas2Polar({ x: event.translationX, y: event.translationY }, { x: r, y: r }).theta;
+    }
+  });
+  const style = useAnimatedStyle(() => {
+    const {x: translateX, y: translateY } = polar2Canvas({ theta: theta.value, radius: r }, { x: r, y: r});
+    return {
+      transform: [{ translateX }, { translateY }]
+    }
+  });
   return (
-    <Test />
+    <PanGestureHandler {...{onGestureEvent}}>
+      <Animated.View style={[{ width: 200, height: 200, backgroundColor: "cyan" }, style]} />
+    </PanGestureHandler>
   );
 };
 
