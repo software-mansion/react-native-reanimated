@@ -21,6 +21,7 @@ import ChatHeadsExample from './ChatHeadsExample';
 import SwipeableListExample from './SwipeableListExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LiquidSwipe from './LiquidSwipe';
+import Slider from "./Slider";
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
@@ -52,6 +53,10 @@ const SCREENS = {
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 (iOS ONLY) Liquid Swipe Example',
+  },
+  Slider: {
+    screen: Slider,
+    title: '🆕 Slider',
   },
 };
 
