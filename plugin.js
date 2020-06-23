@@ -93,7 +93,8 @@ function processWorkletFunction(t, fun) {
   const closure = new Map();
   const outputs = new Set();
 
-  console.log(fun.toString());
+  // We use copy because some of the plugins don't update bindings and
+  // some even brake them!
   const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
 
   traverse(astWorkletCopy, {
@@ -129,7 +130,6 @@ function processWorkletFunction(t, fun) {
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
-      console.log("add", name);
     },
   });
 
@@ -225,7 +225,7 @@ function processWorkletFunction(t, fun) {
       ),
       t.returnStatement(privateFunctionId),
     ])
-  ); 
+  );
 
   const replacement = t.callExpression(newFun, []);
   // we check if function needs to be assigned to variable declaration.
@@ -287,23 +287,21 @@ function processWorklets(t, path, processor) {
 }
 
 const PLUGIN_BLACKLIST_NAMES = [
- // '@babel/plugin-transform-destructuring',
+  // '@babel/plugin-transform-destructuring', do not blacklist
+  'metro-react-native-babel-preset/node_modules/@babel/plugin-transform-object-assign',
 ];
 
-const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map(pluginName => {
-  const blacklistedPluginObject = require(pluginName);
-
-
-  if (!blacklistedPluginObject) {
-    console.log(`No ${pluginName}!`);
-    return null;
-  } else {
-    const blacklistedPlugin = blacklistedPluginObject.default(
-      {assertVersion: (x) => true}
-    );
+const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
+  try {
+    const blacklistedPluginObject = require(pluginName);
+    const blacklistedPlugin = blacklistedPluginObject.default({
+      assertVersion: (x) => true,
+    });
 
     visitors.explode(blacklistedPlugin.visitor);
-    return blacklistedPlugin;  
+    return blacklistedPlugin;
+  } catch (e) {
+    console.log(`No ${pluginName}!`);
   }
 });
 
@@ -315,17 +313,21 @@ function removePluginsFromBlacklist(plugins) {
 
     let toRemove = [];
     for (let i = 0; i < plugins.length; i++) {
-      if (JSON.stringify(Object.keys(plugins[i].visitor)) != JSON.stringify(Object.keys(blacklistedPlugin.visitor))) {
+      if (
+        JSON.stringify(Object.keys(plugins[i].visitor)) !=
+        JSON.stringify(Object.keys(blacklistedPlugin.visitor))
+      ) {
         continue;
       }
       let areEqual = true;
       for (let key of Object.keys(blacklistedPlugin.visitor)) {
-        if (blacklistedPlugin.visitor[key].toString() !=
-            plugins[i].visitor[key].toString()
-          ) {
-            areEqual = false;
-            break;
-          }
+        if (
+          blacklistedPlugin.visitor[key].toString() !=
+          plugins[i].visitor[key].toString()
+        ) {
+          areEqual = false;
+          break;
+        }
       }
 
       if (areEqual) {
@@ -333,7 +335,7 @@ function removePluginsFromBlacklist(plugins) {
       }
     }
 
-    toRemove.forEach(x => plugins.splice(x, 1));
+    toRemove.forEach((x) => plugins.splice(x, 1));
   });
 }
 
@@ -341,20 +343,7 @@ module.exports = function ({ types: t }) {
   return {
     visitor: {
       CallExpression: {
-        enter(path) {
-          if (path.get('callee').matchesPattern('Object.assign')) {
-            // @babel/plugin-transform-object-assign
-            path.node.callee.object.name = 'Object__DO_NOT_TRANSFORM';
-          }
-        },
         exit(path) {
-          if (
-            path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')
-          ) {
-            // @babel/plugin-transform-object-assign
-            path.node.callee.object.name = 'Object';
-          }
-
           processWorklets(t, path, processWorkletFunction);
         },
       },
@@ -367,6 +356,6 @@ module.exports = function ({ types: t }) {
     manipulateOptions(opts, parserOpts) {
       const plugins = opts.plugins;
       removePluginsFromBlacklist(plugins);
-    }
+    },
   };
 };
