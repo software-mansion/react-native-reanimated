@@ -1,6 +1,6 @@
 APP_ABI := all
 APP_BUILD_SCRIPT := Android.mk
-APP_PLATFORM := android-16
+APP_PLATFORM := android-18
 
 APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
