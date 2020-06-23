@@ -2,6 +2,9 @@
 
 const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
+const { visitors } = require('@babel/traverse');
+const traverse = require('@babel/traverse').default;
+const parse = require('@babel/parser').parse;
 
 const functionHooks = new Set([
   'useAnimatedStyle',
@@ -90,14 +93,10 @@ function processWorkletFunction(t, fun) {
   const closure = new Map();
   const outputs = new Set();
 
-  const funScope = fun.scope;
+  console.log(fun.toString());
+  const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
 
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
+  traverse(astWorkletCopy, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
       if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
@@ -123,16 +122,22 @@ function processWorkletFunction(t, fun) {
 
       let currentScope = path.scope;
 
-      while (true) {
+      while (currentScope != null) {
         if (currentScope.bindings[name] != null) {
           return;
-        }
-        if (currentScope === funScope) {
-          break;
         }
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      console.log("add", name);
+    },
+  });
+
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
     },
     AssignmentExpression(path) {
       // test for <somethin>.value = <something> expressions
@@ -220,7 +225,7 @@ function processWorkletFunction(t, fun) {
       ),
       t.returnStatement(privateFunctionId),
     ])
-  );
+  ); 
 
   const replacement = t.callExpression(newFun, []);
   // we check if function needs to be assigned to variable declaration.
@@ -281,6 +286,57 @@ function processWorklets(t, path, processor) {
   }
 }
 
+const PLUGIN_BLACKLIST_NAMES = [
+ // '@babel/plugin-transform-destructuring',
+];
+
+const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map(pluginName => {
+  const blacklistedPluginObject = require(pluginName);
+
+
+  if (!blacklistedPluginObject) {
+    console.log(`No ${pluginName}!`);
+    return null;
+  } else {
+    const blacklistedPlugin = blacklistedPluginObject.default(
+      {assertVersion: (x) => true}
+    );
+
+    visitors.explode(blacklistedPlugin.visitor);
+    return blacklistedPlugin;  
+  }
+});
+
+function removePluginsFromBlacklist(plugins) {
+  PLUGIN_BLACKLIST.forEach((blacklistedPlugin) => {
+    if (!blacklistedPlugin) {
+      return;
+    }
+
+    let toRemove = [];
+    for (let i = 0; i < plugins.length; i++) {
+      if (JSON.stringify(Object.keys(plugins[i].visitor)) != JSON.stringify(Object.keys(blacklistedPlugin.visitor))) {
+        continue;
+      }
+      let areEqual = true;
+      for (let key of Object.keys(blacklistedPlugin.visitor)) {
+        if (blacklistedPlugin.visitor[key].toString() !=
+            plugins[i].visitor[key].toString()
+          ) {
+            areEqual = false;
+            break;
+          }
+      }
+
+      if (areEqual) {
+        toRemove.push(i);
+      }
+    }
+
+    toRemove.forEach(x => plugins.splice(x, 1));
+  });
+}
+
 module.exports = function ({ types: t }) {
   return {
     visitor: {
@@ -308,5 +364,9 @@ module.exports = function ({ types: t }) {
         },
       },
     },
+    manipulateOptions(opts, parserOpts) {
+      const plugins = opts.plugins;
+      removePluginsFromBlacklist(plugins);
+    }
   };
 };
