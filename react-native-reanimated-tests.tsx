@@ -8,6 +8,12 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
   useAnimatedGestureHandler,
+  Easing,
+  withTiming,
+  withSpring,
+  cancelAnimation,
+  delay,
+  loop,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -27,7 +33,7 @@ const styles = StyleSheet.create({
 // @TODO: add reanimated 1 tests here
 
 /**
- * Reanimated 2
+ * Reanimated 2 Hooks
  */
 
 // useSharedValue
@@ -94,6 +100,149 @@ function AnimatedGestureHandlerTest() {
     },
     onEnd: (_) => {
       x.value = 0;
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+/**
+ * Reanimated 2 Animations
+ */
+
+// withTiming
+function WithTimingTest() {
+  const width = useSharedValue(50);
+  const style = useAnimatedStyle(() => {
+    return {
+      width: withTiming(width.value, {
+        duration: 500,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      }),
+    };
+  });
+  return (
+    <View>
+      <Animated.View style={[styles.box, style]} />
+      <Button onPress={() => (width.value = Math.random() * 300)} title="Hey" />
+    </View>
+  );
+}
+
+// withSpring
+function WithSpringTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = x.value;
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (_) => {
+      x.value = withSpring(0);
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+// cancelAnimation
+function CancelAnimationTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      cancelAnimation(x);
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (_) => {
+      x.value = 0;
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+// delay
+function DelayTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      cancelAnimation(x);
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (_) => {
+      x.value = delay(1000, withTiming(70));
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+// loop
+function LoopTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      cancelAnimation(x);
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (_) => {
+      x.value = loop(withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {

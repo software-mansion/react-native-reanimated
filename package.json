@@ -8,7 +8,8 @@
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint": "eslint './src/**/*.js'",
-    "release": "npm login && release-it"
+    "release": "npm login && release-it",
+    "type:check": "tsc"
   },
   "main": "lib/commonjs/Animated",
   "module": "lib/module/Animated",
@@ -83,8 +84,7 @@
     "typescript": "^3.9.5"
   },
   "lint-staged": {
-    "*.js": "eslint",
-    "react-native-reanimated.d.ts": "tsc"
+    "*.js": "eslint"
   },
   "husky": {
     "hooks": {
