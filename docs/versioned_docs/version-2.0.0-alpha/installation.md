@@ -231,4 +231,18 @@ If not, after making those changes your app will be compatible with Turbo Module
 @end
 ```
 
+8. Enable developer menu in `AppDelegate.mm`.
+
+```objectivec
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
+{
+  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+
+  #if RCT_DEV
+    [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add
+  #endif
+  ...
+```
+
+
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/commit/f6f2b77496bc00601150f98ea19a341f844d06a3) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).

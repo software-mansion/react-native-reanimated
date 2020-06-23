@@ -55,6 +55,11 @@
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
   _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+
+  #if RCT_DEV
+    [_turboModuleManager moduleForName:"RCTDevMenu"];
+  #endif
+
   __weak __typeof(self) weakSelf = self;
   return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
