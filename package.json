@@ -60,8 +60,8 @@
     "@babel/preset-typescript": "^7.7.4",
     "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
-    "@types/react": "^16.9.0",
-    "@types/react-native": "0.60.19",
+    "@types/react": "^16.9.38",
+    "@types/react-native": "^0.62.13",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
     "eslint": "^6.5.1",
@@ -73,19 +73,19 @@
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^3.0.9",
     "jest": "^24.9.0",
-    "lint-staged": "^9.4.2",
+    "lint-staged": "^10.2.11",
     "prettier": "^1.13.7",
     "react": "^16.9.0",
     "react-native": "^0.61.0",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
-    "release-it": "^13.1.1"
+    "release-it": "^13.1.1",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.9.5"
   },
   "lint-staged": {
-    "*.js": [
-      "eslint",
-      "git add"
-    ]
+    "*.js": "eslint",
+    "react-native-reanimated.d.ts": "tsc"
   },
   "husky": {
     "hooks": {

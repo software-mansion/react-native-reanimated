@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "jsx": "react-native",
+    "sourceMap": true,
+    "noEmit": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["react", "react-native"],
+    "moduleResolution": "node"
+  },
+  "files": ["react-native-reanimated-tests.tsx"]
+}
