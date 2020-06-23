@@ -247,7 +247,7 @@ export default function createAnimatedComponent(Component) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map(style => {
-            if (style.viewTag) {
+            if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
               return style.initial;
             } else {
