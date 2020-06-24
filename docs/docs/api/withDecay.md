@@ -1,31 +1,23 @@
 ---
-id: withSpring
-title: withSpring
-sidebar_label: withSpring
+id: withDecay
+title: withDecay
+sidebar_label: withDecay
 ---
 
-Starts a spring-based animation.
+Starts a velocity based "scroll" animation.
 
 ### Arguments
 
-#### `toValue` [number]
-
-The target value at which the spring should settle.
-
 #### `options` [object]
 
-Object carrying spring configuration.
+Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options                   | Default | Description |
-| ------------------------- | ------- | ----------- |
-| velocity                  | 0       |             |
-| damping                   | 10      |             |
-| mass                      | 1       |             |
-| stiffness                 | 100     |             |
-| overshootClamping         | false   |             |
-| restDisplacementThreshold | 0.001   |             |
-| restSpeedThreshold        | 0.001   |             |
+| Options      | Default | Description                                      |
+| ------------ | ------- | -------------------------------------------- |
+| velocity     | 0       | Initial velocity                             |
+| deceleration | 0.998   | Rate of decay                                |
+| clamp        | []      | Array of two animation boundaries (optional) |
 
 #### `callback` [function](optional)
 
@@ -38,7 +30,7 @@ This method returns an animation object. It can be either assigned directly to a
 
 ## Example
 
-```js {21}
+```js
 import Animated, {
   useSharedValue,
   withSpring,
@@ -57,8 +49,11 @@ function App() {
     onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
-    onEnd: _ => {
-      x.value = withSpring(0);
+    onEnd: evt => {
+      x.value = withDecay({
+        velocity: evt.velocityX,
+        clamp: [0, 200], // optionally define boundaries for the animation
+      });
     },
   });
 

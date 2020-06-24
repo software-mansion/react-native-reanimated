@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -47,7 +47,8 @@
   },
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
-    "fbjs": "^1.0.0"
+    "fbjs": "^1.0.0",
+    "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "react": "*",
@@ -75,8 +76,8 @@
     "jest": "^24.9.0",
     "lint-staged": "^10.2.11",
     "prettier": "^1.13.7",
-    "react": "^16.9.0",
-    "react-native": "^0.61.0",
+    "react": "^16.11.0",
+    "react-native": "^0.62.2",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
     "release-it": "^13.1.1",
@@ -85,11 +86,6 @@
   },
   "lint-staged": {
     "*.js": "eslint"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "release-it": {
     "hooks": {

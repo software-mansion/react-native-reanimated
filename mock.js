@@ -13,6 +13,15 @@ const { View, Text, Image, Animated, Platform } = require('react-native');
 
 function NOOP() {}
 
+function simulateCallbackFactory(...params) {
+  return (callback) => {
+    callback &&
+      setTimeout(() => {
+        callback(...params);
+      }, 0);
+  };
+}
+
 class Code extends React.Component {
   render() {
     return null;
@@ -165,16 +174,16 @@ const Reanimated = {
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
   decay: () => ({
-    start: NOOP,
-    stop: NOOP,
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
   }),
   timing: () => ({
-    start: NOOP,
-    stop: NOOP,
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
   }),
   spring: () => ({
-    start: NOOP,
-    stop: NOOP,
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
   }),
 
   proc: cb => cb,

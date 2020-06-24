@@ -195,7 +195,19 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                    const jsi::Value *args,
                    size_t count
                    ) mutable -> jsi::Value {
-          return funPtr->callWithThis(rt, *jsThis, args, count);
+           jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
+           rt.global().setProperty(rt, "jsThis", *jsThis); //set jsThis
+
+           jsi::Value res = jsi::Value::undefined();
+
+           if (thisValue.isObject()) {
+             res = funPtr->callWithThis(rt, thisValue.asObject(rt), args, count);
+           } else {
+             res = funPtr->call(rt, args, count);
+           }
+
+           rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+           return res;
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "workletFunction"), 0, clb);
       } else {
@@ -230,10 +242,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             
             jsi::Value returnedValue;
             
-            returnedValue = funPtr->callWithThis(rt,
-                                             jsThis,
+            jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
+            rt.global().setProperty(rt, "jsThis", jsThis); //set jsThis
+            
+            returnedValue = funPtr->call(rt,
                                              static_cast<const jsi::Value*>(args),
                                              (size_t)params.size());
+            
+            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
             
             delete [] args;
             // ToDo use returned value to return promise
@@ -292,14 +308,15 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
 
   if (module->isHostRuntime(rt)) {
     if (propName == "value") {
-      {
-        std::lock_guard<std::mutex> lock(readWriteMutex);
-        value = ShareableValue::adapt(rt, newValue, module);
-      }
-      module->scheduler->scheduleOnUI([this] {
-        for (auto listener : listeners) {
-          listener.second();
-        }
+      auto shareable = ShareableValue::adapt(rt, newValue, module);
+      module->scheduler->scheduleOnUI([this, shareable] {
+        jsi::Runtime &rt = *this->module->runtime.get();
+        auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
+        jsi::Value newValue = shareable->getValue(rt);
+        module->valueSetter->getValue(rt)
+          .asObject(rt)
+          .asFunction(rt)
+          .callWithThis(rt, setterProxy, newValue);
       });
     }
     return;

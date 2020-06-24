@@ -160,7 +160,7 @@ dependencies {
     implementation project(':react-native-gesture-handler')
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation project(':react-native')// From node_modules
+    implementation "com.facebook.react:react-native:+"  // From node_modules
     //implementation 'org.webkit:android-jsc:+'
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"

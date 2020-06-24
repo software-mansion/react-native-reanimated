@@ -19,7 +19,9 @@ import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import SwipeableListExample from './SwipeableListExample';
+import ScrollableViewExample from './ScrollableViewExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
@@ -44,6 +46,14 @@ const SCREENS = {
   SwipeableListExample: {
     screen: SwipeableListExample,
     title: '🆕 (advanced) Swipeable List',
+  },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '🆕 (advanced) Lightbox',
+  },
+  ScrollableViewExample: {
+    screen: ScrollableViewExample,
+    title: '🆕 (advanced) ScrollView imitation',
   },
   AnimatedTabBarExample: {
     screen: AnimatedTabBarExample,

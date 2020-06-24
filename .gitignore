@@ -28,6 +28,7 @@ project.xcworkspace
 .idea
 .gradle
 local.properties
+android/src/main/JNILibs/
 
 # node.js
 #

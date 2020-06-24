@@ -21,6 +21,8 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt, UpdaterFunction update
   
   dummyGlobal.setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
   rt.global().setProperty(rt, "global", dummyGlobal);
+  
+  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
 
   auto callback = [](
       jsi::Runtime &rt,
