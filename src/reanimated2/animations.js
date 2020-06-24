@@ -178,73 +178,68 @@ export function withSpring(toValue, userConfig, callback) {
 
 export function withDecay(userConfig, callback) {
   'worklet';
+  return defineAnimation(0, () => {
+    'worklet';
+    const config = {
+      deceleration: 0.998,
+    };
+    if (userConfig) {
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+    }
 
-  // TODO: not sure what should I return here
-  // if (!_WORKLET) {
-  //   return toValue;
-  // }
+    const VELOCITY_EPS = 5;
 
-  const config = {
-    deceleration: 0.998,
-  };
-  if (userConfig) {
-    Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
-  }
+    function decay(animation, now) {
+      const { lastTimestamp, initialVelocity, current, velocity } = animation;
 
-  const VELOCITY_EPS = 5;
+      const deltaTime = Math.min(now - lastTimestamp, 64);
+      animation.lastTimestamp = now;
 
-  function decay(animation, now) {
-    const {
-      lastTimestamp,
-      initialVelocity,
-      current,
-      velocity,
-    } = animation;
+      const kv = Math.pow(config.deceleration, deltaTime);
+      const kx = (config.deceleration * (1 - kv)) / (1 - config.deceleration);
 
-    const deltaTime = Math.min(now - lastTimestamp, 64);
-    animation.lastTimestamp = now;
+      const v0 = velocity / 1000;
+      const v = v0 * kv * 1000;
+      const x = current + v0 * kx;
 
-    const kv = Math.pow(config.deceleration, deltaTime);
-    const kx = (config.deceleration * (1 - kv)) / (1 - config.deceleration);
+      animation.current = x;
+      animation.velocity = v;
 
-    const v0 = velocity / 1000;
-    const v = v0 * kv * 1000;
-    const x = current + v0 * kx;
+      let toValueIsReached = null;
 
-    animation.current = x;
-    animation.velocity = v;
+      if (Array.isArray(config.clamp)) {
+        if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
+          toValueIsReached = config.clamp[0];
+        } else if (
+          initialVelocity > 0 &&
+          animation.current >= config.clamp[1]
+        ) {
+          toValueIsReached = config.clamp[1];
+        }
+      }
 
-    let toValueIsReached = null;
+      if (Math.abs(v) < VELOCITY_EPS || toValueIsReached !== null) {
+        if (toValueIsReached !== null) {
+          animation.current = toValueIsReached;
+        }
 
-    if (Array.isArray(config.clamp)) {
-      if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
-        toValueIsReached = config.clamp[0];
-      } else if (initialVelocity > 0 && animation.current >= config.clamp[1]) {
-        toValueIsReached = config.clamp[1];
+        return true;
       }
     }
 
-    if (Math.abs(v) < VELOCITY_EPS || toValueIsReached !== null) {
-      if (toValueIsReached !== null) {
-        animation.current = toValueIsReached;
-      }
-
-      return true;
+    function start(animation, value, now) {
+      animation.current = value;
+      animation.lastTimestamp = now;
+      animation.initialVelocity = config.velocity;
     }
-  }
 
-  function start(animation, value, now) {
-    animation.current = value;
-    animation.lastTimestamp = now;
-    animation.initialVelocity = config.velocity;
-  }
-
-  return {
-    animation: decay,
-    start,
-    velocity: config.velocity || 0,
-    callback,
-  };
+    return {
+      animation: decay,
+      start,
+      velocity: config.velocity || 0,
+      callback,
+    };
+  });
 }
 
 export function delay(delayMs, nextAnimation) {
