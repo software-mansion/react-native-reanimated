@@ -6,6 +6,7 @@
 #include "NativeReanimatedModuleSpec.h"
 #include "Scheduler.h"
 #include "ErrorHandler.h"
+#include "WorkletsCache.h"
 
 #include <unistd.h>
 
@@ -14,11 +15,13 @@ namespace reanimated {
 using FrameCallback = std::function<void(double)>;
 
 class ShareableValue;
+class MutableValue;
 class MapperRegistry;
 class EventHandlerRegistry;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   friend ShareableValue;
+  friend MutableValue;
   
   public:
     NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
@@ -58,6 +61,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
   public:
+  std::shared_ptr<WorkletsCache> workletsCache;
   std::shared_ptr<ShareableValue> valueSetter;
   std::shared_ptr<Scheduler> scheduler;
 };

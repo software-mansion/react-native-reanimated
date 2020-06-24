@@ -1,6 +1,7 @@
 'use strict';
 
 const generate = require('@babel/generator').default;
+const hash = require('string-hash-64');
 
 const functionHooks = new Set([
   'useAnimatedStyle',
@@ -31,9 +32,12 @@ const globals = new Set([
   'UIManager',
   'requestAnimationFrame',
   '_WORKLET',
+  'arguments',
   '_log',
   '_updateProps',
   'RegExp',
+  'Error',
+  'global',
 ]);
 
 function buildWorkletString(t, fun, closureVariables) {
@@ -52,7 +56,7 @@ function buildWorkletString(t, fun, closureVariables) {
         t.variableDeclaration('const', [
           t.variableDeclarator(
             t.objectPattern(
-              closureVariables.map(variable =>
+              closureVariables.map((variable) =>
                 t.objectProperty(
                   t.identifier(variable.name),
                   t.identifier(variable.name),
@@ -153,6 +157,7 @@ function processWorkletFunction(t, fun) {
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
   const funString = buildWorkletString(t, fun, variables);
+  const workletHash = hash(funString);
 
   const newFun = t.functionExpression(
     fun.id,
@@ -170,7 +175,7 @@ function processWorkletFunction(t, fun) {
             false
           ),
           t.objectExpression(
-            variables.map(variable =>
+            variables.map((variable) =>
               t.objectProperty(
                 t.identifier(variable.name),
                 variable,
@@ -190,6 +195,17 @@ function processWorkletFunction(t, fun) {
             false
           ),
           t.stringLiteral(funString)
+        )
+      ),
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__workletHash'),
+            false
+          ),
+          t.numericLiteral(workletHash)
         )
       ),
       t.expressionStatement(
@@ -223,49 +239,73 @@ function processWorkletFunction(t, fun) {
   );
 }
 
-module.exports = function({ types: t }) {
+function processIfWorkletNode(t, path) {
+  const fun = path;
+
+  fun.traverse({
+    DirectiveLiteral(path) {
+      const value = path.node.value;
+      if (value === 'worklet' && path.getFunctionParent() === fun) {
+        // make sure "worklet" is listed among directives for the fun
+        // this is necessary as because of some bug, babel will attempt to
+        // process replaced function if it is nested inside another function
+        const directives = fun.node.body.directives;
+        if (
+          directives &&
+          directives.length > 0 &&
+          directives.some(
+            (directive) =>
+              t.isDirectiveLiteral(directive.value) &&
+              directive.value.value === 'worklet'
+          )
+        ) {
+          processWorkletFunction(t, fun);
+        }
+      }
+    },
+  });
+}
+
+function processWorklets(t, path, processor) {
+  const name = path.node.callee.name;
+  if (
+    objectHooks.has(name) &&
+    path.get('arguments.0').type === 'ObjectExpression'
+  ) {
+    const objectPath = path.get('arguments.0.properties.0');
+    for (let i = 0; i < objectPath.container.length; i++) {
+      processor(t, objectPath.getSibling(i).get('value'));
+    }
+  } else if (functionHooks.has(name)) {
+    processor(t, path.get('arguments.0'));
+  }
+}
+
+module.exports = function ({ types: t }) {
   return {
     visitor: {
-      CallExpression(path) {
-        const name = path.node.callee.name;
-        if (
-          objectHooks.has(name) &&
-          path.get('arguments.0').type === 'ObjectExpression'
-        ) {
-          const objectPath = path.get('arguments.0.properties.0');
-          for (let i = 0; i < objectPath.container.length; i++) {
-            processWorkletFunction(t, objectPath.getSibling(i).get('value'));
+      CallExpression: {
+        enter(path) {
+          if (path.get('callee').matchesPattern('Object.assign')) {
+            // @babel/plugin-transform-object-assign
+            path.node.callee.object.name = 'Object__DO_NOT_TRANSFORM';
           }
-          path.skip();
-        } else if (functionHooks.has(name)) {
-          processWorkletFunction(t, path.get('arguments.0'));
-          path.skip();
-        }
+        },
+        exit(path) {
+          if (
+            path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')
+          ) {
+            // @babel/plugin-transform-object-assign
+            path.node.callee.object.name = 'Object';
+          }
+
+          processWorklets(t, path, processWorkletFunction);
+        },
       },
-      'FunctionExpression|FunctionDeclaration|ArrowFunctionExpression'(path) {
-        const fun = path;
-        fun.traverse({
-          DirectiveLiteral(path) {
-            const value = path.node.value;
-            if (value === 'worklet' && path.getFunctionParent() === fun) {
-              // make sure "worklet" is listed among directives for the fun
-              // this is necessary as because of some bug, babel will attempt to
-              // process replaced function if it is nested inside another function
-              const directives = fun.node.body.directives;
-              if (
-                directives &&
-                directives.length > 0 &&
-                directives.some(
-                  directive =>
-                    t.isDirectiveLiteral(directive.value) &&
-                    directive.value.value === 'worklet'
-                )
-              ) {
-                processWorkletFunction(t, fun);
-              }
-            }
-          },
-        });
+      'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
+        exit(path) {
+          processIfWorkletNode(t, path);
+        },
       },
     },
   };

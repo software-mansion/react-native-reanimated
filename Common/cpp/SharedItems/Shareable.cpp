@@ -4,14 +4,6 @@
 
 namespace reanimated {
 
-static jsi::Value eval(jsi::Runtime &rt, const char *code) {
-  return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
-}
-
-static jsi::Function function(jsi::Runtime &rt, const std::string& code) {
-  return eval(rt, ("(" + code + ")").c_str()).getObject(rt).getFunction(rt);
-}
-
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
@@ -189,16 +181,13 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // when running on UI thread we prep a function
 
         auto jsThis = frozenObject->shallowClone(*module->runtime);
-        auto code = jsThis->getProperty(*module->runtime, "asString").asString(*module->runtime).utf8(*module->runtime);
-        auto fun = function(*module->runtime, code);
-
+        std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+        
         // HACK ALERT: there is a special case of "setter" function where we don't want to pass
         // closure as "this". Here we handle that case separately;
         if (module->valueSetter.get() == this) {
-          return fun;
+          return jsi::Value(rt, *funPtr);
         }
-
-        std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
         auto clb = [=](
                    jsi::Runtime &rt,
@@ -232,7 +221,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             jsi::Runtime &rt = *retain_this->module->runtime.get();
             auto jsThis = retain_this->createHost(rt, retain_this->frozenObject);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
-            auto fun = function(rt, code);
+            std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
             
             jsi::Value * args = new jsi::Value[params.size()];
             for (int i = 0; i < params.size(); ++i) {
@@ -241,7 +230,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             
             jsi::Value returnedValue;
             
-            returnedValue = fun.callWithThis(rt,
+            returnedValue = funPtr->callWithThis(rt,
                                              jsThis,
                                              static_cast<const jsi::Value*>(args),
                                              (size_t)params.size());
@@ -303,14 +292,15 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
 
   if (module->isHostRuntime(rt)) {
     if (propName == "value") {
-      {
-        std::lock_guard<std::mutex> lock(readWriteMutex);
-        value = ShareableValue::adapt(rt, newValue, module);
-      }
-      module->scheduler->scheduleOnUI([this] {
-        for (auto listener : listeners) {
-          listener.second();
-        }
+      auto shareable = ShareableValue::adapt(rt, newValue, module);
+      module->scheduler->scheduleOnUI([this, shareable] {
+        jsi::Runtime &rt = *this->module->runtime.get();
+        auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
+        jsi::Value newValue = shareable->getValue(rt);
+        module->valueSetter->getValue(rt)
+          .asObject(rt)
+          .asFunction(rt)
+          .callWithThis(rt, setterProxy, newValue);
       });
     }
     return;

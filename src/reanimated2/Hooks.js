@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
 import updateProps from './UpdateProps';
+import { initialUpdaterRun } from './animations';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -85,9 +86,13 @@ function runAnimations(animation, timestamp, key, result) {
   function runAnimations(animation, timestamp, key, result) {
     if (Array.isArray(animation)) {
       result[key] = [];
-      return animation.every((entry, index) =>
-        runAnimations(entry, timestamp, index, result[key])
-      );
+      let allFinished = true;
+      animation.forEach((entry, index) => {
+        if (!runAnimations(entry, timestamp, index, result[key])) {
+          allFinished = false;
+        }
+      });
+      return allFinished;
     } else if (typeof animation === 'object' && animation.animation) {
       if (animation.callStart) {
         animation.callStart(timestamp);
@@ -104,9 +109,13 @@ function runAnimations(animation, timestamp, key, result) {
       return finished;
     } else if (typeof animation === 'object') {
       result[key] = {};
-      return Object.keys(animation).every(k =>
-        runAnimations(animation[k], timestamp, k, result[key])
-      );
+      let allFinished = true;
+      Object.keys(animation).forEach(k => {
+        if (!runAnimations(animation[k], timestamp, k, result[key])) {
+          allFinished = false;
+        }
+      });
+      return allFinished;
     } else {
       result[key] = animation;
       return true;
@@ -245,7 +254,7 @@ export function useAnimatedStyle(updater) {
 
   const initRef = useRef(null);
   if (initRef.current === null) {
-    const initial = updater();
+    const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -273,7 +282,7 @@ export function useDerivedValue(processor) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = {
-      sharedValue: makeMutable(processor()),
+      sharedValue: makeMutable(initialUpdaterRun(processor)),
       inputs: Object.values(processor._closure),
     };
   }

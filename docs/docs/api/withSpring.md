@@ -17,16 +17,16 @@ The target value at which the spring should settle.
 Object carrying spring configuration.
 Allowed parameters are listed below:
 
-| Options | Default | Description |
-| --- | --- | --- |
-| damping | 10 | |
-| mass | 1 | |
-| stiffness | 100 | |
-| overshootClamping | false | |
-| restDisplacementThreshold | 0.001 | |
-| restSpeedThreshold | 0.001 | |
+| Options                   | Default | Description |
+| ------------------------- | ------- | ----------- |
+| damping                   | 10      |             |
+| mass                      | 1       |             |
+| stiffness                 | 100     |             |
+| overshootClamping         | false   |             |
+| restDisplacementThreshold | 0.001   |             |
+| restSpeedThreshold        | 0.001   |             |
 
-#### `callback` [function] (optional)
+#### `callback` [function](optional)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
@@ -38,7 +38,6 @@ This method returns an animation object. It can be either assigned directly to a
 ## Example
 
 ```js {21}
-
 import Animated, {
   useSharedValue,
   withSpring,
@@ -78,7 +77,4 @@ function App() {
     </PanGestureHandler>
   );
 }
-
 ```
-
-

@@ -22,10 +22,22 @@ index 42675dd..09e327f 100644
              "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors()
      )
 diff --git a/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk b/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
-index 84eae80..a672190 100644
+index 84eae80..dcf73de 100644
 --- a/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
 +++ b/node_modules/react-native/ReactAndroid/src/main/jni/Application.mk
-@@ -22,7 +22,7 @@ APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+@@ -5,7 +5,11 @@
+ 
+ APP_BUILD_SCRIPT := Android.mk
+ 
++ifdef $(CI)
++APP_ABI := x86
++else
+ APP_ABI := armeabi-v7a x86 arm64-v8a x86_64
++endif
+ APP_PLATFORM := android-16
+ 
+ APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+@@ -22,7 +26,7 @@ APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
  # Where are APP_MK_DIR, THIRD_PARTY_NDK_DIR, etc. defined?
  #   The directories inside NDK_MODULE_PATH (ex: APP_MK_DIR, THIRD_PARTY_NDK_DIR,
  #   etc.) are defined inside build.gradle.
