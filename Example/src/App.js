@@ -21,6 +21,7 @@ import ChatHeadsExample from './ChatHeadsExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
@@ -46,6 +47,10 @@ const SCREENS = {
     screen: SwipeableListExample,
     title: '🆕 (advanced) Swipeable List',
   },
+  LightboxExample: {
+    screen: LightboxExample,
+    title: '🆕 (advanced) Lightbox',
+  },
   ScrollableViewExample: {
     screen: ScrollableViewExample,
     title: '🆕 (advanced) ScrollView imitation',
@@ -61,19 +66,19 @@ const SCREENS = {
 };
 
 function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map((key) => ({ key }));
+  const data = Object.keys(SCREENS).map(key => ({ key }));
   return (
     <FlatList
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      renderItem={(props) => (
+      renderItem={props => (
         <MainScreenItem
           {...props}
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
+      renderScrollComponent={props => <ScrollView {...props} />}
       ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
     />
   );
@@ -147,8 +152,8 @@ const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
+  web: input => createBrowserApp(input, { history: 'hash' }),
+  default: input => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);
