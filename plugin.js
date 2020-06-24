@@ -149,6 +149,7 @@ function processWorkletFunction(t, fun) {
   // if we don't clone other modules won't process parts of newFun defined below
   // this is weird but couldn't find a better way to force transform helper to
   // process the function
+  const workletID = Math.random() * 1e18;
   const clone = t.cloneNode(fun.node);
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
@@ -193,6 +194,17 @@ function processWorkletFunction(t, fun) {
         )
       ),
       t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__workletID'),
+            false
+          ),
+          t.numericLiteral(workletID)
+        )
+      ),
+      t.expressionStatement(
         t.callExpression(
           t.memberExpression(
             t.identifier('global'),
@@ -223,50 +235,71 @@ function processWorkletFunction(t, fun) {
   );
 }
 
+function processIfWorkletNode(t, path) {
+  const fun = path;
+
+  if (path.node.type === 'FuncionDeclaration' && path.node.id.name === 'siakaka') {
+    console.log(fun.toString());
+  }
+
+  fun.traverse({
+    DirectiveLiteral(path) {
+      const value = path.node.value;
+      if (value === 'worklet' && path.getFunctionParent() === fun) {
+        // make sure "worklet" is listed among directives for the fun
+        // this is necessary as because of some bug, babel will attempt to
+        // process replaced function if it is nested inside another function
+        const directives = fun.node.body.directives;
+        if (
+          directives &&
+          directives.length > 0 &&
+          directives.some(
+            directive =>
+              t.isDirectiveLiteral(directive.value) &&
+              directive.value.value === 'worklet'
+          )
+        ) {
+          processWorkletFunction(t, fun)
+        }
+      }
+    },
+  });
+}
+
 module.exports = function({ types: t }) {
   return {
     visitor: {
-      CallExpression(path) {
-        const name = path.node.callee.name;
-        if (
-          objectHooks.has(name) &&
-          path.get('arguments.0').type === 'ObjectExpression'
-        ) {
-          const objectPath = path.get('arguments.0.properties.0');
-          for (let i = 0; i < objectPath.container.length; i++) {
-            processWorkletFunction(t, objectPath.getSibling(i).get('value'));
+      CallExpression: {
+        exit(path) {
+          const name = path.node.callee.name;
+          if (
+            objectHooks.has(name) &&
+            path.get('arguments.0').type === 'ObjectExpression'
+          ) {
+            const objectPath = path.get('arguments.0.properties.0');
+            for (let i = 0; i < objectPath.container.length; i++) {
+              processWorkletFunction(t, objectPath.getSibling(i).get('value'))
+            }
+          } else if (functionHooks.has(name)) {
+            processWorkletFunction(t, path.get('arguments.0'))
           }
-          path.skip();
-        } else if (functionHooks.has(name)) {
-          processWorkletFunction(t, path.get('arguments.0'));
-          path.skip();
         }
       },
-      'FunctionExpression|FunctionDeclaration|ArrowFunctionExpression'(path) {
-        const fun = path;
-        fun.traverse({
-          DirectiveLiteral(path) {
-            const value = path.node.value;
-            if (value === 'worklet' && path.getFunctionParent() === fun) {
-              // make sure "worklet" is listed among directives for the fun
-              // this is necessary as because of some bug, babel will attempt to
-              // process replaced function if it is nested inside another function
-              const directives = fun.node.body.directives;
-              if (
-                directives &&
-                directives.length > 0 &&
-                directives.some(
-                  directive =>
-                    t.isDirectiveLiteral(directive.value) &&
-                    directive.value.value === 'worklet'
-                )
-              ) {
-                processWorkletFunction(t, fun);
-              }
-            }
-          },
-        });
+      FunctionDeclaration: {
+        exit(path) {
+          processIfWorkletNode(t, path);
+        }
       },
+      FunctionExpression: {
+        exit(path) {
+          processIfWorkletNode(t, path);
+        }
+      },
+      ArrowFunctionExpression: {
+        exit(path) {
+          processIfWorkletNode(t,path);
+        }
+      }
     },
   };
 };

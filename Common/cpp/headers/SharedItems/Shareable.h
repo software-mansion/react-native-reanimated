@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <jsi/jsi.h>
 #include "Logger.h"
+#include "WorkletsCache.h"
 
 namespace reanimated {
 
@@ -32,6 +33,7 @@ class RemoteObject;
 class RemoteObjectInitializer;
 
 class ShareableValue: public std::enable_shared_from_this<ShareableValue> {
+friend WorkletsCache;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);
@@ -100,6 +102,7 @@ class MutableValue : public jsi::HostObject, public std::enable_shared_from_this
 };
 
 class FrozenObject : public jsi::HostObject {
+  friend WorkletsCache;
   friend void extractMutables(jsi::Runtime &rt,
                               std::shared_ptr<ShareableValue> sv,
                               std::vector<std::shared_ptr<MutableValue>> &res);
