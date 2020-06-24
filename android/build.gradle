@@ -371,7 +371,7 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
     outputs.upToDateWhen { false }
     commandLine(getNdkBuildFullPath(),
             "NDK_PROJECT_PATH=null",
-            "NDK_APPLICATION_MK=$projectDir/src/main/jni/Application.mk",
+            "NDK_APPLICATION_MK=$projectDir/src/main/JNI/Application.mk",
             "NDK_OUT=" + temporaryDir,
             "NDK_LIBS_OUT=$buildDir/reanimated-ndk/all",
             "THIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk",
