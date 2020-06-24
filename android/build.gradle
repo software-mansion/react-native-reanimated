@@ -364,7 +364,7 @@ task extractJNIFiles {
 }
 
 task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, prepareHermes, extractAARHeaders, extractJNIFiles], type: Exec) {
-    inputs.dir("src/main/jni")
+    inputs.dir("src/main/JNI")
     inputs.dir("src/main/cpp")
     inputs.dir("src/main/Common")
     outputs.dir("$buildDir/reanimated-ndk/all")
