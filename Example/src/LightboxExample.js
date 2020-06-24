@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -77,24 +77,12 @@ function ListItem({ item, index, onPress }) {
   );
 }
 
-function useSharedVector(x, y) {
-  return {
-    x: useSharedValue(x),
-    y: useSharedValue(y),
-  };
-}
-
 const timingConfig = {
   duration: 350,
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
 function ImageTransition({ activeImage, onClose }) {
-  const animationProgress = useSharedValue(0);
-
-  const backdropOpacity = useSharedValue(0);
-  const scale = useSharedValue(1);
-
   const {
     x,
     item,
@@ -104,30 +92,36 @@ function ImageTransition({ activeImage, onClose }) {
     targetHeight,
     sv: imageOpacity,
   } = activeImage;
-
+  const { uri } = item;
   const y = activeImage.y - Header.HEIGHT;
 
-  const target = useSharedVector(
-    0,
+  const animationProgress = useSharedValue(0);
+
+  const backdropOpacity = useSharedValue(0);
+  const scale = useSharedValue(1);
+
+  const targetX = useSharedValue(0);
+  const targetY = useSharedValue(
     (dimensions.height - targetHeight) / 2 - Header.HEIGHT
   );
 
-  const translate = useSharedVector(0, 0);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   const onPan = useAnimatedGestureHandler({
     onActive: event => {
-      translate.x.value = event.translationX;
-      translate.y.value = event.translationY;
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
 
       scale.value = interpolate(
-        translate.y.value,
+        translateY.value,
         [-200, 0, 200],
         [0.65, 1, 0.65],
         Extrapolate.CLAMP
       );
 
       backdropOpacity.value = interpolate(
-        translate.y.value,
+        translateY.value,
         [-100, 0, 100],
         [0, 1, 0],
         Extrapolate.CLAMP
@@ -135,12 +129,12 @@ function ImageTransition({ activeImage, onClose }) {
     },
 
     onEnd: (event, ctx) => {
-      if (Math.abs(translate.y.value) > 40) {
-        target.x.value = translate.x.value - target.x.value * -1;
-        target.y.value = translate.y.value - target.y.value * -1;
+      if (Math.abs(translateY.value) > 40) {
+        targetX.value = translateX.value - targetX.value * -1;
+        targetY.value = translateY.value - targetY.value * -1;
 
-        translate.x.value = 0;
-        translate.y.value = 0;
+        translateX.value = 0;
+        translateY.value = 0;
 
         animationProgress.value = withTiming(0, timingConfig, () => {
           imageOpacity.value = 1;
@@ -150,8 +144,8 @@ function ImageTransition({ activeImage, onClose }) {
         backdropOpacity.value = withTiming(0, timingConfig);
       } else {
         backdropOpacity.value = withTiming(1, timingConfig);
-        translate.x.value = withTiming(0, timingConfig);
-        translate.y.value = withTiming(0, timingConfig);
+        translateX.value = withTiming(0, timingConfig);
+        translateY.value = withTiming(0, timingConfig);
       }
 
       scale.value = withTiming(1, timingConfig);
@@ -162,15 +156,13 @@ function ImageTransition({ activeImage, onClose }) {
     const interpolateProgress = range =>
       interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
 
-    const translateY =
-      translate.y.value + interpolateProgress([y, target.y.value]);
-    const translateX =
-      translate.x.value + interpolateProgress([x, target.x.value]);
+    const top = translateY.value + interpolateProgress([y, targetY.value]);
+    const left = translateX.value + interpolateProgress([x, targetX.value]);
 
     return {
       position: 'absolute',
-      top: translateY,
-      left: translateX,
+      top,
+      left,
       width: interpolateProgress([width, targetWidth]),
       height: interpolateProgress([height, targetHeight]),
       transform: [
@@ -187,14 +179,15 @@ function ImageTransition({ activeImage, onClose }) {
     };
   });
 
-  runOnUI(() => {
-    'worklet';
-
-    animationProgress.value = withTiming(1, timingConfig, () => {
-      imageOpacity.value = 0;
-    });
-    backdropOpacity.value = withTiming(1, timingConfig);
-  })();
+  useEffect(() => {
+    runOnUI(() => {
+      'worklet';
+      animationProgress.value = withTiming(1, timingConfig, () => {
+        imageOpacity.value = 0;
+      });
+      backdropOpacity.value = withTiming(1, timingConfig);
+    })();
+  }, []);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
@@ -202,7 +195,7 @@ function ImageTransition({ activeImage, onClose }) {
 
       <PanGestureHandler onGestureEvent={onPan}>
         <Animated.View style={StyleSheet.absoluteFillObject}>
-          <AnimatedImage source={{ uri: item.uri }} style={imageStyles} />
+          <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
       </PanGestureHandler>
     </View>
