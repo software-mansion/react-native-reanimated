@@ -13,10 +13,11 @@ Starts a velocity based "scroll" animation.
 Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options  | Default | Description                                  |
-| -------- | ------- | -------------------------------------------- |
-| velocity | 0       |                                              |
-| clamp    | []      | Array of two animation boundaries (optional) |
+| Options      | Default | Description                                      |
+| ------------ | ------- | -------------------------------------------- |
+| velocity     | 0       | Initial velocity                             |
+| deceleration | 0.998   | Rate of decay                                |
+| clamp        | []      | Array of two animation boundaries (optional) |
 
 #### `callback` [function](optional)
 
