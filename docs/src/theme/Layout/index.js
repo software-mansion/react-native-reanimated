@@ -26,6 +26,7 @@ function Layout(props) {
     title: siteTitle,
     themeConfig: {image: defaultImage},
     url: siteUrl,
+    customFields,
   } = siteConfig;
   const {
     children,
@@ -37,7 +38,11 @@ function Layout(props) {
     permalink,
     version,
   } = props;
-  const metaTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+  const chosenSiteTitle =
+    customFields && customFields.shortTitle
+      ? customFields.shortTitle
+      : siteTitle;
+  const metaTitle = title ? `${title} | ${chosenSiteTitle}` : chosenSiteTitle;
 
   const metaImage = image || defaultImage;
   let metaImageUrl = siteUrl + useBaseUrl(metaImage);
