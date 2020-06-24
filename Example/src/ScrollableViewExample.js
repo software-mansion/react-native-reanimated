@@ -5,11 +5,11 @@ import Animated, {
   useSharedValue,
   withDecay,
   withTiming,
+  Easing,
 } from 'react-native-reanimated';
 import { View, Dimensions } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
-import { Easing } from 'react-native-reanimated';
 
 const windowDimensions = Dimensions.get('window');
 
