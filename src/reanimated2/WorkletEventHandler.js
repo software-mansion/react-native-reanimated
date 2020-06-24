@@ -7,7 +7,7 @@ export default class WorkletEventHandler {
   }
 
   registerForEvents(viewTag, fallbackEventName = undefined) {
-    this.registrations = this.eventNames.map(eventName =>
+    this.registrations = this.eventNames.map((eventName) =>
       NativeModule.registerEventHandler(viewTag + eventName, this.worklet)
     );
     if (this.registrations.length === 0 && fallbackEventName) {
@@ -22,7 +22,9 @@ export default class WorkletEventHandler {
 
   unregisterFromEvents() {
     this.registrations &&
-      this.registrations.forEach(id => NativeModule.unregisterEventHandler(id));
+      this.registrations.forEach((id) =>
+        NativeModule.unregisterEventHandler(id)
+      );
     this.registrations = undefined;
   }
 }

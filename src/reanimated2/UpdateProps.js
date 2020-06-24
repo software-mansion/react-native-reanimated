@@ -7,7 +7,7 @@ import processColorX from 'react-native/Libraries/StyleSheet/processColor';
 
 const LocalColorProperties = {};
 
-Object.keys(ReactNativeStyleAttributes).forEach(key => {
+Object.keys(ReactNativeStyleAttributes).forEach((key) => {
   if (ReactNativeStyleAttributes[key].process === processColorX) {
     LocalColorProperties[key] = true;
   }
@@ -17,7 +17,7 @@ const ColorProperties = makeShareable(LocalColorProperties);
 
 export default function updateProps(viewTag, updates) {
   'worklet';
-  Object.keys(updates).forEach(key => {
+  Object.keys(updates).forEach((key) => {
     if (ColorProperties[key]) {
       updates[key] = processColor(updates[key]);
     }
