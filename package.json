@@ -86,11 +86,6 @@
       "git add"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "release-it": {
     "hooks": {
       "before:git:bump": [
