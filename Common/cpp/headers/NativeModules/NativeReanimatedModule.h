@@ -15,11 +15,13 @@ namespace reanimated {
 using FrameCallback = std::function<void(double)>;
 
 class ShareableValue;
+class MutableValue;
 class MapperRegistry;
 class EventHandlerRegistry;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   friend ShareableValue;
+  friend MutableValue;
   
   public:
     NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,

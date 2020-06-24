@@ -24,9 +24,12 @@ function workletValueSetter(value) {
     previousAnimation.cancelled = true;
     this._animation = null;
   }
-  if (typeof value === 'object' && value !== null && value.animation) {
+  if (
+    typeof value === 'function' ||
+    (value !== null && typeof value === 'object' && value.animation)
+  ) {
     // animated set
-    const animation = value;
+    const animation = typeof value === 'function' ? value() : value;
     let callStart = timestamp => {
       animation.start(animation, this.value, timestamp, previousAnimation);
     };
@@ -39,7 +42,7 @@ function workletValueSetter(value) {
         callStart(timestamp);
         callStart = null; // prevent closure from keeping ref to previous animation
       }
-      const finished = value.animation(animation, timestamp);
+      const finished = animation.animation(animation, timestamp);
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {
