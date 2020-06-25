@@ -198,8 +198,8 @@ export default function createAnimatedComponent(Component) {
         : [this.props.style];
       const viewTag = findNodeHandle(this);
       styles.forEach(style => {
-        if (style && style.viewTag !== undefined) {
-          style.viewTag.value = viewTag;
+        if (style && style.viewTags !== undefined) {
+          style.viewTags.push(viewTag)
         }
       });
       // attach animatedProps property

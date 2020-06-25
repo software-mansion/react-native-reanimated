@@ -169,7 +169,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state) {
+function styleUpdater(viewTags, updater, state) {
   'worklet';
   const animations = state.animations || {};
 
@@ -218,7 +218,9 @@ function styleUpdater(viewTag, updater, state) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates);
+      viewTags.forEach((viewTag) => {
+        updateProps(viewTag, updates);
+      })
     }
 
     if (!allFinished) {
@@ -245,12 +247,15 @@ function styleUpdater(viewTag, updater, state) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff);
+   viewTags.forEach((viewTag) => {
+     updateProps(viewTag, diff);
+   })
   }
 }
 
 export function useAnimatedStyle(updater) {
   const viewTag = useSharedValue(-1);
+  const viewTags = []
 
   const initRef = useRef(null);
   if (initRef.current === null) {
@@ -265,12 +270,13 @@ export function useAnimatedStyle(updater) {
 
   useMapper(() => {
     'worklet';
-    styleUpdater(viewTag, updater, remoteState);
+    styleUpdater(viewTags, updater, remoteState);
   }, inputs);
 
   return {
     viewTag,
     initial,
+    viewTags,
   };
 }
 
