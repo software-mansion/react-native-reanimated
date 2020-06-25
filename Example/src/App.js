@@ -23,10 +23,13 @@ import ScrollableViewExample from './ScrollableViewExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import FeaturesTestsScreen from './FeaturesTestsScreen'
+// Features tests
+import AnimatedStyleMultipleViews from './FeaturesTests/AnimatedStyleMultipleViews';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
-const SCREENS = {
+export const SCREENS = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -63,10 +66,20 @@ const SCREENS = {
     screen: LiquidSwipe,
     title: '🆕 (iOS ONLY) Liquid Swipe Example',
   },
+  FeaturesTestsScreen: {
+    screen: FeaturesTestsScreen,
+    title: '🆕 Features Tests',
+  },
+  // Features tests
+  AnimatedStyleMultipleViews: {
+      screen: AnimatedStyleMultipleViews,
+      title: '🆕 Animated Style for multiple views',
+  }
 };
 
 function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map((key) => ({ key }));
+  let data = Object.keys(SCREENS).map((key) => ({ key }))
+  data = data.slice(0, data.indexOf('FeaturesTestsScreen'));
   return (
     <FlatList
       style={styles.list}
@@ -130,7 +143,7 @@ const ExampleApp = createSwitchNavigator({
   Reanimated1,
 });
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   list: {
     backgroundColor: '#EFEFF4',
   },
