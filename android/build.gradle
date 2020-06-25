@@ -364,14 +364,14 @@ task extractJNIFiles {
 }
 
 task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, prepareHermes, extractAARHeaders, extractJNIFiles], type: Exec) {
-    inputs.dir("src/main/jni")
+    inputs.dir("src/main/JNI")
     inputs.dir("src/main/cpp")
     inputs.dir("src/main/Common")
     outputs.dir("$buildDir/reanimated-ndk/all")
     outputs.upToDateWhen { false }
     commandLine(getNdkBuildFullPath(),
             "NDK_PROJECT_PATH=null",
-            "NDK_APPLICATION_MK=$projectDir/src/main/jni/Application.mk",
+            "NDK_APPLICATION_MK=$projectDir/src/main/JNI/Application.mk",
             "NDK_OUT=" + temporaryDir,
             "NDK_LIBS_OUT=$buildDir/reanimated-ndk/all",
             "THIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk",
@@ -383,7 +383,7 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
             "REACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react",
             "HERMES_ENGINE=$projectDir/../node_modules/hermes-engine",
             "VM=HERMES",
-            "-C", file("src/main/jni").absolutePath,
+            "-C", file("src/main/JNI").absolutePath,
             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors()
     )
 }
@@ -394,7 +394,7 @@ task cleanNdkLibs(type: Exec) {
     errorOutput(new ByteArrayOutputStream())
     commandLine(getNdkBuildFullPath(),
             "THIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk",
-            "-C", file("src/main/jni").absolutePath,
+            "-C", file("src/main/JNI").absolutePath,
             "clean")
     doLast {
         def aar_path = "$buildDir/outputs/aar";
