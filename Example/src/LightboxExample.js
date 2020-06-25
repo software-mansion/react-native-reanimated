@@ -109,7 +109,7 @@ function ImageTransition({ activeImage, onClose }) {
   const translateY = useSharedValue(0);
 
   const onPan = useAnimatedGestureHandler({
-    onActive: event => {
+    onActive: (event) => {
       translateX.value = event.translationX;
       translateY.value = event.translationY;
 
@@ -153,7 +153,7 @@ function ImageTransition({ activeImage, onClose }) {
   });
 
   const imageStyles = useAnimatedStyle(() => {
-    const interpolateProgress = range =>
+    const interpolateProgress = (range) =>
       interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
 
     const top = translateY.value + interpolateProgress([y, targetY.value]);

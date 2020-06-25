@@ -40,7 +40,7 @@ export function withTiming(toValue, userConfig, callback) {
       easing: Easing.inOut(Easing.quad),
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function timing(animation, now) {
@@ -109,7 +109,7 @@ export function withSpring(toValue, userConfig, callback) {
       restSpeedThreshold: 0.001,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function spring(animation, now) {

@@ -12,13 +12,13 @@ function ScrollExample() {
   const isScrolling = useSharedValue(false);
 
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: event => {
+    onScroll: (event) => {
       transY.value = event.contentOffset.y;
     },
-    onBeginDrag: e => {
+    onBeginDrag: (e) => {
       isScrolling.value = true;
     },
-    onEndDrag: e => {
+    onEndDrag: (e) => {
       isScrolling.value = false;
     },
   });

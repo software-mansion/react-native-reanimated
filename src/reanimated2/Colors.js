@@ -388,7 +388,7 @@ function normalizeColor(color) {
 
 export default function processColor(color) {
   'worklet';
-  if (color === null || color === undefined  || typeof color === "number") {
+  if (color === null || color === undefined || typeof color === 'number') {
     return color;
   }
 
