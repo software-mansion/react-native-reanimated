@@ -22,8 +22,6 @@ function FeaturesTestsScreen({ navigation }) {
         <MainScreenItem
           {...props}
           onPressItem={({ key }) => {
-              console.log('click ' + key)
-              console.log(navigation)
               navigation.navigate(key)
             }}
         />
