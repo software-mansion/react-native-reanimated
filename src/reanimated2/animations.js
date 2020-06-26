@@ -66,7 +66,8 @@ export function withTiming(toValue, userConfig, callback) {
       if (
         previousAnimation &&
         previousAnimation.type === 'timing' &&
-        previousAnimation.toValue === toValue
+        previousAnimation.toValue === toValue &&
+        previousAnimation.startTime
       ) {
         // to maintain continuity of timing animations we check if we are starting
         // new timing over the old one with the same parameters. If so, we want
