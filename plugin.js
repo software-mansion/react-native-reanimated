@@ -131,14 +131,6 @@ function processWorkletFunction(t, fun) {
       }
       closure.set(name, path.node);
     },
-  });
-
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
     AssignmentExpression(path) {
       // test for <somethin>.value = <something> expressions
       const left = path.node.left;
@@ -148,6 +140,14 @@ function processWorkletFunction(t, fun) {
         t.isIdentifier(left.property, { name: 'value' })
       ) {
         outputs.add(left.object.name);
+      }
+    },
+  });
+
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
       }
     },
   });
@@ -287,13 +287,14 @@ function processWorklets(t, path, processor) {
 }
 
 const PLUGIN_BLACKLIST_NAMES = [
-  // '@babel/plugin-transform-destructuring', do not blacklist
   'metro-react-native-babel-preset/node_modules/@babel/plugin-transform-object-assign',
 ];
 
 const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
   try {
     const blacklistedPluginObject = require(pluginName);
+    // All Babel polyfills use the declare method that's why we can create them like that.
+    // https://github.com/babel/babel/blob/main/packages/babel-helper-plugin-utils/src/index.js#L1
     const blacklistedPlugin = blacklistedPluginObject.default({
       assertVersion: (x) => true,
     });
@@ -301,7 +302,7 @@ const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
     visitors.explode(blacklistedPlugin.visitor);
     return blacklistedPlugin;
   } catch (e) {
-    console.log(`No ${pluginName}!`);
+    console.warn(`Plugin ${pluginName} couldn't be removed!`);
   }
 });
 
