@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <jsi/jsi.h>
-#include "Shareable.h"
+#include "ShareableValue.h"
 #include "NativeReanimatedModule.h"
 
 namespace reanimated {
