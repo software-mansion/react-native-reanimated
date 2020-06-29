@@ -8,6 +8,7 @@
 #import "RuntimeDecorator.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
+#import "RENativeMethods.h"
 
 namespace reanimated {
 
@@ -91,6 +92,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       onRender(displayLink.timestamp * 1000.0);
     }];
   };
+  
+  RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
+  auto measuringFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
+    return measure(viewTag, uiManager);
+  };
+  
+  auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
+    scrollTo(viewTag, uiManager, x, y, animated);
+  };
 
   auto propObtainer = [reanimatedModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
     NSString* propNameConverted = [NSString stringWithFormat:@"%s",propName.utf8(rt).c_str()];
@@ -109,7 +119,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
                                                                             requestRender,
                                                                             propUpdater,
                                                                             errorHandler,
-                                                                            propObtainer));
+                                                                            propObtainer,
+                                                                            scrollToFunction,
+                                                                            measuringFunction));
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);

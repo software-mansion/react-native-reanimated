@@ -5,7 +5,11 @@
 
 namespace reanimated {
 
-void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt, UpdaterFunction updater, RequestFrameFunction requestFrame) {
+void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
+                                        UpdaterFunction updater,
+                                        RequestFrameFunction requestFrame,
+                                        ScrollToFunction scrollTo,
+                                        MeasuringFunction measure) {
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   
   jsi::Object dummyGlobal(rt);
@@ -75,7 +79,40 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt, UpdaterFunction update
   };
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
-
+  
+  auto clb3 = [scrollTo](
+      jsi::Runtime &rt,
+      const jsi::Value &thisValue,
+      const jsi::Value *args,
+      size_t count
+      ) -> jsi::Value {
+    int viewTag = (int)args[0].asNumber();
+    double x = args[1].asNumber();
+    double y = args[2].asNumber();
+    bool animated = args[3].getBool();
+    scrollTo(viewTag, x, y, animated);
+    return jsi::Value::undefined();
+  };
+  jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, clb3);
+  rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
+  
+  auto clb4 = [measure](
+      jsi::Runtime &rt,
+      const jsi::Value &thisValue,
+      const jsi::Value *args,
+      size_t count
+      ) -> jsi::Value {
+    int viewTag = (int)args[0].asNumber();
+    auto result = measure(viewTag);
+    jsi::Object resultObject(rt);
+    for (auto &i:result) {
+      resultObject.setProperty(rt, i.first.c_str(), i.second);
+    }
+    return resultObject;
+  };
+  jsi::Value measureFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
+  rt.global().setProperty(rt, "_measure", measureFunction);
+  
 }
 
 }
