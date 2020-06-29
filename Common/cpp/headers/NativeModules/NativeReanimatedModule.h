@@ -7,6 +7,7 @@
 #include "Scheduler.h"
 #include "ErrorHandler.h"
 #include "WorkletsCache.h"
+#include "RuntimeDecorator.h"
 
 #include <unistd.h>
 
@@ -29,7 +30,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
                            std::unique_ptr<jsi::Runtime> rt,
                            std::function<void(std::function<void(double)>)> requestRender,
                            std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
-                           std::shared_ptr<ErrorHandler> errorHandler);
+                           std::shared_ptr<ErrorHandler> errorHandler,
+                           ScrollToFunction scrollToFunction,
+                           MeasuringFunction measuringFunction);
+                           
     virtual ~NativeReanimatedModule();
 
     void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) override;
