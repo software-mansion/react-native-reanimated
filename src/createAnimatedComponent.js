@@ -221,12 +221,6 @@ export default function createAnimatedComponent(Component) {
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
     }
 
-    // _setComponentRef = c => {
-    //   if (c !== this._component) {
-    //     this._component = c;
-    //   }
-    // };
-
     _setComponentRef = setAndForwardRef({
       getForwardedRef: () => this.props.forwardedRef,
       setLocalRef: ref => {
