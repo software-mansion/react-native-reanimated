@@ -59,11 +59,11 @@ void NativeProxy::installJSIBindings()
     return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
   };
 
-  auto measuringFunction = [](int viewTag) -> std::vector<std::pair<std::string, double>> {
+  auto measuringFunction = [this](int viewTag) -> std::vector<std::pair<std::string, double>> {
     return measure(viewTag);
   };
 
-  auto scrollToFunction = [](int viewTag, double x, double y, bool animated) {
+  auto scrollToFunction = [this](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, x, y, animated);
   };
 
@@ -195,15 +195,16 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag)
 {
   auto method = javaPart_
                     ->getClass()
-                    ->getMethod<local_ref<JArrayInt>(int)>("measure");
-  local_ref<JArrayInt> output = method(javaPart_.get(), viewTag);
-  auto elements = outputs->getRegion(0, size);
-  vector<std::pair<std::string, double>> result;
+                    ->getMethod<local_ref<JArrayFloat>(int)>("measure");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
 
   result.push_back({"x", elements[0]});
   result.push_back({"y", elements[1]});
 
-  result.push_back({"width", elements[2[});
+  result.push_back({"width", elements[2]});
   result.push_back({"height", elements[3]});
 
   result.push_back({"pageX", elements[4]});

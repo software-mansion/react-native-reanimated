@@ -100,7 +100,7 @@ public class NativeProxy {
     mNodesManager.scrollTo(viewTag, x, y, animated);
   }
 
-  private int[] measure(int viewTag) {
+  private float[] measure(int viewTag) {
     return mNodesManager.measure(viewTag);
   }
 
