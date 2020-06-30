@@ -94,6 +94,8 @@ void NativeProxy::requestRender(std::function<void(double)> onRender) {
   method(javaPart_.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
 }
 
+
+
 void NativeProxy::registerEventHandler(std::function<void(std::string,std::string)> handler) {
   static auto method = javaPart_
     ->getClass()
@@ -149,6 +151,19 @@ void NativeProxy::updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &
     ->getClass()
     ->getMethod<void(int,JMap<JString,JObject>::javaobject)>("updateProps");
   method(javaPart_.get(), viewTag, ConvertToPropsMap(rt, props).get());
+}
+
+void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
+  auto method = javaPart_
+    ->getClass()
+    ->getMethod<void(int, int, int, bool)>("scrollTo");
+  method(javaPart_.get(), viewTag, x, y, animated);
+}
+
+std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
+  auto method = javaPart_
+    ->getClass()
+    ->getMethod()
 }
 
 }

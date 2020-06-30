@@ -62,6 +62,14 @@ public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
 
+  public void scrollTo(int viewTag, double x, double y, boolean animated) {
+    NativeMethodsHelper.scrollTo(mUIManager.resolveView(viewTag), x, y, animated);
+  }
+
+  public int[] measure(int viewTag) {
+    return NativeMethodsHelper.measure(mUIManager.resolveView(viewTag));
+  }
+
   public interface OnAnimationFrame {
     void onAnimationFrame(double timestampMs);
   }
