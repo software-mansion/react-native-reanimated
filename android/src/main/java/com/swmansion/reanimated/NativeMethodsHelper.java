@@ -13,6 +13,11 @@ public class NativeMethodsHelper {
 
   public static float[] measure(View view) {
     View rootView = (View) RootViewUtil.getRootView(view);
+    if (rootView == null || view == null) {
+      float result[] = new float [6];
+      result[0] = -1234567;
+    }
+
     int buffer[] = new int [4];
     computeBoundingBox(rootView, buffer);
     int rootX = buffer[0];

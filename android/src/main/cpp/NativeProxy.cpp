@@ -155,7 +155,7 @@ void NativeProxy::updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
   auto method = javaPart_
     ->getClass()
-    ->getMethod<void(int, int, int, bool)>("scrollTo");
+    ->getMethod<void(int, double, double, bool)>("scrollTo");
   method(javaPart_.get(), viewTag, x, y, animated);
 }
 

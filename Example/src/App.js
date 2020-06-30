@@ -168,6 +168,7 @@ import Animated,{
 
 export default function screen() {
   const boxRef = useRef(null);
+  const scrollView = useRef(null);
 
   function handleClick() {
     const handle = findNodeHandle(boxRef.current);
@@ -180,11 +181,32 @@ export default function screen() {
     )();
   }
 
+  function handleClick2() {
+    const handle = findNodeHandle(scrollView.current);
+    runOnUI(
+      () => {
+        'worklet';
+        _scrollTo(handle, 10, 0, true);
+      }
+    )();
+  }
+
 
   return (
     <View>
       <TouchableHighlight style={stylez.box} ref={boxRef} onPress={handleClick} >
         <Text>okok</Text>
+      </TouchableHighlight>
+      <View style={stylez.wrapper }>
+        <ScrollView style={stylez.scrollView} ref={scrollView} >
+          <Text style={stylez.element}>aa</Text>
+          <Text style={stylez.element}>bb</Text>
+          <Text style={stylez.element}>cc</Text>
+          <Text style={stylez.element}>dd</Text>
+        </ScrollView>
+      </View>
+      <TouchableHighlight onPress={handleClick2} >
+        <Text>moveToThe nextOne</Text>
       </TouchableHighlight>
     </View>
   );
@@ -197,5 +219,13 @@ const stylez = StyleSheet.create({
     height:200,
     backgroundColor:"black",
   },
- 
+  scrollView: {
+    borderColor: "black",
+  },
+  element: {
+    backgroundColor: "red",
+  },
+  wrapper: {
+    height: 20,
+  }
 });

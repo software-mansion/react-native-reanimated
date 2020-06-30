@@ -8,6 +8,10 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
   while (rootView.superview && ![rootView isReactRootView]) {
     rootView = rootView.superview;
   }
+  
+  if (rootView == nil) {
+    return std::vector<std::pair<std::string, double>>(0, std::make_pair("x", -1234567.0));
+  }
 
   CGRect frame = view.frame;
   CGRect globalBounds = [view convertRect:view.bounds toView:rootView];
