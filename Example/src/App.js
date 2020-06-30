@@ -1,5 +1,5 @@
 import { createBrowserApp } from '@react-navigation/web';
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   FlatList,
   Platform,
@@ -7,6 +7,8 @@ import {
   Text,
   View,
   YellowBox,
+  TouchableHighlight,
+  findNodeHandle,
 } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
@@ -156,4 +158,44 @@ const createApp = Platform.select({
   default: (input) => createAppContainer(input),
 });
 
-export default createApp(ExampleApp);
+//export default createApp(ExampleApp);
+
+import Animated,{
+  useSharedValue,
+  useAnimatedStyle,
+  runOnUI,
+} from 'react-native-reanimated';
+
+export default function screen() {
+  const boxRef = useRef(null);
+
+  function handleClick() {
+    const handle = findNodeHandle(boxRef.current);
+    console.log("ok");
+    runOnUI(
+      () => {
+        'worklet';
+        console.log(_measure(handle));
+      }
+    )();
+  }
+
+
+  return (
+    <View>
+      <TouchableHighlight style={stylez.box} ref={boxRef} onPress={handleClick} >
+        <Text>okok</Text>
+      </TouchableHighlight>
+    </View>
+  );
+}
+
+const stylez = StyleSheet.create({
+  box: {
+    margin: 100,
+    width:100,
+    height:200,
+    backgroundColor:"black",
+  },
+ 
+});

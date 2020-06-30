@@ -5,12 +5,13 @@ import android.graphics.RectF;
 import android.view.View;
 import android.view.ViewParent;
 
+import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.RootViewUtil;
 import com.facebook.react.views.scroll.ReactScrollView;
 
 public class NativeMethodsHelper {
 
-  public static int[] measure(View view) {
+  public static float[] measure(View view) {
     View rootView = (View) RootViewUtil.getRootView(view);
     int buffer[] = new int [4];
     computeBoundingBox(rootView, buffer);
@@ -20,9 +21,9 @@ public class NativeMethodsHelper {
     buffer[0] -= rootX;
     buffer[1] -= rootY;
 
-    int result[] = new int [6];
+    float result[] = new float [6];
     result[0] = result[1] = 0;
-    for (int i = 2; i < 6; ++i) result[i] = buffer[i-2];
+    for (int i = 2; i < 6; ++i) result[i] = PixelUtil.toDIPFromPixel(buffer[i-2]);
 
     return result;
   }
