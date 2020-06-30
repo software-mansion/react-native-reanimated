@@ -48,6 +48,14 @@ void NativeProxy::installJSIBindings() {
     this->requestRender(std::move(onRender));
   };
 
+  auto measuringFunction = [](int viewTag) -> std::vector<std::pair<std::string, double>> {
+    return measure(viewTag);
+  };
+
+  auto scrollToFunction = [](int viewTag, double x, double y, bool animated) {
+    scrollTo(viewTag, x, y, animated);
+  };
+
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 
   std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
@@ -57,7 +65,9 @@ void NativeProxy::installJSIBindings() {
                                                          std::move(animatedRuntime),
                                                          requestRender,
                                                          propUpdater,
-                                                         errorHandler);
+                                                         errorHandler,
+                                                         scrollToFunction,
+                                                         measuringFunction);
 
   this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
     module->onEvent(eventName, eventAsString);
@@ -152,7 +162,21 @@ void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   auto method = javaPart_
     ->getClass()
-    ->getMethod()
+    ->getMethod<local_ref<JArrayInt>(int)>("measure");
+  local_ref<JArrayInt> output = method(javaPart_.get(), viewTag);
+  auto elements = outputs->getRegion(0, size);
+  vector<std::pair<std::string, double>> result;
+
+  result.push_back({"x", elements[0]});
+  result.push_back({"y", elements[1]});
+
+  result.push_back({"width", elements[2[});
+  result.push_back({"height", elements[3]});
+
+  result.push_back({"pageX", elements[4]});
+  result.push_back({"pageY", elements[5]});
+
+  return result;
 }
 
 }
