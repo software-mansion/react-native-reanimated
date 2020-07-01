@@ -33,7 +33,9 @@ public class NativeMethodsHelper {
     return result;
   }
 
-  public static void scrollTo(View view, double x, double y, boolean animated) {
+  public static void scrollTo(View view, double argX, double argY, boolean animated) {
+    int x = Math.round(PixelUtil.toPixelFromDIP(argX));
+    int y = Math.round(PixelUtil.toPixelFromDIP(argY));
     ReactScrollView scrollView = (ReactScrollView)view;
     if (animated) {
       scrollView.smoothScrollTo((int)x, (int)y);
