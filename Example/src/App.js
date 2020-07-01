@@ -192,7 +192,7 @@ export default function screen() {
     runOnUI(
       () => {
         'worklet';
-        _scrollTo(handle, 10, 0, true);
+        _scrollTo(handle, 0, 40, true);
       }
     )();
   }
@@ -229,7 +229,10 @@ const stylez = StyleSheet.create({
     borderColor: "black",
   },
   element: {
+    height:20,
     backgroundColor: "red",
+    borderColor: "black",
+    borderWidth: 1,
   },
   wrapper: {
     height: 20,
