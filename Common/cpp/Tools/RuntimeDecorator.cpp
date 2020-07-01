@@ -90,7 +90,6 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
     double x = args[1].asNumber();
     double y = args[2].asNumber();
     bool animated = args[3].getBool();
-    Logger::log("jest");
     scrollTo(viewTag, x, y, animated);
     return jsi::Value::undefined();
   };
