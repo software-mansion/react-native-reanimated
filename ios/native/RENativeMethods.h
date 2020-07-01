@@ -1,10 +1,3 @@
-//
-//  RENativeMethods.h
-//  DoubleConversion
-//
-//  Created by Szymon Kapala on 29/06/2020.
-//
-
 #import <Foundation/Foundation.h>
 #include <vector>
 #include <string>
