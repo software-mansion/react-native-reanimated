@@ -1,5 +1,5 @@
 import { createBrowserApp } from '@react-navigation/web';
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   FlatList,
   Platform,
@@ -7,8 +7,6 @@ import {
   Text,
   View,
   YellowBox,
-  TouchableHighlight,
-  findNodeHandle,
 } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
@@ -158,77 +156,4 @@ const createApp = Platform.select({
   default: (input) => createAppContainer(input),
 });
 
-//export default createApp(ExampleApp);
-
-import Animated,{
-  useSharedValue,
-  useAnimatedStyle,
-  runOnUI,
-} from 'react-native-reanimated';
-
-export default function screen() {
-  const boxRef = useRef(null);
-  const scrollView = useRef(null);
-
-  function handleClick() {
-    const handle = findNodeHandle(boxRef.current);
-    console.log("ok");
-    runOnUI(
-      () => {
-        'worklet';
-        console.log(_measure(handle));
-      }
-    )();
-  }
-
-  function handleClick2() {
-    const handle = findNodeHandle(scrollView.current);
-    runOnUI(
-      () => {
-        'worklet';
-        _scrollTo(handle, 0, 40, true);
-      }
-    )();
-  }
-
-
-  return (
-    <View>
-      <TouchableHighlight style={stylez.box} ref={boxRef} onPress={handleClick} >
-        <Text>okok</Text>
-      </TouchableHighlight>
-      <View style={stylez.wrapper }>
-        <ScrollView style={stylez.scrollView} ref={scrollView} >
-          <Text style={stylez.element}>aa</Text>
-          <Text style={stylez.element}>bb</Text>
-          <Text style={stylez.element}>cc</Text>
-          <Text style={stylez.element}>dd</Text>
-        </ScrollView>
-      </View>
-      <TouchableHighlight onPress={handleClick2} >
-        <Text>moveToThe nextOne</Text>
-      </TouchableHighlight>
-    </View>
-  );
-}
-
-const stylez = StyleSheet.create({
-  box: {
-    margin: 100,
-    width:100,
-    height:200,
-    backgroundColor:"black",
-  },
-  scrollView: {
-    borderColor: "black",
-  },
-  element: {
-    height:20,
-    backgroundColor: "red",
-    borderColor: "black",
-    borderWidth: 1,
-  },
-  wrapper: {
-    height: 20,
-  }
-});
+export default createApp(ExampleApp);
