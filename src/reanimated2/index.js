@@ -3,3 +3,4 @@ export * from './Hooks';
 export * from './animations';
 export * from './interpolation';
 export * from './Easing';
+export * from './NativeMethods';
