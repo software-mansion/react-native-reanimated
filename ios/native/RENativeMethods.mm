@@ -5,11 +5,16 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
   UIView *view = [uiManager viewForReactTag:@(viewTag)];
  
   UIView *rootView = view;
+  
+  if (view == nil) {
+    return std::vector<std::pair<std::string, double>>(0, std::make_pair("x", -1234567.0));
+  }
+  
   while (rootView.superview && ![rootView isReactRootView]) {
     rootView = rootView.superview;
   }
   
-  if (rootView == nil) {
+  if (rootView == nil || (![rootView isReactRootView])) {
     return std::vector<std::pair<std::string, double>>(0, std::make_pair("x", -1234567.0));
   }
 
