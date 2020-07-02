@@ -122,7 +122,7 @@ As a result the worklet will re-execute causing the style to be updated.
 Since in `useAnimatedStyle` we take `offset`'s value, multiply it by `255` and map that to the translation of the view, the view will immediately be shifted to a new location that is from `0` to `255` pixels far from the initial view position.
 This is what you will observe:
 
-[GIF]
+![](/react-native-reanimated/docs/shared-values/sv-immediate.gif)
 
 ## Driving animations
 
@@ -171,7 +171,7 @@ function Box() {
 The only change we made in the above code compared to the example from the previous section is that we wrapped `Math.random()` call that updates the `offset` with `withSpring` call.
 As a result, the updates to the view's translation will be smooth:
 
-[GIF]
+![](/react-native-reanimated/docs/shared-values/sv-spring.gif)
 
 if you want to learn how to customize animations or get notified when the animation is finished read our article about [Animations](animations) or check the API of animation method you want to use, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
 
@@ -184,16 +184,15 @@ That is, when the initial value is `0` and we start animated transition using `w
 ### Interrupting animations
 
 Thanks to the fact that Shared Values keep the state of their animated transition, we can make all animations fully interruptible.
-This means that you can make updates to the Shared Value even if it is currently running the animation.
-Overwriting the value in such a case will result in the previous animation being interacted.
-If the newly assigned value is a static value, that new value will be immediately assigned to the Shared Value, and the previously running animation will be cancelled.
-In case the newly assigned value is also an animation, the previously running animation will smoothly transition into a new animation.
+This means that you can make updates to the Shared Value even if it is currently running the animation without worrying that this will cause an unexpected and sudden animation glitch.
+Overwriting the value in such a case will result in the previous animation being interrupted.
+If the newly assigned value is a number (or anything static), that new value will be immediately assigned to the Shared Value, and the previously running animation will be cancelled.
+In case the newly assigned value is also an animation, the previously running animation will smoothly transition into a new one.
 Animation parameters such as velocity will transfer as well, which is particularly important in spring-based animations.
 This allows to achieve a really smooth transform from one animation into another.
-This behavior is demonstrated on the clip below where we just do more frequent taps on the button to such that the new animation starts while the previous one is still running.
-There are no code changes compared to the above example code.
+This behavior is demonstrated on the clip below where we just do more frequent taps on the button such that the new animation starts while the previous one is still running (there are no code changes compared to the previous example).
 
-[GIF]
+![](/react-native-reanimated/docs/shared-values/sv-interruption.gif)
 
 ### Cancelling animations
 
