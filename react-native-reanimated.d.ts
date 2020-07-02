@@ -437,7 +437,7 @@ declare module 'react-native-reanimated' {
       processor: () => T
     ): SharedValue<T>;
 
-    export function useAnimatedStyle<T extends AnimateProps<ViewStyle> | AnimateProps<TextStyle> | AnimateProps<ImageStyle>>(
+    export function useAnimatedStyle<T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>>(
       updater: () => T
     ): T;
     export function useAnimatedProps<T extends {}>(
