@@ -23,7 +23,7 @@ In order to provide secure and fast ways of accessing shared data across two thr
 As, during animations, updates most of the time happen on the UI thread, Shared Values are optimized to be updated and read from the UI thread.
 Hence, read and writes done from the UI thread are all synchronous, which means that when running from a worklet on the UI thread, you can update the value and expect it to be updated immediately after that call.
 The consequence of this choice is that updates made on the React Native JS thread are all asynchronous.
-Instead of those updates being immediate in such case, Reanimated core schedules the update to be performed on the UI thread this way preventing any concurrency issues.
+Instead of those updates being immediate in such case, Reanimated core schedules the update to be performed on the UI thread, this way preventing any concurrency issues.
 When accessing and updating Shared Values from the React Native JS thread, it is best to think about it as if the value worked the same way as React's state.
 We can make updates to the state, but the updates are not immediate, and in order to read the data we need to wait till the next re-render.
 
@@ -75,7 +75,7 @@ function SomeComponent({ children }) {
 }
 ```
 
-In the above example scroll handler is a worklet and runs the scroll event logic on the UI thread.
+Above, the scroll handler is a worklet and runs the scroll event logic on the UI thread.
 Updates made in that worklets are synchronous.
 
 ## Reactiveness with Shared Values
@@ -89,9 +89,9 @@ It is based on the concept of Shared Values being captured by reactive worklets 
 Currently, there are two ways how you can create a reactive worklet.
 This can be done either by using [`useAnimatedStyle`](api/useAnimatedStyle) or [`useDerivedValue`](api/useDerivedValue) hooks.
 When a Shared Value is captured by a worklet provided to these hooks, the worklet will re-run upon the Shared Value change.
-Under the hood, reanimated engine builds a graph of dependencies between Shared Values and reactive worklets that allows us to only execute the code that needs to update and to make sure updates are done in the correct order.
-For example, when we have a Shared Value `x`, a derived value `y` that uses `x` and an animated style that uses both `x` and `y`, we only re-run the derived value worklet when `x` updates.
-We will also always run the derived value `y` updater first prior to running the animated style updater, because the style depends on it.
+Under the hood, Reanimated engine builds a graph of dependencies between Shared Values and reactive worklets that allows us to only execute the code that needs to update and to make sure updates are done in the correct order.
+For example, when we have a Shared Value `x`, a derived value `y` that uses `x`, and an animated style that uses both `x` and `y`, we only re-run the derived value worklet when `x` updates.
+In such a case, we will also always run the derived value `y` updater first prior to running the animated style updater, because the style depends on it.
 
 Let us look now at an example code:
 ```js {2,6,13}
@@ -116,18 +116,18 @@ function Box() {
 In the above code, we define `offset` Shared Value which is used inside `useAnimatedStyle` reactive worklet.
 The `offset` Shared Value is set to `0` initially, and we added a button that updates the value using `Math.random()`.
 This way each time we press on the button, the `offset` will update to a random value from `0` to `1`.
-Since animated style worklets are reactive, and in our case they depend on a single `offset` shared variable, the worklet won't run except from the initial run and unless the value is updated.
-Upon the button press, and when the value updates, Reanimated core will execute dependent worklets, in our case that'd be our animated style worklet.
-As a result the worklet will re-execute causing the style to be updated.
-Since in `useAnimatedStyle` we take `offset`'s value, multiply it by `255` and map that to the translation of the view, the view will immediately be shifted to a new location that is from `0` to `255` pixels far from the initial view position.
+Since animated style worklets are reactive, and in our case they depend on a single `offset` Shared Variable, the worklet won't be executed except from the initial run, or unless the value is updated.
+Upon the button press, and when the value updates, Reanimated core will execute dependent worklets.
+In our case that'd be our animated style worklet.
+As a result, the worklet will re-execute causing the style to be updated.
+Since in `useAnimatedStyle` we take `offset`'s value, multiply it by `255` and map that to the x-translation of the view, the view will immediately be shifted to a new location that is from `0` to `255` pixels far from the initial view position.
 This is what you will observe:
 
 ![](/react-native-reanimated/docs/shared-values/sv-immediate.gif)
 
 ## Driving animations
 
-Animations in Reanimated 2 are first-class citizens and the library comes bundled with a number of utility methods that help you run and customize animations (
-refer to the section about [animations](animations) to learn about the APIs in Reanimated 2 for controlling animations).
+Animations in Reanimated 2 are first-class citizens, and the library comes bundled with a number of utility methods that help you run and customize animations (refer to the section about [animations](animations) to learn about the APIs in Reanimated 2 for controlling animations).
 One of the ways for animation to be launched is by starting an animated transition of a Shared Value.
 This can be done by wrapping target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](api/withTiming) or [`withSpring`](api/widthSpring)):
 
@@ -168,12 +168,12 @@ function Box() {
 }
 ```
 
-The only change we made in the above code compared to the example from the previous section is that we wrapped `Math.random()` call that updates the `offset` with `withSpring` call.
+The only change we made in the above code compared to the example from the previous section, is that we wrapped `Math.random()` call that updates the `offset` with `withSpring` call.
 As a result, the updates to the view's translation will be smooth:
 
 ![](/react-native-reanimated/docs/shared-values/sv-spring.gif)
 
-if you want to learn how to customize animations or get notified when the animation is finished read our article about [Animations](animations) or check the API of animation method you want to use, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
+If you want to learn how to customize animations or get notified when the animation is finished check the API of animation method you want to use, e.g.,  [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
 
 ### Animation progress
 
