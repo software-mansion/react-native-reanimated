@@ -15,6 +15,7 @@ class Mapper {
   friend MapperRegistry;
 private:
   unsigned long id;
+  NativeReanimatedModule *module;
   jsi::Function mapper;
   std::vector<std::shared_ptr<MutableValue>> inputs;
   std::vector<std::shared_ptr<MutableValue>> outputs;

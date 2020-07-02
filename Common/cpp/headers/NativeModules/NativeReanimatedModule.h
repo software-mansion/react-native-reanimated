@@ -57,11 +57,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
     std::function<void(FrameCallback)> requestRender;
-    std::shared_ptr<ErrorHandler> errorHandler;
     std::shared_ptr<jsi::Value> dummyEvent;
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
   public:
+  std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;
   std::shared_ptr<ShareableValue> valueSetter;
   std::shared_ptr<Scheduler> scheduler;

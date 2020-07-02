@@ -5,12 +5,12 @@
 
 class IOSErrorHandler : public ErrorHandler {
     std::shared_ptr<Scheduler> scheduler;
-    void raiseSpec(const char *message) override;
+    void raiseSpec() override;
     std::shared_ptr<ErrorWrapper> error;
     public:
       IOSErrorHandler(std::shared_ptr<Scheduler> scheduler);
       std::shared_ptr<Scheduler> getScheduler() override;
       std::shared_ptr<ErrorWrapper> getError() override;
-      void handleError() override;
+      void setError(const char *message) override;
       virtual ~IOSErrorHandler() {}
 };
