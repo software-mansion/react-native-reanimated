@@ -436,7 +436,11 @@ declare module 'react-native-reanimated' {
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T
     ): SharedValue<T>;
-    export function useAnimatedStyle<T extends ViewStyle, TextStyle, ImageStyle>(
+
+    export function useAnimatedStyle<T extends AnimateProps<ViewStyle> | AnimateProps<TextStyle> | AnimateProps<ImageStyle>>(
+      updater: () => T
+    ): T;
+    export function useAnimatedProps<T extends {}>(
       updater: () => T
     ): T;
     export function useAnimatedGestureHandler<TContext extends Context>(
@@ -605,6 +609,7 @@ declare module 'react-native-reanimated' {
   export const useValue: typeof Animated.useValue
   export const useSharedValue: typeof Animated.useSharedValue
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle
+  export const useAnimatedProps: typeof Animated.useAnimatedProps
   export const useDerivedValue: typeof Animated.useDerivedValue
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
