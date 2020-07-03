@@ -174,7 +174,7 @@ function styleUpdater(viewTag, updater, state) {
   const animations = state.animations || {};
 
   const newValues = updater() || {};
-  const oldValues = state.last;
+  const oldValues = (state.last === undefined) ? {} : state.last ;
 
   // extract animated props
   let hasAnimations = false;
@@ -254,10 +254,9 @@ export function useAnimatedStyle(updater) {
 
   const initRef = useRef(null);
   if (initRef.current === null) {
-    const initial = initialUpdaterRun(updater);
     initRef.current = {
-      initial,
-      remoteState: makeRemote({ last: initial }),
+      initial: {},
+      remoteState: makeRemote({ last: {} }),
       inputs: Object.values(updater._closure),
     };
   }
@@ -282,7 +281,7 @@ export function useDerivedValue(processor) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = {
-      sharedValue: makeMutable(initialUpdaterRun(processor)),
+      sharedValue: makeMutable(0),
       inputs: Object.values(processor._closure),
     };
   }

@@ -3,13 +3,6 @@ import { Easing } from './Easing';
 
 let IN_STYLE_UPDATER = false;
 
-export function initialUpdaterRun(updater) {
-  IN_STYLE_UPDATER = true;
-  const result = updater();
-  IN_STYLE_UPDATER = false;
-  return result;
-}
-
 function defineAnimation(starting, factory) {
   'worklet';
   if (IN_STYLE_UPDATER) {
