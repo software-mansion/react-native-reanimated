@@ -1,5 +1,3 @@
-#pragma once
-
 #include "SharedParent.h"
 #include <jsi/jsi.h>
 #include "RemoteObject.h"
