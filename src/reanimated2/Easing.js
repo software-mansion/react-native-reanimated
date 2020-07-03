@@ -98,7 +98,7 @@ function cubic(t) {
  */
 function poly(n) {
   'worklet';
-  return t => Math.pow(t, n);
+  return (t) => Math.pow(t, n);
 }
 
 /**
@@ -144,7 +144,7 @@ function exp(t) {
 function elastic(bounciness = 1) {
   'worklet';
   const p = bounciness * Math.PI;
-  return t => 1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
+  return (t) => 1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
 }
 
 /**
@@ -157,7 +157,7 @@ function elastic(bounciness = 1) {
  */
 function back(s = 1.70158) {
   'worklet';
-  return t => t * t * ((s + 1) * t - s);
+  return (t) => t * t * ((s + 1) * t - s);
 }
 
 /**
@@ -210,7 +210,7 @@ function in_(easing) {
  */
 function out(easing) {
   'worklet';
-  return t => {
+  return (t) => {
     'worklet';
     return 1 - easing(1 - t);
   };
@@ -223,7 +223,7 @@ function out(easing) {
  */
 function inOut(easing) {
   'worklet';
-  return t => {
+  return (t) => {
     'worklet';
     if (t < 0.5) {
       return easing(t * 2) / 2;

@@ -7,8 +7,7 @@
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
-    "lint": "eslint .",
-    "postinstall": "patch-package"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.28",
@@ -37,7 +36,6 @@
     "eslint": "^6.5.1",
     "glob-to-regexp": "^0.4.0",
     "jest": "^24.9.0",
-    "patch-package": "^6.2.2",
     "postinstall-postinstall": "^2.1.0",
     "react-test-renderer": "16.11.0"
   },

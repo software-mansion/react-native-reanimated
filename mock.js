@@ -28,20 +28,20 @@ class Code extends React.Component {
   }
 }
 
-const getValue = node => {
-  if (typeof node === "number") {
+const getValue = (node) => {
+  if (typeof node === 'number') {
     return node;
   }
-  return node && node[" __value"] || 0;
+  return (node && node[' __value']) || 0;
 };
 
 class AnimatedValue {
   constructor(val) {
-    this[" __value"] = val;
+    this[' __value'] = val;
   }
 
   setValue(val) {
-    this[" __value"] = val;
+    this[' __value'] = val;
   }
 
   interpolate() {
@@ -61,7 +61,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${Component.displayName || Component.name || 'Component'}`;
+    static displayName = `Transitioning.${
+      Component.displayName || Component.name || 'Component'
+    }`;
 
     setNativeProps() {}
 
@@ -88,7 +90,7 @@ const Reanimated = {
 
   Clock: NOOP,
   Node: NOOP,
-  Value: function() {
+  Value: function () {
     return {
       setValue: NOOP,
     };
@@ -100,30 +102,31 @@ const Reanimated = {
     IDENTITY: 'identity',
   },
 
-  
   add: (...vals) =>
-    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc + v)),
+    new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc + v)),
   sub: (...vals) =>
-    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc - v)),
+    new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc - v)),
   divide: (...vals) =>
-    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc / v)),
+    new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc / v)),
   multiply: (...vals) =>
-    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc * v)),
+    new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc * v)),
   pow: (...vals) =>
-    new AnimatedValue(vals.map(v => getValue(v)).reduce((acc, v) => acc ** v)),
+    new AnimatedValue(
+      vals.map((v) => getValue(v)).reduce((acc, v) => acc ** v)
+    ),
   modulo: (a, b) => new AnimatedValue(getValue(a) % getValue(b)),
-  sqrt: a => new AnimatedValue(Math.sqrt(getValue(a))),
-  log: a => new AnimatedValue(Math.log(getValue(a))),
-  sin: a => new AnimatedValue(Math.sin(getValue(a))),
-  cos: a => new AnimatedValue(Math.cos(getValue(a))),
-  tan: a => new AnimatedValue(Math.tan(getValue(a))),
-  acos: a => new AnimatedValue(Math.acos(getValue(a))),
-  asin: a => new AnimatedValue(Math.asin(getValue(a))),
-  atan: a => new AnimatedValue(Math.atan(getValue(a))),
-  exp: a => new AnimatedValue(Math.exp(getValue(a))),
-  round: a => new AnimatedValue(Math.round(getValue(a))),
-  floor: a => new AnimatedValue(Math.floor(getValue(a))),
-  ceil: a => new AnimatedValue(Math.ceil(getValue(a))),
+  sqrt: (a) => new AnimatedValue(Math.sqrt(getValue(a))),
+  log: (a) => new AnimatedValue(Math.log(getValue(a))),
+  sin: (a) => new AnimatedValue(Math.sin(getValue(a))),
+  cos: (a) => new AnimatedValue(Math.cos(getValue(a))),
+  tan: (a) => new AnimatedValue(Math.tan(getValue(a))),
+  acos: (a) => new AnimatedValue(Math.acos(getValue(a))),
+  asin: (a) => new AnimatedValue(Math.asin(getValue(a))),
+  atan: (a) => new AnimatedValue(Math.atan(getValue(a))),
+  exp: (a) => new AnimatedValue(Math.exp(getValue(a))),
+  round: (a) => new AnimatedValue(Math.round(getValue(a))),
+  floor: (a) => new AnimatedValue(Math.floor(getValue(a))),
+  ceil: (a) => new AnimatedValue(Math.ceil(getValue(a))),
   lessThan: (a, b) => new AnimatedValue(getValue(a) < getValue(b)),
   eq: (a, b) => new AnimatedValue(getValue(a) === getValue(b)),
   greaterThan: (a, b) => new AnimatedValue(getValue(a) > getValue(b)),
@@ -132,7 +135,8 @@ const Reanimated = {
   neq: (a, b) => new AnimatedValue(getValue(a) !== getValue(b)),
   and: (a, b) => new AnimatedValue(getValue(a) && getValue(b)),
   or: (a, b) => new AnimatedValue(getValue(a) || getValue(b)),
-  defined: (a) => new AnimatedValue(getValue(a) !== null && getValue(a) !== undefined),
+  defined: (a) =>
+    new AnimatedValue(getValue(a) !== null && getValue(a) !== undefined),
   not: (a) => new AnimatedValue(!getValue(a)),
   set: (a, b) => {
     a.setValue(getValue(b));
@@ -143,7 +147,7 @@ const Reanimated = {
     if (getValue(a)) {
       return b;
     } else {
-      return c; 
+      return c;
     }
   },
   block: (a) => a[a.length - 1],
@@ -157,7 +161,11 @@ const Reanimated = {
   abs: (a) => Math.abs(getValue(a)),
   acc: NOOP,
   color: (r, g, b, a = 1) => {
-    const color = 16777216 * Math.round(getValue(a) * 255) + 65536 * getValue(r) + 256 * getValue(g) + getValue(b);
+    const color =
+      16777216 * Math.round(getValue(a) * 255) +
+      65536 * getValue(r) +
+      256 * getValue(g) +
+      getValue(b);
     if (Platform.OS === 'android') {
       // on Android color is represented as signed 32 bit int
       if (color < (1 << 31) >>> 0) {
@@ -186,11 +194,11 @@ const Reanimated = {
     stop: simulateCallbackFactory({ finished: true }),
   }),
 
-  proc: cb => cb,
+  proc: (cb) => cb,
 
   useCode: NOOP,
-  createAnimatedComponent: Component => Component,
-}
+  createAnimatedComponent: (Component) => Component,
+};
 
 module.exports = {
   __esModule: true,
@@ -218,7 +226,7 @@ module.exports = {
   },
 
   Transitioning: {
-    View: createTransitioningComponent(View)
+    View: createTransitioningComponent(View),
   },
 
   Transition: {
@@ -226,7 +234,7 @@ module.exports = {
     Together: createMockComponent('Transition.Together'),
     In: createMockComponent('Transition.In'),
     Out: createMockComponent('Transition.Out'),
-    Change: createMockComponent('Transition.Change')
+    Change: createMockComponent('Transition.Change'),
   },
 
   createTransitioningComponent,

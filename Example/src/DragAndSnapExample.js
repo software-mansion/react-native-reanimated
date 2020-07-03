@@ -24,7 +24,7 @@ function DragAndSnap() {
       translation.x.value = ctx.startX + event.translationX;
       translation.y.value = ctx.startY + event.translationY;
     },
-    onEnd: _ => {
+    onEnd: (_) => {
       translation.x.value = withSpring(0);
       translation.y.value = withSpring(0);
     },

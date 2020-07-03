@@ -58,13 +58,13 @@ export default function SwipableList() {
       <FlatList
         data={data}
         renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
       />
     </View>
   );
 }
 
-const springConfig = velocity => {
+const springConfig = (velocity) => {
   'worklet';
 
   return {
@@ -97,7 +97,7 @@ function ListItem({ item, onRemove }) {
       translateX.value = Math.min(0, Math.max(nextTranslate, MAX_TRANSLATE));
     },
 
-    onEnd: evt => {
+    onEnd: (evt) => {
       if (evt.velocityX < -20) {
         translateX.value = withSpring(
           MAX_TRANSLATE,

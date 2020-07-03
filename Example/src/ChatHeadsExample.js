@@ -24,7 +24,7 @@ function ChatHeads({ children }) {
       transX.value = ctx.startX + event.translationX;
       transY.value = ctx.startY + event.translationY;
     },
-    onEnd: event => {
+    onEnd: (event) => {
       const width = windowWidth - 100 - 40; // minus margins & width
       const height = windowHeight - 100 - 40; // minus margins & height
       const toss = 0.2;

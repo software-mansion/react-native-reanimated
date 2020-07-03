@@ -4,12 +4,13 @@
 #include <functional>
 #include <thread>
 #include "SpeedChecker.h"
-#include "Shareable.h"
+#include "ShareableValue.h"
 #include "MapperRegistry.h"
 #include "Mapper.h"
 #include "RuntimeDecorator.h"
 #include "EventHandlerRegistry.h"
 #include "EventHandler.h"
+#include "FrozenObject.h"
 
 using namespace facebook;
 
@@ -19,16 +20,16 @@ void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res) {
   switch (sv->type) {
-    case MutableValueType:
+    case ValueType::MutableValueType:
       res.push_back(sv->mutableValue);
       break;
-    case ArrayType:
+    case ValueType::ArrayType:
       for (auto &it : sv->frozenArray) {
         extractMutables(rt, it, res);
       }
       break;
-    case RemoteObjectType:
-    case ObjectType:
+    case ValueType::RemoteObjectType:
+    case ValueType::ObjectType:
       for (auto &it : sv->frozenObject->map) {
         extractMutables(rt, it.second, res);
       }
@@ -82,11 +83,11 @@ jsi::Value NativeReanimatedModule::makeShareable(jsi::Runtime &rt, const jsi::Va
 }
 
 jsi::Value NativeReanimatedModule::makeMutable(jsi::Runtime &rt, const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, MutableValueType)->getValue(rt);
+  return ShareableValue::adapt(rt, value, this, ValueType::MutableValueType)->getValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value &value) {
-  return ShareableValue::adapt(rt, value, this, RemoteObjectType)->getValue(rt);
+  return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs) {

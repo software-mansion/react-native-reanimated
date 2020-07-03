@@ -48,7 +48,11 @@ class EventHandler : public HybridClass<EventHandler> {
   void receiveEvent(
      jni::alias_ref<JString> eventKey,
      jni::alias_ref<react::WritableMap> event) {
-    handler_(eventKey->toString(), event->toString());
+     std::string eventAsString = "{NativeMap:null}";
+     if (event != nullptr) {
+        eventAsString = event->toString();
+     }
+    handler_(eventKey->toString(), eventAsString);
   }
 
   static void registerNatives() {

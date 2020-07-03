@@ -6,7 +6,8 @@
 //
 
 #include "WorkletsCache.h"
-#include "Shareable.h"
+#include "ShareableValue.h"
+#include "FrozenObject.h"
 
 using namespace facebook;
 

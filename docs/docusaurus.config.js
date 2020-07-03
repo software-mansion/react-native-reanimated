@@ -8,6 +8,9 @@ module.exports = {
   favicon: 'img/SWM_Fav_192x192.png',
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
+  customFields: {
+    shortTitle: 'Reanimated',
+  },
   themeConfig: {
     disableDarkMode: true,
     announcementBar: {
@@ -21,6 +24,7 @@ module.exports = {
       trackingID: 'UA-41044622-6',
       anonymizeIP: true, // Should IPs be anonymized?
     },
+
     navbar: {
       title: 'React Native Reanimated',
       links: [

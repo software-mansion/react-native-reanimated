@@ -37,6 +37,7 @@ jobs:
         - node --version
         - npm install -g yarn --ignore-dependencies
         - npm install -g react-native-cli
+        - yarn
         - cd Example
         - yarn
 

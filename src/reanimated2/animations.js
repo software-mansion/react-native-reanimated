@@ -40,7 +40,7 @@ export function withTiming(toValue, userConfig, callback) {
       easing: Easing.inOut(Easing.quad),
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function timing(animation, now) {
@@ -66,7 +66,8 @@ export function withTiming(toValue, userConfig, callback) {
       if (
         previousAnimation &&
         previousAnimation.type === 'timing' &&
-        previousAnimation.toValue === toValue
+        previousAnimation.toValue === toValue &&
+        previousAnimation.startTime
       ) {
         // to maintain continuity of timing animations we check if we are starting
         // new timing over the old one with the same parameters. If so, we want
@@ -109,7 +110,7 @@ export function withSpring(toValue, userConfig, callback) {
       restSpeedThreshold: 0.001,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function spring(animation, now) {
