@@ -1,5 +1,3 @@
-#pragma once
-
 #include "SharedParent.h"
 #include "MutableValue.h"
 #include "ShareableValue.h"

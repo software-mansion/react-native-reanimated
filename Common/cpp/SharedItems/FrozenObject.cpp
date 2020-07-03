@@ -1,5 +1,3 @@
-#pragma once
-
 #include "SharedParent.h"
 #include "FrozenObject.h"
 #include "ShareableValue.h"

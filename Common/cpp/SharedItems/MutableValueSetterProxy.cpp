@@ -1,5 +1,3 @@
-#pragma once
-
 #include <jsi/jsi.h>
 #include "SharedParent.h"
 #include "MutableValueSetterProxy.h"
