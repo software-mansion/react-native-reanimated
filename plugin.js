@@ -306,6 +306,7 @@ const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
   }
 });
 
+// plugin objects are created by babel internals and they don't carry any identifier
 function removePluginsFromBlacklist(plugins) {
   PLUGIN_BLACKLIST.forEach((blacklistedPlugin) => {
     if (!blacklistedPlugin) {
