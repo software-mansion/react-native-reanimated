@@ -354,6 +354,8 @@ module.exports = function ({ types: t }) {
         },
       },
     },
+    // In this way we can modify babel options 
+    // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
     manipulateOptions(opts, parserOpts) {
       const plugins = opts.plugins;
       removePluginsFromBlacklist(plugins);
