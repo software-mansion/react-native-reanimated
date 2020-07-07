@@ -2,6 +2,9 @@
 
 const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
+const { visitors } = require('@babel/traverse');
+const traverse = require('@babel/traverse').default;
+const parse = require('@babel/parser').parse;
 
 const functionHooks = new Set([
   'useAnimatedStyle',
@@ -96,14 +99,11 @@ function processWorkletFunction(t, fun) {
   const closure = new Map();
   const outputs = new Set();
 
-  const funScope = fun.scope;
+  // We use copy because some of the plugins don't update bindings and
+  // some even break them
+  const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
 
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
+  traverse(astWorkletCopy, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
       if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
@@ -129,12 +129,9 @@ function processWorkletFunction(t, fun) {
 
       let currentScope = path.scope;
 
-      while (true) {
+      while (currentScope != null) {
         if (currentScope.bindings[name] != null) {
           return;
-        }
-        if (currentScope === funScope) {
-          break;
         }
         currentScope = currentScope.parent;
       }
@@ -149,6 +146,14 @@ function processWorkletFunction(t, fun) {
         t.isIdentifier(left.property, { name: 'value' })
       ) {
         outputs.add(left.object.name);
+      }
+    },
+  });
+
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
       }
     },
   });
@@ -287,24 +292,66 @@ function processWorklets(t, path, processor) {
   }
 }
 
+const PLUGIN_BLACKLIST_NAMES = [
+  'metro-react-native-babel-preset/node_modules/@babel/plugin-transform-object-assign',
+];
+
+const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
+  try {
+    const blacklistedPluginObject = require(pluginName);
+    // All Babel polyfills use the declare method that's why we can create them like that.
+    // https://github.com/babel/babel/blob/main/packages/babel-helper-plugin-utils/src/index.js#L1
+    const blacklistedPlugin = blacklistedPluginObject.default({
+      assertVersion: (x) => true,
+    });
+
+    visitors.explode(blacklistedPlugin.visitor);
+    return blacklistedPlugin;
+  } catch (e) {
+    console.warn(`Plugin ${pluginName} couldn't be removed!`);
+  }
+});
+
+// plugin objects are created by babel internals and they don't carry any identifier
+function removePluginsFromBlacklist(plugins) {
+  PLUGIN_BLACKLIST.forEach((blacklistedPlugin) => {
+    if (!blacklistedPlugin) {
+      return;
+    }
+
+    let toRemove = [];
+    for (let i = 0; i < plugins.length; i++) {
+      if (
+        JSON.stringify(Object.keys(plugins[i].visitor)) !=
+        JSON.stringify(Object.keys(blacklistedPlugin.visitor))
+      ) {
+        continue;
+      }
+      let areEqual = true;
+      for (let key of Object.keys(blacklistedPlugin.visitor)) {
+        if (
+          blacklistedPlugin.visitor[key].toString() !=
+          plugins[i].visitor[key].toString()
+        ) {
+          areEqual = false;
+          break;
+        }
+      }
+
+      if (areEqual) {
+        toRemove.push(i);
+      }
+    }
+
+    toRemove.forEach((x) => plugins.splice(x, 1));
+  });
+}
+
 module.exports = function ({ types: t }) {
   return {
     visitor: {
       CallExpression: {
-        enter(path) {
-          if (path.get('callee').matchesPattern('Object.assign')) {
-            // @babel/plugin-transform-object-assign
-            path.node.callee.object.name = 'Object__DO_NOT_TRANSFORM';
-          }
-        },
         exit(path) {
-          if (
-            path.get('callee').matchesPattern('Object__DO_NOT_TRANSFORM.assign')
-          ) {
-            // @babel/plugin-transform-object-assign
-            path.node.callee.object.name = 'Object';
-          }
-
           processWorklets(t, path, processWorkletFunction);
         },
       },
@@ -313,6 +360,12 @@ module.exports = function ({ types: t }) {
           processIfWorkletNode(t, path);
         },
       },
+    },
+    // In this way we can modify babel options 
+    // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
+    manipulateOptions(opts, parserOpts) {
+      const plugins = opts.plugins;
+      removePluginsFromBlacklist(plugins);
     },
   };
 };
