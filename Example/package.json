@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "react-native start",
+    "start": "node ./scripts/generateIndex.js && react-native start",
+    "start-test": "node ./scripts/generateIndex.js --test && react-native start",
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
