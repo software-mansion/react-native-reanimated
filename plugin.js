@@ -94,7 +94,7 @@ function processWorkletFunction(t, fun) {
   const outputs = new Set();
 
   // We use copy because some of the plugins don't update bindings and
-  // some even brake them!
+  // some even break them
   const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
 
   traverse(astWorkletCopy, {
