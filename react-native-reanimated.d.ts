@@ -255,38 +255,8 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function proc<P1>(
-      cb: (p1: P1) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2>(
-      cb: (p1: P1, p2: P2) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3>(
-      cb: (p1: P1, p2: P2, p3: P3) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9, p10: P10) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc(
-      cb: (...params: Adaptable<number>[]) => AnimatedNode<number>
+    export function proc<A extends Adaptable[]>(
+      cb: (...args: A) => AnimatedNode<number>
     ): typeof cb;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
