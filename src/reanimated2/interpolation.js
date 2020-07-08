@@ -1,4 +1,5 @@
 import { Extrapolate } from '../derived/interpolate';
+import { destructColor } from './Colors';
 
 function internalInterpolate(x, l, r, ll, rr, type) {
   'worklet';
@@ -50,4 +51,25 @@ export function interpolate(x, input, output, type) {
     }
   }
   return internalInterpolate.apply({}, [x].concat(narrowedInput).concat(type));
+}
+
+export function interpolateColor(x, input, output, type) {
+  'worklet';
+
+  // Extrapolate.CLAMP is the default interpolation type for colors
+  type = type || Extrapolate.CLAMP;
+
+  const startColor = destructColor.apply({}, output[0]);
+  const endColor = destructColor.appy({}, output[1]);
+
+  if (startColor === undefined || endColor === undefined) {
+    return undefined;
+  }
+
+  const r = interpolate.apply({}, x, input, [startColor[0], endColor[0]], type);
+  const g = interpolate.apply({}, x, input, [startColor[1], endColor[1]], type);
+  const b = interpolate.apply({}, x, input, [startColor[2], endColor[2]], type);
+  const a = interpolate.apply({}, x, input, [startColor[3], endColor[3]], type);
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
 }

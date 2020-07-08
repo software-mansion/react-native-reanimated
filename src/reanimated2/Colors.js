@@ -386,6 +386,42 @@ function normalizeColor(color) {
   return null;
 }
 
+function red(color) {
+  'worklet';
+  return (color >> 24) & 255;
+}
+
+function green(color) {
+  'worklet';
+  return (color >> 16) & 255;
+}
+
+function blue(color) {
+  'worklet';
+  return (color >> 8) & 255;
+}
+
+function alpha(color) {
+  'worklet';
+  return (color & 255) / 255;
+}
+
+export function destructColor(color) {
+  'worklet';
+
+  const normalizedColor = normalizeColor(color);
+  if (normalizedColor === undefined || normalizedColor === null) {
+    return undefined;
+  }
+
+  const r = red(normalizedColor);
+  const g = green(normalizedColor);
+  const b = blue(normalizedColor);
+  const a = alpha(normalizedColor);
+
+  return [r, g, b, a];
+}
+
 export default function processColor(color) {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
