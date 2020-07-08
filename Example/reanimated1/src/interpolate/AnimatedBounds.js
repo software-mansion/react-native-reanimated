@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { EasingNode } from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Box from '../Box';
 import Row from '../Row';
@@ -12,18 +12,14 @@ const {
   eq,
   and,
   add,
-  multiply,
-  lessThan,
   startClock,
-  stopClock,
   clockRunning,
   block,
   timing,
   Value,
   Clock,
   event,
-  interpolate,
-  defined,
+  interpolateNode,
   Extrapolate,
 } = Animated;
 
@@ -39,7 +35,7 @@ const getAnimation = (min, max) => {
   const config = {
     duration: 500,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
+    easing: EasingNode.inOut(EasingNode.ease),
   };
 
   const reset = [
@@ -87,7 +83,7 @@ export default class AnimatedBounds extends Component {
       [set(prevDragX, 0), transX]
     );
 
-    this._transX = interpolate(this._transX, {
+    this._transX = interpolateNode(this._transX, {
       inputRange: [-100, 100],
       outputRange: [-100, 100],
       extrapolate: Extrapolate.CLAMP,
@@ -95,7 +91,7 @@ export default class AnimatedBounds extends Component {
 
     const min = getAnimation(-100, -50);
     const max = getAnimation(100, 50);
-    this._transXA = interpolate(this._transX, {
+    this._transXA = interpolateNode(this._transX, {
       inputRange: [-100, 100],
       outputRange: [min, max],
       extrapolate: Extrapolate.CLAMP,

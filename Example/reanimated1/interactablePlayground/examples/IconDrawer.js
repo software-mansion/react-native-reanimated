@@ -8,6 +8,7 @@ export default class IconDrawer extends Component {
     super(props);
     this._deltaX = new Animated.Value(0);
   }
+
   render() {
     return (
       <View style={styles.container}>
@@ -24,13 +25,13 @@ export default class IconDrawer extends Component {
               style={[
                 styles.button,
                 {
-                  opacity: Animated.interpolate(this._deltaX, {
+                  opacity: Animated.interpolateNode(this._deltaX, {
                     inputRange: [-230, -230, -180, -180],
                     outputRange: [1, 1, 0, 0],
                   }),
                   transform: [
                     {
-                      scale: Animated.interpolate(this._deltaX, {
+                      scale: Animated.interpolateNode(this._deltaX, {
                         inputRange: [-230, -230, -180, -180],
                         outputRange: [1, 1, 0.8, 0.8],
                       }),
@@ -43,13 +44,13 @@ export default class IconDrawer extends Component {
               style={[
                 styles.button,
                 {
-                  opacity: Animated.interpolate(this._deltaX, {
+                  opacity: Animated.interpolateNode(this._deltaX, {
                     inputRange: [-165, -165, -115, -115],
                     outputRange: [1, 1, 0, 0],
                   }),
                   transform: [
                     {
-                      scale: Animated.interpolate(this._deltaX, {
+                      scale: Animated.interpolateNode(this._deltaX, {
                         inputRange: [-165, -165, -115, -115],
                         outputRange: [1, 1, 0.8, 0.8],
                       }),
@@ -62,13 +63,13 @@ export default class IconDrawer extends Component {
               style={[
                 styles.button,
                 {
-                  opacity: Animated.interpolate(this._deltaX, {
+                  opacity: Animated.interpolateNode(this._deltaX, {
                     inputRange: [-100, -100, -50, -50],
                     outputRange: [1, 1, 0, 0],
                   }),
                   transform: [
                     {
-                      scale: Animated.interpolate(this._deltaX, {
+                      scale: Animated.interpolateNode(this._deltaX, {
                         inputRange: [-100, -100, -50, -50],
                         outputRange: [1, 1, 0.8, 0.8],
                       }),
@@ -97,6 +98,7 @@ export default class IconDrawer extends Component {
       </View>
     );
   }
+
   onDrawerSnap(event) {
     const snapPointId = event.nativeEvent.id;
     console.log(`drawer state is ${snapPointId}`);

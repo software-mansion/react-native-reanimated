@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import Animated, {Easing} from 'react-native-reanimated';
+import React, { Component } from 'react';
+import Animated, { EasingNode } from 'react-native-reanimated';
 import Box from '../Box';
 import Row from '../Row';
 
@@ -28,7 +28,7 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 500,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
+    easing: EasingNode.inOut(EasingNode.ease),
   };
 
   const reset = [
@@ -66,7 +66,7 @@ export default class InterpolateColorsExample extends Component {
   render() {
     return (
       <Row>
-        <Box style={{backgroundColor: this.color}} />
+        <Box style={{ backgroundColor: this.color }} />
       </Row>
     );
   }

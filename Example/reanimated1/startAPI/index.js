@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Button, StyleSheet, View, Alert } from 'react-native';
 
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { EasingNode } from 'react-native-reanimated';
 
 const { timing, spring, color, multiply, round, Value } = Animated;
 
@@ -21,7 +21,7 @@ export default class Example extends Component {
     this._config2 = {
       duration: 5000,
       toValue: 1,
-      easing: Easing.inOut(Easing.ease),
+      easing: EasingNode.inOut(EasingNode.ease),
     };
     this._anim2 = spring(this._transX, this._config);
     this._anim = timing(this._transX, this._config2);

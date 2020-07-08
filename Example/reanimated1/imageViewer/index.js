@@ -6,13 +6,7 @@ import {
   PinchGestureHandler,
 } from 'react-native-gesture-handler';
 
-import Animated, { Easing } from 'react-native-reanimated';
-
-// setInterval(() => {
-//   let iters = 1e8,
-//     sum = 0;
-//   while (iters-- > 0) sum += iters;
-// }, 300);
+import Animated, { EasingNode } from 'react-native-reanimated';
 
 const {
   set,
@@ -21,23 +15,16 @@ const {
   or,
   add,
   sub,
-  pow,
   min,
   max,
-  debug,
   multiply,
   divide,
   lessThan,
-  spring,
-  defined,
   decay,
   timing,
-  call,
   diff,
-  acc,
   not,
   abs,
-  block,
   startClock,
   stopClock,
   clockRunning,
@@ -118,7 +105,7 @@ function runTiming(clock, value, dest, startStopClock = true) {
   const config = {
     toValue: new Value(0),
     duration: 300,
-    easing: Easing.inOut(Easing.cubic),
+    easing: EasingNode.inOut(EasingNode.cubic),
   };
 
   return [
@@ -373,6 +360,7 @@ class Viewer extends Component {
       )
     );
   }
+
   render() {
     // The below two animated values makes it so that scale appears to be done
     // from the top left corner of the image view instead of its center. This
@@ -424,6 +412,7 @@ export default class Example extends Component {
   static navigationOptions = {
     title: 'Image Viewer Example',
   };
+
   render() {
     return (
       <View style={styles.container}>

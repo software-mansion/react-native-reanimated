@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import { StyleSheet, View, Image, Dimensions } from 'react-native';
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { EasingNode } from 'react-native-reanimated';
 import Interactable from '../../Interactable';
 
 const widthFactor = Dimensions.get('window').width / 375;
@@ -17,6 +17,7 @@ export default class ChatHeads extends Component {
     this._face1Scale = new Animated.Value(1);
     this._face2Scale = new Animated.Value(1);
   }
+
   render() {
     return (
       <View style={styles.container}>
@@ -168,7 +169,7 @@ export default class ChatHeads extends Component {
       Animated.timing(scaleValue, {
         toValue: 0,
         duration: 300,
-        easing: Easing.inOut(Easing.ease),
+        easing: EasingNode.inOut(EasingNode.ease),
       }).start();
     }
   }

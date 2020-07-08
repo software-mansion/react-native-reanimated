@@ -1,32 +1,15 @@
 import React, { Component } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Box from '../Box';
 import Row from '../Row';
 
-const {
-  set,
-  cond,
-  sub,
-  eq,
-  add,
-  multiply,
-  lessThan,
-  startClock,
-  stopClock,
-  clockRunning,
-  Value,
-  Clock,
-  event,
-  interpolate,
-  defined,
-} = Animated;
+const { set, cond, sub, eq, add, Value, event, interpolateNode } = Animated;
 
 export default class WithDrag extends Component {
   constructor(props) {
     super(props);
-    const TOSS_SEC = 0.2;
 
     const dragX = new Value(0);
     const state = new Value(-1);
@@ -47,11 +30,11 @@ export default class WithDrag extends Component {
       [set(prevDragX, 0), transX]
     );
 
-    this._transXA = interpolate(this._transX, {
+    this._transXA = interpolateNode(this._transX, {
       inputRange: [-120, 120],
       outputRange: [-100, 100],
     });
-    this._transXB = interpolate(this._transX, {
+    this._transXB = interpolateNode(this._transX, {
       inputRange: [-120, -60, 60, 120],
       outputRange: [-60, -10, 10, 60],
     });
@@ -78,8 +61,6 @@ export default class WithDrag extends Component {
     );
   }
 }
-
-const BOX_SIZE = 44;
 
 const styles = StyleSheet.create({
   container: {
