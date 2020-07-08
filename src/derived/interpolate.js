@@ -97,7 +97,7 @@ function checkValidNumbers(name, arr) {
 function convertToRadians(outputRange) {
   for (const [i, value] of outputRange.entries()) {
     if (typeof value === 'string' && value.endsWith('deg')) {
-      outputRange[i] = Number(value.slice(0, -3)) * (Math.PI / 180);
+      outputRange[i] = parseFloat(value) * (Math.PI / 180);
     }
   }
 }
