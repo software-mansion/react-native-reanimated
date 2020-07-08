@@ -234,8 +234,8 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function proc(
-      cb: (...args: Adaptable<any>[]) => AnimatedNode<number>
+    export function proc<A extends Adaptable[]>(
+      cb: (...args: A) => AnimatedNode<number>
     ): typeof cb;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
