@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node ./scripts/generateIndex.js && react-native start",
     "start-test": "node ./scripts/generateIndex.js --test && react-native start",
+    "generate": "node ./scripts/generateIndex.js",
+    "generate-test": "node ./scripts/generateIndex.js --test",
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
