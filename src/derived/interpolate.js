@@ -24,7 +24,11 @@ const interpolateInternalSingleProc = proc(function(
   const progress = divide(sub(value, inS), sub(inE, inS));
   // logic below was made in order to provide a compatibility witn an Animated API
   const resultForNonZeroRange = add(outS, multiply(progress, sub(outE, outS)));
-  const result = cond(eq(inS, inE), cond(lessOrEq(value, inS), outS, outE), resultForNonZeroRange);
+  const result = cond(
+    eq(inS, inE),
+    cond(lessOrEq(value, inS), outS, outE),
+    resultForNonZeroRange
+  );
   return result;
 });
 
@@ -79,7 +83,7 @@ function checkMinElements(name, arr) {
 function checkValidNumbers(name, arr) {
   for (let i = 0; i < arr.length; i++) {
     // We can't validate animated nodes in JS.
-    if (arr[i] instanceof AnimatedNode) continue;
+    if (arr[i] instanceof AnimatedNode || typeof arr[i] !== 'number') continue;
     invariant(
       Number.isFinite(arr[i]),
       '%s cannot include %s. (%s)',
@@ -87,6 +91,14 @@ function checkValidNumbers(name, arr) {
       arr[i],
       arr
     );
+  }
+}
+
+function convertToRadians(outputRange) {
+  for (const [i, value] of outputRange.entries()) {
+    if (typeof value === 'string' && value.endsWith('deg')) {
+      outputRange[i] = parseFloat(value) * (Math.PI / 180);
+    }
   }
 }
 
@@ -98,6 +110,7 @@ export default function interpolate(value, config) {
     extrapolateLeft,
     extrapolateRight,
   } = config;
+
   checkMinElements('inputRange', inputRange);
   checkValidNumbers('inputRange', inputRange);
   checkMinElements('outputRange', outputRange);
@@ -108,6 +121,7 @@ export default function interpolate(value, config) {
     'inputRange and outputRange must be the same length.'
   );
 
+  convertToRadians(outputRange);
   const left = extrapolateLeft || extrapolate;
   const right = extrapolateRight || extrapolate;
   let output = interpolateInternal(value, inputRange, outputRange);
