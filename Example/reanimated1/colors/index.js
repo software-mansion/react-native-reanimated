@@ -3,12 +3,6 @@ import { StyleSheet, View, Dimensions } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
-// setInterval(() => {
-//   let iters = 1e8,
-//     sum = 0;
-//   while (iters-- > 0) sum += iters;
-// }, 300);
-
 const {
   set,
   cond,
@@ -19,7 +13,7 @@ const {
   abs,
   modulo,
   round,
-  interpolate,
+  interpolateNode,
   divide,
   sub,
   color,
@@ -106,12 +100,12 @@ export default class Example extends Component {
       set(offsetY, add(offsetY, dragY))
     );
 
-    const h = interpolate(this._transX, {
+    const h = interpolateNode(this._transX, {
       inputRange: [0, PICKER_WIDTH],
       outputRange: [0, 360],
       extrapolate: 'clamp',
     });
-    const s = interpolate(this._transY, {
+    const s = interpolateNode(this._transY, {
       inputRange: [0, PICKER_HEIGHT],
       outputRange: [1, 0],
       extrapolate: 'clamp',
@@ -134,7 +128,8 @@ export default class Example extends Component {
               {
                 backgroundColor: this._color,
                 transform: [
-                  { translateX: this._transX }, { translateY: this._transY },
+                  { translateX: this._transX },
+                  { translateY: this._transY },
                 ],
               },
             ]}

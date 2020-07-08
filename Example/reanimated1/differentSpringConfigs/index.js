@@ -41,6 +41,7 @@ class Snappable extends Component {
     const clock = new Clock();
     this._transX = runSpring(clock, transX, props.config);
   }
+
   render() {
     const { children } = this.props;
     return (
