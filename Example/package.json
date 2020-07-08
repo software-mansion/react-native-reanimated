@@ -5,8 +5,10 @@
   "scripts": {
     "start": "node ./scripts/generateIndex.js && react-native start",
     "start-test": "node ./scripts/generateIndex.js --test && react-native start",
+    "start-test-suite": "node ./scripts/generateIndex.js --test-suite && react-native start",
     "generate": "node ./scripts/generateIndex.js",
     "generate-test": "node ./scripts/generateIndex.js --test",
+    "generate-test-suite": "node ./scripts/generateIndex.js --test-suite",
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web-only --web",
