@@ -15,7 +15,8 @@ const boxes = [
     title: <>Animate with more ease than ever before👍</>,
     description: (
       <>
-        Complexity reduced from tens to just a few methods. Try it out today: Check out our <a href="docs/about">Documentation</a>.
+        Complexity reduced from tens to just a few methods. Try it out today:
+        Check out our <a href="docs/next/about">Documentation</a>.
       </>
     ),
   },
@@ -23,21 +24,28 @@ const boxes = [
     title: <>Native Performance and Precise Animations</>,
     description: (
       <>
-        Declare your animations in JS, but have them run on the native thread! 🧙 The API affords new levels of precision and detailed control of your animations. 🕹
+        Declare your animations in JS, but have them run on the native thread!
+        🧙 The API affords new levels of precision and detailed control of your
+        animations. 🕹
       </>
-    )
-  }
+    ),
+  },
 ];
 
-const bannerTitle = "React Native Gesture Handler provides native-driven gesture management APIs for building best possible touch-based experiences in React Native.";
-const bannerDescription = "eact Native Reanimated provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.";
-const blogUrl = "https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3";
-const exampleUrl = "https://github.com/software-mansion/react-native-reanimated/tree/master/Example";
-const playgroundUrl = "https://github.com/software-mansion-labs/reanimated-2-playground";
-const tryItOutDecription = "Check out the documentation and learn how to quickly get up and running with Reanimated. Take a look at our API guides to familiarize with the API."
+const bannerTitle =
+  'React Native Gesture Handler provides native-driven gesture management APIs for building best possible touch-based experiences in React Native.';
+const bannerDescription =
+  'eact Native Reanimated provides a more comprehensive, low level abstraction for the Animated library API to be built on top of and hence allow for much greater flexibility especially when it comes to gesture based interactions.';
+const blogUrl =
+  'https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3';
+const exampleUrl =
+  'https://github.com/software-mansion/react-native-reanimated/tree/master/Example';
+const playgroundUrl =
+  'https://github.com/software-mansion-labs/reanimated-2-playground';
+const tryItOutDecription =
+  'Check out the documentation and learn how to quickly get up and running with Reanimated. Take a look at our API guides to familiarize with the API.';
 
-
-function InfoBox({title, description}) {
+function InfoBox({ title, description }) {
   return (
     <div className="col col--6 info-box">
       <h3>{title}</h3>
@@ -48,69 +56,65 @@ function InfoBox({title, description}) {
 
 function Hero() {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const { siteConfig = {} } = context;
 
   return (
     <header className={classnames('hero hero--secondary', styles.heroBanner)}>
-        <div className="container">
-          <div className="row row-hero">
-            <div className="col col--5 hero-content">
-              <h1 className="hero__title">{siteConfig.title}</h1>
-              <p className="hero__p">{siteConfig.tagline}</p>
-              <div className={classnames('hero-buttons', styles.buttons) }>
-                <Link
-                  className={classnames(
-                    'button button--primary button--lg',
-                    styles.getStarted,
-                  )}
-                  to={useBaseUrl('docs/')}>
-                  View Docs
-                </Link>
-                <Link
-                  className={classnames(
-                    'button button--primary button--lg',
-                    styles.getStarted,
-                  )}
-                  to={blogUrl}>
-                  Read Blog Post
-                </Link>
-              </div>
-            </div>
-            <div 
-              className="col col--7 hero-image"
-              style={{
-                backgroundImage: `url(${heroImageUrl})`
-              }}
-              >
+      <div className="container">
+        <div className="row row-hero">
+          <div className="col col--5 hero-content">
+            <h1 className="hero__title">{siteConfig.title}</h1>
+            <p className="hero__p">{siteConfig.tagline}</p>
+            <div className={classnames('hero-buttons', styles.buttons)}>
+              <Link
+                className={classnames(
+                  'button button--primary button--lg',
+                  styles.getStarted
+                )}
+                to={useBaseUrl('docs/next')}>
+                View Docs
+              </Link>
+              <Link
+                className={classnames(
+                  'button button--primary button--lg',
+                  styles.getStarted
+                )}
+                to={blogUrl}>
+                Read Blog Post
+              </Link>
             </div>
           </div>
+          <div
+            className="col col--7 hero-image"
+            style={{
+              backgroundImage: `url(${heroImageUrl})`,
+            }}></div>
         </div>
-      </header>
+      </div>
+    </header>
   );
 }
 function SectionImage() {
-  return(
-    <div 
+  return (
+    <div
       className="col col--4 section-image"
       style={{
         backgroundImage: `url(${sectionImageUrl})`,
-        backgroundSize: "contain",
-        backgroundPosition: "center center",
-        backgroundRepeat: "no-repeat",
-      }}
-      >
-    </div>
+        backgroundSize: 'contain',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+      }}></div>
   );
 }
 
 function SectionBoxes() {
-  return(
+  return (
     <div className="col col--8 section-boxes">
       {boxes && boxes.length > 0 && (
         <div className="row box-container">
-        {boxes.map((props, idx) => (
-          <InfoBox key={idx} {...props} />
-        ))}
+          {boxes.map((props, idx) => (
+            <InfoBox key={idx} {...props} />
+          ))}
         </div>
       )}
     </div>
@@ -118,30 +122,28 @@ function SectionBoxes() {
 }
 
 function BannerSection() {
-  return(
+  return (
     <section>
       <div className="container">
         <div className="row">
-        <div 
-          className="col col--4 section-image"
-          style={{
-            backgroundImage: `url(${sectionImageUrl})`,
-            backgroundSize: "contain",
-            backgroundPosition: "center center",
-            backgroundRepeat: "no-repeat",
-          }}
-          >
-        </div>
+          <div
+            className="col col--4 section-image"
+            style={{
+              backgroundImage: `url(${sectionImageUrl})`,
+              backgroundSize: 'contain',
+              backgroundPosition: 'center center',
+              backgroundRepeat: 'no-repeat',
+            }}></div>
           <div className="col col--8">
             <h1>{bannerTitle}</h1>
             <p className="hero__p">{bannerDescription}</p>
-            <div className={classnames('hero-buttons', styles.buttons) }>
+            <div className={classnames('hero-buttons', styles.buttons)}>
               <Link
                 className={classnames(
                   'button button--primary button--lg',
-                  styles.getStarted,
+                  styles.getStarted
                 )}
-                to={useBaseUrl('docs/installation')}>
+                to={useBaseUrl('docs/next/installation')}>
                 Getting Started Guide
               </Link>
             </div>
@@ -154,7 +156,7 @@ function BannerSection() {
 
 function Home() {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const { siteConfig = {} } = context;
 
   return (
     <Layout
@@ -182,11 +184,10 @@ function Home() {
                   <img src={screenshotUrl} alt="Reanimated screenshot" />
                 </div>
                 <div>
-                  
                   <Link
                     className={classnames(
                       'button button--primary button--lg',
-                      styles.getStarted,
+                      styles.getStarted
                     )}
                     to={exampleUrl}>
                     Example on GitHub
@@ -195,13 +196,18 @@ function Home() {
                   <Link
                     className={classnames(
                       'button button--primary button--lg',
-                      styles.getStarted,
+                      styles.getStarted
                     )}
                     to={playgroundUrl}>
                     Playground App
                   </Link>
                 </div>
-                <p>Or just go to <a href="docs/installation">Documentation page</a> to see how you can run it locally with React Native on both Android and iOS.</p>
+                <p>
+                  Or just go to{' '}
+                  <a href="docs/next/installation">Documentation page</a> to see
+                  how you can run it locally with React Native on both Android
+                  and iOS.
+                </p>
               </div>
             </div>
           </div>
