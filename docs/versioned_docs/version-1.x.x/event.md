@@ -10,6 +10,8 @@ This syntax allows for providing some post-processing for the event data that do
 [See example](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/src/PanRotateAndZoom/index.js)
 
 ```js
+import { event, set } from 'react-native-reanimated'
+
 this.onGestureEvent = event([
   {
     nativeEvent: {
