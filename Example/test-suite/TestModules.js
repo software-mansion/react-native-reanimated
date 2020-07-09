@@ -1,22 +1,9 @@
 'use strict';
 
-import { Platform } from '@unimodules/core';
-import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 import ExponentTest from './ExponentTest';
-import { isDeviceFarm } from './utils/Environment';
 
-function browserSupportsWebGL() {
-  try {
-    const canvas = document.createElement('canvas');
-    return (
-      !!window.WebGLRenderingContext &&
-      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-    );
-  } catch (e) {
-    return false;
-  }
-}
 
 function optionalRequire(requirer) {
   try {
@@ -27,17 +14,6 @@ function optionalRequire(requirer) {
   }
 }
 
-// Both Location and TaskManager test suites define tasks in TaskManager.
-// Since tasks can only be defined during initialization phase (not as a result
-// of calling some function when the application is running, but rather in global scope),
-// we need to trigger code execution of these modules here (not in `getTestModules`
-// which is called in one of the components).
-const LocationTestScreen = optionalRequire(() => require('./tests/Location'));
-const TaskManagerTestScreen = optionalRequire(() => require('./tests/TaskManager'));
-// I have a hunch that optionalRequire doesn't work when *not* in global scope
-// since I had to move Camera screen import here too to get rid of an error
-// caused by missing native module.
-const CameraTestScreen = optionalRequire(() => require('./tests/Camera'));
 
 // List of all modules for tests. Each file path must be statically present for
 // the packager to pick them all up.
@@ -49,18 +25,18 @@ export function getTestModules() {
 
   // Expo core modules should run everywhere
   modules.push(
-    require('./tests/Asset'),
+   /* require('./tests/Asset'),
     require('./tests/Constants'),
     require('./tests/FileSystem'),
     require('./tests/Font'),
     require('./tests/Permissions'),
     require('./tests/ImagePicker'),
-    optionalRequire(() => require('./tests/Image'))
+    optionalRequire(() => require('./tests/Image'))*/
   );
 
   // Universally tested APIs
   modules.push(
-    require('./tests/Random'),
+   /* require('./tests/Random'),
     require('./tests/Crypto'),
     require('./tests/KeepAwake'),
     require('./tests/Blur'),
@@ -70,28 +46,28 @@ export function getTestModules() {
     require('./tests/FirebaseCore'),
     require('./tests/FirebaseAnalytics'),
     require('./tests/FirebaseRecaptcha'),
-    optionalRequire(() => require('./tests/SQLite'))
+    optionalRequire(() => require('./tests/SQLite'))*/
   );
 
   if (Platform.OS === 'android') {
-    modules.push(require('./tests/JSC'));
+   // modules.push(require('./tests/JSC'));
   }
 
   if (global.DETOX) {
     modules.push(
-      require('./tests/Contacts'),
+    /*  require('./tests/Contacts'),
       require('./tests/Haptics'),
       require('./tests/Localization'),
       require('./tests/SecureStore'),
       require('./tests/SMS'),
       require('./tests/StoreReview'),
-      require('./tests/NewNotifications')
+      require('./tests/NewNotifications')*/
     );
     return modules;
   }
 
   if (Platform.OS === 'web') {
-    modules.push(
+   /* modules.push(
       require('./tests/Contacts'),
       // require('./tests/SVG'),
       require('./tests/Localization'),
@@ -105,11 +81,11 @@ export function getTestModules() {
     if (ExponentTest && !ExponentTest.isInCI) {
       // modules.push(optionalRequire(() => require('./tests/Speech')));
     }
-    return modules.filter(Boolean);
+    return modules.filter(Boolean);*/
   }
 
   modules.push(
-    optionalRequire(() => require('./tests/Application')),
+   /* optionalRequire(() => require('./tests/Application')),
     optionalRequire(() => require('./tests/AuthSession')),
     optionalRequire(() => require('./tests/Device')),
     optionalRequire(() => require('./tests/GLView')),
@@ -125,10 +101,10 @@ export function getTestModules() {
     optionalRequire(() => require('./tests/AdMobInterstitial')),
     optionalRequire(() => require('./tests/AdMobRewarded')),
     optionalRequire(() => require('./tests/FBBannerAd')),
-    optionalRequire(() => require('./tests/NewNotifications'))
+    optionalRequire(() => require('./tests/NewNotifications'))*/
   );
 
-  if (!isDeviceFarm()) {
+  /*if (!isDeviceFarm()) {
     // Times out sometimes
     modules.push(
       optionalRequire(() => require('./tests/AdMobPublisherBanner')),
@@ -170,6 +146,6 @@ export function getTestModules() {
   if (Constants.isDevice) {
     modules.push(optionalRequire(() => require('./tests/Cellular')));
     modules.push(optionalRequire(() => require('./tests/BarCodeScanner')));
-  }
+  }*/
   return modules.filter(Boolean);
 }

@@ -25,10 +25,11 @@
     "react-dom": "16.9.0",
     "react-native": "0.63.0",
     "react-native-gesture-handler": "^1.5.0",
+    "react-native-safe-area-context": "^3.0.7",
     "react-native-status-bar-height": "^2.4.0",
     "react-native-svg": "^12.1.0",
     "react-native-web": "^0.11.7",
-    "react-navigation": "4.0.3",
+    "react-navigation": "^4.4.0",
     "react-navigation-stack": "^1.7.3"
   },
   "devDependencies": {
@@ -40,7 +41,9 @@
     "babel-preset-expo": "^7.0.0",
     "eslint": "^6.5.1",
     "glob-to-regexp": "^0.4.0",
-    "jest": "^25.1.0",
+    "immutable": "^4.0.0-rc.12",
+    "jasmine-core": "^3.5.0",
+    "jest": "^24.9.0",
     "postinstall-postinstall": "^2.1.0",
     "react-test-renderer": "16.13.1"
   },

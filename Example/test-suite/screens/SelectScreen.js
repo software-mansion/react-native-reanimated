@@ -1,6 +1,5 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeArea } from 'react-native-safe-area-context';
 
 import { getTestModules } from '../TestModules';
@@ -16,25 +15,9 @@ function ListItem({ title, onPressItem, selected, id }) {
     <PlatformTouchable onPress={onPress}>
       <View style={styles.listItem}>
         <Text style={styles.label}>{title}</Text>
-        <MaterialCommunityIcons
-          color={selected ? Colors.tintColor : 'black'}
-          name={selected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-          size={24}
-        />
       </View>
     </PlatformTouchable>
   );
-}
-
-function createQueryString(tests) {
-  if (!Array.isArray(tests) || !tests.every(v => typeof v === 'string')) {
-    throw new Error(
-      `test-suite: Cannot create query string for runner. Expected array of strings, instead got: ${tests}`
-    );
-  }
-  const uniqueTests = [...new Set(tests)];
-  // Skip encoding or React Navigation will encode twice
-  return uniqueTests.join(' ');
 }
 
 export default class SelectScreen extends React.PureComponent {
@@ -67,40 +50,8 @@ export default class SelectScreen extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    Linking.removeEventListener('url', this._handleOpenURL);
+    
   }
-
-  checkLinking = incomingTests => {
-    // TODO(Bacon): bare-expo should pass a space-separated string.
-    const tests = incomingTests.split(',').map(v => v.trim());
-    const query = createQueryString(tests);
-    this.props.navigation.navigate('run', { tests: query });
-  };
-
-  _handleOpenURL = ({ url }) => {
-    url = url || '';
-    // TODO: Use Expo Linking library once parseURL is implemented for web
-    if (url.includes('/select/')) {
-      const selectedTests = url.split('/').pop();
-      if (selectedTests) {
-        this.checkLinking(selectedTests);
-        return;
-      }
-    }
-
-    if (url.includes('/all')) {
-      // Test all available modules
-      const query = createQueryString(getTestModules().map(m => m.name));
-
-      this.props.navigation.navigate('run', {
-        tests: query,
-      });
-      return;
-    }
-
-    // Application wasn't started from a deep link which we handle. So, we can load test modules.
-    this._loadTestModules();
-  };
 
   _loadTestModules = () => {
     this.setState({
@@ -109,13 +60,7 @@ export default class SelectScreen extends React.PureComponent {
   };
 
   componentDidMount() {
-    Linking.addEventListener('url', this._handleOpenURL);
-
-    Linking.getInitialURL()
-      .then(url => {
-        this._handleOpenURL({ url });
-      })
-      .catch(err => console.error('Failed to load initial URL', err));
+    this._loadTestModules();
   }
 
   _keyExtractor = ({ name }) => name;

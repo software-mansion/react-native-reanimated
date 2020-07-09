@@ -1,12 +1,10 @@
 'use strict';
 
-import { UnavailabilityError } from '@unimodules/core';
-
 import ExponentTest from './ExponentTest';
 
 export async function acceptPermissionsAndRunCommandAsync(fn) {
   if (!ExponentTest) {
-    return await fn();
+    return fn();
   }
 
   const results = await Promise.all([
@@ -28,11 +26,6 @@ export async function shouldSkipTestsRequiringPermissionsAsync() {
     return false;
   }
   return ExponentTest.shouldSkipTestsRequiringPermissionsAsync();
-}
-
-export async function expectMethodToBeUnavailableAsync(expect, method) {
-  const error = await expectMethodToThrowAsync(method);
-  expect(error instanceof UnavailabilityError).toBeTruthy();
 }
 
 export async function expectMethodToThrowAsync(method) {

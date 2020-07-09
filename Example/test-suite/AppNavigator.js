@@ -1,6 +1,5 @@
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator } from 'react-navigation';
 import * as React from 'react';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Colors from './constants/Colors';
 import SelectScreen from './screens/SelectScreen';
@@ -30,10 +29,6 @@ export default function AppNavigator(props) {
       screenOptions={{
         title: 'Tests',
         tabBarLabel: 'Tests',
-        tabBarIcon: ({ focused }) => {
-          const color = focused ? Colors.activeTintColor : Colors.inactiveTintColor;
-          return <MaterialCommunityIcons name="format-list-checks" size={27} color={color} />;
-        },
         transitionSpec,
         headerBackTitle: 'Select',
         headerTitleStyle: {
@@ -46,7 +41,7 @@ export default function AppNavigator(props) {
           boxShadow: '',
         },
       }}>
-      <Stack.Screen name="select" component={SelectScreen} options={{ title: 'Expo Test Suite' }} />
+      <Stack.Screen name="select" component={SelectScreen} options={{ title: 'Reanimated Test Suite' }} />
       <Stack.Screen name="run" component={RunTests} options={{ title: 'Test Runner' }} />
     </Stack.Navigator>
   );
