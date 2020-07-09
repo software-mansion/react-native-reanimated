@@ -97,9 +97,7 @@ export default class SelectScreen extends React.PureComponent {
     if (selected.length === 0) {
       Alert.alert('Cannot Run Tests', 'You must select at least one test to run.');
     } else {
-      const query = createQueryString([...selected]);
-
-      this.props.navigation.navigate('run', { tests: query });
+      this.props.navigation.navigate('run', { tests: [...selected]});
       this.setState({ selected: new Set() });
     }
   };

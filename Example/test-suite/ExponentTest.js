@@ -1,10 +1,9 @@
 import { NativeModules } from 'react-native';
-import getenv from 'getenv';
 
 // Used for bare android device farm builds
 const ExponentTest = (NativeModules && NativeModules.ExponentTest) || {
   get isInCI() {
-    return getenv.boolish('CI', false);
+    return false;
   },
   log: console.log,
   completed() {

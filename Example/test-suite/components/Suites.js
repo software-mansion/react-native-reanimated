@@ -1,6 +1,5 @@
-import Constants from 'expo-constants';
-import React from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+
+import React from 'react';import { FlatList, StyleSheet } from 'react-native';
 
 import DoneText from './DoneText';
 import SuiteResult from './SuiteResult';
@@ -47,7 +46,7 @@ export default function Suites({ suites, done, numFailed, results }) {
 const styles = StyleSheet.create({
   contentContainerStyle: {
     padding: 5,
-    paddingBottom: (Constants.statusBarHeight || 24) + 128,
+    paddingBottom: (24) + 128,
   },
   list: {
     flex: 1,
