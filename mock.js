@@ -90,11 +90,7 @@ const Reanimated = {
 
   Clock: NOOP,
   Node: NOOP,
-  Value: function () {
-    return {
-      setValue: NOOP,
-    };
-  },
+  Value: AnimatedValue,
 
   Extrapolate: {
     EXTEND: 'extend',
