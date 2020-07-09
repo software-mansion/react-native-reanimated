@@ -2,8 +2,6 @@
 
 import { Platform } from 'react-native';
 
-
-
 function optionalRequire(requirer) {
   try {
     return requirer();
@@ -20,131 +18,9 @@ export function getTestModules() {
   const modules = [
     // Sanity
     require('./tests/Basic'),
+    require('./tests/Pitagoras'),
   ];
 
-  // Expo core modules should run everywhere
-  modules.push(
-   /* require('./tests/Asset'),
-    require('./tests/Constants'),
-    require('./tests/FileSystem'),
-    require('./tests/Font'),
-    require('./tests/Permissions'),
-    require('./tests/ImagePicker'),
-    optionalRequire(() => require('./tests/Image'))*/
-  );
-
-  // Universally tested APIs
-  modules.push(
-   /* require('./tests/Random'),
-    require('./tests/Crypto'),
-    require('./tests/KeepAwake'),
-    require('./tests/Blur'),
-    require('./tests/LinearGradient'),
-    require('./tests/Facebook'),
-    require('./tests/HTML'),
-    require('./tests/FirebaseCore'),
-    require('./tests/FirebaseAnalytics'),
-    require('./tests/FirebaseRecaptcha'),
-    optionalRequire(() => require('./tests/SQLite'))*/
-  );
-
-  if (Platform.OS === 'android') {
-   // modules.push(require('./tests/JSC'));
-  }
-
-  if (global.DETOX) {
-    modules.push(
-    /*  require('./tests/Contacts'),
-      require('./tests/Haptics'),
-      require('./tests/Localization'),
-      require('./tests/SecureStore'),
-      require('./tests/SMS'),
-      require('./tests/StoreReview'),
-      require('./tests/NewNotifications')*/
-    );
-    return modules;
-  }
-
-  if (Platform.OS === 'web') {
-   /* modules.push(
-      require('./tests/Contacts'),
-      // require('./tests/SVG'),
-      require('./tests/Localization'),
-      optionalRequire(() => require('./tests/NewNotifications'))
-    );
-
-    if (browserSupportsWebGL()) {
-      modules.push(optionalRequire(() => require('./tests/GLView')));
-    }
-
-    if (ExponentTest && !ExponentTest.isInCI) {
-      // modules.push(optionalRequire(() => require('./tests/Speech')));
-    }
-    return modules.filter(Boolean);*/
-  }
-
-  modules.push(
-   /* optionalRequire(() => require('./tests/Application')),
-    optionalRequire(() => require('./tests/AuthSession')),
-    optionalRequire(() => require('./tests/Device')),
-    optionalRequire(() => require('./tests/GLView')),
-    optionalRequire(() => require('./tests/Haptics')),
-    optionalRequire(() => require('./tests/Localization')),
-    optionalRequire(() => require('./tests/Network')),
-    optionalRequire(() => require('./tests/SecureStore')),
-    optionalRequire(() => require('./tests/Segment')),
-    optionalRequire(() => require('./tests/Speech')),
-    optionalRequire(() => require('./tests/Recording')),
-    optionalRequire(() => require('./tests/ScreenOrientation')),
-    optionalRequire(() => require('./tests/Payments')),
-    optionalRequire(() => require('./tests/AdMobInterstitial')),
-    optionalRequire(() => require('./tests/AdMobRewarded')),
-    optionalRequire(() => require('./tests/FBBannerAd')),
-    optionalRequire(() => require('./tests/NewNotifications'))*/
-  );
-
-  /*if (!isDeviceFarm()) {
-    // Times out sometimes
-    modules.push(
-      optionalRequire(() => require('./tests/AdMobPublisherBanner')),
-      optionalRequire(() => require('./tests/AdMobBanner'))
-    );
-    // Invalid placementId in CI (all tests fail)
-    modules.push(optionalRequire(() => require('./tests/FBNativeAd')));
-    // Requires interaction (sign in popup)
-    modules.push(optionalRequire(() => require('./tests/GoogleSignIn')));
-    // Popup to request device's location which uses Google's location service
-    modules.push(LocationTestScreen);
-    // Fails to redirect because of malformed URL in published version with release channel parameter
-    modules.push(optionalRequire(() => require('./tests/Linking')));
-    // Has uncontrolled view controllers
-    modules.push(require('./tests/SMS'));
-    // Requires permission
-    modules.push(optionalRequire(() => require('./tests/Contacts')));
-    modules.push(optionalRequire(() => require('./tests/Calendar')));
-    modules.push(optionalRequire(() => require('./tests/CalendarReminders')));
-    modules.push(optionalRequire(() => require('./tests/MediaLibrary')));
-    modules.push(optionalRequire(() => require('./tests/Notifications')));
-
-    modules.push(optionalRequire(() => require('./tests/Battery')));
-    if (Constants.isDevice) {
-      modules.push(optionalRequire(() => require('./tests/Brightness')));
-    }
-    // Crashes app when mounting component
-    modules.push(optionalRequire(() => require('./tests/Video')));
-    // "sdkUnversionedTestSuite failed: java.lang.NullPointerException: Attempt to invoke interface method
-    // 'java.util.Map org.unimodules.interfaces.taskManager.TaskInterface.getOptions()' on a null object reference"
-    modules.push(TaskManagerTestScreen);
-    // Audio tests are flaky in CI due to asynchronous fetching of resources
-    modules.push(optionalRequire(() => require('./tests/Audio')));
-    // The Camera tests are flaky on iOS, i.e. they fail randomly
-    if (Constants.isDevice && Platform.OS === 'android') {
-      modules.push(CameraTestScreen);
-    }
-  }
-  if (Constants.isDevice) {
-    modules.push(optionalRequire(() => require('./tests/Cellular')));
-    modules.push(optionalRequire(() => require('./tests/BarCodeScanner')));
-  }*/
+  
   return modules.filter(Boolean);
 }

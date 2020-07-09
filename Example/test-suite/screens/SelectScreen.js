@@ -11,9 +11,13 @@ function ListItem({ title, onPressItem, selected, id }) {
     onPressItem(id);
   }
 
+  const backgroundColor = {
+    backgroundColor: selected ? "gray" : "white",
+  }
+
   return (
     <PlatformTouchable onPress={onPress}>
-      <View style={styles.listItem}>
+      <View style={[styles.listItem, backgroundColor]}>
         <Text style={styles.label}>{title}</Text>
       </View>
     </PlatformTouchable>
@@ -96,7 +100,7 @@ export default class SelectScreen extends React.PureComponent {
     const { selected } = this.state;
     if (selected.length === 0) {
       Alert.alert('Cannot Run Tests', 'You must select at least one test to run.');
-    } else {
+    } else {       
       this.props.navigation.navigate('run', { tests: [...selected]});
       this.setState({ selected: new Set() });
     }
