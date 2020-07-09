@@ -11,5 +11,8 @@ export function test(t) {
     t.it('2 + 2 is 4?', () => {
       t.expect(2 + 2).toBe(4);
     });
+    t.it('2 + 2 is 5?', () => {
+      t.expect(2 + 2).toBe(5);
+    });
   });
 }

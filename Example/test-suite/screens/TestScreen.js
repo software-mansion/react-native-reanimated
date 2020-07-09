@@ -4,7 +4,6 @@ import jasmineModule from 'jasmine-core/lib/jasmine-core/jasmine';
 import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
-import ExponentTest from '../ExponentTest';
 import { getTestModules } from '../TestModules';
 import Portal from '../components/Portal';
 import RunnerError from '../components/RunnerError';
@@ -120,8 +119,8 @@ export default class TestScreen extends React.Component {
         if (result.status === 'passed' || result.status === 'failed') {
           // Open log group if failed
           const grouping = result.status === 'passed' ? '---' : '+++';
-          if (ExponentTest && ExponentTest.log) {
-            ExponentTest.log(`${result.status === 'passed' ? 'PASS' : 'FAIL'} ${result.fullName}`);
+          if (console.log && console.log.log) {
+            console.log.log(`${result.status === 'passed' ? 'PASS' : 'FAIL'} ${result.fullName}`);
           }
           const emoji = result.status === 'passed' ? ':green_heart:' : ':broken_heart:';
           console.log(`${grouping} ${emoji} ${result.fullName}`);
@@ -130,8 +129,8 @@ export default class TestScreen extends React.Component {
           if (result.status === 'failed') {
             app._failures += `${grouping} ${result.fullName}\n`;
             result.failedExpectations.forEach(({ matcherName = 'NO_MATCHER', message }) => {
-              if (ExponentTest && ExponentTest.log) {
-                ExponentTest.log(`${matcherName}: ${message}`);
+              if (console.log && console.log.log) {
+                console.log.log(`${matcherName}: ${message}`);
               }
               console.log(`${matcherName}: ${message}`);
               app._results += `${matcherName}: ${message}\n`;
@@ -179,15 +178,6 @@ export default class TestScreen extends React.Component {
           console.log(jsonResult);
         }
 
-        if (ExponentTest) {
-          ExponentTest.completed(
-            JSON.stringify({
-              failed: failedSpecs.length,
-              failures: app._failures,
-              results: app._results,
-            })
-          );
-        }
       },
     };
   }

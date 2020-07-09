@@ -2,7 +2,6 @@
 
 import { Platform } from 'react-native';
 
-import ExponentTest from './ExponentTest';
 
 
 function optionalRequire(requirer) {
