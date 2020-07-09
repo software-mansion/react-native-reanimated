@@ -293,7 +293,7 @@ function processWorklets(t, path, processor) {
 }
 
 const PLUGIN_BLACKLIST_NAMES = [
-  'metro-react-native-babel-preset/node_modules/@babel/plugin-transform-object-assign',
+  '@babel/plugin-transform-object-assign',
 ];
 
 const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
@@ -319,7 +319,7 @@ function removePluginsFromBlacklist(plugins) {
       return;
     }
 
-    let toRemove = [];
+    const toRemove = [];
     for (let i = 0; i < plugins.length; i++) {
       if (
         JSON.stringify(Object.keys(plugins[i].visitor)) !=
@@ -328,7 +328,7 @@ function removePluginsFromBlacklist(plugins) {
         continue;
       }
       let areEqual = true;
-      for (let key of Object.keys(blacklistedPlugin.visitor)) {
+      for (const key of Object.keys(blacklistedPlugin.visitor)) {
         if (
           blacklistedPlugin.visitor[key].toString() !=
           plugins[i].visitor[key].toString()
