@@ -214,7 +214,7 @@ export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
 
   function onItemPress(imageRef, item, sv) {
-    imageRef.current.getNode().measure((x, y, width, height, pageX, pageY) => {
+    imageRef.current.measure((x, y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {
         return;
       }
