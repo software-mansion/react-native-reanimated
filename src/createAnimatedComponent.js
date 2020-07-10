@@ -231,11 +231,12 @@ export default function createAnimatedComponent(Component) {
         // TODO: Delete this after React Native also deletes this deprecation helper.
         if (ref != null && ref.getNode == null) {
           ref.getNode = () => {
-            console.warn(
-              '%s: Calling `getNode()` on the ref of an Animated component ' +
+           console.warn(
+              '%s: Calling %s on the ref of an Animated component ' +
                 'is no longer necessary. You can now directly use the ref ' +
                 'instead. This method will be removed in a future release.',
-              ref.constructor.name ?? '<<anonymous>>'
+              ref.constructor.name ?? '<<anonymous>>',
+              'getNode()'
             );
             return ref;
           };
