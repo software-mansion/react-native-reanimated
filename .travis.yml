@@ -8,8 +8,8 @@ jobs:
       jdk: openjdk8
       env:
         - NODE_VERSION=10.15.3
-        - ANDROID_API=28
-        - ANDROID_BUILD_TOOLS=28.0.3
+        - ANDROID_API=29
+        - ANDROID_BUILD_TOOLS=29.0.2
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
