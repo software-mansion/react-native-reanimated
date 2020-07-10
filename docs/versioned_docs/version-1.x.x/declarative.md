@@ -6,7 +6,7 @@ sidebar_label: Declarative Animation API
 
 Invoking animation differs from the way it is done when using the original `Animated` API.
 Here, instead of having animation objects we operate on nodes that can perform single animation steps.
-In order to map an animation into a value, we will make the value to be assigned to a node that among few other things will call into the animation step node. Check [`timing`](timing.html), [`decay`](decay.html) and [`spring`](spring.html) nodes documentation for some details about how animation step nodes can be configured.
+In order to map an animation into a value, we will make the value to be assigned to a node that among few other things will call into the animation step node. Check [`timing`](animations/timing.md), [`decay`](animations/decay.md) and [`spring`](animations/spring.md) nodes documentation for some details about how animation step nodes can be configured.
 
 The example below shows a component that renders:
 

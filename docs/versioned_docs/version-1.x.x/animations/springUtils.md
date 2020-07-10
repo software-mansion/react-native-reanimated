@@ -30,4 +30,4 @@ Transforms an object with `bounciness` and `speed` params into config expected b
 
 Transforms an object with `tension` and `friction` params into config expected by the `spring` node. `tension` and `friction` might be nodes or numbers.
 
-See an [Example of different configs](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/src/differentSpringConfigs/index.js).
+See an [Example of different configs](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/reanimated1/differentSpringConfigs/index.js).
