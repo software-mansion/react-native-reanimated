@@ -35,7 +35,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
   constructor(value, constant = false) {
     invariant(
       value !== null,
-      'you are trying to set null on animated value'
+      'you are trying to set null on Animated.Value'
     );
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
