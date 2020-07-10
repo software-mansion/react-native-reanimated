@@ -218,8 +218,21 @@ This makes it possible to use a single Shared Value but map that to a two View's
 
 ## Animation Modifiers
 
-## Callbacks and more
+On top of the animation helper customization, another way to control animations are so-called animation modifiers.
+Currently, Reanimated exposes two modifiers: [`delay`](api/delay) and [`loop`](api/loop).
+As the name suggest, the former modifies the provided animation such that it starts with a given delay, while the latter make the provided animation run back and forth.
+Modifiers take animation object with optional configuration as an input, and return a modified animation object.
+This makes it possible to wrap existing animation helpers (or custom helpers) or make a chain of modifiers when necessary.
+Please refer to the documentation of each of the helper methods to learn about the ways how they can be parameterized.
 
-## Animating non-style props
+To demonstrate `loop` modifier in action, we will recreate a wobble effect on the blue rectange from the previous demos.
+In order
 
-## Animating Shared Values vs `useAnimatedStyle` Animations
+
+
+## Animating Layout Properties
+
+
+
+## Animating Non-Style Properties
+
