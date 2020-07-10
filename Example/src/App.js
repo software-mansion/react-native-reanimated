@@ -156,4 +156,6 @@ const createApp = Platform.select({
   default: (input) => createAppContainer(input),
 });
 
-export default createApp(ExampleApp);
+//export default createApp(ExampleApp);
+
+export default DragAndSnapExample;
