@@ -87,6 +87,17 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
 
+  private NativeProxy mNativeProxy;
+
+  public void setNativeProxy(NativeProxy nativeProxy) {
+    mNativeProxy = nativeProxy;
+  }
+
+  public void onCatalystInstanceDestroy() {
+    mNativeProxy.onCatalystInstanceDestroy();
+    mNativeProxy = null;
+  }
+
   private final class NativeUpdateOperation {
     public int mViewTag;
     public WritableMap mNativeProps;

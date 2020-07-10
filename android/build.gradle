@@ -58,7 +58,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 def BOOST_VERSION = "1_63_0"
 def DOUBLE_CONVERSION_VERSION = "1.1.6"
-def FOLLY_VERSION = "2018.10.22.00"
+def FOLLY_VERSION = "2020.01.13.00"
 def GLOG_VERSION = "0.3.5"
 
 

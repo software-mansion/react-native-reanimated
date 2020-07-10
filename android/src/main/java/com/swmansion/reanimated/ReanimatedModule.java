@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import com.facebook.fbreact.specs.NativeWebSocketModuleSpec;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -228,4 +229,9 @@ public class ReanimatedModule extends ReactContextBaseJavaModule implements
     });
   }
 
+  @Override
+  public void onCatalystInstanceDestroy() {
+    super.onCatalystInstanceDestroy();
+    mNodesManager.onCatalystInstanceDestroy();
+  }
 }
