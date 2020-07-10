@@ -14,10 +14,8 @@ public class ReanimatedJSIModulePackage implements JSIModulePackage {
 
   @Override
   public List<JSIModuleSpec> getJSIModules(ReactApplicationContext reactApplicationContext, JavaScriptContextHolder jsContext) {
-    NativeProxy nativeProxy = new NativeProxy(reactApplicationContext);
-    nativeProxy.prepare();
     NodesManager nodesManager = reactApplicationContext.getNativeModule(ReanimatedModule.class).getNodesManager();
-    nodesManager.setNativeProxy(nativeProxy);
+    nodesManager.initWithContext(reactApplicationContext);
     return Arrays.<JSIModuleSpec>asList();
   }
 }

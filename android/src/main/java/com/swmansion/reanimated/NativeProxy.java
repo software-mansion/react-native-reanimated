@@ -75,6 +75,7 @@ public class NativeProxy {
   public NativeProxy(ReactApplicationContext context) {
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), new Scheduler(context));
     mContext = new WeakReference<>(context);
+    prepare();
   }
 
   private native HybridData initHybrid(long jsContext, Scheduler scheduler);
