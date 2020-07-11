@@ -105,6 +105,11 @@ declare module 'react-native-reanimated' {
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
+    export interface WithDecayConfig {
+      deceleration?: number;
+      velocity: number;
+      clamp?: [number, number];
+    }
     export interface BackwardCompatibleWrapper {
       start: (callback?: (data: { finished: boolean }) => any) => void;
       stop: () => void;
@@ -403,6 +408,10 @@ declare module 'react-native-reanimated' {
       userConfig?: Omit<SpringConfig, 'toValue'>,
       callback?: (isCancelled: boolean) => void,
     ): number;
+    export function withDecay(
+      userConfig: WithDecayConfig,
+      callback?: (isCancelled: boolean) => void
+    ): number;
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
         sharedValue: T
     ): void;
@@ -615,6 +624,7 @@ declare module 'react-native-reanimated' {
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
+  export const withDecay: typeof Animated.withDecay
   export const cancelAnimation: typeof Animated.cancelAnimation
   export const delay: typeof Animated.delay
   export const loop: typeof Animated.loop

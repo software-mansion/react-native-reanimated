@@ -14,6 +14,7 @@ import Animated, {
   cancelAnimation,
   delay,
   loop,
+  withDecay,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -254,6 +255,42 @@ function LoopTest() {
       ],
     };
   });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+// withDecay
+function WithDecayTest() {
+  const x = useSharedValue(0);
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = x.value;
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (evt) => {
+      x.value = withDecay({
+        velocity: evt.velocityX,
+        clamp: [0, 200], // optionally define boundaries for the animation
+      });
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+
   return (
     <PanGestureHandler onGestureEvent={gestureHandler}>
       <Animated.View style={[styles.box, animatedStyle]} />
