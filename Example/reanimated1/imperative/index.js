@@ -9,6 +9,7 @@ export default class Example extends Component {
   state = {
     visible: true,
   };
+
   _transX = new Value(0);
   _toggleVisibility = () => this.setState(prev => ({ visible: !prev.visible }));
   render() {

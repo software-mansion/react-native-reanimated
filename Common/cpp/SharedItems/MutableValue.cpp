@@ -8,11 +8,19 @@ namespace reanimated {
 void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
   std::lock_guard<std::mutex> lock(readWriteMutex);
   value = ShareableValue::adapt(rt, newValue, module);
-  module->scheduler->scheduleOnUI([this] {
+  auto notifyListeners = [this] () {
     for (auto listener : listeners) {
       listener.second();
     }
-  });
+  };
+  
+  if (module->isUIRuntime(rt)) {
+    notifyListeners();
+  } else {
+    module->scheduler->scheduleOnUI([notifyListeners] {
+      notifyListeners();
+    });
+  } 
 }
 
 jsi::Value MutableValue::getValue(jsi::Runtime &rt) {

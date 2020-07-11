@@ -9,6 +9,8 @@ import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
 
+const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
+
 const NODE_MAPPING = new Map();
 
 function listener(data) {
@@ -54,10 +56,6 @@ export default function createAnimatedComponent(Component) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
-    }
-
-    setNativeProps(props) {
-      this._component.setNativeProps(props);
     }
 
     componentDidMount() {
@@ -223,11 +221,28 @@ export default function createAnimatedComponent(Component) {
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
     }
 
-    _setComponentRef = c => {
-      if (c !== this._component) {
-        this._component = c;
-      }
-    };
+    _setComponentRef = setAndForwardRef({
+      getForwardedRef: () => this.props.forwardedRef,
+      setLocalRef: ref => {
+        if (ref !== this._component) {
+          this._component = ref;
+        }
+
+        // TODO: Delete this after React Native also deletes this deprecation helper.
+        if (ref != null && ref.getNode == null) {
+          ref.getNode = () => {
+           console.warn(
+              '%s: Calling %s on the ref of an Animated component ' +
+                'is no longer necessary. You can now directly use the ref ' +
+                'instead. This method will be removed in a future release.',
+              ref.constructor.name ?? '<<anonymous>>',
+              'getNode()'
+            );
+            return ref;
+          };
+        }
+      },
+    });
 
     _filterNonAnimatedStyle(inputStyle) {
       const style = {};
@@ -292,15 +307,18 @@ export default function createAnimatedComponent(Component) {
         <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
-
-    // A third party library can use getNode()
-    // to get the node reference of the decorated component
-    getNode() {
-      return this._component;
-    }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName || Component.name || 'Component'})`
+  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
+    Component.name ||
+    'Component'})`;
 
-  return AnimatedComponent;
+  return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
+    return (
+      <AnimatedComponent
+        {...props}
+        {...(ref == null ? null : { forwardedRef: ref })}
+      />
+    );
+  });
 }

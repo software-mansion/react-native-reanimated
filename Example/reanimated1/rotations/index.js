@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import Animated, { Easing } from 'react-native-reanimated';
+import Animated, { EasingNode } from 'react-native-reanimated';
 
 const {
   set,
@@ -29,7 +29,7 @@ function runTiming(clock, value, dest) {
   const config = {
     duration: 5000,
     toValue: new Value(0),
-    easing: Easing.inOut(Easing.ease),
+    easing: EasingNode.inOut(EasingNode.ease),
   };
 
   return block([
