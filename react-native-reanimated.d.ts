@@ -136,6 +136,9 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
     }
+    export interface WithSpringConfig extends Omit<SpringConfig, 'toValue'> {
+      velocity: number
+    }
 
     interface SpringConfigWithOrigamiTensionAndFriction {
       tension: Adaptable<number>;
@@ -405,7 +408,7 @@ declare module 'react-native-reanimated' {
     ): number;
     export function withSpring(
       toValue: number,
-      userConfig?: Omit<SpringConfig, 'toValue'>,
+      userConfig?: WithSpringConfig,
       callback?: (isCancelled: boolean) => void,
     ): number;
     export function withDecay(
