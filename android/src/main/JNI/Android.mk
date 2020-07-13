@@ -24,8 +24,8 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
 
 LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
 
-LOCAL_STATIC_LIBRARIES := libjsi libfolly_json
-LOCAL_SHARED_LIBRARIES := libreactnativejni libhermes libfbjni
+LOCAL_STATIC_LIBRARIES := libjsi libfolly_json libfbjni libreactnativejni
+LOCAL_SHARED_LIBRARIES := libhermes
 
 include $(BUILD_SHARED_LIBRARY)
 
