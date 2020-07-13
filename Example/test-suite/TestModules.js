@@ -19,6 +19,7 @@ export function getTestModules() {
     // Sanity
     require('./tests/Basic'),
     require('./tests/Pitagoras'),
+    require('./tests/AttachComponent'),
   ];
 
   

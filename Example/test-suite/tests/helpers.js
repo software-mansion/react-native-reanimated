@@ -27,6 +27,17 @@ export const retryForStatus = (object, status) =>
     { retries: 5, minTimeout: 100 }
   );
 
+
+export const mount = (
+    child: React.Node,
+    setPortalChild: React.Node => void
+  ) =>
+    new Promise(resolve => {
+      const clonedChild = React.cloneElement(child);
+      setPortalChild(clonedChild);
+      resolve(clonedChild)
+    });
+
 export const mountAndWaitFor = (
   child: React.Node,
   propName = 'ref',
