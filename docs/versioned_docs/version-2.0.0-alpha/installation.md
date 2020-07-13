@@ -177,7 +177,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
- _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+ _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self jsInvoker:bridge.jsCallInvoker];
  __weak __typeof(self) weakSelf = self;
  return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
    if (!bridge) {
@@ -236,7 +236,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 ```objectivec
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self jsInvoker:bridge.jsCallInvoker];
 
   #if RCT_DEV
     [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add

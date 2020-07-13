@@ -54,7 +54,7 @@
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self jsInvoker:bridge.jsCallInvoker];
 
   #if RCT_DEV
     [_turboModuleManager moduleForName:"RCTDevMenu"];
