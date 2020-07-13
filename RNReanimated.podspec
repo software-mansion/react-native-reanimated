@@ -2,7 +2,13 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "react-native", "package.json")))["version"]
+reactVersion = '0.0.0'
+
+begin
+  reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "react-native", "package.json")))["version"]
+rescue
+  reactVersion = '0.63.2'
+end
 
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
@@ -67,7 +73,7 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  if reactVersion.match(/^0.62/)
+  if reactVersion.match(/^0.62/) 
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'
