@@ -66,7 +66,7 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  s.dependency 'Folly', folly_version
+  s.dependency 'Folly'
 
 end
 

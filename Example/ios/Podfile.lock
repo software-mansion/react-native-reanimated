@@ -272,7 +272,7 @@ PODS:
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
-    - Folly (= 2020.01.13.00)
+    - Folly
     - glog
     - RCTRequired
     - RCTTypeSafety
@@ -435,7 +435,7 @@ SPEC CHECKSUMS:
   ReactCommon: f63556ee9e41e9802257228237e5e660451a03cf
   RNCMaskedView: 76c40a1d41c3e2535df09246a2b5487f04de0814
   RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
-  RNReanimated: 09ba03a080b07acebe4361dbfe4f03e9bf55862e
+  RNReanimated: fd2b6fed9a0ea500e8cf223fc6b13ccd9ff631a6
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 7d2edc5b410474191962e6dee88ee67f9b328b6b
 
