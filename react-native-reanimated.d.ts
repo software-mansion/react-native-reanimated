@@ -107,7 +107,7 @@ declare module 'react-native-reanimated' {
     }
     export interface WithDecayConfig {
       deceleration?: number;
-      velocity: number;
+      velocity?: number;
       clamp?: [number, number];
     }
     export interface BackwardCompatibleWrapper {
