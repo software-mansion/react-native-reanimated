@@ -12,41 +12,10 @@ import java.util.List;
 
 public class ReanimatedJSIModulePackage implements JSIModulePackage {
 
-  private static class NativeProxyProvider implements JSIModuleProvider<NativeProxy> {
-
-    private final ReactApplicationContext mContext;
-
-    private NativeProxyProvider(ReactApplicationContext context) {
-      mContext = context;
-    }
-
-    @Override
-    public NativeProxy get() {
-      return new NativeProxy(mContext);
-    }
-  }
-
-  private static class ModuleSpec implements JSIModuleSpec<NativeProxy> {
-
-    private final ReactApplicationContext mContext;
-
-    private ModuleSpec(ReactApplicationContext context) {
-      mContext = context;
-    }
-
-    @Override
-    public JSIModuleType getJSIModuleType() {
-      return JSIModuleType.TurboModuleManager;
-    }
-
-    @Override
-    public JSIModuleProvider getJSIModuleProvider() {
-      return new NativeProxyProvider(mContext);
-    }
-  }
-
   @Override
   public List<JSIModuleSpec> getJSIModules(ReactApplicationContext reactApplicationContext, JavaScriptContextHolder jsContext) {
-    return Arrays.<JSIModuleSpec>asList(new ModuleSpec(reactApplicationContext));
+    NodesManager nodesManager = reactApplicationContext.getNativeModule(ReanimatedModule.class).getNodesManager();
+    nodesManager.initWithContext(reactApplicationContext);
+    return Arrays.<JSIModuleSpec>asList();
   }
 }
