@@ -330,18 +330,8 @@ export function delay(delayMs, _nextAnimation) {
   });
 }
 
-export function sequence(
-  firstAnimationOrArray,
-  secondAnimation = undefined,
-  thirdAnimation = undefined
-) {
+export function sequence(..._animations) {
   'worklet';
-  let _animations = firstAnimationOrArray;
-  if (!Array.isArray(_animations)) {
-    _animations = [firstAnimationOrArray];
-    secondAnimation && _animations.push(secondAnimation);
-    thirdAnimation && _animations.push(thirdAnimation);
-  }
   return defineAnimation(_animations[0], () => {
     'worklet';
     const animations = _animations.map(a =>
@@ -380,7 +370,7 @@ export function sequence(
   });
 }
 
-export function loop(_nextAnimation, numberOfLoops = 2, reverse = false) {
+export function repeat(_nextAnimation, numberOfReps = 2, reverse = false) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -388,12 +378,12 @@ export function loop(_nextAnimation, numberOfLoops = 2, reverse = false) {
     const nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
-    function loop(animation, now) {
+    function repeat(animation, now) {
       const finished = nextAnimation.animation(nextAnimation, now);
       animation.current = nextAnimation.current;
       if (finished) {
-        animation.loops += 1;
-        if (numberOfLoops > 0 && animation.loops >= numberOfLoops) {
+        animation.reps += 1;
+        if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
         }
 
@@ -412,15 +402,22 @@ export function loop(_nextAnimation, numberOfLoops = 2, reverse = false) {
 
     function start(animation, value, now, previousAnimation) {
       animation.startValue = value;
-      animation.loops = 0;
+      animation.reps = 0;
       nextAnimation.start(nextAnimation, value, now, previousAnimation);
     }
 
     return {
-      animation: loop,
+      animation: repeat,
       start,
-      loops: 0,
+      reps: 0,
       current: nextAnimation.current,
     };
   });
+}
+
+/* Deprecated, kept for backward compatibility. Will be removed soon */
+export function loop(nextAnimation, numberOfLoops = 1) {
+  'worklet';
+  console.warn('Method `loop` is deprecated. Please use `repeat` instead');
+  return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
 }
