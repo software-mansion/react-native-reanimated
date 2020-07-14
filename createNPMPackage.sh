@@ -9,6 +9,7 @@ rm -rf android/build/outputs/aar/*.aar
 cd android 
 gradle clean
 cd $ROOT
+yarn add react-native --dev
 
 # PART I (add latest aar to  android-npm)
 
@@ -46,11 +47,11 @@ yarn add react-native --dev
 mv android android-temp
 mv android-npm android
 
-# PART II (create package)
+# PART VI (create package)
 
 npm pack
 
-# PART III (clean)
+# PART VII (clean)
 
 mv android android-npm
 mv android-temp android
