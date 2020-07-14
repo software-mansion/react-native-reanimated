@@ -4,12 +4,14 @@
 
 IOSErrorHandler::IOSErrorHandler(std::shared_ptr<Scheduler> scheduler) {
     this->scheduler = scheduler;
+    error = std::make_shared<ErrorWrapper>();
 }
 
-void IOSErrorHandler::raiseSpec(const char *message) {
-    this->error = std::make_shared<ErrorWrapper>();
-    this->error->message = message;
-    RCTLogError(@(message));
+void IOSErrorHandler::raiseSpec() {
+    if (error->handled) {
+        return;
+    }
+    RCTLogError(@(error->message.c_str()));
     this->error->handled = true;
 }
 
@@ -21,8 +23,9 @@ std::shared_ptr<ErrorWrapper> IOSErrorHandler::getError() {
     return this->error;
 }
 
-void IOSErrorHandler::handleError() {
-    if (this->error != nullptr) {
-        this->error->handled = true;
-    }
+void IOSErrorHandler::setError(const char *message) {
+  if (error->handled) {
+    error->message = message;
+    error->handled = false;
+  }
 }

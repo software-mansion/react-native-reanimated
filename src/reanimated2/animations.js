@@ -33,6 +33,7 @@ export function cancelAnimation(value) {
 
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
+  toValue = (typeof toValue === 'object' && toValue.value) ? toValue.value : toValue
   return defineAnimation(toValue, () => {
     'worklet';
     const config = {
@@ -95,6 +96,7 @@ export function withTiming(toValue, userConfig, callback) {
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
+  toValue = (typeof toValue === 'object' && toValue.value) ? toValue.value : toValue
   return defineAnimation(toValue, () => {
     'worklet';
 
@@ -210,6 +212,7 @@ export function withSpring(toValue, userConfig, callback) {
 }
 
 export function withDecay(userConfig, callback) {
+  toValue = (typeof toValue === 'object' && toValue.value) ? toValue.value : toValue
   'worklet';
   return defineAnimation(0, () => {
     'worklet';
