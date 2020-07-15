@@ -161,5 +161,4 @@ const createApp = Platform.select({
   default: input => createAppContainer(input),
 });
 
-// export default AnimatedStyleUpdateExample;
 export default createApp(ExampleApp);
