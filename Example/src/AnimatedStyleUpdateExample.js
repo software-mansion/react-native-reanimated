@@ -17,7 +17,7 @@ export default function AnimatedStyleUpdateExample(props) {
 
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(randomWidth.value, config),
+      width: randomWidth.value, // withTiming(randomWidth.value, config),
     };
   });
 
@@ -36,7 +36,7 @@ export default function AnimatedStyleUpdateExample(props) {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
+          randomWidth.value = withTiming(Math.random() * 350, config);
         }}
       />
     </View>

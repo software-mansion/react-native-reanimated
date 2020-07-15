@@ -15,12 +15,16 @@ Object.keys(ReactNativeStyleAttributes).forEach((key) => {
 
 const ColorProperties = makeShareable(LocalColorProperties);
 
-export default function updateProps(viewTag, updates) {
+export default function updateProps(viewTag, updates, maybeViewRef) {
   'worklet';
   Object.keys(updates).forEach((key) => {
     if (ColorProperties[key]) {
       updates[key] = processColor(updates[key]);
     }
   });
-  _updateProps(viewTag, updates);
+
+  const updatePropsInternal =
+    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+
+  updatePropsInternal(viewTag, updates, maybeViewRef);
 }

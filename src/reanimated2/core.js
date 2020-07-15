@@ -19,6 +19,7 @@ export function makeShareable(value) {
 
 function workletValueSetter(value) {
   'worklet';
+  console.log('Setter');
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
@@ -48,12 +49,12 @@ function workletValueSetter(value) {
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
-        requestAnimationFrame(step);
+        requestAnimationFrame_Reanimated(step);
       }
     };
 
     this._animation = animation;
-    requestAnimationFrame(step);
+    requestAnimationFrame_Reanimated(step);
   } else {
     this._value = value;
   }
