@@ -58,20 +58,17 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
                                                std::unique_ptr<jsi::Runtime> rt,
-                                               std::function<void(std::function<void(double)>)> requestRender,
-                                               std::function<void(jsi::Runtime &, int, const jsi::Object &)> propUpdater,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
-                                               ScrollToFunction scrollToFunction,
-                                               MeasuringFunction measuringFunction) : NativeReanimatedModuleSpec(jsInvoker),
-                                                                                      runtime(std::move(rt)),
-                                                                                      mapperRegistry(new MapperRegistry()),
-                                                                                      eventHandlerRegistry(new EventHandlerRegistry()),
-                                                                                      requestRender(requestRender),
-                                                                                      propObtainer(propObtainer),
-                                                                                      errorHandler(errorHandler),
-                                                                                      workletsCache(new WorkletsCache()),
-                                                                                      scheduler(scheduler)
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
+                                                  runtime(std::move(rt)),
+                                                  mapperRegistry(new MapperRegistry()),
+                                                  eventHandlerRegistry(new EventHandlerRegistry()),
+                                                  propObtainer(propObtainer),
+                                                  requestRender(platformDepMethodsHolder.requestRender),
+                                                  errorHandler(errorHandler),
+                                                  workletsCache(new WorkletsCache()),
+                                                  scheduler(scheduler)
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
@@ -79,10 +76,10 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
   };
 
   RuntimeDecorator::addNativeObjects(*runtime,
-                                     propUpdater,
+                                     platformDepMethodsHolder.updaterFunction,
                                      requestAnimationFrame,
-                                     scrollToFunction,
-                                     measuringFunction);
+                                     platformDepMethodsHolder.scrollToFunction,
+                                     platformDepMethodsHolder.measuringFunction);
 }
 
 bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
