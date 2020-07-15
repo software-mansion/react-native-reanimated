@@ -13,6 +13,7 @@
 #include "NativeReanimatedModule.h"
 #include "AndroidScheduler.h"
 #include <android/log.h>
+#include "PlatformDepMethodsHolder.h"
 
 using namespace facebook;
 using namespace react;
@@ -60,14 +61,18 @@ void NativeProxy::installJSIBindings() {
 
   std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
 
+  PlatformDepMethodsHolder platformDepMethodsHolder = {
+    requestRender,
+    propUpdater,
+    scrollToFunction,
+    measuringFunction
+  };
+
   auto module = std::make_shared<NativeReanimatedModule>(nullptr,
                                                          scheduler_,
                                                          std::move(animatedRuntime),
-                                                         requestRender,
-                                                         propUpdater,
                                                          errorHandler,
-                                                         scrollToFunction,
-                                                         measuringFunction);
+                                                         platformDepMethodsHolder);
 
   this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
     module->onEvent(eventName, eventAsString);
