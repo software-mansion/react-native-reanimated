@@ -30,6 +30,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
                            std::function<void(std::function<void(double)>)> requestRender,
                            std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
                            std::shared_ptr<ErrorHandler> errorHandler);
+                           std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer);
     virtual ~NativeReanimatedModule();
 
     void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) override;
@@ -43,6 +44,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
     jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) override;
     void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
+
+    jsi::Value getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) override;
 
     void onRender(double timestampMs);
     void onEvent(std::string eventName, std::string eventAsString);
@@ -60,6 +63,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::shared_ptr<jsi::Value> dummyEvent;
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
+    std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer;
   public:
   std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;

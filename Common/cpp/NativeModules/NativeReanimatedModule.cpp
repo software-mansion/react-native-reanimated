@@ -54,12 +54,14 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::function<void(std::function<void(double)>)> requestRender,
                                                std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
                                                std::shared_ptr<ErrorHandler> errorHandler):
+                                               std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer):
 NativeReanimatedModuleSpec(jsInvoker),
 runtime(std::move(rt)),
 mapperRegistry(new MapperRegistry()),
 eventHandlerRegistry(new EventHandlerRegistry()),
 requestRender(requestRender),
 errorHandler(errorHandler),
+propObtainer(propObtainer),
 workletsCache(new WorkletsCache()),
 scheduler(scheduler) {
   RuntimeDecorator::addNativeObjects(*runtime, propUpdater, [=](FrameCallback callback) {
@@ -138,6 +140,29 @@ void NativeReanimatedModule::unregisterEventHandler(jsi::Runtime &rt, const jsi:
   scheduler->scheduleOnUI([=] {
     eventHandlerRegistry->unregisterEventHandler(id);
   });
+}
+
+
+jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) {
+
+    const int viewTagInt = (int)viewTag.asNumber();
+    std::string propNameStr = propName.asString(rt).utf8(rt);
+    jsi::Function fun = callback.getObject(rt).asFunction(rt);
+    std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+    
+    scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
+      const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);
+      jsi::Value result = std::move(propObtainer(rt, viewTagInt, propNameValue));
+      std::string resultStr = result.asString(rt).utf8(rt);
+
+      scheduler->scheduleOnJS([&rt, resultStr, funPtr] () {
+        const jsi::String resultValue = jsi::String::createFromUtf8(rt, resultStr);
+        funPtr->call(rt, resultValue);
+      });
+
+    });
+     
+    return jsi::Value::undefined();
 }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {

@@ -33,7 +33,8 @@
     "react-native-status-bar-height": "^2.4.0",
     "react-native-svg": "^12.1.0",
     "react-native-web": "^0.11.7",
-    "react-navigation": "^4.4.0"
+    "react-navigation": "^4.4.0",
+    "react-navigation-stack": "^2.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
