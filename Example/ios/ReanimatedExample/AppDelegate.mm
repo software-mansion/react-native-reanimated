@@ -16,6 +16,7 @@
 #import <React/RCTDataRequestHandler.h>
 #import <React/RCTFileRequestHandler.h>
 #import <RNReanimated/RETurboModuleProvider.h>
+#import <RNReanimated/REAModule.h>
 
 @interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate>{
   RCTTurboModuleManager *_turboModuleManager;
@@ -28,8 +29,8 @@
 {
   RCTEnableTurboModule(YES);
 
-  _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"ReanimatedExample"
                                             initialProperties:nil];
 
@@ -54,6 +55,7 @@
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
+   _bridge_reanimated = bridge;
    _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
                                                               delegate:self
                                                              jsInvoker:bridge.jsCallInvoker];
