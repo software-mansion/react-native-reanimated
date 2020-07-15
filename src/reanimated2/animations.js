@@ -344,7 +344,6 @@ export function sequence(..._animations) {
       const finished = currentAnim.animation(currentAnim, now);
       animation.current = currentAnim.current;
       if (finished) {
-        const finalValue = currentAnim.current;
         animation.animationIndex += 1;
         if (animation.animationIndex < animations.length) {
           const nextAnim = animations[animation.animationIndex];
