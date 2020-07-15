@@ -41,7 +41,7 @@ export function withTiming(toValue, userConfig, callback) {
       easing: Easing.inOut(Easing.quad),
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
     }
 
     function timing(animation, now) {
@@ -50,6 +50,8 @@ export function withTiming(toValue, userConfig, callback) {
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
+        // reset startTime to avoid reusing finished animation config in `start` method
+        animation.startTime = 0;
         animation.current = toValue;
         return true;
       }
@@ -112,7 +114,7 @@ export function withSpring(toValue, userConfig, callback) {
       restSpeedThreshold: 0.001,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
     }
 
     function spring(animation, now) {
@@ -220,7 +222,7 @@ export function withDecay(userConfig, callback) {
       deceleration: 0.998,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
     }
 
     const VELOCITY_EPS = 5;
@@ -328,47 +330,93 @@ export function delay(delayMs, _nextAnimation) {
   });
 }
 
-export function loop(_nextAnimation, _numberOfLoops) {
+export function sequence(..._animations) {
+  'worklet';
+  return defineAnimation(_animations[0], () => {
+    'worklet';
+    const animations = _animations.map(a =>
+      typeof a === 'function' ? a() : a
+    );
+    const firstAnimation = animations[0];
+
+    function sequence(animation, now) {
+      const currentAnim = animations[animation.animationIndex];
+      const finished = currentAnim.animation(currentAnim, now);
+      animation.current = currentAnim.current;
+      if (finished) {
+        animation.animationIndex += 1;
+        if (animation.animationIndex < animations.length) {
+          const nextAnim = animations[animation.animationIndex];
+          nextAnim.start(nextAnim, currentAnim.current, now, currentAnim);
+          return false;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function start(animation, value, now, previousAnimation) {
+      animation.animationIndex = 0;
+      firstAnimation.start(firstAnimation, value, now, previousAnimation);
+    }
+
+    return {
+      animation: sequence,
+      start,
+      animationIndex: 0,
+      current: firstAnimation.current,
+    };
+  });
+}
+
+export function repeat(_nextAnimation, numberOfReps = 2, reverse = false) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
 
     const nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
-    let numberOfLoops = _numberOfLoops;
 
-    if (numberOfLoops === undefined) {
-      // todo: default values for worklet params does not work (perhaps issue with plugin)
-      numberOfLoops = 1;
-    }
-
-    function loop(animation, now) {
+    function repeat(animation, now) {
       const finished = nextAnimation.animation(nextAnimation, now);
       animation.current = nextAnimation.current;
       if (finished) {
-        const finalValue = nextAnimation.current;
-        nextAnimation.toValue = animation.startValue;
-        nextAnimation.start(nextAnimation, finalValue, now, nextAnimation);
-        animation.startValue = finalValue;
-        animation.loops += 1;
-        return (
-          numberOfLoops > 0 && animation.loops >= Math.round(numberOfLoops * 2)
-        );
+        animation.reps += 1;
+        if (numberOfReps > 0 && animation.reps >= numberOfReps) {
+          return true;
+        }
+
+        const startValue = reverse
+          ? nextAnimation.current
+          : animation.startValue;
+        if (reverse) {
+          nextAnimation.toValue = animation.startValue;
+          animation.startValue = startValue;
+        }
+        nextAnimation.start(nextAnimation, startValue, now, nextAnimation);
+        return false;
       }
       return false;
     }
 
     function start(animation, value, now, previousAnimation) {
       animation.startValue = value;
-      animation.loops = 0;
+      animation.reps = 0;
       nextAnimation.start(nextAnimation, value, now, previousAnimation);
     }
 
     return {
-      animation: loop,
+      animation: repeat,
       start,
-      loops: 0,
+      reps: 0,
       current: nextAnimation.current,
     };
   });
+}
+
+/* Deprecated, kept for backward compatibility. Will be removed soon */
+export function loop(nextAnimation, numberOfLoops = 1) {
+  'worklet';
+  console.warn('Method `loop` is deprecated. Please use `repeat` instead');
+  return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
 }
