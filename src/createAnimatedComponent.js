@@ -50,10 +50,6 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
-
-      this.state = {
-        animatedStyle: {},
-      };
     }
 
     componentWillUnmount() {
@@ -72,10 +68,6 @@ export default function createAnimatedComponent(Component) {
       this._attachNativeEvents();
       this._attachPropUpdater();
       this._attachAnimatedStyles();
-    }
-
-    _setAnimatedStyle(animatedStyle) {
-      this.setState({ animatedStyle });
     }
 
     _getEventViewRef() {
@@ -309,18 +301,13 @@ export default function createAnimatedComponent(Component) {
     }
 
     render() {
-      const { style = {}, ...props } = this._filterNonAnimatedProps(this.props);
+      const props = this._filterNonAnimatedProps(this.props);
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
       });
       return (
-        <Component
-          style={[style, this.state.animatedStyle]}
-          {...props}
-          ref={this._setComponentRef}
-          {...platformProps}
-        />
+        <Component {...props} ref={this._setComponentRef} {...platformProps} />
       );
     }
   }

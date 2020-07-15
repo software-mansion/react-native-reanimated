@@ -1,6 +1,26 @@
 let MUTABLE_ID = 0;
 let MAPPER_ID = 0;
 
+function extractMutablesFromArray(array) {
+  const res = [];
+
+  function extractMutables(value) {
+    if (value instanceof MutableValue) {
+      res.push(value);
+    } else if (Array.isArray(value)) {
+      value.forEach((v) => extractMutables(v));
+    } else if (typeof value === 'object') {
+      Object.keys(value).forEach((key) => {
+        extractMutables(value[key]);
+      });
+    }
+  }
+
+  extractMutables(array);
+
+  return res;
+}
+
 class MutableValue {
   _animation = null;
   _listeners = [];
@@ -22,11 +42,13 @@ class MutableValue {
   }
 
   addListener(listener) {
+    console.log('add listener');
     this._listeners.push(listener);
   }
 
   _triggerListener() {
-    this._listeners.forEach(listener => {
+    console.log('Trigger listeners', this._listeners);
+    this._listeners.forEach((listener) => {
       listener();
     });
   }
@@ -46,7 +68,7 @@ class Mapper {
       module.maybeRequestRender();
     };
 
-    inputs.forEach(input => {
+    extractMutablesFromArray(inputs).forEach((input) => {
       if (input instanceof MutableValue) {
         input.addListener(markDirty);
       }
@@ -86,7 +108,7 @@ class MapperRegistry {
       this.updatedSinceLastExecute = false;
     }
 
-    this.sortedMappers.forEach(mapper => {
+    this.sortedMappers.forEach((mapper) => {
       console.log('mappers');
       if (mapper.dirty) {
         console.log('dirty');
@@ -118,7 +140,7 @@ class JSReanimated {
     if (!this._renderRequested) {
       this._renderRequested = true;
 
-      requestAnimationFrame(timestampMs => {
+      requestAnimationFrame((timestampMs) => {
         this._renderRequested = false;
 
         this._onRender(timestampMs);
@@ -133,7 +155,7 @@ class JSReanimated {
     const frames = [...this._frames];
     this._frames = [];
 
-    frames.forEach(callback => {
+    frames.forEach((callback) => {
       console.log('frameCallback');
       callback(timestampMs);
     });
@@ -154,7 +176,7 @@ class JSReanimated {
   }
 
   makeRemote(object) {
-    return JSON.parse(JSON.stringify(object));
+    return object;
   }
 
   startMapper(mapper, inputs = [], outputs = []) {
@@ -165,6 +187,13 @@ class JSReanimated {
 
   stopMapper(mapperId) {
     this._mapperRegistry.stopMapper(mapperId);
+  }
+
+  createJsEventHandler(handler) {
+    return (evt) => {
+      handler(evt.nativeEvent);
+      this.maybeRequestRender();
+    };
   }
 
   registerEventHandler(eventHash, eventHandler) {}
@@ -190,7 +219,9 @@ global._updatePropsJS = (viewTag, updates, viewRef) => {
     [{}, {}]
   );
 
-  viewRef.current._setAnimatedStyle(rawStyles);
+  if (viewRef.current._component) {
+    viewRef.current._component.setNativeProps({ style: rawStyles });
+  }
 
   // TODO: Handle animations in styles
   // Object.keys(animations).forEach(key => {
@@ -200,10 +231,10 @@ global._updatePropsJS = (viewTag, updates, viewRef) => {
 
   // });
 
-  reanimatedJS.maybeRequestRender();
+  // reanimatedJS.maybeRequestRender();
 };
 
-global.requestAnimationFrame_Reanimated = callback => {
+global.requestAnimationFrame_Reanimated = (callback) => {
   reanimatedJS.pushFrame(callback);
 };
 
