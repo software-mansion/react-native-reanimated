@@ -51,16 +51,13 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
                                                std::unique_ptr<jsi::Runtime> rt,
-                                               std::function<void(std::function<void(double)>)> requestRender,
-                                               std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
                                                std::shared_ptr<ErrorHandler> errorHandler,
-                                               MeasuringFunction measuringFunction):
->>>>>>> stage 0.5
+                                               PlatformDepMethodsHolder platformDepMethodsHolder):
 NativeReanimatedModuleSpec(jsInvoker),
 runtime(std::move(rt)),
 mapperRegistry(new MapperRegistry()),
 eventHandlerRegistry(new EventHandlerRegistry()),
-requestRender(requestRender),
+requestRender(platformDepMethodsHolder.requestRender),
 errorHandler(errorHandler),
 workletsCache(new WorkletsCache()),
 scheduler(scheduler) {
@@ -70,10 +67,10 @@ scheduler(scheduler) {
   };
   
   RuntimeDecorator::addNativeObjects(*runtime,
-                                     propUpdater,
+                                     platformDepMethodsHolder.updaterFunction,
                                      requestAnimationFrame,
-                                     scrollToFunction,
-                                     measuringFunction
+                                     platformDepMethodsHolder.scrollToFunction,
+                                     platformDepMethodsHolder.measuringFunction
   );
 }
 

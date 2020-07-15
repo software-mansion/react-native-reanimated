@@ -109,14 +109,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<IOSErrorHandler>(scheduler);
 
+  PlatformDepMethodsHolder platformDepMethodsHolder = {
+    requestRender,
+    propUpdater,
+    scrollToFunction,
+    measuringFunction
+  };
+  
   std::shared_ptr<NativeReanimatedModule> module(new NativeReanimatedModule(jsInvoker,
                                                                             scheduler,
                                                                             std::move(animatedRuntime),
-                                                                            requestRender,
-                                                                            propUpdater,
                                                                             errorHandler,
-                                                                            scrollToFunction,
-                                                                            measuringFunction));
+                                                                            platformDepMethodsHolder
+                                                                            ));
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);

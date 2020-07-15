@@ -8,6 +8,7 @@
 #include "ErrorHandler.h"
 #include "WorkletsCache.h"
 #include "RuntimeDecorator.h"
+#include "PlatformDepMethodsHolder.h"
 
 #include <unistd.h>
 
@@ -28,11 +29,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                            std::shared_ptr<Scheduler> scheduler,
                            std::unique_ptr<jsi::Runtime> rt,
-                           std::function<void(std::function<void(double)>)> requestRender,
-                           std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
                            std::shared_ptr<ErrorHandler> errorHandler,
-                           ScrollToFunction scrollToFunction,
-                           MeasuringFunction measuringFunction);
+                           PlatformDepMethodsHolder platformDepMethodsHolder);
                            
     virtual ~NativeReanimatedModule();
 

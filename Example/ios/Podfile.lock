@@ -268,7 +268,7 @@ PODS:
     - React
   - RNGestureHandler (1.5.2):
     - React
-  - RNReanimated (2.0.0-alpha.3):
+  - RNReanimated (2.0.0-alpha.4):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -407,11 +407,11 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  DoubleConversion: cde416483dac037923206447da6e1454df403714
+  DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: 6f1045c66f816849b33c4ff28930b611e89059a0
   FBReactNativeSpec: e856d5103d749483f86f53afafd8df4ed8a776bd
   Folly: b73c3869541e86821df3c387eb0af5f65addfab4
-  glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
+  glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   RCTRequired: e46bb77db03887b3e200d34b08515c804669db99
   RCTTypeSafety: 270fed6675c42f80fb87b47d626ef3cede1505e6
   React: e008906ff1328f9bccb345ff4f7826397ad223fc
@@ -435,7 +435,7 @@ SPEC CHECKSUMS:
   ReactCommon: f63556ee9e41e9802257228237e5e660451a03cf
   RNCMaskedView: 76c40a1d41c3e2535df09246a2b5487f04de0814
   RNGestureHandler: 946a7691e41df61e2c4b1884deab41a4cdc3afff
-  RNReanimated: fd2b6fed9a0ea500e8cf223fc6b13ccd9ff631a6
+  RNReanimated: 5f34111865ab2207dc0dddae854634973ca092ee
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 7d2edc5b410474191962e6dee88ee67f9b328b6b
 
