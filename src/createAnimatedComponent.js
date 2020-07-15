@@ -51,6 +51,10 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+
+      this.state = {
+        animatedStyle: {},
+      };
     }
 
     componentWillUnmount() {
@@ -69,6 +73,10 @@ export default function createAnimatedComponent(Component) {
       this._attachNativeEvents();
       this._attachPropUpdater();
       this._attachAnimatedStyles();
+    }
+
+    _setAnimatedStyle(animatedStyle) {
+      this.setState({ animatedStyle });
     }
 
     _getEventViewRef() {
@@ -282,6 +290,9 @@ export default function createAnimatedComponent(Component) {
           const processedStyle = styles.map((style) => {
             if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
+              if (style.viewRef.current === null) {
+                style.viewRef.current = this;
+              }
               return style.initial;
             } else {
               return style;
@@ -320,13 +331,18 @@ export default function createAnimatedComponent(Component) {
     }
 
     render() {
-      const props = this._filterNonAnimatedProps(this.props);
+      const { style = {}, ...props } = this._filterNonAnimatedProps(this.props);
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
       });
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component
+          style={[style, this.state.animatedStyle]}
+          {...props}
+          ref={this._setComponentRef}
+          {...platformProps}
+        />
       );
     }
   }

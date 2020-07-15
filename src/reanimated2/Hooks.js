@@ -176,7 +176,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state) {
+function styleUpdater(viewTag, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
 
@@ -225,11 +225,11 @@ function styleUpdater(viewTag, updater, state) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates);
+      updateProps(viewTag.value, updates, maybeViewRef);
     }
 
     if (!allFinished) {
-      requestAnimationFrame(frame);
+      requestAnimationFrame_Reanimated(frame);
     } else {
       state.isAnimationRunning = false;
     }
@@ -240,7 +240,7 @@ function styleUpdater(viewTag, updater, state) {
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      requestAnimationFrame(frame);
+      requestAnimationFrame_Reanimated(frame);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -252,7 +252,7 @@ function styleUpdater(viewTag, updater, state) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff);
+    updateProps(viewTag.value, diff, maybeViewRef);
   }
 }
 
@@ -308,6 +308,7 @@ export function useAnimatedStyle(updater, dependencies) {
   return {
     viewTag,
     initial,
+    viewRef,
   };
 }
 

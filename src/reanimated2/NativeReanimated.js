@@ -1,10 +1,13 @@
 import { TurboModuleRegistry } from 'react-native';
+import JSReanimated from './JSReanimated';
 
 const InnerNativeModule =
   global.__reanimatedModuleProxy ||
   TurboModuleRegistry.getEnforcing('NativeReanimated');
 
-export default {
+export const reanimatedNativeAvailable = !InnerNativeModule;
+
+const NativeReanimated = {
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);
   },
@@ -41,3 +44,5 @@ export default {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   },
 };
+
+export default reanimatedNativeAvailable ? NativeReanimated : JSReanimated;
