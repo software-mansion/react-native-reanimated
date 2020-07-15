@@ -92,22 +92,9 @@ If not, after making those changes your app will be compatible with Turbo Module
 
 1. `cd ios && pod install && cd ..`
 
-2. Add bridge property to `AppDelegate.h`
-
-```objectivec {2,6}
-...
-@class RCTBridge; // <-add
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
-...
-@property (nonatomic, readonly) RCTBridge *bridge; // <-add
-...
-@end
-```
-
-3. Rename `AppDelegate.m` to `AppDelegate.mm`.
+2. Rename `AppDelegate.m` to `AppDelegate.mm`.
   > **_NOTE:_** It's important to do it with Xcode.
-4. Add AppDelegate category in `AppDelegate.mm`.
+3. Add AppDelegate category in `AppDelegate.mm`.
 
 ```objectivec {1-2,4-7}
 #import <React/RCTCxxBridgeDelegate.h>
@@ -119,7 +106,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 @end
 ```
 
-5. Enable TurboModules in `AppDelegate.mm`.
+4. Enable TurboModules in `AppDelegate.mm`.
 
 ```objectivec {3}
   + (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -127,29 +114,10 @@ If not, after making those changes your app will be compatible with Turbo Module
     RCTEnableTurboModule(YES); // <- add
 ```
 
-6. Replace bridge initialization in `AppDelegate.mm`.
-
-```objectivec {4-8}
-  - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-  {
-    RCTEnableTurboModule(YES);
-    // RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-    // RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
-    //                                                  moduleName:@"_YourAppNameHere_"
-    //                                           initialProperties:nil];
-    // NOTE: we now use _bridge with an underscore to create a rootView
-    _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-    // NOTE: use your app name instead of _YourAppNameHere_
-    RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
-                                                     moduleName:@"_YourAppNameHere_"
-                                              initialProperties:nil];
-    ...
-```
-
-7. Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `AppDelegate.mm`.
+5. Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `AppDelegate.mm`.
 
 ```objectivec
-// add headers
+// add headers (start)
 #import <React/RCTDataRequestHandler.h>
 #import <React/RCTFileRequestHandler.h>
 #import <React/RCTHTTPRequestHandler.h>
@@ -159,13 +127,19 @@ If not, after making those changes your app will be compatible with Turbo Module
 #import <React/RCTImageLoader.h>
 #import <React/JSCExecutorFactory.h>
 #import <RNReanimated/RETurboModuleProvider.h>
+#import <RNReanimated/REAModule.h>
+// add headers (end)
 ...
 @implementation AppDelegate // changes should be made within AppDelegate's implementation
 ...
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
- _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+  _bridge_reanimated = bridge;
+  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
+ #if RCT_DEV
+  [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add
+ #endif
  __weak __typeof(self) weakSelf = self;
  return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
    if (!bridge) {
@@ -217,19 +191,6 @@ If not, after making those changes your app will be compatible with Turbo Module
 }
 
 @end
-```
-
-8. Enable developer menu in `AppDelegate.mm`.
-
-```objectivec
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
-
-  #if RCT_DEV
-    [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add
-  #endif
-  ...
-```
+``` 
 
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/commit/f6f2b77496bc00601150f98ea19a341f844d06a3) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
