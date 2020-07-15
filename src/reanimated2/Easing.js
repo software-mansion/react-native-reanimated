@@ -146,7 +146,7 @@ function elastic(bounciness = 1) {
   const p = bounciness * Math.PI;
   return t => {
     'worklet';
-    1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
+    return 1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
   };
 }
 

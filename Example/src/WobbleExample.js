@@ -1,18 +1,17 @@
 import Animated, {
   useSharedValue,
   withTiming,
-  withSpring,
+  Easing,
   useAnimatedStyle,
-  loop,
   repeat,
-  runOnUI,
   sequence,
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
 
 const ANGLE = 9;
-const TIME = 1000;
+const TIME = 100;
+const EASING = Easing.elastic(1.5);
 
 export default function AnimatedStyleUpdateExample(props) {
   const rotation = useSharedValue(1);
@@ -35,11 +34,18 @@ export default function AnimatedStyleUpdateExample(props) {
         onPress={() => {
           rotation.value = sequence(
             // deviate left to start from -ANGLE
-            withTiming(-ANGLE, { duration: TIME / 2 }),
+            withTiming(-ANGLE, { duration: TIME / 2, easing: EASING }),
             // wobble between -ANGLE and ANGLE 7 times
-            repeat(withTiming(ANGLE, { duration: TIME }), 7, true),
+            repeat(
+              withTiming(ANGLE, {
+                duration: TIME,
+                easing: EASING,
+              }),
+              7,
+              true
+            ),
             // go back to 0 at the end
-            withTiming(0, { duration: TIME / 2 })
+            withTiming(0, { duration: TIME / 2, easing: EASING })
           );
         }}
       />
