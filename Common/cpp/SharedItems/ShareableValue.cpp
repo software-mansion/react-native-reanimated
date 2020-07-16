@@ -195,7 +195,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           return jsi::Value(rt, *funPtr);
         }
 
-        auto clb = [=, &module](
+        auto clb = [=](
                    jsi::Runtime &rt,
                    const jsi::Value &thisValue,
                    const jsi::Value *args,
