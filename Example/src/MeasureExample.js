@@ -112,7 +112,6 @@ function Section({title, children, height, contentHeight, z, show}) {
 function SectionHeader({title, tag, contentHeight, show}) {
   const handler = useAnimatedGestureHandler({
     onActive: (_, ctx) => {
-      console.log("jest");
       const height = measure(tag).height;
       if (contentHeight.value === 0) {
         contentHeight.value = withTiming(height, {
@@ -121,7 +120,7 @@ function SectionHeader({title, tag, contentHeight, show}) {
         })
       } else {
         contentHeight.value = withTiming(0, {
-          duration: 100,
+          duration: 300,
           easing: Easing.bezier(0.25, 0.1, 0.25, 1),
         })
       }
@@ -137,11 +136,11 @@ function SectionHeader({title, tag, contentHeight, show}) {
         {
           show && (
           <TapGestureHandler onHandlerStateChange={handler} >
-            <View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
+            <Animated.View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
               <Text style={{color: 'white'}}>
                 trigger
               </Text> 
-            </View>
+            </Animated.View>
           </TapGestureHandler>
           )  
         }
