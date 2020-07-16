@@ -11,6 +11,6 @@ class IOSErrorHandler : public ErrorHandler {
       IOSErrorHandler(std::shared_ptr<Scheduler> scheduler);
       std::shared_ptr<Scheduler> getScheduler() override;
       std::shared_ptr<ErrorWrapper> getError() override;
-      void setError(const char *message) override;
+      void setError(std::string message) override;
       virtual ~IOSErrorHandler() {}
 };

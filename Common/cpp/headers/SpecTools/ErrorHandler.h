@@ -21,7 +21,7 @@ class ErrorHandler {
     }
     virtual std::shared_ptr<Scheduler> getScheduler() = 0;
     virtual std::shared_ptr<ErrorWrapper> getError() = 0;
-    virtual void setError(const char *message) = 0;
+    virtual void setError(std::string message) = 0;
     virtual ~ErrorHandler() {}
   protected:
     virtual void raiseSpec() = 0;

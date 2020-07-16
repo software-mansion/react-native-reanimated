@@ -212,11 +212,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                res = funPtr->call(rt, args, count);
              }
            } catch(std::exception &e) {
-             std::string str = e.what();
-             module->errorHandler->setError(str.c_str());
-             if (!module->errorHandler->raise()) {
-               throw;
-             }
+               std::string str = e.what();
+             this->module->errorHandler->setError(str);
+             this->module->errorHandler->raise();
            }
 
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
@@ -264,10 +262,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             
             } catch(std::exception &e) {
               std::string str = e.what();
-              module->errorHandler->setError(str.c_str());
-              if (!module->errorHandler->raise()) {
-                throw;
-              }
+              module->errorHandler->setError(str);
+              module->errorHandler->raise();
             }
             rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
             
