@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   StyleSheet, 
   View,
@@ -78,7 +78,7 @@ export default function MeasureExample() {
 }
 
 function Section({title, children, height, contentHeight, z}) {
-  const randomContentRef = useRef(null);
+  const [randomComRef, setRef] = useState(null);
 
   const stylez = useAnimatedStyle(
     () => {
@@ -93,11 +93,11 @@ function Section({title, children, height, contentHeight, z}) {
 
   return (
     <Animated.View style={[styles.section, stylez, {zIndex: z}]} >
-      { (randomContentRef.current == null)? null : <SectionHeader title={title} tag={getTag(randomContentRef.current)} contentHeight={contentHeight} />}
+      { (randomComRef == null)? null : <SectionHeader title={title} tag={getTag(randomComRef)} contentHeight={contentHeight} />}
       <View>
         { 
           React.Children.map(children, (element, idx) => {
-            return React.cloneElement(element, { ref: randomContentRef });
+            return React.cloneElement(element, { ref: setRef });
           })
         }
       </View>
@@ -124,11 +124,13 @@ function SectionHeader({title, tag, contentHeight}) {
   });
 
   return (
-    <View style={styles.sectionHeader}>
+    <View style={styles.sectionHeader} >
       <View style={{height: sectionHeaderHeight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}} >
-        <Text>{ title }</Text>
+        <Text>
+          { title }
+        </Text>
         <TapGestureHandler onGestureEvent={handler} >
-          <View> style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
+          <View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
             <Text style={{color: 'white'}}>
               trigger
             </Text> 
