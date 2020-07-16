@@ -124,6 +124,7 @@ class MapperRegistry {
 }
 
 class JSReanimated {
+  native = false;
   _valueSetter = undefined;
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
@@ -232,10 +233,6 @@ global._updatePropsJS = (viewTag, updates, viewRef) => {
   // });
 
   // reanimatedJS.maybeRequestRender();
-};
-
-global.requestAnimationFrame_Reanimated = (callback) => {
-  reanimatedJS.pushFrame(callback);
 };
 
 export default reanimatedJS;

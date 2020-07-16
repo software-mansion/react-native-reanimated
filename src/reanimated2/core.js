@@ -4,6 +4,21 @@ global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
 };
 
+function pushFrame(frame) {
+  NativeReanimated.pushFrame(frame);
+}
+const nativeAvailable = NativeReanimated.native;
+
+export function requestFrame(frame) {
+  'worklet';
+
+  if (nativeAvailable) {
+    requestAnimationFrame(frame);
+  } else {
+    pushFrame(frame);
+  }
+}
+
 global._WORKLET = false;
 global._log = function(s) {
   console.log(s);
@@ -61,12 +76,13 @@ function workletValueSetter(value) {
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
-        requestAnimationFrame_Reanimated(step);
+        requestFrame(step);
       }
     };
 
     this._animation = animation;
-    requestAnimationFrame_Reanimated(step);
+
+    requestFrame(step);
   } else {
     this._value = value;
   }

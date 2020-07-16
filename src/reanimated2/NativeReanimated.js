@@ -5,9 +5,9 @@ const InnerNativeModule =
   global.__reanimatedModuleProxy ||
   TurboModuleRegistry.getEnforcing('NativeReanimated');
 
-export const reanimatedNativeAvailable = !InnerNativeModule;
-
 const NativeReanimated = {
+  native: !InnerNativeModule, // FIXME: Put !! here instead
+
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);
   },
@@ -45,4 +45,4 @@ const NativeReanimated = {
   },
 };
 
-export default reanimatedNativeAvailable ? NativeReanimated : JSReanimated;
+export default NativeReanimated.native ? NativeReanimated : JSReanimated;
