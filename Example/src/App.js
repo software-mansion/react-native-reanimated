@@ -19,6 +19,7 @@ import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
+import MeasureExample from './MeasureExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
@@ -162,4 +163,5 @@ const createApp = Platform.select({
   default: (input) => createAppContainer(input),
 });
 
-export default createApp(ExampleApp);
+//export default createApp(ExampleApp);
+export default MeasureExample;
