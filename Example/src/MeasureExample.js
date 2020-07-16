@@ -20,8 +20,8 @@ import { TapGestureHandler } from 'react-native-gesture-handler';
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const indices = [0, 1, 2, 3, 4];
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', ''];
+const indices = [0, 1, 2, 3, 4, 5];
 
 function createSharedVariables() {
   const contentHeights = useRef(null);
@@ -63,7 +63,7 @@ export default function MeasureExample() {
           {
             indices.map(i => {
               return (
-                <Section title={days[i]} key={i} height={heights[i]} contentHeight={contentHeights[i]} z={i} >
+                <Section title={days[i]} key={i} height={heights[i]} contentHeight={contentHeights[i]} z={i} show={true} >
                   <View>
                    <RandomContent/>
                   </View>
@@ -71,18 +71,22 @@ export default function MeasureExample() {
               );
             })
           }
+          <Section title={''} key={5} height={heights[5]} contentHeight={contentHeights[5]} z={5} show={false} >
+            <View style={{height: 500, backgroundColor: 'white'}}>
+              
+            </View>
+          </Section>
         </View>
       </SafeAreaView>
     </View>
   ); 
 }
 
-function Section({title, children, height, contentHeight, z}) {
+function Section({title, children, height, contentHeight, z, show}) {
   const [randomComRef, setRef] = useState(null);
 
   const stylez = useAnimatedStyle(
     () => {
-      //console.log(`wys ${z}`, height.value);
       return {
         transform: [
           { translateY: height.value}
@@ -93,7 +97,7 @@ function Section({title, children, height, contentHeight, z}) {
 
   return (
     <Animated.View style={[styles.section, stylez, {zIndex: z}]} >
-      { (randomComRef == null)? null : <SectionHeader title={title} tag={getTag(randomComRef)} contentHeight={contentHeight} />}
+      { (randomComRef == null)? null : <SectionHeader title={title} tag={getTag(randomComRef)} contentHeight={contentHeight} show={show} />}
       <View>
         { 
           React.Children.map(children, (element, idx) => {
@@ -105,9 +109,10 @@ function Section({title, children, height, contentHeight, z}) {
   );
 }
 
-function SectionHeader({title, tag, contentHeight}) {
+function SectionHeader({title, tag, contentHeight, show}) {
   const handler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onActive: (_, ctx) => {
+      console.log("jest");
       const height = measure(tag).height;
       if (contentHeight.value === 0) {
         contentHeight.value = withTiming(height, {
@@ -129,13 +134,17 @@ function SectionHeader({title, tag, contentHeight}) {
         <Text>
           { title }
         </Text>
-        <TapGestureHandler onGestureEvent={handler} >
-          <View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
-            <Text style={{color: 'white'}}>
-              trigger
-            </Text> 
-          </View>
-        </TapGestureHandler>  
+        {
+          show && (
+          <TapGestureHandler onHandlerStateChange={handler} >
+            <View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
+              <Text style={{color: 'white'}}>
+                trigger
+              </Text> 
+            </View>
+          </TapGestureHandler>
+          )  
+        }
       </View>
     </View>
   );
@@ -177,7 +186,6 @@ function RandomElement() {
 const styles = StyleSheet.create({
     randomElement: {
       backgroundColor: '#EFEFF4',
-      borderRadius: 10,
       alignItems: 'center',
       borderWidth: 1,
       borderColor: 'green',
