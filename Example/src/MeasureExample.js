@@ -34,10 +34,12 @@ function createSharedVariables() {
     const contentHeightsCopy = contentHeights.current;
     const result = [useSharedValue(0)];
     for (let i = 1; i < indices.length; i++) {
+      const previousHeight = result[i-1];
+      const previousContentHeight = contentHeightsCopy[i-1];
       result.push(
         useDerivedValue(
           () => {
-            return result[i-1].value + contentHeightsCopy[i-1].value + sectionHeaderHeight + 1;
+            return previousHeight.value + previousContentHeight.value + sectionHeaderHeight + 1;
           }
         )
       )
@@ -61,8 +63,10 @@ export default function MeasureExample() {
           {
             indices.map(i => {
               return (
-                <Section title={days[i]} key={i} height={heights[i]} contentHeight={contentHeights[i]} >
-                  <RandomContent/>
+                <Section title={days[i]} key={i} height={heights[i]} contentHeight={contentHeights[i]} z={i} >
+                  <View>
+                   <RandomContent/>
+                  </View>
                 </Section>
               );
             })
@@ -73,11 +77,12 @@ export default function MeasureExample() {
   ); 
 }
 
-function Section({title, children, height, contentHeight}) {
+function Section({title, children, height, contentHeight, z}) {
   const randomContentRef = useRef(null);
 
   const stylez = useAnimatedStyle(
     () => {
+      //console.log(`wys ${z}`, height.value);
       return {
         transform: [
           { translateY: height.value}
@@ -87,7 +92,7 @@ function Section({title, children, height, contentHeight}) {
   );
 
   return (
-    <Animated.View style={[styles.section, stylez]} >
+    <Animated.View style={[styles.section, stylez, {zIndex: z}]} >
       { (randomContentRef.current == null)? null : <SectionHeader title={title} tag={getTag(randomContentRef.current)} contentHeight={contentHeight} />}
       <View>
         { 
