@@ -21,6 +21,7 @@ import ChatHeadsExample from './ChatHeadsExample';
 import MeasureExample from './MeasureExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
+import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
@@ -35,6 +36,10 @@ const SCREENS = {
   DragAndSnapExample: {
     screen: DragAndSnapExample,
     title: '🆕 Drag and Snap',
+  },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: '🆕 Synchronous Measure',
   },
   ScrollEventExample: {
     screen: ScrollEventExample,
@@ -158,4 +163,4 @@ const createApp = Platform.select({
 });
 
 //export default createApp(ExampleApp);
-export default MeasureExample;
+export default ScrollToExample;
