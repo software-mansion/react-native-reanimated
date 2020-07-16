@@ -6,7 +6,7 @@ const InnerNativeModule =
   TurboModuleRegistry.getEnforcing('NativeReanimated');
 
 const NativeReanimated = {
-  native: !InnerNativeModule, // FIXME: Put !! here instead
+  native: !!InnerNativeModule, // FIXME: Put !! here instead
 
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);

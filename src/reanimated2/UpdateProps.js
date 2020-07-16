@@ -27,5 +27,4 @@ export default function updateProps(viewTag, updates, maybeViewRef) {
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
   updatePropsInternal(viewTag, updates, maybeViewRef);
-  // _updateProps(viewTag, updates, maybeViewRef);
 }
