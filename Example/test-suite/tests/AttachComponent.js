@@ -10,6 +10,23 @@ import { findNodeHandle } from 'react-native'
 
 export const name = 'AttachComponent';
 
+const waitFor = async (conditionalCallback, errorMessage, timeout) => {
+  const MAX_WAIT_CYCLES = 10;
+  let counter = 0;
+  return new Promise((resolve, reject) => {
+    const interv = setInterval(() => {
+      if (conditionalCallback()) {
+        resolve(true)
+        clearInterval(interv);
+      }
+      if (++counter > MAX_WAIT_CYCLES) {
+        clearInterval(interv);
+        reject(new Error(errorMessage))
+      }
+    }, timeout / MAX_WAIT_CYCLES);
+  });
+}
+
 const Comp = ({ viewRef, callbackRef }) => {
   const opacity = useSharedValue(0.1)
   const uas = useAnimatedStyle(() => {
@@ -23,20 +40,7 @@ const Comp = ({ viewRef, callbackRef }) => {
   callbackRef.current = async (newOp) => {
     opacity.value = newOp
     // make sure shared value has been set
-    const MAX_WAIT_CYCLES = 10;
-    let counter = 0;
-    return new Promise((resolve, reject) => {
-      const interv = setInterval(() => {
-        if (opacity.value === newOp) {
-          resolve(true)
-          clearInterval(interv);
-        }
-        if (++counter > MAX_WAIT_CYCLES) {
-          clearInterval(interv);
-          reject(new Error('failed to set shared value `opacity`'))
-        }
-      }, 100);
-    });
+    return waitFor(() => (opacity.value === newOp), 'failed to set shared value `opacity`', 1000)
   }
   
   return <Animated.View style={ uas } ref={ viewRef } />;
@@ -55,22 +59,10 @@ export async function test(t, { setPortalChild, cleanupPortal }) {
 
       await mount(<Comp viewRef={ viewRef } callbackRef={ callbackRef } />, setPortalChild);
       // make sure both ref are set properly
-      const refSet = await (() => {
-        const MAX_WAIT_CYCLES = 10;
-        let counter = 0;
-        return new Promise((resolve, reject) => {
-          const interv = setInterval(() => {
-            if (viewRef.current !== null && callbackRef.current !== null) {
-              resolve(true)
-              clearInterval(interv);
-            }
-            if (++counter > MAX_WAIT_CYCLES) {
-              clearInterval(interv);
-              reject(new Error('failed to set ref'))
-            }
-          }, 100);
-        });
-      })()
+      const refSet = await waitFor(
+        () => (viewRef.current !== null && callbackRef.current !== null),
+        'failed to set ref',
+        1000)
       t.expect(refSet).toBe(true)
       // check opacity of Animated.View in Comp
       const viewTag = findNodeHandle(viewRef.current)
@@ -85,8 +77,6 @@ export async function test(t, { setPortalChild, cleanupPortal }) {
         expectedOp = parseFloat(expectedOp).toFixed(1)
         t.expect(opacity).toBe(expectedOp)
       }
-
-      t.expect(1).toBe(1)
     });
 
   })
