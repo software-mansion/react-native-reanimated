@@ -55,11 +55,11 @@ class MutableValue {
 }
 
 class Mapper {
-  dirty = false;
+  dirty = true;
 
   constructor(module, mapper, inputs = [], outputs = []) {
     this.id = MAPPER_ID++;
-    this.inputs = inputs;
+    this.inputs = extractMutablesFromArray(inputs);
     this.outputs = outputs;
     this.mapper = mapper;
 
@@ -68,10 +68,8 @@ class Mapper {
       module.maybeRequestRender();
     };
 
-    extractMutablesFromArray(inputs).forEach((input) => {
-      if (input instanceof MutableValue) {
-        input.addListener(markDirty);
-      }
+    this.inputs.forEach((input) => {
+      input.addListener(markDirty);
     });
   }
 
@@ -109,9 +107,7 @@ class MapperRegistry {
     }
 
     this.sortedMappers.forEach((mapper) => {
-      console.log('mappers');
       if (mapper.dirty) {
-        console.log('dirty');
         mapper.execute();
       }
     });
@@ -120,6 +116,10 @@ class MapperRegistry {
   updateOrder() {
     // TODO: Sort it in topological order
     this.sortedMappers = [...this.mappers.values()];
+  }
+
+  get needRunOnRender() {
+    return this.updatedSinceLastExecute;
   }
 }
 
@@ -161,7 +161,9 @@ class JSReanimated {
       callback(timestampMs);
     });
 
-    // this._mapperRegistry.execute();
+    if (this._mapperRegistry.needRunOnRender) {
+      this._mapperRegistry.execute();
+    }
   }
 
   installCoreFunctions(valueSetter) {
@@ -184,6 +186,8 @@ class JSReanimated {
     const instance = new Mapper(this, mapper, inputs, outputs);
 
     this._mapperRegistry.startMapper(instance);
+
+    this.maybeRequestRender();
   }
 
   stopMapper(mapperId) {
