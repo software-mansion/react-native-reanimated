@@ -28,10 +28,10 @@ function hasAnimatedNodes(value) {
     return true;
   }
   if (Array.isArray(value)) {
-    return value.some(item => hasAnimatedNodes(item));
+    return value.some((item) => hasAnimatedNodes(item));
   }
   if (typeof value === 'object') {
-    return Object.keys(value).some(key => hasAnimatedNodes(value[key]));
+    return Object.keys(value).some((key) => hasAnimatedNodes(value[key]));
   }
   return false;
 }
@@ -195,7 +195,7 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       const viewTag = findNodeHandle(this);
-      styles.forEach(style => {
+      styles.forEach((style) => {
         if (style && style.viewTag !== undefined) {
           style.viewTag.value = viewTag;
         }
@@ -223,7 +223,7 @@ export default function createAnimatedComponent(Component) {
 
     _setComponentRef = setAndForwardRef({
       getForwardedRef: () => this.props.forwardedRef,
-      setLocalRef: ref => {
+      setLocalRef: (ref) => {
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -261,7 +261,7 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
-          const processedStyle = styles.map(style => {
+          const processedStyle = styles.map((style) => {
             if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
               if (style.viewRef.current === null) {
@@ -276,7 +276,7 @@ export default function createAnimatedComponent(Component) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial).forEach(key => {
+          Object.keys(value.initial).forEach((key) => {
             props[key] = value.initial[key];
           });
         } else if (value instanceof AnimatedEvent) {
@@ -287,9 +287,11 @@ export default function createAnimatedComponent(Component) {
           props[key] = dummyListener;
         } else if (value instanceof WorkletEventHandler) {
           if (value.eventNames.length > 0) {
-            value.eventNames.forEach(
-              eventName => (props[eventName] = dummyListener)
-            );
+            value.eventNames.forEach((eventName) => {
+              props[eventName] = value.listeners
+                ? value.listeners[eventName]
+                : dummyListener;
+            });
           } else {
             props[key] = dummyListener;
           }
