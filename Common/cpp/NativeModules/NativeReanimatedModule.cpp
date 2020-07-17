@@ -53,15 +53,15 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::unique_ptr<jsi::Runtime> rt,
                                                std::function<void(std::function<void(double)>)> requestRender,
                                                std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
-                                               std::shared_ptr<ErrorHandler> errorHandler):
+                                               std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer):
 NativeReanimatedModuleSpec(jsInvoker),
 runtime(std::move(rt)),
 mapperRegistry(new MapperRegistry()),
 eventHandlerRegistry(new EventHandlerRegistry()),
 requestRender(requestRender),
-errorHandler(errorHandler),
 propObtainer(propObtainer),
+errorHandler(errorHandler),
 workletsCache(new WorkletsCache()),
 scheduler(scheduler) {
   RuntimeDecorator::addNativeObjects(*runtime, propUpdater, [=](FrameCallback callback) {
@@ -152,7 +152,7 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
     
     scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
       const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);
-      jsi::Value result = std::move(propObtainer(rt, viewTagInt, propNameValue));
+      jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
       std::string resultStr = result.asString(rt).utf8(rt);
 
       scheduler->scheduleOnJS([&rt, resultStr, funPtr] () {

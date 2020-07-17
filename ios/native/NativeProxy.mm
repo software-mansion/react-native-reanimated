@@ -108,7 +108,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
                                                                             std::move(animatedRuntime),
                                                                             requestRender,
                                                                             propUpdater,
-                                                                            errorHandler));
+                                                                            errorHandler,
                                                                             propObtainer));
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {

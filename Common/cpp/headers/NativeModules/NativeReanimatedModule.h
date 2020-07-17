@@ -29,7 +29,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
                            std::unique_ptr<jsi::Runtime> rt,
                            std::function<void(std::function<void(double)>)> requestRender,
                            std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
-                           std::shared_ptr<ErrorHandler> errorHandler);
+                           std::shared_ptr<ErrorHandler> errorHandler,
                            std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer);
     virtual ~NativeReanimatedModule();
 
