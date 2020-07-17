@@ -190,13 +190,6 @@ class JSReanimated {
     this._mapperRegistry.stopMapper(mapperId);
   }
 
-  createJsEventHandler(handler) {
-    return (evt) => {
-      handler(evt.nativeEvent);
-      this.maybeRequestRender();
-    };
-  }
-
   registerEventHandler(eventHash, eventHandler) {}
 
   unregisterEventHandler(registrationId) {}

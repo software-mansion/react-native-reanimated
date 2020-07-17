@@ -31,7 +31,7 @@ function hasAnimatedNodes(value) {
   if (Array.isArray(value)) {
     return value.some((item) => hasAnimatedNodes(item));
   }
-  if (value && typeof value === 'object') {
+  if (typeof value === 'object') {
     return Object.keys(value).some((key) => hasAnimatedNodes(value[key]));
   }
   return false;
@@ -305,9 +305,11 @@ export default function createAnimatedComponent(Component) {
           props[key] = dummyListener;
         } else if (value instanceof WorkletEventHandler) {
           if (value.eventNames.length > 0) {
-            value.eventNames.forEach(
-              (eventName) => (props[eventName] = dummyListener)
-            );
+            value.eventNames.forEach((eventName) => {
+              props[eventName] = value.listeners
+                ? value.listeners[eventName]
+                : dummyListener;
+            });
           } else {
             props[key] = dummyListener;
           }

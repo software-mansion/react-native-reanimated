@@ -41,10 +41,7 @@ export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
   if (initRef.current === null) {
-    initRef.current = NativeReanimated.native
-      ? new WorkletEventHandler(handler, eventNames)
-      : // this comes from JS implementation
-        NativeReanimated.createJsEventHandler(handler);
+    initRef.current = new WorkletEventHandler(handler, eventNames);
   }
   return initRef.current;
 }

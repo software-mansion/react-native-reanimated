@@ -1,10 +1,21 @@
 import NativeModule from './NativeReanimated';
 
+const jsListener = (eventName, handler) => (evt) => {
+  handler({ ...evt.nativeEvent, eventName });
+};
+
 export default class WorkletEventHandler {
   constructor(worklet, eventNames = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;
     this.reattachNeeded = false;
+
+    if (!NativeModule.native) {
+      this.listeners = eventNames.reduce((acc, eventName) => {
+        acc[eventName] = jsListener(eventName, worklet);
+        return acc;
+      }, {});
+    }
   }
 
   updateWorklet(newWorklet) {
