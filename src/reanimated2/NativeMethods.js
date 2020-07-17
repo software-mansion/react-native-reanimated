@@ -19,7 +19,7 @@ export function measure(viewTag) {
 export function scrollTo(viewTag, x, y, animated) {
   'worklet';
   if (!_WORKLET) {
-    throw new Error('(scrollTo) method cannot be used on RN side!');
+    return;
   }
   _scrollTo(viewTag, x, y, animated);
 }

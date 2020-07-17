@@ -1,9 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { 
-  StyleSheet, 
-  View,
-  Text,
-} from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -26,7 +22,7 @@ const indices = [0, 1, 2, 3, 4, 5];
 function createSharedVariables() {
   const contentHeights = useRef(null);
   if (contentHeights.current == null) {
-    contentHeights.current = indices.map(i => useSharedValue(0));
+    contentHeights.current = indices.map((i) => useSharedValue(0));
   }
 
   const heights = useRef(null);
@@ -34,15 +30,18 @@ function createSharedVariables() {
     const contentHeightsCopy = contentHeights.current;
     const result = [useSharedValue(0)];
     for (let i = 1; i < indices.length; i++) {
-      const previousHeight = result[i-1];
-      const previousContentHeight = contentHeightsCopy[i-1];
+      const previousHeight = result[i - 1];
+      const previousContentHeight = contentHeightsCopy[i - 1];
       result.push(
-        useDerivedValue(
-          () => {
-            return previousHeight.value + previousContentHeight.value + sectionHeaderHeight + 1;
-          }
-        )
-      )
+        useDerivedValue(() => {
+          return (
+            previousHeight.value +
+            previousContentHeight.value +
+            sectionHeaderHeight +
+            1
+          );
+        })
+      );
     }
     heights.current = result;
   }
@@ -50,66 +49,75 @@ function createSharedVariables() {
   return {
     contentHeights: contentHeights.current,
     heights: heights.current,
-  }
+  };
 }
 
 export default function MeasureExample() {
-  const {heights, contentHeights} = createSharedVariables();
+  const { heights, contentHeights } = createSharedVariables();
 
   return (
     <View>
       <SafeAreaView>
         <View>
-          {
-            indices.map(i => {
-              return (
-                <Section title={days[i]} key={i} height={heights[i]} contentHeight={contentHeights[i]} z={i} show={true} >
-                  <View>
-                   <RandomContent/>
-                  </View>
-                </Section>
-              );
-            })
-          }
-          <Section title={''} key={5} height={heights[5]} contentHeight={contentHeights[5]} z={5} show={false} >
-            <View style={{height: 500, backgroundColor: 'white'}}>
-              
-            </View>
+          {indices.map((i) => {
+            return (
+              <Section
+                title={days[i]}
+                key={i}
+                height={heights[i]}
+                contentHeight={contentHeights[i]}
+                z={i}
+                show={true}>
+                <View>
+                  <RandomContent />
+                </View>
+              </Section>
+            );
+          })}
+          <Section
+            title={''}
+            key={5}
+            height={heights[5]}
+            contentHeight={contentHeights[5]}
+            z={5}
+            show={false}>
+            <View style={{ height: 500, backgroundColor: 'white' }}></View>
           </Section>
         </View>
       </SafeAreaView>
     </View>
-  ); 
+  );
 }
 
-function Section({title, children, height, contentHeight, z, show}) {
+function Section({ title, children, height, contentHeight, z, show }) {
   const [randomComRef, setRef] = useState(null);
 
-  const stylez = useAnimatedStyle(
-    () => {
-      return {
-        transform: [
-          { translateY: height.value}
-        ],
-      }
-    }
-  );
+  const stylez = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: height.value }],
+    };
+  });
 
   return (
-    <Animated.View style={[styles.section, stylez, {zIndex: z}]} >
-      { (randomComRef == null)? null : <SectionHeader title={title} tag={getTag(randomComRef)} contentHeight={contentHeight} show={show} />}
+    <Animated.View style={[styles.section, stylez, { zIndex: z }]}>
+      {randomComRef == null ? null : (
+        <SectionHeader
+          title={title}
+          tag={getTag(randomComRef)}
+          contentHeight={contentHeight}
+          show={show}
+        />
+      )}
       <View>
-        { 
-          React.Children.map(children, (element, idx) => {
-            return React.cloneElement(element, { ref: setRef });
-          })
-        }
+        {React.Children.map(children, (element, idx) => {
+          return React.cloneElement(element, { ref: setRef });
+        })}
       </View>
     </Animated.View>
   );
 }
 
-function SectionHeader({title, tag, contentHeight, show}) {
+function SectionHeader({ title, tag, contentHeight, show }) {
   const handler = useAnimatedGestureHandler({
     onActive: (_, ctx) => {
       const height = measure(tag).height;
@@ -117,33 +125,34 @@ function SectionHeader({title, tag, contentHeight, show}) {
         contentHeight.value = withTiming(height, {
           duration: 500,
           easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        })
+        });
       } else {
         contentHeight.value = withTiming(0, {
           duration: 300,
           easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        })
+        });
       }
     },
   });
 
   return (
-    <View style={styles.sectionHeader} >
-      <View style={{height: sectionHeaderHeight, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}} >
-        <Text>
-          { title }
-        </Text>
-        {
-          show && (
-          <TapGestureHandler onHandlerStateChange={handler} >
-            <Animated.View style={{backgroundColor: 'gray', borderRadius: 10, padding: 5}}> 
-              <Text style={{color: 'white'}}>
-                trigger
-              </Text> 
+    <View style={styles.sectionHeader}>
+      <View
+        style={{
+          height: sectionHeaderHeight,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <Text>{title}</Text>
+        {show && (
+          <TapGestureHandler onHandlerStateChange={handler}>
+            <Animated.View
+              style={{ backgroundColor: 'gray', borderRadius: 10, padding: 5 }}>
+              <Text style={{ color: 'white' }}>trigger</Text>
             </Animated.View>
           </TapGestureHandler>
-          )  
-        }
+        )}
       </View>
     </View>
   );
@@ -155,53 +164,45 @@ function RandomContent() {
     randomElements.current = [];
     const numberOfRandomElements = Math.round(Math.random() * 9 + 1);
     for (let i = 0; i < numberOfRandomElements; i++) {
-      randomElements.current.push(
-        <RandomElement key={i} />
-      );
+      randomElements.current.push(<RandomElement key={i} />);
     }
   }
-  
-  return (
-    <View style={styles.randomContent} >
-      { randomElements.current }
-    </View>
-  );
+
+  return <View style={styles.randomContent}>{randomElements.current}</View>;
 }
 
 function RandomElement() {
   const randomHeight = useRef(Math.round(Math.random() * 40 + 30));
-  const label = useRef(labels[Math.round(Math.random() * 4)] );
-  
+  const label = useRef(labels[Math.round(Math.random() * 4)]);
+
   return (
-    <View style={[styles.randomElement, {height: randomHeight.current}]}>
-      <View style={{flex:1, alignItems:'center', flexDirection:'row'}} >
-        <Text>
-          { label.current }
-        </Text>
+    <View style={[styles.randomElement, { height: randomHeight.current }]}>
+      <View style={{ flex: 1, alignItems: 'center', flexDirection: 'row' }}>
+        <Text>{label.current}</Text>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
-    randomElement: {
-      backgroundColor: '#EFEFF4',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: 'green',
-    },
-    randomContent: {
-      borderColor: 'red',
-      borderWidth: 1,
-    },
-    section: {
-      position: 'absolute',
-      width: '100%',
-    },
-    sectionHeader: {
-      backgroundColor: 'azure',
-      paddingLeft:20,
-      paddingRight: 20,
-      borderBottomColor: 'black',
-      borderBottomWidth: 1, 
-    },
+  randomElement: {
+    backgroundColor: '#EFEFF4',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'green',
+  },
+  randomContent: {
+    borderColor: 'red',
+    borderWidth: 1,
+  },
+  section: {
+    position: 'absolute',
+    width: '100%',
+  },
+  sectionHeader: {
+    backgroundColor: 'azure',
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderBottomColor: 'black',
+    borderBottomWidth: 1,
+  },
 });

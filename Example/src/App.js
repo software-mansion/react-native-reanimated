@@ -54,6 +54,10 @@ const SCREENS = {
     screen: ChatHeadsExample,
     title: '🆕 Chat Heads',
   },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: '🆕 scrollTo',
+  },
   SwipeableListExample: {
     screen: SwipeableListExample,
     title: '🆕 (advanced) Swipeable List',
@@ -168,5 +172,4 @@ const createApp = Platform.select({
   default: (input) => createAppContainer(input),
 });
 
-//export default createApp(ExampleApp);
-export default ScrollToExample;
+export default createApp(ExampleApp);
