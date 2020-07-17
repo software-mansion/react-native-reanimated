@@ -214,7 +214,6 @@ export function withSpring(toValue, userConfig, callback) {
 }
 
 export function withDecay(userConfig, callback) {
-  toValue = (typeof toValue === 'object' && toValue.value) ? toValue.value : toValue
   'worklet';
   return defineAnimation(0, () => {
     'worklet';
