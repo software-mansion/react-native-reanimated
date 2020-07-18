@@ -39,10 +39,6 @@ import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
 
-  static {
-    ReactFeatureFlags.useTurboModules = true;
-  }
-
   private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
     @Override
     public boolean getUseDeveloperSupport() {
@@ -81,7 +77,7 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
-    initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+  //  initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
   }
 
   private static void initializeFlipper(

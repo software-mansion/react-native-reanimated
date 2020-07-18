@@ -28,7 +28,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
                            std::shared_ptr<Scheduler> scheduler,
                            std::unique_ptr<jsi::Runtime> rt,
                            std::function<void(std::function<void(double)>)> requestRender,
-                           std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater);
+                           std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
+                           std::shared_ptr<ErrorHandler> errorHandler);
     virtual ~NativeReanimatedModule();
 
     void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) override;
@@ -56,11 +57,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
     std::function<void(FrameCallback)> requestRender;
-    std::shared_ptr<ErrorHandler> errorHandler;
     std::shared_ptr<jsi::Value> dummyEvent;
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
   public:
+  std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;
   std::shared_ptr<ShareableValue> valueSetter;
   std::shared_ptr<Scheduler> scheduler;

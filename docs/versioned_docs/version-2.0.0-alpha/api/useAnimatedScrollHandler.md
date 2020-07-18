@@ -20,7 +20,6 @@ In such a case the worklet will receive the following parameters:
 In the case where we are interested in handling other scroll related events, instead of passing a single worklet we can pass an object containing any of the following keys: `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, `onMomentumEnd`.
 The values in the object should be individual worklets.
 Each of the worklet will be triggered when the corresponding event is dispatched on the connected Scrollable component.
-Note that momentum events are only dispatched on iOS.
 
 In either case (regardless of whether we pass a single handler worklet, or an object of worklets), each of the event worklets will receive the following parameters when called:
 

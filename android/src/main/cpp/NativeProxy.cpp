@@ -9,6 +9,7 @@
 #include <jsi/JSIDynamic.h>
 
 #include "NativeProxy.h"
+#include "AndroidErrorHandler.h"
 #include "NativeReanimatedModule.h"
 #include "AndroidScheduler.h"
 #include <android/log.h>
@@ -49,11 +50,14 @@ void NativeProxy::installJSIBindings() {
 
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 
+  std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
+
   auto module = std::make_shared<NativeReanimatedModule>(nullptr,
                                                          scheduler_,
                                                          std::move(animatedRuntime),
                                                          requestRender,
-                                                         propUpdater);
+                                                         propUpdater,
+                                                         errorHandler);
 
   this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
     module->onEvent(eventName, eventAsString);
