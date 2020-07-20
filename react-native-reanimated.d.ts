@@ -422,10 +422,12 @@ declare module 'react-native-reanimated' {
       delayMS: number,
       delayedAnimation: number,
     ): number;
-    export function loop(
-      loopedAnimation: number,
-      numberOfLoops?: number,
+    export function repeat(
+      animation: number,
+      numberOfReps?: number,
+      reverse?: boolean
     ): number;
+    export function sequence(...animations: [number, ...number[]]): number;
 
     // hooks
     export function useCode(
@@ -630,6 +632,7 @@ declare module 'react-native-reanimated' {
   export const withDecay: typeof Animated.withDecay
   export const cancelAnimation: typeof Animated.cancelAnimation
   export const delay: typeof Animated.delay
-  export const loop: typeof Animated.loop
+  export const repeat: typeof Animated.repeat;
+  export const sequence: typeof Animated.sequence;
   export const interpolate: typeof Animated.interpolate
 }
