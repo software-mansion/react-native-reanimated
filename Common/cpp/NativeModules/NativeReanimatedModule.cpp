@@ -52,12 +52,14 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::shared_ptr<Scheduler> scheduler,
                                                std::unique_ptr<jsi::Runtime> rt,
                                                std::function<void(std::function<void(double)>)> requestRender,
-                                               std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater):
+                                               std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
+                                               std::shared_ptr<ErrorHandler> errorHandler):
 NativeReanimatedModuleSpec(jsInvoker),
 runtime(std::move(rt)),
 mapperRegistry(new MapperRegistry()),
 eventHandlerRegistry(new EventHandlerRegistry()),
 requestRender(requestRender),
+errorHandler(errorHandler),
 workletsCache(new WorkletsCache()),
 scheduler(scheduler) {
   RuntimeDecorator::addNativeObjects(*runtime, propUpdater, [=](FrameCallback callback) {

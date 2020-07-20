@@ -15,6 +15,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import Reanimated1 from '../reanimated1/App';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
@@ -30,6 +31,10 @@ const SCREENS = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
+  },
+  WobbleExample: {
+    screen: WobbleExample,
+    title: '🆕 Animation Modifiers (Wobble Effect)',
   },
   DragAndSnapExample: {
     screen: DragAndSnapExample,
@@ -66,19 +71,19 @@ const SCREENS = {
 };
 
 function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map((key) => ({ key }));
+  const data = Object.keys(SCREENS).map(key => ({ key }));
   return (
     <FlatList
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      renderItem={(props) => (
+      renderItem={props => (
         <MainScreenItem
           {...props}
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
+      renderScrollComponent={props => <ScrollView {...props} />}
       ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
     />
   );
@@ -152,8 +157,8 @@ const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
+  web: input => createBrowserApp(input, { history: 'hash' }),
+  default: input => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);

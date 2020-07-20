@@ -14,6 +14,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+
 // COPIED FROM RCTTurboModule.mm
 static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &value);
 
@@ -77,11 +78,7 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
 }
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker) {
-
-  RCTBridge *bridge;
-  if ([[UIApplication sharedApplication].delegate respondsToSelector:@selector(bridge)]) {
-    bridge = [[UIApplication sharedApplication].delegate performSelector:@selector(bridge) withObject:[UIApplication sharedApplication].delegate];
-  }
+  RCTBridge *bridge = _bridge_reanimated;
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   auto propUpdater = [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Object &props) -> void {
@@ -97,12 +94,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   std::shared_ptr<Scheduler> scheduler(new IOSScheduler(jsInvoker));
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<IOSErrorHandler>(scheduler);
 
   std::shared_ptr<NativeReanimatedModule> module(new NativeReanimatedModule(jsInvoker,
                                                                             scheduler,
                                                                             std::move(animatedRuntime),
                                                                             requestRender,
-                                                                            propUpdater));
+                                                                            propUpdater,
+                                                                            errorHandler));
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);

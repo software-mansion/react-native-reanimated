@@ -2,23 +2,22 @@
 
 #include "ErrorHandler.h"
 #include "AndroidScheduler.h"
-#include "JNIRegistry.h"
+#include "Scheduler.h"
 #include <jni.h>
 #include <memory>
+#include <fbjni/fbjni.h>
+#include "Logger.h"
 
-class AndroidErrorHandler : ErrorHandler {
-  JNIEnv* env;
+class AndroidErrorHandler : public JavaClass<AndroidErrorHandler>, public ErrorHandler {
   std::shared_ptr<ErrorWrapper> error;
   std::shared_ptr<Scheduler> scheduler;
-  std::shared_ptr<JNIRegistry> jniRegistry;
-  void raiseSpec(const char *message) override;
+  void raiseSpec() override;
   public:
+    static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/AndroidErrorHandler;";
     AndroidErrorHandler(
-        JNIEnv* env,
-        std::shared_ptr<Scheduler> scheduler,
-        std::shared_ptr<JNIRegistry> jniRegistry);
+        std::shared_ptr<Scheduler> scheduler);
     std::shared_ptr<Scheduler> getScheduler() override;
     std::shared_ptr<ErrorWrapper> getError() override;
-    void handleError() override;
+    void setError(const char *message) override;
     virtual ~AndroidErrorHandler() {}
 };

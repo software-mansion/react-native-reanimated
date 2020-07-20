@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class NativeProxy implements JSIModule, TurboModuleRegistry {
+public class NativeProxy {
 
   static {
     System.loadLibrary("reanimated");
@@ -75,6 +75,7 @@ public class NativeProxy implements JSIModule, TurboModuleRegistry {
   public NativeProxy(ReactApplicationContext context) {
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), new Scheduler(context));
     mContext = new WeakReference<>(context);
+    prepare();
   }
 
   private native HybridData initHybrid(long jsContext, Scheduler scheduler);
@@ -96,36 +97,12 @@ public class NativeProxy implements JSIModule, TurboModuleRegistry {
     mNodesManager.registerEventHandler(handler);
   }
 
-  @Override
-  public void initialize() {
-
-  }
-
-  @Override
   public void onCatalystInstanceDestroy() {
     mHybridData.resetNative();
   }
 
-  @Override
-  public @Nullable TurboModule getModule(String moduleName) {
-    return null;
-  }
-
-  @Override
-  public Collection<TurboModule> getModules() {
-    return null;
-  }
-
-  @Override
-  public boolean hasModule(String moduleName) {
-    return false;
-  }
-
-  @Override
-  public List<String> getEagerInitModuleNames() {
+  public void prepare() {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     installJSIBindings();
-    
-    return new ArrayList<String>();
   }
 }

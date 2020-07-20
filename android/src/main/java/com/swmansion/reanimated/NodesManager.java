@@ -8,6 +8,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.JavaOnlyMap;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -86,6 +87,18 @@ public class NodesManager implements EventDispatcherListener {
   public final UpdateContext updateContext;
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
+
+  private NativeProxy mNativeProxy;
+
+  public void onCatalystInstanceDestroy() {
+    mNativeProxy.onCatalystInstanceDestroy();
+    mNativeProxy = null;
+  }
+
+  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mNativeProxy = new NativeProxy(reactApplicationContext);
+    mNativeProxy.prepare();
+  }
 
   private final class NativeUpdateOperation {
     public int mViewTag;

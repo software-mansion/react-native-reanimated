@@ -59,20 +59,7 @@ project.ext.react = [
 ]
 ```
 
-2. Turn on TurboModules by editing `MainApplication.java`
-
-```java {1,5-7}
-import com.facebook.react.config.ReactFeatureFlags; // <- add
-...
-public class MainApplication extends Application implements ReactApplication {
-  ...
-  static {
-    ReactFeatureFlags.useTurboModules = true; // <- add
-  }
-  ...
-```
-
-3. Plug Reanimated
+2. Plug Reanimated
 
 ```java {1-2,12-15}
   import com.facebook.react.bridge.JSIModulePackage; // <- add
