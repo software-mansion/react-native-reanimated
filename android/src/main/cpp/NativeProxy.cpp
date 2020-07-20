@@ -48,9 +48,14 @@ void NativeProxy::installJSIBindings() {
     this->requestRender(std::move(onRender));
   };
 
-  auto propObtainer = [/*this*/](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
-      // TODO
-      return jsi::Value::undefined();
+  auto propObtainer = [this](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+      auto method = javaPart_
+          ->getClass()
+          ->getMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>("obtainProp");
+      local_ref<JString> propNameJStr = jni::make_jstring(propName.utf8(rt).c_str());
+      auto result = method(javaPart_.get(), viewTag, propNameJStr);
+      std::string str = result->toStdString();
+      return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
     };
 
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();

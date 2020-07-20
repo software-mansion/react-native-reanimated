@@ -92,6 +92,11 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  private String obtainProp(int viewTag, String propName) {
+     return mNodesManager.obtainProp(viewTag, propName);
+  }
+
+  @DoNotStrip
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);
