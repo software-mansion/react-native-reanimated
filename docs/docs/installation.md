@@ -59,7 +59,7 @@ project.ext.react = [
 ]
 ```
 
-2. Plug Reanimated
+2. Plug Reanimated in `MainApplication.java`
 
 ```java {1-2,12-15}
   import com.facebook.react.bridge.JSIModulePackage; // <- add
@@ -90,7 +90,7 @@ project.ext.react = [
 > ```
 >  from `MainActivity.java`.
 
-You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/commit/938d494e9512d9fb82c30c23cc80f82c02abd9ea) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
+You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
 
 ## iOS
 
@@ -213,4 +213,4 @@ If not, after making those changes your app will be compatible with Turbo Module
 ```
 
 
-You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/commit/f6f2b77496bc00601150f98ea19a341f844d06a3) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
+You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/37cb058115562bdcd33e3d729abef1f27c081da5) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
