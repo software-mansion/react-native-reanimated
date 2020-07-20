@@ -13,7 +13,8 @@ import Animated, {
   withSpring,
   cancelAnimation,
   delay,
-  loop,
+  repeat,
+  sequence,
   withDecay,
 } from 'react-native-reanimated';
 
@@ -232,8 +233,8 @@ function DelayTest() {
   );
 }
 
-// loop
-function LoopTest() {
+// repeat
+function RepeatTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, ctx) => {
@@ -243,7 +244,37 @@ function LoopTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = loop(withTiming(70));
+      x.value = repeat(withTiming(70), 1, true);
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateX: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PanGestureHandler>
+  );
+}
+
+// sequence
+function SequenceTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      cancelAnimation(x);
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+    onEnd: (_) => {
+      x.value = sequence(withTiming(70), withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
