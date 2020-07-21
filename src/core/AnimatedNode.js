@@ -17,7 +17,7 @@ export function setCallID(nextCallID) {
 }
 
 function sanitizeConfig(config) {
-  if (Platform.OS === 'web' || ['undefined', 'string', 'function', 'boolean', 'number'].includes(typeof config)) {
+  if (Platform.OS === 'web' || Platform.OS === 'windows' || Platform.OS === 'macos' || ['undefined', 'string', 'function', 'boolean', 'number'].includes(typeof config)) {
     return config;
   } else if (Array.isArray(config)) {
     return config.map(sanitizeConfig);
