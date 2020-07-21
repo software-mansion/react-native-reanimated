@@ -1,8 +1,8 @@
 ---
-name: '❓Question'
-about: You can ask questions here
+name: '❓Question (Reanimated v2)'
+about: You can ask questions about Reanimated v2 here
 title: ''
-labels: '❓Question'
+labels: '❓Question, Reanimated2'
 assignees: ''
 ---
 
@@ -15,7 +15,7 @@ Tell us what is unclear for you here, you can attach code below if you have trou
 ## Code
 
 <!--
-Use [snack](https://snack.expo.io/) if you can or paste code in block.
+Paste code in block if you have problem using Reanimated v2.
 
 ```js
 // code goes here

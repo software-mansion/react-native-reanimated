@@ -1,8 +1,8 @@
 ---
-name: "\U0001F4A1 Feature request"
-about: Show us how to improve Reanimated
+name: "\U0001F4A1 Feature request (Reanimated v2)"
+about: Show us how to improve Reanimated v2
 title: ''
-labels: "\U0001F4A1 Feature request"
+labels: "\U0001F4A1 Feature request, Reanimated2"
 assignees: ''
 ---
 
