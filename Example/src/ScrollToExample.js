@@ -16,6 +16,8 @@ const indices = [0, 1, 2, 3];
 
 const range = [0, 9999];
 
+const dotSize = 40;
+
 export default function ScrollToScreen() {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
@@ -38,8 +40,7 @@ export default function ScrollToScreen() {
 
 function getDigit(number, i) {
   return useDerivedValue(() => {
-    const x = Math.floor(number.value / 10 ** i) % 10;
-    return x;
+    return Math.floor(number.value / 10 ** i) % 10;
   });
 }
 
@@ -117,6 +118,12 @@ function ProgressBar({ progress }) {
       transform: [{ translateX: x.value }],
     };
   });
+
+  const barStyle = useAnimatedStyle(() => {
+    return {
+      width: max.value,
+    };
+  });
   return (
     <View
       style={{ height: 100, paddingRight: 80, paddingLeft: 40, width: 300 }}>
@@ -124,6 +131,10 @@ function ProgressBar({ progress }) {
         onLayout={(e) => {
           max.value = e.nativeEvent.layout.width;
         }}>
+        <Animated.View style={ [{ backgroundColor: 'black', height: 2, marginRight: 20, transform: [
+          { translateY: dotSize/2 + 1 },
+          { translateX: dotSize/2 },
+        ] }, barStyle] } />
         <PanGestureHandler onGestureEvent={handler}>
           <Animated.View style={[styles.dot, stylez]} />
         </PanGestureHandler>
@@ -136,7 +147,7 @@ const styles = StyleSheet.create({
   dot: {
     borderRadius: 100,
     backgroundColor: 'black',
-    width: 40,
-    height: 40,
+    width: dotSize,
+    height: dotSize,
   },
 });
