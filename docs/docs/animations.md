@@ -16,7 +16,7 @@ In this arcitle we explore this and other methods that can be used to perform an
 ## Shared Value Animated Transitions
 
 One of the easiest ways of starting an animation in Reanimated 2, is by making an animated transition of a Shared Value.
-Animated Shared Value updates require just a tiny change compared to immadiate change.
+Animated Shared Value updates require just a tiny change comparing to immadiate updates.
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
 ```js {13}
@@ -231,16 +231,91 @@ Let us now excercise the use of modifiers in practice and build animation that c
 We start by rendering the actual view and defining rotation Shared Value that we then use to run the animation:
 
 ```js
+function WobbleExample(props) {
+  const rotation = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotateZ: `${rotation.value}deg` }],
+    };
+  });
+
+  return (
+    <>
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Button
+        title="wobble"
+        onPress={() => {
+          // will be filled in later
+        }}
+      />
+    </>
+  );
+}
 ```
 
+In the above example we make a Shared Value that will represent the rotation of the view.
+Then in `useAnimatedStyle` we map that variable to the rotation attribute by adding a "deg" suffix to indicate the angle is expressed in degrees.
+Let us see how we can now make the rotation animate back and forth using modifiers, here is what we can put in the button's `onPress` handler:
 
-To demonstrate `loop` modifier in action, we will recreate a wobble effect on the blue rectange from the previous demos.
-In order
+```js
+rotation.value = repeat(withTiming(10), 5, true)
+```
+
+The above code will cause the view to run five repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
+The `true` parameter passed to the `repeat` method makes the animation run in reverse every other repetition.
+At the end of all five repetitions the rotation will go back to zero.
+Here is what will happen when we click on the "wobble" button:
+
+[GIF]
+
+The above code makes the rotation only go between `0` and `10` degrees.
+In order for the view to also swing to the left, we could start from say `-10` and go to `10` degrees.
+But we can't just change the initial value, because in such a case the rectangle will be skewed from the beginning.
+One way to solve this is to use `sequence` modifier and starting from `0` do first animation to `-10`, then swing the view from `-10` to `10` several times, and finally go back from `-10` back to `0`.
+Here is how the `onPress` handler can look like:
+
+```js
+rotation.value = sequence(
+  withTiming(-10, { duration: 50 }),
+  repeat(withTiming(ANGLE, { duration: 100 }), 5, true),
+  withTiming(0, { duration: 50 })
+);
+```
+
+In the above code we put three animations in a sequence.
+First we start a timing to the minimum swing position (`-10` degrees), after that we start a loop that goes between `-10` and `10` degrees five times (same as in the previous implementation).
+Finally, we add a finishing timing animation that makes the rotation go back to zero.
+For the surrounding timing animation we pass a duration that is half of the duration we use for the looped animation.
+It is because those animations makes half the distance, thus this way we maintain the similar velocity for the initial, middle and finishing swings.
+Below we present the end result:
+
+[GIF]
 
 ## Animating Layout Properties
 
+Reanimated makes it possible for animations to be executed by completely avoiding the main React Native's JavaScript thread.
+Thanks to the animation runner being completely isolated, the application logic (rendering components, fetching and processing data, etc) cannot impact the performance of animation and hence allows to avoid many unpredictable frame drops.
+Developers who are familiar with React Native's [Animated API](https://reactnative.dev/docs/animated) and the concept of [Native Driver](https://reactnative.dev/blog/2017/02/14/using-native-driver-for-animated) may already understand this benefit, and also know that the use of Native Driver is limited to some subset of view properties.
+This, however, is not the case in Reanimated which supports animations of **all** native properties without generating any load on the main JavaScript thread (including layout properties like `width`, `flex`, etc.).
+This, in fact, was already the case since the first version of Reanimated but we'd like to emphasized that again as we receive questions around this topic from time to time.
 
-
+When discussing animated updates of layout properties, however, it is important to note that even though we avoid calling into the main JavaScript thread, some of the layout updates can be really expensive and cause significant delays despite being run on the native threads.
+An example where the layout property update can be expensive is a change of `flex-direction` on a container with many items.
+Such a change will cause each of the items to reposition and also change their dimensions.
+The change of the dimensions for each of the views may trigger further layout recalculations of the nested views down to the leaf nodes.
+As you can see, a single property change can trigger a lot of recomputation.
+It may perform just fine when we need to fire it once, but if we decided to run such computation during animation for every frame, the outcome may not be satisfactory especially on a low-end devices.
+As we work to improve performance of complex layout updates in Reanimated 2, when you expirience  issues that are the effects of heavy layout computation on every frame, we recommend that you try Reanimated's [Transition API](/react-native-reanimated/docs/1.x.x/transitions) or React Native's [LayoutAnimation API](https://reactnative.dev/docs/layoutanimation).
 
 ## Animating Non-Style Properties
 
+View styles are definitly the most frequently animated properties out there.
+However, in some usecases it is important to also animate properties that does not belong to styles.
+This is especially important if we have native components that expose native properties that we want to animate.
+In such a case we want to avoid roundtrips to the main JavaScript thread in order to update such properties while animating.
+Thankfully, Reanimated allows for that, but as the properties does not belong to styles we can't just use `useAnimatedStyle` hook.
+For this purpose Reanimated exposes a separate hook called `useAnimatedProps`.
+It works in a very similar way to `useAnimatedStyle` but instead of expecing a method that returns the animated styles, we expect the returned object to contain properties that we want to animate.
+Then, in order to hook animated propes to a view, we provide the resulting object as `animatedProps` property to the "Animated" version of the view type we want to render (e.g. `Animated.View`).
+Please check the documentation of [`useAnimatedProps`](api/useAnimatedProps) hook for usage examples.
