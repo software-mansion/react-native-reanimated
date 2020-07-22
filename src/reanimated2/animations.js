@@ -3,6 +3,17 @@ import { Easing } from './Easing';
 
 let IN_STYLE_UPDATER = false;
 
+const assertNumber = (value, callerName) => {
+  const valueType = typeof value
+  if (valueType !== 'number') {
+    let error = `invalid type of toValue passed to ${ callerName }, expected \`number\`, got \`${ valueType }\``;
+    if (valueType === 'object') {
+      error += ', maybe you forgot to add `.value`?'
+    }
+    throw new Error(error);
+  }
+}
+
 export function initialUpdaterRun(updater) {
   IN_STYLE_UPDATER = true;
   const result = updater();
@@ -34,14 +45,7 @@ export function cancelAnimation(value) {
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
   // check toValue
-  const valueType = typeof toValue
-  if (valueType !== 'number') {
-    let error = `invalid type of toValue passed to withTiming, expected \`number\`, got \`${ valueType }\``;
-    if (valueType === 'object') {
-      error += ', maybe you forgot to add `.value`?'
-    }
-    throw new Error(error);
-  }
+  assertNumber(toValue, 'withTiming')
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -108,14 +112,7 @@ export function withTiming(toValue, userConfig, callback) {
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
   // check toValue
-  const valueType = typeof toValue
-  if (valueType !== 'number') {
-    let error = `invalid type of toValue passed to withSpring, expected \`number\`, got \`${ valueType }\``;
-    if (valueType === 'object') {
-      error += ', maybe you forgot to add `.value`?'
-    }
-    throw new Error(error);
-  }
+  assertNumber(toValue, 'withSpring')
 
   return defineAnimation(toValue, () => {
     'worklet';
