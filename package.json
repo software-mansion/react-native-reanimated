@@ -99,7 +99,7 @@
   "release-it": {
     "hooks": {
       "before:git:bump": [
-        "# check if version corresponds to changes in native files  \n git diff --name-only ${latestVersion} HEAD | egrep \"(android/.*)|(ios/.*)\" -q && egrep '\\.0$' -q <<< ${version}"
+        "# check if version corresponds to changes in native files  \n  if git diff --name-only ${latestVersion} HEAD | egrep '(android/.*)|(ios/.*)' -q ; then egrep '\\.0$' -q <<< ${version} ; else true fi ;"
       ]
     }
   },
