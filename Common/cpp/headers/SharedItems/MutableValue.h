@@ -28,6 +28,7 @@ class MutableValue : public jsi::HostObject, public std::enable_shared_from_this
   public:
   void set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name);
+  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt);
   unsigned long addListener(std::function<void()> listener);
   void removeListener(unsigned long listenerId);
 };
