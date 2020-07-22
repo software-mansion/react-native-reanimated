@@ -16,8 +16,15 @@ declare module 'react-native-reanimated' {
     View as ReactNativeView,
     Text as ReactNativeText,
     Image as ReactNativeImage,
-    ScrollView as ReactNativeScrollView
+    ScrollView as ReactNativeScrollView,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
   } from 'react-native';
+  import {
+    GestureHandlerGestureEventNativeEvent,
+    PanGestureHandlerGestureEvent,
+    PanGestureHandlerEventExtra,
+  } from 'react-native-gesture-handler';
   namespace Animated {
     type Nullable<T> = T | null | undefined;
 
@@ -61,6 +68,12 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
+    type RawSharedValue = number | string | boolean | object;
+    type SharedValueType = RawSharedValue | RawSharedValue[];
+    export type SharedValue<T extends SharedValueType> = {
+      value: T;
+    };
+
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
@@ -92,6 +105,11 @@ declare module 'react-native-reanimated' {
     export interface DecayConfig {
       deceleration: Adaptable<number>;
     }
+    export interface WithDecayConfig {
+      deceleration?: number;
+      velocity?: number;
+      clamp?: [number, number];
+    }
     export interface BackwardCompatibleWrapper {
       start: (callback?: (data: { finished: boolean }) => any) => void;
       stop: () => void;
@@ -117,6 +135,9 @@ declare module 'react-native-reanimated' {
       restSpeedThreshold: Adaptable<number>;
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
+    }
+    export interface WithSpringConfig extends Omit<SpringConfig, 'toValue'> {
+      velocity: number
     }
 
     interface SpringConfigWithOrigamiTensionAndFriction {
@@ -341,6 +362,14 @@ declare module 'react-native-reanimated' {
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
+    // reanimated2 derived operations
+    export function interpolate(
+      x: number,
+      input: Array<number>,
+      output: Array<number>,
+      type: Extrapolate
+    ): number;
+
     // animations
     export function decay(
       clock: AnimatedClock,
@@ -371,6 +400,35 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
+    // reanimated2 animations
+    export function withTiming(
+      toValue: number,
+      userConfig?: Omit<TimingConfig, 'toValue'>,
+      callback?: (isCancelled: boolean) => void,
+    ): number;
+    export function withSpring(
+      toValue: number,
+      userConfig?: WithSpringConfig,
+      callback?: (isCancelled: boolean) => void,
+    ): number;
+    export function withDecay(
+      userConfig: WithDecayConfig,
+      callback?: (isCancelled: boolean) => void
+    ): number;
+    export function cancelAnimation<T extends SharedValue<SharedValueType>>(
+        sharedValue: T
+    ): void;
+    export function delay(
+      delayMS: number,
+      delayedAnimation: number,
+    ): number;
+    export function repeat(
+      animation: number,
+      numberOfReps?: number,
+      reverse?: boolean
+    ): number;
+    export function sequence(...animations: [number, ...number[]]): number;
+
     // hooks
     export function useCode(
       exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
@@ -379,6 +437,66 @@ declare module 'react-native-reanimated' {
     export function useValue<T extends Value>(
       initialValue: T
     ): AnimatedValue<T>;
+
+    // reanimated2 functions
+    export function runOnUI<A extends any[], R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
+    export function processColor(color: number | string): number;
+
+    // reanimated2 hooks
+    export function useSharedValue<T>(
+        initialValue: T
+    ): T extends SharedValueType ? SharedValue<T> : never;
+
+    export function useDerivedValue<T extends SharedValueType>(
+      processor: () => T
+    ): SharedValue<T>;
+
+    export function useAnimatedStyle<T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>>(
+      updater: () => T
+    ): T;
+    export function useAnimatedProps<T extends {}>(
+      updater: () => T
+    ): T;
+    export function useAnimatedGestureHandler<TContext extends Context>(
+      handlers: GestureHandlers<TContext>
+    ): OnGestureEvent;
+    export function useAnimatedScrollHandler(
+      handler: ScrollHandler
+    ): OnScroll;
+    export function useAnimatedScrollHandler(
+      handlers: ScrollHandlers
+    ): OnScroll;
+
+    // gesture-handler
+    type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
+
+    // @TODO: refactor this once worklet parse Typescript syntax
+    type Context = { [key: string]: any };
+
+    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
+    type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
+
+    export interface GestureHandlers<TContext extends Context> {
+      onStart?: Handler<TContext>;
+      onActive?: Handler<TContext>;
+      onEnd?: Handler<TContext>;
+      onFail?: Handler<TContext>;
+      onCancel?: Handler<TContext>;
+      onFinish?: (event: NativeEvent, context: TContext, isCanceledOrFailed: boolean) => void;
+    }
+
+    // scroll view
+    type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+    type ScrollHandler = (event: NativeScrollEvent) => void;
+
+    export interface ScrollHandlers {
+      onScroll?:ScrollHandler;
+      onBeginDrag?:ScrollHandler;
+      onEndDrag?: ScrollHandler;
+      onMomentumBegin?: ScrollHandler;
+      onMomentumEnd?: ScrollHandler;
+    }
 
     // configuration
     export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
@@ -500,5 +618,21 @@ declare module 'react-native-reanimated' {
   export const timing: typeof Animated.timing
   export const spring: typeof Animated.spring
   export const SpringUtils: typeof Animated.SpringUtils
+  export const runOnUI: typeof Animated.runOnUI
+  export const processColor: typeof Animated.processColor
   export const useValue: typeof Animated.useValue
+  export const useSharedValue: typeof Animated.useSharedValue
+  export const useAnimatedStyle: typeof Animated.useAnimatedStyle
+  export const useAnimatedProps: typeof Animated.useAnimatedProps
+  export const useDerivedValue: typeof Animated.useDerivedValue
+  export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
+  export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
+  export const withTiming: typeof Animated.withTiming
+  export const withSpring: typeof Animated.withSpring
+  export const withDecay: typeof Animated.withDecay
+  export const cancelAnimation: typeof Animated.cancelAnimation
+  export const delay: typeof Animated.delay
+  export const repeat: typeof Animated.repeat;
+  export const sequence: typeof Animated.sequence;
+  export const interpolate: typeof Animated.interpolate
 }
