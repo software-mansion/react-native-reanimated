@@ -1,4 +1,5 @@
 import useCode from '../derived/useCode';
+import AnimatedNode from './AnimatedNode';
 
 function assertNodesNotNull(code, children, exec) {
   if (!code) {
