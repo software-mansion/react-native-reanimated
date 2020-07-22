@@ -268,6 +268,19 @@ export function useAnimatedStyle(updater) {
     styleUpdater(viewTag, updater, remoteState);
   }, inputs);
 
+  let wrongKey
+  const isError = Object.keys(initial).some((key) => {
+    const element = initial[key]
+    const result = (typeof element === 'object' && Object.keys(element).length === 0)
+    if (result) {
+      wrongKey = key
+    }
+    return result
+  })
+  if (isError && wrongKey !== undefined) {
+    throw new Error(`invalid value passed to \`${ wrongKey }\`, empty objects are not allowed in useAnimatedStyle, maybe you forgot to use \`.value\`?`)
+  }
+
   return {
     viewTag,
     initial,

@@ -40,7 +40,7 @@ export function withTiming(toValue, userConfig, callback) {
     if (valueType === 'object') {
       error += ', maybe you forgot to add `.value`?'
     }
-    throw error;
+    throw new Error(error);
   }
 
   return defineAnimation(toValue, () => {
@@ -114,7 +114,7 @@ export function withSpring(toValue, userConfig, callback) {
     if (valueType === 'object') {
       error += ', maybe you forgot to add `.value`?'
     }
-    throw error;
+    throw new Error(error);
   }
 
   return defineAnimation(toValue, () => {
