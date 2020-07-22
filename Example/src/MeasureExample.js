@@ -20,35 +20,29 @@ const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', ''];
 const indices = [0, 1, 2, 3, 4, 5];
 
 function createSharedVariables() {
-  const contentHeights = useRef(null);
-  if (contentHeights.current == null) {
-    contentHeights.current = indices.map((i) => useSharedValue(0));
-  }
+  const contentHeights = indices.map((i) => useSharedValue(0));
 
-  const heights = useRef(null);
-  if (heights.current == null) {
-    const contentHeightsCopy = contentHeights.current;
-    const result = [useSharedValue(0)];
-    for (let i = 1; i < indices.length; i++) {
-      const previousHeight = result[i - 1];
-      const previousContentHeight = contentHeightsCopy[i - 1];
-      result.push(
-        useDerivedValue(() => {
-          return (
-            previousHeight.value +
-            previousContentHeight.value +
-            sectionHeaderHeight +
-            1
-          );
-        })
-      );
-    }
-    heights.current = result;
+  const contentHeightsCopy = contentHeights;
+  const result = [useSharedValue(0)];
+  for (let i = 1; i < indices.length; i++) {
+    const previousHeight = result[i - 1];
+    const previousContentHeight = contentHeightsCopy[i - 1];
+    result.push(
+      useDerivedValue(() => {
+        return (
+          previousHeight.value +
+          previousContentHeight.value +
+          sectionHeaderHeight +
+          1
+        );
+      })
+    );
   }
+  const heights = result;
 
   return {
-    contentHeights: contentHeights.current,
-    heights: heights.current,
+    contentHeights,
+    heights,
   };
 }
 
