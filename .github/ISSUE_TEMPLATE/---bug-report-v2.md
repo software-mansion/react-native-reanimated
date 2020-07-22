@@ -1,8 +1,8 @@
 ---
-name: "\U0001F41E Bug report"
-about: Report an issue with Reanimated
+name: "\U0001F41E Bug report (Reanimated v2)"
+about: Report an issue with Reanimated v2
 title: ''
-labels: "\U0001F41E Bug"
+labels: "\U0001F41E Bug, Reanimated2"
 assignees: ''
 ---
 
@@ -25,7 +25,7 @@ Tell us what's happening here.
 ## Snack or minimal code example
 
 <!--
-Please provide a Snack ([https://snack.expo.io/](https://snack.expo.io/)) or provide a minimal code example that reproduces the problem.
+Please provide a minimal code example that reproduces the problem.
 Here are some tips for providing a minimal example: [https://stackoverflow.com/help/mcve](https://stackoverflow.com/help/mcve).
 -->
 
