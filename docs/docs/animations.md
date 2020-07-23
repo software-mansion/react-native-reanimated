@@ -212,7 +212,7 @@ function Box() {
 }
 ```
 
-[GIF]
+![](/react-native-reanimated/docs/animations/twosprings.gif)
 
 Unlike in the previous example, here we define animation in the `useAnimatedStyle` hook.
 This makes it possible to use a single Shared Value but map that to two View's styles.
@@ -269,7 +269,7 @@ Setting the reverse flag to `true` will result in the rotation doing three full 
 At the end of all six repetitions the rotation will go back to zero.
 Here is what will happen when we click on the "wobble" button:
 
-[GIF]
+![](/react-native-reanimated/docs/animations/swing.gif)
 
 The above code makes the rotation only go between `0` and `10` degrees.
 In order for the view to also swing to the left, we could start from `-10` and go to `10` degrees.
@@ -292,7 +292,7 @@ For the surrounding timing animation we pass a duration that is half of the dura
 It is because those animations make half the distance, thus this way we maintain the similar velocity for the initial, middle and finishing swings.
 Below we present the end result:
 
-[GIF]
+![](/react-native-reanimated/docs/animations/wobble.gif)
 
 ## Animating Layout Properties
 
