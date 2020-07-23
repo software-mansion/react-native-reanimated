@@ -13,7 +13,7 @@ const ANGLE = 9;
 const TIME = 100;
 const EASING = Easing.elastic(1.5);
 
-export default function AnimatedStyleUpdateExample(props) {
+export default function WobbleExample(props) {
   const rotation = useSharedValue(1);
 
   const style = useAnimatedStyle(() => {
