@@ -45,7 +45,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 ![](/react-native-reanimated/docs/shared-values/sv-immediate.gif)
 
 With Reanimated 2, such Shared Value updates can be transformed to an animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/widthSpring).
-The only change that we can do now is to wrap random offset value in `withSpring` call as shown below:
+The only change that we can do now, is to wrap random offset value in `withSpring` call as shown below:
 
 ```js {3}
 <Button
@@ -56,7 +56,7 @@ The only change that we can do now is to wrap random offset value in `withSpring
 />
 ```
 
-This way, instead of assigning a number to Shared Value, we make an animation object which is then used to run updates on the Shared Value until it reaches the final value.
+This way, instead of assigning a number to Shared Value, we make an animation object which is then used to run updates on the Shared Value until it reaches the target.
 As a result the `offset` Shared Value transitions smoothly between the current and the newly assigned random number, which results in a nice spring-based animation in between those states:
 
 ![](/react-native-reanimated/docs/shared-values/sv-spring.gif)
@@ -64,9 +64,9 @@ As a result the `offset` Shared Value transitions smoothly between the current a
 ## Animations in `useAnimatedStyle` hook
 
 Animated Shared Value transitions are not the only way to initiate and run animations.
-It is often the case that we'd like animated properties that are not directly mapped onto a Shared Value.
+It is often the case that we'd like to animate properties that are not directly mapped onto a Shared Value.
 For that, in Reanimated we allow for animations to be specified directly in [`useAnimatedStyle`](api/useAnimatedStyle) hook.
-In order to do this you can use the same animation helper methods from Reanimated API, but instead of using it when updating a Shared Value, you can use it to wrap the style value property.
+In order to do this you can use the same animation helper methods from Reanimated API, but instead of using it when updating a Shared Value you use it to wrap the style value property:
 
 ```js {5}
 const animatedStyles = useAnimatedStyle(() => {
@@ -88,10 +88,11 @@ With this change added, we no longer need to animate the `offset` Shared Value u
 <Button onPress={() => (offset.value = Math.random())} title="Move" />
 ```
 
-As a result we will get the exact same behavior as when we'd animate the `offset` value update.
+As a result we will get the exact same behavior as when animating the `offset` value update.
 However, in this case we move the control over how value updates need to be performed from the place where we make Shared Value amends to the place where we define the View styles.
 This approach is more convenient in many cases, especially when view properties are derived from Shared Value as opposed to the Shared Value being directly mapped to given styles.
-Also, keeping all the aspects of view styles and transitions often makes it easier to keep control over your component's code, as it forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
+Also, keeping all the aspects of view styles and transitions colocated often makes it easier to keep control over your components' code.
+It forces you to have everything defined in one place vs scattered around the codebase allowing for animated transitions being triggered from anywhere.
 
 ## Interrupting Animated Updates
 
@@ -104,7 +105,7 @@ In the former case, when you make an update to Shared Value that is being animat
 Interruptions also work correctly for animations defined in `useAnimatedStyle` hook.
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.
 
-We believe that the described behavior when it comes to interruptions is desirable in the majority of the usecases, and hence we made it the default.
+We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
 In case you'd like to wait with the next animation until the previous one is finished, or in the case you'd like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or [`cancelAnimation`](api/cancelAnimation) method in the latter case.
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
@@ -113,7 +114,7 @@ To illustrate how interruptions perform in practice, please take a look at the b
 
 ## Customizing Animations
 
-Reanimated currently provides two built-in animation helpers: [`withTiming`](api/withTiming) and [`withSpring`](api/widthSpring).
+Reanimated currently provides three built-in animation helpers: [`withTiming`](api/withTiming), [`withSpring`](api/withSpring), and [`withDecay`](api/widthDecay).
 As there are ways of expanding that with your own, custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), we are not yet ready to document that as we still plan some changes of that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provides a great flexibility.
 Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](api/withTiming) and [`withSpring`](api/widthSpring) for the complete set of parameters.
@@ -213,18 +214,18 @@ function Box() {
 
 [GIF]
 
-Unlike in the previous example, here we define animation in `useAnimatedStyle` hook.
-This makes it possible to use a single Shared Value but map that to a two View's styles.
+Unlike in the previous example, here we define animation in the `useAnimatedStyle` hook.
+This makes it possible to use a single Shared Value but map that to two View's styles.
 
 ## Animation Modifiers
 
 Beside the ability of adjusting animation options, another way of customizing animations is by using animation modifiers.
 Currently, Reanimated exposes three modifiers: [`delay`](api/delay), [`sequence`](api/sequence) and [`repeat`](api/repeat).
 As the name suggests, `delay` modifier makes the provided animation to start with a given delay, the `sequence` modifier allows a number of animations to be provided and will make them run one after another.
-The `repeat` modifier allows for the provided animation to be repeated several times.
+Finally, the `repeat` modifier allows for the provided animation to be repeated several times.
 
 Modifiers typically take one or more animation objects with optional configuration as an input, and return an object that represents the modified animation.
-This makes it possible to wrap existing animation helpers (or custom helpers) or make a chain of modifiers when necessary.
+This makes it possible to wrap existing animation helpers (or custom helpers), or make a chain of modifiers when necessary.
 Please refer to the documentation of each of the modifier methods to learn about the ways how they can be parameterized.
 
 Let us now exercise the use of modifiers in practice and build animation that causes a rectangular view to wobble upon a button click.
@@ -255,36 +256,37 @@ function WobbleExample(props) {
 ```
 
 In the above example we make a Shared Value that will represent the rotation of the view.
-Then in `useAnimatedStyle` we map that variable to the rotation attribute by adding a "deg" suffix to indicate the angle is expressed in degrees.
+Then, in `useAnimatedStyle` we map that variable to the rotation attribute by adding a "deg" suffix to indicate the angle is expressed in degrees.
 Let us see how we can now make the rotation animate back and forth using modifiers, here is what we can put in the button's `onPress` handler:
 
 ```js
-rotation.value = repeat(withTiming(10), 5, true)
+rotation.value = repeat(withTiming(10), 6, true)
 ```
 
-The above code will cause the view to run five repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
-The `true` parameter passed to the `repeat` method makes the animation run in reverse every other repetition.
-At the end of all five repetitions the rotation will go back to zero.
+The above code will cause the view to run six repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
+The third parameter passed to the `repeat` method makes the animation to run in reverse every other repetition.
+Setting the reverse flag to `true` will result in the rotation doing three full loops (from `0` to `10` and back).
+At the end of all six repetitions the rotation will go back to zero.
 Here is what will happen when we click on the "wobble" button:
 
 [GIF]
 
 The above code makes the rotation only go between `0` and `10` degrees.
-In order for the view to also swing to the left, we could start from say `-10` and go to `10` degrees.
-But we can't just change the initial value, because in such a case the rectangle will be skewed from the beginning.
-One way to solve this is to use a `sequence` modifier and starting from `0` do the first animation to `-10`, then swing the view from `-10` to `10` several times, and finally go back from `-10` back to `0`.
-Here is how the `onPress` handler can look like:
+In order for the view to also swing to the left, we could start from `-10` and go to `10` degrees.
+But we can't just change the initial value to `-10`, because in such a case the rectangle will be skewed from the beginning.
+One way to solve this is to use a `sequence` modifier and starting from `0`, do the first animation to `-10`, then swing the view from `-10` to `10` several times, and finally go from `-10` back to `0`.
+Here is how the `onPress` handler will look like:
 
 ```js
 rotation.value = sequence(
   withTiming(-10, { duration: 50 }),
-  repeat(withTiming(ANGLE, { duration: 100 }), 5, true),
+  repeat(withTiming(ANGLE, { duration: 100 }), 6, true),
   withTiming(0, { duration: 50 })
 );
 ```
 
 In the above code we put three animations in a sequence.
-First we start a timing to the minimum swing position (`-10` degrees), after that we start a loop that goes between `-10` and `10` degrees five times (same as in the previous implementation).
+First, we start a timing to the minimum swing position (`-10` degrees), after that we start a loop that goes between `-10` and `10` degrees six times (same as in the previous implementation).
 Finally, we add a finishing timing animation that makes the rotation go back to zero.
 For the surrounding timing animation we pass a duration that is half of the duration we use for the looped animation.
 It is because those animations make half the distance, thus this way we maintain the similar velocity for the initial, middle and finishing swings.
