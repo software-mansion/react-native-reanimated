@@ -453,4 +453,22 @@
     }
 }
 
+- (NSString*)obtainProp:(nonnull NSNumber *)viewTag
+               propName:(nonnull NSString *)propName
+{
+    UIView* view = [self.uiManager viewForReactTag:viewTag];
+    
+    NSString* result = [NSString stringWithFormat:@"error: unknown propName %@, currently supported: opacity, zIndex", propName];
+    
+    if ([propName isEqualToString:@"opacity"]) {
+        CGFloat alpha = view.alpha;
+        result = [@(alpha) stringValue];
+    } else if ([propName isEqualToString:@"zIndex"]) {
+        NSInteger zIndex = view.reactZIndex;
+        result = [@(zIndex) stringValue];
+    }
+    
+    return result;
+}
+
 @end
