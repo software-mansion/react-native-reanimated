@@ -36,6 +36,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   // events
   virtual jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) = 0;
   virtual void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) = 0;
+
+  // views
+  virtual jsi::Value getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) = 0;
 };
 
 }

@@ -24,11 +24,14 @@ let content = fs.readFileSync(inputPath).toString()
 
 // replace
 const replaces = {
-    'component': ['App', 'TestApp'],
-    'path': ['./src/App', './test/TestApp'],
+    'component': ['App', 'TestApp', 'TestSuite'],
+    'path': ['./src/App', './test/TestApp', './test-suite/App'],
 }
 
-const replaceIndex = (args.indexOf('--test') !== -1) ? 1 : 0
+let replaceIndex = 0;
+if (args.indexOf('--test') !== -1) replaceIndex = 1;
+if (args.indexOf('--test-suite') !== -1) replaceIndex = 2;
+
 Object.keys(replaces).forEach((key) => {
     content = content.split('${' + key + '}').join(replaces[key][replaceIndex])
 })

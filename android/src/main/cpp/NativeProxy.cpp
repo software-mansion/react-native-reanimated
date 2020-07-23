@@ -48,6 +48,16 @@ void NativeProxy::installJSIBindings() {
     this->requestRender(std::move(onRender));
   };
 
+  auto propObtainer = [this](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+      auto method = javaPart_
+          ->getClass()
+          ->getMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>("obtainProp");
+      local_ref<JString> propNameJStr = jni::make_jstring(propName.utf8(rt).c_str());
+      auto result = method(javaPart_.get(), viewTag, propNameJStr);
+      std::string str = result->toStdString();
+      return jsi::Value(rt, jsi::String::createFromAscii(rt, str.c_str()));
+    };
+
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 
   std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
@@ -57,7 +67,8 @@ void NativeProxy::installJSIBindings() {
                                                          std::move(animatedRuntime),
                                                          requestRender,
                                                          propUpdater,
-                                                         errorHandler);
+                                                         errorHandler,
+                                                         propObtainer);
 
   this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
     module->onEvent(eventName, eventAsString);

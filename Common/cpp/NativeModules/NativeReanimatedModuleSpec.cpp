@@ -79,6 +79,16 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterEventHandl
   return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getViewProp(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+        ->getViewProp(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+    return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["installCoreFunctions"] = MethodMetadata{
@@ -102,6 +112,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
     2, __hostFunction_NativeReanimatedModuleSpec_registerEventHandler};
   methodMap_["unregisterEventHandler"] = MethodMetadata{
     1, __hostFunction_NativeReanimatedModuleSpec_unregisterEventHandler};
+
+  methodMap_["getViewProp"] = MethodMetadata{
+    3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
 }
 
 }

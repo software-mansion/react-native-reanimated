@@ -485,6 +485,19 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
+  public String obtainProp(int viewTag, String propName) {
+    View view = mUIManager.resolveView(viewTag);
+    String result = "error: unknown propName " + propName + ", currently supported: opacity, zIndex";
+    if (propName.equals("opacity")) {
+      Float opacity = view.getAlpha();
+      result = Float.toString(opacity);
+    } else if (propName.equals("zIndex")) {
+      Float zIndex = view.getElevation();
+      result = Float.toString(zIndex);
+    }
+    return result;
+  }
+
   private static void addProp(WritableMap propMap, String key, Object value) {
     if (value == null) {
       propMap.putNull(key);

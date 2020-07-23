@@ -36,4 +36,8 @@ export default {
   unregisterEventHandler(registrationId) {
     return InnerNativeModule.unregisterEventHandler(registrationId);
   },
+
+  getViewProp(viewTag, propName, callback) {
+    return InnerNativeModule.getViewProp(viewTag, propName, callback);
+  },
 };
