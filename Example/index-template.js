@@ -1,5 +1,4 @@
-import React from 'react'
-import { AppRegistry, Platform, View, Text } from 'react-native';
+import { AppRegistry, Platform } from 'react-native';
 import { name as appName } from './app.json';
 import ${component} from '${path}';
 
