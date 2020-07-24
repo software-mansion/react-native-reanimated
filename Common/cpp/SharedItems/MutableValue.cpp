@@ -80,6 +80,12 @@ jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   return jsi::Value::undefined();
 }
 
+std::vector<jsi::PropNameID> MutableValue::getPropertyNames(jsi::Runtime &rt) {
+  std::vector<jsi::PropNameID> result;
+  result.push_back(jsi::PropNameID::forUtf8(rt, std::string("value")));
+  return result;
+}
+
 MutableValue::MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module):
 module(module), value(ShareableValue::adapt(rt, initial, module)) {}
 

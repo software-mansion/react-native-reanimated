@@ -25,14 +25,7 @@ outputs(outputs) {
 
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
-  try {
-    mapper.callWithThis(rt, mapper);
-  }
-  catch(...) {
-    if (!module->errorHandler->raise()) {
-      throw;
-    }
-  }
+  mapper.callWithThis(rt, mapper);
 }
 
 }

@@ -23,7 +23,7 @@ std::shared_ptr<ErrorWrapper> IOSErrorHandler::getError() {
     return this->error;
 }
 
-void IOSErrorHandler::setError(const char *message) {
+void IOSErrorHandler::setError(std::string message) {
   if (error->handled) {
     error->message = message;
     error->handled = false;

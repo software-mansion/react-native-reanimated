@@ -30,7 +30,7 @@ std::shared_ptr<ErrorWrapper> AndroidErrorHandler::getError() {
     return this->error;
 }
 
-void AndroidErrorHandler::setError(const char *message) {
+void AndroidErrorHandler::setError(std::string message) {
   if (error->handled) {
     error->message = message;
     error->handled = false;

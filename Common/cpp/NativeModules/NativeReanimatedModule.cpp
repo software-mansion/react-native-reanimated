@@ -180,16 +180,23 @@ void NativeReanimatedModule::maybeRequestRender() {
 }
 
 void NativeReanimatedModule::onRender(double timestampMs) {
-  mapperRegistry->execute(*runtime);
+  try {
+    mapperRegistry->execute(*runtime);
 
-  std::vector<FrameCallback> callbacks = frameCallbacks;
-  frameCallbacks.clear();
-  for (auto callback : callbacks) {
-    callback(timestampMs);
+    std::vector<FrameCallback> callbacks = frameCallbacks;
+    frameCallbacks.clear();
+    for (auto callback : callbacks) {
+      callback(timestampMs);
+    }
+
+    if (mapperRegistry->needRunOnRender()) {
+      maybeRequestRender();
+    }
   }
-
-  if (mapperRegistry->needRunOnRender()) {
-    maybeRequestRender();
+  catch(...) {
+    if (!errorHandler->raise()) {
+      throw;
+    }
   }
 }
 
