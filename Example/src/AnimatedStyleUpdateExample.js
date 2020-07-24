@@ -3,50 +3,9 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   Easing,
-  getViewProp,
 } from 'react-native-reanimated';
-import { View, Button, findNodeHandle } from 'react-native';
-import React, { useRef } from 'react';
-
-const Test = () => {
-  const ref = useRef();
-  let viewTag;
-  const op = useSharedValue(0.5);
-
-  const uas = useAnimatedStyle(() => {
-    return {
-      opacity: op.value,
-    };
-  });
-
-  const handleOp = async () => {
-    if (viewTag === undefined) {
-      viewTag = findNodeHandle(ref.current);
-    }
-    op.value = op.value + 0.1;
-    if (op.value > 1) {
-      op.value = 0.1;
-    }
-
-    if (viewTag !== undefined) {
-      const result = await getViewProp(viewTag, 'opacity');
-      console.log('here ' + result);
-    }
-  };
-
-  return (
-    <View>
-      <Button title="TEST" onPress={handleOp} />
-      <Animated.View
-        ref={ref}
-        style={[
-          uas,
-          { backgroundColor: 'burlywood', zIndex: 55, width: 100, height: 100 },
-        ]}
-      />
-    </View>
-  );
-};
+import { View, Button } from 'react-native';
+import React from 'react';
 
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
@@ -80,7 +39,6 @@ export default function AnimatedStyleUpdateExample(props) {
           randomWidth.value = Math.random() * 350;
         }}
       />
-      <Test />
     </View>
   );
 }
