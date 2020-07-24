@@ -8,28 +8,43 @@ import { initialUpdaterRun } from './animations';
 export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutable(init);
+    ref.current = {
+      mutable: makeMutable(init),
+      last: init,
+    };
   }
-  return ref.current;
+
+  if (init !== ref.current.last) {
+    ref.current.last = init;
+    ref.current.mutable.value = init;
+  }
+
+  return ref.current.mutable;
 }
 
 export function useMapper(fun, inputs = [], outputs = []) {
+  const ids = useRef([]);
+
+  function clean() {
+    for (const id of ids.current) {
+      stopMapper(id);
+    }
+    ids.current = [];
+  }
+
+  clean();
+  const mapperId = startMapper(fun, inputs, outputs);
+  ids.current.push(mapperId);
+
   useEffect(() => {
-    const mapperId = startMapper(fun, inputs, outputs);
     return () => {
-      stopMapper(mapperId);
+      clean();
     };
   }, []);
 }
 
 export function useEvent(handler, eventNames = []) {
-  const initRef = useRef(null);
-
-  if (initRef.current === null) {
-    initRef.current = new WorkletEventHandler(handler, eventNames);
-  }
-
-  return initRef.current;
+  return new WorkletEventHandler(handler, eventNames);
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -64,12 +79,12 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
         }
       }
 
-      animation.callStart = (timestamp) => {
+      animation.callStart = timestamp => {
         animation.start(animation, value, timestamp, lastAnimation);
       };
     } else if (typeof animatedProp === 'object') {
       // it is an object
-      Object.keys(animatedProp).forEach((key) =>
+      Object.keys(animatedProp).forEach(key =>
         prepareAnimation(
           animatedProp[key],
           lastAnimation && lastAnimation[key],
@@ -110,7 +125,7 @@ function runAnimations(animation, timestamp, key, result) {
     } else if (typeof animation === 'object') {
       result[key] = {};
       let allFinished = true;
-      Object.keys(animation).forEach((k) => {
+      Object.keys(animation).forEach(k => {
         if (!runAnimations(animation[k], timestamp, k, result[key])) {
           allFinished = false;
         }
@@ -135,7 +150,7 @@ function isAnimated(prop) {
       if (prop.animation) {
         return true;
       }
-      return Object.keys(prop).some((key) => isAnimated(prop[key]));
+      return Object.keys(prop).some(key => isAnimated(prop[key]));
     }
     return false;
   }
@@ -145,12 +160,12 @@ function isAnimated(prop) {
 function styleDiff(oldStyle, newStyle) {
   'worklet';
   const diff = {};
-  Object.keys(oldStyle).forEach((key) => {
+  Object.keys(oldStyle).forEach(key => {
     if (newStyle[key] === undefined) {
       diff[key] = null;
     }
   });
-  Object.keys(newStyle).forEach((key) => {
+  Object.keys(newStyle).forEach(key => {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
@@ -178,13 +193,13 @@ function styleUpdater(viewTag, updater, state) {
 
   // extract animated props
   let hasAnimations = false;
-  Object.keys(animations).forEach((key) => {
+  Object.keys(animations).forEach(key => {
     const value = newValues[key];
     if (!isAnimated(value)) {
       delete animations[key];
     }
   });
-  Object.keys(newValues).forEach((key) => {
+  Object.keys(newValues).forEach(key => {
     const value = newValues[key];
     if (isAnimated(value)) {
       prepareAnimation(value, animations[key], oldValues[key]);
@@ -202,7 +217,7 @@ function styleUpdater(viewTag, updater, state) {
 
     const updates = {};
     let allFinished = true;
-    Object.keys(animations).forEach((propName) => {
+    Object.keys(animations).forEach(propName => {
       const finished = runAnimations(
         animations[propName],
         timestamp,
@@ -252,16 +267,15 @@ function styleUpdater(viewTag, updater, state) {
 export function useAnimatedStyle(updater) {
   const viewTag = useSharedValue(-1);
 
-  const initRef = useRef(null);
-  if (initRef.current === null) {
-    const initial = initialUpdaterRun(updater);
-    initRef.current = {
-      initial,
-      remoteState: makeRemote({ last: initial }),
-      inputs: Object.values(updater._closure),
-    };
+  const initial = initialUpdaterRun(updater);
+  const inputs = Object.values(updater._closure);
+
+  const remoteStateRef = useRef(null);
+  if (remoteStateRef.current == null) {
+    remoteStateRef.current = makeRemote({ last: initial });
   }
-  const { initial, remoteState, inputs } = initRef.current;
+
+  const remoteState = remoteStateRef.current;
 
   useMapper(() => {
     'worklet';
@@ -279,15 +293,8 @@ export function useAnimatedStyle(updater) {
 export const useAnimatedProps = useAnimatedStyle;
 
 export function useDerivedValue(processor) {
-  const initRef = useRef(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      sharedValue: makeMutable(initialUpdaterRun(processor)),
-      inputs: Object.values(processor._closure),
-    };
-  }
-
-  const { sharedValue, inputs } = initRef.current;
+  const sharedValue = useSharedValue(initialUpdaterRun(processor));
+  const inputs = Object.values(processor._closure);
 
   useMapper(
     () => {
@@ -311,7 +318,7 @@ export function useAnimatedGestureHandler(handlers) {
   const { context } = initRef.current;
 
   return useEvent(
-    (event) => {
+    event => {
       'worklet';
       const UNDETERMINED = 0;
       const FAILED = 1;
@@ -377,7 +384,7 @@ export function useAnimatedScrollHandler(handlers) {
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent((event) => {
+  return useEvent(event => {
     'worklet';
     const {
       onScroll,
