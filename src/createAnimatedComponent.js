@@ -197,8 +197,12 @@ export default function createAnimatedComponent(Component) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!(value instanceof AnimatedNode) && key !== 'transform') {
-          style[key] = value;
+        if (key !== 'transform') {
+          if (value instanceof AnimatedNode) {
+            style[key] = value.__getValue();
+          } else {
+            style[key] = value;
+          }
         }
       }
       return style;
@@ -216,7 +220,9 @@ export default function createAnimatedComponent(Component) {
           // alltogether. Therefore we provide a dummy callback here to allow
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
-        } else if (!(value instanceof AnimatedNode)) {
+        } else if (value instanceof AnimatedNode) {
+          props[key] = value.__getValue();
+        } else {
           props[key] = value;
         }
       }
