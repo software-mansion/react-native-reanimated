@@ -9,28 +9,38 @@ import { getTag } from './NativeMethods'
 export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutable(init);
+    ref.current = {
+      mutable: makeMutable(init),
+      last: init,
+    };
+  } else if (init !== ref.current.last) {
+    ref.current.last = init;
+    ref.current.mutable.value = init;
   }
-  return ref.current;
+
+  return ref.current.mutable;
 }
 
-export function useMapper(fun, inputs = [], outputs = []) {
+export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
   useEffect(() => {
     const mapperId = startMapper(fun, inputs, outputs);
     return () => {
       stopMapper(mapperId);
     };
-  }, []);
+  }, dependencies);
 }
 
-export function useEvent(handler, eventNames = []) {
+export function useEvent(handler, eventNames = [], dependencies = []) {
   const initRef = useRef(null);
 
-  if (initRef.current === null) {
-    initRef.current = new WorkletEventHandler(handler, eventNames);
+  if (initRef.current === null || handleDependenciesChange(initRef, dependencies)) {
+    initRef.current = {
+      worklet: new WorkletEventHandler(handler, eventNames),
+      dependencies
+    };
   }
 
-  return initRef.current;
+  return initRef.current.worklet;
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -250,16 +260,17 @@ function styleUpdater(viewTag, updater, state) {
   }
 }
 
-export function useAnimatedStyle(updater) {
+export function useAnimatedStyle(updater, dependencies = []) {
   const viewTag = useSharedValue(-1);
 
   const initRef = useRef(null);
-  if (initRef.current === null) {
+  if (initRef.current === null || handleDependenciesChange(initRef, dependencies)) {
     const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
       inputs: Object.values(updater._closure),
+      dependencies,
     };
   }
   const { initial, remoteState, inputs } = initRef.current;
@@ -267,7 +278,7 @@ export function useAnimatedStyle(updater) {
   useMapper(() => {
     'worklet';
     styleUpdater(viewTag, updater, remoteState);
-  }, inputs);
+  }, inputs, [], dependencies);
 
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
@@ -294,12 +305,14 @@ export function useAnimatedStyle(updater) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor) {
+export function useDerivedValue(processor, dependencies = []) {
   const initRef = useRef(null);
-  if (initRef.current === null) {
+
+  if (initRef.current === null || handleDependenciesChange(initRef, dependencies)) {
     initRef.current = {
       sharedValue: makeMutable(initialUpdaterRun(processor)),
       inputs: Object.values(processor._closure),
+      dependencies,
     };
   }
 
@@ -311,7 +324,8 @@ export function useDerivedValue(processor) {
       sharedValue.value = processor();
     },
     inputs,
-    [sharedValue]
+    [sharedValue],
+    dependencies
   );
 
   return sharedValue;
@@ -448,3 +462,22 @@ export function useAnimatedRef() {
   return ref.current
 }
 
+const handleDependenciesChange = (ref, dependencies) => {
+  if (ref.current === null) {
+    throw new Error('forbidden value of null ref passed to `handleDependenciesChange`')
+  }
+  if (dependencies === undefined) {
+    return true; // this isn't intuitive but it means to just recreate worklet for every render(like not passing anything to `useEffect`)
+  }
+  let dependenciesChanged = false
+  if (dependencies.length !== ref.current.dependencies.length) {
+    throw new Error(`hook call error: invalid number of dependencies detected(expected ${ref.current.dependencies.length}, got ${dependencies.length})`)
+  }
+  for(let i=0; i<dependencies.length; ++i) {
+    if (dependencies[i] !== ref.current.dependencies[i]) {
+      dependenciesChanged = true
+      ref.current.dependencies[i] = dependencies[i]
+    }
+  }
+  return dependenciesChanged
+}
