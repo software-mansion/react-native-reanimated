@@ -4,6 +4,7 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
+import AnimatedValue from './core/AnimatedValue';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
@@ -28,10 +29,10 @@ function hasAnimatedNodes(value) {
     return true;
   }
   if (Array.isArray(value)) {
-    return value.some(item => hasAnimatedNodes(item));
+    return value.some((item) => hasAnimatedNodes(item));
   }
   if (typeof value === 'object') {
-    return Object.keys(value).some(key => hasAnimatedNodes(value[key]));
+    return Object.keys(value).some((key) => hasAnimatedNodes(value[key]));
   }
   return false;
 }
@@ -195,7 +196,7 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       const viewTag = findNodeHandle(this);
-      styles.forEach(style => {
+      styles.forEach((style) => {
         if (style && style.viewTag !== undefined) {
           style.viewTag.value = viewTag;
         }
@@ -223,7 +224,7 @@ export default function createAnimatedComponent(Component) {
 
     _setComponentRef = setAndForwardRef({
       getForwardedRef: () => this.props.forwardedRef,
-      setLocalRef: ref => {
+      setLocalRef: (ref) => {
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -231,7 +232,7 @@ export default function createAnimatedComponent(Component) {
         // TODO: Delete this after React Native also deletes this deprecation helper.
         if (ref != null && ref.getNode == null) {
           ref.getNode = () => {
-           console.warn(
+            console.warn(
               '%s: Calling %s on the ref of an Animated component ' +
                 'is no longer necessary. You can now directly use the ref ' +
                 'instead. This method will be removed in a future release.',
@@ -250,6 +251,10 @@ export default function createAnimatedComponent(Component) {
         const value = inputStyle[key];
         if (!hasAnimatedNodes(value)) {
           style[key] = value;
+        } else if (value instanceof AnimatedValue) {
+          // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
+          // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
+          style[key] = value._startingValue;
         }
       }
       return style;
@@ -261,7 +266,7 @@ export default function createAnimatedComponent(Component) {
         const value = inputProps[key];
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
-          const processedStyle = styles.map(style => {
+          const processedStyle = styles.map((style) => {
             if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
               return style.initial;
@@ -273,7 +278,7 @@ export default function createAnimatedComponent(Component) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial).forEach(key => {
+          Object.keys(value.initial).forEach((key) => {
             props[key] = value.initial[key];
           });
         } else if (value instanceof AnimatedEvent) {
@@ -285,13 +290,17 @@ export default function createAnimatedComponent(Component) {
         } else if (value instanceof WorkletEventHandler) {
           if (value.eventNames.length > 0) {
             value.eventNames.forEach(
-              eventName => (props[eventName] = dummyListener)
+              (eventName) => (props[eventName] = dummyListener)
             );
           } else {
             props[key] = dummyListener;
           }
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
+        } else if (value instanceof AnimatedValue) {
+          // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
+          // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
+          props[key] = value._startingValue;
         }
       }
       return props;
