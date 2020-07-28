@@ -23,6 +23,10 @@
         {
           "type": "doc",
           "id": "version-1.x.x/transitions"
+        },
+        {
+          "type": "doc",
+          "id": "version-1.x.x/config"
         }
       ]
     },
