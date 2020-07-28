@@ -71,20 +71,20 @@ const SCREENS = {
 };
 
 function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map(key => ({ key }));
+  const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      renderItem={props => (
+      renderItem={(props) => (
         <MainScreenItem
           {...props}
-          screens={ SCREENS }
+          screens={SCREENS}
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}
-      renderScrollComponent={props => <ScrollView {...props} />}
+      renderScrollComponent={(props) => <ScrollView {...props} />}
       ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
     />
   );
@@ -158,8 +158,8 @@ export const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: input => createBrowserApp(input, { history: 'hash' }),
-  default: input => createAppContainer(input),
+  web: (input) => createBrowserApp(input, { history: 'hash' }),
+  default: (input) => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);
