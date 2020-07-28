@@ -11,7 +11,12 @@ class Animation {
   }
 
   static decayDefaultState() {
-    return Animation.springDefaultState();
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      velocity: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+    };
   }
 
   static timingDefaultState() {
