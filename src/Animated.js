@@ -1,9 +1,14 @@
-import { Image, ScrollView, Text, View } from 'react-native';
 import Easing from './Easing';
 import AnimatedClock from './core/AnimatedClock';
 import AnimatedValue from './core/AnimatedValue';
 import AnimatedNode from './core/AnimatedNode';
 import AnimatedCode from './core/AnimatedCode';
+import AnimatedFlatList from './components/AnimatedFlatList';
+import AnimatedImage from './components/AnimatedImage';
+import AnimatedScrollView from './components/AnimatedScrollView';
+import AnimatedSectionList from './components/AnimatedSectionList';
+import AnimatedText from './components/AnimatedText';
+import AnimatedView from './components/AnimatedView';
 import * as base from './base';
 import * as derived from './derived';
 import createAnimatedComponent from './createAnimatedComponent';
@@ -32,10 +37,12 @@ const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
 const springWrapper = backwardCompatibleAnimWrapper(spring, SpringAnimation);
 const Animated = {
   // components
-  View: createAnimatedComponent(View),
-  Text: createAnimatedComponent(Text),
-  Image: createAnimatedComponent(Image),
-  ScrollView: createAnimatedComponent(ScrollView),
+  View: AnimatedView,
+  Text: AnimatedText,
+  Image: AnimatedImage,
+  ScrollView: AnimatedScrollView,
+  FlatList: AnimatedFlatList,
+  SectionList: AnimatedSectionList,
   Code: AnimatedCode,
   createAnimatedComponent,
 
