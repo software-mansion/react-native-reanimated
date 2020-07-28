@@ -13,7 +13,7 @@ import { evaluateOnce } from '../derived/evaluateOnce';
 
 function createOldAnimationObject(node, animationStateDefaults, value, config) {
   const newClock = new Clock();
-  const currentState = animationStateDefaults;
+  const currentState = animationStateDefaults();
   let alwaysNode;
   let isStarted = false;
   let isDone = false;
