@@ -60,14 +60,10 @@ const FastRefreshTest = () => {
     setExpanded(!expanded);
   };
 
-  if (shared.value === -1) {
-    update();
-  }
-
   // test useEvent
   const flag = useSharedValue(1);
   const eventHandler = useEvent(
-    event => {
+    (event) => {
       if (flag.value === 1) {
         setState(Math.floor(Math.random() * 300));
         flag.value = 0;
@@ -79,15 +75,34 @@ const FastRefreshTest = () => {
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent']
   );
 
-  const bgColor =
-    state === derived.value &&
-    state === shared.value &&
-    state !== derivedNotListening.value
-      ? 'green'
-      : 'red';
+  let bgColor;
+
+  // sometimes we have to wait for shared value to be set and then read properly
+  const waitingTimeout = 100;
+  const startCounting = Date.now();
+  while (state !== shared.value) {
+    const delay = Date.now() - startCounting;
+    if (delay > waitingTimeout) {
+      console.log('timeout exceeded waiting for shared value: ' + delay);
+      bgColor = 'red';
+      break;
+    }
+  }
+
+  if (bgColor === undefined) {
+    bgColor =
+      state === derived.value &&
+      state === shared.value &&
+      state !== derivedNotListening.value
+        ? 'green'
+        : 'red';
+  }
 
   return (
     <View>
+      <Text>
+        Press the button or try to drag the box on the bottom to do testing
+      </Text>
       <Button title="change state" onPress={update} />
       <Text style={{ padding: 10, backgroundColor: bgColor }}>
         Those should be the same: {state}/{derived.value}/{shared.value} but not
@@ -96,7 +111,7 @@ const FastRefreshTest = () => {
       <Text>The lengths of the following containers should be the same</Text>
       <Animated.View style={[styles.box, uasShared]} />
       <Animated.View style={[styles.box, uasListening]} />
-      <Text>This should alternate(long/short)</Text>
+      <Text>This should alternate(long/short) on button press</Text>
       <Child expanded={expanded} />
       <Text>But this should not update</Text>
       <Animated.View style={[styles.box, uasNotListening]} />
