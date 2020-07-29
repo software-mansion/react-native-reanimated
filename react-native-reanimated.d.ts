@@ -527,7 +527,7 @@ declare module 'react-native-reanimated' {
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
-  export const Easing: EasingStatic;
+  export const EasingNode: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
