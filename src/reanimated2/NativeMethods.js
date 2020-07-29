@@ -16,10 +16,11 @@ export function measure(viewTag) {
   return result;
 }
 
-export function scrollTo(viewTag, x, y, animated) {
+export function scrollTo(animatedRef, x, y, animated) {
   'worklet';
   if (!_WORKLET) {
     return;
   }
+  const viewTag = animatedRef().value
   _scrollTo(viewTag, x, y, animated);
 }

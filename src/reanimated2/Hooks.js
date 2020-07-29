@@ -4,6 +4,7 @@ import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
+import { getTag } from './NativeMethods'
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -409,3 +410,17 @@ export function useAnimatedScrollHandler(handlers) {
     }
   }, subscribeForEvents);
 }
+
+export function useAnimatedRef() {
+  const tag = useSharedValue(-1)
+
+  return (component) => {
+    'worklet';
+    // enters when ref is set by attaching to a component
+    if (component !== undefined) {
+      tag.value = getTag(component);
+    }
+    return tag
+  }
+}
+
