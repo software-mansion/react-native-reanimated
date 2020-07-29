@@ -32,14 +32,10 @@ function defineAnimation(starting, factory) {
   return factory;
 }
 
-export function cancelAnimation(value) {
+export function cancelAnimation(sharedValue) {
   'worklet';
-  // TODO: this is supported only when run on UI – maybe assert?
-  const previousAnimation = value._animation;
-  if (previousAnimation) {
-    previousAnimation.cancelled = true;
-    value._animation = null;
-  }
+  // setting the current value cancels the animation if one is currently running
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
 export function withTiming(toValue, userConfig, callback) {
