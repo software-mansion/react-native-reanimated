@@ -261,10 +261,13 @@ export function useAnimatedStyle(updater, dependencies = []) {
 
   const initRef = useRef(null);
 
+  if (dependencies === null) {
+    dependencies = undefined;
+  }
   /**
    * create(or recreate) the object if
    *  it has not been created yet
-   *  any provided dependencies changes(or there have not been any provided which is equal to listen to any change)
+   *  any provided dependencies changed(or there have not been any provided which is equal to listen to any change)
    *  worklet hash changed(which means worklet body changed)
    */
   if (
@@ -321,10 +324,13 @@ export const useAnimatedProps = useAnimatedStyle;
 export function useDerivedValue(processor, dependencies = []) {
   const initRef = useRef(null);
 
+  if (dependencies === null) {
+    dependencies = undefined;
+  }
   /**
    * create(or recreate) the object if
    *  it has not been created yet
-   *  any provided dependencies changes(or there have not been any provided which is equal to listen to any change)
+   *  any provided dependencies changed(or there have not been any provided which is equal to listen to any change)
    *  worklet hash changed(which means worklet body changed)
    */
   if (
