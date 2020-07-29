@@ -21,6 +21,6 @@ export function scrollTo(animatedRef, x, y, animated) {
   if (!_WORKLET) {
     return;
   }
-  const viewTag = animatedRef().value
+  const viewTag = animatedRef()
   _scrollTo(viewTag, x, y, animated);
 }
