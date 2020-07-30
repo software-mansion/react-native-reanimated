@@ -12,7 +12,7 @@ const screenshotUrl = 'img/3.gif';
 
 const boxes = [
   {
-    title: <>Animate with more ease than ever before👍</>,
+    title: <>Animate with more ease than ever before</>,
     description: (
       <>
         Complexity reduced from tens to just a few methods. Try it out today:
