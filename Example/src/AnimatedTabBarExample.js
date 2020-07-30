@@ -185,6 +185,7 @@ const Bar = () => {
             activeIndex={activeIndex}
             item={tab.item}
             width={tabWidth}
+            key={`fg-${index}`}
           />
         ))}
         <Svg width={tabWidth * 2} height={64}>
@@ -201,6 +202,7 @@ const Bar = () => {
             width={tabWidth}
             indicatorPosition={indicatorPosition}
             position={position}
+            key={`bg-${index}`}
           />
         );
       })}
