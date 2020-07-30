@@ -256,14 +256,10 @@ function styleUpdater(viewTag, updater, state) {
   }
 }
 
-export function useAnimatedStyle(updater, dependencies = []) {
+export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
 
   const initRef = useRef(null);
-
-  if (dependencies === null) {
-    dependencies = undefined;
-  }
   /**
    * create(or recreate) the object if
    *  it has not been created yet
@@ -321,12 +317,9 @@ export function useAnimatedStyle(updater, dependencies = []) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor, dependencies = []) {
+export function useDerivedValue(processor, dependencies) {
   const initRef = useRef(null);
 
-  if (dependencies === null) {
-    dependencies = undefined;
-  }
   /**
    * create(or recreate) the object if
    *  it has not been created yet
