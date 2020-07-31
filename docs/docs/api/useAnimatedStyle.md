@@ -20,7 +20,7 @@ If the style worklet uses any shared values, it will be executed upon these valu
 
 ## Example
 
-```js {12-16}
+```js {11-15}
 import { StyleSheet } from 'react-native';
 import {
   Animated,

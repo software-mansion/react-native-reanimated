@@ -31,7 +31,7 @@ The reference is an object with `.value` property, that can be accessed and modi
 
 In the below example we render a button, which triggers random updates of a shared value directly from the React Native JS thread.
 
-```js {6}
+```js {5}
 import { Button } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 

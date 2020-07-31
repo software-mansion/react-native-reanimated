@@ -37,7 +37,7 @@ This method returns an animation object. It can be either assigned directly to a
 
 ## Example
 
-```js {21}
+```js {20}
 import Animated, {
   useSharedValue,
   withSpring,
@@ -56,7 +56,7 @@ function App() {
     onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
-    onEnd: _ => {
+    onEnd: (_) => {
       x.value = withSpring(0);
     },
   });

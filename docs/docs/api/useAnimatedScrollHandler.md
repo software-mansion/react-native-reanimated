@@ -46,7 +46,7 @@ The handler should be passed under `onScroll` parameter regardless of whether it
 In the below example we define a scroll handler by passing a single worklet handler.
 The worklet handler is triggered for each of the scroll events dispatched to the `Animated.ScrollView` component to which we attach the handler.
 
-```js {11-13,30}
+```js {10-12,29}
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -56,7 +56,7 @@ import Animated, {
 function ScrollExample() {
   const translationY = useSharedValue(0);
 
-  const scrollHandler = useAnimatedScrollHandler(event => {
+  const scrollHandler = useAnimatedScrollHandler((event) => {
     translationY.value = event.contentOffset.y;
   });
 
@@ -92,13 +92,13 @@ The place where we attach handler to a scrollable component remains unchanged re
 const isScrolling = useSharedValue(false);
 
 const scrollHandler = useAnimatedScrollHandler({
-  onScroll: event => {
+  onScroll: (event) => {
     translationY.value = event.contentOffset.y;
   },
-  onBeginDrag: e => {
+  onBeginDrag: (e) => {
     isScrolling.value = true;
   },
-  onEndDrag: e => {
+  onEndDrag: (e) => {
     isScrolling.value = false;
   },
 });
