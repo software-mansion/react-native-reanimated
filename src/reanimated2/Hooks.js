@@ -258,40 +258,38 @@ function styleUpdater(viewTag, updater, state) {
 
 export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
-
   const initRef = useRef(null);
-  /**
-   * create(or recreate) the object if
-   *  it has not been created yet
-   *  any provided dependencies changed(or there have not been any provided which is equal to listen to any change)
-   *  worklet hash changed(which means worklet body changed)
-   */
-  if (
-    initRef.current === null ||
-    handleDependenciesChange(initRef, dependencies) ||
-    initRef.current.__workletHash !== updater.__workletHash
-  ) {
+  const inputs = Object.values(updater._closure);
+
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, updater.__workletHash];
+  } else {
+    dependencies.push(updater.__workletHash);
+  }
+
+  if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
-      inputs: Object.values(updater._closure),
-      dependencies,
-      __workletHash: updater.__workletHash,
     };
   }
-  const { initial, remoteState, inputs } = initRef.current;
 
-  useMapper(
-    () => {
+  const { remoteState, initial } = initRef.current;
+
+  useEffect(() => {
+    const fun = () => {
       'worklet';
       styleUpdater(viewTag, updater, remoteState);
-    },
-    inputs,
-    [],
-    dependencies
-  );
+    };
+    const mapperId = startMapper(fun, inputs, []);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
 
+  // check for invalid usage of shared values in returned object
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
     const element = initial[key];
@@ -317,39 +315,33 @@ export function useAnimatedStyle(updater, dependencies) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor, dependencies) {
+export function useDerivedValue(processor, dependencies = undefined) {
   const initRef = useRef(null);
+  const inputs = Object.values(processor._closure);
 
-  /**
-   * create(or recreate) the object if
-   *  it has not been created yet
-   *  any provided dependencies changed(or there have not been any provided which is equal to listen to any change)
-   *  worklet hash changed(which means worklet body changed)
-   */
-  if (
-    initRef.current === null ||
-    handleDependenciesChange(initRef, dependencies) ||
-    initRef.current.__workletHash !== processor.__workletHash
-  ) {
-    initRef.current = {
-      sharedValue: makeMutable(initialUpdaterRun(processor)),
-      inputs: Object.values(processor._closure),
-      dependencies,
-      __workletHash: processor.__workletHash,
-    };
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, processor.__workletHash];
+  } else {
+    dependencies.push(processor.__workletHash);
   }
 
-  const { sharedValue, inputs } = initRef.current;
+  if (initRef.current === null) {
+    initRef.current = makeMutable(initialUpdaterRun(processor));
+  }
 
-  useMapper(
-    () => {
+  const sharedValue = initRef.current;
+
+  useEffect(() => {
+    const fun = () => {
       'worklet';
       sharedValue.value = processor();
-    },
-    inputs,
-    [sharedValue],
-    dependencies
-  );
+    };
+    const mapperId = startMapper(fun, inputs, [sharedValue]);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
 
   return sharedValue;
 }
@@ -485,31 +477,3 @@ export function useAnimatedRef() {
   return ref.current
 }
 
-const handleDependenciesChange = (ref, dependencies) => {
-  if (ref.current === null) {
-    throw new Error(
-      'forbidden value of null ref passed to `handleDependenciesChange`'
-    );
-  }
-  if (dependencies === undefined) {
-    // this isn't intuitive but it means to just recreate worklet for every render(like not passing anything to `useEffect`)
-    return true;
-  }
-  if (dependencies.length === 0) {
-    // empty array means do not listen to any changes
-    return false;
-  }
-  let dependenciesChanged = false;
-  if (dependencies.length !== ref.current.dependencies.length) {
-    throw new Error(
-      `hook call error: invalid number of dependencies detected(expected ${ref.current.dependencies.length}, got ${dependencies.length})`
-    );
-  }
-  for (let i = 0; i < dependencies.length; ++i) {
-    if (dependencies[i] !== ref.current.dependencies[i]) {
-      dependenciesChanged = true;
-      ref.current.dependencies[i] = dependencies[i];
-    }
-  }
-  return dependenciesChanged;
-};
