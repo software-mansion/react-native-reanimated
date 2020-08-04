@@ -64,8 +64,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                   runtime(std::move(rt)),
                                                   mapperRegistry(new MapperRegistry()),
                                                   eventHandlerRegistry(new EventHandlerRegistry()),
-                                                  propObtainer(propObtainer),
                                                   requestRender(platformDepMethodsHolder.requestRender),
+                                                  propObtainer(propObtainer),
                                                   errorHandler(errorHandler),
                                                   workletsCache(new WorkletsCache()),
                                                   scheduler(scheduler)

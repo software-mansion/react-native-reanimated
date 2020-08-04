@@ -23,7 +23,8 @@ public class SafeAreaContextPackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
         return Arrays.<ViewManager>asList(
-            new SafeAreaProviderManager(reactContext)
+            new SafeAreaProviderManager(reactContext),
+            new SafeAreaViewManager()
         );
     }
 
