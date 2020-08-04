@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -7,9 +7,9 @@ import Animated, {
   useAnimatedGestureHandler,
   measure,
   withTiming,
-  getTag,
   Easing,
   useDerivedValue,
+  useAnimatedRef,
 } from 'react-native-reanimated';
 import { TapGestureHandler } from 'react-native-gesture-handler';
 
@@ -84,7 +84,7 @@ export default function MeasureExample() {
 }
 
 function Section({ title, children, height, contentHeight, z, show }) {
-  const [randomComRef, setRef] = useState(null);
+  const aref = useAnimatedRef();
 
   const stylez = useAnimatedStyle(() => {
     return {
@@ -93,28 +93,26 @@ function Section({ title, children, height, contentHeight, z, show }) {
   });
 
   return (
-    <Animated.View style={[styles.section, stylez, { zIndex: z }]}>
-      {randomComRef == null ? null : (
-        <SectionHeader
-          title={title}
-          tag={getTag(randomComRef)}
-          contentHeight={contentHeight}
-          show={show}
-        />
-      )}
+    <Animated.View style={[styles.section, stylez, { zIndex: z }]}> 
+      <SectionHeader
+        title={title}
+        animatedRef={aref}
+        contentHeight={contentHeight}
+        show={show}
+      />
       <View>
         {React.Children.map(children, (element, idx) => {
-          return React.cloneElement(element, { ref: setRef });
+          return React.cloneElement(element, { ref: aref });
         })}
       </View>
     </Animated.View>
   );
 }
 
-function SectionHeader({ title, tag, contentHeight, show }) {
+function SectionHeader({ title, animatedRef, contentHeight, show }) {
   const handler = useAnimatedGestureHandler({
     onActive: (_, ctx) => {
-      const height = measure(tag).height;
+      const height = measure(animatedRef).height;
       if (contentHeight.value === 0) {
         contentHeight.value = withTiming(height, {
           duration: 500,
