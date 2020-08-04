@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -6,8 +6,8 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedGestureHandler,
   scrollTo,
-  getTag,
   useDerivedValue,
+  useAnimatedRef,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
@@ -62,20 +62,15 @@ function NumberDisplay({ number }) {
 }
 
 function Digit({ digit }) {
-  const tag = useSharedValue(-1);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    tag.value = getTag(ref.current);
-  }, []);
+  const aref = useAnimatedRef();
 
   useDerivedValue(() => {
-    scrollTo(tag.value, 0, digit.value * 200, true);
+    scrollTo(aref, 0, digit.value * 200, true);
   });
 
   return (
     <View style={{ height: 200 }}>
-      <ScrollView ref={ref}>
+      <ScrollView ref={aref}>
         {digits.map((i) => {
           return (
             <View
