@@ -64,7 +64,7 @@ void NativeProxy::installJSIBindings()
     return measure(viewTag);
   };
 
-  auto scrollToFunction = [this](int viewTag, double x, double y, bool animated) {
+  auto scrollToFunction = [this](int viewTag, double x, double y, bool animated) -> void {
     scrollTo(viewTag, x, y, animated);
   };
 

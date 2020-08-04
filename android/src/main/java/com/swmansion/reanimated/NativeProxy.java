@@ -95,7 +95,8 @@ public class NativeProxy {
   private String obtainProp(int viewTag, String propName) {
      return mNodesManager.obtainProp(viewTag, propName);
   }
-  
+
+  @DoNotStrip
   private void scrollTo(int viewTag, double x, double y, boolean animated) {
     mNodesManager.scrollTo(viewTag, x, y, animated);
   }
