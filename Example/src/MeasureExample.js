@@ -62,7 +62,7 @@ export default function MeasureExample() {
                 contentHeight={contentHeights[i]}
                 z={i}
                 show={true}>
-                <View>
+                <View collapsable={false}>
                   <RandomContent />
                 </View>
               </Section>
@@ -75,7 +75,10 @@ export default function MeasureExample() {
             contentHeight={contentHeights[5]}
             z={5}
             show={false}>
-            <View style={{ height: 500, backgroundColor: 'white' }}></View>
+            <View
+              collapsable={false}
+              style={{ height: 500, backgroundColor: 'white' }}
+            />
           </Section>
         </View>
       </SafeAreaView>

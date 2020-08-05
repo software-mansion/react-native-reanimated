@@ -209,11 +209,11 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag)
   result.push_back({"x", elements[0]});
   result.push_back({"y", elements[1]});
 
-  result.push_back({"width", elements[2]});
-  result.push_back({"height", elements[3]});
+  result.push_back({"pageX", elements[2]});
+  result.push_back({"pageY", elements[3]});
 
-  result.push_back({"pageX", elements[4]});
-  result.push_back({"pageY", elements[5]});
+  result.push_back({"width", elements[4]});
+  result.push_back({"height", elements[5]});
 
   return result;
 }

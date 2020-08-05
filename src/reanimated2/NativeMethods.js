@@ -1,9 +1,19 @@
+/* global _WORKLET _measure _scrollTo */
 import { findNodeHandle } from 'react-native';
 
 export function getTag(view) {
   return findNodeHandle(view);
 }
 
+/**
+ * fields that can be accessed:
+ *  x
+ *  y
+ *  width
+ *  height
+ *  pageX
+ *  pageY
+ */
 export function measure(animatedRef) {
   'worklet';
   if (!_WORKLET) {
@@ -22,6 +32,6 @@ export function scrollTo(animatedRef, x, y, animated) {
   if (!_WORKLET) {
     return;
   }
-  const viewTag = animatedRef()
+  const viewTag = animatedRef();
   _scrollTo(viewTag, x, y, animated);
 }
