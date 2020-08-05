@@ -17,6 +17,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
@@ -61,6 +62,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
+
+  public void scrollTo(int viewTag, double x, double y, boolean animated) {
+    View view;
+    try {
+      view = mUIManager.resolveView(viewTag);
+    } catch(IllegalViewOperationException e) {
+      e.printStackTrace();
+      return;
+    }
+    NativeMethodsHelper.scrollTo(view, x, y, animated);
+  }
+
+  public float[] measure(int viewTag) {
+    View view;
+    try {
+      view = mUIManager.resolveView(viewTag);
+    } catch(IllegalViewOperationException e) {
+      e.printStackTrace();
+      return (new float[]{});
+    }
+    return NativeMethodsHelper.measure(view);
+  }
 
   public interface OnAnimationFrame {
     void onAnimationFrame(double timestampMs);

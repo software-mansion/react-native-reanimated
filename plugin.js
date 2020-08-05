@@ -41,6 +41,8 @@ const globals = new Set([
   'RegExp',
   'Error',
   'global',
+  '_measure',
+  '_scrollTo',
 ]);
 
 function buildWorkletString(t, fun, closureVariables, name) {

@@ -19,8 +19,10 @@ import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
+import MeasureExample from './MeasureExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
+import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
@@ -40,6 +42,10 @@ const SCREENS = {
     screen: DragAndSnapExample,
     title: '🆕 Drag and Snap',
   },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: '🆕 Synchronous Measure',
+  },
   ScrollEventExample: {
     screen: ScrollEventExample,
     title: '🆕 Scroll Events',
@@ -47,6 +53,10 @@ const SCREENS = {
   ChatHeadsExample: {
     screen: ChatHeadsExample,
     title: '🆕 Chat Heads',
+  },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: '🆕 scrollTo',
   },
   SwipeableListExample: {
     screen: SwipeableListExample,

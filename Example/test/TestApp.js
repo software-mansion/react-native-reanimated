@@ -8,6 +8,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { styles, ItemSeparator, MainScreenItem } from '../src/App';
 
 import SimpleTest from './SimpleTest';
+import MeasureTest from './MeasureTest';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
@@ -15,6 +16,10 @@ const SCREENS = {
   SimpleTest: {
     screen: SimpleTest,
     title: '🆕 Simple test',
+  },
+  MeasureTest: {
+    screen: MeasureTest,
+    title: '🆕 Measure test',
   },
 };
 

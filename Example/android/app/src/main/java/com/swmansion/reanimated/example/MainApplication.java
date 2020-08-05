@@ -37,8 +37,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new RNCMaskedViewPackage(),
-            new SvgPackage(),
+          new RNCMaskedViewPackage(),
+          new SvgPackage(),
           new ReanimatedPackage(),
           new RNGestureHandlerPackage(),
           new SafeAreaContextPackage()
