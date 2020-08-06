@@ -1,9 +1,32 @@
-// Important note: start() and stop() will only be called at most once.
-// Once an animation has been stopped or finished its course, it will
-// not be reused.
+import AnimatedValue from '../core/InternalAnimatedValue';
+
 class Animation {
-  start(fromValue, onUpdate, onEnd, previousAnimation, animatedValue) {}
-  stop() {}
+  static springDefaultState() {
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      velocity: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+    };
+  }
+
+  static decayDefaultState() {
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      velocity: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+    };
+  }
+
+  static timingDefaultState() {
+    return {
+      position: new AnimatedValue(0),
+      finished: new AnimatedValue(0),
+      time: new AnimatedValue(0),
+      frameTime: new AnimatedValue(0),
+    };
+  }
 }
 
 export default Animation;
