@@ -4,6 +4,7 @@ import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
 import AnimatedNode from './core/AnimatedNode';
+import AnimatedValue from './core/AnimatedValue';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 
 import invariant from 'fbjs/lib/invariant';
@@ -198,9 +199,9 @@ export default function createAnimatedComponent(Component) {
       for (const key in inputStyle) {
         const value = inputStyle[key];
         if (key !== 'transform') {
-          if (value instanceof AnimatedNode) {
-            style[key] = value.__getValue();
-          } else {
+          if (value instanceof AnimatedValue) {
+            style[key] = value._startingValue;
+          } else if (!(value instanceof AnimatedNode)) {
             style[key] = value;
           }
         }
@@ -220,9 +221,9 @@ export default function createAnimatedComponent(Component) {
           // alltogether. Therefore we provide a dummy callback here to allow
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
-        } else if (value instanceof AnimatedNode) {
-          props[key] = value.__getValue();
-        } else {
+        } else if (value instanceof AnimatedValue) {
+          props[key] = value._startingValue;
+        } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         }
       }
@@ -247,7 +248,9 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName || Component.name || 'Component'})`
+  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
+    Component.name ||
+    'Component'})`;
 
   return AnimatedComponent;
 }
