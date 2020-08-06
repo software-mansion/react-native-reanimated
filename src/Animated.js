@@ -10,9 +10,7 @@ import createAnimatedComponent from './createAnimatedComponent';
 import decay from './animations/decay';
 import timing from './animations/timing';
 import spring from './animations/spring';
-import TimingAnimation from './animations/TimingAnimation';
-import SpringAnimation from './animations/SpringAnimation';
-import DecayAnimation from './animations/DecayAnimation';
+import Animation from './animations/Animation';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -26,10 +24,18 @@ import {
 import SpringUtils from './animations/SpringUtils';
 import useValue from './useValue';
 
-
-const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
-const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
-const springWrapper = backwardCompatibleAnimWrapper(spring, SpringAnimation);
+const decayWrapper = backwardCompatibleAnimWrapper(
+  decay,
+  Animation.decayDefaultState
+);
+const timingWrapper = backwardCompatibleAnimWrapper(
+  timing,
+  Animation.timingDefaultState
+);
+const springWrapper = backwardCompatibleAnimWrapper(
+  spring,
+  Animation.springDefaultState
+);
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -72,19 +78,16 @@ export {
   Easing,
   Transitioning,
   Transition,
-  createTransitioningComponent, 
-
+  createTransitioningComponent,
   // classes
   AnimatedClock as Clock,
   AnimatedValue as Value,
   AnimatedNode as Node,
-
   // animations
   decayWrapper as decay,
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
-
   // hooks
   useValue,
 };
