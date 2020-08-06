@@ -18,6 +18,7 @@ module.exports = {
           'api/useDerivedValue',
           'api/useAnimatedScrollHandler',
           'api/useAnimatedGestureHandler',
+          'api/useAnimatedRef',
         ],
         Animations: [
           'api/withTiming',
@@ -27,6 +28,7 @@ module.exports = {
           'api/sequence',
           'api/repeat',
         ],
+        'api/NativeMethods',
       },
     ],
   },
