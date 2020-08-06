@@ -8,6 +8,7 @@ module.exports = {
   favicon: 'img/SWM_Fav_192x192.png',
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-reanimated', // Usually your repo name.
+  onBrokenLinks: 'warn',
   customFields: {
     shortTitle: 'Reanimated',
   },
@@ -44,7 +45,7 @@ module.exports = {
               to: 'docs/',
               activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
             },
-            ...versions.slice(1).map(version => ({
+            ...versions.slice(1).map((version) => ({
               label: version,
               to: `docs/${version}/`,
             })),
