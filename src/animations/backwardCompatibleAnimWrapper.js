@@ -73,7 +73,7 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
     __detach: () => {
       animationCallback && animationCallback({ finished: isDone });
       animationCallback = null;
-      alwaysNode.__removeChild(value);
+      value.__initialized && alwaysNode.__removeChild(value);
     },
     stop: () => {
       if (isDone) {
