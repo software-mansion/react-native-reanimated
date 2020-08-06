@@ -23,6 +23,7 @@ module.exports = {
         Animations: [
           'api/withTiming',
           'api/withSpring',
+          'api/withDecay',
           'api/cancelAnimation',
           'api/delay',
           'api/sequence',
