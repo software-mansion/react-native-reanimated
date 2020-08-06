@@ -29,7 +29,10 @@ module.exports = {
           'api/sequence',
           'api/repeat',
         ],
-        'api/nativeMethods',
+        'Native methods': [
+          'api/nativeMethods/measure',
+          'api/nativeMethods/scrollTo',
+        ],
       },
     ],
   },
