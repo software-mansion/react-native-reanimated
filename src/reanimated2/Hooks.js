@@ -255,7 +255,7 @@ export function useAnimatedStyle(updater) {
 
   const initRef = useRef(null);
   if (initRef.current === null) {
-    const initial = initialUpdaterRun(updater);
+    const initial = {};
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -451,4 +451,3 @@ export function useAnimatedRef() {
 
   return ref.current
 }
-
