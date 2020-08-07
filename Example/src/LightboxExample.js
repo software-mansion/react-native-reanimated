@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,7 +16,6 @@ import {
   ScrollView,
   PanGestureHandler,
   TouchableWithoutFeedback,
-  TapGestureHandler,
 } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
