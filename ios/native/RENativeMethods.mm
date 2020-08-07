@@ -29,7 +29,7 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
   result.push_back({"height", globalBounds.size.height});
   
   result.push_back({"pageX", globalBounds.origin.x});
-  result.push_back({"pageY", globalBounds.origin.x});
+  result.push_back({"pageY", globalBounds.origin.y});
   return result;
 }
 
