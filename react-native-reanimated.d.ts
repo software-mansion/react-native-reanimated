@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -467,6 +467,16 @@ declare module 'react-native-reanimated' {
       handlers: ScrollHandlers
     ): OnScroll;
 
+    export function useAnimatedRef<T extends Component>(): RefObject<T>;
+    export function measure<T extends Component>(ref: RefObject<T>): {
+      width: number;
+      height: number;
+      x: number;
+      y: number;
+      pageX: number;
+      pageY: number;
+    };
+
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
@@ -627,6 +637,8 @@ declare module 'react-native-reanimated' {
   export const useDerivedValue: typeof Animated.useDerivedValue
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
+  export const useAnimatedRef: typeof Animated.useAnimatedRef
+  export const measure: typeof Animated.measure
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
   export const withDecay: typeof Animated.withDecay
