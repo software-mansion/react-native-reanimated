@@ -39,13 +39,10 @@ export async function test(t, { setPortalChild, cleanupPortal }) {
       // test the component
       const animatedRef = refWrapper.current.animatedRef;
 
-      console.log('siema');
-      console.log(animatedRef);
       const viewTag = getTag(animatedRef.current);
       runOnUI(() => {
         'worklet';
         const uiViewTag = animatedRef();
-        console.log('running on UI ' + uiViewTag);
         if (uiViewTag === viewTag) {
           refWrapper.current.uiFlag.value = 1;
         }
