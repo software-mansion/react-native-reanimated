@@ -109,21 +109,16 @@ function ImageTransition({ activeImage, onClose }) {
   );
   const x = useSharedValue(0);
   const y = useSharedValue(0);
-  const isMeasured = useSharedValue(false);
 
   function measureStuff() {
     'worklet';
 
-    if (isMeasured.value) {
-      return;
-    }
+    const measurements = measure(animatedRef);
 
-    const m = measure(animatedRef);
-
-    width.value = m.width;
-    height.value = m.height;
-    x.value = m.pageX;
-    y.value = m.pageY - HEADER_HEIGHT;
+    width.value = measurements.width;
+    height.value = measurements.height;
+    x.value = measurements.pageX;
+    y.value = measurements.pageY - HEADER_HEIGHT;
   }
 
   const translateX = useSharedValue(0);
