@@ -335,7 +335,10 @@ export function useAnimatedGestureHandler(handlers) {
       const ACTIVE = 4;
       const END = 5;
 
-      if ((event.oldState === UNDETERMINED || event.oldState === END) && handlers.onStart) {
+      if (
+        (event.oldState === UNDETERMINED || event.oldState === END) &&
+        handlers.onStart
+      ) {
         handlers.onStart(event, context);
       }
       if (event.state === ACTIVE && handlers.onActive) {
