@@ -331,6 +331,7 @@ export function useAnimatedGestureHandler(handlers) {
       'worklet';
       const UNDETERMINED = 0;
       const FAILED = 1;
+      const BEGAN = 2;
       const CANCELLED = 3;
       const ACTIVE = 4;
       const END = 5;
@@ -348,7 +349,7 @@ export function useAnimatedGestureHandler(handlers) {
         handlers.onEnd(event, context);
       }
       if (
-        event.oldState === ACTIVE &&
+        (event.oldState === ACTIVE || event.oldState === BEGAN) &&
         event.state === FAILED &&
         handlers.onFail
       ) {
