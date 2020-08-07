@@ -9,8 +9,8 @@ import {
   set,
   lessThan,
   proc,
+  abs,
 } from '../base';
-import { abs } from '../derived';
 
 const VELOCITY_EPS = 5;
 

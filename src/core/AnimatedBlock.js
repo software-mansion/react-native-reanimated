@@ -33,7 +33,7 @@ export function createAnimatedBlock(items) {
 }
 
 function nodify(v) {
-  if (typeof v === 'object' && v.__isProxy) {
+  if (typeof v === 'object' && v?.__isProxy) {
     if (!v.__val) {
       v.__val = new InternalAnimatedValue(0);
     }

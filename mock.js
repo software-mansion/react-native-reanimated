@@ -13,6 +13,15 @@ const { View, Text, Image, Animated, Platform } = require('react-native');
 
 function NOOP() {}
 
+function simulateCallbackFactory(...params) {
+  return (callback) => {
+    callback &&
+      setTimeout(() => {
+        callback(...params);
+      }, 0);
+  };
+}
+
 class Code extends React.Component {
   render() {
     return null;
@@ -23,7 +32,7 @@ const getValue = node => {
   if (typeof node === "number") {
     return node;
   }
-  return node && node[" __value"];
+  return node && node[" __value"] || 0;
 };
 
 class AnimatedValue {
@@ -79,11 +88,7 @@ const Reanimated = {
 
   Clock: NOOP,
   Node: NOOP,
-  Value: function() {
-    return {
-      setValue: NOOP,
-    };
-  },
+  Value: AnimatedValue,
 
   Extrapolate: {
     EXTEND: 'extend',
@@ -138,7 +143,7 @@ const Reanimated = {
     }
   },
   block: (a) => a[a.length - 1],
-  call: (a, b) => b(a),
+  call: (a, b) => b(a.map(getValue)),
   debug: NOOP,
   onChange: NOOP,
   startClock: NOOP,
@@ -164,9 +169,18 @@ const Reanimated = {
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
-  decay: NOOP,
-  timing: NOOP,
-  spring: NOOP,
+  decay: () => ({
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
+  }),
+  timing: () => ({
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
+  }),
+  spring: () => ({
+    start: simulateCallbackFactory({ finished: true }),
+    stop: simulateCallbackFactory({ finished: true }),
+  }),
 
   proc: cb => cb,
 

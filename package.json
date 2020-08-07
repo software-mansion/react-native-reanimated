@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "1.7.1",
+  "version": "1.10.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -8,16 +8,22 @@
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint": "eslint './src/**/*.js'",
-    "release": "release-it"
+    "release": "npm login && release-it",
+    "prepare": "bob build"
   },
-  "main": "src/Animated.js",
+  "main": "lib/commonjs/Animated",
+  "module": "lib/module/Animated",
+  "react-native": "src/Animated",
+  "source": "src/Animated",
   "types": "react-native-reanimated.d.ts",
   "files": [
     "src/",
+    "lib/",
     "android/src/main/AndroidManifest.xml",
     "android/src/main/java/",
     "android/build.gradle",
     "ios/",
+    "!ios/build/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
@@ -49,6 +55,7 @@
     "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-typescript": "^7.7.4",
+    "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
     "@types/react": "^16.9.0",
     "@types/react-native": "0.60.19",
@@ -84,8 +91,16 @@
   "release-it": {
     "hooks": {
       "before:git:bump": [
-        "# check if version corresponds to changes in native files  \n git diff --name-only ${latestVersion} HEAD | egrep \"(android/.*)|(ios/.*)\" -q && egrep '\\.0$' -q <<< ${version}"
+        "# check if version corresponds to changes in native files  \n  if git diff --name-only ${latestVersion} HEAD | egrep '(android/.*)|(ios/.*)' -q ; then egrep '\\.0$' -q <<< ${version} ; else true ; fi ;"
       ]
     }
+  },
+  "@react-native-community/bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module"
+    ]
   }
 }
