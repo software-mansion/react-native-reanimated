@@ -76,7 +76,7 @@ const SCREENS = {
   },
   LiquidSwipe: {
     screen: LiquidSwipe,
-    title: '🆕 (iOS ONLY) Liquid Swipe Example',
+    title: '🆕 Liquid Swipe Example',
   },
 };
 
