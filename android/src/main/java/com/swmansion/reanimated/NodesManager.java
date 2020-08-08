@@ -398,13 +398,6 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
       EventNode node = mEventMapping.get(key);
-      // If for some reason name resolution failed try a more generic approach
-      // converting `topEventName` to `onEventName`
-      if (node == null && eventName != null && eventName.startsWith("top")) {
-        eventName = "on" + eventName.substring(3);
-        key = viewTag + eventName;
-        node = mEventMapping.get(key);
-      }
       if (node != null) {
         event.dispatch(node);
       }
