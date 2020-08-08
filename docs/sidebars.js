@@ -9,6 +9,7 @@ module.exports = {
       'events',
       'architecture',
       'migration',
+      'troubleshooting',
     ],
     'API Reference': [
       {
