@@ -477,6 +477,8 @@ declare module 'react-native-reanimated' {
       pageY: number;
     };
 
+    export function scrollTo(ref: RefObject<ReactNativeScrollView | ScrollView>, x: number, y: number, animated: boolean): void;
+
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
@@ -639,6 +641,7 @@ declare module 'react-native-reanimated' {
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
   export const useAnimatedRef: typeof Animated.useAnimatedRef
   export const measure: typeof Animated.measure
+  export const scrollTo: typeof Animated.scrollTo
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
   export const withDecay: typeof Animated.withDecay
