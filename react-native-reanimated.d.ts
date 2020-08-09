@@ -460,11 +460,11 @@ declare module 'react-native-reanimated' {
     export function useAnimatedGestureHandler<TContext extends Context>(
       handlers: GestureHandlers<TContext>
     ): OnGestureEvent;
-    export function useAnimatedScrollHandler(
-      handler: ScrollHandler
+    export function useAnimatedScrollHandler<TContext extends Context>(
+      handler: ScrollHandler<TContext>
     ): OnScroll;
-    export function useAnimatedScrollHandler(
-      handlers: ScrollHandlers
+    export function useAnimatedScrollHandler<TContext extends Context>(
+      handlers: ScrollHandlers<TContext>
     ): OnScroll;
 
     export function useAnimatedRef<T extends Component>(): RefObject<T>;
@@ -482,8 +482,7 @@ declare module 'react-native-reanimated' {
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
-    // @TODO: refactor this once worklet parse Typescript syntax
-    type Context = { [key: string]: any };
+    type Context = Record<string, unknown>;
 
     type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
     type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
@@ -500,14 +499,14 @@ declare module 'react-native-reanimated' {
     // scroll view
     type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
-    type ScrollHandler = (event: NativeScrollEvent) => void;
+    type ScrollHandler<TContext extends Context> = (event: NativeScrollEvent, context: TContext) => void;
 
-    export interface ScrollHandlers {
-      onScroll?:ScrollHandler;
-      onBeginDrag?:ScrollHandler;
-      onEndDrag?: ScrollHandler;
-      onMomentumBegin?: ScrollHandler;
-      onMomentumEnd?: ScrollHandler;
+    export interface ScrollHandlers<TContext extends Context> {
+      onScroll?:ScrollHandler<TContext>;
+      onBeginDrag?:ScrollHandler<TContext>;
+      onEndDrag?: ScrollHandler<TContext>;
+      onMomentumBegin?: ScrollHandler<TContext>;
+      onMomentumEnd?: ScrollHandler<TContext>;
     }
 
     // configuration
@@ -539,6 +538,7 @@ declare module 'react-native-reanimated' {
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
+  
   export const EasingNode: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
