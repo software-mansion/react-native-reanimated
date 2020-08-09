@@ -516,7 +516,7 @@ declare module 'react-native-reanimated' {
 
   export default Animated;
 
-  interface EasingStatic {
+  export interface EasingStatic {
     linear: Animated.EasingFunction;
     ease: Animated.EasingFunction;
     quad: Animated.EasingFunction;
@@ -649,5 +649,6 @@ declare module 'react-native-reanimated' {
   export const delay: typeof Animated.delay
   export const repeat: typeof Animated.repeat;
   export const sequence: typeof Animated.sequence;
-  export const interpolate: typeof Animated.interpolate
+  export const interpolate: typeof Animated.interpolate;
+  export const Easing: Animated.EasingStatic;
 }
