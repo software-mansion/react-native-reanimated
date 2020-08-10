@@ -4,6 +4,8 @@ title: scrollTo
 sidebar_label: scrollTo
 ---
 
+> Due to time constraints we weren't able to finish this page.
+
 ### Arguments
 
 #### `animatedRef`
