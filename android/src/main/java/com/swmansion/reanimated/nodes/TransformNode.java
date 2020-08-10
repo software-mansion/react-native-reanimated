@@ -56,7 +56,7 @@ public class TransformNode extends Node {
         } else if(type == ReadableType.Array) {
           transformConfig.value = transformConfigMap.getArray("value");
         } else {
-          transformConfigMap.getDouble("value");
+          transformConfig.value = transformConfigMap.getDouble("value");
         }
         configs.add(transformConfig);
       }
