@@ -9,6 +9,7 @@ import { styles, ItemSeparator, MainScreenItem } from '../src/App';
 
 import SimpleTest from './SimpleTest';
 import MeasureTest from './MeasureTest';
+import FastRefreshTest from './FastRefreshTest';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
@@ -20,6 +21,10 @@ const SCREENS = {
   MeasureTest: {
     screen: MeasureTest,
     title: '🆕 Measure test',
+  },
+  FastRefreshTest: {
+    screen: FastRefreshTest,
+    title: '🆕 Fast refresh test',
   },
 };
 
