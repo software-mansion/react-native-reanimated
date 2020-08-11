@@ -90,4 +90,5 @@ jobs:
           - node_modules
       script:
         - yarn
+        - yarn tsc react-native-reanimated.d.ts --noEmit --lib 'es6'
         - yarn test
