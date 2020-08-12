@@ -8,4 +8,4 @@ Creates a color node in RGBA format, where the first three input nodes should ha
 
 The returned node can be mapped to view properties that represents color (e.g. [`backgroundColor`](https://facebook.github.io/react-native/docs/view-style-props.html#backgroundcolor)).
 
-##### Note: In order to interpolate color output values, use [`interpolateColors`](interpolate-colors.html) instead.
+##### Note: In order to interpolate color output values, use [`interpolateColors`](interpolateColors.md) instead.
