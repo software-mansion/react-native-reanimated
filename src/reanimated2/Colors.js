@@ -1,3 +1,4 @@
+/* global _WORKLET */
 /**
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js
@@ -18,10 +19,15 @@ function call(...args) {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
-const cachedMatchers = makeRemote({});
+// matchers use RegExp objects which needs to be created separately on JS and on
+// the UI thread. We keep separate cache of Regexes for UI and JS using the below
+// objects, then pick the right cache in getMatchers() method.
+const jsCachedMatchers = {};
+const uiCachedMatchers = makeRemote({});
 
 function getMatchers() {
   'worklet';
+  const cachedMatchers = _WORKLET ? uiCachedMatchers : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
