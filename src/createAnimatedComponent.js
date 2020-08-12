@@ -30,7 +30,7 @@ function hasAnimatedNodes(value) {
   if (Array.isArray(value)) {
     return value.some(item => hasAnimatedNodes(item));
   }
-  if (typeof value === 'object') {
+  if (typeof value === 'object' && value) {
     return Object.keys(value).some(key => hasAnimatedNodes(value[key]));
   }
   return false;
