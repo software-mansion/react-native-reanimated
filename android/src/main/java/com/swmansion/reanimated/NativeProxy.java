@@ -97,6 +97,16 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  private void scrollTo(int viewTag, double x, double y, boolean animated) {
+    mNodesManager.scrollTo(viewTag, x, y, animated);
+  }
+
+  @DoNotStrip
+  private float[] measure(int viewTag) {
+    return mNodesManager.measure(viewTag);
+  }
+
+  @DoNotStrip
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);

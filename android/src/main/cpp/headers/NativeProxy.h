@@ -92,6 +92,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler(std::function<void(std::string,std::string)> handler);
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
+  void scrollTo(int viewTag, double x, double y, bool animated);
+  std::vector<std::pair<std::string, double>> measure(int viewTag);
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,

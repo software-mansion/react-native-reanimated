@@ -4,15 +4,15 @@ import { Easing } from './Easing';
 let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
-  const valueType = typeof value
+  const valueType = typeof value;
   if (valueType !== 'number') {
-    let error = `invalid type of toValue passed to ${ callerName }, expected \`number\`, got \`${ valueType }\``;
+    let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
     if (valueType === 'object') {
-      error += ', maybe you forgot to add `.value`?'
+      error += ', maybe you forgot to add `.value`?';
     }
     throw new Error(error);
   }
-}
+};
 
 export function initialUpdaterRun(updater) {
   IN_STYLE_UPDATER = true;
@@ -32,20 +32,16 @@ function defineAnimation(starting, factory) {
   return factory;
 }
 
-export function cancelAnimation(value) {
+export function cancelAnimation(sharedValue) {
   'worklet';
-  // TODO: this is supported only when run on UI – maybe assert?
-  const previousAnimation = value._animation;
-  if (previousAnimation) {
-    previousAnimation.cancelled = true;
-    value._animation = null;
-  }
+  // setting the current value cancels the animation if one is currently running
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
   // check toValue
-  assertNumber(toValue, 'withTiming')
+  assertNumber(toValue, 'withTiming');
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -54,7 +50,7 @@ export function withTiming(toValue, userConfig, callback) {
       easing: Easing.inOut(Easing.quad),
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function timing(animation, now) {
@@ -112,7 +108,7 @@ export function withTiming(toValue, userConfig, callback) {
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
   // check toValue
-  assertNumber(toValue, 'withSpring')
+  assertNumber(toValue, 'withSpring');
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -129,7 +125,7 @@ export function withSpring(toValue, userConfig, callback) {
       restSpeedThreshold: 0.001,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     function spring(animation, now) {
@@ -236,7 +232,7 @@ export function withDecay(userConfig, callback) {
       deceleration: 0.998,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach(key => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
     const VELOCITY_EPS = 5;
@@ -348,7 +344,7 @@ export function sequence(..._animations) {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
-    const animations = _animations.map(a =>
+    const animations = _animations.map((a) =>
       typeof a === 'function' ? a() : a
     );
     const firstAnimation = animations[0];

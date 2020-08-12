@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -367,7 +367,7 @@ declare module 'react-native-reanimated' {
       x: number,
       input: Array<number>,
       output: Array<number>,
-      type: Extrapolate
+      type?: Extrapolate
     ): number;
 
     // animations
@@ -460,18 +460,29 @@ declare module 'react-native-reanimated' {
     export function useAnimatedGestureHandler<TContext extends Context>(
       handlers: GestureHandlers<TContext>
     ): OnGestureEvent;
-    export function useAnimatedScrollHandler(
-      handler: ScrollHandler
+    export function useAnimatedScrollHandler<TContext extends Context>(
+      handler: ScrollHandler<TContext>
     ): OnScroll;
-    export function useAnimatedScrollHandler(
-      handlers: ScrollHandlers
+    export function useAnimatedScrollHandler<TContext extends Context>(
+      handlers: ScrollHandlers<TContext>
     ): OnScroll;
+
+    export function useAnimatedRef<T extends Component>(): RefObject<T>;
+    export function measure<T extends Component>(ref: RefObject<T>): {
+      width: number;
+      height: number;
+      x: number;
+      y: number;
+      pageX: number;
+      pageY: number;
+    };
+
+    export function scrollTo(ref: RefObject<ReactNativeScrollView | ScrollView>, x: number, y: number, animated: boolean): void;
 
     // gesture-handler
     type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
 
-    // @TODO: refactor this once worklet parse Typescript syntax
-    type Context = { [key: string]: any };
+    type Context = Record<string, unknown>;
 
     type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
     type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
@@ -488,14 +499,14 @@ declare module 'react-native-reanimated' {
     // scroll view
     type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
-    type ScrollHandler = (event: NativeScrollEvent) => void;
+    type ScrollHandler<TContext extends Context> = (event: NativeScrollEvent, context: TContext) => void;
 
-    export interface ScrollHandlers {
-      onScroll?:ScrollHandler;
-      onBeginDrag?:ScrollHandler;
-      onEndDrag?: ScrollHandler;
-      onMomentumBegin?: ScrollHandler;
-      onMomentumEnd?: ScrollHandler;
+    export interface ScrollHandlers<TContext extends Context> {
+      onScroll?:ScrollHandler<TContext>;
+      onBeginDrag?:ScrollHandler<TContext>;
+      onEndDrag?: ScrollHandler<TContext>;
+      onMomentumBegin?: ScrollHandler<TContext>;
+      onMomentumEnd?: ScrollHandler<TContext>;
     }
 
     // configuration
@@ -527,7 +538,8 @@ declare module 'react-native-reanimated' {
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
-  export const Easing: EasingStatic;
+  
+  export const EasingNode: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
@@ -627,6 +639,9 @@ declare module 'react-native-reanimated' {
   export const useDerivedValue: typeof Animated.useDerivedValue
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
+  export const useAnimatedRef: typeof Animated.useAnimatedRef
+  export const measure: typeof Animated.measure
+  export const scrollTo: typeof Animated.scrollTo
   export const withTiming: typeof Animated.withTiming
   export const withSpring: typeof Animated.withSpring
   export const withDecay: typeof Animated.withDecay

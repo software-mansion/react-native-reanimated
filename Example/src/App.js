@@ -19,8 +19,10 @@ import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
+import MeasureExample from './MeasureExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
+import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
@@ -40,6 +42,10 @@ const SCREENS = {
     screen: DragAndSnapExample,
     title: '🆕 Drag and Snap',
   },
+  MeasureExample: {
+    screen: MeasureExample,
+    title: '🆕 Synchronous Measure',
+  },
   ScrollEventExample: {
     screen: ScrollEventExample,
     title: '🆕 Scroll Events',
@@ -47,6 +53,10 @@ const SCREENS = {
   ChatHeadsExample: {
     screen: ChatHeadsExample,
     title: '🆕 Chat Heads',
+  },
+  ScrollableToExample: {
+    screen: ScrollToExample,
+    title: '🆕 scrollTo',
   },
   SwipeableListExample: {
     screen: SwipeableListExample,
@@ -66,25 +76,25 @@ const SCREENS = {
   },
   LiquidSwipe: {
     screen: LiquidSwipe,
-    title: '🆕 (iOS ONLY) Liquid Swipe Example',
+    title: '🆕 Liquid Swipe Example',
   },
 };
 
 function MainScreen({ navigation }) {
-  const data = Object.keys(SCREENS).map(key => ({ key }));
+  const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
       style={styles.list}
       data={data}
       ItemSeparatorComponent={ItemSeparator}
-      renderItem={props => (
+      renderItem={(props) => (
         <MainScreenItem
           {...props}
-          screens={ SCREENS }
+          screens={SCREENS}
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}
-      renderScrollComponent={props => <ScrollView {...props} />}
+      renderScrollComponent={(props) => <ScrollView {...props} />}
       ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
     />
   );
@@ -158,8 +168,8 @@ export const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: input => createBrowserApp(input, { history: 'hash' }),
-  default: input => createAppContainer(input),
+  web: (input) => createBrowserApp(input, { history: 'hash' }),
+  default: (input) => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);

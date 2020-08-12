@@ -4,27 +4,34 @@ import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
+import { getTag } from './NativeMethods'
 
 export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutable(init);
+    ref.current = {
+      mutable: makeMutable(init),
+      last: init,
+    };
+  } else if (init !== ref.current.last) {
+    ref.current.last = init;
+    ref.current.mutable.value = init;
   }
-  return ref.current;
+
+  return ref.current.mutable;
 }
 
-export function useMapper(fun, inputs = [], outputs = []) {
+export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
   useEffect(() => {
     const mapperId = startMapper(fun, inputs, outputs);
     return () => {
       stopMapper(mapperId);
     };
-  }, []);
+  }, dependencies);
 }
 
 export function useEvent(handler, eventNames = []) {
   const initRef = useRef(null);
-
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   }
@@ -249,36 +256,53 @@ function styleUpdater(viewTag, updater, state) {
   }
 }
 
-export function useAnimatedStyle(updater) {
+export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
-
   const initRef = useRef(null);
+  const inputs = Object.values(updater._closure);
+
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, updater.__workletHash];
+  } else {
+    dependencies.push(updater.__workletHash);
+  }
+
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
-      inputs: Object.values(updater._closure),
     };
   }
-  const { initial, remoteState, inputs } = initRef.current;
 
-  useMapper(() => {
-    'worklet';
-    styleUpdater(viewTag, updater, remoteState);
-  }, inputs);
+  const { remoteState, initial } = initRef.current;
 
-  let wrongKey
+  useEffect(() => {
+    const fun = () => {
+      'worklet';
+      styleUpdater(viewTag, updater, remoteState);
+    };
+    const mapperId = startMapper(fun, inputs, []);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
+
+  // check for invalid usage of shared values in returned object
+  let wrongKey;
   const isError = Object.keys(initial).some((key) => {
-    const element = initial[key]
-    const result = (typeof element === 'object' && element.value !== undefined)
+    const element = initial[key];
+    const result = typeof element === 'object' && element.value !== undefined;
     if (result) {
-      wrongKey = key
+      wrongKey = key;
     }
-    return result
-  })
+    return result;
+  });
   if (isError && wrongKey !== undefined) {
-    throw new Error(`invalid value passed to \`${ wrongKey }\`, maybe you forgot to use \`.value\`?`)
+    throw new Error(
+      `invalid value passed to \`${wrongKey}\`, maybe you forgot to use \`.value\`?`
+    );
   }
 
   return {
@@ -291,25 +315,33 @@ export function useAnimatedStyle(updater) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor) {
+export function useDerivedValue(processor, dependencies = undefined) {
   const initRef = useRef(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      sharedValue: makeMutable(initialUpdaterRun(processor)),
-      inputs: Object.values(processor._closure),
-    };
+  const inputs = Object.values(processor._closure);
+
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, processor.__workletHash];
+  } else {
+    dependencies.push(processor.__workletHash);
   }
 
-  const { sharedValue, inputs } = initRef.current;
+  if (initRef.current === null) {
+    initRef.current = makeMutable(initialUpdaterRun(processor));
+  }
 
-  useMapper(
-    () => {
+  const sharedValue = initRef.current;
+
+  useEffect(() => {
+    const fun = () => {
       'worklet';
       sharedValue.value = processor();
-    },
-    inputs,
-    [sharedValue]
-  );
+    };
+    const mapperId = startMapper(fun, inputs, [sharedValue]);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
 
   return sharedValue;
 }
@@ -326,13 +358,13 @@ export function useAnimatedGestureHandler(handlers) {
   return useEvent(
     (event) => {
       'worklet';
-      const UNDETERMINED = 0;
       const FAILED = 1;
+      const BEGAN = 2;
       const CANCELLED = 3;
       const ACTIVE = 4;
       const END = 5;
 
-      if (event.oldState === UNDETERMINED && handlers.onStart) {
+      if (event.state === BEGAN && handlers.onStart) {
         handlers.onStart(event, context);
       }
       if (event.state === ACTIVE && handlers.onActive) {
@@ -341,21 +373,17 @@ export function useAnimatedGestureHandler(handlers) {
       if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
         handlers.onEnd(event, context);
       }
-      if (
-        event.oldState === ACTIVE &&
-        event.state === FAILED &&
-        handlers.onFail
-      ) {
+      if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
         handlers.onFail(event, context);
       }
-      if (
-        event.oldState === ACTIVE &&
-        event.state === CANCELLED &&
-        handlers.onCancel
-      ) {
+      if (event.oldState === ACTIVE && event.state === CANCELLED && handlers.onCancel) {
         handlers.onCancel(event, context);
       }
-      if (event.oldState === ACTIVE && handlers.onFinish) {
+      if (
+        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
+        event.state !== BEGAN && event.state !== ACTIVE &&
+        handlers.onFinish
+      ) {
         handlers.onFinish(
           event,
           context,
@@ -422,3 +450,30 @@ export function useAnimatedScrollHandler(handlers) {
     }
   }, subscribeForEvents);
 }
+
+export function useAnimatedRef() {
+  const tag = useSharedValue(-1)
+  const ref = useRef(null)
+
+  if (!ref.current) {
+    const fun = function(component) {
+      'worklet';
+      // enters when ref is set by attaching to a component
+      if (component) {
+        tag.value = getTag(component);
+        fun.current = component
+      }
+      return tag.value;
+    };
+
+    Object.defineProperty(fun, 'current', {
+      value: null,
+      writable: true,
+      enumerable: false,
+    });
+    ref.current = fun;
+  }
+
+  return ref.current
+}
+

@@ -19,7 +19,7 @@ export function makeShareable(value) {
 
 export function getViewProp(viewTag, propName) {
   return new Promise((resolve, reject) => {
-    return NativeReanimated.getViewProp(viewTag, propName, result => {
+    return NativeReanimated.getViewProp(viewTag, propName, (result) => {
       if (result.substr(0, 6) === 'error:') {
         reject(result);
       } else {
@@ -42,10 +42,10 @@ function workletValueSetter(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let callStart = timestamp => {
+    let callStart = (timestamp) => {
       animation.start(animation, this.value, timestamp, previousAnimation);
     };
-    const step = timestamp => {
+    const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;

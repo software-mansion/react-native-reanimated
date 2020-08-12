@@ -14,34 +14,41 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace reanimated
+{
 
 void extractMutables(jsi::Runtime &rt,
-                            std::shared_ptr<ShareableValue> sv,
-                            std::vector<std::shared_ptr<MutableValue>> &res) {
-  switch (sv->type) {
-    case ValueType::MutableValueType:
-      res.push_back(sv->mutableValue);
-      break;
-    case ValueType::ArrayType:
-      for (auto &it : sv->frozenArray) {
-        extractMutables(rt, it, res);
-      }
-      break;
-    case ValueType::RemoteObjectType:
-    case ValueType::ObjectType:
-      for (auto &it : sv->frozenObject->map) {
-        extractMutables(rt, it.second, res);
-      }
-      break;
-    default:
-      break;
+                     std::shared_ptr<ShareableValue> sv,
+                     std::vector<std::shared_ptr<MutableValue>> &res)
+{
+  switch (sv->type)
+  {
+  case ValueType::MutableValueType:
+    res.push_back(sv->mutableValue);
+    break;
+  case ValueType::ArrayType:
+    for (auto &it : sv->frozenArray)
+    {
+      extractMutables(rt, it, res);
+    }
+    break;
+  case ValueType::RemoteObjectType:
+  case ValueType::ObjectType:
+    for (auto &it : sv->frozenObject->map)
+    {
+      extractMutables(rt, it.second, res);
+    }
+    break;
+  default:
+    break;
   }
 }
 
-std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime &rt, const jsi::Array &array, NativeReanimatedModule *module) {
+std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime &rt, const jsi::Array &array, NativeReanimatedModule *module)
+{
   std::vector<std::shared_ptr<MutableValue>> res;
-  for (size_t i = 0, size = array.size(rt); i < size; i++) {
+  for (size_t i = 0, size = array.size(rt); i < size; i++)
+  {
     auto shareable = ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module);
     extractMutables(rt, shareable, res);
   }
@@ -51,50 +58,62 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
                                                std::unique_ptr<jsi::Runtime> rt,
-                                               std::function<void(std::function<void(double)>)> requestRender,
-                                               std::function<void(jsi::Runtime&, int, const jsi::Object&)> propUpdater,
                                                std::shared_ptr<ErrorHandler> errorHandler,
-                                               std::function<jsi::Value(jsi::Runtime&, const int, const jsi::String&)> propObtainer):
-NativeReanimatedModuleSpec(jsInvoker),
-runtime(std::move(rt)),
-mapperRegistry(new MapperRegistry()),
-eventHandlerRegistry(new EventHandlerRegistry()),
-requestRender(requestRender),
-propObtainer(propObtainer),
-errorHandler(errorHandler),
-workletsCache(new WorkletsCache()),
-scheduler(scheduler) {
-  RuntimeDecorator::addNativeObjects(*runtime, propUpdater, [=](FrameCallback callback) {
+                                               std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
+                                                  runtime(std::move(rt)),
+                                                  mapperRegistry(new MapperRegistry()),
+                                                  eventHandlerRegistry(new EventHandlerRegistry()),
+                                                  requestRender(platformDepMethodsHolder.requestRender),
+                                                  propObtainer(propObtainer),
+                                                  errorHandler(errorHandler),
+                                                  workletsCache(new WorkletsCache()),
+                                                  scheduler(scheduler)
+{
+  auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
-  });
+  };
+
+  RuntimeDecorator::addNativeObjects(*runtime,
+                                     platformDepMethodsHolder.updaterFunction,
+                                     requestAnimationFrame,
+                                     platformDepMethodsHolder.scrollToFunction,
+                                     platformDepMethodsHolder.measuringFunction);
 }
 
-bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt) {
+bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
+{
   return runtime.get() == &rt;
 }
 
-bool NativeReanimatedModule::isHostRuntime(jsi::Runtime &rt) {
+bool NativeReanimatedModule::isHostRuntime(jsi::Runtime &rt)
+{
   return !isUIRuntime(rt);
 }
 
-void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) {
+void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
+{
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
 }
 
-jsi::Value NativeReanimatedModule::makeShareable(jsi::Runtime &rt, const jsi::Value &value) {
+jsi::Value NativeReanimatedModule::makeShareable(jsi::Runtime &rt, const jsi::Value &value)
+{
   return ShareableValue::adapt(rt, value, this)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::makeMutable(jsi::Runtime &rt, const jsi::Value &value) {
+jsi::Value NativeReanimatedModule::makeMutable(jsi::Runtime &rt, const jsi::Value &value)
+{
   return ShareableValue::adapt(rt, value, this, ValueType::MutableValueType)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value &value) {
+jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value &value)
+{
   return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs) {
+jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs)
+{
   static unsigned long MAPPER_ID = 1;
 
   unsigned long newMapperId = MAPPER_ID++;
@@ -112,14 +131,16 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
   return jsi::Value((double)newMapperId);
 }
 
-void NativeReanimatedModule::stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) {
+void NativeReanimatedModule::stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId)
+{
   unsigned long id = mapperId.asNumber();
   scheduler->scheduleOnUI([=] {
     mapperRegistry->stopMapper(id);
   });
 }
 
-jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) {
+jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet)
+{
   static unsigned long EVENT_HANDLER_ID = 1;
 
   unsigned long newRegistrationId = EVENT_HANDLER_ID++;
@@ -135,42 +156,45 @@ jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const 
   return jsi::Value((double)newRegistrationId);
 }
 
-void NativeReanimatedModule::unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) {
+void NativeReanimatedModule::unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId)
+{
   unsigned long id = registrationId.asNumber();
   scheduler->scheduleOnUI([=] {
     eventHandlerRegistry->unregisterEventHandler(id);
   });
 }
 
+jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback)
+{
 
-jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) {
+  const int viewTagInt = (int)viewTag.asNumber();
+  std::string propNameStr = propName.asString(rt).utf8(rt);
+  jsi::Function fun = callback.getObject(rt).asFunction(rt);
+  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
 
-    const int viewTagInt = (int)viewTag.asNumber();
-    std::string propNameStr = propName.asString(rt).utf8(rt);
-    jsi::Function fun = callback.getObject(rt).asFunction(rt);
-    std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    
-    scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
-      const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);
-      jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
-      std::string resultStr = result.asString(rt).utf8(rt);
+  scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
+    const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);
+    jsi::Value result = propObtainer(rt, viewTagInt, propNameValue);
+    std::string resultStr = result.asString(rt).utf8(rt);
 
-      scheduler->scheduleOnJS([&rt, resultStr, funPtr] () {
-        const jsi::String resultValue = jsi::String::createFromUtf8(rt, resultStr);
-        funPtr->call(rt, resultValue);
-      });
-
+    scheduler->scheduleOnJS([&rt, resultStr, funPtr]() {
+      const jsi::String resultValue = jsi::String::createFromUtf8(rt, resultStr);
+      funPtr->call(rt, resultValue);
     });
-     
-    return jsi::Value::undefined();
+  });
+
+  return jsi::Value::undefined();
 }
 
-void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString) {
+void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString)
+{
   eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 }
 
-void NativeReanimatedModule::maybeRequestRender() {
-  if (!renderRequested) {
+void NativeReanimatedModule::maybeRequestRender()
+{
+  if (!renderRequested)
+  {
     renderRequested = true;
     requestRender([this](double timestampMs) {
       this->renderRequested = false;
@@ -179,29 +203,36 @@ void NativeReanimatedModule::maybeRequestRender() {
   }
 }
 
-void NativeReanimatedModule::onRender(double timestampMs) {
-  try {
+void NativeReanimatedModule::onRender(double timestampMs)
+{
+  try
+  {
     mapperRegistry->execute(*runtime);
 
     std::vector<FrameCallback> callbacks = frameCallbacks;
     frameCallbacks.clear();
-    for (auto callback : callbacks) {
+    for (auto callback : callbacks)
+    {
       callback(timestampMs);
     }
 
-    if (mapperRegistry->needRunOnRender()) {
+    if (mapperRegistry->needRunOnRender())
+    {
       maybeRequestRender();
     }
   }
-  catch(...) {
-    if (!errorHandler->raise()) {
+  catch (...)
+  {
+    if (!errorHandler->raise())
+    {
       throw;
     }
   }
 }
 
-NativeReanimatedModule::~NativeReanimatedModule() {
+NativeReanimatedModule::~NativeReanimatedModule()
+{
   // noop
 }
 
-}
+} // namespace reanimated
