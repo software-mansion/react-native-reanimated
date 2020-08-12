@@ -28,4 +28,4 @@ concat(
 );
 ```
 
-##### Note: In order to interpolate color output values, use [`interpolateColors`](interpolate-colors.html) instead.
+##### Note: In order to interpolate color output values, use [`interpolateColors`](interpolateColors.md) instead.
