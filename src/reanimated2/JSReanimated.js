@@ -75,8 +75,7 @@ class Mapper {
   }
 
   execute() {
-    this._dirty = false;
-
+    this.dirty = false;
     this.mapper();
   }
 }
