@@ -1,9 +1,11 @@
 import { TurboModuleRegistry } from 'react-native';
-import JSReanimated from './JSReanimated';
+import reanimatedJS from './js-reanimated';
 
-const InnerNativeModule =
+let InnerNativeModule =
   global.__reanimatedModuleProxy ||
   TurboModuleRegistry.getEnforcing('NativeReanimated');
+
+InnerNativeModule = false;
 
 const NativeReanimated = {
   native: !!InnerNativeModule, // FIXME: Put !! here instead
@@ -45,4 +47,4 @@ const NativeReanimated = {
   },
 };
 
-export default NativeReanimated.native ? NativeReanimated : JSReanimated;
+export default NativeReanimated.native ? NativeReanimated : reanimatedJS;
