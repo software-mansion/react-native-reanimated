@@ -36,6 +36,7 @@ class MutableValue {
   }
 
   set value(nextValue) {
+    // eslint-disable-next-line
     this._setter.apply(this, [nextValue]);
 
     this._triggerListener();
@@ -60,7 +61,7 @@ class Mapper {
   constructor(module, mapper, inputs = [], outputs = []) {
     this.id = MAPPER_ID++;
     this.inputs = extractMutablesFromArray(inputs);
-    this.outputs = outputs;
+    this.outputs = extractMutablesFromArray(outputs);
     this.mapper = mapper;
 
     const markDirty = () => {
@@ -114,8 +115,82 @@ class MapperRegistry {
   }
 
   updateOrder() {
-    // TODO: Sort it in topological order
-    this.sortedMappers = [...this.mappers.values()];
+    class Node {
+      mapper = null;
+      children = [];
+
+      constructor(mapper, parents = [], children = []) {
+        this.mapper = mapper;
+        this.children = children;
+      }
+    }
+
+    const nodes = [...this.mappers.values()].map((mapper) => new Node(mapper));
+
+    const mappersById = {};
+    this.mappers.forEach((mapper) => {
+      mappersById[mapper.id] = mapper;
+    });
+
+    // create a graph from array of nodes
+    nodes.forEach((node) => {
+      if (node.mapper.outputs.length === 0) {
+        return;
+      }
+      nodes.forEach((restNode) => {
+        if (restNode.mapper.inputs.length === 0) {
+          return;
+        }
+        // do not compare with itself
+        if (node.mapper.id !== restNode.mapper.id) {
+          node.mapper.outputs.forEach((output) => {
+            restNode.mapper.inputs.forEach((restMapperInput) => {
+              if (output._id === restMapperInput._id) {
+                node.children.push(restNode);
+              }
+            });
+          });
+        }
+      });
+    });
+
+    const post = {};
+    let postCounter = 1;
+    const dfs = (node) => {
+      const index = nodes.indexOf(node);
+      if (index === -1) {
+        // this node has already been handled
+        return;
+      }
+      ++postCounter;
+      nodes.splice(index, 1);
+      if (node.children.length === 0 && nodes.length > 0) {
+        post[node.mapper.id] = postCounter++;
+        dfs(nodes[0]);
+        return;
+      }
+      node.children.forEach((childNode) => {
+        dfs(childNode);
+      });
+      post[node.mapper.id] = postCounter++;
+    };
+
+    dfs(nodes[0]);
+
+    const postArray = Object.keys(post).map((key) => {
+      return [key, post[key]];
+    });
+    postArray.sort((a, b) => {
+      return b[1] - a[1];
+    });
+    postArray.forEach(([id, post]) => {
+      this.sortedMappers.push(mappersById[id]);
+    });
+
+    console.log('sorted mappers:');
+    this.sortedMappers.forEach(({ id, inputs, outputs }) => {
+      console.log(`${id}/${inputs.length}/${outputs.length}`);
+    });
   }
 
   get needRunOnRender() {
@@ -204,7 +279,7 @@ const reanimatedJS = new JSReanimated();
 global._updatePropsJS = (viewTag, updates, viewRef) => {
   console.log('updateProps');
 
-  const [rawStyles, animations] = Object.keys(updates).reduce(
+  const [rawStyles] = Object.keys(updates).reduce(
     (acc, key) => {
       const value = updates[key];
 

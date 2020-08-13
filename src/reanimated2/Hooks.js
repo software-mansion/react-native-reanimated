@@ -10,8 +10,7 @@ import {
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
-import { getTag } from './NativeMethods'
-import JSReanimated from './JSReanimated';
+import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 
 export function useSharedValue(init) {
@@ -266,6 +265,7 @@ export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
+  const viewRef = useRef(null);
 
   // build dependencies
   if (dependencies === undefined) {
@@ -283,11 +283,12 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   const { remoteState, initial } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewTag, updater, remoteState);
+      styleUpdater(viewTag, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
