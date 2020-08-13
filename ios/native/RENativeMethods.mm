@@ -43,4 +43,3 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
   [scrollView setValue:oldEventDispatcher forKey:eventDispatcherKey];
 }
-
