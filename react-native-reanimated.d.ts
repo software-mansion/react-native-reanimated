@@ -137,8 +137,15 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
     }
-    export interface WithSpringConfig extends Omit<SpringConfig, 'toValue'> {
-      velocity: number
+    export interface WithSpringConfig {
+      damping: number;
+      mass: number;
+      stiffness: number;
+      overshootClamping: boolean;
+      restSpeedThreshold: number;
+      restDisplacementThreshold: number;
+      toValue: number;
+      velocity: number;
     }
 
     interface SpringConfigWithOrigamiTensionAndFriction {
@@ -371,10 +378,14 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
-    // reanimated2 animations
+    // reanimated2 animations                   
+    export interface WithTimingConfig {
+      duration: number;
+      easing: EasingFunction;
+    }
     export function withTiming(
       toValue: number,
-      userConfig?: Omit<TimingConfig, 'toValue'>,
+      userConfig?: WithTimingConfig,
       callback?: (isCancelled: boolean) => void,
     ): number;
     export function withSpring(
