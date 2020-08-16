@@ -118,11 +118,12 @@ declare module 'react-native-reanimated' {
     export interface TimingState extends AnimationState {
       frameTime: AnimatedValue<number>;
     }
-    export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingNodeFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingFunction = (value: number) => number;
     export interface TimingConfig {
       toValue: Adaptable<number>;
       duration: Adaptable<number>;
-      easing: EasingFunction;
+      easing: EasingNodeFunction;
     }
 
     export type SpringState = PhysicsAnimationState;
@@ -255,39 +256,9 @@ declare module 'react-native-reanimated' {
     export const neq: BinaryOperator<0 | 1>;
     export const and: MultiOperator<0 | 1>;
     export const or: MultiOperator<0 | 1>;
-    export function proc<P1>(
-      cb: (p1: P1) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2>(
-      cb: (p1: P1, p2: P2) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3>(
-      cb: (p1: P1, p2: P2, p3: P3) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>(
-      cb: (p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9, p10: P10) => AnimatedNode<number>
-    ): typeof cb;
-    export function proc(
-      cb: (...params: Adaptable<number>[]) => AnimatedNode<number>
-    ): typeof cb;
+    export function proc<T extends (Adaptable<Value> | undefined)[]>(
+      func: (...args: T) => AnimatedNode<number>
+    ): typeof func;
     export function defined(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set<T extends Value>(
@@ -516,17 +487,42 @@ declare module 'react-native-reanimated' {
 
   export default Animated;
 
-  export interface EasingStatic {
+  interface EasingNodeStatic {
+    linear: Animated.EasingNodeFunction;
+    ease: Animated.EasingNodeFunction;
+    quad: Animated.EasingNodeFunction;
+    cubic: Animated.EasingNodeFunction;
+    poly(n: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    sin: Animated.EasingNodeFunction;
+    circle: Animated.EasingNodeFunction;
+    exp: Animated.EasingNodeFunction;
+    elastic(bounciness?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    back(s?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    bounce: Animated.EasingNodeFunction;
+    bezier(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+    ): Animated.EasingNodeFunction;
+    in(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+    out(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+    inOut(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+  }
+  
+  export const EasingNode: EasingNodeStatic;
+
+  interface EasingStatic {
     linear: Animated.EasingFunction;
     ease: Animated.EasingFunction;
     quad: Animated.EasingFunction;
     cubic: Animated.EasingFunction;
-    poly(n: Animated.Adaptable<number>): Animated.EasingFunction;
+    poly(n: number): Animated.EasingFunction;
     sin: Animated.EasingFunction;
     circle: Animated.EasingFunction;
     exp: Animated.EasingFunction;
-    elastic(bounciness?: Animated.Adaptable<number>): Animated.EasingFunction;
-    back(s?: Animated.Adaptable<number>): Animated.EasingFunction;
+    elastic(bounciness?: number): Animated.EasingFunction;
+    back(s?: number): Animated.EasingFunction;
     bounce: Animated.EasingFunction;
     bezier(
       x1: number,
@@ -539,7 +535,7 @@ declare module 'react-native-reanimated' {
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
   
-  export const EasingNode: EasingStatic;
+  export const Easing: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
@@ -649,6 +645,5 @@ declare module 'react-native-reanimated' {
   export const delay: typeof Animated.delay
   export const repeat: typeof Animated.repeat;
   export const sequence: typeof Animated.sequence;
-  export const interpolate: typeof Animated.interpolate;
-  export const Easing: Animated.EasingStatic;
+  export const interpolate: typeof Animated.interpolate
 }
