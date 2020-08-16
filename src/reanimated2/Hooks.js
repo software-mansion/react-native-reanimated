@@ -9,23 +9,29 @@ import { getTag } from './NativeMethods'
 export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutable(init);
+    ref.current = {
+      mutable: makeMutable(init),
+      last: init,
+    };
+  } else if (init !== ref.current.last) {
+    ref.current.last = init;
+    ref.current.mutable.value = init;
   }
-  return ref.current;
+
+  return ref.current.mutable;
 }
 
-export function useMapper(fun, inputs = [], outputs = []) {
+export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
   useEffect(() => {
     const mapperId = startMapper(fun, inputs, outputs);
     return () => {
       stopMapper(mapperId);
     };
-  }, []);
+  }, dependencies);
 }
 
 export function useEvent(handler, eventNames = []) {
   const initRef = useRef(null);
-
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   }
@@ -250,25 +256,40 @@ function styleUpdater(viewTag, updater, state) {
   }
 }
 
-export function useAnimatedStyle(updater) {
+export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
-
   const initRef = useRef(null);
+  const inputs = Object.values(updater._closure);
+
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, updater.__workletHash];
+  } else {
+    dependencies.push(updater.__workletHash);
+  }
+
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
-      inputs: Object.values(updater._closure),
     };
   }
-  const { initial, remoteState, inputs } = initRef.current;
 
-  useMapper(() => {
-    'worklet';
-    styleUpdater(viewTag, updater, remoteState);
-  }, inputs);
+  const { remoteState, initial } = initRef.current;
 
+  useEffect(() => {
+    const fun = () => {
+      'worklet';
+      styleUpdater(viewTag, updater, remoteState);
+    };
+    const mapperId = startMapper(fun, inputs, []);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
+
+  // check for invalid usage of shared values in returned object
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
     const element = initial[key];
@@ -294,25 +315,33 @@ export function useAnimatedStyle(updater) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor) {
+export function useDerivedValue(processor, dependencies = undefined) {
   const initRef = useRef(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      sharedValue: makeMutable(initialUpdaterRun(processor)),
-      inputs: Object.values(processor._closure),
-    };
+  const inputs = Object.values(processor._closure);
+
+  // build dependencies
+  if (dependencies === undefined) {
+    dependencies = [...inputs, processor.__workletHash];
+  } else {
+    dependencies.push(processor.__workletHash);
   }
 
-  const { sharedValue, inputs } = initRef.current;
+  if (initRef.current === null) {
+    initRef.current = makeMutable(initialUpdaterRun(processor));
+  }
 
-  useMapper(
-    () => {
+  const sharedValue = initRef.current;
+
+  useEffect(() => {
+    const fun = () => {
       'worklet';
       sharedValue.value = processor();
-    },
-    inputs,
-    [sharedValue]
-  );
+    };
+    const mapperId = startMapper(fun, inputs, [sharedValue]);
+    return () => {
+      stopMapper(mapperId);
+    };
+  }, dependencies);
 
   return sharedValue;
 }

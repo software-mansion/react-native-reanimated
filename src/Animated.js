@@ -10,9 +10,7 @@ import createAnimatedComponent from './createAnimatedComponent';
 import decay from './animations/decay';
 import timing from './animations/timing';
 import spring from './animations/spring';
-import TimingAnimation from './animations/TimingAnimation';
-import SpringAnimation from './animations/SpringAnimation';
-import DecayAnimation from './animations/DecayAnimation';
+import Animation from './animations/Animation';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -25,11 +23,20 @@ import {
 } from './Transitioning';
 import SpringUtils from './animations/SpringUtils';
 import useValue from './useValue';
-import * as reanimated2 from './reanimated2'
+import * as reanimated2 from './reanimated2';
 
-const decayWrapper = backwardCompatibleAnimWrapper(decay, DecayAnimation);
-const timingWrapper = backwardCompatibleAnimWrapper(timing, TimingAnimation);
-const springWrapper = backwardCompatibleAnimWrapper(spring, SpringAnimation);
+const decayWrapper = backwardCompatibleAnimWrapper(
+  decay,
+  Animation.decayDefaultState
+);
+const timingWrapper = backwardCompatibleAnimWrapper(
+  timing,
+  Animation.timingDefaultState
+);
+const springWrapper = backwardCompatibleAnimWrapper(
+  spring,
+  Animation.springDefaultState
+);
 const Animated = {
   // components
   View: createAnimatedComponent(View),
@@ -62,7 +69,7 @@ const Animated = {
   useValue,
 
   // reanimated2
-  ...reanimated2
+  ...reanimated2,
 };
 
 export default Animated;
@@ -87,7 +94,6 @@ export {
   timingWrapper as timing,
   springWrapper as spring,
   SpringUtils,
-
   // hooks
   useValue,
 };

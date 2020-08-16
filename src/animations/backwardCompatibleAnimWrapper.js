@@ -11,9 +11,9 @@ import {
 import Clock from '../core/AnimatedClock';
 import { evaluateOnce } from '../derived/evaluateOnce';
 
-function createOldAnimationObject(node, AnimationClass, value, config) {
+function createOldAnimationObject(node, animationStateDefaults, value, config) {
   const newClock = new Clock();
-  const currentState = AnimationClass.getDefaultState();
+  const currentState = animationStateDefaults();
   let alwaysNode;
   let isStarted = false;
   let isDone = false;
@@ -73,7 +73,7 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
     __detach: () => {
       animationCallback && animationCallback({ finished: isDone });
       animationCallback = null;
-      alwaysNode.__removeChild(value);
+      value.__initialized && alwaysNode.__removeChild(value);
     },
     stop: () => {
       if (isDone) {
@@ -104,11 +104,14 @@ function createOldAnimationObject(node, AnimationClass, value, config) {
  * Depending on the arguments list we either return animation node or return an
  * animation object that is compatible with the original Animated API
  */
-export default function backwardsCompatibleAnimWrapper(node, AnimationClass) {
+export default function backwardsCompatibleAnimWrapper(
+  node,
+  animationStateDefaults
+) {
   return (clock, state, config) => {
     if (config !== undefined) {
       return node(clock, state, config);
     }
-    return createOldAnimationObject(node, AnimationClass, clock, state);
+    return createOldAnimationObject(node, animationStateDefaults, clock, state);
   };
 }

@@ -83,7 +83,7 @@ function checkMinElements(name, arr) {
 function checkValidNumbers(name, arr) {
   for (let i = 0; i < arr.length; i++) {
     // We can't validate animated nodes in JS.
-    if (arr[i] instanceof AnimatedNode) continue;
+    if (arr[i] instanceof AnimatedNode || typeof arr[i] !== 'number') continue;
     invariant(
       Number.isFinite(arr[i]),
       '%s cannot include %s. (%s)',
@@ -91,6 +91,14 @@ function checkValidNumbers(name, arr) {
       arr[i],
       arr
     );
+  }
+}
+
+function convertToRadians(outputRange) {
+  for (const [i, value] of outputRange.entries()) {
+    if (typeof value === 'string' && value.endsWith('deg')) {
+      outputRange[i] = parseFloat(value) * (Math.PI / 180);
+    }
   }
 }
 
@@ -102,6 +110,7 @@ export default function interpolate(value, config) {
     extrapolateLeft,
     extrapolateRight,
   } = config;
+
   checkMinElements('inputRange', inputRange);
   checkValidNumbers('inputRange', inputRange);
   checkMinElements('outputRange', outputRange);
@@ -112,6 +121,7 @@ export default function interpolate(value, config) {
     'inputRange and outputRange must be the same length.'
   );
 
+  convertToRadians(outputRange);
   const left = extrapolateLeft || extrapolate;
   const right = extrapolateRight || extrapolate;
   let output = interpolateInternal(value, inputRange, outputRange);

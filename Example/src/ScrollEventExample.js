@@ -42,18 +42,16 @@ function ScrollExample() {
         <Animated.View style={[styles.box, stylez]} />
       </View>
       <View style={styles.half}>
-        <View style={styles.half}>
-          <Animated.ScrollView
-            style={styles.scroll}
-            scrollEventThrottle={1}
-            onScroll={scrollHandler}>
-            <View style={styles.placeholder} />
-            <View style={styles.placeholder} />
-            <View style={styles.placeholder} />
-            <View style={styles.placeholder} />
-            <View style={styles.placeholder} />
-          </Animated.ScrollView>
-        </View>
+        <Animated.ScrollView
+          style={styles.scroll}
+          scrollEventThrottle={1}
+          onScroll={scrollHandler}>
+          <View style={styles.placeholder} />
+          <View style={styles.placeholder} />
+          <View style={styles.placeholder} />
+          <View style={styles.placeholder} />
+          <View style={styles.placeholder} />
+        </Animated.ScrollView>
       </View>
     </View>
   );

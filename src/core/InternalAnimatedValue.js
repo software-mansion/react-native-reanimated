@@ -1,6 +1,7 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 import ReanimatedModule from '../ReanimatedModule';
+import invariant from 'fbjs/lib/invariant';
 
 function sanitizeValue(value) {
   return value === null || value === undefined || typeof value === 'string'
@@ -32,6 +33,10 @@ export default class InternalAnimatedValue extends AnimatedNode {
   }
 
   constructor(value, constant = false) {
+    invariant(
+      value !== null,
+      'Animated.Value cannot be set to the null'
+    );
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
     this._animation = null;

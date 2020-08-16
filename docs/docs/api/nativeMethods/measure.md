@@ -4,6 +4,8 @@ title: measure
 sidebar_label: measure
 ---
 
+> Due to time constraints we weren't able to finish this page.
+
 ### Arguments
 
 #### animatedRef
