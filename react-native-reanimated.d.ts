@@ -118,11 +118,12 @@ declare module 'react-native-reanimated' {
     export interface TimingState extends AnimationState {
       frameTime: AnimatedValue<number>;
     }
-    export type EasingFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingNodeFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingFunction = (value: number) => number;
     export interface TimingConfig {
       toValue: Adaptable<number>;
       duration: Adaptable<number>;
-      easing: EasingFunction;
+      easing: EasingNodeFunction;
     }
 
     export type SpringState = PhysicsAnimationState;
@@ -136,8 +137,15 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
     }
-    export interface WithSpringConfig extends Omit<SpringConfig, 'toValue'> {
-      velocity: number
+    export interface WithSpringConfig {
+      damping: number;
+      mass: number;
+      stiffness: number;
+      overshootClamping: boolean;
+      restSpeedThreshold: number;
+      restDisplacementThreshold: number;
+      toValue: number;
+      velocity: number;
     }
 
     interface SpringConfigWithOrigamiTensionAndFriction {
@@ -370,10 +378,14 @@ declare module 'react-native-reanimated' {
       config: DecayConfig,
     ): BackwardCompatibleWrapper;
 
-    // reanimated2 animations
+    // reanimated2 animations                   
+    export interface WithTimingConfig {
+      duration: number;
+      easing: EasingFunction;
+    }
     export function withTiming(
       toValue: number,
-      userConfig?: Omit<TimingConfig, 'toValue'>,
+      userConfig?: WithTimingConfig,
       callback?: (isCancelled: boolean) => void,
     ): number;
     export function withSpring(
@@ -486,17 +498,42 @@ declare module 'react-native-reanimated' {
 
   export default Animated;
 
+  interface EasingNodeStatic {
+    linear: Animated.EasingNodeFunction;
+    ease: Animated.EasingNodeFunction;
+    quad: Animated.EasingNodeFunction;
+    cubic: Animated.EasingNodeFunction;
+    poly(n: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    sin: Animated.EasingNodeFunction;
+    circle: Animated.EasingNodeFunction;
+    exp: Animated.EasingNodeFunction;
+    elastic(bounciness?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    back(s?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    bounce: Animated.EasingNodeFunction;
+    bezier(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+    ): Animated.EasingNodeFunction;
+    in(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+    out(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+    inOut(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
+  }
+  
+  export const EasingNode: EasingNodeStatic;
+
   interface EasingStatic {
     linear: Animated.EasingFunction;
     ease: Animated.EasingFunction;
     quad: Animated.EasingFunction;
     cubic: Animated.EasingFunction;
-    poly(n: Animated.Adaptable<number>): Animated.EasingFunction;
+    poly(n: number): Animated.EasingFunction;
     sin: Animated.EasingFunction;
     circle: Animated.EasingFunction;
     exp: Animated.EasingFunction;
-    elastic(bounciness?: Animated.Adaptable<number>): Animated.EasingFunction;
-    back(s?: Animated.Adaptable<number>): Animated.EasingFunction;
+    elastic(bounciness?: number): Animated.EasingFunction;
+    back(s?: number): Animated.EasingFunction;
     bounce: Animated.EasingFunction;
     bezier(
       x1: number,
@@ -509,7 +546,7 @@ declare module 'react-native-reanimated' {
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
   
-  export const EasingNode: EasingStatic;
+  export const Easing: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
     transition: ReactNode;
