@@ -8,7 +8,7 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
   useAnimatedGestureHandler,
-  EasingNode as Easing,
+  Easing,
   withTiming,
   withSpring,
   cancelAnimation,
