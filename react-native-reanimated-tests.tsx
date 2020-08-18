@@ -94,10 +94,10 @@ function AnimatedScrollHandlerTest() {
 function AnimatedGestureHandlerTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, ctx: { startX: number }) => {
       ctx.startX = x.value;
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -147,10 +147,10 @@ function WithTimingTest() {
 function WithSpringTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, ctx: { startX: number }) => {
       ctx.startX = x.value;
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -177,10 +177,10 @@ function WithSpringTest() {
 function CancelAnimationTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, ctx: { startX: number }) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -207,10 +207,10 @@ function CancelAnimationTest() {
 function DelayTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -237,10 +237,10 @@ function DelayTest() {
 function RepeatTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -267,10 +267,10 @@ function RepeatTest() {
 function SequenceTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -298,10 +298,10 @@ function WithDecayTest() {
   const x = useSharedValue(0);
 
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, ctx: { startX: number }) => {
       ctx.startX = x.value;
     },
-    onActive: (event, ctx) => {
+    onActive: (event, ctx: { startX: number }) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (evt) => {
