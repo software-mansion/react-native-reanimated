@@ -11,13 +11,13 @@ namespace reanimated
 using namespace facebook;
 using namespace react;
 
-class IOSScheduler : public Scheduler {
+class REIOSScheduler : public Scheduler {
   std::shared_ptr<CallInvoker> jsInvoker;
   public:
-  IOSScheduler(std::shared_ptr<CallInvoker> jsInvoker);
+  REIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker);
   void scheduleOnUI(std::function<void()> job) override;
   void scheduleOnJS(std::function<void()> job) override;
-  virtual ~IOSScheduler();
+  virtual ~REIOSScheduler();
 };
 
 } // namespace reanimated

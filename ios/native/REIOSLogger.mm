@@ -1,24 +1,24 @@
-#include "IOSLogger.h"
+#include "REIOSLogger.h"
 #include "Logger.h"
 #import <Foundation/Foundation.h>
 
 namespace reanimated {
 
-std::unique_ptr<LoggerInterface> Logger::instance = std::unique_ptr<IOSLogger>(new IOSLogger());
+std::unique_ptr<LoggerInterface> Logger::instance = std::unique_ptr<REIOSLogger>(new REIOSLogger());
 
-void IOSLogger::log(const char* str) {
+void REIOSLogger::log(const char* str) {
   NSLog(@"%@", [NSString stringWithCString:str encoding:[NSString defaultCStringEncoding]]);
 }
 
-void IOSLogger::log(double d) {
+void REIOSLogger::log(double d) {
   NSLog(@"%lf", d);
 }
 
-void IOSLogger::log(int i) {
+void REIOSLogger::log(int i) {
    NSLog(@"%i", i);
 }
 
-void IOSLogger::log(bool b) {
+void REIOSLogger::log(bool b) {
   const char* str = (b)? "true" : "false";
   NSLog(@"%@", [NSString stringWithCString:str encoding:[NSString defaultCStringEncoding]]);
 }

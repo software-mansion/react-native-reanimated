@@ -1,4 +1,4 @@
-#import "RENativeMethods.h"
+#import "NativeMethods.h"
 #import <React/RCTScrollView.h>
 
 
