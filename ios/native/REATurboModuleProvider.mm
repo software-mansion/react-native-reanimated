@@ -1,5 +1,5 @@
 
-#import "RETurboModuleProvider.h"
+#import "REATurboModuleProvider.h"
 #import "NativeProxy.h"
 #import <React/CoreModulesPlugins.h>
 #import <NativeReanimatedModule.h>
@@ -10,7 +10,7 @@
 namespace facebook {
 namespace react {
 
-Class RETurboModuleClassProvider(const char *name) {
+Class REATurboModuleClassProvider(const char *name) {
   return RCTCoreModulesClassProvider(name);
 }
 

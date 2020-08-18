@@ -1,6 +1,6 @@
 #import "NativeProxy.h"
-#import "REIOSScheduler.h"
-#import "REIOSErrorHandler.h"
+#import "REAIOSScheduler.h"
+#import "REAIOSErrorHandler.h"
 #import "RuntimeDecorator.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
@@ -109,9 +109,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       return val;
   };
 
-  std::shared_ptr<Scheduler> scheduler(new REIOSScheduler(jsInvoker));
+  std::shared_ptr<Scheduler> scheduler(new REAIOSScheduler(jsInvoker));
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REIOSErrorHandler>(scheduler);
+  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,

@@ -5,16 +5,16 @@
 
 namespace reanimated {
 
-class REIOSErrorHandler : public ErrorHandler {
+class REAIOSErrorHandler : public ErrorHandler {
     std::shared_ptr<Scheduler> scheduler;
     void raiseSpec() override;
     std::shared_ptr<ErrorWrapper> error;
     public:
-      REIOSErrorHandler(std::shared_ptr<Scheduler> scheduler);
+      REAIOSErrorHandler(std::shared_ptr<Scheduler> scheduler);
       std::shared_ptr<Scheduler> getScheduler() override;
       std::shared_ptr<ErrorWrapper> getError() override;
       void setError(std::string message) override;
-      virtual ~REIOSErrorHandler() {}
+      virtual ~REAIOSErrorHandler() {}
 };
 
 }
