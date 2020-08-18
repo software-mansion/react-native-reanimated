@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <queue>
@@ -6,6 +5,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+
+namespace reanimated
+{
 
 //
 // Copyright (c) 2013 Juan Palacios juan.palacios.puyana@gmail.com
@@ -83,3 +85,4 @@ class Scheduler {
     Queue<std::function<void()>> jsJobs;
 };
 
+}

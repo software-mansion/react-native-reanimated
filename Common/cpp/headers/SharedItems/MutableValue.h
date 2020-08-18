@@ -1,13 +1,13 @@
 #pragma once
 
-#include <mutex>
-#include <jsi/jsi.h>
 #include "SharedParent.h"
 #include "MutableValueSetterProxy.h"
-
-namespace reanimated {
+#include <mutex>
+#include <jsi/jsi.h>
 
 using namespace facebook;
+
+namespace reanimated {
 
 class MutableValue : public jsi::HostObject, public std::enable_shared_from_this<MutableValue> {
   private:

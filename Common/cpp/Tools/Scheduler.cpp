@@ -1,5 +1,8 @@
 #include "Scheduler.h"
 
+namespace reanimated
+{
+
 void Scheduler::scheduleOnUI(std::function<void()> job) {
   uiJobs.push(std::move(job));
 }
@@ -20,3 +23,4 @@ void Scheduler::triggerJS() {
 
 Scheduler::~Scheduler() {}
 
+}

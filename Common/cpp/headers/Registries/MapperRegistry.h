@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <jsi/jsi.h>
 
-namespace reanimated {
-
 using namespace facebook;
+
+namespace reanimated {
 
 class Mapper;
 

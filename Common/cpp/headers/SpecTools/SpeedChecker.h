@@ -4,6 +4,9 @@
 
 #include "Logger.h"
 
+namespace reanimated
+{
+
 class SpeedChecker {
 public:
   static void checkSpeed(std::string tag, std::function<void()> fun) {
@@ -19,3 +22,5 @@ public:
 #endif
   }
 };
+
+}

@@ -1,16 +1,16 @@
 #pragma once
 
+#include "WorkletsCache.h"
+#include "SharedParent.h"
+#include "Logger.h"
 #include <string>
 #include <mutex>
 #include <unordered_map>
 #include <jsi/jsi.h>
-#include "Logger.h"
-#include "WorkletsCache.h"
-#include "SharedParent.h"
-
-namespace reanimated {
 
 using namespace facebook;
+
+namespace reanimated {
 
 class ShareableValue: public std::enable_shared_from_this<ShareableValue> {
 friend WorkletsCache;

@@ -3,6 +3,9 @@
 #include "LoggerInterface.h"
 #include <memory>
 
+namespace reanimated
+{
+
 class Logger {
   public:
   template<typename T>
@@ -15,3 +18,5 @@ class Logger {
   private:
     static std::unique_ptr<LoggerInterface> instance;
 };
+
+}

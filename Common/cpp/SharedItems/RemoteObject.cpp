@@ -1,11 +1,11 @@
-#include "SharedParent.h"
-#include <jsi/jsi.h>
 #include "RemoteObject.h"
+#include "SharedParent.h"
 #include "NativeReanimatedModule.h"
-
-namespace reanimated {
+#include <jsi/jsi.h>
 
 using namespace facebook;
+
+namespace reanimated {
 
 void RemoteObject::maybeInitializeOnUIRuntime(jsi::Runtime &rt) {
   if (initializer.get() != nullptr) {

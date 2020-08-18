@@ -9,10 +9,10 @@
 
 #include "AndroidScheduler.h"
 
+namespace reanimated {
+
 using namespace facebook;
 using namespace react;
-
-namespace reanimated {
 
 class SchedulerWrapper: public Scheduler {
 private:

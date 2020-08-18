@@ -1,16 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "NativeReanimatedModuleSpec.h"
 #include "Scheduler.h"
 #include "ErrorHandler.h"
 #include "WorkletsCache.h"
 #include "RuntimeDecorator.h"
 #include "PlatformDepMethodsHolder.h"
-
 #include <unistd.h>
+#include <memory>
+#include <vector>
 
 namespace reanimated
 {

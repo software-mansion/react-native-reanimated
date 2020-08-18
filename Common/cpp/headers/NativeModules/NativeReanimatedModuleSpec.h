@@ -15,7 +15,8 @@
 using namespace facebook;
 using namespace react;
 
-namespace reanimated {
+namespace reanimated
+{
 
 class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  protected:
@@ -41,4 +42,4 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) = 0;
 };
 
-}
+} // namespace reanimated

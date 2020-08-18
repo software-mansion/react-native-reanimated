@@ -1,15 +1,11 @@
-//
-//  WorkletsCache.cpp
-//  DoubleConversion
-//
-//  Created by Szymon Kapala on 01/06/2020.
-//
-
 #include "WorkletsCache.h"
 #include "ShareableValue.h"
 #include "FrozenObject.h"
 
 using namespace facebook;
+
+namespace reanimated
+{
 
 jsi::Value eval(jsi::Runtime &rt, const char *code) {
   return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
@@ -27,4 +23,6 @@ std::shared_ptr<jsi::Function> WorkletsCache::getFunction(jsi::Runtime &rt, std:
     worklets[workletHash] = funPtr;
   }
   return worklets[workletHash];
+}
+
 }

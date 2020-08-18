@@ -1,10 +1,8 @@
 #include "MapperRegistry.h"
-
+#include "Mapper.h"
 #include <map>
 #include <array>
 #include <set>
-
-#include "Mapper.h"
 
 namespace reanimated {
 

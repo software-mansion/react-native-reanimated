@@ -1,12 +1,12 @@
 #pragma once
 
-#include <jsi/jsi.h>
 #include "WorkletsCache.h"
 #include "SharedParent.h"
-
-namespace reanimated {
+#include <jsi/jsi.h>
 
 using namespace facebook;
+
+namespace reanimated {
 
 class FrozenObject : public jsi::HostObject {
   friend WorkletsCache;
