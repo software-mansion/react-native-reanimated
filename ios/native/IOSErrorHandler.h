@@ -3,6 +3,8 @@
 #include "ErrorHandler.h"
 #include "Scheduler.h"
 
+namespace reanimated {
+
 class IOSErrorHandler : public ErrorHandler {
     std::shared_ptr<Scheduler> scheduler;
     void raiseSpec() override;
@@ -14,3 +16,5 @@ class IOSErrorHandler : public ErrorHandler {
       void setError(std::string message) override;
       virtual ~IOSErrorHandler() {}
 };
+
+}

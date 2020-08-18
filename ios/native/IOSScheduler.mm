@@ -1,5 +1,7 @@
 #include "IOSScheduler.h"
 
+namespace reanimated {
+
 using namespace facebook;
 using namespace react;
 
@@ -23,3 +25,4 @@ void IOSScheduler::scheduleOnJS(std::function<void()> job) {
 
 IOSScheduler::~IOSScheduler(){}
 
+}

@@ -1,6 +1,9 @@
+#include "IOSErrorHandler.h"
 #import <Foundation/Foundation.h>
 #import <React/RCTLog.h>
-#include "IOSErrorHandler.h"
+
+
+namespace reanimated {
 
 IOSErrorHandler::IOSErrorHandler(std::shared_ptr<Scheduler> scheduler) {
     this->scheduler = scheduler;
@@ -28,4 +31,6 @@ void IOSErrorHandler::setError(std::string message) {
     error->message = message;
     error->handled = false;
   }
+}
+
 }

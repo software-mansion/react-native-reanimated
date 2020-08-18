@@ -5,6 +5,9 @@
 #import <ReactCommon/CallInvoker.h>
 #import <React/RCTUIManager.h>
 
+namespace reanimated
+{
+
 using namespace facebook;
 using namespace react;
 
@@ -16,3 +19,5 @@ class IOSScheduler : public Scheduler {
   void scheduleOnJS(std::function<void()> job) override;
   virtual ~IOSScheduler();
 };
+
+} // namespace reanimated

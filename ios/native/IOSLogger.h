@@ -1,8 +1,9 @@
 #pragma once
 
+#include "LoggerInterface.h"
 #include <stdio.h>
 
-#include "LoggerInterface.h"
+namespace reanimated {
 
 class IOSLogger : public LoggerInterface {
   public:
@@ -12,3 +13,5 @@ class IOSLogger : public LoggerInterface {
     void log(bool b) override;
     virtual ~IOSLogger() {}
 };
+
+}

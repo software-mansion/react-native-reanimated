@@ -1,14 +1,14 @@
 #import "NativeProxy.h"
-#include <folly/json.h>
-#import <React/RCTFollyConvert.h>
-#import <React/RCTUIManager.h>
 #import "IOSScheduler.h"
 #import "IOSErrorHandler.h"
-#import <jsi/JSCRuntime.h>
 #import "RuntimeDecorator.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "RENativeMethods.h"
+#import <jsi/JSCRuntime.h>
+#import <folly/json.h>
+#import <React/RCTFollyConvert.h>
+#import <React/RCTUIManager.h>
 
 namespace reanimated {
 
