@@ -137,15 +137,15 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
     }
+
     export interface WithSpringConfig {
-      damping: number;
-      mass: number;
-      stiffness: number;
-      overshootClamping: boolean;
-      restSpeedThreshold: number;
-      restDisplacementThreshold: number;
-      toValue: number;
-      velocity: number;
+      damping?: number;
+      mass?: number;
+      stiffness?: number;
+      overshootClamping?: boolean;
+      restSpeedThreshold?: number;
+      restDisplacementThreshold?: number;
+      velocity?: number;
     }
 
     interface SpringConfigWithOrigamiTensionAndFriction {
