@@ -1,13 +1,9 @@
+#include "AndroidScheduler.h"
 #include <memory>
 #include <string>
-
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <hermes/hermes.h>
-
 #include <android/log.h>
-
-#include "AndroidScheduler.h"
 
 namespace reanimated {
 
