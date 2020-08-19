@@ -15,12 +15,12 @@ Class REATurboModuleClassProvider(const char *name);
 /**
  * Provide a pure C++ instance of a TurboModule, specific to this app.
  */
-std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker);
+std::shared_ptr<TurboModule> REATurboModuleProvider(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker);
 
 /**
  * Provide an instance of a ObjCTurboModule, given the ObjC instance, specific to this app.
  */
-std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name,
+std::shared_ptr<TurboModule> REATurboModuleProvider(const std::string &name,
                                                          id<RCTTurboModule> instance,
                                                          std::shared_ptr<CallInvoker> jsInvoker);
 
