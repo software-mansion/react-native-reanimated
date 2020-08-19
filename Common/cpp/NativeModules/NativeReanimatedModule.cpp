@@ -1,8 +1,5 @@
 #include "NativeReanimatedModule.h"
-#include <memory>
 #include "Logger.h"
-#include <functional>
-#include <thread>
 #include "SpeedChecker.h"
 #include "ShareableValue.h"
 #include "MapperRegistry.h"
@@ -11,6 +8,9 @@
 #include "EventHandlerRegistry.h"
 #include "EventHandler.h"
 #include "FrozenObject.h"
+#include <functional>
+#include <thread>
+#include <memory>
 
 using namespace facebook;
 

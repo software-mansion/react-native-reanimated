@@ -1,7 +1,7 @@
 #include "RuntimeDecorator.h"
+#include "Logger.h"
 #include <unordered_map>
 #include <memory>
-#include "Logger.h"
 
 namespace reanimated {
 

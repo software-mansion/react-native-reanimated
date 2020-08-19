@@ -1,10 +1,12 @@
-#ifndef PlatformDepMethods_h
-#define PlatformDepMethods_h
+#pragma once
 
 #include <stdio.h>
 #include <jsi/jsi.h>
 
 using namespace facebook;
+
+namespace reanimated
+{
 
 using UpdaterFunction = std::function<void(jsi::Runtime &rt, int viewTag, const jsi::Object& object)>;
 using RequestRender = std::function<void(std::function<void(double)>)>;
@@ -18,4 +20,4 @@ struct PlatformDepMethodsHolder {
   MeasuringFunction measuringFunction;
 };
 
-#endif /* PlatformDepMethods_h */
+}

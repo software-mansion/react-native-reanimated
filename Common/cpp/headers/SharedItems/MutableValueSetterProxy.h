@@ -1,10 +1,11 @@
 #pragma once
 
 #include "SharedParent.h"
-
-namespace reanimated {
+#include <jsi/jsi.h>
 
 using namespace facebook;
+
+namespace reanimated {
 
 class MutableValueSetterProxy: public jsi::HostObject {
 private:

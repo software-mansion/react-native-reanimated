@@ -15,7 +15,7 @@
 #import <React/RCTHTTPRequestHandler.h>
 #import <React/RCTDataRequestHandler.h>
 #import <React/RCTFileRequestHandler.h>
-#import <RNReanimated/RETurboModuleProvider.h>
+#import <RNReanimated/REATurboModuleProvider.h>
 #import <RNReanimated/REAModule.h>
 
 @interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate>{
@@ -77,7 +77,7 @@
 
 - (Class)getModuleClassFromName:(const char *)name
 {
-  return facebook::react::RETurboModuleClassProvider(name);
+  return facebook::react::REATurboModuleClassProvider(name);
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name

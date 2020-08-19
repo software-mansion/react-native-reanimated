@@ -10,7 +10,7 @@ namespace react {
 /**
  * Provide the TurboModule class for the given name.
  */
-Class RETurboModuleClassProvider(const char *name);
+Class REATurboModuleClassProvider(const char *name);
 
 /**
  * Provide a pure C++ instance of a TurboModule, specific to this app.

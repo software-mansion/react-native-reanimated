@@ -1,7 +1,10 @@
 #pragma once
 
-#include <string>
 #include "Scheduler.h"
+#include <string>
+
+namespace reanimated
+{
 
 struct ErrorWrapper {
   std::string message = "";
@@ -26,3 +29,5 @@ class ErrorHandler {
   protected:
     virtual void raiseSpec() = 0;
 };
+
+}

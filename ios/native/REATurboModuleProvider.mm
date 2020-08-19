@@ -1,16 +1,16 @@
 
-#import "RETurboModuleProvider.h"
+#import "REATurboModuleProvider.h"
+#import "NativeProxy.h"
 #import <React/CoreModulesPlugins.h>
 #import <NativeReanimatedModule.h>
 #import <jsi/JSCRuntime.h>
-#import "NativeProxy.h"
 
 // NOTE: This entire file should be codegen'ed.
 
 namespace facebook {
 namespace react {
 
-Class RETurboModuleClassProvider(const char *name) {
+Class REATurboModuleClassProvider(const char *name) {
   return RCTCoreModulesClassProvider(name);
 }
 

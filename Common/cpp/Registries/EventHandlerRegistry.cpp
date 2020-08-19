@@ -1,5 +1,4 @@
 #include "EventHandlerRegistry.h"
-
 #include "EventHandler.h"
 
 namespace reanimated {

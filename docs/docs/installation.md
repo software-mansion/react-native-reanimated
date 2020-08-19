@@ -165,7 +165,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 
 - (Class)getModuleClassFromName:(const char *)name
 {
- return facebook::react::RETurboModuleClassProvider(name);
+ return facebook::react::REATurboModuleClassProvider(name);
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name

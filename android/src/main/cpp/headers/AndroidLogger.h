@@ -2,6 +2,9 @@
 
 #include "LoggerInterface.h"
 
+namespace reanimated
+{
+
 class AndroidLogger : public LoggerInterface {
   public:
     void log(const char* str) override;
@@ -10,3 +13,5 @@ class AndroidLogger : public LoggerInterface {
     void log(bool b) override;
     virtual ~AndroidLogger() {}
 };
+
+}

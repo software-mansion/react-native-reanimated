@@ -1,5 +1,8 @@
-#import "RENativeMethods.h"
+#import "NativeMethods.h"
 #import <React/RCTScrollView.h>
+
+
+namespace reanimated {
 
 std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *uiManager) {
   UIView *view = [uiManager viewForReactTag:@(viewTag)];
@@ -42,4 +45,6 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
   [scrollView setValue:nil forKey:eventDispatcherKey];
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
   [scrollView setValue:oldEventDispatcher forKey:eventDispatcherKey];
+}
+
 }

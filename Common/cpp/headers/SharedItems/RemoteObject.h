@@ -3,9 +3,9 @@
 #include "SharedParent.h"
 #include "FrozenObject.h"
 
-namespace reanimated {
-
 using namespace facebook;
+
+namespace reanimated {
 
 class RemoteObject: public jsi::HostObject {
 private:

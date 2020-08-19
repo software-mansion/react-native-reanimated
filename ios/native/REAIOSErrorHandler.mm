@@ -1,13 +1,16 @@
+#include "REAIOSErrorHandler.h"
 #import <Foundation/Foundation.h>
 #import <React/RCTLog.h>
-#include "IOSErrorHandler.h"
 
-IOSErrorHandler::IOSErrorHandler(std::shared_ptr<Scheduler> scheduler) {
+
+namespace reanimated {
+
+REAIOSErrorHandler::REAIOSErrorHandler(std::shared_ptr<Scheduler> scheduler) {
     this->scheduler = scheduler;
     error = std::make_shared<ErrorWrapper>();
 }
 
-void IOSErrorHandler::raiseSpec() {
+void REAIOSErrorHandler::raiseSpec() {
     if (error->handled) {
         return;
     }
@@ -15,17 +18,19 @@ void IOSErrorHandler::raiseSpec() {
     this->error->handled = true;
 }
 
-std::shared_ptr<Scheduler> IOSErrorHandler::getScheduler() {
+std::shared_ptr<Scheduler> REAIOSErrorHandler::getScheduler() {
     return this->scheduler;
 }
 
-std::shared_ptr<ErrorWrapper> IOSErrorHandler::getError() {
+std::shared_ptr<ErrorWrapper> REAIOSErrorHandler::getError() {
     return this->error;
 }
 
-void IOSErrorHandler::setError(std::string message) {
+void REAIOSErrorHandler::setError(std::string message) {
   if (error->handled) {
     error->message = message;
     error->handled = false;
   }
+}
+
 }

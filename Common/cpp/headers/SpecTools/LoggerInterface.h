@@ -1,5 +1,8 @@
 #pragma once
 
+namespace reanimated
+{
+
 class LoggerInterface {
   public:
     virtual void log(const char* str) = 0;
@@ -8,3 +11,5 @@ class LoggerInterface {
     virtual void log(bool b) = 0;
     virtual ~LoggerInterface() {}
 };
+
+}

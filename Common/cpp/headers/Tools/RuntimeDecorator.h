@@ -1,12 +1,12 @@
 #pragma once
 
+#include "PlatformDepMethodsHolder.h"
 #include <stdio.h>
 #include <jsi/jsi.h>
-#include "PlatformDepMethodsHolder.h"
-
-namespace reanimated {
 
 using namespace facebook;
+
+namespace reanimated {
 
 using RequestFrameFunction = std::function<void(std::function<void(double)>)>;
 
