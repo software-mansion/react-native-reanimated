@@ -14,7 +14,7 @@ Class REATurboModuleClassProvider(const char *name) {
   return RCTCoreModulesClassProvider(name);
 }
 
-std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker) {
+std::shared_ptr<TurboModule> REATurboModuleProvider(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker) {
   if (name == "NativeReanimated") {
     return reanimated::createReanimatedModule(jsInvoker);
   }
@@ -22,7 +22,7 @@ std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name, std:
   return nullptr;
 }
 
-std::shared_ptr<TurboModule> RETurboModuleProvider(const std::string &name,
+std::shared_ptr<TurboModule> REATurboModuleProvider(const std::string &name,
                                                          id<RCTTurboModule> instance,
                                                          std::shared_ptr<CallInvoker> jsInvoker) {
   return nullptr;
