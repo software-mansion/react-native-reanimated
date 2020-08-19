@@ -178,6 +178,7 @@ declare module 'react-native-reanimated' {
     type CodeProps = {
       exec?: AnimatedNode<number>
       children?: () => AnimatedNode<number>
+      dependencies?: Array<any>
     };
 
     // components
