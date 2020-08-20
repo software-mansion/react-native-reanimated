@@ -27,12 +27,10 @@ export default class MutableValue {
   }
 
   addListener(listener) {
-    console.log('add listener');
     this._listeners.push(listener);
   }
 
   _triggerListener() {
-    console.log('Trigger listeners', this._listeners);
     this._listeners.forEach((listener) => {
       listener();
     });

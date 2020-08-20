@@ -3,8 +3,6 @@ import JSReanimated from './JSReanimated';
 const reanimatedJS = new JSReanimated();
 
 global._updatePropsJS = (viewTag, updates, viewRef) => {
-  console.log('updateProps');
-
   const [rawStyles] = Object.keys(updates).reduce(
     (acc, key) => {
       const value = updates[key];

@@ -103,11 +103,6 @@ export default class MapperRegistry {
     postArray.forEach(([id, post]) => {
       this.sortedMappers.push(mappersById[id]);
     });
-
-    console.log('sorted mappers:');
-    this.sortedMappers.forEach(({ id, inputs, outputs }) => {
-      console.log(`${id}/${inputs.length}/${outputs.length}`);
-    });
   }
 
   get needRunOnRender() {

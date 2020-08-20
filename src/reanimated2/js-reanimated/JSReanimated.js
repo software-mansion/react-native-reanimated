@@ -10,7 +10,6 @@ export default class JSReanimated {
   _frames = [];
 
   pushFrame(frame) {
-    console.log('pushFrame');
     this._frames.push(frame);
 
     this.maybeRequestRender();
@@ -29,14 +28,12 @@ export default class JSReanimated {
   }
 
   _onRender(timestampMs) {
-    console.log('onRender');
     this._mapperRegistry.execute();
 
     const frames = [...this._frames];
     this._frames = [];
 
     frames.forEach((callback) => {
-      console.log('frameCallback');
       callback(timestampMs);
     });
 
