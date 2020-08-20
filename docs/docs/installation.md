@@ -135,7 +135,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 #import <React/RCTGIFImageDecoder.h>
 #import <React/RCTImageLoader.h>
 #import <React/JSCExecutorFactory.h>
-#import <RNReanimated/RETurboModuleProvider.h>
+#import <RNReanimated/REATurboModuleProvider.h>
 #import <RNReanimated/REAModule.h>
 // add headers (end)
 ...
