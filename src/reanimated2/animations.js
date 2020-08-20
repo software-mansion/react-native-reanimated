@@ -174,7 +174,9 @@ export function withSpring(toValue, userConfig, callback) {
 
       const isOvershooting = () => {
         if (config.overshootClamping && config.stiffness !== 0) {
-          return current < toValue ? current > toValue : current < toValue;
+          return current < toValue
+            ? animation.current > toValue
+            : animation.current < toValue;
         } else {
           return false;
         }
