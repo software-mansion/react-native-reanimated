@@ -117,7 +117,7 @@ function workletValueSetterJS(value) {
       }
       const finished = animation.animation(animation, timestamp);
       animation.timestamp = timestamp;
-      this._value = animation.current;
+      this._setValue(animation.current);
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -129,7 +129,7 @@ function workletValueSetterJS(value) {
 
     requestFrame(step);
   } else {
-    this._value = value;
+    this._setValue(value);
   }
 }
 

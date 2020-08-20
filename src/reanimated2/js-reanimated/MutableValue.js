@@ -21,6 +21,11 @@ export default class MutableValue {
     this._triggerListener();
   }
 
+  _setValue(newValue) {
+    this._value = newValue;
+    this._triggerListener();
+  }
+
   addListener(listener) {
     console.log('add listener');
     this._listeners.push(listener);
