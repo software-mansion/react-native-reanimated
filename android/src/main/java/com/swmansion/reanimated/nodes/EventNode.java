@@ -74,7 +74,7 @@ public class EventNode extends Node implements RCTEventEmitter {
 
   @Override
   public void receiveTouches(String eventName, WritableArray touches, WritableArray changedIndices) {
-    throw new RuntimeException("receiveTouches is not support by animated events");
+    throw new RuntimeException("receiveTouches is not supported by animated events");
   }
 
   @Override

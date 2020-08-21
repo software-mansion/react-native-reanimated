@@ -50,12 +50,12 @@ import com.swmansion.reanimated.nodes.ValueNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -90,7 +90,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
-  private final Map<String, EventNode> mEventMapping = new HashMap<>();
+  private final Map<String, RCTEventEmitter> mEventMapping = new ConcurrentHashMap<>();
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
@@ -103,7 +103,8 @@ public class NodesManager implements EventDispatcherListener {
 
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
-  private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
+  private final ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
+  private final CopyingEventEmitter mCopyingEventEmitter = new CopyingEventEmitter();
   private boolean mWantRunUpdates;
 
   public double currentFrameTimeMs;
@@ -190,8 +191,10 @@ public class NodesManager implements EventDispatcherListener {
   private void onAnimationFrame(long frameTimeNanos) {
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
-    while (!mEventQueue.isEmpty()) {
-      handleEvent(mEventQueue.poll());
+    synchronized (mEventQueue){
+      while (!mEventQueue.isEmpty()) {
+        handleEvent(mEventQueue.poll(), true);
+      }
     }
 
     if (!mFrameCallbacks.isEmpty()) {
@@ -427,28 +430,43 @@ public class NodesManager implements EventDispatcherListener {
     // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {
-      handleEvent(event);
+      handleEvent(event, false);
     } else {
-      mEventQueue.offer(event);
+      synchronized (mCopyingEventEmitter) {
+        if(mEventMapping.containsKey(getEventNodeTag(event))){
+        // if event we're capable of handling is dispatched from non-UI thread we copy that event and add it to `mEventQueue` via `CopyingEventEmitter`
+        // by doing it this way we avoid situation where event is dispatched & disposed on the other thread (possibly destroying it's state) and later reused in `handleEvent()`
+          Event copiedEvent = mCopyingEventEmitter.copyEvent(event);
+          mEventQueue.offer(copiedEvent);
+        }
+      }
       startUpdatingOnAnimationFrame();
     }
   }
 
-  private void handleEvent(Event event) {
+  private String getEventNodeTag(Event event){
     // If the event has a different name in native, convert it to it's JS name.
     String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
     int viewTag = event.getViewTag();
-    String key = viewTag + eventName;
+    // mapped event tag is created by concatenating view tag with event name
+    return viewTag + eventName;
+  }
 
+  private void handleEvent(Event event, boolean copied) {
     if (mCustomEventHandler != null) {
       event.dispatch(mCustomEventHandler);
     }
 
     if (!mEventMapping.isEmpty()) {
-      EventNode node = mEventMapping.get(key);
+      RCTEventEmitter node = mEventMapping.get(getEventNodeTag(event));
       if (node != null) {
         event.dispatch(node);
       }
+    }
+
+    if(copied){
+      // copied events won't be handled by `EventDispatcher`, so we have to dispose them manually
+      event.onDispose();
     }
   }
 
