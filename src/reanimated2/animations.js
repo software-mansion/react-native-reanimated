@@ -394,7 +394,7 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
-        callback();
+        callback(animation.current);
         if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
         }
