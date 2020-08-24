@@ -381,7 +381,7 @@ export function sequence(..._animations) {
   });
 }
 
-export function repeat(_nextAnimation, numberOfReps = 2, reverse = false) {
+export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callback = () => {}) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -394,6 +394,7 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false) {
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
+        callback(animation.current);
         if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
         }
