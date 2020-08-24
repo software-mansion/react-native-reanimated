@@ -109,7 +109,6 @@ function runAnimations(animation, timestamp, key, result) {
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
-        // TODO: also trigger callback when animation is cancelled (overwritten)
         animation.callback && animation.callback(true /* finished */);
       }
       result[key] = animation.current;
@@ -476,4 +475,3 @@ export function useAnimatedRef() {
 
   return ref.current
 }
-
