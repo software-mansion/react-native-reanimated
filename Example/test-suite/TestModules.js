@@ -9,6 +9,7 @@ export function getTestModules() {
     require('./tests/Pitagoras'),
     require('./tests/AttachComponent'),
     require('./tests/AnimatedRef'),
+    require('./tests/Colors'),
   ];
 
   return modules.filter(Boolean);
