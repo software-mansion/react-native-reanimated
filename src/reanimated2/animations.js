@@ -335,7 +335,9 @@ export function delay(delayMs, _nextAnimation) {
     }
 
     const callback = (finished) => {
-      nextAnimation.callback(finished);
+      if (nextAnimation.callback) {
+        nextAnimation.callback(finished);
+      }
     };
 
     return {
@@ -378,7 +380,9 @@ export function sequence(..._animations) {
       animation.current = currentAnim.current;
       if (finished) {
         // we want to call the callback after every single animation
-        currentAnim.callback(true /* finished */);
+        if (currentAnim.callback) {
+          currentAnim.callback(true /* finished */);
+        }
         currentAnim.finished = true;
         animation.animationIndex += 1;
         if (animation.animationIndex < animations.length) {
@@ -406,7 +410,13 @@ export function sequence(..._animations) {
   });
 }
 
-export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callback = () => {}) {
+export function repeat(
+  _nextAnimation,
+  numberOfReps = 2,
+  reverse = false,
+  callback,
+  stepCallback
+) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -419,7 +429,9 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
-        callback(animation.current);
+        if (stepCallback) {
+          stepCallback(animation.current);
+        }
         if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
         }
@@ -448,6 +460,7 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       start,
       reps: 0,
       current: nextAnimation.current,
+      callback,
     };
   });
 }

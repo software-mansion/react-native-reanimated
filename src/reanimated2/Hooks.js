@@ -475,3 +475,4 @@ export function useAnimatedRef() {
 
   return ref.current
 }
+
