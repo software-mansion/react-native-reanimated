@@ -1,12 +1,16 @@
 'use strict';
-import { processColor as reaProcessColor } from 'react-native-reanimated';
+import { waitForDetailed } from './helpers';
+import {
+  runOnUI,
+  processColor as reaProcessColor,
+} from 'react-native-reanimated';
 import { processColor } from 'react-native';
 
 export const name = 'Colors';
 
 export function test(t) {
   t.describe('colors', () => {
-    t.it('process basic colors', () => {
+    t.it('process basic colors', async () => {
       const testData = [
         'red',
         'green',
@@ -19,10 +23,27 @@ export function test(t) {
         'purple',
       ];
 
+      const uiResults = {};
       testData.forEach((color) => {
-        const reaResult = reaProcessColor(color);
-        const rnResult = processColor(color);
-        t.expect(rnResult).toBe(reaResult);
+        const jsCallback = (color, uiResult) => {
+          uiResults[color] = uiResult;
+        };
+
+        runOnUI(() => {
+          'worklet';
+          const uiResult = reaProcessColor(color);
+          jsCallback(color, uiResult);
+        })();
+      });
+      const colorsProcessed = await waitForDetailed(
+        () => Object.keys(uiResults).length === testData.length,
+        'color processing timeout exceeded',
+        1000
+      );
+      t.expect(colorsProcessed).toBe(true);
+      Object.keys(uiResults).forEach((color) => {
+        const jsResult = processColor(color);
+        t.expect(uiResults[color]).toBe(jsResult);
       });
     });
   });
