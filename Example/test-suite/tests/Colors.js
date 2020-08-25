@@ -1,5 +1,6 @@
 'use strict';
-import { processColor } from 'react-native-reanimated';
+import { processColor as reaProcessColor } from 'react-native-reanimated';
+import { processColor } from 'react-native';
 
 export const name = 'Colors';
 
@@ -7,20 +8,21 @@ export function test(t) {
   t.describe('colors', () => {
     t.it('process basic colors', () => {
       const testData = [
-        ['red', 'ff0000'],
-        ['green', '008000'],
-        ['blue', '0000ff'],
+        'red',
+        'green',
+        'blue',
+        'white',
+        'black',
+        'cyan',
+        'orange',
+        'yellow',
+        'purple',
       ];
 
-      const obtainColorString = (color) => {
-        const padding = 2;
-        return processColor(color)
-          .toString(16)
-          .substring(padding);
-      };
-
-      testData.forEach(([color, expectedString]) => {
-        t.expect(obtainColorString(color)).toBe(expectedString);
+      testData.forEach((color) => {
+        const reaResult = reaProcessColor(color);
+        const rnResult = processColor(color);
+        t.expect(rnResult).toBe(reaResult);
       });
     });
   });
