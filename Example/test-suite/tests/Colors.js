@@ -25,6 +25,10 @@ export function test(t) {
 
       const uiResults = {};
       testData.forEach((color) => {
+        // run on JS thread
+        t.expect(processColor(color)).toBe(reaProcessColor(color));
+
+        // run on UI thread
         const jsCallback = (color, uiResult) => {
           uiResults[color] = uiResult;
         };
