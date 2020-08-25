@@ -381,8 +381,8 @@ declare module 'react-native-reanimated' {
 
     // reanimated2 animations                   
     export interface WithTimingConfig {
-      duration: number;
-      easing: EasingFunction;
+      duration?: number;
+      easing?: EasingFunction;
     }
     export function withTiming(
       toValue: number,
