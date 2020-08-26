@@ -334,10 +334,17 @@ export function delay(delayMs, _nextAnimation) {
       animation.previousAnimation = previousAnimation;
     }
 
+    const callback = (finished) => {
+      if (nextAnimation.callback) {
+        nextAnimation.callback(finished);
+      }
+    };
+
     return {
       animation: delay,
       start,
       current: nextAnimation.current,
+      callback,
     };
   });
 }
@@ -346,16 +353,37 @@ export function sequence(..._animations) {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
-    const animations = _animations.map((a) =>
-      typeof a === 'function' ? a() : a
-    );
+    const animations = _animations.map((a) => {
+      const result = typeof a === 'function' ? a() : a;
+      result.finished = false;
+      return result;
+    });
     const firstAnimation = animations[0];
+
+    const callback = (finished) => {
+      if (finished) {
+        // we want to call the callback after every single animation
+        // not after all of them
+        return;
+      }
+      // this is going to be called only if sequence has been cancelled
+      animations.forEach((animation) => {
+        if (typeof animation.callback === 'function' && !animation.finished) {
+          animation.callback(finished);
+        }
+      });
+    };
 
     function sequence(animation, now) {
       const currentAnim = animations[animation.animationIndex];
       const finished = currentAnim.animation(currentAnim, now);
       animation.current = currentAnim.current;
       if (finished) {
+        // we want to call the callback after every single animation
+        if (currentAnim.callback) {
+          currentAnim.callback(true /* finished */);
+        }
+        currentAnim.finished = true;
         animation.animationIndex += 1;
         if (animation.animationIndex < animations.length) {
           const nextAnim = animations[animation.animationIndex];
@@ -377,11 +405,17 @@ export function sequence(..._animations) {
       start,
       animationIndex: 0,
       current: firstAnimation.current,
+      callback,
     };
   });
 }
 
-export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callback = () => {}) {
+export function repeat(
+  _nextAnimation,
+  numberOfReps = 2,
+  reverse = false,
+  callback
+) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -394,7 +428,11 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
-        callback(animation.current);
+        // call inner animation's callback on every repetition
+        // as the second argument the animation's current value is passed
+        if (nextAnimation.callback) {
+          nextAnimation.callback(true /* finished */, animation.current);
+        }
         if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
         }
@@ -412,6 +450,16 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       return false;
     }
 
+    const repCallback = (finished) => {
+      if (callback) {
+        callback(finished);
+      }
+      // when cancelled call inner animation's callback
+      if (!finished && nextAnimation.callback) {
+        nextAnimation.callback(false /* finished */);
+      }
+    };
+
     function start(animation, value, now, previousAnimation) {
       animation.startValue = value;
       animation.reps = 0;
@@ -423,6 +471,7 @@ export function repeat(_nextAnimation, numberOfReps = 2, reverse = false, callba
       start,
       reps: 0,
       current: nextAnimation.current,
+      callback: repCallback,
     };
   });
 }
