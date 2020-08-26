@@ -25,8 +25,9 @@ public:
    }
 
    void scheduleOnJS(std::function<void()> job) override {
-     Scheduler::scheduleOnJS(job);
-     scheduler_->cthis()->scheduleOnJS();
+     scheduler_->cthis()->jsCallInvoker_->invokeAsync(std::move(job));
+     //Scheduler::scheduleOnJS(job);
+     //scheduler_->cthis()->scheduleOnJS();
    }
 
    ~SchedulerWrapper() {};
@@ -62,6 +63,10 @@ void AndroidScheduler::scheduleOnUI() {
 void AndroidScheduler::scheduleOnJS() {
   static auto method = javaPart_->getClass()->getMethod<void()>("scheduleOnJS");
   method(javaPart_.get());
+}
+
+void AndroidScheduler::setJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
+  jsCallInvoker_ = jsCallInvoker;
 }
 
 void AndroidScheduler::registerNatives() {
