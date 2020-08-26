@@ -414,8 +414,7 @@ export function repeat(
   _nextAnimation,
   numberOfReps = 2,
   reverse = false,
-  callback,
-  stepCallback
+  callback
 ) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
@@ -429,8 +428,10 @@ export function repeat(
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
-        if (stepCallback) {
-          stepCallback(animation.current);
+        // call inner animation's callback on every repetition
+        // as the second argument the animation's current value is passed
+        if (nextAnimation.callback) {
+          nextAnimation.callback(true /* finished */, animation.current);
         }
         if (numberOfReps > 0 && animation.reps >= numberOfReps) {
           return true;
@@ -449,6 +450,16 @@ export function repeat(
       return false;
     }
 
+    const repCallback = (finished) => {
+      if (callback) {
+        callback(finished);
+      }
+      // when cancelled call inner animation's callback
+      if (!finished && nextAnimation.callback) {
+        nextAnimation.callback(false /* finished */);
+      }
+    };
+
     function start(animation, value, now, previousAnimation) {
       animation.startValue = value;
       animation.reps = 0;
@@ -460,7 +471,7 @@ export function repeat(
       start,
       reps: 0,
       current: nextAnimation.current,
-      callback,
+      callback: repCallback,
     };
   });
 }
