@@ -54,7 +54,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     void onRender(double timestampMs);
     void onEvent(std::string eventName, std::string eventAsString);
 
-    void maybeRequestRender();
+    void maybeRequestFrame();
+    void maybeRequestUpdates();
 
     bool isUIRuntime(jsi::Runtime &rt);
     bool isHostRuntime(jsi::Runtime &rt);
@@ -66,7 +67,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     std::function<void(FrameCallback)> requestRender;
     std::shared_ptr<jsi::Value> dummyEvent;
     std::vector<FrameCallback> frameCallbacks;
-    bool renderRequested = false;
+    bool frameRequested = false;
+    bool updatesRequested = false;
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
   public:
   std::shared_ptr<ErrorHandler> errorHandler;

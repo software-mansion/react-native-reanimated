@@ -72,7 +72,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
-    maybeRequestRender();
+    maybeRequestFrame();
   };
 
   RuntimeDecorator::addNativeObjects(*runtime,
@@ -125,7 +125,6 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
     auto mapper = std::make_shared<Mapper>(this, newMapperId, std::move(mapperFunction), inputMutables, outputMutables);
     mapperRegistry->startMapper(mapper);
-    maybeRequestRender();
   });
 
   return jsi::Value((double)newMapperId);
@@ -191,13 +190,23 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
   eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
 }
 
-void NativeReanimatedModule::maybeRequestRender()
+void NativeReanimatedModule::maybeRequestUpdates() {
+  if (!updatesRequested) {
+    updatesRequested = true;
+    scheduler->scheduleOnUI([this]() {
+      updatesRequested = false;
+      mapperRegistry->execute(*runtime);
+    });
+  }
+}
+
+void NativeReanimatedModule::maybeRequestFrame()
 {
-  if (!renderRequested)
+  if (!frameRequested)
   {
-    renderRequested = true;
+    frameRequested = true;
     requestRender([this](double timestampMs) {
-      this->renderRequested = false;
+      this->frameRequested = false;
       this->onRender(timestampMs);
     });
   }
@@ -207,18 +216,11 @@ void NativeReanimatedModule::onRender(double timestampMs)
 {
   try
   {
-    mapperRegistry->execute(*runtime);
-
     std::vector<FrameCallback> callbacks = frameCallbacks;
     frameCallbacks.clear();
     for (auto callback : callbacks)
     {
       callback(timestampMs);
-    }
-
-    if (mapperRegistry->needRunOnRender())
-    {
-      maybeRequestRender();
     }
   }
   catch (...)

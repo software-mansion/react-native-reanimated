@@ -295,6 +295,12 @@ export default function createAnimatedComponent(Component) {
           } else {
             props[key] = dummyListener;
           }
+          // when there is a native event handler defined for a view we set scrollEventThrottle
+          // atrribute to 1. This is done to automatically adjust the throttling for
+          // scroll view events. As it is difficult to tell if the wrapped view is a
+          // scrollable element at this point we always set this property. For other type
+          // of native views it will simply be ignored.
+          props.scrollEventThrottle = 1;
         } else if (!(value instanceof AnimatedNode)) {
           props[key] = value;
         } else if (value instanceof AnimatedValue) {

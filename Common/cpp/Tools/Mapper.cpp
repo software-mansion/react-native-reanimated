@@ -14,13 +14,17 @@ module(module),
 mapper(std::move(mapper)),
 inputs(inputs),
 outputs(outputs) {
-  auto markDirty = [this, module]() {
-    this->dirty = true;
-    module->maybeRequestRender();
+  auto markDirty = [this]() {
+    this->markDirty();
   };
   for (auto input : inputs) {
     input->addListener(markDirty);
   }
+}
+
+void Mapper::markDirty() {
+  this->dirty = true;
+  module->maybeRequestUpdates();
 }
 
 void Mapper::execute(jsi::Runtime &rt) {

@@ -28,6 +28,7 @@ public:
          std::vector<std::shared_ptr<MutableValue>> inputs,
          std::vector<std::shared_ptr<MutableValue>> outputs);
   void execute(jsi::Runtime &rt);
+  void markDirty();
 };
 
 }

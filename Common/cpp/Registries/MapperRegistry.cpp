@@ -10,6 +10,7 @@ namespace reanimated {
 
 void MapperRegistry::startMapper(std::shared_ptr<Mapper> mapper) {
   mappers[mapper->id] = mapper;
+  mapper->markDirty();
   updatedSinceLastExecute = true;
 }
 
@@ -28,10 +29,6 @@ void MapperRegistry::execute(jsi::Runtime &rt) {
       mapper->execute(rt);
     }
   }
-}
-
-bool MapperRegistry::needRunOnRender() {
-  return updatedSinceLastExecute; // TODO: also run if input nodes are dirty
 }
 
 void MapperRegistry::updateOrder() { // Topological sorting

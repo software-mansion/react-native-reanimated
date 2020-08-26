@@ -1,6 +1,8 @@
 #import "REANodesManager.h"
 
 #import <React/RCTConvert.h>
+#import <React/RCTScrollEvent.h>
+#import <React/RCTShadowView.h>
 
 #import "Nodes/REANode.h"
 #import "Nodes/REAPropsNode.h"
@@ -49,6 +51,7 @@
   REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
+  BOOL _willPerformOperations;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   REAEventHandler _eventHandler;
@@ -142,13 +145,6 @@
 {
   _currentAnimationTimestamp = _displayLink.timestamp;
 
-  // We process all enqueued events first
-  for (NSUInteger i = 0; i < _eventQueue.count; i++) {
-    id<RCTEvent> event = _eventQueue[i];
-    [self processEvent:event];
-  }
-  [_eventQueue removeAllObjects];
-
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
@@ -174,14 +170,31 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
+      RCTShadowView *rootShadow = [self.uiManager shadowViewForReactTag:@(1)];
+      BOOL canPerformSyncLayout = YES;// !YGNodeIsDirty(rootShadow.yogaNode);
+      if (!canPerformSyncLayout) {
+        // if sync layout cannot happen we immediately let know main thread to continue
+        dispatch_semaphore_signal(semaphore);
+      }
+
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
         copiedOperationsQueue[i](self.uiManager);
       }
-      [self.uiManager setNeedsLayout];
+
+      if (canPerformSyncLayout) {
+        [self.uiManager batchDidComplete];
+        dispatch_semaphore_signal(semaphore);
+      } else {
+        [self.uiManager setNeedsLayout];
+      }
     });
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
   }
   _wantRunUpdates = NO;
+  _willPerformOperations = NO;
 }
 
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
@@ -190,6 +203,17 @@
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
+  if (_displayLink && _displayLink.timestamp > 0) {
+    _willPerformOperations = YES;
+  }
+  if (!_willPerformOperations) {
+    // display link is inactive or was just created –– means it won't run in this frame while we still
+    // want those updates to happen
+    _willPerformOperations = YES;
+    RCTExecuteOnMainQueue(^{
+      [self performOperations];
+    });
+  }
 }
 
 - (void)getValue:(REANodeID)nodeID
@@ -353,24 +377,6 @@
   _processingDirectEvent = NO;
 }
 
-- (BOOL)isDirectEvent:(id<RCTEvent>)event
-{
-  static NSArray<NSString *> *directEventNames;
-  static dispatch_once_t directEventNamesToken;
-  dispatch_once(&directEventNamesToken, ^{
-    directEventNames = @[
-      @"topContentSizeChange",
-      @"topMomentumScrollBegin",
-      @"topMomentumScrollEnd",
-      @"topScroll",
-      @"topScrollBeginDrag",
-      @"topScrollEndDrag"
-    ];
-  });
-
-  return [directEventNames containsObject:RCTNormalizeInputEventName(event.eventName)];
-}
-
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
   NSString *key = [NSString stringWithFormat:@"%@%@",
@@ -383,20 +389,25 @@
 
   if (_eventHandler != nil) {
     _eventHandler(eventHash, event);
+//    if ([@"topScroll" isEqualToString:[event arguments][1]]) {
+//      CGFloat translateY = -1 * [event.arguments[2][@"contentOffset"][@"y"] floatValue];
+////      dispatch_async(dispatch_get_main_queue(), ^{
+////      RCTExecuteOnMainQueue(^{
+//        NSDictionary *uiProps = @{
+//          @"transform": @[@{@"translateY": @(translateY)}]
+//        };
+//        [self.uiManager
+//         synchronouslyUpdateViewOnUIThread:@(57)
+//         viewName:@"RCTView"
+//         props:uiProps];
+////      });
+//    }
   }
 
   REANode *eventNode = [_eventMapping objectForKey:key];
 
   if (eventNode != nil) {
-    if ([self isDirectEvent:event]) {
-      // Bypass the event queue/animation frames and process scroll events
-      // immediately to avoid getting out of sync with the scroll position
-      [self processDirectEvent:event];
-    } else {
-      // enqueue node to be processed
-      [_eventQueue addObject:event];
-      [self startUpdatingOnAnimationFrame];
-    }
+    [self processDirectEvent:event];
   }
 }
 
@@ -443,14 +454,14 @@
      synchronouslyUpdateViewOnUIThread:viewTag
      viewName:viewName
      props:uiProps];
-    }
-    if (nativeProps.count > 0) {
-      [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps];
-    }
-    if (jsProps.count > 0) {
-      [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
-                                          body:@{@"viewTag": viewTag, @"props": jsProps }];
-    }
+  }
+  if (nativeProps.count > 0) {
+    [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps];
+  }
+  if (jsProps.count > 0) {
+    [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
+                                        body:@{@"viewTag": viewTag, @"props": jsProps }];
+  }
 }
 
 - (NSString*)obtainProp:(nonnull NSNumber *)viewTag

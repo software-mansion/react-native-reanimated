@@ -21,8 +21,6 @@ public:
   void stopMapper(unsigned long id);
 
   void execute(jsi::Runtime &rt);
-
-  bool needRunOnRender();
 };
 
 }
