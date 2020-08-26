@@ -91,7 +91,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<Scheduler> scheduler_;
 
-
   void installJSIBindings();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler(std::function<void(std::string,std::string)> handler);

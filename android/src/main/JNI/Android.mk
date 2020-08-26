@@ -29,7 +29,7 @@ LOCAL_SHARED_LIBRARIES := libhermes libfolly_json libfbjni libreactnativejni
 
 include $(BUILD_SHARED_LIBRARY)
 
-# start build empty library which is needed by CallInvokerHolderImpl.java
+# start | build empty library which is needed by CallInvokerHolderImpl.java
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := turbomodulejsijni
