@@ -1,5 +1,6 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
+import { processSpringConfig } from './SpringConfig';
 
 let IN_STYLE_UPDATER = false;
 
@@ -117,9 +118,6 @@ export function withSpring(toValue, userConfig, callback) {
     // when user config is "frozen object" we can't enumerate it (perhaps
     // something is wrong with the object prototype).
     const config = {
-      damping: 10,
-      mass: 1,
-      stiffness: 100,
       overshootClamping: false,
       restDisplacementThreshold: 0.001,
       restSpeedThreshold: 0.001,
@@ -127,6 +125,8 @@ export function withSpring(toValue, userConfig, callback) {
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
+
+    processSpringConfig(userConfig);
 
     function spring(animation, now) {
       const { toValue, lastTimestamp, current, velocity } = animation;
