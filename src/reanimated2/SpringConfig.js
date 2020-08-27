@@ -100,7 +100,7 @@ export function processSpringConfig(config) {
         config.speed === undefined &&
         config.tension === undefined &&
         config.friction === undefined,
-      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one',
+      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
     );
     config.stiffness = config.stiffness ?? 100;
     config.damping = config.damping ?? 10;
@@ -112,26 +112,26 @@ export function processSpringConfig(config) {
         config.stiffness === undefined &&
         config.damping === undefined &&
         config.mass === undefined,
-      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one',
+      'You can define one of bounciness/speed, tension/friction, or stiffness/damping/mass, but not more than one'
     );
     const springConfig = fromBouncinessAndSpeed(
       config.bounciness ?? 8,
-      config.speed ?? 12,
+      config.speed ?? 12
     );
     config.stiffness = springConfig.stiffness;
     config.damping = springConfig.damping;
-    config.mass = config.mass ?? 1
+    config.mass = config.mass ?? 1;
   } else {
     const springConfig = fromOrigamiTensionAndFriction(
       config.tension ?? 40,
-      config.friction ?? 7,
+      config.friction ?? 7
     );
     config.stiffness = springConfig.stiffness;
     config.damping = springConfig.damping;
-    config.mass = config.mass ?? 1
+    config.mass = config.mass ?? 1;
   }
 
   invariant(config.stiffness > 0, 'Stiffness value must be greater than 0');
   invariant(config.damping > 0, 'Damping value must be greater than 0');
   invariant(config.mass > 0, 'Mass value must be greater than 0');
-} 
+}
