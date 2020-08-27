@@ -107,7 +107,7 @@ function ListItem({ item, index, onPress }) {
 }
 
 const timingConfig = {
-  duration: 350,
+  duration: 240,
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
@@ -163,12 +163,13 @@ function ImageTransition({ activeImage, onClose }) {
         translateY.value = 0;
 
         animationProgress.value = withTiming(0, timingConfig, () => {
-          imageOpacity.value = 1;
-
-          // fixes flickering
-          setTimeout(() => {
-            onClose();
-          }, 16);
+          imageOpacity.value = withTiming(
+            1,
+            {
+              duration: 16,
+            },
+            onClose
+          );
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
