@@ -11,6 +11,7 @@ import SimpleTest from './SimpleTest';
 import MeasureTest from './MeasureTest';
 import FastRefreshTest from './FastRefreshTest';
 import ScrollToTest from './scrollToTest';
+import AnimatedReactionTest from './AnimatedReactionTest';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
@@ -31,6 +32,10 @@ const SCREENS = {
     screen: ScrollToTest,
     title: '🆕 ScrollTo test',
   },
+  AnimatedReactionTest: {
+    screen: AnimatedReactionTest,
+    title: '🆕 Animated reaction test',
+  },
 };
 
 function MainScreen({ navigation }) {
@@ -43,7 +48,7 @@ function MainScreen({ navigation }) {
       renderItem={(props) => (
         <MainScreenItem
           {...props}
-          screens={SCREENS}
+          screens={ SCREENS }
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}

@@ -6,11 +6,15 @@ const { visitors } = require('@babel/traverse');
 const traverse = require('@babel/traverse').default;
 const parse = require('@babel/parser').parse;
 
-const functionHooks = new Set([
-  'useAnimatedStyle',
-  'useAnimatedProps',
-  'useDerivedValue',
-  'useAnimatedScrollHandler',
+/**
+ * holds a map of hooks names as keys and array of argument indexes which are worklets(starting from 0)
+ */
+const functionHooks = new Map([
+  ['useAnimatedStyle', [0]],
+  ['useAnimatedProps', [0]],
+  ['useDerivedValue', [0]],
+  ['useAnimatedScrollHandler', [0]],
+  ['useAnimatedReaction', [0, 1]],
 ]);
 
 const objectHooks = new Set([
@@ -289,14 +293,17 @@ function processWorklets(t, path, processor) {
     for (let i = 0; i < objectPath.container.length; i++) {
       processor(t, objectPath.getSibling(i).get('value'));
     }
-  } else if (functionHooks.has(name)) {
-    processor(t, path.get('arguments.0'));
+  } else {
+    const indexes = functionHooks.get(name);
+    if (Array.isArray(indexes)) {
+      indexes.forEach((index) => {
+        processor(t, path.get(`arguments.${index}`));
+      });
+    }
   }
 }
 
-const PLUGIN_BLACKLIST_NAMES = [
-  '@babel/plugin-transform-object-assign',
-];
+const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
 
 const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
   try {
@@ -324,7 +331,7 @@ function removePluginsFromBlacklist(plugins) {
     const toRemove = [];
     for (let i = 0; i < plugins.length; i++) {
       if (
-        JSON.stringify(Object.keys(plugins[i].visitor)) !=
+        JSON.stringify(Object.keys(plugins[i].visitor)) !==
         JSON.stringify(Object.keys(blacklistedPlugin.visitor))
       ) {
         continue;
@@ -332,7 +339,7 @@ function removePluginsFromBlacklist(plugins) {
       let areEqual = true;
       for (const key of Object.keys(blacklistedPlugin.visitor)) {
         if (
-          blacklistedPlugin.visitor[key].toString() !=
+          blacklistedPlugin.visitor[key].toString() !==
           plugins[i].visitor[key].toString()
         ) {
           areEqual = false;
@@ -349,7 +356,7 @@ function removePluginsFromBlacklist(plugins) {
   });
 }
 
-module.exports = function ({ types: t }) {
+module.exports = function({ types: t }) {
   return {
     visitor: {
       CallExpression: {
@@ -363,7 +370,7 @@ module.exports = function ({ types: t }) {
         },
       },
     },
-    // In this way we can modify babel options 
+    // In this way we can modify babel options
     // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
     manipulateOptions(opts, parserOpts) {
       const plugins = opts.plugins;
