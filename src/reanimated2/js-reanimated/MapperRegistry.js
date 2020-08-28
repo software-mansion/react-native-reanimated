@@ -11,6 +11,7 @@ export default class MapperRegistry {
   startMapper(mapper) {
     this.mappers.set(mapper.id, mapper);
     this.updatedSinceLastExecute = true;
+    return mapper.id;
   }
 
   stopMapper(id) {

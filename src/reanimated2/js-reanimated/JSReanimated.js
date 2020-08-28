@@ -60,10 +60,9 @@ export default class JSReanimated {
 
   startMapper(mapper, inputs = [], outputs = []) {
     const instance = new Mapper(this, mapper, inputs, outputs);
-
-    this._mapperRegistry.startMapper(instance);
-
+    const mapperId = this._mapperRegistry.startMapper(instance);
     this.maybeRequestRender();
+    return mapperId;
   }
 
   stopMapper(mapperId) {
