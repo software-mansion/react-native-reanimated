@@ -13,6 +13,7 @@ const functionHooks = new Map([
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
   ['useDerivedValue', [0]],
+  ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
 ]);
 
