@@ -101,6 +101,10 @@ export default class MapperRegistry {
     postArray.sort((a, b) => {
       return b[1] - a[1];
     });
+
+    // clear sorted mappers
+    this.sortedMappers = [];
+
     postArray.forEach(([id, post]) => {
       this.sortedMappers.push(mappersById[id]);
     });
