@@ -17,6 +17,7 @@
 #import <React/RCTFileRequestHandler.h>
 #import <RNReanimated/REATurboModuleProvider.h>
 #import <RNReanimated/REAModule.h>
+#import "MBFingerTipWindow.h"
 
 @interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate>{
   RCTTurboModuleManager *_turboModuleManager;
@@ -37,6 +38,12 @@
   rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  const bool showTaps = true;
+  if (showTaps) {
+    MBFingerTipWindow *window = [[MBFingerTipWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    window.alwaysShowTouches = YES;
+    self.window = window;
+  }
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
