@@ -4,7 +4,7 @@ import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
-import { getTag } from './NativeMethods'
+import { getTag } from './NativeMethods';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -372,15 +372,24 @@ export function useAnimatedGestureHandler(handlers) {
       if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
         handlers.onEnd(event, context);
       }
-      if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
+      if (
+        event.oldState === BEGAN &&
+        event.state === FAILED &&
+        handlers.onFail
+      ) {
         handlers.onFail(event, context);
       }
-      if (event.oldState === ACTIVE && event.state === CANCELLED && handlers.onCancel) {
+      if (
+        event.oldState === ACTIVE &&
+        event.state === CANCELLED &&
+        handlers.onCancel
+      ) {
         handlers.onCancel(event, context);
       }
       if (
         (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state !== BEGAN && event.state !== ACTIVE &&
+        event.state !== BEGAN &&
+        event.state !== ACTIVE &&
         handlers.onFinish
       ) {
         handlers.onFinish(
@@ -451,8 +460,8 @@ export function useAnimatedScrollHandler(handlers) {
 }
 
 export function useAnimatedRef() {
-  const tag = useSharedValue(-1)
-  const ref = useRef(null)
+  const tag = useSharedValue(-1);
+  const ref = useRef(null);
 
   if (!ref.current) {
     const fun = function(component) {
@@ -460,7 +469,7 @@ export function useAnimatedRef() {
       // enters when ref is set by attaching to a component
       if (component) {
         tag.value = getTag(component);
-        fun.current = component
+        fun.current = component;
       }
       return tag.value;
     };
@@ -473,7 +482,7 @@ export function useAnimatedRef() {
     ref.current = fun;
   }
 
-  return ref.current
+  return ref.current;
 }
 
 /**
@@ -490,9 +499,16 @@ export function useAnimatedReaction(prepare, react) {
     };
   }
   const { inputs } = inputsRef.current;
-  useMapper(() => {
-    'worklet';
-    const input = prepare();
-    react(input);
+
+  useEffect(() => {
+    const fun = () => {
+      'worklet';
+      const input = prepare();
+      react(input);
+    };
+    const mapperId = startMapper(fun, inputs, []);
+    return () => {
+      stopMapper(mapperId);
+    };
   }, inputs);
 }
