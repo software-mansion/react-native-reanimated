@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+/* global _WORKLET */
+import { useEffect, useRef, useState } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
@@ -511,4 +512,29 @@ export function useAnimatedReaction(prepare, react) {
       stopMapper(mapperId);
     };
   }, inputs);
+}
+
+/**
+ * mixes React's usetState with useSharedValue
+ * @param initial
+ */
+export function useAnimatedState(initial) {
+  const [state, setState] = useState(initial);
+  const sv = useSharedValue(initial);
+
+  const setMixedState = (newValue) => {
+    'worklet';
+    sv.value = newValue;
+    setState(newValue);
+  };
+
+  const getState = () => {
+    'worklet';
+    if (_WORKLET) {
+      return sv.value;
+    }
+    return state;
+  };
+
+  return [getState, setMixedState];
 }
