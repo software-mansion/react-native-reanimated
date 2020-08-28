@@ -135,7 +135,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 #import <React/RCTGIFImageDecoder.h>
 #import <React/RCTImageLoader.h>
 #import <React/JSCExecutorFactory.h>
-#import <RNReanimated/REATurboModuleProvider.h>
+#import <RNReanimated/RETurboModuleProvider.h>
 #import <RNReanimated/REAModule.h>
 // add headers (end)
 ...
@@ -165,20 +165,20 @@ If not, after making those changes your app will be compatible with Turbo Module
 
 - (Class)getModuleClassFromName:(const char *)name
 {
- return facebook::react::REATurboModuleClassProvider(name);
+ return facebook::react::RETurboModuleClassProvider(name);
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
                                                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
 {
- return facebook::react::REATurboModuleProvider(name, jsInvoker);
+ return facebook::react::RETurboModuleProvider(name, jsInvoker);
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
                                                       instance:(id<RCTTurboModule>)instance
                                                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
 {
- return facebook::react::REATurboModuleProvider(name, instance, jsInvoker);
+ return facebook::react::RETurboModuleProvider(name, instance, jsInvoker);
 }
 
 - (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
