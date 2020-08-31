@@ -4,7 +4,9 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useDerivedValue,
+  useAnimatedGestureHandler,
 } from 'react-native-reanimated';
+import { TapGestureHandler } from 'react-native-gesture-handler';
 
 const Child = ({ expanded }) => {
   const uas = useAnimatedStyle(() => {
@@ -79,6 +81,56 @@ const FastRefreshTest = () => {
     }
   }
 
+  // test gestures
+  const ghsv1 = useSharedValue(0);
+  const ghsv2 = useSharedValue(0);
+  const ghsv3 = useSharedValue(0);
+
+  const ghas1 = useAnimatedStyle(() => {
+    return {
+      backgroundColor: ghsv1.value === state ? 'green' : 'red',
+    };
+  });
+
+  const ghas2 = useAnimatedStyle(() => {
+    return {
+      backgroundColor: ghsv2.value === state ? 'green' : 'red',
+    };
+  });
+
+  const ghas3 = useAnimatedStyle(() => {
+    return {
+      backgroundColor: ghsv3.value === state ? 'green' : 'red',
+    };
+  });
+
+  // not passing dependencies - obtaining dependencies from closure
+  const tapEventHandler = useAnimatedGestureHandler({
+    onEnd: (_) => {
+      ghsv1.value = state;
+    },
+  });
+
+  // passing state as dependency
+  const tapEventHandlerListenToOne = useAnimatedGestureHandler(
+    {
+      onEnd: (_) => {
+        ghsv2.value = state;
+      },
+    },
+    [state]
+  );
+
+  // empty array of dependencies
+  const tapEventHandlerNotListening = useAnimatedGestureHandler(
+    {
+      onEnd: (_) => {
+        ghsv3.value = state;
+      },
+    },
+    []
+  );
+
   return (
     <View>
       <Text>Press the button to do testing</Text>
@@ -105,6 +157,31 @@ const FastRefreshTest = () => {
       <Child expanded={expanded} />
       <Text>But this should not update</Text>
       <Animated.View style={[styles.box, uasNotListening]} />
+
+      <Text>Testing events:</Text>
+      <Text>
+        Following boxes should turn green when pressed(after pressing the button
+        on the top)
+      </Text>
+      <TapGestureHandler onGestureEvent={tapEventHandler}>
+        <Animated.View
+          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas1]}
+        />
+      </TapGestureHandler>
+
+      <TapGestureHandler onGestureEvent={tapEventHandlerListenToOne}>
+        <Animated.View
+          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas2]}
+        />
+      </TapGestureHandler>
+
+      <Text>This one should stay red</Text>
+
+      <TapGestureHandler onGestureEvent={tapEventHandlerNotListening}>
+        <Animated.View
+          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas3]}
+        />
+      </TapGestureHandler>
     </View>
   );
 };

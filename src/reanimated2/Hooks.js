@@ -1,5 +1,4 @@
-/* global _WORKLET */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
@@ -31,10 +30,18 @@ export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
   }, dependencies);
 }
 
-export function useEvent(handler, eventNames = []) {
+export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
+  } else if (rebuild) {
+    // unregister events first
+    initRef.current.unregisterFromEvents();
+    const viewTag = initRef.current.viewTag;
+    // assign new object
+    initRef.current = new WorkletEventHandler(handler, eventNames);
+    // register again for the same view tag
+    initRef.current.registerForEvents(viewTag);
   }
 
   return initRef.current;
@@ -346,14 +353,51 @@ export function useDerivedValue(processor, dependencies = undefined) {
   return sharedValue;
 }
 
-export function useAnimatedGestureHandler(handlers) {
+export function useAnimatedGestureHandler(handlers, dependencies) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),
+      savedDependencies: [],
     };
   }
-  const { context } = initRef.current;
+  const { context, savedDependencies } = initRef.current;
+  let dependenciesDiffer = false;
+
+  // builds one big hash from multiple worklets' hashes
+  const buildHash = (handlers) => {
+    return Object.keys(handlers).reduce(
+      (previousValue, key) =>
+        previousValue === null
+          ? handlers[key].__workletHash
+          : previousValue.toString() + handlers[key].__workletHash.toString(),
+      null
+    );
+  };
+
+  if (dependencies === undefined) {
+    dependencies = Object.keys(handlers).map((handlerKey) => {
+      const handler = handlers[handlerKey];
+      return {
+        workletHash: handler.__workletHash,
+        closure: handler._closure,
+      };
+    });
+  } else {
+    dependencies.push(buildHash(handlers));
+  }
+
+  if (dependencies.length !== savedDependencies.length) {
+    dependenciesDiffer = true;
+  } else {
+    for (let i = 0; i < dependencies.length; ++i) {
+      if (dependencies[i] !== savedDependencies[i]) {
+        dependenciesDiffer = true;
+        break;
+      }
+    }
+  }
+  initRef.current.savedDependencies = dependencies;
 
   return useEvent(
     (event) => {
@@ -400,7 +444,8 @@ export function useAnimatedGestureHandler(handlers) {
         );
       }
     },
-    ['onGestureHandlerStateChange', 'onGestureHandlerEvent']
+    ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
+    dependenciesDiffer
   );
 }
 
@@ -512,29 +557,4 @@ export function useAnimatedReaction(prepare, react) {
       stopMapper(mapperId);
     };
   }, inputs);
-}
-
-/**
- * mixes React's usetState with useSharedValue
- * @param initial
- */
-export function useAnimatedState(initial) {
-  const [state, setState] = useState(initial);
-  const sv = useSharedValue(initial);
-
-  const setMixedState = (newValue) => {
-    'worklet';
-    sv.value = newValue;
-    setState(newValue);
-  };
-
-  const getState = () => {
-    'worklet';
-    if (_WORKLET) {
-      return sv.value;
-    }
-    return state;
-  };
-
-  return [getState, setMixedState];
 }
