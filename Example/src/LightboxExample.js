@@ -1,19 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  runOnUI,
   useAnimatedGestureHandler,
   interpolate,
   Extrapolate,
   withTiming,
   Easing,
+  useAnimatedRef,
+  measure,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View, Image } from 'react-native';
+import { Dimensions, StyleSheet, View, Image, StatusBar } from 'react-native';
 import {
   ScrollView,
   PanGestureHandler,
-  TouchableWithoutFeedback,
+  TapGestureHandler,
 } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
@@ -52,7 +53,7 @@ function ImageList({ images, onItemPress }) {
 }
 
 function ListItem({ item, index, onPress }) {
-  const ref = useRef();
+  const ref = useAnimatedRef();
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -68,32 +69,57 @@ function ListItem({ item, index, onPress }) {
     };
   });
 
+  const width = useSharedValue(0);
+  const height = useSharedValue(0);
+  const x = useSharedValue(0);
+  const y = useSharedValue(0);
+
+  function handlePress() {
+    onPress(ref, item, { imageOpacity: opacity, width, height, x, y });
+  }
+
+  const handler = useAnimatedGestureHandler({
+    onFinish: (evt, ctx, isCanceledOrFailed) => {
+      if (isCanceledOrFailed) {
+        return;
+      }
+
+      // measure the image
+      // width/height and position to animate from it to the full screen one
+      const measurements = measure(ref);
+
+      width.value = measurements.width;
+      height.value = measurements.height;
+      x.value = measurements.pageX;
+      y.value = measurements.pageY - HEADER_HEIGHT;
+
+      handlePress();
+    },
+  });
+
   return (
-    <TouchableWithoutFeedback
-      style={containerStyle}
-      onPress={() => onPress(ref, item, opacity)}>
-      <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
-    </TouchableWithoutFeedback>
+    <TapGestureHandler onGestureEvent={handler}>
+      <Animated.View style={containerStyle}>
+        <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
+      </Animated.View>
+    </TapGestureHandler>
   );
 }
 
 const timingConfig = {
-  duration: 350,
+  duration: 240,
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
+const HEADER_HEIGHT = Header.HEIGHT - StatusBar.currentHeight;
+
 function ImageTransition({ activeImage, onClose }) {
-  const {
-    x,
-    item,
-    width,
-    height,
-    targetWidth,
-    targetHeight,
-    sv: imageOpacity,
-  } = activeImage;
+  const { item, x, y, width, height, imageOpacity } = activeImage;
   const { uri } = item;
-  const y = activeImage.y - Header.HEIGHT;
+
+  const targetWidth = dimensions.width;
+  const scaleFactor = item.width / targetWidth;
+  const targetHeight = item.height / scaleFactor;
 
   const animationProgress = useSharedValue(0);
 
@@ -102,7 +128,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - Header.HEIGHT
+    (dimensions.height - targetHeight) / 2 - HEADER_HEIGHT
   );
 
   const translateX = useSharedValue(0);
@@ -137,8 +163,13 @@ function ImageTransition({ activeImage, onClose }) {
         translateY.value = 0;
 
         animationProgress.value = withTiming(0, timingConfig, () => {
-          imageOpacity.value = 1;
-          onClose();
+          imageOpacity.value = withTiming(
+            1,
+            {
+              duration: 16,
+            },
+            onClose
+          );
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
@@ -156,15 +187,17 @@ function ImageTransition({ activeImage, onClose }) {
     const interpolateProgress = (range) =>
       interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
 
-    const top = translateY.value + interpolateProgress([y, targetY.value]);
-    const left = translateX.value + interpolateProgress([x, targetX.value]);
+    const top =
+      translateY.value + interpolateProgress([y.value, targetY.value]);
+    const left =
+      translateX.value + interpolateProgress([x.value, targetX.value]);
 
     return {
       position: 'absolute',
       top,
       left,
-      width: interpolateProgress([width, targetWidth]),
-      height: interpolateProgress([height, targetHeight]),
+      width: interpolateProgress([width.value, targetWidth]),
+      height: interpolateProgress([height.value, targetHeight]),
       transform: [
         {
           scale: scale.value,
@@ -180,13 +213,13 @@ function ImageTransition({ activeImage, onClose }) {
   });
 
   useEffect(() => {
-    runOnUI(() => {
-      'worklet';
-      animationProgress.value = withTiming(1, timingConfig, () => {
-        imageOpacity.value = 0;
-      });
-      backdropOpacity.value = withTiming(1, timingConfig);
-    })();
+    // fixes flickering
+    requestAnimationFrame(() => {
+      imageOpacity.value = 0;
+    });
+
+    animationProgress.value = withTiming(1, timingConfig);
+    backdropOpacity.value = withTiming(1, timingConfig);
   }, []);
 
   return (
@@ -213,26 +246,11 @@ const images = Array.from({ length: 30 }, (_, index) => {
 export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
 
-  function onItemPress(imageRef, item, sv) {
-    imageRef.current.measure((x, y, width, height, pageX, pageY) => {
-      if (width === 0 && height === 0) {
-        return;
-      }
-
-      const targetWidth = dimensions.width;
-      const scaleFactor = item.width / targetWidth;
-      const targetHeight = item.height / scaleFactor;
-
-      setActiveImage({
-        item,
-        width,
-        height,
-        x: pageX,
-        y: pageY,
-        targetHeight,
-        targetWidth,
-        sv,
-      });
+  function onItemPress(animatedRef, item, svs) {
+    setActiveImage({
+      animatedRef,
+      item,
+      ...svs,
     });
   }
 
