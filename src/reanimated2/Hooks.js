@@ -35,15 +35,8 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
-    // unregister events first
-    initRef.current.unregisterFromEvents();
-    const viewTag = initRef.current.viewTag;
-    // assign new object
-    initRef.current = new WorkletEventHandler(handler, eventNames);
-    // register again for the same view tag
-    initRef.current.registerForEvents(viewTag);
+    initRef.current.worklet = handler;
   }
-
   return initRef.current;
 }
 
