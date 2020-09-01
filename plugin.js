@@ -71,8 +71,16 @@ class ClosureGenerator {
       memberExpressionNode.computed ||
       memberExpressionNode.property.name === 'value'
     ) {
-      // a.b[w] -> a.b.w
+      // a.b[w] -> a.b.w in babel nodes
       // a.v.value
+      return notFound;
+    }
+    if (
+      path.parentNode &&
+      path.parentNode.type === 'AssignmentExpression' &&
+      path.parentNode.left === path.node
+    ) {
+      /// captured.newProp = 5;
       return notFound;
     }
     const purePath = [memberExpressionNode.property.name];
