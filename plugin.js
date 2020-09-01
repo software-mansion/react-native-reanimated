@@ -68,14 +68,12 @@ class ClosureGenerator {
       return notFound;
     }
     const purePath = [memberExpressionNode.property.name];
-    console.log('findRec dla', purePath[0]);
     const node = memberExpressionNode;
     const upAns = this.findPrefixRec(path.parentPath);
     return this.mergeAns([purePath, node], upAns);
   }
 
   findPrefix(base, babelPath) {
-    console.log('find dla', base);
     const purePath = [base];
     const node = babelPath.node;
     const upAns = this.findPrefixRec(babelPath.parentPath);
@@ -83,9 +81,7 @@ class ClosureGenerator {
   }
 
   addPath(base, babelPath) {
-    console.log('dodaje dla', base);
     const [purePath, node] = this.findPrefix(base, babelPath);
-    console.log('po findPref', purePath);
     let parent = this.trie;
     let index = -1;
     for (const current of purePath) {
@@ -104,7 +100,6 @@ class ClosureGenerator {
   }
 
   generateNodeForBase(t, current, parent) {
-    console.log('gen dla', current);
     const currentNode = parent[0][current];
     if (currentNode[1]) {
       return currentNode[0];
@@ -123,7 +118,6 @@ class ClosureGenerator {
 
   generate(t, variables, names) {
     const arrayOfKeys = [...names];
-    console.log('names', names);
     return t.objectExpression(
       variables.map((variable, index) =>
         t.objectProperty(
