@@ -67,6 +67,10 @@ class ClosureGenerator {
     if (memberExpressionNode.property.type !== 'Identifier') {
       return notFound;
     }
+    if (memberExpressionNode.computed) {
+      // a.b[w] -> a.b.w
+      return notFound;
+    }
     const purePath = [memberExpressionNode.property.name];
     const node = memberExpressionNode;
     const upAns = this.findPrefixRec(path.parentPath);
