@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Button, View, StyleSheet, Text } from 'react-native';
+import { Button, View, StyleSheet, Text, ScrollView } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useAnimatedGestureHandler,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { TapGestureHandler } from 'react-native-gesture-handler';
 
@@ -21,6 +22,16 @@ const UASChild = ({ expanded }) => {
   );
 };
 
+const TestUASCase = ({ state, dependencies }) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: state,
+    };
+  }, dependencies);
+
+  return <Animated.View style={[styles.box, animatedStyle]} />;
+};
+
 const TestUAS = ({ expanded, state }) => {
   const shared = useSharedValue(state);
 
@@ -35,124 +46,76 @@ const TestUAS = ({ expanded, state }) => {
     }
   }
 
-  const uasShared = useAnimatedStyle(() => {
-    return {
-      width: shared.value,
-    };
-  });
-
-  const uasListeningOne = useAnimatedStyle(() => {
-    return {
-      width: state,
-    };
-  }, [state]);
-
-  const uasListeningAll = useAnimatedStyle(() => {
-    return {
-      width: state,
-    };
-  });
-
-  const uasNotListening = useAnimatedStyle(() => {
-    return {
-      width: state,
-    };
-  }, []);
   return (
     <>
-      <Text>The lengths of the following containers should be the same</Text>
-      <Animated.View style={[styles.box, uasShared]} />
-      <Animated.View style={[styles.box, uasListeningOne]} />
-      <Animated.View style={[styles.box, uasListeningAll]} />
+      <Text>The lengths of those containers should be equal</Text>
+      <TestUASCase state={state} dependencies={undefined} />
+      <TestUASCase state={state} dependencies={[state]} />
       <Text>This should alternate(long/short) on button press</Text>
       <UASChild expanded={expanded} />
       <Text>But this should not update</Text>
-      <Animated.View style={[styles.box, uasNotListening]} />
+      <TestUASCase state={state} dependencies={[]} />
     </>
   );
 };
 
-const TestUDV = ({ state, UDVTestResult }) => {
+const TestUDVCase = ({ state, dependencies }) => {
   const derived = useDerivedValue(() => {
     return state;
-  });
+  }, dependencies);
 
-  const resultUas = useAnimatedStyle(() => {
-    const color = UDVTestResult.value === 1 ? 'green' : 'red';
+  const animatedStyle = useAnimatedStyle(() => {
+    const color = state !== -1 && derived.value === state ? 'green' : 'red';
     return {
       backgroundColor: color,
     };
   });
+  return <Animated.View style={[styles.box, animatedStyle]} />;
+};
+
+const TestUDV = ({ state, UDVTestResult }) => {
   return (
     <>
-      <Button
-        title="check derived values"
-        onPress={() => {
-          if (derived.value === state) {
-            UDVTestResult.value = 1;
-          } else {
-            UDVTestResult.value = 0;
-          }
-        }}
-      />
-      <Text>This box should be green after pressing checking button</Text>
-      <Animated.View
-        style={[{ width: 100, height: 20, backgroundColor: 'gray' }, resultUas]}
-      />
+      <Text>Those boxes should be green after pressing checking button</Text>
+      <TestUDVCase state={state} dependencies={undefined} />
+      <TestUDVCase state={state} dependencies={[state]} />
+      <Text>This one should remain red</Text>
+      <TestUDVCase state={state} dependencies={[]} />
     </>
   );
 };
 
+const TestUAGHCase = ({ state, dependencies }) => {
+  const sv = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: sv.value === state ? 'green' : 'red',
+    };
+  });
+
+  const tapEventHandler = useAnimatedGestureHandler(
+    {
+      onEnd: (_) => {
+        sv.value = state;
+      },
+    },
+    dependencies
+  );
+
+  return (
+    <TapGestureHandler onGestureEvent={tapEventHandler}>
+      <Animated.View
+        style={[
+          { height: 25, width: 25, backgroundColor: 'red' },
+          animatedStyle,
+        ]}
+      />
+    </TapGestureHandler>
+  );
+};
+
 const TestUAGH = ({ state }) => {
-  const ghsv1 = useSharedValue(0);
-  const ghsv2 = useSharedValue(0);
-  const ghsv3 = useSharedValue(0);
-
-  const ghas1 = useAnimatedStyle(() => {
-    return {
-      backgroundColor: ghsv1.value === state ? 'green' : 'red',
-    };
-  });
-
-  const ghas2 = useAnimatedStyle(() => {
-    return {
-      backgroundColor: ghsv2.value === state ? 'green' : 'red',
-    };
-  });
-
-  const ghas3 = useAnimatedStyle(() => {
-    return {
-      backgroundColor: ghsv3.value === state ? 'green' : 'red',
-    };
-  });
-
-  // not passing dependencies - obtaining dependencies from closure
-  const tapEventHandler = useAnimatedGestureHandler({
-    onEnd: (_) => {
-      ghsv1.value = state;
-    },
-  });
-
-  // passing state as dependency
-  const tapEventHandlerListenToOne = useAnimatedGestureHandler(
-    {
-      onEnd: (_) => {
-        ghsv2.value = state;
-      },
-    },
-    [state]
-  );
-
-  // empty array of dependencies
-  const tapEventHandlerNotListening = useAnimatedGestureHandler(
-    {
-      onEnd: (_) => {
-        ghsv3.value = state;
-      },
-    },
-    []
-  );
-
   return (
     <>
       <Text>Testing events:</Text>
@@ -160,25 +123,75 @@ const TestUAGH = ({ state }) => {
         Following boxes should turn green when pressed(after pressing the button
         on the top)
       </Text>
-      <TapGestureHandler onGestureEvent={tapEventHandler}>
-        <Animated.View
-          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas1]}
-        />
-      </TapGestureHandler>
-
-      <TapGestureHandler onGestureEvent={tapEventHandlerListenToOne}>
-        <Animated.View
-          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas2]}
-        />
-      </TapGestureHandler>
-
+      <TestUAGHCase state={state} dependencies={undefined} />
+      <TestUAGHCase state={state} dependencies={[state]} />
       <Text>This one should stay red</Text>
+      <TestUAGHCase state={state} dependencies={[]} />
+    </>
+  );
+};
+let cid = 0;
+const TestUASHCase = ({ itemsArr, state, dependencies }) => {
+  const sv = useSharedValue(-1);
+  const id = ++cid;
 
-      <TapGestureHandler onGestureEvent={tapEventHandlerNotListening}>
-        <Animated.View
-          style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas3]}
-        />
-      </TapGestureHandler>
+  const scrollHandler = useAnimatedScrollHandler(
+    {
+      onEndDrag: (e) => {
+        sv.value = state;
+      },
+    },
+    dependencies
+  );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: state !== -1 && state === sv.value ? 'green' : 'red',
+    };
+  });
+
+  return (
+    <>
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.ScrollView
+        style={{ backgroundColor: 'yellow', margin: 5 }}
+        scrollEventThrottle={1}
+        horizontal={true}
+        onScroll={scrollHandler}>
+        {itemsArr.map((i) => {
+          return (
+            <View
+              style={{
+                width: 25,
+                height: 25,
+                backgroundColor: i % 2 ? 'black' : 'yellow',
+              }}
+              key={`${id}-${i}`}
+            />
+          );
+        })}
+      </Animated.ScrollView>
+    </>
+  );
+};
+
+const TestUASH = ({ state }) => {
+  const itemsArr = [];
+  for (let i = 0; i < 15; ++i) {
+    itemsArr.push(i);
+  }
+
+  return (
+    <>
+      <Text>After scroll checking containers should turn green</Text>
+      <TestUASHCase
+        state={state}
+        itemsArr={itemsArr}
+        dependencies={undefined}
+      />
+      <TestUASHCase state={state} itemsArr={itemsArr} dependencies={[state]} />
+      <Text>Here it should stay red</Text>
+      <TestUASHCase state={state} itemsArr={itemsArr} dependencies={[]} />
     </>
   );
 };
@@ -196,22 +209,23 @@ const FastRefreshTest = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <Text>Press the button to do testing</Text>
       <Button title="change state" onPress={update} />
       <TestUDV state={state} UDVTestResult={UDVTestResult} />
       <TestUAS expanded={expanded} state={state} />
       <TestUAGH state={state} />
-    </View>
+      <TestUASH state={state} />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   box: {
-    width: 20,
-    height: 20,
+    width: 10,
+    height: 10,
     backgroundColor: 'orange',
-    margin: 10,
+    margin: 5,
   },
 });
 

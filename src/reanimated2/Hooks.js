@@ -315,7 +315,7 @@ export function useAnimatedStyle(updater, dependencies) {
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
 
-export function useDerivedValue(processor, dependencies = undefined) {
+export function useDerivedValue(processor, dependencies) {
   const initRef = useRef(null);
   const inputs = Object.values(processor._closure);
 
@@ -346,6 +346,17 @@ export function useDerivedValue(processor, dependencies = undefined) {
   return sharedValue;
 }
 
+// builds one big hash from multiple worklets' hashes
+function buildWorkletsHash(handlers) {
+  return Object.keys(handlers).reduce(
+    (previousValue, key) =>
+      previousValue === null
+        ? handlers[key].__workletHash
+        : previousValue.toString() + handlers[key].__workletHash.toString(),
+    null
+  );
+}
+
 export function useAnimatedGestureHandler(handlers, dependencies) {
   const initRef = useRef(null);
   if (initRef.current === null) {
@@ -357,17 +368,6 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   const { context, savedDependencies } = initRef.current;
   let dependenciesDiffer = false;
 
-  // builds one big hash from multiple worklets' hashes
-  const buildHash = (handlers) => {
-    return Object.keys(handlers).reduce(
-      (previousValue, key) =>
-        previousValue === null
-          ? handlers[key].__workletHash
-          : previousValue.toString() + handlers[key].__workletHash.toString(),
-      null
-    );
-  };
-
   if (dependencies === undefined) {
     dependencies = Object.keys(handlers).map((handlerKey) => {
       const handler = handlers[handlerKey];
@@ -377,7 +377,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
       };
     });
   } else {
-    dependencies.push(buildHash(handlers));
+    dependencies.push(buildWorkletsHash(handlers));
   }
 
   if (dependencies.length !== savedDependencies.length) {
@@ -442,15 +442,44 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   );
 }
 
-export function useAnimatedScrollHandler(handlers) {
+export function useAnimatedScrollHandler(handlers, dependencies) {
   const initRef = useRef(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),
+      savedDependencies: [],
     };
   }
-  const { context } = initRef.current;
+  const { context, savedDependencies } = initRef.current;
 
+  // check dependencies
+  let dependenciesDiffer = false;
+
+  if (dependencies === undefined) {
+    dependencies = Object.keys(handlers).map((handlerKey) => {
+      const handler = handlers[handlerKey];
+      return {
+        workletHash: handler.__workletHash,
+        closure: handler._closure,
+      };
+    });
+  } else {
+    dependencies.push(buildWorkletsHash(handlers));
+  }
+
+  if (dependencies.length !== savedDependencies.length) {
+    dependenciesDiffer = true;
+  } else {
+    for (let i = 0; i < dependencies.length; ++i) {
+      if (dependencies[i] !== savedDependencies[i]) {
+        dependenciesDiffer = true;
+        break;
+      }
+    }
+  }
+  initRef.current.savedDependencies = dependencies;
+
+  // build event subscription array
   const subscribeForEvents = ['onScroll'];
   if (handlers.onBeginDrag !== undefined) {
     subscribeForEvents.push('onScrollBeginDrag');
@@ -465,37 +494,41 @@ export function useAnimatedScrollHandler(handlers) {
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent((event) => {
-    'worklet';
-    const {
-      onScroll,
-      onBeginDrag,
-      onEndDrag,
-      onMomentumBegin,
-      onMomentumEnd,
-    } = handlers;
-    if (event.eventName.endsWith('onScroll')) {
-      if (onScroll) {
-        onScroll(event, context);
-      } else if (typeof handlers === 'function') {
-        handlers(event, context);
+  return useEvent(
+    (event) => {
+      'worklet';
+      const {
+        onScroll,
+        onBeginDrag,
+        onEndDrag,
+        onMomentumBegin,
+        onMomentumEnd,
+      } = handlers;
+      if (event.eventName.endsWith('onScroll')) {
+        if (onScroll) {
+          onScroll(event, context);
+        } else if (typeof handlers === 'function') {
+          handlers(event, context);
+        }
+      } else if (onBeginDrag && event.eventName.endsWith('onScrollBeginDrag')) {
+        onBeginDrag(event, context);
+      } else if (onEndDrag && event.eventName.endsWith('onScrollEndDrag')) {
+        onEndDrag(event, context);
+      } else if (
+        onMomentumBegin &&
+        event.eventName.endsWith('onMomentumScrollBegin')
+      ) {
+        onMomentumBegin(event, context);
+      } else if (
+        onMomentumEnd &&
+        event.eventName.endsWith('onMomentumScrollEnd')
+      ) {
+        onMomentumEnd(event, context);
       }
-    } else if (onBeginDrag && event.eventName.endsWith('onScrollBeginDrag')) {
-      onBeginDrag(event, context);
-    } else if (onEndDrag && event.eventName.endsWith('onScrollEndDrag')) {
-      onEndDrag(event, context);
-    } else if (
-      onMomentumBegin &&
-      event.eventName.endsWith('onMomentumScrollBegin')
-    ) {
-      onMomentumBegin(event, context);
-    } else if (
-      onMomentumEnd &&
-      event.eventName.endsWith('onMomentumScrollEnd')
-    ) {
-      onMomentumEnd(event, context);
-    }
-  }, subscribeForEvents);
+    },
+    subscribeForEvents,
+    dependenciesDiffer
+  );
 }
 
 export function useAnimatedRef() {
