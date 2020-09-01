@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { TapGestureHandler } from 'react-native-gesture-handler';
 
-const Child = ({ expanded }) => {
+const UASChild = ({ expanded }) => {
   const uas = useAnimatedStyle(() => {
     return {
       width: expanded ? 10 : 300,
@@ -21,25 +21,20 @@ const Child = ({ expanded }) => {
   );
 };
 
-const FastRefreshTest = () => {
-  const [state, setState] = useState(-1);
-  const [expanded, setExpanded] = useState(true);
-
+const TestUAS = ({ expanded, state }) => {
   const shared = useSharedValue(state);
-  const testResult = useSharedValue(0);
 
-  const derived = useDerivedValue(() => {
-    return state;
-  });
+  // sometimes we have to wait for shared value to be set and then read properly
+  const waitingTimeout = 100;
+  const startCounting = Date.now();
+  while (state !== shared.value) {
+    const delay = Date.now() - startCounting;
+    if (delay > waitingTimeout) {
+      console.log('timeout exceeded waiting for shared value: ' + delay);
+      break;
+    }
+  }
 
-  const resultUas = useAnimatedStyle(() => {
-    const color = testResult.value === 1 ? 'green' : 'red';
-    return {
-      backgroundColor: color,
-    };
-  });
-
-  // test useAnimatedStyle
   const uasShared = useAnimatedStyle(() => {
     return {
       width: shared.value,
@@ -63,25 +58,52 @@ const FastRefreshTest = () => {
       width: state,
     };
   }, []);
+  return (
+    <>
+      <Text>The lengths of the following containers should be the same</Text>
+      <Animated.View style={[styles.box, uasShared]} />
+      <Animated.View style={[styles.box, uasListeningOne]} />
+      <Animated.View style={[styles.box, uasListeningAll]} />
+      <Text>This should alternate(long/short) on button press</Text>
+      <UASChild expanded={expanded} />
+      <Text>But this should not update</Text>
+      <Animated.View style={[styles.box, uasNotListening]} />
+    </>
+  );
+};
 
-  const update = () => {
-    testResult.value = 0;
-    setState(Math.floor(Math.random() * 300));
-    setExpanded(!expanded);
-  };
+const TestUDV = ({ state, UDVTestResult }) => {
+  const derived = useDerivedValue(() => {
+    return state;
+  });
 
-  // sometimes we have to wait for shared value to be set and then read properly
-  const waitingTimeout = 100;
-  const startCounting = Date.now();
-  while (state !== shared.value) {
-    const delay = Date.now() - startCounting;
-    if (delay > waitingTimeout) {
-      console.log('timeout exceeded waiting for shared value: ' + delay);
-      break;
-    }
-  }
+  const resultUas = useAnimatedStyle(() => {
+    const color = UDVTestResult.value === 1 ? 'green' : 'red';
+    return {
+      backgroundColor: color,
+    };
+  });
+  return (
+    <>
+      <Button
+        title="check derived values"
+        onPress={() => {
+          if (derived.value === state) {
+            UDVTestResult.value = 1;
+          } else {
+            UDVTestResult.value = 0;
+          }
+        }}
+      />
+      <Text>This box should be green after pressing checking button</Text>
+      <Animated.View
+        style={[{ width: 100, height: 20, backgroundColor: 'gray' }, resultUas]}
+      />
+    </>
+  );
+};
 
-  // test gestures
+const TestUAGH = ({ state }) => {
   const ghsv1 = useSharedValue(0);
   const ghsv2 = useSharedValue(0);
   const ghsv3 = useSharedValue(0);
@@ -132,32 +154,7 @@ const FastRefreshTest = () => {
   );
 
   return (
-    <View>
-      <Text>Press the button to do testing</Text>
-      <Button title="change state" onPress={update} />
-      <Button
-        title="check derived values"
-        onPress={() => {
-          if (derived.value === state) {
-            testResult.value = 1;
-          } else {
-            testResult.value = 0;
-          }
-        }}
-      />
-      <Text>This box should be green after pressing checking button</Text>
-      <Animated.View
-        style={[{ width: 100, height: 20, backgroundColor: 'gray' }, resultUas]}
-      />
-      <Text>The lengths of the following containers should be the same</Text>
-      <Animated.View style={[styles.box, uasShared]} />
-      <Animated.View style={[styles.box, uasListeningOne]} />
-      <Animated.View style={[styles.box, uasListeningAll]} />
-      <Text>This should alternate(long/short) on button press</Text>
-      <Child expanded={expanded} />
-      <Text>But this should not update</Text>
-      <Animated.View style={[styles.box, uasNotListening]} />
-
+    <>
       <Text>Testing events:</Text>
       <Text>
         Following boxes should turn green when pressed(after pressing the button
@@ -182,6 +179,29 @@ const FastRefreshTest = () => {
           style={[{ height: 25, width: 25, backgroundColor: 'red' }, ghas3]}
         />
       </TapGestureHandler>
+    </>
+  );
+};
+
+const FastRefreshTest = () => {
+  const [state, setState] = useState(-1);
+  const [expanded, setExpanded] = useState(true);
+
+  const UDVTestResult = useSharedValue(0);
+
+  const update = () => {
+    UDVTestResult.value = 0;
+    setState(Math.floor(Math.random() * 300));
+    setExpanded(!expanded);
+  };
+
+  return (
+    <View>
+      <Text>Press the button to do testing</Text>
+      <Button title="change state" onPress={update} />
+      <TestUDV state={state} UDVTestResult={UDVTestResult} />
+      <TestUAS expanded={expanded} state={state} />
+      <TestUAGH state={state} />
     </View>
   );
 };
