@@ -45,6 +45,91 @@ const globals = new Set([
   '_scrollTo',
 ]);
 
+class ClosureGenerator {
+  trie = [{}, false];
+
+  mergeAns(oldAns, newAns) {
+    const [purePath, node] = oldAns;
+    const [purePathUp, nodeUp] = newAns;
+    if (purePathUp.length !== 0) {
+      return [purePath.concat(purePathUp), nodeUp];
+    } else {
+      return [purePath, node];
+    }
+  }
+
+  findPrefixRec(path) {
+    const notFound = [[], null];
+    if (!path || path.node.type !== 'MemberExpression') {
+      return notFound;
+    }
+    const memberExpressionNode = path.node;
+    if (memberExpressionNode.property.type !== 'Identifier') {
+      return notFound;
+    }
+    const purePath = [memberExpressionNode.property.name];
+    const node = memberExpressionNode;
+    const upAns = this.findPrefixRec(path.parentPath);
+    return this.mergeAns([purePath, node], upAns);
+  }
+
+  findPrefix(base, babelPath) {
+    const purePath = [base];
+    const node = babelPath.node;
+    const upAns = this.findPrefixRec(babelPath.parentPath);
+    return this.mergeAns([purePath, node], upAns);
+  }
+
+  addPath(base, babelPath) {
+    const [purePath, node] = this.findPrefix(base, babelPath);
+    let parent = this.trie;
+    let index = -1;
+    for (const current of purePath) {
+      index++;
+      if (parent[1]) {
+        continue;
+      }
+      if (!parent[0][current]) {
+        parent[0][current] = [null, false];
+      }
+      if (index === purePath.length - 1) {
+        parent[0][current] = [node, true];
+      }
+      parent = parent[0][current];
+    }
+  }
+
+  generateNodeForBase(t, current, parent) {
+    const currentNode = parent[current];
+    if (currentNode[1]) {
+      return currentNode[0];
+    }
+    return t.objectExpression(
+      Object.keys(currentNode).map((propertyName) =>
+        t.objectProperty(
+          t.identifier(propertyName),
+          this.generateNodeForBase(t, propertyName, currentNode[0]),
+          false,
+          true
+        )
+      )
+    );
+  }
+
+  generate(t, variables, closureVariables) {
+    return t.objectExpression(
+      variables.map((variable, index) =>
+        t.objectProperty(
+          t.identifier(variable.name),
+          this.generateNodeForBase(t, closureVariables[index], this.trie),
+          false,
+          true
+        )
+      )
+    );
+  }
+}
+
 function buildWorkletString(t, fun, closureVariables, name) {
   fun.traverse({
     enter(path) {
@@ -100,6 +185,7 @@ function processWorkletFunction(t, fun) {
 
   const closure = new Map();
   const outputs = new Set();
+  const closureGenerator = new ClosureGenerator();
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -138,6 +224,7 @@ function processWorkletFunction(t, fun) {
         currentScope = currentScope.parent;
       }
       closure.set(name, path.node);
+      closureGenerator.addPath(name, path);
     },
     AssignmentExpression(path) {
       // test for <somethin>.value = <something> expressions
@@ -187,16 +274,7 @@ function processWorkletFunction(t, fun) {
             t.identifier('_closure'),
             false
           ),
-          t.objectExpression(
-            variables.map((variable) =>
-              t.objectProperty(
-                t.identifier(variable.name),
-                variable,
-                false,
-                true
-              )
-            )
-          )
+          closureGenerator.generate()
         )
       ),
       t.expressionStatement(
@@ -294,9 +372,7 @@ function processWorklets(t, path, processor) {
   }
 }
 
-const PLUGIN_BLACKLIST_NAMES = [
-  '@babel/plugin-transform-object-assign',
-];
+const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
 
 const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
   try {
@@ -324,7 +400,7 @@ function removePluginsFromBlacklist(plugins) {
     const toRemove = [];
     for (let i = 0; i < plugins.length; i++) {
       if (
-        JSON.stringify(Object.keys(plugins[i].visitor)) !=
+        JSON.stringify(Object.keys(plugins[i].visitor)) !==
         JSON.stringify(Object.keys(blacklistedPlugin.visitor))
       ) {
         continue;
@@ -332,7 +408,7 @@ function removePluginsFromBlacklist(plugins) {
       let areEqual = true;
       for (const key of Object.keys(blacklistedPlugin.visitor)) {
         if (
-          blacklistedPlugin.visitor[key].toString() !=
+          blacklistedPlugin.visitor[key].toString() !==
           plugins[i].visitor[key].toString()
         ) {
           areEqual = false;
@@ -349,7 +425,7 @@ function removePluginsFromBlacklist(plugins) {
   });
 }
 
-module.exports = function ({ types: t }) {
+module.exports = function({ types: t }) {
   return {
     visitor: {
       CallExpression: {
@@ -363,7 +439,7 @@ module.exports = function ({ types: t }) {
         },
       },
     },
-    // In this way we can modify babel options 
+    // In this way we can modify babel options
     // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
     manipulateOptions(opts, parserOpts) {
       const plugins = opts.plugins;
