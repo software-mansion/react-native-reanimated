@@ -67,8 +67,12 @@ class ClosureGenerator {
     if (memberExpressionNode.property.type !== 'Identifier') {
       return notFound;
     }
-    if (memberExpressionNode.computed) {
+    if (
+      memberExpressionNode.computed ||
+      memberExpressionNode.property.name === 'value'
+    ) {
       // a.b[w] -> a.b.w
+      // a.v.value
       return notFound;
     }
     const purePath = [memberExpressionNode.property.name];
