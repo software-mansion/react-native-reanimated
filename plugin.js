@@ -68,12 +68,14 @@ class ClosureGenerator {
       return notFound;
     }
     const purePath = [memberExpressionNode.property.name];
+    console.log('findRec dla', purePath[0]);
     const node = memberExpressionNode;
     const upAns = this.findPrefixRec(path.parentPath);
     return this.mergeAns([purePath, node], upAns);
   }
 
   findPrefix(base, babelPath) {
+    console.log('find dla', base);
     const purePath = [base];
     const node = babelPath.node;
     const upAns = this.findPrefixRec(babelPath.parentPath);
@@ -81,7 +83,9 @@ class ClosureGenerator {
   }
 
   addPath(base, babelPath) {
+    console.log('dodaje dla', base);
     const [purePath, node] = this.findPrefix(base, babelPath);
+    console.log('po findPref', purePath);
     let parent = this.trie;
     let index = -1;
     for (const current of purePath) {
@@ -90,7 +94,7 @@ class ClosureGenerator {
         continue;
       }
       if (!parent[0][current]) {
-        parent[0][current] = [null, false];
+        parent[0][current] = [{}, false];
       }
       if (index === purePath.length - 1) {
         parent[0][current] = [node, true];
@@ -100,15 +104,16 @@ class ClosureGenerator {
   }
 
   generateNodeForBase(t, current, parent) {
-    const currentNode = parent[current];
+    console.log('gen dla', current);
+    const currentNode = parent[0][current];
     if (currentNode[1]) {
       return currentNode[0];
     }
     return t.objectExpression(
-      Object.keys(currentNode).map((propertyName) =>
+      Object.keys(currentNode[0]).map((propertyName) =>
         t.objectProperty(
           t.identifier(propertyName),
-          this.generateNodeForBase(t, propertyName, currentNode[0]),
+          this.generateNodeForBase(t, propertyName, currentNode),
           false,
           true
         )
@@ -116,12 +121,14 @@ class ClosureGenerator {
     );
   }
 
-  generate(t, variables, closureVariables) {
+  generate(t, variables, names) {
+    const arrayOfKeys = [...names];
+    console.log('names', names);
     return t.objectExpression(
       variables.map((variable, index) =>
         t.objectProperty(
           t.identifier(variable.name),
-          this.generateNodeForBase(t, closureVariables[index], this.trie),
+          this.generateNodeForBase(t, arrayOfKeys[index], this.trie),
           false,
           true
         )
@@ -274,7 +281,7 @@ function processWorkletFunction(t, fun) {
             t.identifier('_closure'),
             false
           ),
-          closureGenerator.generate()
+          closureGenerator.generate(t, variables, closure.keys())
         )
       ),
       t.expressionStatement(
