@@ -4,6 +4,7 @@ import { Easing } from './Easing';
 let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
+  'worklet'
   const valueType = typeof value;
   if (valueType !== 'number') {
     let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
