@@ -36,6 +36,8 @@ const globals = new Set([
   'requestAnimationFrame',
   '_WORKLET',
   'arguments',
+  'Map',
+  'Set',
   '_log',
   '_updateProps',
   'RegExp',
@@ -43,6 +45,58 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+]);
+
+const blacklistedFunctions = new Set([
+  'stopCapturing',
+  'toString',
+  'map',
+  'filter',
+  'forEach',
+  'valueOf',
+  'toPrecision',
+  'toExponential',
+  'constructor',
+  'toFixed',
+  'toLocaleString',
+  'toSource',
+  'charAt',
+  'charCodeAt',
+  'concat',
+  'indexOf',
+  'lastIndexOf',
+  'localeCompare',
+  'length',
+  'match',
+  'replace',
+  'search',
+  'slice',
+  'split',
+  'substr',
+  'substring',
+  'toLocaleLowerCase',
+  'toLocaleUpperCase',
+  'toLowerCase',
+  'toUpperCase',
+  'every',
+  'join',
+  'pop',
+  'push',
+  'reduce',
+  'reduceRight',
+  'reverse',
+  'shift',
+  'slice',
+  'some',
+  'sort',
+  'splice',
+  'unshift',
+  'hasOwnProperty',
+  'isPrototypeOf',
+  'propertyIsEnumerable',
+  'bind',
+  'apply',
+  'call',
 ]);
 
 class ClosureGenerator {
@@ -69,10 +123,12 @@ class ClosureGenerator {
     }
     if (
       memberExpressionNode.computed ||
-      memberExpressionNode.property.name === 'value'
+      memberExpressionNode.property.name === 'value' ||
+      blacklistedFunctions.has(memberExpressionNode.property.name)
     ) {
       // a.b[w] -> a.b.w in babel nodes
       // a.v.value
+      // sth.map(() => )
       return notFound;
     }
     if (
