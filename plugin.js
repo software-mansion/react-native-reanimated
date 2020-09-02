@@ -132,9 +132,9 @@ class ClosureGenerator {
       return notFound;
     }
     if (
-      path.parentNode &&
-      path.parentNode.type === 'AssignmentExpression' &&
-      path.parentNode.left === path.node
+      path.parent &&
+      path.parent.type === 'AssignmentExpression' &&
+      path.parent.left === path.node
     ) {
       /// captured.newProp = 5;
       return notFound;
