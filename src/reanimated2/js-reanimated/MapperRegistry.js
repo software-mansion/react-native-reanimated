@@ -93,7 +93,7 @@ export default class MapperRegistry {
       post[node.mapper.id] = postCounter++;
     };
 
-    dfs(nodes[0]);
+    while (nodes.length) dfs(nodes[0]);
 
     const postArray = Object.keys(post).map((key) => {
       return [key, post[key]];
