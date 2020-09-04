@@ -290,6 +290,10 @@ function processWorklets(t, path, processor) {
     path.get('arguments.0').type === 'ObjectExpression'
   ) {
     const objectPath = path.get('arguments.0.properties.0');
+    if (!objectPath) {
+      // edge case empty object
+      return;
+    }
     for (let i = 0; i < objectPath.container.length; i++) {
       processor(t, objectPath.getSibling(i).get('value'));
     }
