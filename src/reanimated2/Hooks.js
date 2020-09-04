@@ -357,17 +357,8 @@ function buildWorkletsHash(handlers) {
   );
 }
 
-export function useAnimatedGestureHandler(handlers, dependencies) {
-  const initRef = useRef(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      context: makeRemote({}),
-      savedDependencies: [],
-    };
-  }
-  const { context, savedDependencies } = initRef.current;
-  let dependenciesDiffer = false;
-
+// builds dependencies array for gesture handlers
+function buildDependencies(dependencies, handlers) {
   if (dependencies === undefined) {
     dependencies = Object.keys(handlers).map((handlerKey) => {
       const handler = handlers[handlerKey];
@@ -379,17 +370,44 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   } else {
     dependencies.push(buildWorkletsHash(handlers));
   }
+  return dependencies;
+}
 
-  if (dependencies.length !== savedDependencies.length) {
-    dependenciesDiffer = true;
-  } else {
-    for (let i = 0; i < dependencies.length; ++i) {
-      if (dependencies[i] !== savedDependencies[i]) {
-        dependenciesDiffer = true;
-        break;
-      }
-    }
+// this is supposed to work as useEffect comparison
+function areDependenciesEqual(a, b) {
+  function is(x, y) {
+    /* eslint-disable no-self-compare */
+    return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
+    /* eslint-enable no-self-compare */
   }
+  var objectIs = typeof Object.is === 'function' ? Object.is : is;
+
+  function areHookInputsEqual(nextDeps, prevDeps) {
+    if (prevDeps === null) return !1;
+    for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++)
+      if (!objectIs(nextDeps[i], prevDeps[i])) return !1;
+    return !0;
+  }
+
+  return areHookInputsEqual(a, b);
+}
+
+export function useAnimatedGestureHandler(handlers, dependencies) {
+  const initRef = useRef(null);
+  if (initRef.current === null) {
+    initRef.current = {
+      context: makeRemote({}),
+      savedDependencies: [],
+    };
+  }
+  const { context, savedDependencies } = initRef.current;
+
+  dependencies = buildDependencies(dependencies, handlers);
+
+  const dependenciesDiffer = !areDependenciesEqual(
+    dependencies,
+    savedDependencies
+  );
   initRef.current.savedDependencies = dependencies;
 
   return useEvent(
@@ -452,31 +470,12 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
   }
   const { context, savedDependencies } = initRef.current;
 
-  // check dependencies
-  let dependenciesDiffer = false;
+  dependencies = buildDependencies(dependencies, handlers);
 
-  if (dependencies === undefined) {
-    dependencies = Object.keys(handlers).map((handlerKey) => {
-      const handler = handlers[handlerKey];
-      return {
-        workletHash: handler.__workletHash,
-        closure: handler._closure,
-      };
-    });
-  } else {
-    dependencies.push(buildWorkletsHash(handlers));
-  }
-
-  if (dependencies.length !== savedDependencies.length) {
-    dependenciesDiffer = true;
-  } else {
-    for (let i = 0; i < dependencies.length; ++i) {
-      if (dependencies[i] !== savedDependencies[i]) {
-        dependenciesDiffer = true;
-        break;
-      }
-    }
-  }
+  const dependenciesDiffer = !areDependenciesEqual(
+    dependencies,
+    savedDependencies
+  );
   initRef.current.savedDependencies = dependencies;
 
   // build event subscription array
