@@ -13,19 +13,24 @@ id(id),
 module(module),
 mapper(std::move(mapper)),
 inputs(inputs),
-outputs(outputs) {
-  auto markDirty = [this, module]() {
+outputs(outputs) {  auto markDirty = [this, module]() {
     this->dirty = true;
     module->maybeRequestRender();
   };
   for (auto input : inputs) {
-    input->addListener(markDirty);
+    input->addListener(id, markDirty);
   }
 }
 
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
   mapper.callWithThis(rt, mapper);
+}
+
+Mapper::~Mapper() {
+  for (auto input : inputs) {
+    input->removeListener(id);
+  }
 }
 
 }
