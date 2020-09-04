@@ -374,7 +374,7 @@ function buildDependencies(dependencies, handlers) {
 }
 
 // this is supposed to work as useEffect comparison
-function areDependenciesEqual(a, b) {
+function areDependenciesEqual(nextDeps, prevDeps) {
   function is(x, y) {
     /* eslint-disable no-self-compare */
     return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
@@ -389,7 +389,7 @@ function areDependenciesEqual(a, b) {
     return !0;
   }
 
-  return areHookInputsEqual(a, b);
+  return areHookInputsEqual(nextDeps, prevDeps);
 }
 
 export function useAnimatedGestureHandler(handlers, dependencies) {
