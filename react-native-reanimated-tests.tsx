@@ -1,7 +1,13 @@
 /* eslint-disable */
 import React from 'react';
 import { StyleSheet, Button, View } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { 
+  PanGestureHandler,
+  PinchGestureHandlerGestureEvent,
+  PinchGestureHandler,
+  PanGestureHandlerGestureEvent,
+  TapGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useDerivedValue,
@@ -90,14 +96,14 @@ function AnimatedScrollHandlerTest() {
   );
 }
 
-// useAnimatedGestureHandler
+// useAnimatedGestureHandler with context
 function AnimatedGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: { startX: number }) => {
+  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+    onStart: (_, ctx) => {
       ctx.startX = x.value;
     },
-    onActive: (event, ctx: { startX: number }) => {
+    onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -117,6 +123,32 @@ function AnimatedGestureHandlerTest() {
     <PanGestureHandler onGestureEvent={gestureHandler}>
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
+  );
+}
+
+function AnimatedPinchGestureHandlerTest() {
+  const x = useSharedValue(0);
+  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
+    onActive: (event) => {
+      x.value = event.scale;
+    },
+    onEnd: () => {
+      x.value = withTiming(1);
+    },
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: x.value,
+        },
+      ],
+    };
+  });
+  return (
+    <PinchGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box, animatedStyle]} />
+    </PinchGestureHandler>
   );
 }
 

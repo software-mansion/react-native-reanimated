@@ -21,9 +21,8 @@ declare module 'react-native-reanimated' {
     NativeSyntheticEvent,
   } from 'react-native';
   import {
-    GestureHandlerGestureEventNativeEvent,
+    GestureHandlerGestureEvent,
     PanGestureHandlerGestureEvent,
-    PanGestureHandlerEventExtra,
   } from 'react-native-gesture-handler';
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -440,13 +439,16 @@ declare module 'react-native-reanimated' {
     export function useAnimatedProps<T extends {}>(
       updater: () => T
     ): T;
-    export function useAnimatedGestureHandler<TContext extends Context>(
-      handlers: GestureHandlers<TContext>
-    ): OnGestureEvent;
-    export function useAnimatedScrollHandler<TContext extends Context>(
+    export function useAnimatedGestureHandler<
+      T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
+      TContext extends Context = {}
+    >(
+      handlers: GestureHandlers<T['nativeEvent'], TContext>
+    ): OnGestureEvent<T>;
+    export function useAnimatedScrollHandler<TContext extends Context = {}>(
       handler: ScrollHandler<TContext>
     ): OnScroll;
-    export function useAnimatedScrollHandler<TContext extends Context>(
+    export function useAnimatedScrollHandler<TContext extends Context = {}>(
       handlers: ScrollHandlers<TContext>
     ): OnScroll;
 
@@ -463,20 +465,19 @@ declare module 'react-native-reanimated' {
     export function scrollTo(ref: RefObject<ReactNativeScrollView | ScrollView>, x: number, y: number, animated: boolean): void;
 
     // gesture-handler
-    type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
+    type OnGestureEvent<T> = (event: T) => void;
 
     type Context = Record<string, unknown>;
 
-    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
-    type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
+    type Handler<T, TContext extends Context> = (event: T, context: TContext) => void;
 
-    export interface GestureHandlers<TContext extends Context> {
-      onStart?: Handler<TContext>;
-      onActive?: Handler<TContext>;
-      onEnd?: Handler<TContext>;
-      onFail?: Handler<TContext>;
-      onCancel?: Handler<TContext>;
-      onFinish?: (event: NativeEvent, context: TContext, isCanceledOrFailed: boolean) => void;
+    export interface GestureHandlers<T, TContext extends Context> {
+      onStart?: Handler<T, TContext>;
+      onActive?: Handler<T, TContext>;
+      onEnd?: Handler<T, TContext>;
+      onFail?: Handler<T, TContext>;
+      onCancel?: Handler<T, TContext>;
+      onFinish?: (event: T, context: TContext, isCanceledOrFailed: boolean) => void;
     }
 
     // scroll view
