@@ -13,6 +13,19 @@ import { Header } from 'react-navigation-stack';
 
 const windowDimensions = Dimensions.get('window');
 
+const colors = [
+  'black',
+  'blue',
+  'green',
+  'yellow',
+  'red',
+  'gray',
+  'pink',
+  'orange',
+];
+
+const boxHeight = 120;
+
 function friction(value) {
   'worklet';
 
@@ -80,7 +93,7 @@ function ScrollableView({ children }) {
 
   const styles = useAnimatedStyle(() => {
     return {
-      flex: 1,
+      height: boxHeight * colors.length,
       transform: [
         {
           translateY: translateY.value,
@@ -105,7 +118,7 @@ function Box({ color }) {
     <View
       style={{
         backgroundColor: color,
-        height: 120,
+        height: boxHeight,
         borderBottomWidth: 1,
         borderBottomColor: 'gray',
       }}
@@ -116,14 +129,9 @@ function Box({ color }) {
 export default function Example() {
   return (
     <ScrollableView>
-      <Box color="black" />
-      <Box color="blue" />
-      <Box color="green" />
-      <Box color="yellow" />
-      <Box color="red" />
-      <Box color="gray" />
-      <Box color="pink" />
-      <Box color="orange" />
+      {colors.map((color) => (
+        <Box color={color} key={color} />
+      ))}
     </ScrollableView>
   );
 }
