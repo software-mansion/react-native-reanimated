@@ -7,6 +7,7 @@ export default class WorkletEventHandler {
   }
 
   registerForEvents(viewTag, fallbackEventName = undefined) {
+    this.viewTag = viewTag;
     this.registrations = this.eventNames.map((eventName) =>
       NativeModule.registerEventHandler(viewTag + eventName, this.worklet)
     );
