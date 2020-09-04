@@ -13,7 +13,8 @@ void MapperRegistry::startMapper(std::shared_ptr<Mapper> mapper) {
 
 void MapperRegistry::stopMapper(unsigned long id) {
   mappers.erase(id);
-  updatedSinceLastExecute = true;}
+  updatedSinceLastExecute = true;
+}
 
 void MapperRegistry::execute(jsi::Runtime &rt) {
   if (updatedSinceLastExecute) {

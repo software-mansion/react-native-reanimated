@@ -13,7 +13,8 @@ id(id),
 module(module),
 mapper(std::move(mapper)),
 inputs(inputs),
-outputs(outputs) {  auto markDirty = [this, module]() {
+outputs(outputs) {
+  auto markDirty = [this, module]() {
     this->dirty = true;
     module->maybeRequestRender();
   };
