@@ -47,6 +47,7 @@ const globals = new Set([
   '_scrollTo',
 ]);
 
+// leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
 const blacklistedFunctions = new Set([
   'stopCapturing',
   'toString',
