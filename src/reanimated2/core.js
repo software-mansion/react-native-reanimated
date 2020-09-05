@@ -47,7 +47,7 @@ function workletValueSetter(value) {
     };
     const step = (timestamp) => {
       if (animation.cancelled) {
-        animation.callback && animation.callback(false /* finished */);
+        animation.callback && animation.callback(true /* cancelled */);
         return;
       }
       if (callStart) {
@@ -58,7 +58,7 @@ function workletValueSetter(value) {
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {
-        animation.callback && animation.callback(true /* finished */);
+        animation.callback && animation.callback(false /* finished */);
       } else {
         requestAnimationFrame(step);
       }
