@@ -21,35 +21,7 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Clone the repo, go to the Example/ folder and run:
-
-```
-yarn install
-```
-
-### Running on iOS
-
-Before running the app, install the cocoapods dependencies:
-
-```
-cd ios && pod install && cd ..
-```
-
-Now, you can start the app:
-
-```
-react-native run-ios
-```
-
-### Running on Android
-
-Run the react native's cli command:
-
-```
-react-native run-android
-```
-
-**Important:** You will need to have an Android or iOS device or emulator connected as well as react-native-cli package installed globally.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check Example/ directory README for installation instructions.
 
 ## License
 
