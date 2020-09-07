@@ -387,16 +387,16 @@ declare module 'react-native-reanimated' {
     export function withTiming(
       toValue: number,
       userConfig?: WithTimingConfig,
-      callback?: (isCancelled: boolean) => void,
+      callback?: (isFinished: boolean) => void,
     ): number;
     export function withSpring(
       toValue: number,
       userConfig?: WithSpringConfig,
-      callback?: (isCancelled: boolean) => void,
+      callback?: (isFinished: boolean) => void,
     ): number;
     export function withDecay(
       userConfig: WithDecayConfig,
-      callback?: (isCancelled: boolean) => void
+      callback?: (isFinished: boolean) => void
     ): number;
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
         sharedValue: T
