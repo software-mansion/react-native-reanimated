@@ -19,47 +19,41 @@ import {
 import SpringUtils from './animations/SpringUtils';
 import useValue from './useValue';
 
-const Animated = {
-  // components
-  View: createAnimatedComponent(View),
-  Text: createAnimatedComponent(Text),
-  Image: createAnimatedComponent(Image),
-  ScrollView: createAnimatedComponent(ScrollView),
-  Code: AnimatedCode,
-  createAnimatedComponent,
-
-  // classes
-  Clock: AnimatedClock,
-  Value: AnimatedValue,
-  Node: AnimatedNode,
-
-  // operations
-  ...base,
-  ...derived,
-
-  // animations
-  get decay() {
-    return require('./animations/decay').default;
-  },
-  get timing() {
-    return require('./animations/timing').default;
-  },
-  get spring() {
-    return require('./animations/spring').default;
-  },
-  SpringUtils,
-
-  // configuration
-  addWhitelistedNativeProps,
-  addWhitelistedUIProps,
-
-  // hooks
-  useValue,
-};
-
 module.exports = {
   __esModule: true,
-  default: Animated,
+  default: {
+    // components
+    View: createAnimatedComponent(View),
+    Text: createAnimatedComponent(Text),
+    Image: createAnimatedComponent(Image),
+    ScrollView: createAnimatedComponent(ScrollView),
+    Code: AnimatedCode,
+    createAnimatedComponent,
+
+    // classes
+    Clock: AnimatedClock,
+    Value: AnimatedValue,
+    Node: AnimatedNode,
+
+    // animations
+    get decay() {
+      return require('./animations/decay').default;
+    },
+    get timing() {
+      return require('./animations/timing').default;
+    },
+    get spring() {
+      return require('./animations/spring').default;
+    },
+    SpringUtils,
+
+    // configuration
+    addWhitelistedNativeProps,
+    addWhitelistedUIProps,
+
+    // hooks
+    useValue,
+  },
 
   // other
   Easing,
@@ -72,10 +66,6 @@ module.exports = {
   Value: AnimatedValue,
   Node: AnimatedNode,
 
-  // operations
-  ...base,
-  ...derived,
-
   // animations
   get decay() {
     return require('./animations/decay').default;
@@ -91,3 +81,15 @@ module.exports = {
   // hooks
   useValue,
 };
+
+// NOTE: DO NOT use `...foo`, because it will cause getters to be evaluated, breaking lazy exports
+
+for (const op in base) {
+  module.exports[op] = base[op];
+  module.exports.default[op] = base[op];
+}
+
+for (const op in derived) {
+  module.exports[op] = derived[op];
+  module.exports.default[op] = derived[op];
+}

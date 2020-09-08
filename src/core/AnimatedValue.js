@@ -1,8 +1,6 @@
 import { createAnimatedSet as set } from '../core/AnimatedSet';
-import interpolate from '../derived/interpolate';
 import InternalAnimatedValue from './InternalAnimatedValue';
 import { Platform } from 'react-native';
-import { evaluateOnce } from '../derived/evaluateOnce';
 import ReanimatedModule from '../ReanimatedModule';
 import { val } from '../val';
 
@@ -23,6 +21,7 @@ export default class AnimatedValue extends InternalAnimatedValue {
         // FIXME handle setting value with a node
         ReanimatedModule.setValue(this.__nodeID, value);
       } else {
+        const { evaluateOnce } = require('../derived/evaluateOnce');
         evaluateOnce(set(this, value), this);
       }
     }
@@ -33,6 +32,7 @@ export default class AnimatedValue extends InternalAnimatedValue {
   }
 
   interpolate(config) {
+    const { interpolate } = require('../derived/interpolate');
     return interpolate(this, config);
   }
 }
