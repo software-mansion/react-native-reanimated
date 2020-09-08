@@ -4,13 +4,14 @@ set -x
 
 ROOT=$(pwd)
 
+# PART I - prepare
+yarn add react-native --dev
+
 # PART I - I (clean)
 
 rm -rf android/build/outputs/aar/*.aar
 cd android 
 gradle clean
-cd $ROOT
-yarn add react-native --dev
 
 # PART I (add latest aar to  android-npm)
 
