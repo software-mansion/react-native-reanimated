@@ -9,6 +9,8 @@ import {
   greaterOrEq,
   proc,
 } from '../base';
+import Animation from './Animation';
+import backwardCompatibleAnimWrapper from './backwardCompatibleAnimWrapper';
 
 const internalTiming = proc(function(
   clock,
@@ -50,7 +52,7 @@ const internalTiming = proc(function(
   ]);
 });
 
-export default function(clock, state, config) {
+export default backwardCompatibleAnimWrapper(function(clock, state, config) {
   if (config.duration === 0) {
     // when duration is zero we end the timing immediately
     return block([set(state.position, config.toValue), set(state.finished, 1)]);
@@ -71,4 +73,4 @@ export default function(clock, state, config) {
     progress,
     newFrameTime
   );
-}
+}, Animation.timingDefaultState);

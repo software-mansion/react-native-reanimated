@@ -11,6 +11,8 @@ import {
   proc,
   abs,
 } from '../base';
+import Animation from './Animation';
+import backwardCompatibleAnimWrapper from './backwardCompatibleAnimWrapper';
 
 const VELOCITY_EPS = 5;
 
@@ -45,8 +47,8 @@ const procDecay = proc(
     decay(clock, { time, velocity, position, finished }, { deceleration })
 );
 
-export default (
-  clock,
-  { time, velocity, position, finished },
-  { deceleration }
-) => procDecay(clock, time, velocity, position, finished, deceleration);
+export default backwardCompatibleAnimWrapper(
+  (clock, { time, velocity, position, finished }, { deceleration }) =>
+    procDecay(clock, time, velocity, position, finished, deceleration),
+  Animation.decayDefaultState
+);

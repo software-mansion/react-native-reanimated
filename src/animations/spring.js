@@ -21,6 +21,8 @@ import {
   abs,
 } from '../base';
 import AnimatedValue from '../core/InternalAnimatedValue';
+import Animation from './Animation';
+import backwardCompatibleAnimWrapper from './backwardCompatibleAnimWrapper';
 
 const MAX_STEPS_MS = 64;
 
@@ -168,38 +170,41 @@ const procSpring = proc(
     )
 );
 
-export default (
-  clock,
-  {
-    finished,
-    velocity,
-    position,
-    time,
-    // @ts-ignore
-    prevPosition,
-  },
-  {
-    toValue,
-    damping,
-    mass,
-    stiffness,
-    overshootClamping,
-    restDisplacementThreshold,
-    restSpeedThreshold,
-  }
-) =>
-  procSpring(
-    finished,
-    velocity,
-    position,
-    time,
-    prevPosition,
-    toValue,
-    damping,
-    mass,
-    stiffness,
-    overshootClamping,
-    restSpeedThreshold,
-    restDisplacementThreshold,
-    clock
-  );
+export default backwardCompatibleAnimWrapper(
+  (
+    clock,
+    {
+      finished,
+      velocity,
+      position,
+      time,
+      // @ts-ignore
+      prevPosition,
+    },
+    {
+      toValue,
+      damping,
+      mass,
+      stiffness,
+      overshootClamping,
+      restDisplacementThreshold,
+      restSpeedThreshold,
+    }
+  ) =>
+    procSpring(
+      finished,
+      velocity,
+      position,
+      time,
+      prevPosition,
+      toValue,
+      damping,
+      mass,
+      stiffness,
+      overshootClamping,
+      restSpeedThreshold,
+      restDisplacementThreshold,
+      clock
+    ),
+  Animation.springDefaultState
+);
