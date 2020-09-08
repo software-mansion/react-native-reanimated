@@ -1,16 +1,12 @@
 import plugin from '../../plugin';
 import { transform } from '@babel/core';
-import { format } from 'prettier';
 
 function runPlugin(input) {
   return transform(input, {
     filename: 'someFile.js',
+    compact: false,
     plugins: [plugin],
   });
-}
-
-function prettierOutput(input) {
-  return format(input, { parser: 'babel' });
 }
 
 describe('babel plugin', () => {
@@ -37,7 +33,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(prettierOutput(code)).toMatchSnapshot();
+    expect(code).toMatchSnapshot();
   });
 
   it('adds closure to worklets', () => {
@@ -48,6 +44,6 @@ describe('babel plugin', () => {
       }`;
 
     const { code } = runPlugin(input);
-    expect(prettierOutput(code)).toContain('_closure');
+    expect(code).toContain('_closure');
   });
 });
