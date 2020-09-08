@@ -33,6 +33,13 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
 > yarn add react-native-reanimated@alpha
 ```
 
+**Note:** to use Reanimated 2 from master branch:
+
+- go to `https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22`
+- select latest build and download `react-native-reanimated-2.0.0-alpha.tgz` artifact
+- run `tar zxvf react-native-reanimated-2.0.0-alpha.tgz.zip` to unpack zip (or unpack it manually)
+- run `yarn add file:react-native-reanimated-2.0.0-*.tgz` to install the package
+
 ## Babel plugin
 
 Add Reanimated's babel plugin to your `babel.config.js`:
@@ -83,12 +90,14 @@ project.ext.react = [
 
 > **_NOTE:_** In previous releases, we required an additional step which is turning on Turbo Modules.
 > If you are upgrading from alpha.{ <=3 } please remove the following lines:
+>
 > ```Java
-> static {	
->    ReactFeatureFlags.useTurboModules = true;	
+> static {
+>    ReactFeatureFlags.useTurboModules = true;
 >  }
 > ```
->  from `MainActivity.java`.
+>
+> from `MainActivity.java`.
 
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
 
@@ -102,7 +111,7 @@ If not, after making those changes your app will be compatible with Turbo Module
 1. `cd ios && pod install && cd ..`
 
 2. Rename `AppDelegate.m` to `AppDelegate.mm`.
-  > **_NOTE:_** It's important to do it with Xcode.
+   > **_NOTE:_** It's important to do it with Xcode.
 3. Add AppDelegate category in `AppDelegate.mm`.
 
 ```objectivec {1-2,4-7}
@@ -204,13 +213,13 @@ If not, after making those changes your app will be compatible with Turbo Module
 @end
 ```
 
-6. ( Additinal step for React Native 0.62.* ) Change initialization of TurboModuleManager
+6. ( Additinal step for React Native 0.62.\* ) Change initialization of TurboModuleManager
+
 ```objectivec {3-3}
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
   _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
   ...
 ```
-
 
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/37cb058115562bdcd33e3d729abef1f27c081da5) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
