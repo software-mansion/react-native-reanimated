@@ -2,7 +2,7 @@ name: Build npm package
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 12 */1 * *'
 
 jobs:
   build:
