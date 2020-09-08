@@ -4,7 +4,7 @@ title: useAnimatedReaction
 sidebar_label: useAnimatedReaction
 ---
 
-`useAnimatedreaction` hook allows performing certain actions on some shared values' change. The key idea is, all of the shared values included in the first worklet are the inputs set. Every time any of those change both worklets are triggered in the order specified above. Also the second worklet may modify any shared values excluding those used in the first worklet.
+`useAnimatedReaction` hook allows performing certain actions on some shared values' change. The key idea is, all of the shared values included in the first worklet are the inputs set. Every time any of those change both worklets are triggered in the order specified above. Also the second worklet may modify any shared values excluding those used in the first worklet.
 
 There are two params:
 
