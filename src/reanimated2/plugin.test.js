@@ -46,4 +46,30 @@ describe('babel plugin', () => {
     const { code } = runPlugin(input);
     expect(code).toContain('_closure');
   });
+
+  it('supports default ES6 style imports', () => {
+    const input = `
+    import * as Reanimated from 'react-native-reanimated'
+
+    function Box() {
+        const offset = Reanimated.useSharedValue(0);
+
+        const animatedStyles = Reanimated.useAnimatedStyle(() => {
+          return {
+            transform: [{ translateX: offset.value * 255 }],
+          };
+        });
+
+        return (
+          <>
+            <Animated.View style={[styles.box, animatedStyles]} />
+            <Button onPress={() => (offset.value = Math.random())} title="Move" />
+          </>
+        );
+      }
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toContain('_closure');
+  });
 });

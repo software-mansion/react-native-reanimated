@@ -436,7 +436,10 @@ function processIfWorkletNode(t, path) {
 }
 
 function processWorklets(t, path, processor) {
-  const name = path.node.callee.name;
+  const name =
+    path.node.callee.type === 'MemberExpression'
+      ? path.node.callee.property.name
+      : path.node.callee.name;
   if (
     objectHooks.has(name) &&
     path.get('arguments.0').type === 'ObjectExpression'
