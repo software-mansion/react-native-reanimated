@@ -15,11 +15,9 @@ const AnimatedReactionTest = () => {
 
   useAnimatedReaction(
     () => {
-      'worklet';
       return x.value / 1.5;
     },
-    data => {
-      'worklet';
+    (data) => {
       if (x2.value < maxX2) {
         x2.value = data;
       }
