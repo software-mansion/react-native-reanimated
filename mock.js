@@ -9,7 +9,7 @@
  */
 
 const React = require('react');
-const { View, Text, Image, Animated, Platform } = require('react-native');
+const { View, Text, Image, Animated, Platform, processColor } = require('react-native');
 
 function NOOP() {}
 
@@ -98,6 +98,8 @@ const Reanimated = {
     IDENTITY: 'identity',
   },
 
+  processColor,
+  
   add: (...vals) =>
     new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc + v)),
   sub: (...vals) =>
