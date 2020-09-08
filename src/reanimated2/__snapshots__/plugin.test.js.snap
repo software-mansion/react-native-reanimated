@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`babel plugin transforms  1`] = `
+"var _interopRequireWildcard = require(\\"@babel/runtime/helpers/interopRequireWildcard\\");
+
+var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
+
+function Box() {
+  var offset = (0, _reactNativeReanimated.useSharedValue)(0);
+  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
+    const _f = function () {
+      return {
+        transform: [{
+          translateX: offset.value * 255
+        }]
+      };
+    };
+
+    _f._closure = {
+      offset
+    };
+    _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
+    _f.__workletHash = 7114514849439;
+
+    global.__reanimatedWorkletInit(_f);
+
+    return _f;
+  }());
+  return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {
+    style: [styles.box, animatedStyles]
+  }), React.createElement(Button, {
+    onPress: function onPress() {
+      return offset.value = Math.random();
+    },
+    title: \\"Move\\"
+  }));
+}"
+`;
