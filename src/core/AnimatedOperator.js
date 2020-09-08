@@ -41,8 +41,8 @@ const OPERATIONS = {
   abs: single(a => Math.abs(a)),
   ceil: single(a => Math.ceil(a)),
   floor: single(a => Math.floor(a)),
-  max: reduce((a,b) => Math.max(a, b)),
-  min: reduce((a,b) => Math.min(a, b)),
+  max: reduce((a, b) => Math.max(a, b)),
+  min: reduce((a, b) => Math.min(a, b)),
 
   // logical
   and: reduceFrom((a, b) => a && b, true),
@@ -80,10 +80,7 @@ class AnimatedOperator extends AnimatedNode {
       ),
       `Reanimated: Animated.operator node second argument should be one or more of type AnimatedNode, String or Number but got ${input}`
     );
-    super(
-      { type: 'op', op: operator, input },
-      input
-    );
+    super({ type: 'op', op: operator, input }, input);
     this._op = operator;
     this._input = input;
   }

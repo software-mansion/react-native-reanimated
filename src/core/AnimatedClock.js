@@ -88,4 +88,3 @@ export default class AnimatedClock extends AnimatedNode {
     return this._started;
   }
 }
-
