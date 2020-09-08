@@ -19,6 +19,7 @@ module.exports = {
           'api/useAnimatedScrollHandler',
           'api/useAnimatedGestureHandler',
           'api/useAnimatedRef',
+          'api/useAnimatedReaction',
         ],
         Animations: [
           'api/withTiming',
