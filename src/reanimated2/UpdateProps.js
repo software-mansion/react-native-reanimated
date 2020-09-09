@@ -1,24 +1,31 @@
-/* global _updateProps */
+/* global _updateProps _updatePropsJS */
 import processColor from './Colors';
 import { makeShareable } from './core';
 
-import ReactNativeStyleAttributes from 'react-native/Libraries/Components/View/ReactNativeStyleAttributes';
-import processColorX from 'react-native/Libraries/StyleSheet/processColor';
+// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+const colorProps = [
+  'backgroundColor',
+  'borderBottomColor',
+  'borderColor',
+  'borderLeftColor',
+  'borderRightColor',
+  'borderTopColor',
+  'borderStartColor',
+  'borderEndColor',
+  'color',
+  'shadowColor',
+  'textDecorationColor',
+  'tintColor',
+  'textShadowColor',
+  'overlayColor',
+];
 
-const LocalColorProperties = {};
-
-Object.keys(ReactNativeStyleAttributes).forEach((key) => {
-  if (ReactNativeStyleAttributes[key].process === processColorX) {
-    LocalColorProperties[key] = true;
-  }
-});
-
-const ColorProperties = makeShareable(LocalColorProperties);
+const ColorProperties = makeShareable(colorProps);
 
 export default function updateProps(viewTag, updates, maybeViewRef) {
   'worklet';
   Object.keys(updates).forEach((key) => {
-    if (ColorProperties[key]) {
+    if (ColorProperties.indexOf(key) !== -1) {
       updates[key] = processColor(updates[key]);
     }
   });
