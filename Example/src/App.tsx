@@ -83,7 +83,7 @@ const Slider: FunctionComponent<ComponentType> = ({
   const throttledOnChange = useRef(throttle(onChange, 20));
 
   const animatedHeightStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: animatedHeight.value }],
+    height: animatedHeight.value,
   }));
 
   const onGestureEvent = useAnimatedGestureHandler({
@@ -114,6 +114,25 @@ const Slider: FunctionComponent<ComponentType> = ({
       $gesture.value = false;
     },
   });
+
+  // SLOW
+  useEffect(() => {
+    setTimeout(() => {
+      function mySlowFunction(baseNumber) {
+        console.warn('mySlowFunction');
+        let result = 0;
+        for (var i = Math.pow(baseNumber, 7); i >= 0; i--) {
+          result += Math.atan(i) * Math.tan(i);
+        };
+        console.warn('mySlowFunction');
+      }
+
+      mySlowFunction(100); // higher number => more iterations => slower
+
+    }, 10000);
+  }, []);
+
+  //
   return (
     <MaskedView
       style={{ flex: 1, height: '100%' }}
