@@ -22,6 +22,7 @@
 #import "Nodes/REAParamNode.h"
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
+#import <React/RCTShadowView.h>
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -36,6 +37,10 @@
              props:(NSDictionary *)props;
 
 - (void)setNeedsLayout;
+
+-(RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
+
+- (void)flushUIBlocksWithCompletion:(void (^)(void))completion;
 
 @end
 
@@ -175,9 +180,27 @@
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
     RCTExecuteOnUIManagerQueue(^{
+      NSMutableSet<NSNumber *> *rootViewTagsSet = [self.uiManager valueForKey:@"_rootViewTags"];
+      NSArray<NSNumber *> *rootViewTags = [rootViewTagsSet allObjects];
+      NSMutableArray<NSNumber *> *canLayout = [NSMutableArray new];
+      NSMutableArray<RCTShadowView *> *rootViews = [NSMutableArray new];
+      
+      for (int i = 0; i < [rootViewTags count]; ++i) {
+        RCTShadowView *rootView = [self.uiManager shadowViewForReactTag: rootViewTags[i]];
+        [rootViews addObject:rootView];
+        [canLayout addObject: [NSNumber numberWithBool:(!YGNodeIsDirty(rootView.yogaNode))]];
+      }
+      
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
         copiedOperationsQueue[i](self.uiManager);
       }
+      
+      for (int i = 0; i < [rootViews count]; ++i) {
+        if ([canLayout[i] boolValue]) {
+          [self.uiManager addUIBlock:[self.uiManager uiBlockWithLayoutUpdateForRootView:rootViews[i]]];
+        }
+      }
+      [self.uiManager flushUIBlocksWithCompletion:^{}];
       [self.uiManager setNeedsLayout];
     });
   }
