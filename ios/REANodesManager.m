@@ -38,10 +38,6 @@
 
 - (void)setNeedsLayout;
 
--(RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
-
-- (void)flushUIBlocksWithCompletion:(void (^)(void))completion;
-
 @end
 
 
@@ -179,30 +175,27 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
-      NSMutableSet<NSNumber *> *rootViewTagsSet = [self.uiManager valueForKey:@"_rootViewTags"];
-      NSArray<NSNumber *> *rootViewTags = [rootViewTagsSet allObjects];
-      NSMutableArray<NSNumber *> *canLayout = [NSMutableArray new];
-      NSMutableArray<RCTShadowView *> *rootViews = [NSMutableArray new];
+      NSMutableArray *_pendingUIBlocks = [self.uiManager valueForKey:@"_pendingUIBlocks"];
+      bool canPerformLayout = (_pendingUIBlocks == nil) || ([_pendingUIBlocks count] == 0);
       
-      for (int i = 0; i < [rootViewTags count]; ++i) {
-        RCTShadowView *rootView = [self.uiManager shadowViewForReactTag: rootViewTags[i]];
-        [rootViews addObject:rootView];
-        [canLayout addObject: [NSNumber numberWithBool:(!YGNodeIsDirty(rootView.yogaNode))]];
+      if (!canPerformLayout) {
+        dispatch_semaphore_signal(semaphore);
       }
       
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
         copiedOperationsQueue[i](self.uiManager);
       }
       
-      for (int i = 0; i < [rootViews count]; ++i) {
-        if ([canLayout[i] boolValue]) {
-          [self.uiManager addUIBlock:[self.uiManager uiBlockWithLayoutUpdateForRootView:rootViews[i]]];
-        }
+      if (canPerformLayout) {
+        [self.uiManager batchDidComplete];
+        dispatch_semaphore_signal(semaphore);
+      } else {
+        [self.uiManager setNeedsLayout];
       }
-      [self.uiManager flushUIBlocksWithCompletion:^{}];
-      [self.uiManager setNeedsLayout];
     });
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
   }
   _wantRunUpdates = NO;
 }
