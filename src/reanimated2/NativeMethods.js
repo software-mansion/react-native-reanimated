@@ -30,7 +30,7 @@ export function measure(animatedRef) {
 export function scrollTo(animatedRef, x, y, animated) {
   'worklet';
   if (!_WORKLET) {
-    return;
+    throw new Error('(scrollTo) method cannot be used on RN side!');
   }
   const viewTag = animatedRef();
   _scrollTo(viewTag, x, y, animated);
