@@ -10,7 +10,14 @@ import Animated, {
   useAnimatedRef,
   measure,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View, Image, StatusBar } from 'react-native';
+import {
+  Dimensions,
+  StyleSheet,
+  View,
+  Image,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import {
   ScrollView,
   PanGestureHandler,
@@ -29,6 +36,8 @@ const IMAGE_SIZE =
 const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
+    height:
+      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
   },
 
   scrollContainer: {

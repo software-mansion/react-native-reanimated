@@ -6,8 +6,9 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import { Header } from 'react-navigation-stack';
 
-const windowHeight = Dimensions.get('window').height;
+const windowHeight = Dimensions.get('window').height - Header.HEIGHT;
 const size = 40;
 
 function ScrollExample() {
