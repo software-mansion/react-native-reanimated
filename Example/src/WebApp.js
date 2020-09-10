@@ -22,7 +22,7 @@ import MeasureExample from './MeasureExample';
 /**/
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
-/* native methods are not supported for the web * /
+/* native methods are not supported for the web */
 import ScrollToExample from './ScrollToExample';
 /**/
 /* font awesome does not work * /
@@ -61,7 +61,7 @@ const SCREENS = {
     screen: ChatHeadsExample,
     title: '🆕 Chat Heads',
   },
-  /** /
+  /**/
   ScrollableToExample: {
     screen: ScrollToExample,
     title: '🆕 scrollTo',

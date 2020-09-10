@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -65,11 +65,18 @@ function Digit({ digit }) {
   const aref = useAnimatedRef();
 
   useDerivedValue(() => {
-    scrollTo(aref, 0, digit.value * 200, true);
+    if (Platform.OS === 'web') {
+      if (aref && aref.current) {
+        aref.current.scrollTo({ y: digit.value * 200 });
+      }
+    } else {
+      scrollTo(aref, 0, digit.value * 200, true);
+    }
   });
 
   return (
-    <View style={{ height: 200 }}>
+    <View
+      style={{ height: 200, width: Platform.OS === 'web' ? 50 : undefined }}>
       <ScrollView ref={aref}>
         {digits.map((i) => {
           return (
@@ -126,10 +133,20 @@ function ProgressBar({ progress }) {
         onLayout={(e) => {
           max.value = e.nativeEvent.layout.width;
         }}>
-        <Animated.View style={ [{ backgroundColor: 'black', height: 2, marginRight: 20, transform: [
-          { translateY: dotSize/2 + 1 },
-          { translateX: dotSize/2 },
-        ] }, barStyle] } />
+        <Animated.View
+          style={[
+            {
+              backgroundColor: 'black',
+              height: 2,
+              marginRight: 20,
+              transform: [
+                { translateY: dotSize / 2 + 1 },
+                { translateX: dotSize / 2 },
+              ],
+            },
+            barStyle,
+          ]}
+        />
         <PanGestureHandler onGestureEvent={handler}>
           <Animated.View style={[styles.dot, stylez]} />
         </PanGestureHandler>
