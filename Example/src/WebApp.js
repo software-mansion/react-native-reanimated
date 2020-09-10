@@ -28,7 +28,7 @@ import ScrollToExample from './ScrollToExample';
 /* font awesome does not work * /
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 /**/
-import LightboxExample from './LightboxExample';
+import LightboxExample from './WebSpecific/LightBoxExample';
 /* masked view does not work * /
 import LiquidSwipe from './LiquidSwipe';
 /**/
