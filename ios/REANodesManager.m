@@ -38,6 +38,13 @@
 
 - (void)setNeedsLayout;
 
+- (void)_dispatchPropsDidChangeEvents;
+
+- (void)_dispatchChildrenDidChangeEvents;
+
+- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
+
+
 @end
 
 
@@ -175,10 +182,17 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+    
+    __block void (^mounting)(void) = nil;
+    
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
-      NSMutableArray *_pendingUIBlocks = [self.uiManager valueForKey:@"_pendingUIBlocks"];
-      bool canPerformLayout = (_pendingUIBlocks == nil) || ([_pendingUIBlocks count] == 0);
+      NSMutableArray *pendingUIBlocks = [self.uiManager valueForKey:@"_pendingUIBlocks"];
+      NSMutableDictionary<NSNumber *, RCTShadowView *> *shadowViewRegistry = [self.uiManager valueForKey:@"_shadowViewRegistry"];
+      NSMutableSet<NSNumber *> *rootViewTags = [self.uiManager valueForKey:@"_rootViewTags"];
+      RCTUIManagerObserverCoordinator *observerCoordinator = [self.uiManager valueForKey:@"_observerCoordinator"];
+      
+      bool canPerformLayout = (pendingUIBlocks == nil) || ([pendingUIBlocks count] == 0);
       
       if (!canPerformLayout) {
         dispatch_semaphore_signal(semaphore);
@@ -189,13 +203,80 @@
       }
       
       if (canPerformLayout) {
-        [self.uiManager batchDidComplete];
+        
+        // layoutAndMount
+        [self.uiManager _dispatchPropsDidChangeEvents];
+        [self.uiManager _dispatchChildrenDidChangeEvents];
+
+        [observerCoordinator uiManagerWillPerformLayout:self.uiManager];
+
+          // Perform layout
+          for (NSNumber *reactTag in rootViewTags) {
+            RCTRootShadowView *rootView = (RCTRootShadowView *)shadowViewRegistry[reactTag];
+            [self.uiManager addUIBlock:[self.uiManager uiBlockWithLayoutUpdateForRootView:rootView]];
+          }
+
+          [observerCoordinator uiManagerDidPerformLayout:self.uiManager];
+
+          [observerCoordinator uiManagerWillPerformMounting:self.uiManager];
+
+          // flushWithCompletion
+          void (^flushWithCompletion)(void) = ^void() {
+            // First copy the previous blocks into a temporary variable, then reset the
+            // pending blocks to a new array. This guards against mutation while
+            // processing the pending blocks in another thread.
+            NSArray<RCTViewManagerUIBlock> *previousPendingUIBlocks = [pendingUIBlocks mutableCopy];
+            [pendingUIBlocks removeAllObjects];
+
+            __block void (^completion)(void) = ^{
+              [observerCoordinator uiManagerDidPerformMounting:self.uiManager];
+            };
+          
+            if (previousPendingUIBlocks.count == 0) {
+              completion();
+              return;
+            }
+
+            __weak RCTUIManager *weakUIManager = self.uiManager;
+
+            void (^mountingBlock)(void) = ^{
+              RCTUIManager *strongSelf = weakUIManager;
+
+              @try {
+                for (RCTViewManagerUIBlock block in previousPendingUIBlocks) {
+                  NSMutableDictionary<NSNumber *, UIView *> *viewRegistry = [strongSelf valueForKey:@"_viewRegistry"];
+                  block(strongSelf, viewRegistry);
+                }
+              } @catch (NSException *exception) {
+                RCTLogError(@"Exception thrown while executing UI block: %@", exception);
+              }
+            };
+
+            if ([observerCoordinator uiManager:self.uiManager performMountingWithBlock:mountingBlock]) {
+              completion();
+              return;
+            }
+
+            mounting = ^void() {
+              mountingBlock();
+              RCTExecuteOnUIManagerQueue(completion);
+            };
+            //
+        };
+        flushWithCompletion();
+        //
+        
         dispatch_semaphore_signal(semaphore);
       } else {
         [self.uiManager setNeedsLayout];
       }
     });
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    
+    if (mounting) {
+      mounting();
+    }
+    
   }
   _wantRunUpdates = NO;
 }
@@ -398,7 +479,13 @@
   event.eventName];
 
   if (_eventHandler != nil) {
-    _eventHandler(eventHash, event);
+    __strong REAEventHandler eventHandler = _eventHandler;
+    RCTExecuteOnMainQueue(^void(){
+      eventHandler(eventHash, event);
+      if ([self isDirectEvent:event]) {
+        [self performOperations];
+      }
+    });
   }
 
   REANode *eventNode = [_eventMapping objectForKey:key];
