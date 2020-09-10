@@ -30,7 +30,8 @@
     "README.md",
     "react-native-reanimated.d.ts",
     "mock.js",
-    "plugin.js"
+    "plugin.js",
+    "index.js"
   ],
   "repository": {
     "type": "git",
@@ -78,7 +79,7 @@
     "lint-staged": "^10.2.11",
     "prettier": "^1.13.7",
     "react": "^16.11.0",
-    "react-native": "0.63.0",
+    "react-native": "^0.63.2",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
     "release-it": "^13.1.1",
