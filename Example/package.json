@@ -34,7 +34,7 @@
     "react-native-screens": "^2.9.0",
     "react-native-status-bar-height": "^2.4.0",
     "react-native-svg": "^12.1.0",
-    "react-native-web": "^0.13.9",
+    "react-native-web": "^0.12.3",
     "react-navigation": "^4.4.0",
     "react-navigation-stack": "^2.8.2"
   },
