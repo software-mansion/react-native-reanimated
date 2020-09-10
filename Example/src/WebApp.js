@@ -17,14 +17,10 @@ import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
 import ChatHeadsExample from './ChatHeadsExample';
-/* native methods are not supported for the web * /
 import MeasureExample from './MeasureExample';
-/**/
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
-/* native methods are not supported for the web */
 import ScrollToExample from './ScrollToExample';
-/**/
 /* font awesome does not work * /
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 /**/
@@ -47,12 +43,10 @@ const SCREENS = {
     screen: DragAndSnapExample,
     title: '🆕 Drag and Snap',
   },
-  /* * /
   MeasureExample: {
     screen: MeasureExample,
     title: '🆕 Synchronous Measure',
   },
-  /**/
   ScrollEventExample: {
     screen: ScrollEventExample,
     title: '🆕 Scroll Events',
@@ -61,12 +55,10 @@ const SCREENS = {
     screen: ChatHeadsExample,
     title: '🆕 Chat Heads',
   },
-  /**/
   ScrollableToExample: {
     screen: ScrollToExample,
     title: '🆕 scrollTo',
   },
-  /**/
   SwipeableListExample: {
     screen: SwipeableListExample,
     title: '🆕 (advanced) Swipeable List',

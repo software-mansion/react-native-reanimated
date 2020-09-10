@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -96,7 +96,7 @@ function Section({ title, children, height, contentHeight, z, show }) {
   });
 
   return (
-    <Animated.View style={[styles.section, stylez, { zIndex: z }]}> 
+    <Animated.View style={[styles.section, stylez, { zIndex: z }]}>
       <SectionHeader
         title={title}
         animatedRef={aref}
@@ -112,22 +112,51 @@ function Section({ title, children, height, contentHeight, z, show }) {
   );
 }
 
+function asyncMeasure(animatedRef) {
+  return new Promise((resolve, reject) => {
+    if (animatedRef && animatedRef.current) {
+      animatedRef.current.measure((x, y, width, height, pageX, pageY) => {
+        resolve({ x, y, width, height, pageX, pageY });
+      });
+    } else {
+      reject(new Error('measure: animated ref not ready'));
+    }
+  });
+}
+
 function SectionHeader({ title, animatedRef, contentHeight, show }) {
-  const handler = useAnimatedGestureHandler({
-    onActive: (_, ctx) => {
-      const height = measure(animatedRef).height;
-      if (contentHeight.value === 0) {
-        contentHeight.value = withTiming(height, {
-          duration: 500,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        });
-      } else {
-        contentHeight.value = withTiming(0, {
-          duration: 300,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        });
+  const applyMeasure = ({ x, y, width, height, pageX, pageY }) => {
+    if (contentHeight.value === 0) {
+      contentHeight.value = withTiming(height, {
+        duration: 500,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
+    } else {
+      contentHeight.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      });
+    }
+  };
+
+  let onActiveImpl;
+  if (Platform.OS === 'web') {
+    onActiveImpl = async (_, ctx) => {
+      try {
+        applyMeasure(await asyncMeasure(animatedRef));
+      } catch (e) {
+        console.log(e);
       }
-    },
+    };
+  } else {
+    onActiveImpl = (_, ctx) => {
+      'worklet';
+      applyMeasure(measure(animatedRef));
+    };
+  }
+
+  const handler = useAnimatedGestureHandler({
+    onActive: onActiveImpl,
   });
 
   return (
