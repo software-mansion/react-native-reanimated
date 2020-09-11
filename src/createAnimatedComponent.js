@@ -111,6 +111,7 @@ export default function createAnimatedComponent(Component) {
       const attached = new Set();
       const nextEvts = new Set();
       let viewTag;
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
@@ -132,17 +133,19 @@ export default function createAnimatedComponent(Component) {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
           }
-        } else if (prop instanceof WorkletEventHandler) {
+        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
           prop.unregisterFromEvents();
         }
       }
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
-        } else if (prop instanceof WorkletEventHandler) {
+        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
           prop.registerForEvents(viewTag, key);
+          prop.reattachNeeded = false;
         }
       }
     }

@@ -35,7 +35,7 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
-    initRef.current.worklet = handler;
+    initRef.current.updateWorklet(handler);
   }
   return initRef.current;
 }

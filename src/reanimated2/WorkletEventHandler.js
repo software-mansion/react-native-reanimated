@@ -4,6 +4,12 @@ export default class WorkletEventHandler {
   constructor(worklet, eventNames = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;
+    this.reattachNeeded = false;
+  }
+
+  updateWorklet(newWorklet) {
+    this.worklet = newWorklet;
+    this.reattachNeeded = true;
   }
 
   registerForEvents(viewTag, fallbackEventName = undefined) {
