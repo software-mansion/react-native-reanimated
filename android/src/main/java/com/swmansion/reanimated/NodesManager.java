@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NodesManager implements EventDispatcherListener {
@@ -186,6 +187,41 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
+  private void performOperations() {
+    if (!mOperationsInBatch.isEmpty()) {
+      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      mOperationsInBatch = new LinkedList<>();
+      final Semaphore semaphore = new Semaphore(0);
+      mContext.runOnNativeModulesQueueThread(
+              // FIXME replace `mContext` with `mContext.getExceptionHandler()` after RN 0.59 support is dropped
+              new GuardedRunnable(mContext) {
+                @Override
+                public void runGuarded() {
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  while (!copiedOperationsQueue.isEmpty()) {
+                    NativeUpdateOperation op = copiedOperationsQueue.remove();
+                    ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                    if (shadowNode != null) {
+                      mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+                    }
+                  }
+                  if (shouldDispatchUpdates) {
+                    mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  }
+                  semaphore.release();
+                }
+              });
+      while (true) {
+        try {
+          semaphore.acquire();
+          break;
+        } catch (InterruptedException e) {
+          //noop
+        }
+      }
+    }
+  }
+
   private void onAnimationFrame(long frameTimeNanos) {
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
@@ -204,29 +240,7 @@ public class NodesManager implements EventDispatcherListener {
     if (mWantRunUpdates) {
       Node.runUpdates(updateContext);
     }
-
-    if (!mOperationsInBatch.isEmpty()) {
-      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
-      mOperationsInBatch = new LinkedList<>();
-      mContext.runOnNativeModulesQueueThread(
-              // FIXME replace `mContext` with `mContext.getExceptionHandler()` after RN 0.59 support is dropped
-              new GuardedRunnable(mContext) {
-                @Override
-                public void runGuarded() {
-                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
-                  while (!copiedOperationsQueue.isEmpty()) {
-                    NativeUpdateOperation op = copiedOperationsQueue.remove();
-                    ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
-                    if (shadowNode != null) {
-                      mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
-                    }
-                  }
-                  if (shouldDispatchUpdates) {
-                    mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
-                  }
-                }
-              });
-    }
+    performOperations();
 
     mCallbackPosted.set(false);
     mWantRunUpdates = false;
@@ -427,6 +441,7 @@ public class NodesManager implements EventDispatcherListener {
     // UI thread.
     if (UiThreadUtil.isOnUiThread()) {
       handleEvent(event);
+      performOperations();
     } else {
       mEventQueue.offer(event);
       startUpdatingOnAnimationFrame();
