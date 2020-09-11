@@ -188,8 +188,22 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString)
 {
-  eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
-  onRender(0);
+   try
+    {
+      eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
+      mapperRegistry->execute(*runtime);
+      if (mapperRegistry->needRunOnRender())
+      {
+        maybeRequestRender();
+      }
+    }
+    catch (...)
+    {
+      if (!errorHandler->raise())
+      {
+        throw;
+      }
+    }
 }
 
 void NativeReanimatedModule::maybeRequestRender()
@@ -204,10 +218,8 @@ void NativeReanimatedModule::maybeRequestRender()
   }
 }
 
-void NativeReanimatedModule::onRender(double timestampMsUnused)
+void NativeReanimatedModule::onRender(double timestampMs)
 {
-  double timestampMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-  std::chrono::system_clock::now().time_since_epoch()).count();
   try
   {
     mapperRegistry->execute(*runtime);
