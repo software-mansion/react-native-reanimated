@@ -19,6 +19,7 @@ declare module 'react-native-reanimated' {
     ScrollView as ReactNativeScrollView,
     NativeScrollEvent,
     NativeSyntheticEvent,
+    ColorValue,
   } from 'react-native';
   import {
     GestureHandlerGestureEventNativeEvent,
@@ -187,10 +188,10 @@ declare module 'react-native-reanimated' {
           ? AnimateStyle<S[K]>
           :   
               // allow `number` where `string` normally is to support colors    
-                S[K] extends (string | undefined) ? S[K] | number : S[K]
+                S[K] extends (ColorValue | string | undefined) ? S[K] | number : S[K]
               | AnimatedNode<
                   // allow `number` where `string` normally is to support colors
-                  S[K] extends (string | undefined) ? S[K] | number : S[K]
+                  S[K] extends (ColorValue | string | undefined) ? S[K] | number : S[K]
                 >)
     };
 
