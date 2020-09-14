@@ -465,7 +465,7 @@ declare module 'react-native-reanimated' {
     export function scrollTo(ref: RefObject<ReactNativeScrollView | ScrollView>, x: number, y: number, animated: boolean): void;
 
     // gesture-handler
-    type OnGestureEvent<T> = (event: T) => void;
+    type OnGestureEvent<T extends GestureHandlerGestureEvent> = (event: T) => void;
 
     type Context = Record<string, unknown>;
 
