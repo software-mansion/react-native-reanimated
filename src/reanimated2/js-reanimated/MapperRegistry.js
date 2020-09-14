@@ -25,24 +25,15 @@ export default class MapperRegistry {
       this.updatedSinceLastExecute = false;
     }
 
-    this.sortedMappers.forEach((mapper) => {
+    for (let i = 0, len = this.sortedMappers.length; i < len; ++i) {
+      const mapper = this.sortedMappers[i];
       if (mapper.dirty) {
         mapper.execute();
       }
-    });
+    }
   }
 
   updateOrder() {
-    class Node {
-      mapper = null;
-      children = [];
-
-      constructor(mapper, parents = [], children = []) {
-        this.mapper = mapper;
-        this.children = children;
-      }
-    }
-
     const nodes = [...this.mappers.values()].map((mapper) => new Node(mapper));
 
     const mappersById = {};
@@ -51,26 +42,40 @@ export default class MapperRegistry {
     });
 
     // create a graph from array of nodes
-    nodes.forEach((node) => {
+    for (let i = 0, nodesLen = nodes.length; i < nodesLen; ++i) {
+      const node = nodes[i];
       if (node.mapper.outputs.length === 0) {
-        return;
+        break;
       }
-      nodes.forEach((restNode) => {
+      for (let j = 0; j < nodesLen; ++j) {
+        const restNode = nodes[j];
         if (restNode.mapper.inputs.length === 0) {
-          return;
+          break;
         }
         // do not compare with itself
-        if (node.mapper.id !== restNode.mapper.id) {
-          node.mapper.outputs.forEach((output) => {
-            restNode.mapper.inputs.forEach((restMapperInput) => {
-              if (output._id === restMapperInput._id) {
-                node.children.push(restNode);
-              }
-            });
-          });
+        if (i === j) {
+          continue;
         }
-      });
-    });
+        for (
+          let outi = 0, outputsLen = node.mapper.outputs.length;
+          outi < outputsLen;
+          ++outi
+        ) {
+          for (
+            let resti = 0, restLen = restNode.mapper.inputs.length;
+            resti < restLen;
+            ++resti
+          ) {
+            if (
+              node.mapper.outputs[outi]._id ===
+              restNode.mapper.inputs[resti]._id
+            ) {
+              node.children.push(restNode);
+            }
+          }
+        }
+      }
+    }
 
     const post = {};
     let postCounter = 1;
@@ -87,9 +92,9 @@ export default class MapperRegistry {
         dfs(nodes[0]);
         return;
       }
-      node.children.forEach((childNode) => {
-        dfs(childNode);
-      });
+      for (let i = 0, len = node.children.length; i < len; ++i) {
+        dfs(node.children[i]);
+      }
       post[node.mapper.id] = postCounter++;
     };
 
@@ -105,12 +110,23 @@ export default class MapperRegistry {
     // clear sorted mappers
     this.sortedMappers = [];
 
-    postArray.forEach(([id, post]) => {
+    for (let i = 0, len = postArray.length; i < len; ++i) {
+      const [id] = postArray[i];
       this.sortedMappers.push(mappersById[id]);
-    });
+    }
   }
 
   get needRunOnRender() {
     return this.updatedSinceLastExecute;
+  }
+}
+
+class Node {
+  mapper = null;
+  children = [];
+
+  constructor(mapper, parents = [], children = []) {
+    this.mapper = mapper;
+    this.children = children;
   }
 }

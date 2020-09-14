@@ -31,8 +31,8 @@ export default class MutableValue {
   }
 
   _triggerListener() {
-    this._listeners.forEach((listener) => {
-      listener();
-    });
+    for (let i = 0, len = this._listeners.length; i < len; ++i) {
+      this._listeners[i]();
+    }
   }
 }

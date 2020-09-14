@@ -33,9 +33,9 @@ export default class JSReanimated {
     const frames = [...this._frames];
     this._frames = [];
 
-    frames.forEach((callback) => {
-      callback(timestampMs);
-    });
+    for (let i = 0, len = frames.length; i < len; ++i) {
+      frames[i](timestampMs);
+    }
 
     if (this._mapperRegistry.needRunOnRender) {
       this._mapperRegistry.execute();
