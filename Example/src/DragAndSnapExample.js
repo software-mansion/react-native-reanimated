@@ -53,9 +53,7 @@ function DragAndSnap() {
 
   return (
     <View style={{ flex: 1, margin: 50 }}>
-      <PanGestureHandler
-        onHandlerStateChange={gestureHandler}
-        onGestureEvent={gestureHandler}>
+      <PanGestureHandler onHandlerStateChange={gestureHandler}>
         <Animated.View
           style={[
             {
