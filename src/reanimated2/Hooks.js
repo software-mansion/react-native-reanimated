@@ -12,6 +12,7 @@ import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -39,8 +40,10 @@ export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
-  if (initRef.current === null) {
+  if (initRef.current === null || (Platform.OS === 'web' && rebuild)) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
+  } else if (rebuild) {
+    initRef.current.updateWorklet(handler);
   }
   return initRef.current;
 }
