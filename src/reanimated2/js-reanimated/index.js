@@ -16,13 +16,6 @@ global._updatePropsJS = (viewTag, updates, viewRef) => {
 
     viewRef.current._component.setNativeProps({ style: rawStyles });
   }
-
-  // TODO: Handle animations in styles
-  // Object.keys(animations).forEach(key => {
-  //   const animationCreator = animations[key];
-  //   console.log(animationCreator.toString());
-  // });
-  // reanimatedJS.maybeRequestRender();
 };
 
 export default reanimatedJS;
