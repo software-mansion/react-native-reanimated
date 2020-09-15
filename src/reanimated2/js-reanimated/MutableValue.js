@@ -15,12 +15,10 @@ export default class MutableValue {
   }
 
   set value(nextValue) {
-    // eslint-disable-next-line
-    this._setter.apply(this, [nextValue]);
-
-    this._triggerListener();
+    this._setter(nextValue);
   }
 
+  // this changes the value finally and is supposed to be called from this._setter
   _setValue(newValue) {
     this._value = newValue;
     this._triggerListener();

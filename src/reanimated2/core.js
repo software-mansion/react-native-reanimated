@@ -90,8 +90,6 @@ function workletValueSetter(value) {
 // We cannot use pushFrame
 // so we use own implementation for js
 function workletValueSetterJS(value) {
-  'worklet';
-
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
