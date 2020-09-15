@@ -144,9 +144,7 @@ function ListItem({ item, onRemove }) {
 
   return (
     <View style={s.item}>
-      <PanGestureHandler
-        activeOffsetX={[-10, 10]}
-        onHandlerStateChange={handler}>
+      <PanGestureHandler activeOffsetX={[-10, 10]} onGestureEvent={handler}>
         <Animated.View style={styles}>
           <ListItemContent item={item} />
 

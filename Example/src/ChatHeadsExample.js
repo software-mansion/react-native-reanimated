@@ -89,7 +89,7 @@ function ChatHeads({ children }) {
           transY={transY}
         />
       )}
-      <PanGestureHandler onHandlerStateChange={gestureHandler}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[styles.headContainer, stylez]}>
           {childrenArray[0]}
         </Animated.View>

@@ -104,7 +104,7 @@ function ScrollableView({ children }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <PanGestureHandler onHandlerStateChange={handler}>
+      <PanGestureHandler onGestureEvent={handler}>
         <Animated.View style={animatedStyles}>
           <View onLayout={onLayout}>{children}</View>
         </Animated.View>
