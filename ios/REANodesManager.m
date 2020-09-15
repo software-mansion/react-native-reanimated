@@ -200,24 +200,28 @@
     __weak typeof(self) weakSelf = self;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
-      NSMutableArray *pendingUIBlocks = [self.uiManager valueForKey:@"_pendingUIBlocks"];
-      bool canPerformLayout = (pendingUIBlocks == nil) || ([pendingUIBlocks count] == 0);
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
+      NSMutableArray *pendingUIBlocks = [strongSelf.uiManager valueForKey:@"_pendingUIBlocks"];
+      bool canPerformLayout = ([pendingUIBlocks count] == 0);
       
       if (!canPerformLayout) {
         dispatch_semaphore_signal(semaphore);
       }
       
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
-        copiedOperationsQueue[i](self.uiManager);
+        copiedOperationsQueue[i](strongSelf.uiManager);
       }
       
       if (canPerformLayout) {
-        weakSelf.shouldInterceptMountingBlock = YES;
-        [self.uiManager batchDidComplete];
-        weakSelf.shouldInterceptMountingBlock = NO;
+        strongSelf.shouldInterceptMountingBlock = YES;
+        [strongSelf.uiManager batchDidComplete];
+        strongSelf.shouldInterceptMountingBlock = NO;
         dispatch_semaphore_signal(semaphore);
       } else {
-        [self.uiManager setNeedsLayout];
+        [strongSelf.uiManager setNeedsLayout];
       }
     });
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
@@ -428,11 +432,16 @@
   event.eventName];
 
   if (_eventHandler != nil) {
-    __strong REAEventHandler eventHandler = _eventHandler;
+    __weak REAEventHandler eventHandler = _eventHandler;
+    __weak typeof(self) weakSelf = self;
     RCTExecuteOnMainQueue(^void(){
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
       eventHandler(eventHash, event);
-      if ([self isDirectEvent:event]) {
-        [self performOperations];
+      if ([strongSelf isDirectEvent:event]) {
+        [strongSelf performOperations];
       }
     });
   }
