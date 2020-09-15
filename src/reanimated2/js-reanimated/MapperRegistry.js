@@ -45,15 +45,11 @@ export default class MapperRegistry {
     for (let i = 0, nodesLen = nodes.length; i < nodesLen; ++i) {
       const node = nodes[i];
       if (node.mapper.outputs.length === 0) {
-        break;
+        continue;
       }
       for (let j = 0; j < nodesLen; ++j) {
         const restNode = nodes[j];
-        if (restNode.mapper.inputs.length === 0) {
-          break;
-        }
-        // do not compare with itself
-        if (i === j) {
+        if (i === j || restNode.mapper.inputs.length === 0) {
           continue;
         }
         for (
