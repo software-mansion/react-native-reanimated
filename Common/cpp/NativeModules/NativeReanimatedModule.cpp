@@ -188,7 +188,22 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString)
 {
-  eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
+   try
+    {
+      eventHandlerRegistry->processEvent(*runtime, eventName, eventAsString);
+      mapperRegistry->execute(*runtime);
+      if (mapperRegistry->needRunOnRender())
+      {
+        maybeRequestRender();
+      }
+    }
+    catch (...)
+    {
+      if (!errorHandler->raise())
+      {
+        throw;
+      }
+    }
 }
 
 void NativeReanimatedModule::maybeRequestRender()
