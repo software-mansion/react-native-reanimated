@@ -11,7 +11,7 @@
     "release": "npm login && release-it",
     "type:check": "tsc"
   },
-  "main": "lib/commonjs/Animated",
+  "main": "src/Animated.js",
   "module": "lib/module/Animated",
   "react-native": "src/Animated",
   "source": "src/Animated",
@@ -30,8 +30,7 @@
     "README.md",
     "react-native-reanimated.d.ts",
     "mock.js",
-    "plugin.js",
-    "index.js"
+    "plugin.js"
   ],
   "repository": {
     "type": "git",
