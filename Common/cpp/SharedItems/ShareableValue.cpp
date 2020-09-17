@@ -47,7 +47,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     if (!(object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP).isUndefined())) {
       jsi::Object hiddenProperty = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP).asObject(rt);
       if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
-        type = objectType;
+        type = ValueType::ObjectType;
+        if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
+          type = ValueType::WorkletFunctionType;
+        }
         frozenObject = hiddenProperty.getHostObject<FrozenObject>(rt);
         adaptCache(rt, value);
         return;
