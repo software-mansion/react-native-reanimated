@@ -14,13 +14,6 @@ module.exports = {
   },
   themeConfig: {
     disableDarkMode: true,
-    announcementBar: {
-      id: 'old_version', // Any value that will identify this message.
-      content:
-        'This is a documentation website for Reanimated 2.0 alpha release. If you are looking for Reanimated 1 docs <a target="_blank" rel="noopener noreferrer" href="https://docs.swmansion.com/react-native-reanimated/docs/">here is a link</a>',
-      backgroundColor: '#ffaaa8', // Defaults to `#fff`.
-      textColor: '#001a72', // Defaults to `#000`.
-    },
     googleAnalytics: {
       trackingID: 'UA-41044622-6',
       anonymizeIP: true, // Should IPs be anonymized?
@@ -30,7 +23,7 @@ module.exports = {
       title: 'React Native Reanimated',
       links: [
         {
-          label: 'Docs',
+          label: 'Versions',
           to: 'docs/about',
           position: 'left',
           activeBaseRegex: `docs/(?!next)`,
