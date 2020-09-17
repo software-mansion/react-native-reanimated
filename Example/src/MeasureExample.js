@@ -146,6 +146,7 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
         console.log(e);
+        throw new Error('measure failed: ' + e);
       }
     };
   } else {
