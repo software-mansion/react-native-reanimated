@@ -38,13 +38,12 @@ function hasAnimatedNodes(value) {
 }
 
 function flattenArray(array) {
+  if (!Array.isArray(array)) {
+    return array;
+  }
   const resultArr = [];
 
   const _flattenArray = (arr) => {
-    if (!Array.isArray(arr)) {
-      resultArr.push(arr);
-      return;
-    }
     arr.forEach((item) => {
       if (Array.isArray(item)) {
         _flattenArray(item);
