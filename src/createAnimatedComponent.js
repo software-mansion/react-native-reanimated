@@ -282,6 +282,9 @@ export default function createAnimatedComponent(Component) {
           const processedStyle = styles.map((style) => {
             if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
+              if (style.viewRef.current === null) {
+                style.viewRef.current = this;
+              }
               return style.initial;
             } else {
               return style;
@@ -302,9 +305,11 @@ export default function createAnimatedComponent(Component) {
           props[key] = dummyListener;
         } else if (value instanceof WorkletEventHandler) {
           if (value.eventNames.length > 0) {
-            value.eventNames.forEach(
-              (eventName) => (props[eventName] = dummyListener)
-            );
+            value.eventNames.forEach((eventName) => {
+              props[eventName] = value.listeners
+                ? value.listeners[eventName]
+                : dummyListener;
+            });
           } else {
             props[key] = dummyListener;
           }

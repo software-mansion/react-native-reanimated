@@ -11,7 +11,7 @@ module.exports = (api) => {
             'module-resolver',
             {
               alias: {
-                'react-native-reanimated': './Animated/Animated.js',
+                'react-native-reanimated': './Animated/',
               },
             },
           ]

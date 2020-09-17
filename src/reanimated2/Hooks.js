@@ -1,10 +1,18 @@
 import { useEffect, useRef } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
-import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
+import {
+  startMapper,
+  stopMapper,
+  makeMutable,
+  makeRemote,
+  requestFrame,
+} from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
+import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -32,7 +40,7 @@ export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
-  if (initRef.current === null) {
+  if (initRef.current === null || (Platform.OS === 'web' && rebuild)) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
@@ -176,7 +184,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state) {
+function styleUpdater(viewTag, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
 
@@ -225,11 +233,11 @@ function styleUpdater(viewTag, updater, state) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates);
+      updateProps(viewTag.value, updates, maybeViewRef);
     }
 
     if (!allFinished) {
-      requestAnimationFrame(frame);
+      requestFrame(frame);
     } else {
       state.isAnimationRunning = false;
     }
@@ -240,7 +248,7 @@ function styleUpdater(viewTag, updater, state) {
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      requestAnimationFrame(frame);
+      requestFrame(frame);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -252,7 +260,7 @@ function styleUpdater(viewTag, updater, state) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff);
+    updateProps(viewTag.value, diff, maybeViewRef);
   }
 }
 
@@ -260,6 +268,7 @@ export function useAnimatedStyle(updater, dependencies) {
   const viewTag = useSharedValue(-1);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
+  const viewRef = useRef(null);
 
   // build dependencies
   if (dependencies === undefined) {
@@ -277,11 +286,12 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   const { remoteState, initial } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewTag, updater, remoteState);
+      styleUpdater(viewTag, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
@@ -308,6 +318,7 @@ export function useAnimatedStyle(updater, dependencies) {
   return {
     viewTag,
     initial,
+    viewRef,
   };
 }
 
