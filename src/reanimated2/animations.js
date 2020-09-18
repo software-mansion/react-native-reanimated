@@ -1,11 +1,12 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
-  'worklet'
+  'worklet';
   const valueType = typeof value;
   if (valueType !== 'number') {
     let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
@@ -15,6 +16,35 @@ const assertNumber = (value, callerName) => {
     throw new Error(error);
   }
 };
+
+/**
+ * This function is supposed to handle any behaviors which are different on JS and UI
+ * since there is initialUpdaterRun call which run on JS and any following call
+ * is performed through mappers on UI thread
+ * at the same time every callback call looks the same for the user
+ * Here we modify output of the callback so it won't fail on the JS thread
+ * (so the user should write it like it's always called on UI)
+ */
+export function initialProxy(styles) {
+  // changes for android
+  if (Platform.OS === 'android') {
+    Object.keys(styles).forEach((key) => {
+      if (key === 'transform') {
+        styles[key].forEach((transformObj) => {
+          Object.keys(transformObj).forEach((transformKey) => {
+            if (transformKey.indexOf('rotate') !== -1) {
+              const value = transformObj[transformKey];
+              if (typeof value === 'number') {
+                // convert rotation values to string with 'deg' suffix
+                transformObj[transformKey] = `${value}deg`;
+              }
+            }
+          });
+        });
+      }
+    });
+  }
+}
 
 export function initialUpdaterRun(updater) {
   IN_STYLE_UPDATER = true;

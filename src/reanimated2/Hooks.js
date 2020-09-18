@@ -9,7 +9,7 @@ import {
   requestFrame,
 } from './core';
 import updateProps from './UpdateProps';
-import { initialUpdaterRun } from './animations';
+import { initialUpdaterRun, initialProxy } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
@@ -314,6 +314,8 @@ export function useAnimatedStyle(updater, dependencies) {
       `invalid value passed to \`${wrongKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
+
+  initialProxy(initial);
 
   return {
     viewTag,
