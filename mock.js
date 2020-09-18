@@ -91,6 +91,24 @@ const Reanimated = {
   Clock: NOOP,
   Node: NOOP,
   Value: AnimatedValue,
+  
+  EasingNode: {
+    linear: NOOP,
+    ease: NOOP,
+    quad: NOOP,
+    cubic: NOOP,
+    poly: () => NOOP,
+    sin: NOOP,
+    circle: NOOP,
+    exp: NOOP,
+    elastic: () => NOOP,
+    back: () => NOOP,
+    bounce: () => NOOP,
+    bezier: () => NOOP,
+    in: () => NOOP,
+    out: () => NOOP,
+    inOut: () => NOOP,
+  },
 
   Extrapolate: {
     EXTEND: 'extend',
@@ -202,24 +220,6 @@ module.exports = {
   ...Reanimated,
 
   default: Reanimated,
-
-  Easing: {
-    linear: NOOP,
-    ease: NOOP,
-    quad: NOOP,
-    cubic: NOOP,
-    poly: () => NOOP,
-    sin: NOOP,
-    circle: NOOP,
-    exp: NOOP,
-    elastic: () => NOOP,
-    back: () => NOOP,
-    bounce: () => NOOP,
-    bezier: () => NOOP,
-    in: () => NOOP,
-    out: () => NOOP,
-    inOut: () => NOOP,
-  },
 
   Transitioning: {
     View: createTransitioningComponent(View),
