@@ -426,7 +426,7 @@ declare module 'react-native-reanimated' {
     export function runOnUI<A extends any[], R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
 
-    type Dependencies = any[];
+    type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
     export function useSharedValue<T>(
@@ -435,28 +435,28 @@ declare module 'react-native-reanimated' {
 
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): SharedValue<T>;
 
     export function useAnimatedStyle<T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>>(
       updater: () => T,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): T;
     export function useAnimatedGestureHandler<TContext extends Context>(
       handlers: GestureHandlers<TContext>,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): OnGestureEvent;
     export function useAnimatedScrollHandler<TContext extends Context>(
       handler: ScrollHandler<TContext>,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): OnScroll;
     export function useAnimatedScrollHandler<TContext extends Context>(
       handlers: ScrollHandlers<TContext>,
-      dependencies?: Dependencies,
+      deps?: DependencyList,
     ): OnScroll;
 
     export function useAnimatedRef<T extends Component>(): RefObject<T>;
