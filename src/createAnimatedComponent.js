@@ -37,6 +37,25 @@ function hasAnimatedNodes(value) {
   return false;
 }
 
+function flattenArray(array) {
+  if (!Array.isArray(array)) {
+    return array;
+  }
+  const resultArr = [];
+
+  const _flattenArray = (arr) => {
+    arr.forEach((item) => {
+      if (Array.isArray(item)) {
+        _flattenArray(item);
+      } else {
+        resultArr.push(item);
+      }
+    });
+  };
+  _flattenArray(array);
+  return resultArr;
+}
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -205,9 +224,10 @@ export default function createAnimatedComponent(Component) {
     }
 
     _attachAnimatedStyles() {
-      const styles = Array.isArray(this.props.style)
+      let styles = Array.isArray(this.props.style)
         ? this.props.style
         : [this.props.style];
+      styles = flattenArray(styles);
       const viewTag = findNodeHandle(this);
       styles.forEach((style) => {
         if (style && style.viewTag !== undefined) {
