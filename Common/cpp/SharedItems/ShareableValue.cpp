@@ -44,8 +44,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   bool isRNRuntime = !(module->isUIRuntime(rt));
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
-    if (!(object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP).isUndefined())) {
-      jsi::Object hiddenProperty = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP).asObject(rt);
+    jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
+    if (!(hiddenValue.isUndefined())) {
+      jsi::Object hiddenProperty = hiddenValue.asObject(rt);
       if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
         type = ValueType::ObjectType;
         if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
