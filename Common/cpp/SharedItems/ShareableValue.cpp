@@ -34,7 +34,10 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
   if (module->isUIRuntime(rt)) {
-    remoteValue = std::make_unique<jsi::Value>(rt, value);
+    if (remoteValue.expired()) {
+      remoteValue = getWeakRef(rt);
+    }
+    (*remoteValue.lock()) = jsi::Value(rt, value);
   } else {
     hostValue = std::make_unique<jsi::Value>(rt, value);
   }
@@ -136,10 +139,15 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (module->isUIRuntime(rt)) {
-    if (remoteValue.get() == nullptr) {
-      remoteValue = std::make_unique<jsi::Value>(rt, toJSValue(rt));
+    if (remoteValue.expired()) {
+      auto ref = getWeakRef(rt);
+      remoteValue = ref;
     }
-    return jsi::Value(rt, *remoteValue);
+    
+    if (remoteValue.lock()->isUndefined()) {
+      (*remoteValue.lock()) = jsi::Value(rt, toJSValue(rt));
+    }
+    return jsi::Value(rt, *remoteValue.lock());
   } else {
     if (hostValue.get() == nullptr) {
       hostValue = std::make_unique<jsi::Value>(rt, toJSValue(rt));

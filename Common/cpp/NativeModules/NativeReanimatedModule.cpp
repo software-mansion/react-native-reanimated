@@ -11,6 +11,7 @@
 #include <functional>
 #include <thread>
 #include <memory>
+#include "JSIStoreValueUser.h"
 
 using namespace facebook;
 
@@ -247,7 +248,7 @@ void NativeReanimatedModule::onRender(double timestampMs)
 
 NativeReanimatedModule::~NativeReanimatedModule()
 {
-  // noop
+  StoreUser::clearStore();
 }
 
 } // namespace reanimated
