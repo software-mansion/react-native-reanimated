@@ -2,6 +2,7 @@
 
 #include "SharedParent.h"
 #include "FrozenObject.h"
+#include "JSIStoreValueUser.h"
 
 using namespace facebook;
 

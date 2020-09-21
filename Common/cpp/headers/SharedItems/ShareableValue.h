@@ -7,12 +7,13 @@
 #include <mutex>
 #include <unordered_map>
 #include <jsi/jsi.h>
+#include <JSIStoreValueUser.h>
 
 using namespace facebook;
 
 namespace reanimated {
 
-class ShareableValue: public std::enable_shared_from_this<ShareableValue> {
+class ShareableValue: public std::enable_shared_from_this<ShareableValue>, public StoreUser {
 friend WorkletsCache;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
@@ -30,7 +31,7 @@ private:
   std::vector<std::shared_ptr<ShareableValue>> frozenArray;
 
   std::unique_ptr<jsi::Value> hostValue;
-  std::unique_ptr<jsi::Value> remoteValue;
+  std::weak_ptr<jsi::Value> remoteValue;
 
   jsi::Value toJSValue(jsi::Runtime &rt);
 
