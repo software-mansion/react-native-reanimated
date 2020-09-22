@@ -21,9 +21,8 @@ declare module 'react-native-reanimated' {
     NativeSyntheticEvent,
   } from 'react-native';
   import {
-    GestureHandlerGestureEventNativeEvent,
+    GestureHandlerGestureEvent,
     PanGestureHandlerGestureEvent,
-    PanGestureHandlerEventExtra,
   } from 'react-native-gesture-handler';
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -31,7 +30,7 @@ declare module 'react-native-reanimated' {
     class AnimatedNode<T> {
       constructor(
         nodeConfig: object,
-        inputNodes?: ReadonlyArray<AnimatedNode<any>>,
+        inputNodes?: ReadonlyArray<AnimatedNode<any>>
       );
       isNativelyInitialized(): boolean;
       /**
@@ -118,7 +117,9 @@ declare module 'react-native-reanimated' {
     export interface TimingState extends AnimationState {
       frameTime: AnimatedValue<number>;
     }
-    export type EasingNodeFunction = (value: Adaptable<number>) => AnimatedNode<number>;
+    export type EasingNodeFunction = (
+      value: Adaptable<number>
+    ) => AnimatedNode<number>;
     export type EasingFunction = (value: number) => number;
     export interface TimingConfig {
       toValue: Adaptable<number>;
@@ -168,30 +169,44 @@ declare module 'react-native-reanimated' {
       toValue: Adaptable<number>;
     }
 
-    type SpringUtils =  {
+    type SpringUtils = {
       makeDefaultConfig: () => SpringConfig;
-      makeConfigFromBouncinessAndSpeed: (prevConfig: SpringConfigWithBouncinessAndSpeed) => SpringConfig;
-      makeConfigFromOrigamiTensionAndFriction: (prevConfig: SpringConfigWithOrigamiTensionAndFriction) => SpringConfig
-    }
+      makeConfigFromBouncinessAndSpeed: (
+        prevConfig: SpringConfigWithBouncinessAndSpeed
+      ) => SpringConfig;
+      makeConfigFromOrigamiTensionAndFriction: (
+        prevConfig: SpringConfigWithOrigamiTensionAndFriction
+      ) => SpringConfig;
+    };
 
-    export const SpringUtils: SpringUtils
+    export const SpringUtils: SpringUtils;
 
-    export type TransformStyleTypes = TransformsStyle['transform'] extends (readonly (infer T)[] | undefined) ? T : never
-    export type AdaptTransforms<T> = { [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]> }
-    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[]
+    export type TransformStyleTypes = TransformsStyle['transform'] extends (
+      | readonly (infer T)[]
+      | undefined)
+      ? T
+      : never;
+    export type AdaptTransforms<T> = {
+      [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>
+    };
+    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[];
 
     export type AnimateStyle<S extends object> = {
-      [K in keyof S]: K extends 'transform' ? AnimatedTransform : (S[K] extends ReadonlyArray<any>
-        ? ReadonlyArray<AnimateStyle<S[K][0]>>
-        : S[K] extends object
-          ? AnimateStyle<S[K]>
-          :   
-              // allow `number` where `string` normally is to support colors    
-                S[K] extends (string | undefined) ? S[K] | number : S[K]
-              | AnimatedNode<
-                  // allow `number` where `string` normally is to support colors
-                  S[K] extends (string | undefined) ? S[K] | number : S[K]
-                >)
+      [K in keyof S]: K extends 'transform'
+        ? AnimatedTransform
+        : (S[K] extends ReadonlyArray<any>
+            ? ReadonlyArray<AnimateStyle<S[K][0]>>
+            : S[K] extends object
+            ? AnimateStyle<S[K]>
+            : // allow `number` where `string` normally is to support colors
+            S[K] extends (string | undefined)
+            ? S[K] | number
+            :
+                | S[K]
+                | AnimatedNode<
+                    // allow `number` where `string` normally is to support colors
+                    S[K] extends (string | undefined) ? S[K] | number : S[K]
+                  >);
     };
 
     export type AnimateProps<
@@ -202,13 +217,13 @@ declare module 'react-native-reanimated' {
     > = {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<S>>
-        : P[K] | AnimatedNode<P[K]>
+        : P[K] | AnimatedNode<P[K]>;
     };
 
     type CodeProps = {
-      exec?: AnimatedNode<number>
-      children?: () => AnimatedNode<number>
-      dependencies?: Array<any>
+      exec?: AnimatedNode<number>;
+      children?: () => AnimatedNode<number>;
+      dependencies?: Array<any>;
     };
 
     // components
@@ -218,9 +233,7 @@ declare module 'react-native-reanimated' {
     export class Text extends Component<AnimateProps<TextStyle, TextProps>> {
       getNode(): ReactNativeText;
     }
-    export class Image extends Component<
-      AnimateProps<ImageStyle, ImageProps>
-    > {
+    export class Image extends Component<AnimateProps<ImageStyle, ImageProps>> {
       getNode(): ReactNativeImage;
     }
     export class ScrollView extends Component<
@@ -272,30 +285,30 @@ declare module 'react-native-reanimated' {
     export function not(value: Adaptable<any>): AnimatedNode<0 | 1>;
     export function set<T extends Value>(
       valueToBeUpdated: AnimatedValue<T>,
-      sourceNode: Adaptable<T>,
+      sourceNode: Adaptable<T>
     ): AnimatedNode<T>;
     export function concat(
-      ...args: Array<Adaptable<string> | Adaptable<number>>,
+      ...args: Array<Adaptable<string> | Adaptable<number>>
     ): AnimatedNode<string>;
     export function cond<T1 extends Value = number, T2 extends Value = number>(
       conditionNode: Adaptable<number>,
       ifNode: Adaptable<T1>,
-      elseNode?: Adaptable<T2>,
+      elseNode?: Adaptable<T2>
     ): AnimatedNode<T1 | T2>;
     export function block<T1 extends Value = number, T2 extends Value = any>(
-      items: ReadonlyArray<Adaptable<T2>>,
+      items: ReadonlyArray<Adaptable<T2>>
     ): AnimatedNode<T1>;
     export function call<T>(
       args: ReadonlyArray<T | AnimatedNode<T>>,
-      callback: (args: ReadonlyArray<T>) => void,
+      callback: (args: ReadonlyArray<T>) => void
     ): AnimatedNode<0>;
     export function debug<T>(
       message: string,
-      value: AnimatedNode<T>,
+      value: AnimatedNode<T>
     ): AnimatedNode<T>;
     export function onChange(
       value: Adaptable<number>,
-      action: Adaptable<number>,
+      action: Adaptable<number>
     ): AnimatedNode<number>;
     export function startClock(clock: AnimatedClock): AnimatedNode<0>;
     export function stopClock(clock: AnimatedClock): AnimatedNode<0>;
@@ -303,11 +316,17 @@ declare module 'react-native-reanimated' {
     // the return type for `event` is a lie, but it's the same lie that
     // react-native makes within Animated
     type EventArgFunc<T> = (arg: T) => AnimatedNode<number>;
-    type EventMapping<T> = T extends object ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> } : Adaptable<T> | EventArgFunc<T>;
-    type EventMappingArray<T> = T extends Array<any> ? { [I in keyof T]: EventMapping<T[I]> } : [EventMapping<T>]
+    type EventMapping<T> = T extends object
+      ? { [K in keyof T]?: EventMapping<T[K]> | EventArgFunc<T[K]> }
+      : Adaptable<T> | EventArgFunc<T>;
+    type EventMappingArray<T> = T extends Array<any>
+      ? { [I in keyof T]: EventMapping<T[I]> }
+      : [EventMapping<T>];
     export function event<T>(
-        argMapping: T extends never ? ReadonlyArray<Mapping> : Readonly<EventMappingArray<T>>,
-        config?: {},
+      argMapping: T extends never
+        ? ReadonlyArray<Mapping>
+        : Readonly<EventMappingArray<T>>,
+      config?: {}
     ): (...args: any[]) => void;
 
     // derived operations
@@ -317,23 +336,23 @@ declare module 'react-native-reanimated' {
       r: Adaptable<number>,
       g: Adaptable<number>,
       b: Adaptable<number>,
-      a?: Adaptable<number>,
+      a?: Adaptable<number>
     ): AnimatedNode<number>;
     export function diff(value: Adaptable<number>): AnimatedNode<number>;
     export function diffClamp(
       value: Adaptable<number>,
       minVal: Adaptable<number>,
-      maxVal: Adaptable<number>,
+      maxVal: Adaptable<number>
     ): AnimatedNode<number>;
     export function interpolateNode(
       value: Adaptable<number>,
-      config: InterpolationConfig,
+      config: InterpolationConfig
     ): AnimatedNode<number>;
     export function interpolateColors(
       animationValue: Adaptable<number>,
       {
         inputRange,
-        outputColorRange
+        outputColorRange,
       }: {
         inputRange: ReadonlyArray<Adaptable<number>>;
         outputColorRange: (string | number)[];
@@ -354,33 +373,33 @@ declare module 'react-native-reanimated' {
     export function decay(
       clock: AnimatedClock,
       state: DecayState,
-      config: DecayConfig,
+      config: DecayConfig
     ): AnimatedNode<number>;
     export function timing(
       clock: AnimatedClock,
       state: TimingState,
-      config: TimingConfig,
+      config: TimingConfig
     ): AnimatedNode<number>;
     export function spring(
       clock: AnimatedClock,
       state: SpringState,
-      config: SpringConfig,
+      config: SpringConfig
     ): AnimatedNode<number>;
     // backward compatible API
     export function spring(
       node: AnimatedNode<number>,
-      config: SpringConfig,
+      config: SpringConfig
     ): BackwardCompatibleWrapper;
     export function timing(
       node: AnimatedNode<number>,
-      config: TimingConfig,
+      config: TimingConfig
     ): BackwardCompatibleWrapper;
     export function decay(
       node: AnimatedNode<number>,
-      config: DecayConfig,
+      config: DecayConfig
     ): BackwardCompatibleWrapper;
 
-    // reanimated2 animations                   
+    // reanimated2 animations
     export interface WithTimingConfig {
       duration?: number;
       easing?: EasingFunction;
@@ -388,24 +407,21 @@ declare module 'react-native-reanimated' {
     export function withTiming(
       toValue: number,
       userConfig?: WithTimingConfig,
-      callback?: (isFinished: boolean) => void,
+      callback?: (isFinished: boolean) => void
     ): number;
     export function withSpring(
       toValue: number,
       userConfig?: WithSpringConfig,
-      callback?: (isFinished: boolean) => void,
+      callback?: (isFinished: boolean) => void
     ): number;
     export function withDecay(
       userConfig: WithDecayConfig,
       callback?: (isFinished: boolean) => void
     ): number;
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
-        sharedValue: T
+      sharedValue: T
     ): void;
-    export function delay(
-      delayMS: number,
-      delayedAnimation: number,
-    ): number;
+    export function delay(delayMS: number, delayedAnimation: number): number;
     export function repeat(
       animation: number,
       numberOfReps?: number,
@@ -415,52 +431,60 @@ declare module 'react-native-reanimated' {
 
     // hooks
     export function useCode(
-      exec: () => Nullable< AnimatedNode<number>[] | AnimatedNode<number> > | boolean,
-      deps: Array<any>,
-    ): void
+      exec: () =>
+        | Nullable<AnimatedNode<number>[] | AnimatedNode<number>>
+        | boolean,
+      deps: Array<any>
+    ): void;
     export function useValue<T extends Value>(
       initialValue: T
     ): AnimatedValue<T>;
 
     // reanimated2 functions
-    export function runOnUI<A extends any[], R>(fn: (...args: A) => R): (...args: Parameters<typeof fn>) => void;
+    export function runOnUI<A extends any[], R>(
+      fn: (...args: A) => R
+    ): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
 
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
     export function useSharedValue<T>(
-        initialValue: T
+      initialValue: T
     ): T extends SharedValueType ? SharedValue<T> : never;
 
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T,
-      deps?: DependencyList,
+      deps?: DependencyList
     ): SharedValue<T>;
 
-    export function useAnimatedStyle<T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>>(
-      updater: () => T,
-      deps?: DependencyList,
-    ): T;
+    export function useAnimatedStyle<
+      T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
+    >(updater: () => T, deps?: DependencyList): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
-      deps?: DependencyList,
+      deps?: DependencyList
     ): T;
-    export function useAnimatedGestureHandler<TContext extends Context>(
-      handlers: GestureHandlers<TContext>,
-      deps?: DependencyList,
-    ): OnGestureEvent;
-    export function useAnimatedScrollHandler<TContext extends Context>(
+    export function useAnimatedGestureHandler<
+      T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
+      TContext extends Context = {}
+    >(
+      handlers: GestureHandlers<T['nativeEvent'], TContext>,
+      deps?: DependencyList
+    ): OnGestureEvent<T>;
+    export function useAnimatedScrollHandler<TContext extends Context = {}>(
       handler: ScrollHandler<TContext>,
-      deps?: DependencyList,
+      deps?: DependencyList
     ): OnScroll;
-    export function useAnimatedScrollHandler<TContext extends Context>(
+    export function useAnimatedScrollHandler<TContext extends Context = {}>(
       handlers: ScrollHandlers<TContext>,
-      deps?: DependencyList,
+      deps?: DependencyList
     ): OnScroll;
 
     export function useAnimatedRef<T extends Component>(): RefObject<T>;
-    export function measure<T extends Component>(ref: RefObject<T>): {
+    export function measure<T extends Component>(
+      ref: RefObject<T>
+    ): {
       width: number;
       height: number;
       x: number;
@@ -469,40 +493,58 @@ declare module 'react-native-reanimated' {
       pageY: number;
     };
 
-    export function scrollTo(ref: RefObject<ReactNativeScrollView | ScrollView>, x: number, y: number, animated: boolean): void;
+    export function scrollTo(
+      ref: RefObject<ReactNativeScrollView | ScrollView>,
+      x: number,
+      y: number,
+      animated: boolean
+    ): void;
 
     // gesture-handler
-    type OnGestureEvent = (event: PanGestureHandlerGestureEvent) => void;
+    type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
+      event: T
+    ) => void;
 
     type Context = Record<string, unknown>;
 
-    type NativeEvent = GestureHandlerGestureEventNativeEvent & PanGestureHandlerEventExtra;
-    type Handler<TContext extends Context> = (event: NativeEvent, context: TContext) => void;
+    type Handler<T, TContext extends Context> = (
+      event: T,
+      context: TContext
+    ) => void;
 
-    export interface GestureHandlers<TContext extends Context> {
-      onStart?: Handler<TContext>;
-      onActive?: Handler<TContext>;
-      onEnd?: Handler<TContext>;
-      onFail?: Handler<TContext>;
-      onCancel?: Handler<TContext>;
-      onFinish?: (event: NativeEvent, context: TContext, isCanceledOrFailed: boolean) => void;
+    export interface GestureHandlers<T, TContext extends Context> {
+      onStart?: Handler<T, TContext>;
+      onActive?: Handler<T, TContext>;
+      onEnd?: Handler<T, TContext>;
+      onFail?: Handler<T, TContext>;
+      onCancel?: Handler<T, TContext>;
+      onFinish?: (
+        event: T,
+        context: TContext,
+        isCanceledOrFailed: boolean
+      ) => void;
     }
 
     // scroll view
     type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
-    type ScrollHandler<TContext extends Context> = (event: NativeScrollEvent, context: TContext) => void;
+    type ScrollHandler<TContext extends Context> = (
+      event: NativeScrollEvent,
+      context: TContext
+    ) => void;
 
     export interface ScrollHandlers<TContext extends Context> {
-      onScroll?:ScrollHandler<TContext>;
-      onBeginDrag?:ScrollHandler<TContext>;
+      onScroll?: ScrollHandler<TContext>;
+      onBeginDrag?: ScrollHandler<TContext>;
       onEndDrag?: ScrollHandler<TContext>;
       onMomentumBegin?: ScrollHandler<TContext>;
       onMomentumEnd?: ScrollHandler<TContext>;
     }
 
     // configuration
-    export function addWhitelistedNativeProps(props: { [key: string]: true }): void;
+    export function addWhitelistedNativeProps(props: {
+      [key: string]: true;
+    }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
   }
 
@@ -517,20 +559,22 @@ declare module 'react-native-reanimated' {
     sin: Animated.EasingNodeFunction;
     circle: Animated.EasingNodeFunction;
     exp: Animated.EasingNodeFunction;
-    elastic(bounciness?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
+    elastic(
+      bounciness?: Animated.Adaptable<number>
+    ): Animated.EasingNodeFunction;
     back(s?: Animated.Adaptable<number>): Animated.EasingNodeFunction;
     bounce: Animated.EasingNodeFunction;
     bezier(
       x1: number,
       y1: number,
       x2: number,
-      y2: number,
+      y2: number
     ): Animated.EasingNodeFunction;
     in(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
     out(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
     inOut(easing: Animated.EasingNodeFunction): Animated.EasingNodeFunction;
   }
-  
+
   export const EasingNode: EasingNodeStatic;
 
   interface EasingStatic {
@@ -549,13 +593,13 @@ declare module 'react-native-reanimated' {
       x1: number,
       y1: number,
       x2: number,
-      y2: number,
+      y2: number
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
     inOut(easing: Animated.EasingFunction): Animated.EasingFunction;
   }
-  
+
   export const Easing: EasingStatic;
 
   export interface TransitioningViewProps extends ViewProps {
@@ -578,7 +622,13 @@ declare module 'react-native-reanimated' {
   }
 
   export interface TransitionInOutProps extends TransitionProps {
-    type?: 'fade' | 'scale' | 'slide-top' | 'slide-bottom' | 'slide-right' | 'slide-left';
+    type?:
+      | 'fade'
+      | 'scale'
+      | 'slide-top'
+      | 'slide-bottom'
+      | 'slide-right'
+      | 'slide-left';
   }
 
   export class Transition extends Component {
@@ -590,81 +640,83 @@ declare module 'react-native-reanimated' {
   }
 
   export class Clock extends Animated.Clock {}
-  export class Value<T extends string | number | boolean> extends Animated.Value<T> {}
+  export class Value<
+    T extends string | number | boolean
+  > extends Animated.Value<T> {}
   export class Node<T> extends Animated.Node<T> {}
-  export const add: typeof Animated.add
-  export const sub: typeof Animated.sub
-  export const multiply: typeof Animated.multiply
-  export const divide: typeof Animated.divide
-  export const pow: typeof Animated.pow
-  export const modulo: typeof Animated.modulo
-  export const sqrt: typeof Animated.sqrt
-  export const log: typeof Animated.log
-  export const sin: typeof Animated.sin
-  export const cos: typeof Animated.cos
-  export const exp: typeof Animated.exp
-  export const round: typeof Animated.round
-  export const lessThan: typeof Animated.lessThan
-  export const eq: typeof Animated.eq
-  export const greaterThan: typeof Animated.greaterThan
-  export const lessOrEq: typeof Animated.lessOrEq
-  export const greaterOrEq: typeof Animated.greaterOrEq
-  export const neq: typeof Animated.neq
-  export const and: typeof Animated.and
-  export const or: typeof Animated.or
-  export const defined: typeof Animated.defined
-  export const not: typeof Animated.not
-  export const tan: typeof Animated.tan
-  export const acos: typeof Animated.acos
-  export const asin: typeof Animated.asin
-  export const atan: typeof Animated.atan
-  export const proc: typeof Animated.proc
-  export const block: typeof Animated.block
-  export const concat: typeof Animated.concat
-  export const event: typeof Animated.event
-  export const call: typeof Animated.call
-  export const debug: typeof Animated.debug
-  export const clockRunning: typeof Animated.clockRunning
-  export const stopClock: typeof Animated.stopClock
-  export const startClock: typeof Animated.startClock
-  export const set: typeof Animated.set
-  export const cond: typeof Animated.cond
-  export const abs: typeof Animated.abs
-  export const acc: typeof Animated.acc
-  export const color: typeof Animated.color
-  export const interpolateColors: typeof Animated.interpolateColors
-  export const diff: typeof Animated.diff
-  export const diffClamp: typeof Animated.diffClamp
-  export const interpolateNode: typeof Animated.interpolateNode
-  export const Extrapolate: typeof Animated.Extrapolate
-  export const max: typeof Animated.max
-  export const min: typeof Animated.min
-  export const onChange: typeof Animated.onChange
-  export const floor: typeof Animated.floor
-  export const ceil: typeof Animated.ceil
-  export const useCode: typeof Animated.useCode
-  export const decay: typeof Animated.decay
-  export const timing: typeof Animated.timing
-  export const spring: typeof Animated.spring
-  export const SpringUtils: typeof Animated.SpringUtils
-  export const runOnUI: typeof Animated.runOnUI
-  export const processColor: typeof Animated.processColor
-  export const useValue: typeof Animated.useValue
-  export const useSharedValue: typeof Animated.useSharedValue
-  export const useAnimatedStyle: typeof Animated.useAnimatedStyle
-  export const useAnimatedProps: typeof Animated.useAnimatedProps
-  export const useDerivedValue: typeof Animated.useDerivedValue
-  export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler
-  export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler
-  export const useAnimatedRef: typeof Animated.useAnimatedRef
-  export const measure: typeof Animated.measure
-  export const scrollTo: typeof Animated.scrollTo
-  export const withTiming: typeof Animated.withTiming
-  export const withSpring: typeof Animated.withSpring
-  export const withDecay: typeof Animated.withDecay
-  export const cancelAnimation: typeof Animated.cancelAnimation
-  export const delay: typeof Animated.delay
+  export const add: typeof Animated.add;
+  export const sub: typeof Animated.sub;
+  export const multiply: typeof Animated.multiply;
+  export const divide: typeof Animated.divide;
+  export const pow: typeof Animated.pow;
+  export const modulo: typeof Animated.modulo;
+  export const sqrt: typeof Animated.sqrt;
+  export const log: typeof Animated.log;
+  export const sin: typeof Animated.sin;
+  export const cos: typeof Animated.cos;
+  export const exp: typeof Animated.exp;
+  export const round: typeof Animated.round;
+  export const lessThan: typeof Animated.lessThan;
+  export const eq: typeof Animated.eq;
+  export const greaterThan: typeof Animated.greaterThan;
+  export const lessOrEq: typeof Animated.lessOrEq;
+  export const greaterOrEq: typeof Animated.greaterOrEq;
+  export const neq: typeof Animated.neq;
+  export const and: typeof Animated.and;
+  export const or: typeof Animated.or;
+  export const defined: typeof Animated.defined;
+  export const not: typeof Animated.not;
+  export const tan: typeof Animated.tan;
+  export const acos: typeof Animated.acos;
+  export const asin: typeof Animated.asin;
+  export const atan: typeof Animated.atan;
+  export const proc: typeof Animated.proc;
+  export const block: typeof Animated.block;
+  export const concat: typeof Animated.concat;
+  export const event: typeof Animated.event;
+  export const call: typeof Animated.call;
+  export const debug: typeof Animated.debug;
+  export const clockRunning: typeof Animated.clockRunning;
+  export const stopClock: typeof Animated.stopClock;
+  export const startClock: typeof Animated.startClock;
+  export const set: typeof Animated.set;
+  export const cond: typeof Animated.cond;
+  export const abs: typeof Animated.abs;
+  export const acc: typeof Animated.acc;
+  export const color: typeof Animated.color;
+  export const interpolateColors: typeof Animated.interpolateColors;
+  export const diff: typeof Animated.diff;
+  export const diffClamp: typeof Animated.diffClamp;
+  export const interpolateNode: typeof Animated.interpolateNode;
+  export const Extrapolate: typeof Animated.Extrapolate;
+  export const max: typeof Animated.max;
+  export const min: typeof Animated.min;
+  export const onChange: typeof Animated.onChange;
+  export const floor: typeof Animated.floor;
+  export const ceil: typeof Animated.ceil;
+  export const useCode: typeof Animated.useCode;
+  export const decay: typeof Animated.decay;
+  export const timing: typeof Animated.timing;
+  export const spring: typeof Animated.spring;
+  export const SpringUtils: typeof Animated.SpringUtils;
+  export const runOnUI: typeof Animated.runOnUI;
+  export const processColor: typeof Animated.processColor;
+  export const useValue: typeof Animated.useValue;
+  export const useSharedValue: typeof Animated.useSharedValue;
+  export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
+  export const useAnimatedProps: typeof Animated.useAnimatedProps;
+  export const useDerivedValue: typeof Animated.useDerivedValue;
+  export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
+  export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
+  export const useAnimatedRef: typeof Animated.useAnimatedRef;
+  export const measure: typeof Animated.measure;
+  export const scrollTo: typeof Animated.scrollTo;
+  export const withTiming: typeof Animated.withTiming;
+  export const withSpring: typeof Animated.withSpring;
+  export const withDecay: typeof Animated.withDecay;
+  export const cancelAnimation: typeof Animated.cancelAnimation;
+  export const delay: typeof Animated.delay;
   export const repeat: typeof Animated.repeat;
   export const sequence: typeof Animated.sequence;
-  export const interpolate: typeof Animated.interpolate
+  export const interpolate: typeof Animated.interpolate;
 }
