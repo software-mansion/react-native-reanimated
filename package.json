@@ -92,7 +92,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn tsc react-native-reanimated.d.ts react-native-reanimated-tests.tsx --noEmit --lib 'es6' --jsx 'react-native' --esModuleInterop"
+      "pre-commit": "lint-staged && yarn tsc"
     }
   },
   "release-it": {
