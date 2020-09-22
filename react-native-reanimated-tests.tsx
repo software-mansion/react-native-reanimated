@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   useDerivedValue,
   useAnimatedStyle,
+  useAnimatedProps,
   useAnimatedScrollHandler,
   useAnimatedGestureHandler,
   Easing,
@@ -359,4 +360,31 @@ function WithDecayTest() {
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
   );
+}
+
+// hooks dependencies
+function DependenciesTest() {
+  const dependencies:Array<undefined | Array<any>> = [undefined, [], [0,]];
+
+  dependencies.forEach((dependency) => {
+    useAnimatedStyle(() => {
+      return {};
+    }, dependency);
+  });
+
+  dependencies.forEach((dependency) => {
+    useAnimatedProps(() => {
+      return {};
+    }, dependency);
+  });
+
+  dependencies.forEach((dependency) => {
+    useAnimatedGestureHandler({}, dependency);
+  });
+
+  dependencies.forEach((dependency) => {
+    useAnimatedScrollHandler({}, dependency);
+  });
+
+  return <View />;
 }
