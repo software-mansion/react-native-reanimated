@@ -22,6 +22,7 @@
 #import "Nodes/REAParamNode.h"
 #import "Nodes/REAFunctionNode.h"
 #import "Nodes/REACallFuncNode.h"
+#import <React/RCTShadowView.h>
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -39,6 +40,12 @@
 
 @end
 
+@interface REANodesManager() <RCTUIManagerObserver>
+
+@property BOOL shouldInterceptMountingBlock;
+
+@end
+
 
 @implementation REANodesManager
 {
@@ -52,6 +59,7 @@
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
   REAEventHandler _eventHandler;
+  volatile void (^_mounting)(void);
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -67,8 +75,14 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
+    _shouldInterceptMountingBlock = NO;
+    [[uiManager observerCoordinator] addObserver:self];
   }
   return self;
+}
+
+- (void)dealloc {
+  [[_uiManager observerCoordinator] removeObserver:self];
 }
 
 - (void)invalidate
@@ -166,6 +180,14 @@
   }
 }
 
+- (BOOL)uiManager:(RCTUIManager *)manager performMountingWithBlock:(RCTUIManagerMountingBlock)block {
+  if (_shouldInterceptMountingBlock) {
+    _mounting = block;
+    return YES;
+  }
+  return NO;
+}
+
 - (void)performOperations
 {
   if (_wantRunUpdates) {
@@ -174,12 +196,40 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+    
+    __weak typeof(self) weakSelf = self;
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     RCTExecuteOnUIManagerQueue(^{
-      for (int i = 0; i < copiedOperationsQueue.count; i++) {
-        copiedOperationsQueue[i](self.uiManager);
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
       }
-      [self.uiManager setNeedsLayout];
+      NSMutableArray *pendingUIBlocks = [strongSelf.uiManager valueForKey:@"_pendingUIBlocks"];
+      bool canPerformLayout = ([pendingUIBlocks count] == 0);
+      
+      if (!canPerformLayout) {
+        dispatch_semaphore_signal(semaphore);
+      }
+      
+      for (int i = 0; i < copiedOperationsQueue.count; i++) {
+        copiedOperationsQueue[i](strongSelf.uiManager);
+      }
+      
+      if (canPerformLayout) {
+        strongSelf.shouldInterceptMountingBlock = YES;
+        [strongSelf.uiManager batchDidComplete];
+        strongSelf.shouldInterceptMountingBlock = NO;
+        dispatch_semaphore_signal(semaphore);
+      } else {
+        [strongSelf.uiManager setNeedsLayout];
+      }
     });
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    
+    if (_mounting) {
+      _mounting();
+      _mounting = nil;
+    }
   }
   _wantRunUpdates = NO;
 }
@@ -382,7 +432,18 @@
   event.eventName];
 
   if (_eventHandler != nil) {
-    _eventHandler(eventHash, event);
+    __weak REAEventHandler eventHandler = _eventHandler;
+    __weak typeof(self) weakSelf = self;
+    RCTExecuteOnMainQueue(^void(){
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
+      eventHandler(eventHash, event);
+      if ([strongSelf isDirectEvent:event]) {
+        [strongSelf performOperations];
+      }
+    });
   }
 
   REANode *eventNode = [_eventMapping objectForKey:key];

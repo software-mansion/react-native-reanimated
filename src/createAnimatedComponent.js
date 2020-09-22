@@ -37,6 +37,25 @@ function hasAnimatedNodes(value) {
   return false;
 }
 
+function flattenArray(array) {
+  if (!Array.isArray(array)) {
+    return array;
+  }
+  const resultArr = [];
+
+  const _flattenArray = (arr) => {
+    arr.forEach((item) => {
+      if (Array.isArray(item)) {
+        _flattenArray(item);
+      } else {
+        resultArr.push(item);
+      }
+    });
+  };
+  _flattenArray(array);
+  return resultArr;
+}
+
 export default function createAnimatedComponent(Component) {
   invariant(
     typeof Component !== 'function' ||
@@ -110,10 +129,17 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
       const attached = new Set();
       const nextEvts = new Set();
+      let viewTag;
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
+        } else if (
+          prop instanceof WorkletEventHandler &&
+          viewTag === undefined
+        ) {
+          viewTag = prop.viewTag;
         }
       }
       for (const key in prevProps) {
@@ -126,13 +152,19 @@ export default function createAnimatedComponent(Component) {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
           }
+        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
+          prop.unregisterFromEvents();
         }
       }
+
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
+        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
+          prop.registerForEvents(viewTag, key);
+          prop.reattachNeeded = false;
         }
       }
     }
@@ -192,9 +224,10 @@ export default function createAnimatedComponent(Component) {
     }
 
     _attachAnimatedStyles() {
-      const styles = Array.isArray(this.props.style)
+      let styles = Array.isArray(this.props.style)
         ? this.props.style
         : [this.props.style];
+      styles = flattenArray(styles);
       const viewTag = findNodeHandle(this);
       styles.forEach((style) => {
         if (style && style.viewTag !== undefined) {
@@ -269,6 +302,9 @@ export default function createAnimatedComponent(Component) {
           const processedStyle = styles.map((style) => {
             if (style && style.viewTag) {
               // this is how we recognize styles returned by useAnimatedStyle
+              if (style.viewRef.current === null) {
+                style.viewRef.current = this;
+              }
               return style.initial;
             } else {
               return style;
@@ -289,9 +325,11 @@ export default function createAnimatedComponent(Component) {
           props[key] = dummyListener;
         } else if (value instanceof WorkletEventHandler) {
           if (value.eventNames.length > 0) {
-            value.eventNames.forEach(
-              (eventName) => (props[eventName] = dummyListener)
-            );
+            value.eventNames.forEach((eventName) => {
+              props[eventName] = value.listeners
+                ? value.listeners[eventName]
+                : dummyListener;
+            });
           } else {
             props[key] = dummyListener;
           }

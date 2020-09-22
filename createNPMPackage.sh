@@ -1,19 +1,20 @@
 #!/bin/bash
 set -e
+set -x
 
 ROOT=$(pwd)
 
-# PART I - I (clean)
+# PART I - I (install RN)
+yarn add react-native --dev
+
+# PART I - II (clean)
 
 rm -rf android/build/outputs/aar/*.aar
 cd android 
 gradle clean
-cd $ROOT
-yarn add react-native --dev
 
-# PART I (add latest aar to  android-npm)
+# PART I (add latest aar to android-npm)
 
-cd android
 gradle :assembleDebug
 cd $ROOT
 

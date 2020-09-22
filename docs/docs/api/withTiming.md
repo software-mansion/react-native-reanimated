@@ -37,7 +37,7 @@ This method returns an animation object. It can be either assigned directly to a
 
 ```js
 import { Button } from 'react-native';
-import {
+import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,

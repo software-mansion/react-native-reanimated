@@ -7,11 +7,24 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { View, Dimensions } from 'react-native';
+import { View, Dimensions, Platform, StyleSheet } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
 const windowDimensions = Dimensions.get('window');
+
+const colors = [
+  'black',
+  'blue',
+  'green',
+  'yellow',
+  'red',
+  'gray',
+  'pink',
+  'orange',
+];
+
+const boxHeight = 120;
 
 function friction(value) {
   'worklet';
@@ -78,9 +91,9 @@ function ScrollableView({ children }) {
     },
   });
 
-  const styles = useAnimatedStyle(() => {
+  const animatedStyles = useAnimatedStyle(() => {
     return {
-      flex: 1,
+      height: boxHeight * colors.length,
       transform: [
         {
           translateY: translateY.value,
@@ -92,7 +105,7 @@ function ScrollableView({ children }) {
   return (
     <View style={{ flex: 1 }}>
       <PanGestureHandler onGestureEvent={handler}>
-        <Animated.View style={styles}>
+        <Animated.View style={animatedStyles}>
           <View onLayout={onLayout}>{children}</View>
         </Animated.View>
       </PanGestureHandler>
@@ -105,7 +118,7 @@ function Box({ color }) {
     <View
       style={{
         backgroundColor: color,
-        height: 120,
+        height: boxHeight,
         borderBottomWidth: 1,
         borderBottomColor: 'gray',
       }}
@@ -115,15 +128,22 @@ function Box({ color }) {
 
 export default function Example() {
   return (
-    <ScrollableView>
-      <Box color="black" />
-      <Box color="blue" />
-      <Box color="green" />
-      <Box color="yellow" />
-      <Box color="red" />
-      <Box color="gray" />
-      <Box color="pink" />
-      <Box color="orange" />
-    </ScrollableView>
+    <View style={styles.wrapper}>
+      <ScrollableView>
+        {colors.map((color) => (
+          <Box color={color} key={color} />
+        ))}
+      </ScrollableView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    height:
+      Platform.OS === 'web'
+        ? windowDimensions.height - Header.HEIGHT
+        : undefined,
+    overflow: Platform.OS === 'web' ? 'hidden' : undefined,
+  },
+});

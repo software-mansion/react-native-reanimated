@@ -2,11 +2,13 @@ package com.swmansion.reanimated;
 
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewParent;
 
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.RootViewUtil;
+import com.facebook.react.views.scroll.ReactHorizontalScrollView;
 import com.facebook.react.views.scroll.ReactScrollView;
 
 public class NativeMethodsHelper {
@@ -16,6 +18,7 @@ public class NativeMethodsHelper {
     if (rootView == null || view == null) {
       float result[] = new float [6];
       result[0] = -1234567;
+      return result;
     }
 
     int buffer[] = new int [4];
@@ -36,12 +39,29 @@ public class NativeMethodsHelper {
   public static void scrollTo(View view, double argX, double argY, boolean animated) {
     int x = Math.round(PixelUtil.toPixelFromDIP(argX));
     int y = Math.round(PixelUtil.toPixelFromDIP(argY));
-    ReactScrollView scrollView = (ReactScrollView)view;
-    if (animated) {
-      scrollView.smoothScrollTo((int)x, (int)y);
-    } else {
-      scrollView.scrollTo((int)x, (int)y);
+    boolean horizontal = false;
+    
+    if (view instanceof ReactHorizontalScrollView) {
+      horizontal = true;
+    } else if (!(view instanceof ReactScrollView)) {
+      Log.w("REANIMATED", "NativeMethodsHelper: Unhandled scroll view type - allowed only {ReactScrollView, ReactHorizontalScrollView}");
+      return;
     }
+
+    if (animated) {
+      if (horizontal) {
+        ((ReactHorizontalScrollView)view).smoothScrollTo((int)x, (int)y);
+      } else {
+        ((ReactScrollView)view).smoothScrollTo((int)x, (int)y);
+      }
+    } else {
+      if (horizontal) {
+        ((ReactHorizontalScrollView)view).scrollTo((int)x, (int)y);
+      } else {
+        ((ReactScrollView)view).scrollTo((int)x, (int)y);
+      }
+    }
+
   }
 
   private static void computeBoundingBox(View view, int[] outputBuffer) {

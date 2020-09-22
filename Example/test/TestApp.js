@@ -48,7 +48,7 @@ function MainScreen({ navigation }) {
       renderItem={(props) => (
         <MainScreenItem
           {...props}
-          screens={ SCREENS }
+          screens={SCREENS}
           onPressItem={({ key }) => navigation.navigate(key)}
         />
       )}

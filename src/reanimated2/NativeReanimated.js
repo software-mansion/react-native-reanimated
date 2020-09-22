@@ -1,10 +1,15 @@
-import { TurboModuleRegistry } from 'react-native';
+import { TurboModuleRegistry, Platform } from 'react-native';
+import reanimatedJS from './js-reanimated';
 
 const InnerNativeModule =
-  global.__reanimatedModuleProxy ||
-  TurboModuleRegistry.getEnforcing('NativeReanimated');
+  Platform.OS === 'web'
+    ? false
+    : global.__reanimatedModuleProxy ||
+      TurboModuleRegistry.getEnforcing('NativeReanimated');
 
-export default {
+const NativeReanimated = {
+  native: !!InnerNativeModule,
+
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);
   },
@@ -41,3 +46,5 @@ export default {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   },
 };
+
+export default NativeReanimated.native ? NativeReanimated : reanimatedJS;

@@ -9,6 +9,7 @@ module.exports = {
       'events',
       'architecture',
       'migration',
+      'troubleshooting',
     ],
     'API Reference': [
       {
@@ -19,6 +20,7 @@ module.exports = {
           'api/useAnimatedScrollHandler',
           'api/useAnimatedGestureHandler',
           'api/useAnimatedRef',
+          'api/useAnimatedReaction',
         ],
         Animations: [
           'api/withTiming',
