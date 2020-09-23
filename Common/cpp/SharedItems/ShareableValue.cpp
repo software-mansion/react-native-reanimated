@@ -193,8 +193,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return array;
     }
     case ValueType::RemoteObjectType:
-      if (module->isUIRuntime(rt)) {
-        return remoteObject->returnObject(rt);
+     if (module->isUIRuntime(rt)) {
+        remoteObject->maybeInitializeOnUIRuntime(rt);
       }
       return createHost(rt, remoteObject);
     case ValueType::MutableValueType:
