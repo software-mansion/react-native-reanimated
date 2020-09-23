@@ -33,9 +33,14 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
 > yarn add react-native-reanimated@alpha
 ```
 
-**Note:** to use Reanimated 2 from master branch:
+### Reanimated 2 in Expo
 
-- go to `https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22`
+To use experimental support of Reanimated 2 in the Expo managed apps follow [their installation instructions](https://docs.expo.io/versions/latest/sdk/reanimated/).
+
+### Using master branch builds
+To use Reanimated 2 built from the master branch:
+
+- go to the ["Build npm package" workflow in Reanimated repository](https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22)
 - select latest build and download `react-native-reanimated-2.0.0-alpha.tgz` artifact
 - run `tar zxvf react-native-reanimated-2.0.0-alpha.tgz.zip` to unpack zip (or unpack it manually)
 - run `yarn add file:react-native-reanimated-2.0.0-*.tgz` to install the package
