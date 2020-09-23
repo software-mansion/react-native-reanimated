@@ -46,3 +46,49 @@ function App() {
   );
 }
 ```
+
+
+`useDerivedValue` is also useful when we want to run animations based on the props passed to the component.
+
+Let's say we want to increase the width of the progress bar when the shared value in the `ComponentA` is updated.
+
+
+```js {6}
+import { Button } from 'react-native';
+import { useSharedValue, useDerivedValue } from 'react-native-reanimated';
+
+function ComponentA() {
+  const progress = useSharedValue(0);
+  const width = useDerivedValue(() => {
+    return progress.value * 250;
+  });
+
+  return (
+    <View>
+      <ProgressBar width={width} />
+      <Button onPress={() => (progress.value = Math.random())} />
+    </View>
+  );
+}
+```
+```js {6}
+import { Button } from 'react-native';
+import Animated, { useSharedValue, useDerivedValue, useAnimatedStyle } from 'react-native-reanimated';
+
+function ProgressBar({width}) {
+  const widthStyle = useAnimatedStyle(() => {
+    // if shared value was passed instead of derived shared value,
+    // this worklet wouldn't have noticed the changes thus, no update would have happened
+    return {
+      width: width.value,
+    }
+  });
+
+  return (
+    <Animated.View style={[widthStyle]}>
+      <Text>I'll animate when you change width in ComponentA</Text>
+    </Animated.View>
+  );
+}
+export default ProgressBar;
+```
