@@ -13,7 +13,7 @@ import Animated, {
   useAnimatedScrollHandler,
   withDecay,
   delay,
-  loop,
+  repeat,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
@@ -133,7 +133,7 @@ const SimpleTest = () => {
       <Button
         title="change size(loop)"
         onPress={() => {
-          sv.value = loop(withTiming(updateSV(), { duration: 500 }));
+          sv.value = repeat(withTiming(updateSV(), { duration: 500 }), 2, true);
         }}
       />
       <PanGestureHandler onGestureEvent={gestureHandler}>
