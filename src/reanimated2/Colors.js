@@ -398,7 +398,7 @@ export default function processColor(color) {
     return color;
   }
 
-  let normalizedColor = normalizeColor(color);
+  const normalizedColor = normalizeColor(color);
 
   if (normalizedColor === null || normalizedColor === undefined) {
     return undefined;
@@ -408,15 +408,16 @@ export default function processColor(color) {
     return null;
   }
 
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0;
+  let normalizedColorShifted =
+    ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0;
 
   if (Platform.OS === 'android') {
     // Android use 32 bit *signed* integer to represent the color
     // We utilize the fact that bitwise operations in JS also operates on
     // signed 32 bit integers, so that we can use those to convert from
     // *unsigned* to *signed* 32bit int that way.
-    normalizedColor = normalizedColor | 0x0;
+    normalizedColorShifted = normalizedColorShifted | 0x0;
   }
 
-  return normalizedColor;
+  return normalizedColorShifted;
 }
