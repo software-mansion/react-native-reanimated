@@ -10,6 +10,7 @@
 namespace reanimated {
 
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
+const char *ALREADY_CONVERTED= "__alreadyConverted";
   
 void addHiddenProperty(jsi::Runtime &rt,
                        jsi::Value &&value,
@@ -56,7 +57,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
           type = ValueType::WorkletFunctionType;
         }
         frozenObject = hiddenProperty.getHostObject<FrozenObject>(rt);
-        adaptCache(rt, value);
+        if (object.hasProperty(rt, ALREADY_CONVERTED)) {
+          adaptCache(rt, value);
+        }
         return;
       }
     }
@@ -92,7 +95,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
         if (isRNRuntime) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
-          adaptCache(rt, value);
         }
       }
     } else if (object.isArray(rt)) {
@@ -119,7 +121,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       if (isRNRuntime) {
         addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         freeze(rt, object);
-        adaptCache(rt, value);
       }
     }
   } else if (value.isSymbol()) {
@@ -154,7 +155,6 @@ jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
     }
     return jsi::Value(rt, *hostValue);
   }
-  return toJSValue(rt);
 }
 
 jsi::Object ShareableValue::createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host) {
@@ -167,6 +167,7 @@ jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> f
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
   addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
+  addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
   return freeze.call(rt, obj);
 }
 
@@ -305,7 +306,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           
           module->scheduler->scheduleOnUI([retain_this, params, &module] {
             jsi::Runtime &rt = *retain_this->module->runtime.get();
-            auto jsThis = retain_this->createHost(rt, retain_this->frozenObject);
+            auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
             std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
             
