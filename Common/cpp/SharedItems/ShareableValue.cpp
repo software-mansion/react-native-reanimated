@@ -206,7 +206,19 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       } else {
         // function is accessed from a different runtme, we wrap function in host func that'd enqueue
         // call on an appropriate thread
+        
         auto module = this->module;
+        auto warnFunction = [module](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count
+            ) -> jsi::Value {
+          module->errorHandler->setError("tried to synchronously call function from a diffrent thread");
+          module->errorHandler->raise();
+          return jsi::Value::undefined();
+        };
+        
         auto hostFunction = this->hostFunction;
         auto hostRuntime = this->hostRuntime;
         auto clb = [module, hostFunction, hostRuntime](
@@ -242,7 +254,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           module->scheduler->scheduleOnJS(job);
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
+        jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, warnFunction);
+        jsi::Function res = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
+        addHiddenProperty(rt, std::move(res), wrapperFunction, "callAsync");
+        return wrapperFunction;
       }
     case ValueType::WorkletFunctionType:
       auto module = this->module;

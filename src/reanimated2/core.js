@@ -150,3 +150,7 @@ export function startMapper(mapper, inputs = [], outputs = []) {
 export function stopMapper(mapperId) {
   NativeReanimated.stopMapper(mapperId);
 }
+
+export function runOnJS(fun) {
+  return fun;
+}
