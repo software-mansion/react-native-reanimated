@@ -101,6 +101,7 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   writingDirection: true,
   /* text color */
   color: true,
+  tintColor: true,
 };
 
 function configureProps() {
