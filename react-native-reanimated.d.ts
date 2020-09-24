@@ -9,6 +9,7 @@ declare module 'react-native-reanimated' {
     ImageProps,
     ScrollViewProps,
     StyleProp,
+    RegisteredStyle,
     ViewStyle,
     TextStyle,
     ImageStyle,
@@ -458,8 +459,9 @@ declare module 'react-native-reanimated' {
       deps?: DependencyList
     ): SharedValue<T>;
 
+    export type AnimatedStyleProp<T> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
-      T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
+      T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
