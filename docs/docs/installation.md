@@ -44,6 +44,7 @@ To use Reanimated 2 built from the master branch:
 - select latest build and download `react-native-reanimated-2.0.0-alpha.tgz` artifact
 - run `tar zxvf react-native-reanimated-2.0.0-alpha.tgz.zip` to unpack zip (or unpack it manually)
 - run `yarn add file:react-native-reanimated-2.0.0-*.tgz` to install the package
+- run `cd android && ./gradlew clean`
 
 ## Babel plugin
 
