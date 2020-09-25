@@ -1,4 +1,5 @@
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -151,6 +152,19 @@ export function stopMapper(mapperId) {
   NativeReanimated.stopMapper(mapperId);
 }
 
-export function runOnJS(fun) {
-  return fun;
+export let runOnJS = (fun) => fun;
+
+if (Platform.OS !== 'web') {
+  runOnJS = (fun) => {
+    'worklet';
+    if (!_WORKLET) {
+      // eslint-disable-line
+      return fun;
+    }
+    if (!fun.__callAsync) {
+      throw new Error("Function couldn't be called by runOnJS");
+    } else {
+      return fun.__callAsync;
+    }
+  };
 }

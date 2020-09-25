@@ -49,7 +49,6 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
-  'runOnJS',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
@@ -103,6 +102,7 @@ const blacklistedFunctions = new Set([
   'bind',
   'apply',
   'call',
+  '__callAsync',
 ]);
 
 class ClosureGenerator {

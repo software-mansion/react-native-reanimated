@@ -11,6 +11,12 @@ namespace reanimated {
 
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
+std::string CALLBACK_ERROR = R"(
+Tried to synchronously call function from a diffrent thread.
+Solution is:
+a) if you want to synchronously execute this method, mark it as a worklet
+b) if you want to execute this method on the JS thread, wrap it using runOnJS
+)";
   
 void addHiddenProperty(jsi::Runtime &rt,
                        jsi::Value &&value,
@@ -214,7 +220,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
             ) -> jsi::Value {
-          module->errorHandler->setError("tried to synchronously call function from a diffrent thread");
+          module->errorHandler->setError(CALLBACK_ERROR);
           module->errorHandler->raise();
           return jsi::Value::undefined();
         };
@@ -256,7 +262,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         };
         jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, warnFunction);
         jsi::Function res = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
-        addHiddenProperty(rt, std::move(res), wrapperFunction, "callAsync");
+        addHiddenProperty(rt, std::move(res), wrapperFunction, "__callAsync");
         return wrapperFunction;
       }
     case ValueType::WorkletFunctionType:

@@ -112,23 +112,6 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   };
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
   rt.global().setProperty(rt, "_measure", measureFunction);
-  
-  auto runOnJS = [](
-      jsi::Runtime &rt,
-      const jsi::Value &thisValue,
-      const jsi::Value *args,
-      size_t count
-      ) -> jsi::Value {
-    if (args[0].isObject()) {
-      jsi::Object obj = args[0].getObject(rt);
-      if (obj.hasProperty(rt, "callAsync")) {
-        return obj.getProperty(rt, "callAsync");
-      }
-    }
-    return jsi::Value::undefined();
-  };
-  jsi::Value runOnJSFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "runOnJS"), 1, runOnJS);
-  rt.global().setProperty(rt, "runOnJS", runOnJSFun);
 }
 
 }
