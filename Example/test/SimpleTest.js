@@ -12,7 +12,7 @@ import Animated, {
   useAnimatedGestureHandler,
   useAnimatedScrollHandler,
   withDecay,
-  delay,
+  withDelay,
   loop,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
@@ -125,9 +125,9 @@ const SimpleTest = () => {
         }}
       />
       <Button
-        title="change size(delay)"
+        title="change size(with delay)"
         onPress={() => {
-          sv.value = delay(1000, withTiming(updateSV(), { duration: 0 }));
+          sv.value = withDelay(1000, withTiming(updateSV(), { duration: 0 }));
         }}
       />
       <Button

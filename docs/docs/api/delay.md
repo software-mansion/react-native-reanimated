@@ -1,7 +1,7 @@
 ---
-id: delay
-title: delay
-sidebar_label: delay
+id: withDelay
+title: withDelay
+sidebar_label: withDelay
 ---
 
 Allows for the provided animation to start with a specified delay.
@@ -28,5 +28,5 @@ This method returns an animation object. It can be either assigned directly to a
 Timing animation will start on the `sharedValue` after one second.
 
 ```js
-sharedValue.value = delay(1000, withTiming(70));
+sharedValue.value = withDelay(1000, withTiming(70));
 ```

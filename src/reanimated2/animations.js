@@ -5,7 +5,7 @@ import NativeReanimated from './NativeReanimated';
 let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
-  'worklet'
+  'worklet';
   const valueType = typeof value;
   if (valueType !== 'number') {
     let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
@@ -294,7 +294,7 @@ export function withDecay(userConfig, callback) {
   });
 }
 
-export function delay(delayMs, _nextAnimation) {
+export function withDelay(delayMs, _nextAnimation) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -351,7 +351,7 @@ export function delay(delayMs, _nextAnimation) {
   });
 }
 
-export function sequence(..._animations) {
+export function withSequence(..._animations) {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -412,7 +412,7 @@ export function sequence(..._animations) {
   });
 }
 
-export function repeat(
+export function withRepeat(
   _nextAnimation,
   numberOfReps = 2,
   reverse = false,
@@ -476,11 +476,4 @@ export function repeat(
       callback: repCallback,
     };
   });
-}
-
-/* Deprecated, kept for backward compatibility. Will be removed soon */
-export function loop(nextAnimation, numberOfLoops = 1) {
-  'worklet';
-  console.warn('Method `loop` is deprecated. Please use `repeat` instead');
-  return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
 }
