@@ -157,8 +157,7 @@ export let runOnJS = (fun) => fun;
 if (Platform.OS !== 'web') {
   runOnJS = (fun) => {
     'worklet';
-    if (!_WORKLET) {
-      // eslint-disable-line
+    if (!_WORKLET) { // eslint-disable-line
       return fun;
     }
     if (!fun.__callAsync) {
