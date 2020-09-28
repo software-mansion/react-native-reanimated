@@ -60,7 +60,8 @@ Add Reanimated's babel plugin to your `babel.config.js`:
   };
 ```
 
-> **_NOTE:_** Reanimated plugin has to be listed last.
+* **_NOTE:_** Reanimated plugin **only** works with `node >=12`. When adding it, make sure to run `react-native start` with the `--reset-cache` flag
+* **_NOTE:_** Reanimated plugin has to be listed last.
 
 ## Android
 
