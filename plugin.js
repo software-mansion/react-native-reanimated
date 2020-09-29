@@ -40,6 +40,7 @@ const globals = new Set([
   'requestAnimationFrame',
   '_WORKLET',
   'arguments',
+  'Boolean',
   'Map',
   'Set',
   '_log',
