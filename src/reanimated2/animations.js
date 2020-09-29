@@ -5,7 +5,7 @@ import NativeReanimated from './NativeReanimated';
 let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
-  'worklet'
+  'worklet';
   const valueType = typeof value;
   if (valueType !== 'number') {
     let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
@@ -294,7 +294,7 @@ export function withDecay(userConfig, callback) {
   });
 }
 
-export function delay(delayMs, _nextAnimation) {
+export function withDelay(delayMs, _nextAnimation) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -351,7 +351,7 @@ export function delay(delayMs, _nextAnimation) {
   });
 }
 
-export function sequence(..._animations) {
+export function withSequence(..._animations) {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -412,7 +412,7 @@ export function sequence(..._animations) {
   });
 }
 
-export function repeat(
+export function withRepeat(
   _nextAnimation,
   numberOfReps = 2,
   reverse = false,
@@ -478,9 +478,37 @@ export function repeat(
   });
 }
 
-/* Deprecated, kept for backward compatibility. Will be removed soon */
+/* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function loop(nextAnimation, numberOfLoops = 1) {
   'worklet';
-  console.warn('Method `loop` is deprecated. Please use `repeat` instead');
+  console.warn('Method `loop` is deprecated. Please use `withRepeat` instead');
   return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
 }
+
+export function delay(delayMs, _nextAnimation) {
+  'worklet';
+  console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
+  return withDelay(delayMs, _nextAnimation);
+}
+
+export function repeat(
+  _nextAnimation,
+  numberOfReps = 2,
+  reverse = false,
+  callback
+) {
+  'worklet';
+  console.warn(
+    'Method `repeat` is deprecated. Please use `withRepeat` instead'
+  );
+  return withRepeat(_nextAnimation, numberOfReps, reverse, callback);
+}
+
+export function sequence(..._animations) {
+  'worklet';
+  console.warn(
+    'Method `sequence` is deprecated. Please use `withSequence` instead'
+  );
+  return withSequence(..._animations);
+}
+/* Deprecated section end */

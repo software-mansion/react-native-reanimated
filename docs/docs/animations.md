@@ -220,9 +220,9 @@ This makes it possible to use a single Shared Value but map that to two View's s
 ## Animation Modifiers
 
 Beside the ability of adjusting animation options, another way of customizing animations is by using animation modifiers.
-Currently, Reanimated exposes three modifiers: [`delay`](api/delay), [`sequence`](api/sequence) and [`repeat`](api/repeat).
-As the name suggests, `delay` modifier makes the provided animation to start with a given delay, the `sequence` modifier allows a number of animations to be provided and will make them run one after another.
-Finally, the `repeat` modifier allows for the provided animation to be repeated several times.
+Currently, Reanimated exposes three modifiers: [`withDelay`](api/withDelay), [`withSequence`](api/withSequence) and [`withRepeat`](api/withRepeat).
+As the name suggests, `withDelay` modifier makes the provided animation to start with a given delay, the `withSequence` modifier allows a number of animations to be provided and will make them run one after another.
+Finally, the `withRepeat` modifier allows for the provided animation to be repeated several times.
 
 Modifiers typically take one or more animation objects with optional configuration as an input, and return an object that represents the modified animation.
 This makes it possible to wrap existing animation helpers (or custom helpers), or make a chain of modifiers when necessary.
@@ -260,11 +260,11 @@ Then, in `useAnimatedStyle` we map that variable to the rotation attribute by ad
 Let us see how we can now make the rotation animate back and forth using modifiers, here is what we can put in the button's `onPress` handler:
 
 ```js
-rotation.value = repeat(withTiming(10), 6, true)
+rotation.value = withRepeat(withTiming(10), 6, true)
 ```
 
 The above code will cause the view to run six repetitions of timing animation between the initial state of the `rotation` value (that is `0`) and value `10`.
-The third parameter passed to the `repeat` method makes the animation to run in reverse every other repetition.
+The third parameter passed to the `withRepeat` method makes the animation to run in reverse every other repetition.
 Setting the reverse flag to `true` will result in the rotation doing three full loops (from `0` to `10` and back).
 At the end of all six repetitions the rotation will go back to zero.
 Here is what will happen when we click on the "wobble" button:
@@ -274,13 +274,13 @@ Here is what will happen when we click on the "wobble" button:
 The above code makes the rotation only go between `0` and `10` degrees.
 In order for the view to also swing to the left, we could start from `-10` and go to `10` degrees.
 But we can't just change the initial value to `-10`, because in such a case the rectangle will be skewed from the beginning.
-One way to solve this is to use a `sequence` modifier and starting from `0`, do the first animation to `-10`, then swing the view from `-10` to `10` several times, and finally go from `-10` back to `0`.
+One way to solve this is to use a `withSequence` modifier and starting from `0`, do the first animation to `-10`, then swing the view from `-10` to `10` several times, and finally go from `-10` back to `0`.
 Here is how the `onPress` handler will look like:
 
 ```js
-rotation.value = sequence(
+rotation.value = withSequence(
   withTiming(-10, { duration: 50 }),
-  repeat(withTiming(ANGLE, { duration: 100 }), 6, true),
+  withRepeat(withTiming(ANGLE, { duration: 100 }), 6, true),
   withTiming(0, { duration: 50 })
 );
 ```

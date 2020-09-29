@@ -27,9 +27,9 @@ module.exports = {
           'api/withSpring',
           'api/withDecay',
           'api/cancelAnimation',
-          'api/delay',
-          'api/sequence',
-          'api/repeat',
+          'api/withDelay',
+          'api/withSequence',
+          'api/withRepeat',
         ],
         'Native methods': [
           'api/nativeMethods/measure',
