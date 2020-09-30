@@ -41,7 +41,9 @@ This can be any primitive or nested data like object, array, number, string or b
 
 In order to update Shared Value from the React Native thread or from a worklet running on the UI thread, you should set a new value onto the `.value` property.
 
-```js {2,5}
+```js {4,7}
+import { useSharedValue } from 'react-native-reanimated';
+
 function SomeComponent() {
   const sharedVal = useSharedValue(0);
   return (
@@ -56,7 +58,9 @@ function SomeComponent() {
 In the above example we update value asynchronously from the React Native JS thread.
 Updates can be done synchronously when making them from within a worklet, like so:
 
-```js {3,7}
+```js {5,9}
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+
 function SomeComponent({ children }) {
 
   const scrollOffset = useSharedValue(0);
@@ -94,7 +98,9 @@ For example, when we have a Shared Value `x`, a derived value `y` that uses `x`,
 In such a case, we will also always run the derived value `y` updater first prior to running the animated style updater, because the style depends on it.
 
 Let us look now at an example code:
-```js {2,6,13}
+```js {4,8,15}
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
 function Box() {
   const offset = useSharedValue(0);
 
@@ -143,7 +149,7 @@ Below is a complete code example which is the modified version of the example fr
 Here, instead of updating `offset` value immediately, we perform an animated transition with a timing curve.
 
 ```js {17}
-import { withSpring } from 'react-native-reanimated';
+import Animated, { withSpring } from 'react-native-reanimated';
 
 function Box() {
   const offset = useSharedValue(0);

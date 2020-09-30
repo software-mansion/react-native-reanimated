@@ -19,7 +19,9 @@ One of the easiest ways of starting an animation in Reanimated 2, is by making a
 Animated Shared Value updates require just a tiny change compared to immediate updates.
 Let us recall the example from the previous article, where we'd update a Shared Value with some random number on every button tap:
 
-```js {13}
+```js {15}
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
 function Box() {
   const offset = useSharedValue(0);
 
@@ -173,11 +175,10 @@ Below we show an example of how a custom spring animation can be defined and how
 Please review [`withSpring`](api/withSpring) documentation for the complete list of configurable options.
 
 ```js
-import {
+import Animated, {
   withSpring,
   useAnimatedStyle,
   useSharedValue,
-  Animated,
 } from 'react-native-reanimated';
 
 function Box() {
@@ -232,6 +233,8 @@ Let us now exercise the use of modifiers in practice and build animation that ca
 We start by rendering the actual view and defining rotation Shared Value that we then use to run the animation:
 
 ```js
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
 function WobbleExample(props) {
   const rotation = useSharedValue(0);
 
