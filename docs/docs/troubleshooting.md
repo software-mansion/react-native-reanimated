@@ -10,7 +10,7 @@ This error frequently happens when metro cache is not updated. Clear it with:
 
 ```
 watchman watch-del-all
-yarn start -- --reset-cache
+yarn start --reset-cache
 ```
 
 Also, make sure that you installed the babel plugin.
