@@ -43,6 +43,64 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
+function transform(value, handler) {
+  'worklet'
+  if (typeof value === 'string') { // toInt
+    // TODO handle color
+    const match = value.match(/(\D*)([\d.]*)(\D*)/);
+    const prefix = match[1];
+    const suffix = match[3];
+    const number = match[2];
+    handler.__prefix = prefix;
+    handler.__suffix = suffix;
+    return parseInt(number);
+  } else { // toString
+    if (handler.__prefix === undefined) {
+      return value;
+    }
+    return handler.__prefix + value + handler.__suffix;
+  }
+}
+
+const needsToBeChanged = ['toValue', 'current'];
+function transformAnimation(animation) {
+  'worklet';
+  if (!animation) {
+    return;
+  }
+  needsToBeChanged.forEach((prop) => { animation[prop] = transform(animation[prop], animation) });
+}
+
+export function decorateAnimation(animation) {
+  'worklet'
+  const baseOnStart = animation.onStart;
+  const baseOnFrame = animation.onFrame;
+  animation.onStart = (animation, value, timestamp, previousAnimation) => {
+    const val = transform(value, animation);
+    transformAnimation(animation);
+    transformAnimation(previousAnimation);
+    
+    baseOnStart(animation, val, timestamp, previousAnimation);
+
+    transformAnimation(animation);
+    transformAnimation(previousAnimation);
+  };
+
+  animation.onFrame = (animation, timestamp) => {
+    let res;
+    transformAnimation(animation);
+
+    res = baseOnFrame(animation, timestamp);
+
+    console.log("current przed", animation.current);
+
+    transformAnimation(animation);
+
+    console.log("current po", animation.current);
+    return res;
+  };
+}
+
 function workletValueSetter(value) {
   'worklet';
 
@@ -57,19 +115,20 @@ function workletValueSetter(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let callStart = (timestamp) => {
-      animation.start(animation, this.value, timestamp, previousAnimation);
+    //decorateAnimation(animation); TODO
+    let initializeAnimation = (timestamp) => {
+      animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
       }
-      if (callStart) {
-        callStart(timestamp);
-        callStart = null; // prevent closure from keeping ref to previous animation
+      if (initializeAnimation) {
+        initializeAnimation(timestamp);
+        initializeAnimation = null; // prevent closure from keeping ref to previous animation
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {
@@ -101,19 +160,19 @@ function workletValueSetterJS(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let callStart = (timestamp) => {
-      animation.start(animation, this.value, timestamp, previousAnimation);
+    let initializeAnimation = (timestamp) => {
+      animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
       }
-      if (callStart) {
-        callStart(timestamp);
-        callStart = null; // prevent closure from keeping ref to previous animation
+      if (initializeAnimation) {
+        initializeAnimation(timestamp);
+        initializeAnimation = null; // prevent closure from keeping ref to previous animation
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       this._setValue(animation.current);
       if (finished) {

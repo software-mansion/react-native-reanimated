@@ -13,6 +13,7 @@ import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { decorateAnimation } from './core';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -61,8 +62,11 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       );
       return animatedProp;
     }
-    if (typeof animatedProp === 'object' && animatedProp.animation) {
+    if (typeof animatedProp === 'object' && animatedProp.onFrame) {
       const animation = animatedProp;
+      console.log("jestem-2");
+      decorateAnimation(animation);
+      console.log("oo");
 
       let value = animation.current;
       if (lastValue !== undefined) {
@@ -81,7 +85,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       }
 
       animation.callStart = (timestamp) => {
-        animation.start(animation, value, timestamp, lastAnimation);
+        animation.onStart(animation, value, timestamp, lastAnimation);
       };
     } else if (typeof animatedProp === 'object') {
       // it is an object
@@ -109,12 +113,12 @@ function runAnimations(animation, timestamp, key, result) {
         }
       });
       return allFinished;
-    } else if (typeof animation === 'object' && animation.animation) {
+    } else if (typeof animation === 'object' && animation.onFrame) {
       if (animation.callStart) {
         animation.callStart(timestamp);
         animation.callStart = null;
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
@@ -147,7 +151,7 @@ function isAnimated(prop) {
       return prop.some(isAnimated);
     }
     if (typeof prop === 'object') {
-      if (prop.animation) {
+      if (prop.onFrame) {
         return true;
       }
       return Object.keys(prop).some((key) => isAnimated(prop[key]));
@@ -188,7 +192,11 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
 
+  console.log("style 1");
+
   const newValues = updater() || {};
+
+  console.log("style 2");
   const oldValues = state.last;
 
   // extract animated props
@@ -279,6 +287,7 @@ export function useAnimatedStyle(updater, dependencies) {
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
+    console.log("initial", JSON.stringify(initial));
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -291,6 +300,7 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     const fun = () => {
       'worklet';
+      console.log("okokok");
       styleUpdater(viewTag, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);

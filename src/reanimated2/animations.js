@@ -6,14 +6,14 @@ let IN_STYLE_UPDATER = false;
 
 const assertNumber = (value, callerName) => {
   'worklet';
-  const valueType = typeof value;
+  /*const valueType = typeof value;
   if (valueType !== 'number') {
     let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
     if (valueType === 'object') {
       error += ', maybe you forgot to add `.value`?';
     }
     throw new Error(error);
-  }
+  }*/
 };
 
 export function initialUpdaterRun(updater) {
@@ -76,7 +76,7 @@ export function withTiming(toValue, userConfig, callback) {
       return false;
     }
 
-    function start(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, previousAnimation) {
       if (
         previousAnimation &&
         previousAnimation.type === 'timing' &&
@@ -97,8 +97,8 @@ export function withTiming(toValue, userConfig, callback) {
 
     return {
       type: 'timing',
-      animation: timing,
-      start,
+      onFrame: timing,
+      onStart,
       progress: 0,
       toValue,
       current: toValue,
@@ -206,7 +206,7 @@ export function withSpring(toValue, userConfig, callback) {
       }
     }
 
-    function start(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, previousAnimation) {
       animation.current = value;
       if (previousAnimation) {
         animation.velocity =
@@ -218,8 +218,8 @@ export function withSpring(toValue, userConfig, callback) {
     }
 
     return {
-      animation: spring,
-      start,
+      onFrame: spring,
+      onStart,
       toValue,
       velocity: config.velocity || 0,
       current: toValue,
@@ -279,15 +279,15 @@ export function withDecay(userConfig, callback) {
       }
     }
 
-    function start(animation, value, now) {
+    function onStart(animation, value, now) {
       animation.current = value;
       animation.lastTimestamp = now;
       animation.initialVelocity = config.velocity;
     }
 
     return {
-      animation: decay,
-      start,
+      onFrame: decay,
+      onStart,
       velocity: config.velocity || 0,
       callback,
     };
@@ -307,7 +307,7 @@ export function withDelay(delayMs, _nextAnimation) {
 
       if (now - startTime > delayMs) {
         if (!started) {
-          nextAnimation.start(
+          nextAnimation.onFrame(
             nextAnimation,
             animation.current,
             now,
@@ -316,11 +316,11 @@ export function withDelay(delayMs, _nextAnimation) {
           animation.previousAnimation = null;
           animation.started = true;
         }
-        const finished = nextAnimation.animation(nextAnimation, now);
+        const finished = nextAnimation.onFrame(nextAnimation, now);
         animation.current = nextAnimation.current;
         return finished;
       } else if (previousAnimation) {
-        const finished = previousAnimation.animation(previousAnimation, now);
+        const finished = previousAnimation.onFrame(previousAnimation, now);
         animation.current = previousAnimation.current;
         if (finished) {
           animation.previousAnimation = null;
@@ -329,7 +329,7 @@ export function withDelay(delayMs, _nextAnimation) {
       return false;
     }
 
-    function start(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, previousAnimation) {
       animation.startTime = now;
       animation.started = false;
       animation.current = value;
@@ -343,8 +343,8 @@ export function withDelay(delayMs, _nextAnimation) {
     };
 
     return {
-      animation: delay,
-      start,
+      onFrame: delay,
+      onStart,
       current: nextAnimation.current,
       callback,
     };
@@ -378,7 +378,7 @@ export function withSequence(..._animations) {
 
     function sequence(animation, now) {
       const currentAnim = animations[animation.animationIndex];
-      const finished = currentAnim.animation(currentAnim, now);
+      const finished = currentAnim.onFrame(currentAnim, now);
       animation.current = currentAnim.current;
       if (finished) {
         // we want to call the callback after every single animation
@@ -389,7 +389,7 @@ export function withSequence(..._animations) {
         animation.animationIndex += 1;
         if (animation.animationIndex < animations.length) {
           const nextAnim = animations[animation.animationIndex];
-          nextAnim.start(nextAnim, currentAnim.current, now, currentAnim);
+          nextAnim.onStart(nextAnim, currentAnim.current, now, currentAnim);
           return false;
         }
         return true;
@@ -397,14 +397,14 @@ export function withSequence(..._animations) {
       return false;
     }
 
-    function start(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, previousAnimation) {
       animation.animationIndex = 0;
-      firstAnimation.start(firstAnimation, value, now, previousAnimation);
+      firstAnimation.onStart(firstAnimation, value, now, previousAnimation);
     }
 
     return {
-      animation: sequence,
-      start,
+      onFrame: sequence,
+      onStart,
       animationIndex: 0,
       current: firstAnimation.current,
       callback,
@@ -426,7 +426,7 @@ export function withRepeat(
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
     function repeat(animation, now) {
-      const finished = nextAnimation.animation(nextAnimation, now);
+      const finished = nextAnimation.onFrame(nextAnimation, now);
       animation.current = nextAnimation.current;
       if (finished) {
         animation.reps += 1;
@@ -446,7 +446,7 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        nextAnimation.start(nextAnimation, startValue, now, nextAnimation);
+        nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
         return false;
       }
       return false;
@@ -462,15 +462,15 @@ export function withRepeat(
       }
     };
 
-    function start(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, previousAnimation) {
       animation.startValue = value;
       animation.reps = 0;
-      nextAnimation.start(nextAnimation, value, now, previousAnimation);
+      nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
     }
 
     return {
-      animation: repeat,
-      start,
+      onFrame: repeat,
+      onStart,
       reps: 0,
       current: nextAnimation.current,
       callback: repCallback,

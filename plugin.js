@@ -41,6 +41,7 @@ const globals = new Set([
   '_WORKLET',
   'arguments',
   'Boolean',
+  'parseInt',
   'Map',
   'Set',
   '_log',

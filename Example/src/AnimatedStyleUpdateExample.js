@@ -18,6 +18,7 @@ export default function AnimatedStyleUpdateExample(props) {
   const style = useAnimatedStyle(() => {
     return {
       width: withTiming(randomWidth.value, config),
+      transform: [{rotate: withTiming(`${randomWidth.value}deg`)}],
     };
   });
 

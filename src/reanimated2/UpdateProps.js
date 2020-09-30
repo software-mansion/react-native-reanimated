@@ -26,6 +26,8 @@ const ColorProperties = makeShareable(colorProps);
 export default function updateProps(viewTag, updates, maybeViewRef) {
   'worklet';
 
+  console.log("props", JSON.stringify(updates));
+
   if (Platform.OS !== 'web') {
     Object.keys(updates).forEach((key) => {
       if (ColorProperties.indexOf(key) !== -1) {
