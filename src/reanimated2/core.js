@@ -56,7 +56,7 @@ function transform(value, handler) {
     handler.__suffix = suffix;
     return parseInt(number);
   } else {
-    // toString
+    // toString if __prefix is available and number otherwise
     if (handler.__prefix === undefined) {
       return value;
     }
@@ -64,7 +64,7 @@ function transform(value, handler) {
   }
 }
 
-const needsToBeChanged = ['toValue', 'current'];
+const needsToBeChanged = ['toValue', 'current', 'startValue'];
 function transformAnimation(animation) {
   'worklet';
   if (!animation) {
@@ -95,6 +95,8 @@ export function decorateAnimation(animation) {
 
     const res = baseOnFrame(animation, timestamp);
 
+    console.log('przed', animation.current, timestamp);
+
     transformAnimation(animation);
     return res;
   };
@@ -110,7 +112,7 @@ function workletValueSetter(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.animation)
+    (value !== null && typeof value === 'object' && value.onFrame)
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
