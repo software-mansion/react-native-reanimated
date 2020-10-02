@@ -1,5 +1,5 @@
 /* global _updateProps _updatePropsJS */
-import processColor from './Colors';
+import { processColor } from './Colors';
 import { makeShareable } from './core';
 import { Platform } from 'react-native';
 
