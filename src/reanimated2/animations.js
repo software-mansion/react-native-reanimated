@@ -4,18 +4,6 @@ import NativeReanimated from './NativeReanimated';
 
 let IN_STYLE_UPDATER = false;
 
-const assertNumber = (value, callerName) => {
-  'worklet';
-  /*const valueType = typeof value;
-  if (valueType !== 'number') {
-    let error = `invalid type of toValue passed to ${callerName}, expected \`number\`, got \`${valueType}\``;
-    if (valueType === 'object') {
-      error += ', maybe you forgot to add `.value`?';
-    }
-    throw new Error(error);
-  }*/
-};
-
 export function initialUpdaterRun(updater) {
   IN_STYLE_UPDATER = true;
   const result = updater();
@@ -23,15 +11,85 @@ export function initialUpdaterRun(updater) {
   return result;
 }
 
+export function transform(value, handler) {
+  'worklet';
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'string') {
+    // toInt
+    // TODO handle color
+    const match = value.match(/(\D*)([\d.]*)(\D*)/);
+    const prefix = match[1];
+    const suffix = match[3];
+    const number = match[2];
+    handler.__prefix = prefix;
+    handler.__suffix = suffix;
+    return parseFloat(number);
+  } else {
+    // toString if __prefix is available and number otherwise
+    if (handler.__prefix === undefined) {
+      return value;
+    }
+    return handler.__prefix + value + handler.__suffix;
+  }
+}
+
+const needsToBeChanged = ['toValue', 'current', 'startValue'];
+export function transformAnimation(animation) {
+  'worklet';
+  if (!animation) {
+    return;
+  }
+  needsToBeChanged.forEach((prop) => {
+    animation[prop] = transform(animation[prop], animation);
+  });
+}
+
+export function decorateAnimation(animation) {
+  'worklet';
+  if (animation.isHigherOrder) {
+    return;
+  }
+  const baseOnStart = animation.onStart;
+  const baseOnFrame = animation.onFrame;
+  animation.onStart = (animation, value, timestamp, previousAnimation) => {
+    const val = transform(value, animation);
+    transformAnimation(animation);
+    transformAnimation(previousAnimation);
+
+    baseOnStart(animation, val, timestamp, previousAnimation);
+
+    transformAnimation(animation);
+    transformAnimation(previousAnimation);
+  };
+
+  animation.onFrame = (animation, timestamp) => {
+    transformAnimation(animation);
+
+    const res = baseOnFrame(animation, timestamp);
+
+    transformAnimation(animation);
+    return res;
+  };
+}
+
 function defineAnimation(starting, factory) {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting;
   }
-  if (_WORKLET || !NativeReanimated.native) {
-    return factory();
+  const create = () => {
+    'worklet';
+    const animation = factory();
+    decorateAnimation(animation);
+    return animation;
   }
-  return factory;
+
+  if (_WORKLET || !NativeReanimated.native) {
+    return create();
+  }
+  return create;
 }
 
 export function cancelAnimation(sharedValue) {
@@ -42,8 +100,6 @@ export function cancelAnimation(sharedValue) {
 
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
-  // check toValue
-  assertNumber(toValue, 'withTiming');
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -109,8 +165,6 @@ export function withTiming(toValue, userConfig, callback) {
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
-  // check toValue
-  assertNumber(toValue, 'withSpring');
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -298,7 +352,6 @@ export function withDelay(delayMs, _nextAnimation) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
-
     const nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
@@ -307,7 +360,7 @@ export function withDelay(delayMs, _nextAnimation) {
 
       if (now - startTime > delayMs) {
         if (!started) {
-          nextAnimation.onFrame(
+          nextAnimation.onStart(
             nextAnimation,
             animation.current,
             now,
@@ -343,6 +396,7 @@ export function withDelay(delayMs, _nextAnimation) {
     };
 
     return {
+      isHigherOrder: true,
       onFrame: delay,
       onStart,
       current: nextAnimation.current,
@@ -403,6 +457,7 @@ export function withSequence(..._animations) {
     }
 
     return {
+      isHigherOrder: true,
       onFrame: sequence,
       onStart,
       animationIndex: 0,
@@ -422,7 +477,7 @@ export function withRepeat(
   return defineAnimation(_nextAnimation, () => {
     'worklet';
 
-    const nextAnimation =
+    let nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
     function repeat(animation, now) {
@@ -446,7 +501,7 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
+        nextAnimation.onStart(nextAnimation, transform(startValue, animation), now, nextAnimation);
         return false;
       }
       return false;
@@ -469,6 +524,7 @@ export function withRepeat(
     }
 
     return {
+      isHigherOrder: true,
       onFrame: repeat,
       onStart,
       reps: 0,

@@ -43,68 +43,8 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
-function transform(value, handler) {
-  'worklet';
-  if (typeof value === 'string') {
-    // toInt
-    // TODO handle color
-    const match = value.match(/(\D*)([\d.]*)(\D*)/);
-    const prefix = match[1];
-    const suffix = match[3];
-    const number = match[2];
-    handler.__prefix = prefix;
-    handler.__suffix = suffix;
-    return parseInt(number);
-  } else {
-    // toString if __prefix is available and number otherwise
-    if (handler.__prefix === undefined) {
-      return value;
-    }
-    return handler.__prefix + value + handler.__suffix;
-  }
-}
-
-const needsToBeChanged = ['toValue', 'current', 'startValue'];
-function transformAnimation(animation) {
-  'worklet';
-  if (!animation) {
-    return;
-  }
-  needsToBeChanged.forEach((prop) => {
-    animation[prop] = transform(animation[prop], animation);
-  });
-}
-
-export function decorateAnimation(animation) {
-  'worklet';
-  const baseOnStart = animation.onStart;
-  const baseOnFrame = animation.onFrame;
-  animation.onStart = (animation, value, timestamp, previousAnimation) => {
-    const val = transform(value, animation);
-    transformAnimation(animation);
-    transformAnimation(previousAnimation);
-
-    baseOnStart(animation, val, timestamp, previousAnimation);
-
-    transformAnimation(animation);
-    transformAnimation(previousAnimation);
-  };
-
-  animation.onFrame = (animation, timestamp) => {
-    transformAnimation(animation);
-
-    const res = baseOnFrame(animation, timestamp);
-
-    console.log('przed', animation.current, timestamp);
-
-    transformAnimation(animation);
-    return res;
-  };
-}
-
 function workletValueSetter(value) {
   'worklet';
-
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
@@ -116,7 +56,6 @@ function workletValueSetter(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    decorateAnimation(animation);
     let initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };

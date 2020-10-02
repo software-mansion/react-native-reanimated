@@ -7,7 +7,6 @@ import {
   makeMutable,
   makeRemote,
   requestFrame,
-  decorateAnimation,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -64,7 +63,6 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
     }
     if (typeof animatedProp === 'object' && animatedProp.onFrame) {
       const animation = animatedProp;
-      decorateAnimation(animation);
 
       let value = animation.current;
       if (lastValue !== undefined) {
@@ -189,12 +187,7 @@ function styleDiff(oldStyle, newStyle) {
 function styleUpdater(viewTag, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
-
-  console.log('style 1');
-
   const newValues = updater() || {};
-
-  console.log('style 2');
   const oldValues = state.last;
 
   // extract animated props
@@ -285,7 +278,6 @@ export function useAnimatedStyle(updater, dependencies) {
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
-    console.log('initial', JSON.stringify(initial));
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -298,7 +290,6 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      console.log('okokok');
       styleUpdater(viewTag, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);

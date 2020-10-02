@@ -42,6 +42,7 @@ const globals = new Set([
   'arguments',
   'Boolean',
   'parseInt',
+  'parseFloat',
   'Map',
   'Set',
   '_log',
