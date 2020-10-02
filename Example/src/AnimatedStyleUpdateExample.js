@@ -16,6 +16,7 @@ import React from 'react';
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
   const color = useSharedValue('blue');
+  const rotate = useSharedValue('0deg');
 
   const config = {
     duration: 500,
@@ -30,17 +31,16 @@ export default function AnimatedStyleUpdateExample(props) {
       // rotate.value = withSequence(withTiming(`${val}deg`, config), withTiming(`${40}deg`, config));
       // rotate.value = withDelay(2000, withTiming(`${val}deg`))
       // rotate.value = withRepeat(withTiming(`${val}deg`, config));
-      // rotate.value = withSpring(`${val}deg`);
-      // color.value = withTiming('red', config);
+       rotate.value = withSpring(`${val}deg`);
+       //color.value = withTiming('red', config);
     }
   );
 
   const style = useAnimatedStyle(() => {
     return {
        width: withTiming(randomWidth.value, config),
-       // backgroundColor: color.value,
-       backgroundColor: 'rgba(12,12,12,0.5)',
-       opacity: 1,
+        // backgroundColor: color.value,
+       transform: [{rotate: rotate.value}],
     };
   });
 

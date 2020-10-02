@@ -175,7 +175,7 @@ export function decorateAnimation(animation) {
       animation[i] = JSON.parse(JSON.stringify(animation));
       animation[i].current = HSVACurrent[index];
       animation[i].onStart(animation[i], HSVAValue[index], timestamp, (previousAnimation) ? previousAnimation[i]: undefined);
-      res.push = animation[i].current;
+      res.push(animation[i].current);
     });
 
     animation.current = toRGBA(res);
@@ -188,7 +188,7 @@ export function decorateAnimation(animation) {
     tab.forEach((i, index)=> {
       animation[i].current = HSVACurrent[index];
       finished &= animation[i].onFrame(animation[i], timestamp);
-      res.push = animation[i].current;
+      res.push(animation[i].current);
     });
 
     animation.current = toRGBA(res);
