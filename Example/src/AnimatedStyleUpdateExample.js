@@ -15,7 +15,7 @@ import React from 'react';
 
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
-  const rotate = useSharedValue('0deg');
+  const color = useSharedValue('blue');
 
   const config = {
     duration: 500,
@@ -31,14 +31,16 @@ export default function AnimatedStyleUpdateExample(props) {
       // rotate.value = withDelay(2000, withTiming(`${val}deg`))
       // rotate.value = withRepeat(withTiming(`${val}deg`, config));
       // rotate.value = withSpring(`${val}deg`);
-      rotate.value = withDecay({velocity: 100});
+      // color.value = withTiming('red', config);
     }
   );
 
   const style = useAnimatedStyle(() => {
     return {
        width: withTiming(randomWidth.value, config),
-       transform: [{ rotate: rotate.value }],
+       // backgroundColor: color.value,
+       backgroundColor: 'rgba(12,12,12,0.5)',
+       opacity: 1,
     };
   });
 
@@ -47,10 +49,11 @@ export default function AnimatedStyleUpdateExample(props) {
       style={{
         flex: 1,
         flexDirection: 'column',
+        backgroundColor: 'yellow',
       }}>
       <Animated.View
         style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
+          { width: 100, height: 80, margin: 30 },
           style,
         ]}
       />

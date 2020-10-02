@@ -392,7 +392,7 @@ function normalizeColor(color) {
   return null;
 }
 
-export default function processColor(color) {
+export function processColorInitially(color) {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -408,7 +408,28 @@ export default function processColor(color) {
     return null;
   }
 
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0;
+  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; //argb
+  return normalizeColor;
+}
+
+export function isColor(value) {
+  return processColorInitially(value) 
+}
+
+export function to(value) {
+
+}
+
+export default function processColor(color) {
+  'worklet';
+  const normalizedColor = processColorInitially(color);
+  if (normalizedColor === null || normalizedColor === undefined) {
+    return undefined;
+  }
+
+  if (typeof normalizedColor !== 'number') {
+    return null;
+  }
 
   if (Platform.OS === 'android') {
     // Android use 32 bit *signed* integer to represent the color

@@ -1,5 +1,6 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
+import { processColorInitially, isColor } from './Colors';
 import NativeReanimated from './NativeReanimated';
 
 let IN_STYLE_UPDATER = false;
@@ -11,11 +12,97 @@ export function initialUpdaterRun(updater) {
   return result;
 }
 
+/* accepts parameters
+ * r  Object = {r:x, g:y, b:z}
+ * OR 
+ * r, g, b
+ */
+function RGBtoHSV(r, g, b) {
+  'worklet';
+  if (arguments.length === 1) {
+    g = r.g, b = r.b, r = r.r;
+  }
+  var max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    d = max - min,
+    h,
+    s = (max === 0 ? 0 : d / max),
+    v = max / 255;
+
+  switch (max) {
+    case min:
+      h = 0;
+      break;
+    case r:
+      h = (g - b) + d * (g < b ? 6 : 0);
+      h /= 6 * d;
+      break;
+    case g:
+      h = (b - r) + d * 2;
+      h /= 6 * d;
+      break;
+    case b:
+      h = (r - g) + d * 4;
+      h /= 6 * d;
+      break;
+  }
+
+  return {
+    h: h,
+    s: s,
+    v: v
+  };
+}
+
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR 
+ * h, s, v
+ */
+function HSVtoRGB(h, s, v) {
+  'worklet';
+  var r, g, b, i, f, p, q, t;
+  if (arguments.length === 1) {
+    s = h.s, v = h.v, h = h.h;
+  }
+  i = Math.floor(h * 6);
+  f = h * 6 - i;
+  p = v * (1 - s);
+  q = v * (1 - f * s);
+  t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0:
+      r = v, g = t, b = p;
+      break;
+    case 1:
+      r = q, g = v, b = p;
+      break;
+    case 2:
+      r = p, g = v, b = t;
+      break;
+    case 3:
+      r = p, g = q, b = v;
+      break;
+    case 4:
+      r = t, g = p, b = v;
+      break;
+    case 5:
+      r = v, g = p, b = q;
+      break;
+  }
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255)
+  };
+}
+
 export function transform(value, handler) {
   'worklet';
   if (value === undefined) {
     return undefined;
   }
+
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
@@ -26,13 +113,14 @@ export function transform(value, handler) {
     handler.__prefix = prefix;
     handler.__suffix = suffix;
     return parseFloat(number);
-  } else {
-    // toString if __prefix is available and number otherwise
-    if (handler.__prefix === undefined) {
-      return value;
-    }
-    return handler.__prefix + value + handler.__suffix;
   }
+  
+  // toString if __prefix is available and number otherwise
+  if (handler.__prefix === undefined) {
+    return value;
+  }
+
+  return handler.__prefix + value + handler.__suffix;
 }
 
 const needsToBeChanged = ['toValue', 'current', 'startValue'];
@@ -53,7 +141,9 @@ export function decorateAnimation(animation) {
   }
   const baseOnStart = animation.onStart;
   const baseOnFrame = animation.onFrame;
-  animation.onStart = (animation, value, timestamp, previousAnimation) => {
+  
+  const prefNumberSuffOnStart = (animation, value, timestamp, previousAnimation) => {
+
     const val = transform(value, animation);
     transformAnimation(animation);
     transformAnimation(previousAnimation);
@@ -63,8 +153,7 @@ export function decorateAnimation(animation) {
     transformAnimation(animation);
     transformAnimation(previousAnimation);
   };
-
-  animation.onFrame = (animation, timestamp) => {
+  const prefNumberSuffOnframe = (animation, timestamp) => {
     transformAnimation(animation);
 
     const res = baseOnFrame(animation, timestamp);
@@ -72,6 +161,68 @@ export function decorateAnimation(animation) {
     transformAnimation(animation);
     return res;
   };
+
+  const tab = ['H', 'S', 'V', 'A'];
+  const colorOnStart = (animation, value, timestamp, previousAnimation) => {
+    let HSVAValue;
+    let HSVACurrent;
+    const res = [];
+    if (isColor(value)) {
+      HSVACurrent = convertToHSVA(animation.current);
+      HSVAValue = convertToHSVA(value);
+    }
+    tab.forEach((i, index) => {
+      animation[i] = JSON.parse(JSON.stringify(animation));
+      animation[i].current = HSVACurrent[index];
+      animation[i].onStart(animation[i], HSVAValue[index], timestamp, (previousAnimation) ? previousAnimation[i]: undefined);
+      res.push = animation[i].current;
+    });
+
+    animation.current = toRGBA(res);
+  };
+
+  const colorOnFrame = (animation, timestamp) => {
+    const HSVACurrent = convertToHSVA(animation.current);
+    const res = [];
+    let finished = true;
+    tab.forEach((i, index)=> {
+      animation[i].current = HSVACurrent[index];
+      finished &= animation[i].onFrame(animation[i], timestamp);
+      res.push = animation[i].current;
+    });
+
+    animation.current = toRGBA(res);
+    return finished;
+  };
+
+  animation.onStart = (animation, value, timestamp, previousAnimation) => {
+    if (isColor(value)) {
+      colorOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = colorOnFrame;
+    } else if (typeof value === 'string') {
+      prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = prefNumberSuffOnframe;
+      return;
+    }
+    baseOnStart(animation, value, timestamp, previousAnimation);
+  };
+}
+
+function convertToHSVA(color) {
+  'worklet';
+  const processed = processColorInitially(color); // argb;
+  const a = (processed >>> 24) / 255;
+  const r = (processed << 8) >>> 24;
+  const g = (processed << 16) >>> 24;
+  const b = (processed << 24) >>> 24;
+  const {h, s, v} = RGBtoHSV(r, g, b);
+  return [h, s, v, a];
+}
+
+function toRGBA(HSVA) {
+  'worklet';
+  const {r, g, b} = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
+  return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
 
 function defineAnimation(starting, factory) {
