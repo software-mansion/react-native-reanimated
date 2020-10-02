@@ -102,6 +102,7 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   /* text color */
   color: true,
   tintColor: true,
+  shadowColor: true,
 };
 
 function configureProps() {
