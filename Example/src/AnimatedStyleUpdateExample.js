@@ -7,6 +7,8 @@ import Animated, {
   withRepeat,
   withDelay,
   withSequence,
+  withSpring,
+  withDecay,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
@@ -25,9 +27,11 @@ export default function AnimatedStyleUpdateExample(props) {
       return randomWidth.value;
     },
     (val) => {
-      //rotate.value = withSequence(withTiming(`${val}deg`, config), withTiming(`${40}deg`, config));
+      // rotate.value = withSequence(withTiming(`${val}deg`, config), withTiming(`${40}deg`, config));
       // rotate.value = withDelay(2000, withTiming(`${val}deg`))
       // rotate.value = withRepeat(withTiming(`${val}deg`, config));
+      // rotate.value = withSpring(`${val}deg`);
+      rotate.value = withDecay({velocity: 100});
     }
   );
 
