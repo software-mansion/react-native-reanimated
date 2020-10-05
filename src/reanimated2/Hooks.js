@@ -584,6 +584,7 @@ export function useAnimatedReaction(prepare, react) {
   useEffect(() => {
     const fun = () => {
       'worklet';
+      console.log("worklet", _WORKLET);
       const input = prepare();
       react(input);
     };

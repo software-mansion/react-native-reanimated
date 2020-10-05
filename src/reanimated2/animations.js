@@ -153,7 +153,7 @@ export function decorateAnimation(animation) {
     transformAnimation(animation);
     transformAnimation(previousAnimation);
   };
-  const prefNumberSuffOnframe = (animation, timestamp) => {
+  const prefNumberSuffOnFrame = (animation, timestamp) => {
     transformAnimation(animation);
 
     const res = baseOnFrame(animation, timestamp);
@@ -196,14 +196,19 @@ export function decorateAnimation(animation) {
   };
 
   animation.onStart = (animation, value, timestamp, previousAnimation) => {
+    console.log("test");
     if (isColor(value)) {
+      console.log("color");
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
+      return;
     } else if (typeof value === 'string') {
+      console.log("prefNumberSuff");
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
-      animation.onFrame = prefNumberSuffOnframe;
+      animation.onFrame = prefNumberSuffOnFrame;
       return;
     }
+    console.log("dziala");
     baseOnStart(animation, value, timestamp, previousAnimation);
   };
 }

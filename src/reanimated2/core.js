@@ -45,6 +45,7 @@ export function getViewProp(viewTag, propName) {
 
 function workletValueSetter(value) {
   'worklet';
+  console.log("setter", _WORKLET);
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
