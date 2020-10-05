@@ -81,8 +81,6 @@ export default function Animations(props) {
   ]);
 
   indices.forEach((i) => {
-    console.log(i);
-    console.log(randomWidths[i]);
     const randomWidth = randomWidths[i];
     const toColor = randomToColors[i];
     useAnimatedReaction(() => {
@@ -100,12 +98,13 @@ export default function Animations(props) {
       {indices.map((i) => {
         const randomWidth = randomWidths[i];
         const color = randomToColors[i];
+        const styleColor = randomColors[i];
         let index = colorIndeces[i];
         const rotation = rotations[i];
         const style = useAnimatedStyle(() => {
           return {
             width: withTiming(randomWidth.value, config),
-            backgroundColor: withTiming(color.value, config),
+            backgroundColor: styleColor.value,
             transform: [{ rotate: rotation.value }],
           };
         });
@@ -125,7 +124,7 @@ export default function Animations(props) {
               title="toggle"
               onPress={() => {
                 randomWidth.value = Math.random() * 350;
-                color.value = colors[++index % colors.length];
+                color.value = colors[(++index) % colors.length];
               }}
             />
           </View>

@@ -668,7 +668,6 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        console.log("start", startValue, nextAnimation.toValue);
         nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
         return false;
       }
@@ -688,7 +687,6 @@ export function withRepeat(
     function onStart(animation, value, now, previousAnimation) {
       animation.startValue = value;
       animation.reps = 0;
-      console.log("mainOnStart", value, nextAnimation.toValue);
       nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
     }
 
