@@ -17,6 +17,8 @@ export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
   const color = useSharedValue('blue');
   const rotate = useSharedValue('0deg');
+  let index = 0; // useSharedValue(0);
+  const colors = ['red', 'grey', 'yellow', 'white', 'darkslateblue'];
 
   const config = {
     duration: 500,
@@ -32,15 +34,18 @@ export default function AnimatedStyleUpdateExample(props) {
       // rotate.value = withDelay(2000, withTiming(`${val}deg`))
       // rotate.value = withRepeat(withTiming(`${val}deg`, config));
       // rotate.value = withSpring(`${val}deg`);
-       color.value = withTiming('red', config);
+      // index.value = ( index.value + 1 ) % colors.length;
+      // color.value = withTiming(colors[index.value], config);
+      // color.value = withSpring(colors[index.value]);
+      // color.value = withDecay({velocity: 6});
     }
   );
 
   const style = useAnimatedStyle(() => {
-    console.log("example", color.value);
     return {
       width: withTiming(randomWidth.value, config),
-      backgroundColor: color.value,
+      // backgroundColor: withTiming(color.value, config),
+      backgroundColor: withSpring(color.value),
       // transform: [{rotate: rotate.value}],
     };
   });
@@ -62,6 +67,7 @@ export default function AnimatedStyleUpdateExample(props) {
         title="toggle"
         onPress={() => {
           randomWidth.value = Math.random() * 350;
+          color.value = colors[(++index)%colors.length];
         }}
       />
     </View>

@@ -136,11 +136,11 @@ export function transformAnimation(animation) {
 
 function convertToHSVA(color) {
   'worklet';
-  const processed = processColorInitially(color); // argb;
-  const a = (processed >>> 24) / 255;
-  const r = (processed << 8) >>> 24;
-  const g = (processed << 16) >>> 24;
-  const b = (processed << 24) >>> 24;
+  const processedColor = processColorInitially(color); // argb;
+  const a = (processedColor >>> 24) / 255;
+  const r = (processedColor << 8) >>> 24;
+  const g = (processedColor << 16) >>> 24;
+  const b = (processedColor << 24) >>> 24;
   const {
     h,
     s,
@@ -167,6 +167,7 @@ export function decorateAnimation(animation) {
   const baseOnStart = animation.onStart;
   const baseOnFrame = animation.onFrame;
   const animationCopy = Object.assign({}, animation); 
+  delete animation.callback;
   
   const prefNumberSuffOnStart = (animation, value, timestamp, previousAnimation) => {
 
@@ -204,7 +205,7 @@ export function decorateAnimation(animation) {
     tab.forEach((i, index) => {
       animation[i] = Object.assign({}, animationCopy);
       animation[i].current = HSVACurrent[index];
-      animation[i].toValue = HSVAToValue[index];
+      animation[i].toValue = (HSVAToValue)? HSVAToValue[index] : undefined;
       animation[i].onStart(animation[i], HSVAValue[index], timestamp, (previousAnimation) ? previousAnimation[i]: undefined);
       res.push(animation[i].current);
     });
@@ -228,7 +229,6 @@ export function decorateAnimation(animation) {
 
   animation.onStart = (animation, value, timestamp, previousAnimation) => {
     if (isColor(value)) {
-      console.log("color");
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
       return;

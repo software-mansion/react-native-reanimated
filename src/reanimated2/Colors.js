@@ -409,7 +409,7 @@ export function processColorInitially(color) {
   }
 
   normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; //argb
-  return normalizeColor;
+  return normalizedColor;
 }
 
 export function isColor(value) {
