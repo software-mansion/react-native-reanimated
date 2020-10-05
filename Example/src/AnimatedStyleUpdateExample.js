@@ -15,7 +15,7 @@ import React from 'react';
 
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
-  // const color = useSharedValue('blue');
+  const color = useSharedValue('blue');
   const rotate = useSharedValue('0deg');
 
   const config = {
@@ -28,21 +28,20 @@ export default function AnimatedStyleUpdateExample(props) {
       return randomWidth.value;
     },
     (val) => {
-      console.log('worklet2', _WORKLET);
       // rotate.value = withSequence(withTiming(`${val}deg`, config), withTiming(`${40}deg`, config));
       // rotate.value = withDelay(2000, withTiming(`${val}deg`))
       // rotate.value = withRepeat(withTiming(`${val}deg`, config));
-       rotate.value = withSpring(`${val}deg`);
-       // color.value = withTiming('red', config);
+      // rotate.value = withSpring(`${val}deg`);
+       color.value = withTiming('red', config);
     }
   );
 
   const style = useAnimatedStyle(() => {
-    console.log("example", rotate.value);
+    console.log("example", color.value);
     return {
       width: withTiming(randomWidth.value, config),
-       // backgroundColor: color.value,
-      transform: [{rotate: rotate.value}],
+      backgroundColor: color.value,
+      // transform: [{rotate: rotate.value}],
     };
   });
 
@@ -55,7 +54,7 @@ export default function AnimatedStyleUpdateExample(props) {
       }}>
       <Animated.View
         style={[
-          { width: 100, height: 80, margin: 30, backgroundColor: 'black' },
+          { width: 100, height: 80, margin: 30 },
           style,
         ]}
       />

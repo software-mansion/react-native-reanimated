@@ -134,6 +134,31 @@ export function transformAnimation(animation) {
   });
 }
 
+function convertToHSVA(color) {
+  'worklet';
+  const processed = processColorInitially(color); // argb;
+  const a = (processed >>> 24) / 255;
+  const r = (processed << 8) >>> 24;
+  const g = (processed << 16) >>> 24;
+  const b = (processed << 24) >>> 24;
+  const {
+    h,
+    s,
+    v
+  } = RGBtoHSV(r, g, b);
+  return [h, s, v, a];
+}
+
+function toRGBA(HSVA) {
+  'worklet';
+  const {
+    r,
+    g,
+    b
+  } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
+  return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
+}
+
 export function decorateAnimation(animation) {
   'worklet';
   if (animation.isHigherOrder) {
@@ -141,6 +166,7 @@ export function decorateAnimation(animation) {
   }
   const baseOnStart = animation.onStart;
   const baseOnFrame = animation.onFrame;
+  const animationCopy = Object.assign({}, animation); 
   
   const prefNumberSuffOnStart = (animation, value, timestamp, previousAnimation) => {
 
@@ -166,14 +192,19 @@ export function decorateAnimation(animation) {
   const colorOnStart = (animation, value, timestamp, previousAnimation) => {
     let HSVAValue;
     let HSVACurrent;
+    let HSVAToValue;
     const res = [];
     if (isColor(value)) {
       HSVACurrent = convertToHSVA(animation.current);
       HSVAValue = convertToHSVA(value);
+      if (animation.toValue) {
+        HSVAToValue = convertToHSVA(animation.toValue);
+      }
     }
     tab.forEach((i, index) => {
-      animation[i] = JSON.parse(JSON.stringify(animation));
+      animation[i] = Object.assign({}, animationCopy);
       animation[i].current = HSVACurrent[index];
+      animation[i].toValue = HSVAToValue[index];
       animation[i].onStart(animation[i], HSVAValue[index], timestamp, (previousAnimation) ? previousAnimation[i]: undefined);
       res.push(animation[i].current);
     });
@@ -196,38 +227,18 @@ export function decorateAnimation(animation) {
   };
 
   animation.onStart = (animation, value, timestamp, previousAnimation) => {
-    console.log("test");
     if (isColor(value)) {
       console.log("color");
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
       return;
     } else if (typeof value === 'string') {
-      console.log("prefNumberSuff");
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = prefNumberSuffOnFrame;
       return;
     }
-    console.log("dziala");
     baseOnStart(animation, value, timestamp, previousAnimation);
   };
-}
-
-function convertToHSVA(color) {
-  'worklet';
-  const processed = processColorInitially(color); // argb;
-  const a = (processed >>> 24) / 255;
-  const r = (processed << 8) >>> 24;
-  const g = (processed << 16) >>> 24;
-  const b = (processed << 24) >>> 24;
-  const {h, s, v} = RGBtoHSV(r, g, b);
-  return [h, s, v, a];
-}
-
-function toRGBA(HSVA) {
-  'worklet';
-  const {r, g, b} = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
-  return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
 
 function defineAnimation(starting, factory) {

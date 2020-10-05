@@ -28,7 +28,6 @@ const uiCachedMatchers = makeRemote({});
 function getMatchers() {
   'worklet';
   const cachedMatchers = _WORKLET ? uiCachedMatchers : jsCachedMatchers;
-  console.log("typ", _WORKLET);
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
