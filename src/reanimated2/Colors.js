@@ -415,11 +415,10 @@ export function processColorInitially(color) {
 
 export function isColor(value) {
   'worklet'
-  return processColorInitially(value) 
-}
-
-export function to(value) {
-
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return processColorInitially(value) != null; 
 }
 
 export default function processColor(color) {

@@ -55,7 +55,7 @@ export default function AnimatedStyleUpdateExample(props) {
       }}>
       <Animated.View
         style={[
-          { width: 100, height: 80, margin: 30 },
+          { width: 100, height: 80, margin: 30, backgroundColor: 'black' },
           style,
         ]}
       />
