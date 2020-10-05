@@ -44,8 +44,7 @@ export default function AnimatedStyleUpdateExample(props) {
   const style = useAnimatedStyle(() => {
     return {
       width: withTiming(randomWidth.value, config),
-      // backgroundColor: withTiming(color.value, config),
-      backgroundColor: withSpring(color.value),
+      backgroundColor: withTiming(color.value, config),
       // transform: [{rotate: rotate.value}],
     };
   });
