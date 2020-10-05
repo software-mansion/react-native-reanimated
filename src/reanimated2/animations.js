@@ -173,12 +173,12 @@ export function decorateAnimation(animation) {
 
     const val = transform(value, animation);
     transformAnimation(animation);
-    transformAnimation(previousAnimation);
+    if (previousAnimation != animation) transformAnimation(previousAnimation);
 
     baseOnStart(animation, val, timestamp, previousAnimation);
 
     transformAnimation(animation);
-    transformAnimation(previousAnimation);
+    if (previousAnimation != animation) transformAnimation(previousAnimation);
   };
   const prefNumberSuffOnFrame = (animation, timestamp) => {
     transformAnimation(animation);
@@ -668,7 +668,8 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        nextAnimation.onStart(nextAnimation, transform(startValue, animation), now, nextAnimation);
+        console.log("start", startValue, nextAnimation.toValue);
+        nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
         return false;
       }
       return false;
@@ -687,6 +688,7 @@ export function withRepeat(
     function onStart(animation, value, now, previousAnimation) {
       animation.startValue = value;
       animation.reps = 0;
+      console.log("mainOnStart", value, nextAnimation.toValue);
       nextAnimation.onStart(nextAnimation, value, now, previousAnimation);
     }
 

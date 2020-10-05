@@ -60,7 +60,7 @@ export default function Animations(props) {
     },
     ({ val, color }) => {
       'worklet';
-      rotations[2].value = withRepeat(withTiming(`${val}deg`, config));
+      rotations[2].value = withRepeat(withTiming(`${val}deg`, config), 2, true);
     },
     ({ val, color }) => {
       'worklet';
