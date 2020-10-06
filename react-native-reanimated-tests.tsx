@@ -368,7 +368,7 @@ function WithDecayTest() {
 function UseWorkletCallbackTest() {
   const callback = useWorkletCallback((a: number, b: number) => {
     return a + b;
-  });
+  }, []);
 
   runOnUI(() => {
     const res = callback(1, 1);

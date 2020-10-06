@@ -446,8 +446,7 @@ declare module 'react-native-reanimated' {
     ): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
     export function createWorklet<A extends any[], R>(
-      fn: (...args: A) => R,
-      deps?: DependencyList
+      fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => R;
 
     type DependencyList = ReadonlyArray<any>;
