@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <jsi/jsi.h>
+#include <mutex>
 
 using namespace facebook;
 
@@ -15,6 +16,7 @@ class StoreUser {
   int identifier = 0;
   static std::atomic<int> ctr;
   static std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> store;
+  static std::mutex storeMutex;
   
 public:
   StoreUser() {
