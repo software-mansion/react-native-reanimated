@@ -63,8 +63,5 @@ Below we highlight some of the problems that we are aware of (in most of the cas
 - The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
   We are looking into this problem and hope to have it resolved really soon.
 - JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.
-- Recursive worklets aren’t supported (however there are simple workarounds for this problem)
 - Objects passed to worklets from React Native don’t have the correct prototype set in JavaScript.
   As a result, such objects aren’t enumerable, that is you can’t use “for in” constructs, spread operator (three dots), or functions like Object.assign with them.
-- Expo support is not ready yet, next SDK release will support React Native 0.62 – this will allow you to use Reanimated 2 in the ejected Expo app.
-- Web support is missing for now as well, we plan to work on adding react-native-web support in the near future.
