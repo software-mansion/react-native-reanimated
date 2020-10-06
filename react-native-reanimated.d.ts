@@ -445,6 +445,10 @@ declare module 'react-native-reanimated' {
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
+    export function createWorklet<A extends any[], R>(
+      fn: (...args: A) => R,
+      deps?: DependencyList
+    ): (...args: Parameters<typeof fn>) => R;
 
     type DependencyList = ReadonlyArray<any>;
 
@@ -480,6 +484,10 @@ declare module 'react-native-reanimated' {
       handlers: ScrollHandlers<TContext>,
       deps?: DependencyList
     ): OnScroll;
+    export function useWorkletCallback<A extends any[], R>(
+      fn: (...args: A) => R,
+      deps?: DependencyList
+    ): (...args: Parameters<typeof fn>) => R;
 
     export function useAnimatedRef<T extends Component>(): RefObject<T>;
     export function measure<T extends Component>(
