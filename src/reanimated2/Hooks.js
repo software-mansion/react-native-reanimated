@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -593,4 +593,8 @@ export function useAnimatedReaction(prepare, react) {
       stopMapper(mapperId);
     };
   }, inputs);
+}
+
+export function useWorkletCallback(fun) {
+  return useCallback(fun);
 }
