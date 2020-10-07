@@ -595,7 +595,7 @@ export function useAnimatedReaction(prepare, react) {
   }, inputs);
 }
 
-export function useWorkletCallback(fun, deps) {
+export function useWorklet(fun, deps) {
   return useCallback(fun, deps);
 }
 

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React from 'react';
 import { StyleSheet, Button, View } from 'react-native';
-import { 
+import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
@@ -22,7 +22,7 @@ import Animated, {
   repeat,
   sequence,
   withDecay,
-  useWorkletCallback,
+  useWorklet,
   createWorklet,
   runOnUI,
 } from 'react-native-reanimated';
@@ -364,9 +364,9 @@ function WithDecayTest() {
   );
 }
 
-// useWorkletCallback
-function UseWorkletCallbackTest() {
-  const callback = useWorkletCallback((a: number, b: number) => {
+// useWorklet
+function UseWorkletTest() {
+  const callback = useWorklet((a: number, b: number) => {
     return a + b;
   }, []);
 

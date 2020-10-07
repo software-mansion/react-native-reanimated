@@ -15,7 +15,7 @@ const functionHooks = new Map([
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
-  ['useWorkletCallback', [0]],
+  ['useWorklet', [0]],
   ['createWorklet', [0]],
 ]);
 

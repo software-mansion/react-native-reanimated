@@ -483,7 +483,7 @@ declare module 'react-native-reanimated' {
       handlers: ScrollHandlers<TContext>,
       deps?: DependencyList
     ): OnScroll;
-    export function useWorkletCallback<A extends any[], R>(
+    export function useWorklet<A extends any[], R>(
       fn: (...args: A) => R,
       deps?: DependencyList
     ): (...args: Parameters<typeof fn>) => R;
@@ -713,7 +713,7 @@ declare module 'react-native-reanimated' {
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
   export const useAnimatedProps: typeof Animated.useAnimatedProps;
   export const useDerivedValue: typeof Animated.useDerivedValue;
-  export const useWorkletCallback: typeof Animated.useWorkletCallback;
+  export const useWorklet: typeof Animated.useWorklet;
   export const createWorklet: typeof Animated.createWorklet;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
