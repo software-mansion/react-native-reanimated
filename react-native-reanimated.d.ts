@@ -713,6 +713,8 @@ declare module 'react-native-reanimated' {
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
   export const useAnimatedProps: typeof Animated.useAnimatedProps;
   export const useDerivedValue: typeof Animated.useDerivedValue;
+  export const useWorkletCallback: typeof Animated.useWorkletCallback;
+  export const createWorklet: typeof Animated.createWorklet;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
