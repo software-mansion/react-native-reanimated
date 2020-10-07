@@ -207,6 +207,11 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
     }
 }
 
+bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(std::string eventName) {
+  return eventHandlerRegistry->isAnyHandlerWaitingForEvent(eventName);
+}
+
+
 void NativeReanimatedModule::maybeRequestRender()
 {
   if (!renderRequested)
