@@ -22,6 +22,9 @@ import Animated, {
   repeat,
   sequence,
   withDecay,
+  useWorkletCallback,
+  createWorklet,
+  runOnUI,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -359,4 +362,34 @@ function WithDecayTest() {
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
   );
+}
+
+// useWorkletCallback
+function UseWorkletCallbackTest() {
+  const callback = useWorkletCallback((a: number, b: number) => {
+    return a + b;
+  }, []);
+
+  runOnUI(() => {
+    const res = callback(1, 1);
+
+    console.log(res);
+  })();
+
+  return <Animated.View style={styles.container} />;
+}
+
+// createWorklet
+function CreateWorkletTest() {
+  const callback = createWorklet((a: number, b: number) => {
+    return a + b;
+  });
+
+  runOnUI(() => {
+    const res = callback(1, 1);
+
+    console.log(res);
+  })();
+
+  return <Animated.View style={styles.container} />;
 }
