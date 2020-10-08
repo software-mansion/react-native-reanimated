@@ -4,6 +4,9 @@ set -x
 
 ROOT=$(pwd)
 
+# unset CI so all archs are built
+unset CI
+
 # PART I - I (install RN)
 yarn add react-native --dev
 
