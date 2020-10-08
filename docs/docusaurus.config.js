@@ -33,15 +33,15 @@ module.exports = {
               to: 'docs/',
               activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
             },
-            {
-              label: 'Master',
-              to: 'docs/next/',
-              activeBasePath: 'docs/next',
-            },
             ...versions.slice(1).map((version) => ({
               label: version,
               to: `docs/${version}/`,
             })),
+            {
+              label: 'Master/Unreleased',
+              to: 'docs/next/',
+              activeBasePath: 'docs/next',
+            },
           ],
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
