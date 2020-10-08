@@ -13,8 +13,6 @@
 #import <React/RCTFileRequestHandler.h>
 #import "MBFingerTipWindow.h"
 
-#import <RNReanimated/REATurboSwitch.h>
-
 @interface AppDelegate() <RCTBridgeDelegate>
 @end
 
