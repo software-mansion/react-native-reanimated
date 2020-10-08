@@ -191,7 +191,7 @@ const Reanimated = {
   },
   diff: NOOP,
   diffClamp: NOOP,
-  interpolate: NOOP,
+  interpolateNode: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
