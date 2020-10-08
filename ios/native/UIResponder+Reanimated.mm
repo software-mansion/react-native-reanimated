@@ -8,6 +8,8 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import "REATurboSwitch.h"
 
+#ifndef DONT_AUTOINTSTALL_REANIMATED
+
 @implementation UIResponder (Reanimated)
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
@@ -33,3 +35,5 @@
 }
 
 @end
+
+#endif
