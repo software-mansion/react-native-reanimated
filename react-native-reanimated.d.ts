@@ -460,6 +460,8 @@ declare module 'react-native-reanimated' {
       processor: () => T,
       deps?: DependencyList
     ): SharedValue<T>;
+                        
+    export function useAnimatedReaction<D>(dependencies: () => D, effects: (dependencies: D) => void);
 
     export function useAnimatedStyle<
       T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
@@ -711,6 +713,7 @@ declare module 'react-native-reanimated' {
   export const useValue: typeof Animated.useValue;
   export const useSharedValue: typeof Animated.useSharedValue;
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
+  export const useAnimatedReaction: typeof Animated.useAnimatedReaction;
   export const useAnimatedProps: typeof Animated.useAnimatedProps;
   export const useDerivedValue: typeof Animated.useDerivedValue;
   export const useWorkletCallback: typeof Animated.useWorkletCallback;
