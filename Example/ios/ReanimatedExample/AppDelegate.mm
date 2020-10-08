@@ -18,6 +18,7 @@
 #import <RNReanimated/REATurboModuleProvider.h>
 #import <RNReanimated/REAModule.h>
 #import "MBFingerTipWindow.h"
+#import <RNReanimated/REABridge.h>
 
 @interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate>{
   RCTTurboModuleManager *_turboModuleManager;
@@ -28,9 +29,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  RCTEnableTurboModule(YES);
-
-  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTBridge *bridge = [[REABridge alloc] initWithDelegate:self launchOptions:launchOptions];
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"ReanimatedExample"
                                             initialProperties:nil];
