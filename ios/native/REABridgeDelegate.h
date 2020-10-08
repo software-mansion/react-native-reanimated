@@ -1,10 +1,3 @@
-//
-//  REABridgeDelegate.h
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 08/10/2020.
-//
-
 #import <Foundation/Foundation.h>
 #import <React/RCTCxxBridgeDelegate.h>
 

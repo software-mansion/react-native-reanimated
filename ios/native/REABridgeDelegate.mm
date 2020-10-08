@@ -1,10 +1,3 @@
-//
-//  REABridgeDelegate.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 08/10/2020.
-//
-
 #import "REABridgeDelegate.h"
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/NativeProxy.h>
