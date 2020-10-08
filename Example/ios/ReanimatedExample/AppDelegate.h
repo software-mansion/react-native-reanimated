@@ -6,11 +6,10 @@
  */
 
 #import <UIKit/UIKit.h>
-#import <RNReanimated/REAAppDelegate.h>
 
 @class RCTBridge;
 
-@interface AppDelegate : REAAppDelegate
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (nonatomic, strong) UIWindow *window;
 

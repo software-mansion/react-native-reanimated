@@ -1,16 +1,34 @@
-#import "REAAppDelegate.h"
+//
+//  REABridgeDelegate.m
+//  RNReanimated
+//
+//  Created by Szymon Kapala on 08/10/2020.
+//
+
+#import "REABridgeDelegate.h"
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
 #import <React/JSCExecutorFactory.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 #import <React/RCTBridge+Private.h>
+#import <React/RCTCxxBridgeDelegate.h>
 
-@interface REAAppDelegate() <RCTCxxBridgeDelegate>
+@interface REABridgeDelegate (RCTCxxBridgeDelegate)
 
 @end
 
-@implementation REAAppDelegate
+@implementation REABridgeDelegate {
+  id<RCTBridgeDelegate> _delegate;
+}
+
+- (instancetype)initWithDelegate:(id<RCTBridgeDelegate>)delegate
+{
+  if (self = [super init]) {
+    _delegate = delegate;
+  }
+  return self;
+}
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
@@ -29,6 +47,12 @@
       );
     }
   });
+}
+
+- (id)forwardingTargetForSelector:(SEL)sel
+{
+    if ([_delegate respondsToSelector:sel]) return _delegate;
+    return nil;
 }
 
 @end
