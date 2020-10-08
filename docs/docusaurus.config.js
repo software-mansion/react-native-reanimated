@@ -29,14 +29,14 @@ module.exports = {
           activeBaseRegex: `docs/(?!next)`,
           items: [
             {
-              label: 'Master',
-              to: 'docs/next/',
-              activeBasePath: 'docs/next',
-            },
-            {
               label: versions[0],
               to: 'docs/',
               activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
+            },
+            {
+              label: 'Master',
+              to: 'docs/next/',
+              activeBasePath: 'docs/next',
             },
             ...versions.slice(1).map((version) => ({
               label: version,
