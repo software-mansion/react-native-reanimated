@@ -13,7 +13,7 @@
 #import <React/RCTFileRequestHandler.h>
 #import "MBFingerTipWindow.h"
 
-#import <RNReanimated/REABridgeDelegate.h>
+#import <RNReanimated/REATurboSwitch.h>
 
 @interface AppDelegate() <RCTBridgeDelegate>
 @end
@@ -22,8 +22,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:[[REABridgeDelegate alloc] initWithDelegate:self]
-                                            launchOptions:launchOptions];
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"ReanimatedExample"
                                             initialProperties:nil];
