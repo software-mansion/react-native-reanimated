@@ -2,11 +2,12 @@
 
 namespace reanimated {
 
-int identifier = 0;
 std::atomic<int> StoreUser::ctr;
+std::mutex StoreUser::storeMutex;
 std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> StoreUser::store;
 
 std::weak_ptr<jsi::Value> StoreUser::getWeakRef(jsi::Runtime &rt) {
+  const std::lock_guard<std::mutex> lock(storeMutex);
   if (StoreUser::store.count(identifier) == 0) {
     StoreUser::store[identifier] = std::vector<std::shared_ptr<jsi::Value>>();
   }
@@ -17,6 +18,7 @@ std::weak_ptr<jsi::Value> StoreUser::getWeakRef(jsi::Runtime &rt) {
 }
 
 void StoreUser::removeRefs() {
+  const std::lock_guard<std::mutex> lock(storeMutex);
   if (StoreUser::store.count(identifier) > 0) {
     StoreUser::store.erase(identifier);
   }
@@ -28,6 +30,7 @@ StoreUser::~StoreUser() {
 
 
 void StoreUser::clearStore() {
+  const std::lock_guard<std::mutex> lock(storeMutex);
   StoreUser::store.clear();
 }
 
