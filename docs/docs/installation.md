@@ -111,15 +111,14 @@ You can refer [to this diff](https://github.com/software-mansion-labs/reanimated
 
 On iOS installation is automatic. 
 
-> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on.  Because we had 
-> reported some issues regarding bugs in turbo versions of react-native libraries we decided to changed our approach and we no longer 
+> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer 
 > use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely 
 > undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).  
 
 > **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag: 
 > `DONT_AUTOINTSTALL_REANIMATED`.
 > It can be done by pasting: 
-> ```JS
+> ```js
 > post_install do |installer|
 >    installer.pods_project.targets.each do |target|
 >        target.build_configurations.each do |config|
@@ -128,5 +127,4 @@ On iOS installation is automatic.
 >    end
 > end
 > ```
-> to your `Podfile`. (Don't forget to run `pod install` after that).
-
+> to your `Podfile`. Don't forget to run `pod install` after doing that.
