@@ -116,6 +116,18 @@ On iOS installation is automatic.
 > use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely 
 > undo all installation steps from the previous instruction [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).  
 
-> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag: `DONT_AUTOINTSTALL_REANIMATED`.
+> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag: 
+> `DONT_AUTOINTSTALL_REANIMATED`.
+> It can be done by pasting: 
+> ```JS
+> post_install do |installer|
+>    installer.pods_project.targets.each do |target|
+>        target.build_configurations.each do |config|
+>            config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINTSTALL_REANIMATED'
+>        end
+>    end
+> end
+> ```
+> to your `Podfile`. (Don't forget to run `pod install` after that).
 
 
