@@ -116,123 +116,22 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 ## iOS
 
-Steps here are adapted directly from [React Native's RNTester app](https://github.com/facebook/react-native/blob/master/RNTester/RNTester/AppDelegate.mm), that is configured to use Turbo Modules.
-Most of the changes aren't specific to Reanimated but rather to Turbo Modules itself.
-If your iOS app is already using Turbo Modules, you can likely skip some of the steps below.
-If not, after making those changes your app will be compatible with Turbo Modules which may help with future React Native upgrades.
+On iOS installation is automatic. 
 
-1. `cd ios && pod install && cd ..`
+> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer 
+> use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely 
+> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).  
 
-2. Rename `AppDelegate.m` to `AppDelegate.mm`.
-   > **_NOTE:_** It's important to do it with Xcode.
-3. Add AppDelegate category in `AppDelegate.mm`.
-
-```objectivec {1-2,4-7}
-#import <React/RCTCxxBridgeDelegate.h>
-#import <ReactCommon/RCTTurboModuleManager.h>
-...
-@interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
-    RCTTurboModuleManager *_turboModuleManager;
-}
-@end
-```
-
-4. Enable TurboModules in `AppDelegate.mm`.
-
-```objectivec {3}
-  + (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-  {
-    RCTEnableTurboModule(YES); // <- add
-```
-
-5. Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `AppDelegate.mm`.
-
-```objectivec
-// add headers (start)
-#import <React/RCTDataRequestHandler.h>
-#import <React/RCTFileRequestHandler.h>
-#import <React/RCTHTTPRequestHandler.h>
-#import <React/RCTNetworking.h>
-#import <React/RCTLocalAssetImageLoader.h>
-#import <React/RCTGIFImageDecoder.h>
-#import <React/RCTImageLoader.h>
-#import <React/JSCExecutorFactory.h>
-#import <RNReanimated/REATurboModuleProvider.h>
-#import <RNReanimated/REAModule.h>
-// add headers (end)
-...
-@implementation AppDelegate // changes should be made within AppDelegate's implementation
-...
-
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  _bridge_reanimated = bridge;
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
-                                                              delegate:self
-                                                             jsInvoker:bridge.jsCallInvoker];
- #if RCT_DEV
-  [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add
- #endif
- __weak __typeof(self) weakSelf = self;
- return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
-   if (!bridge) {
-     return;
-   }
-   __typeof(self) strongSelf = weakSelf;
-   if (strongSelf) {
-     [strongSelf->_turboModuleManager installJSBindingWithRuntime:&runtime];
-   }
- });
-}
-
-- (Class)getModuleClassFromName:(const char *)name
-{
- return facebook::react::REATurboModuleClassProvider(name);
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
-                                                     jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
-{
- return facebook::react::REATurboModuleProvider(name, jsInvoker);
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
-                                                      instance:(id<RCTTurboModule>)instance
-                                                     jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
-{
- return facebook::react::REATurboModuleProvider(name, instance, jsInvoker);
-}
-
-- (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
-{
- if (moduleClass == RCTImageLoader.class) {
-   return [[moduleClass alloc] initWithRedirectDelegate:nil loadersProvider:^NSArray<id<RCTImageURLLoader>> *{
-     return @[[RCTLocalAssetImageLoader new]];
-   } decodersProvider:^NSArray<id<RCTImageDataDecoder>> *{
-     return @[[RCTGIFImageDecoder new]];
-   }];
- } else if (moduleClass == RCTNetworking.class) {
-   return [[moduleClass alloc] initWithHandlersProvider:^NSArray<id<RCTURLRequestHandler>> *{
-     return @[
-       [RCTHTTPRequestHandler new],
-       [RCTDataRequestHandler new],
-       [RCTFileRequestHandler new],
-     ];
-   }];
- }
- return [moduleClass new];
-}
-
-@end
-```
-
-6. ( Additinal step for React Native 0.62.\* ) Change initialization of TurboModuleManager
-
-```objectivec {3-3}
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
-  ...
-```
-
-You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/37cb058115562bdcd33e3d729abef1f27c081da5) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
+> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag: 
+> `DONT_AUTOINTSTALL_REANIMATED`.
+> It can be done by pasting: 
+> ```js
+> post_install do |installer|
+>    installer.pods_project.targets.each do |target|
+>        target.build_configurations.each do |config|
+>            config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINTSTALL_REANIMATED'
+>        end
+>    end
+> end
+> ```
+> to your `Podfile`. Don't forget to run `pod install` after doing that.
