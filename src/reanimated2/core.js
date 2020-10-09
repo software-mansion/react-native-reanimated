@@ -1,5 +1,4 @@
 import NativeReanimated from './NativeReanimated';
-import { Platform } from 'react-native';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -152,24 +151,20 @@ export function stopMapper(mapperId) {
   NativeReanimated.stopMapper(mapperId);
 }
 
-export let runOnJS = (fun) => fun;
-
-if (Platform.OS !== 'web') {
-  runOnJS = (fun) => {
-    'worklet';
-    if (!_WORKLET) {
-      // eslint-disable-line
-      return fun;
-    }
-    if (!fun.__callAsync) {
-      throw new Error(
-        "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
-      );
-    } else {
-      return fun.__callAsync;
-    }
-  };
-}
+export const runOnJS = (fun) => {
+  'worklet';
+  if (!_WORKLET) {
+    // eslint-disable-line
+    return fun;
+  }
+  if (!fun.__callAsync) {
+    throw new Error(
+      "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
+    );
+  } else {
+    return fun.__callAsync;
+  }
+};
 
 const capturableConsole = console;
 runOnUI(() => {
