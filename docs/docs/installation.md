@@ -107,6 +107,13 @@ project.ext.react = [
 
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
 
+### Proguard
+
+If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:
+```
+-keep class com.facebook.react.turbomodule.** { *; }
+```
+
 ## iOS
 
 Steps here are adapted directly from [React Native's RNTester app](https://github.com/facebook/react-native/blob/master/RNTester/RNTester/AppDelegate.mm), that is configured to use Turbo Modules.
