@@ -16729,100 +16729,18 @@ If you are upgrading from alpha.{ <=3 } please remove the following lines:`),Obj
    ReactFeatureFlags.useTurboModules = true;
  }
 `)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"blockquote"},`from `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`MainActivity.java`),`.`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`You can refer `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8"}),`to this diff`),` that presents the set of the above changes made to a fresh react native project in our `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://github.com/software-mansion-labs/reanimated-2-playground"}),`Playground repo`),`.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("h3",{"id":"proguard"},`Proguard`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{}),`-keep class com.facebook.react.turbomodule.** { *; }
-`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("h2",{"id":"ios"},`iOS`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`Steps here are adapted directly from `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://github.com/facebook/react-native/blob/master/RNTester/RNTester/AppDelegate.mm"}),`React Native's RNTester app`),`, that is configured to use Turbo Modules.
-Most of the changes aren't specific to Reanimated but rather to Turbo Modules itself.
-If your iOS app is already using Turbo Modules, you can likely skip some of the steps below.
-If not, after making those changes your app will be compatible with Turbo Modules which may help with future React Native upgrades.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("ol",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"li"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`cd ios && pod install && cd ..`))),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"li"},`Rename `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`AppDelegate.m`),` to `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`AppDelegate.mm`),`.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("blockquote",{parentName:"li"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"blockquote"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("strong",{parentName:"p"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("em",{parentName:"strong"},`NOTE:`)),` It's important to do it with Xcode.`))),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"li"},`Add AppDelegate category in `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`AppDelegate.mm`),`.`))),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{"className":"language-objectivec","metastring":"{1-2,4-7}","{1-2,4-7}":true}),`#import <React/RCTCxxBridgeDelegate.h>
-#import <ReactCommon/RCTTurboModuleManager.h>
-...
-@interface AppDelegate() <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
-    RCTTurboModuleManager *_turboModuleManager;
-}
-@end
-`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("ol",{"start":4},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},`Enable TurboModules in `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"li"},`AppDelegate.mm`),`.`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{"className":"language-objectivec","metastring":"{3}","{3}":true}),`  + (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-  {
-    RCTEnableTurboModule(YES); // <- add
-`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("ol",{"start":5},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},`Add remaining methods needed to configure Turbo Modules and Reanimated module in particular – all changes should be made in `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"li"},`AppDelegate.mm`),`.`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{"className":"language-objectivec"}),`// add headers (start)
-#import <React/RCTDataRequestHandler.h>
-#import <React/RCTFileRequestHandler.h>
-#import <React/RCTHTTPRequestHandler.h>
-#import <React/RCTNetworking.h>
-#import <React/RCTLocalAssetImageLoader.h>
-#import <React/RCTGIFImageDecoder.h>
-#import <React/RCTImageLoader.h>
-#import <React/JSCExecutorFactory.h>
-#import <RNReanimated/REATurboModuleProvider.h>
-#import <RNReanimated/REAModule.h>
-// add headers (end)
-...
-@implementation AppDelegate // changes should be made within AppDelegate's implementation
-...
-
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  _bridge_reanimated = bridge;
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
-                                                              delegate:self
-                                                             jsInvoker:bridge.jsCallInvoker];
- #if RCT_DEV
-  [_turboModuleManager moduleForName:"RCTDevMenu"]; // <- add
- #endif
- __weak __typeof(self) weakSelf = self;
- return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
-   if (!bridge) {
-     return;
-   }
-   __typeof(self) strongSelf = weakSelf;
-   if (strongSelf) {
-     [strongSelf->_turboModuleManager installJSBindingWithRuntime:&runtime];
-   }
- });
-}
-
-- (Class)getModuleClassFromName:(const char *)name
-{
- return facebook::react::REATurboModuleClassProvider(name);
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
-                                                     jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
-{
- return facebook::react::REATurboModuleProvider(name, jsInvoker);
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
-                                                      instance:(id<RCTTurboModule>)instance
-                                                     jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker
-{
- return facebook::react::REATurboModuleProvider(name, instance, jsInvoker);
-}
-
-- (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
-{
- if (moduleClass == RCTImageLoader.class) {
-   return [[moduleClass alloc] initWithRedirectDelegate:nil loadersProvider:^NSArray<id<RCTImageURLLoader>> *{
-     return @[[RCTLocalAssetImageLoader new]];
-   } decodersProvider:^NSArray<id<RCTImageDataDecoder>> *{
-     return @[[RCTGIFImageDecoder new]];
-   }];
- } else if (moduleClass == RCTNetworking.class) {
-   return [[moduleClass alloc] initWithHandlersProvider:^NSArray<id<RCTURLRequestHandler>> *{
-     return @[
-       [RCTHTTPRequestHandler new],
-       [RCTDataRequestHandler new],
-       [RCTFileRequestHandler new],
-     ];
-   }];
- }
- return [moduleClass new];
-}
-
-@end
-`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("ol",{"start":6},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ol"},`( Additinal step for React Native 0.62.`,`*`,` ) Change initialization of TurboModuleManager`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{"className":"language-objectivec","metastring":"{3-3}","{3-3}":true}),`- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge delegate:self];
-  ...
-`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`You can refer `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/37cb058115562bdcd33e3d729abef1f27c081da5"}),`to this diff`),` that presents the set of the above changes made to a fresh react native project in our `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://github.com/software-mansion-labs/reanimated-2-playground"}),`Playground repo`),`.`));};MDXContent.isMDXComponent=true;
+`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("h2",{"id":"ios"},`iOS`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`On iOS installation is automatic. `),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("blockquote",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"blockquote"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("strong",{parentName:"p"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("em",{parentName:"strong"},`NOTE:`)),` In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
+use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
+undo all installation steps from the `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("a",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"p"},{"href":"https://docs.swmansion.com/react-native-reanimated/docs/installation#ios"}),`previous instruction`),`.  `)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("blockquote",null,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"blockquote"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("strong",{parentName:"p"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("em",{parentName:"strong"},`NOTE:`)),` If you want to turn off autoinstall on iOS please add the following compilation flag:
+`,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`DONT_AUTOINTSTALL_REANIMATED`),`.
+It can be done by pasting: `),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",{parentName:"blockquote"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{"className":"language-js"}),`post_install do |installer|
+   installer.pods_project.targets.each do |target|
+       target.build_configurations.each do |config|
+           config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINTSTALL_REANIMATED'
+       end
+   end
+end
+`)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",{parentName:"blockquote"},`to your `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`Podfile`),`. Don't forget to run `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`pod install`),` after doing that.`)));};MDXContent.isMDXComponent=true;
 
 /***/ }),
 /* 149 */
