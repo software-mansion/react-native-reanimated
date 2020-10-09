@@ -52,6 +52,7 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  'isNaN',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
