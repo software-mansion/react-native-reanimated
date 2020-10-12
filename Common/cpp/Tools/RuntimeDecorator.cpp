@@ -113,6 +113,17 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
   rt.global().setProperty(rt, "_measure", measureFunction);
   
+  auto clb5 = [](
+      jsi::Runtime &rt,
+      const jsi::Value &thisValue,
+      const jsi::Value *args,
+      size_t count
+      ) -> jsi::Value {
+    rt.global().setProperty(rt, args[0].asString(rt), args[1]);
+    return jsi::Value::undefined();
+  };
+  jsi::Value globalSetter = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_globalSetter"), 1, clb5);
+  rt.global().setProperty(rt, "_globalSetter", globalSetter);
 }
 
 }

@@ -150,3 +150,29 @@ export function startMapper(mapper, inputs = [], outputs = []) {
 export function stopMapper(mapperId) {
   NativeReanimated.stopMapper(mapperId);
 }
+
+export const runOnJS = (fun) => {
+  'worklet';
+  if (!_WORKLET) {
+    // eslint-disable-line
+    return fun;
+  }
+  if (!fun.__callAsync) {
+    throw new Error(
+      "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
+    );
+  } else {
+    return fun.__callAsync;
+  }
+};
+
+const capturableConsole = console;
+runOnUI(() => {
+  'worklet';
+  const console = {
+    log: runOnJS(capturableConsole.log),
+    warn: runOnJS(capturableConsole.warn),
+    error: runOnJS(capturableConsole.error),
+  };
+  _globalSetter('console', console); // eslint-disable-line
+})();

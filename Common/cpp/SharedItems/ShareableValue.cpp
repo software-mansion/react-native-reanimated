@@ -11,6 +11,12 @@ namespace reanimated {
 
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
+std::string CALLBACK_ERROR = R"(
+Tried to synchronously call function from a diffrent thread.
+Solution is:
+a) if you want to synchronously execute this method, mark it as a worklet
+b) if you want to execute this method on the JS thread, wrap it using runOnJS
+)";
   
 void addHiddenProperty(jsi::Runtime &rt,
                        jsi::Value &&value,
@@ -206,7 +212,19 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       } else {
         // function is accessed from a different runtme, we wrap function in host func that'd enqueue
         // call on an appropriate thread
+        
         auto module = this->module;
+        auto warnFunction = [module](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count
+            ) -> jsi::Value {
+          module->errorHandler->setError(CALLBACK_ERROR);
+          module->errorHandler->raise();
+          return jsi::Value::undefined();
+        };
+        
         auto hostFunction = this->hostFunction;
         auto hostRuntime = this->hostRuntime;
         auto clb = [module, hostFunction, hostRuntime](
@@ -242,7 +260,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           module->scheduler->scheduleOnJS(job);
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
+        jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, warnFunction);
+        jsi::Function res = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
+        addHiddenProperty(rt, std::move(res), wrapperFunction, "__callAsync");
+        return wrapperFunction;
       }
     case ValueType::WorkletFunctionType:
       auto module = this->module;
