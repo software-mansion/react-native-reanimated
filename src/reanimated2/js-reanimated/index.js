@@ -18,4 +18,8 @@ global._updatePropsJS = (viewTag, updates, viewRef) => {
   }
 };
 
+global._globalSetter = (name, val) => {
+  global[name] = val;
+};
+
 export default reanimatedJS;
