@@ -1,12 +1,11 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Button, View } from 'react-native';
-import { 
+import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
-  TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -25,6 +24,7 @@ import Animated, {
   useWorkletCallback,
   createWorklet,
   runOnUI,
+  useAnimatedReaction,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -102,7 +102,10 @@ function AnimatedScrollHandlerTest() {
 // useAnimatedGestureHandler with context
 function AnimatedGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, ctx) => {
       ctx.startX = x.value;
     },
@@ -131,7 +134,9 @@ function AnimatedGestureHandlerTest() {
 
 function AnimatedPinchGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PinchGestureHandlerGestureEvent
+  >({
     onActive: (event) => {
       x.value = event.scale;
     },
@@ -392,4 +397,41 @@ function CreateWorkletTest() {
   })();
 
   return <Animated.View style={styles.container} />;
+}
+
+// useWorkletCallback
+function UseAnimatedReactionTest() {
+  const [state, setState] = useState();
+  const sv = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    }
+  );
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    },
+    []
+  );
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    },
+    [state]
+  );
+
+  return null;
 }
