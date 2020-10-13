@@ -3,6 +3,7 @@ import { Easing } from './Easing';
 import NativeReanimated from './NativeReanimated';
 
 let IN_STYLE_UPDATER = false;
+const FRAME_LENGTH = 1000 / 60;
 
 const assertNumber = (value, callerName) => {
   'worklet';
@@ -133,7 +134,10 @@ export function withSpring(toValue, userConfig, callback) {
     function spring(animation, now) {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
-      const deltaTime = Math.min(now - lastTimestamp, 64);
+      const deltaTime =
+        lastTimestamp === now
+          ? FRAME_LENGTH
+          : Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
 
       const c = config.damping;
