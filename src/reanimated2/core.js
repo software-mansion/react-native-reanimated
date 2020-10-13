@@ -112,7 +112,8 @@ function workletValueSetterJS(value) {
         return;
       }
       if (callStart) {
-        callStart(timestamp);
+        // we subtract one frame so the initial delta will not be 0
+        callStart(timestamp - 1000 / 60);
         callStart = null; // prevent closure from keeping ref to previous animation
       }
       const finished = animation.animation(animation, timestamp);
