@@ -1,3 +1,5 @@
+/* global _WORKLET */
+
 import NativeReanimated from './NativeReanimated';
 
 global.__reanimatedWorkletInit = function(worklet) {
@@ -154,7 +156,6 @@ export function stopMapper(mapperId) {
 export const runOnJS = (fun) => {
   'worklet';
   if (!_WORKLET) {
-    // eslint-disable-line
     return fun;
   }
   if (!fun.__callAsync) {
