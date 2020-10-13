@@ -1,7 +1,7 @@
 /* global _WORKLET */
 import NativeReanimated from './NativeReanimated';
 
-const FRAME_LENGTH = 1000 / 60;
+export const FRAME_LENGTH = 1000 / 60;
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
