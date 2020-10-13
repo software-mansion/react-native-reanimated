@@ -1,3 +1,4 @@
+/* global _WORKLET */
 import React from 'react';
 import { TextInput, Button, View } from 'react-native';
 import Animated, {
@@ -13,7 +14,8 @@ import Animated, {
   useAnimatedScrollHandler,
   withDecay,
   withDelay,
-  loop,
+  withRepeat,
+  withSequence,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
@@ -107,33 +109,90 @@ const SimpleTest = () => {
       <Button
         title="change size(with timing)"
         onPress={() => {
-          sv.value = withTiming(updateSV());
+          sv.value = withTiming(updateSV(), null, (finished) => {
+            // callback may run on UI or on JS
+            // 'worklet'
+            console.log('timing clb', _WORKLET, finished);
+          });
         }}
       />
       <Button
         title="change size(with spring)"
         onPress={() => {
-          sv.value = withSpring(updateSV());
+          sv.value = withSpring(updateSV(), null, (finished) => {
+            // callback may run on UI or on JS
+            // 'worklet'
+            console.log('spring clb', _WORKLET, finished);
+          });
         }}
       />
       <Button
         title="change size(with decay)"
         onPress={() => {
-          sv.value = withDecay({
-            velocity: Math.floor(Math.random() * 100 - 50),
-          });
+          sv.value = withDecay(
+            {
+              velocity: Math.floor(Math.random() * 100 - 50),
+            },
+            (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('decay clb', _WORKLET, finished);
+            }
+          );
         }}
       />
       <Button
         title="change size(with delay)"
         onPress={() => {
-          sv.value = withDelay(1000, withTiming(updateSV(), { duration: 0 }));
+          sv.value = withDelay(
+            1000,
+            withTiming(updateSV(), { duration: 0 }, (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('delayed timing clb', _WORKLET, finished);
+            })
+          );
         }}
       />
       <Button
-        title="change size(loop)"
+        title="change size(with sequence)"
         onPress={() => {
-          sv.value = loop(withTiming(updateSV(), { duration: 500 }));
+          sv.value = withSequence(
+            withTiming(updateSV(), { duration: 500 }, (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('sequenced timing clb 1', _WORKLET, finished);
+            }),
+            withTiming(updateSV(), { duration: 500 }, (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('sequenced timing clb 2', _WORKLET, finished);
+            }),
+            withTiming(updateSV(), { duration: 500 }, (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('sequenced timing clb 3', _WORKLET, finished);
+            })
+          );
+        }}
+      />
+      <Button
+        title="change size(with repeat)"
+        onPress={() => {
+          sv.value = withRepeat(
+            withTiming(updateSV(), { duration: 500 }, (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('repeated timing clb', _WORKLET, finished);
+            }),
+            4,
+            true,
+            (finished) => {
+              // callback may run on UI or on JS
+              // 'worklet'
+              console.log('repeat clb final', _WORKLET, finished);
+            }
+          );
         }}
       />
       <PanGestureHandler onGestureEvent={gestureHandler}>
