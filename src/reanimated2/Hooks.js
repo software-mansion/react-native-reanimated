@@ -7,7 +7,6 @@ import {
   makeMutable,
   makeRemote,
   requestFrame,
-  FRAME_LENGTH,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -112,7 +111,8 @@ function runAnimations(animation, timestamp, key, result) {
       return allFinished;
     } else if (typeof animation === 'object' && animation.animation) {
       if (animation.callStart) {
-        animation.callStart(timestamp - FRAME_LENGTH);
+        // we subtract one frame so the initial delta will not be 0
+        animation.callStart(timestamp - 1000 / 60);
         animation.callStart = null;
       }
       const finished = animation.animation(animation, timestamp);

@@ -1,8 +1,6 @@
 /* global _WORKLET */
 import NativeReanimated from './NativeReanimated';
 
-export const FRAME_LENGTH = 1000 / 60;
-
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
 };
@@ -69,7 +67,8 @@ function workletValueSetter(value) {
         return;
       }
       if (callStart) {
-        callStart(timestamp - FRAME_LENGTH);
+        // we subtract one frame so the initial delta will not be 0
+        callStart(timestamp - 1000 / 60);
         callStart = null; // prevent closure from keeping ref to previous animation
       }
       const finished = animation.animation(animation, timestamp);
