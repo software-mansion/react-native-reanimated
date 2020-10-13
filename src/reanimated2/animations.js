@@ -132,6 +132,7 @@ export function withSpring(toValue, userConfig, callback) {
 
     function spring(animation, now) {
       const { toValue, lastTimestamp, current, velocity } = animation;
+
       const deltaTime = Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
 
