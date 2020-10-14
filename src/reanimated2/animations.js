@@ -165,6 +165,7 @@ export function cancelAnimation(sharedValue) {
 }
 
 function callbackDecorator(callback) {
+  'worklet';
   if (!callback || callback.__worklet) {
     return callback;
   }
