@@ -583,7 +583,12 @@ export function useAnimatedReaction(prepare, react, dependencies) {
   const { inputs } = inputsRef.current;
 
   if (dependencies === undefined) {
-    dependencies = [...inputs, prepare.__workletHash, react.__workletHash];
+    dependencies = [
+      Object.values(prepare._closure),
+      Object.values(react._closure),
+      prepare.__workletHash,
+      react.__workletHash,
+    ];
   } else {
     dependencies.push(prepare.__workletHash, react.__workletHash);
   }
