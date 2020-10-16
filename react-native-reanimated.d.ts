@@ -453,7 +453,8 @@ declare module 'react-native-reanimated' {
 
     // reanimated2 hooks
     export function useSharedValue<T>(
-      initialValue: T
+      initialValue: T,
+      shouldRebuild?: boolean
     ): T extends SharedValueType ? SharedValue<T> : never;
 
     export function useDerivedValue<T extends SharedValueType>(
