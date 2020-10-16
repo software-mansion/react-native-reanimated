@@ -573,7 +573,7 @@ export function useAnimatedRef() {
  * the first worklet defines the inputs, in other words on which shared values change will it be called.
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
-export function useAnimatedReaction(prepare, react) {
+export function useAnimatedReaction(prepare, react, dependencies) {
   const inputsRef = useRef(null);
   if (inputsRef.current === null) {
     inputsRef.current = {
@@ -581,6 +581,17 @@ export function useAnimatedReaction(prepare, react) {
     };
   }
   const { inputs } = inputsRef.current;
+
+  if (dependencies === undefined) {
+    dependencies = [
+      Object.values(prepare._closure),
+      Object.values(react._closure),
+      prepare.__workletHash,
+      react.__workletHash,
+    ];
+  } else {
+    dependencies.push(prepare.__workletHash, react.__workletHash);
+  }
 
   useEffect(() => {
     const fun = () => {
@@ -592,7 +603,7 @@ export function useAnimatedReaction(prepare, react) {
     return () => {
       stopMapper(mapperId);
     };
-  }, inputs);
+  }, dependencies);
 }
 
 export function useWorkletCallback(fun, deps) {

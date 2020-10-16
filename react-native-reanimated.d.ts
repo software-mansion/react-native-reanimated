@@ -187,7 +187,7 @@ declare module 'react-native-reanimated' {
       ? T
       : never;
     export type AdaptTransforms<T> = {
-      [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>
+      [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>;
     };
     export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[];
 
@@ -197,9 +197,8 @@ declare module 'react-native-reanimated' {
         : (S[K] extends ReadonlyArray<any>
             ? ReadonlyArray<AnimateStyle<S[K][0]>>
             : S[K] extends object
-            ? AnimateStyle<S[K]>
-            : // allow `number` where `string` normally is to support colors
-            S[K] extends (string | undefined)
+            ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
+            : S[K] extends (string | undefined)
             ? S[K] | number
             :
                 | S[K]
@@ -460,8 +459,12 @@ declare module 'react-native-reanimated' {
       processor: () => T,
       deps?: DependencyList
     ): SharedValue<T>;
-                        
-    export function useAnimatedReaction<D>(dependencies: () => D, effects: (dependencies: D) => void);
+
+    export function useAnimatedReaction<D>(
+      dependencies: () => D,
+      effects: (dependencies: D) => void,
+      deps?: DependencyList
+    );
 
     export function useAnimatedStyle<
       T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
