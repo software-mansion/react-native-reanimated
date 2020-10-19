@@ -18,7 +18,7 @@ worklet which takes data prepared by the one in the first parameter and performs
 
 #### `dependencies` [Array]
 
-Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component.
+Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 
 Example:
 
