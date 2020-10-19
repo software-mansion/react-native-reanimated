@@ -395,6 +395,144 @@ function normalizeColor(color) {
   return null;
 }
 
+export const ColorSpace = Object.freeze({
+  RGB: 'rgb',
+  HSV: 'hsv',
+});
+
+export const opacity = (c) => {
+  'worklet';
+  return ((c >> 24) & 255) / 255;
+};
+
+export const red = (c) => {
+  'worklet';
+  return (c >> 16) & 255;
+};
+
+export const green = (c) => {
+  'worklet';
+  return (c >> 8) & 255;
+};
+
+export const blue = (c) => {
+  'worklet';
+  return c & 255;
+};
+
+export const rgbaColor = (r, g, b, alpha = 1) => {
+  'worklet';
+  if (Platform.OS === 'web' || !_WORKLET) {
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const a = alpha * 255;
+  const c =
+    a * (1 << 24) +
+    Math.round(r) * (1 << 16) +
+    Math.round(g) * (1 << 8) +
+    Math.round(b);
+  if (Platform.OS === 'android') {
+    // on Android color is represented as signed 32 bit int
+    return c < (1 << 31) >>> 0 ? c : c - Math.pow(2, 32);
+  }
+  return c;
+};
+
+/* accepts parameters
+ * r  Object = {r:x, g:y, b:z}
+ * OR
+ * r, g, b
+ */
+function RGBtoHSV(r, g, b) {
+  'worklet';
+  /* eslint-disable */
+  if (arguments.length === 1) {
+    (g = r.g), (b = r.b), (r = r.r);
+  }
+  var max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    d = max - min,
+    h,
+    s = max === 0 ? 0 : d / max,
+    v = max / 255;
+
+  switch (max) {
+    case min:
+      h = 0;
+      break;
+    case r:
+      h = g - b + d * (g < b ? 6 : 0);
+      h /= 6 * d;
+      break;
+    case g:
+      h = b - r + d * 2;
+      h /= 6 * d;
+      break;
+    case b:
+      h = r - g + d * 4;
+      h /= 6 * d;
+      break;
+  }
+
+  return {
+    h: h,
+    s: s,
+    v: v,
+  };
+  /* eslint-enable */
+}
+
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR
+ * h, s, v
+ */
+function HSVtoRGB(h, s, v) {
+  'worklet';
+  /* eslint-disable */
+  var r, g, b, i, f, p, q, t;
+  if (arguments.length === 1) {
+    (s = h.s), (v = h.v), (h = h.h);
+  }
+  i = Math.floor(h * 6);
+  f = h * 6 - i;
+  p = v * (1 - s);
+  q = v * (1 - f * s);
+  t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0:
+      (r = v), (g = t), (b = p);
+      break;
+    case 1:
+      (r = q), (g = v), (b = p);
+      break;
+    case 2:
+      (r = p), (g = v), (b = t);
+      break;
+    case 3:
+      (r = p), (g = q), (b = v);
+      break;
+    case 4:
+      (r = t), (g = p), (b = v);
+      break;
+    case 5:
+      (r = v), (g = p), (b = q);
+      break;
+  }
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
+  /* eslint-enable */
+}
+
+export const hsvToColor = (h, s, v) => {
+  'worklet';
+  const { r, g, b } = HSVtoRGB(h, s, v);
+  return rgbaColor(r, g, b);
+};
+
 export function processColorInitially(color) {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
@@ -423,7 +561,7 @@ export function isColor(value) {
   return processColorInitially(value) != null;
 }
 
-export default function processColor(color) {
+export function processColor(color) {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
@@ -461,132 +599,10 @@ export function toRGBA(HSVA) {
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
-export const ColorSpace = Object.freeze({
-  RGB: 'rgb',
-  HSV: 'hsv',
-});
-
-const fract = (v) => {
-  'worklet';
-  return v - Math.floor(v);
-};
-
-export const opacity = (c) => {
-  'worklet';
-  return ((c >> 24) & 255) / 255;
-};
-
-export const red = (c) => {
-  'worklet';
-  return (c >> 16) & 255;
-};
-
-export const green = (c) => {
-  'worklet';
-  return (c >> 8) & 255;
-};
-
-export const blue = (c) => {
-  'worklet';
-  return c & 255;
-};
-
-const mix = (value, x, y) => {
-  'worklet';
-  return x + value * (y - x);
-};
-const clamp = (value, lowerBound, upperBound) => {
-  'worklet';
-  return Math.min(Math.max(lowerBound, value), upperBound);
-};
-
-export const rgbaColor = (r, g, b, alpha = 1) => {
-  'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  const a = alpha * 255;
-  const c =
-    a * (1 << 24) +
-    Math.round(r) * (1 << 16) +
-    Math.round(g) * (1 << 8) +
-    Math.round(b);
-  if (Platform.OS === 'android') {
-    // on Android color is represented as signed 32 bit int
-    return c < (1 << 31) >>> 0 ? c : c - Math.pow(2, 32);
-  }
-  return c;
-};
-
-export const hsvToRgb = (h, s, v) => {
-  'worklet';
-  // vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  const K = {
-    x: 1,
-    y: 2 / 3,
-    z: 1 / 3,
-    w: 3,
-  };
-  // vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-  const p = {
-    x: Math.abs(fract(h + K.x) * 6 - K.w),
-    y: Math.abs(fract(h + K.y) * 6 - K.w),
-    z: Math.abs(fract(h + K.z) * 6 - K.w),
-  };
-  // return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-  const rgb = {
-    x: v * mix(s, K.x, clamp(p.x - K.x, 0, 1)),
-    y: v * mix(s, K.x, clamp(p.y - K.x, 0, 1)),
-    z: v * mix(s, K.x, clamp(p.z - K.x, 0, 1)),
-  };
-  return {
-    r: Math.round(rgb.x * 255),
-    g: Math.round(rgb.y * 255),
-    b: Math.round(rgb.z * 255),
-  };
-};
-
-export const hsvToColor = (h, s, v) => {
-  'worklet';
-  const { r, g, b } = hsvToRgb(h, s, v);
-  return rgbaColor(r, g, b);
-};
-
-const rgbToHsv = (c) => {
-  'worklet';
-  const r = red(c) / 255;
-  const g = green(c) / 255;
-  const b = blue(c) / 255;
-
-  const ma = Math.max(r, g, b);
-  const mi = Math.min(r, g, b);
-  let h = 0;
-  const v = ma;
-
-  const d = ma - mi;
-  const s = ma === 0 ? 0 : d / ma;
-  if (ma === mi) {
-    h = 0; // achromatic
-  } else {
-    switch (ma) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-  return { h, s, v };
-};
 
 const interpolateColorsHSV = (value, inputRange, colors) => {
   'worklet';
-  const colorsAsHSV = colors.map((c) => rgbToHsv(c));
+  const colorsAsHSV = colors.map((c) => RGBtoHSV(c));
   const h = interpolate(
     value,
     inputRange,
