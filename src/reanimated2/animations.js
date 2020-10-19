@@ -177,7 +177,6 @@ function callbackDecorator(callback) {
 
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
-  // check toValue
   callback = callbackDecorator(callback);
 
   return defineAnimation(toValue, () => {
@@ -244,7 +243,6 @@ export function withTiming(toValue, userConfig, callback) {
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
-  // check toValue
   callback = callbackDecorator(callback);
 
   return defineAnimation(toValue, () => {
