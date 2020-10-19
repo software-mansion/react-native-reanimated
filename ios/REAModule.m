@@ -21,7 +21,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _bridge_reanimated = nil;
   _transitionManager = nil;
   [_nodesManager invalidate];
-  [self.bridge.eventDispatcher removeDispatchObserver:self];
   [self.bridge.uiManager.observerCoordinator removeObserver:self];
 }
 
@@ -43,8 +42,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
   _transitionManager = [[REATransitionManager alloc] initWithUIManager:self.bridge.uiManager];
 
-  [bridge.eventDispatcher addDispatchObserver:self];
-  //[bridge.uiManager.observerCoordinator addObserver:self];
+  [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
 #pragma mark -- Transitioning API
