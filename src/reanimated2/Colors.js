@@ -392,7 +392,7 @@ function normalizeColor(color) {
   return null;
 }
 
-export default function processColor(color) {
+export function processColorInitially(color) {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -408,7 +408,28 @@ export default function processColor(color) {
     return null;
   }
 
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0;
+  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // argb
+  return normalizedColor;
+}
+
+export function isColor(value) {
+  'worklet';
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return processColorInitially(value) != null;
+}
+
+export default function processColor(color) {
+  'worklet';
+  let normalizedColor = processColorInitially(color);
+  if (normalizedColor === null || normalizedColor === undefined) {
+    return undefined;
+  }
+
+  if (typeof normalizedColor !== 'number') {
+    return null;
+  }
 
   if (Platform.OS === 'android') {
     // Android use 32 bit *signed* integer to represent the color
@@ -419,4 +440,110 @@ export default function processColor(color) {
   }
 
   return normalizedColor;
+}
+
+/* accepts parameters
+ * r  Object = {r:x, g:y, b:z}
+ * OR
+ * r, g, b
+ */
+function RGBtoHSV(r, g, b) {
+  'worklet';
+  /* eslint-disable */
+  if (arguments.length === 1) {
+    (g = r.g), (b = r.b), (r = r.r);
+  }
+  var max = Math.max(r, g, b),
+    min = Math.min(r, g, b),
+    d = max - min,
+    h,
+    s = max === 0 ? 0 : d / max,
+    v = max / 255;
+
+  switch (max) {
+    case min:
+      h = 0;
+      break;
+    case r:
+      h = g - b + d * (g < b ? 6 : 0);
+      h /= 6 * d;
+      break;
+    case g:
+      h = b - r + d * 2;
+      h /= 6 * d;
+      break;
+    case b:
+      h = r - g + d * 4;
+      h /= 6 * d;
+      break;
+  }
+
+  return {
+    h: h,
+    s: s,
+    v: v,
+  };
+  /* eslint-enable */
+}
+
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR
+ * h, s, v
+ */
+function HSVtoRGB(h, s, v) {
+  'worklet';
+  /* eslint-disable */
+  var r, g, b, i, f, p, q, t;
+  if (arguments.length === 1) {
+    (s = h.s), (v = h.v), (h = h.h);
+  }
+  i = Math.floor(h * 6);
+  f = h * 6 - i;
+  p = v * (1 - s);
+  q = v * (1 - f * s);
+  t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0:
+      (r = v), (g = t), (b = p);
+      break;
+    case 1:
+      (r = q), (g = v), (b = p);
+      break;
+    case 2:
+      (r = p), (g = v), (b = t);
+      break;
+    case 3:
+      (r = p), (g = q), (b = v);
+      break;
+    case 4:
+      (r = t), (g = p), (b = v);
+      break;
+    case 5:
+      (r = v), (g = p), (b = q);
+      break;
+  }
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
+  /* eslint-enable */
+}
+
+export function convertToHSVA(color) {
+  'worklet';
+  const processedColor = processColorInitially(color); // argb;
+  const a = (processedColor >>> 24) / 255;
+  const r = (processedColor << 8) >>> 24;
+  const g = (processedColor << 16) >>> 24;
+  const b = (processedColor << 24) >>> 24;
+  const { h, s, v } = RGBtoHSV(r, g, b);
+  return [h, s, v, a];
+}
+
+export function toRGBA(HSVA) {
+  'worklet';
+  const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
+  return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }

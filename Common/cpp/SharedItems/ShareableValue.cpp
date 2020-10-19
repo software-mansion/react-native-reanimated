@@ -273,12 +273,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));
         std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
-        
-        // HACK ALERT: there is a special case of "setter" function where we don't want to pass
-        // closure as "this". Here we handle that case separately;
-        if (module->valueSetter.get() == this) {
-          return jsi::Value(rt, *funPtr);
-        }
 
         auto clb = [=](
                    jsi::Runtime &rt,
