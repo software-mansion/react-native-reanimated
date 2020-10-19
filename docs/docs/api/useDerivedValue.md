@@ -18,7 +18,9 @@ The `updaterWorklet` will be triggered immediately upon use of this hook in orde
 
 #### `dependencies` [Array]
 
-Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component. Example:
+Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component.
+
+Example:
 
 ```js {7}
 const App = () => {

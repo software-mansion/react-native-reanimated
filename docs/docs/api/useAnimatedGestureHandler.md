@@ -28,7 +28,9 @@ This object will persist in between events and across worklet handlers for all t
 
 #### `dependencies` [Array]
 
-Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component. Example:
+Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component.
+
+Example:
 
 ```js {11}
 const App = () => {

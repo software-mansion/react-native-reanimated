@@ -33,7 +33,9 @@ When there are several event handlers provided in a form of an object of worklet
 
 #### `dependencies` [Array]
 
-Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component. Example:
+Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component.
+
+Example:
 
 ```js {11}
 const App = () => {
