@@ -23,17 +23,41 @@ Each of the worklet will be triggered when the corresponding event is dispatched
 
 In either case (regardless of whether we pass a single handler worklet, or an object of worklets), each of the event worklets will receive the following parameters when called:
 
-##### `event` [object]
-
-Event object carrying the information about the scroll.
+- `event` [object] - event object carrying the information about the scroll.
 The payload can differ depending on the type of the event (`onScroll`, `onBeginDrag`, etc.).
 Please consult [React Native's ScrollView documentation](https://reactnative.dev/docs/scrollview) to learn about scroll event structure.
 
-##### `context` [object]
-
-A plain JS object that can be used to store some state.
+- `context` [object] - plain JS object that can be used to store some state.
 This object will persist in between scroll event occurrences and you can read and write any data to it.
 When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
+
+#### `dependencies` [Array]
+
+Optional argument which is an array of values which changes cause this hook to rebuild the worklet. It results in receiving updated values during rerender of the wrapping component. Example:
+
+```js {11}
+const App = () => {
+  const [state, setState] = useState(0);
+  const sv = useSharedValue(0);
+
+  const handler = useAnimatedScrollHandler(
+    {
+      onEndDrag: (e) => {
+        sv.value = state;
+      },
+    },
+    dependencies
+  );
+  //...
+  return <></>
+}
+```
+
+`dependencies` here may be:
+
+- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure(variables from outer scope used in worklet),
+- empty array(`[]`) - worklet will be rebuilt only if any of the callbacks' bodies changes,
+- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
 
 ### Returns
 
