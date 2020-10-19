@@ -8,20 +8,13 @@ This is a convenience hook that returns an event handler reference which can be 
 
 ### Arguments
 
-#### `scrollHandlerOrHandlersObject` [worklet|object with worklets]
+#### `scrollHandlerOrHandlersObject` [object with worklets]
 
-This hook can be used in two ways.
-Either by passing a single worklet that corresponds to a scroll handler.
-The second way can be used if we are interested in processing other events related to scrolling such as `onBeginDrag` or `onMomentumBegin`.
-
-In the first case, the argument should be a worklet that will be triggered when `onScroll` event is dispatched for the connected Scrollable component.
-In such a case the worklet will receive the following parameters:
-
-In the case where we are interested in handling other scroll related events, instead of passing a single worklet we can pass an object containing any of the following keys: `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, `onMomentumEnd`.
+Object containing any of the following keys: `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, `onMomentumEnd`.
 The values in the object should be individual worklets.
 Each of the worklet will be triggered when the corresponding event is dispatched on the connected Scrollable component.
 
-In either case (regardless of whether we pass a single handler worklet, or an object of worklets), each of the event worklets will receive the following parameters when called:
+Each of the event worklets will receive the following parameters when called:
 
 - `event` [object] - event object carrying the information about the scroll.
 The payload can differ depending on the type of the event (`onScroll`, `onBeginDrag`, etc.).
