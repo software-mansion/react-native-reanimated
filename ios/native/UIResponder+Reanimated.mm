@@ -7,7 +7,7 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
 
-#ifndef DONT_AUTOINTSTALL_REANIMATED
+#ifndef DONT_AUTOINSTALL_REANIMATED
 
 @implementation UIResponder (Reanimated)
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
