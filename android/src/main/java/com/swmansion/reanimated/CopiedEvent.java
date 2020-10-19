@@ -18,7 +18,7 @@ public class CopiedEvent {
       public void receiveEvent(int targetTag, String eventName, @Nullable WritableMap event) {
         CopiedEvent.this.targetTag = targetTag;
         CopiedEvent.this.eventName = eventName;
-        CopiedEvent.this.payload = event;
+        CopiedEvent.this.payload = event.copy();
       }
 
       @Override
