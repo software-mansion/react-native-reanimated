@@ -50,6 +50,9 @@ const styles = StyleSheet.create({
 // useSharedValue
 function SharedValueTest() {
   const translate = useSharedValue(0);
+  const translate2 = useSharedValue(0, true);
+  const translate3 = useSharedValue(0, false);
+
   return <Animated.View style={styles.container} />;
 }
 
