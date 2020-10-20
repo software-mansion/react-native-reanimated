@@ -12,7 +12,7 @@ namespace reanimated {
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
 std::string CALLBACK_ERROR = R"(
-Tried to synchronously call function from a diffrent thread.
+Tried to synchronously call function from a different thread.
 Solution is:
 a) if you want to synchronously execute this method, mark it as a worklet
 b) if you want to execute this method on the JS thread, wrap it using runOnJS

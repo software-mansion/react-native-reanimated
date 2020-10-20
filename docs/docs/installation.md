@@ -38,6 +38,7 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
 To use experimental support of Reanimated 2 in the Expo managed apps follow [their installation instructions](https://docs.expo.io/versions/latest/sdk/reanimated/).
 
 ### Using master branch builds
+
 To use Reanimated 2 built from the master branch:
 
 - go to the ["Build npm package" workflow in Reanimated repository](https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22)
@@ -110,28 +111,31 @@ You can refer [to this diff](https://github.com/software-mansion-labs/reanimated
 ### Proguard
 
 If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:
+
 ```
 -keep class com.facebook.react.turbomodule.** { *; }
 ```
 
 ## iOS
 
-On iOS installation is automatic. 
+On iOS installation is automatic.
 
-> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer 
-> use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely 
-> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).  
+> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
+> use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
+> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).
 
-> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag: 
-> `DONT_AUTOINTSTALL_REANIMATED`.
-> It can be done by pasting: 
+> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag:
+> `DONT_AUTOINSTALL_REANIMATED`.
+> It can be done by pasting:
+>
 > ```js
 > post_install do |installer|
 >    installer.pods_project.targets.each do |target|
 >        target.build_configurations.each do |config|
->            config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINTSTALL_REANIMATED'
+>            config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINSTALL_REANIMATED'
 >        end
 >    end
 > end
 > ```
+>
 > to your `Podfile`. Don't forget to run `pod install` after doing that.
