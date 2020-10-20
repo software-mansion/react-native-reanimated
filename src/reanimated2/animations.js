@@ -256,8 +256,8 @@ export function withSpring(toValue, userConfig, callback) {
       mass: 1,
       stiffness: 100,
       overshootClamping: false,
-      restDisplacementThreshold: 0.001,
-      restSpeedThreshold: 0.001,
+      restDisplacementThreshold: 0.01,
+      restSpeedThreshold: 2,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
