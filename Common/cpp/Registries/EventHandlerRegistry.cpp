@@ -23,7 +23,7 @@ void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName,
   auto handlersIt = eventMappings.find(eventName);
   if (handlersIt != eventMappings.end()) {
     std::string delimimter = "NativeMap:";
-    auto eventSplitted = eventPayload.substr(eventPayload.find(delimimter) + del.size(), eventPayload.size());
+    auto eventSplitted = eventPayload.substr(eventPayload.find(delimimter) + delimimter.size(), eventPayload.size());
     auto eventJSON = eventSplitted.substr(0, eventSplitted.size() - 1);
     std::vector<uint8_t> eventJSONVector(eventJSON.begin(), eventJSON.end());
 
