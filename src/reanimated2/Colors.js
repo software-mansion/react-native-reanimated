@@ -442,6 +442,8 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
  * r  Object = {r:x, g:y, b:z}
  * OR
  * r, g, b
+ * 0 <= r, g, b <= 255
+ * returns 0 <= h, s, v <= 1
  */
 function RGBtoHSV(r, g, b) {
   'worklet';
@@ -486,6 +488,8 @@ function RGBtoHSV(r, g, b) {
  * h  Object = {h:x, s:y, v:z}
  * OR
  * h, s, v
+ * 0 <= h, s, v <= 1
+ * returns 0 <= r, g, b <= 255
  */
 function HSVtoRGB(h, s, v) {
   'worklet';
