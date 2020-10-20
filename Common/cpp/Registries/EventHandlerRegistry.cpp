@@ -22,8 +22,13 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName, std::string eventPayload) {
   auto handlersIt = eventMappings.find(eventName);
   if (handlersIt != eventMappings.end()) {
-    // TODO: use jsi::Value::createFromJsonUtf8
-    auto eventObject = eval(rt, ("(" + eventPayload + ")").c_str()).asObject(rt).getProperty(rt, "NativeMap");
+    std::string delimimter = "NativeMap:";
+    auto eventSplitted = eventPayload.substr(eventPayload.find(delimimter) + del.size(), eventPayload.size());
+    auto eventJSON = eventSplitted.substr(0, eventSplitted.size() - 1);
+    std::vector<uint8_t> eventJSONVector(eventJSON.begin(), eventJSON.end());
+
+    auto eventObject = jsi::Value::createFromJsonUtf8(rt, &eventJSONVector[0], eventJSON.size());
+      
     eventObject.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
     for (auto handler : handlersIt->second) {
       handler.second->process(rt, eventObject);
