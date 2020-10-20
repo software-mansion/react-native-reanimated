@@ -30,10 +30,8 @@ void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName,
     auto lastBracketCharactedPosition = eventPayload.size() - positionToSplit - 1;
     auto eventJSON = eventPayload.substr(positionToSplit,  lastBracketCharactedPosition);
 
-    std::vector<uint8_t> eventJSONVector(eventJSON.begin(), eventJSON.end());
+    auto eventObject = jsi::Value::createFromJsonUtf8(rt, (uint8_t*)(&eventJSON[0]), eventJSON.size());
 
-    auto eventObject = jsi::Value::createFromJsonUtf8(rt, &eventJSONVector[0], eventJSON.size());
-      
     eventObject.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
     for (auto handler : handlersIt->second) {
       handler.second->process(rt, eventObject);
