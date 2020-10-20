@@ -17,9 +17,9 @@ import Animated, {
   withTiming,
   withSpring,
   cancelAnimation,
-  delay,
-  repeat,
-  sequence,
+  withDelay,
+  withRepeat,
+  withSequence,
   withDecay,
   useWorkletCallback,
   createWorklet,
@@ -246,8 +246,8 @@ function CancelAnimationTest() {
   );
 }
 
-// delay
-function DelayTest() {
+// withDelay
+function WithDelayTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -257,7 +257,7 @@ function DelayTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = delay(1000, withTiming(70));
+      x.value = withDelay(1000, withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -276,8 +276,8 @@ function DelayTest() {
   );
 }
 
-// repeat
-function RepeatTest() {
+// withRepeat
+function WithRepeatTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -287,7 +287,7 @@ function RepeatTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = repeat(withTiming(70), 1, true);
+      x.value = withRepeat(withTiming(70), 1, true);
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -306,8 +306,8 @@ function RepeatTest() {
   );
 }
 
-// sequence
-function SequenceTest() {
+// withSequence
+function WithSequenceTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -317,7 +317,7 @@ function SequenceTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = sequence(withTiming(70), withTiming(70));
+      x.value = withSequence(withTiming(70), withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {

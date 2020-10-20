@@ -420,13 +420,13 @@ declare module 'react-native-reanimated' {
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
       sharedValue: T
     ): void;
-    export function delay(delayMS: number, delayedAnimation: number): number;
-    export function repeat(
+    export function withDelay(delayMS: number, delayedAnimation: number): number;
+    export function withRepeat(
       animation: number,
       numberOfReps?: number,
       reverse?: boolean
     ): number;
-    export function sequence(...animations: [number, ...number[]]): number;
+    export function withSequence(...animations: [number, ...number[]]): number;
 
     // hooks
     export function useCode(
@@ -731,8 +731,8 @@ declare module 'react-native-reanimated' {
   export const withSpring: typeof Animated.withSpring;
   export const withDecay: typeof Animated.withDecay;
   export const cancelAnimation: typeof Animated.cancelAnimation;
-  export const delay: typeof Animated.delay;
-  export const repeat: typeof Animated.repeat;
-  export const sequence: typeof Animated.sequence;
+  export const withDelay: typeof Animated.withDelay;
+  export const withRepeat: typeof Animated.withRepeat;
+  export const withSequence: typeof Animated.withSequence;
   export const interpolate: typeof Animated.interpolate;
 }
