@@ -11,7 +11,7 @@ It allows for creating an association between shared values and View properties.
 
 #### `updater` [Function]
 
-Single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically) which is responsible for returning an object with view style properties.
+Single worklet which is responsible for returning an object with view style properties.
 
 #### `dependencies` [Array]
 
