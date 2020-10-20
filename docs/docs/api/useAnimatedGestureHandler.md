@@ -12,23 +12,49 @@ Before you can use the hook, make sure that you have `react-native-gesture-handl
 
 #### `gestureHandlers` [object with worklets]
 
-The first and only argument to this hook is an object that can carry one or more worklet handlers.
+The first argument to this hook is an object that can carry one or more worklet handlers.
 The handlers can be set under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
 
 Read more about gesture handling states in the [Gesture Handler library documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/state.html).
 Each of the specified handlers will be triggered depending on the current state of the attached Gesture Handler.
 The handler worklet will receive the following arguments:
 
-##### `event` [object]
-
-Event object carrying the event payload.
+- `event` [object] - event object carrying the event payload.
 The payload will be different depending on the type of the Gesture Handler to which the worklet is attached (`PanGestureHandler`, `RotationGestureHandler`, etc.).
 Please check the documentation section on the [selected handler type](https://docs.swmansion.com/react-native-gesture-handler/docs/getting-started.html) to learn about the event structure.
 
-##### `context` [object]
-
-A plain JS object that can be used to store some state.
+- `context` [object] - plain JS object that can be used to store some state.
 This object will persist in between events and across worklet handlers for all the selected states and you can read and write any data to it.
+
+#### `dependencies` [Array]
+
+Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+
+Example:
+
+```js {11}
+const App = () => {
+  const [state, setState] = useState(0);
+  const sv = useSharedValue(0);
+
+  const handler = useAnimatedGestureHandler(
+    {
+      onEnd: (_) => {
+        sv.value = state;
+      },
+    },
+    dependencies
+  );
+  //...
+  return <></>
+}
+```
+
+`dependencies` here may be:
+
+- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure(variables from outer scope used in worklet),
+- empty array(`[]`) - worklet will be rebuilt only if any of the callbacks' bodies changes,
+- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or in any values from the given array.
 
 ### Returns
 

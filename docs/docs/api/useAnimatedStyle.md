@@ -6,17 +6,50 @@ sidebar_label: useAnimatedStyle
 
 This hook is one of the main elements of the new Reanimated v2 API.
 It allows for creating an association between shared values and View properties.
-The hook takes a single worklet (it is not necessary to add `worklet` directive here, because the method will be converted to worklet automatically).
-The provided worklet is responsible for returning a object with view style properties.
 
-For the list of available properties you can refer to the React Native core documentation on [View Style Props](https://reactnative.dev/docs/view-style-props). You may also want to check React Native’s [guide on styling views](https://reactnative.dev/docs/style).
+### Arguments
 
-In order to connect the animated style hook result, you need to pass it as one of the `style` properties to the `Animated` version of the component (e.g. `Animated.View`).
-In React Native, View’s `style` property can take an array of styles, which gives you a way to mix static and dynamic styles.
-We recommend that you defined static styles using React Native’s [`StyleSheet` API](https://reactnative.dev/docs/stylesheet) and pass them along the animated styles object returned by this hook.
+#### `updater` [Function]
+
+Single worklet which is responsible for returning an object with view style properties.
+
+#### `dependencies` [Array]
+
+Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+
+Example:
+
+```js {9}
+const App = () => {
+  const [state, setState] = useState(0);
+  const sv = useSharedValue(state);
+
+  const style = useAnimatedStyle(() => {
+    return {
+      width: sv.value,
+    };
+  }, dependencies);
+  //...
+  return <></>
+}
+```
+
+`dependencies` here may be:
+
+- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in it's body or any values from it's closure(variables from outer scope used in worklet),
+- empty array(`[]`) - worklet will be rebuilt only if it's body changes,
+- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in it's body or any values from the given array.
+
+### Returns
+
+Animated style - in order to connect the animated style hook result, you need to pass it as one of the `style` properties to the `Animated` version of the component (e.g. `Animated.View`).
+In React Native, View's `style` property can take an array of styles, which gives you a way to mix static and dynamic styles.
+We recommend that you defined static styles using React Native's [`StyleSheet` API](https://reactnative.dev/docs/stylesheet) and pass them along the animated styles object returned by this hook.
 It is more efficient to only keep styles that are actually changed as a result of animation in the animated style hook, and the rest of the styles should be either provided as inline objects or using StyleSheets.
 
 If the style worklet uses any shared values, it will be executed upon these values updates and the connected view will be updated.
+
+For the list of available properties you can refer to the React Native core documentation on [View Style Props](https://reactnative.dev/docs/view-style-props). You may also want to check React Native's [guide on styling views](https://reactnative.dev/docs/style).
 
 ## Example
 

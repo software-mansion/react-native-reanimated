@@ -12,9 +12,34 @@ The hook returns the same type of a shared value reference instance as [`useShar
 
 #### `updaterWorklet` [worklet]
 
-The first and only argument is a worklet that gets triggered whenever at least one of the shared values used in that worklet changes.
+The first argument is a worklet that gets triggered whenever at least one of the shared values used in that worklet changes.
 It is expected that the worklet return a new JS value (number, string, bool, Object, Array) that will be assigned to the shared value reference the hook returns.
 The `updaterWorklet` will be triggered immediately upon use of this hook in order to calculate the initial payload for the returned shared value.
+
+#### `dependencies` [Array]
+
+Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+
+Example:
+
+```js {7}
+const App = () => {
+  const [state, setState] = useState(0);
+  const sv = useSharedValue(state);
+
+  const derived = useDerivedValue(() => {
+    return sv.value * state;
+  }, dependencies);
+  //...
+  return <></>
+}
+```
+
+`dependencies` here may be:
+
+- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in it's body or any values from it's closure(variables from outer scope used in worklet),
+- empty array(`[]`) - worklet will be rebuilt only if it's body changes,
+- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in it's body or any values from the given array.
 
 ### Returns
 
