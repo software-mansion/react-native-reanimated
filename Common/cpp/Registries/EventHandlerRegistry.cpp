@@ -22,9 +22,14 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName, std::string eventPayload) {
   auto handlersIt = eventMappings.find(eventName);
   if (handlersIt != eventMappings.end()) {
+    // We receive here a JS Map with JSON as a value of NativeMap key
+    // { NativeMap: { "jsonProp": "json value" } }
+    // So we need to extract only JSON part
     std::string delimimter = "NativeMap:";
-    auto eventSplitted = eventPayload.substr(eventPayload.find(delimimter) + delimimter.size(), eventPayload.size());
-    auto eventJSON = eventSplitted.substr(0, eventSplitted.size() - 1);
+    auto positionToSplit = eventPayload.find(delimimter) + delimimter.size();
+    auto lastBracketCharactedPosition = eventPayload.size() - positionToSplit - 1;
+    auto eventJSON = eventPayload.substr(positionToSplit,  lastBracketCharactedPosition);
+
     std::vector<uint8_t> eventJSONVector(eventJSON.begin(), eventJSON.end());
 
     auto eventObject = jsi::Value::createFromJsonUtf8(rt, &eventJSONVector[0], eventJSON.size());
