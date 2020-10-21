@@ -275,6 +275,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));
         std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+        auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
 
         auto clb = [=](
                    jsi::Runtime &rt,
@@ -301,7 +302,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
            return res;
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "workletFunction"), 0, clb);
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
       } else {
         // when run outside of UI thread we enqueue a call on the UI thread
         auto retain_this = shared_from_this();
@@ -353,7 +354,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           });
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "workletFunction"), 0, clb);
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_workletFunction"), 0, clb);
       }
   }
   throw "convert error";
