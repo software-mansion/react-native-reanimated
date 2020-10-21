@@ -3,10 +3,6 @@
 
 namespace reanimated {
 
-static jsi::Value eval(jsi::Runtime &rt, const char *code) {
-  return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
-}
-
 void EventHandlerRegistry::registerEventHandler(std::shared_ptr<EventHandler> eventHandler) {
   eventMappings[eventHandler->eventName][eventHandler->id] = eventHandler;
   eventHandlers[eventHandler->id] = eventHandler;
