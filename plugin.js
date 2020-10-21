@@ -17,6 +17,11 @@ const functionHooks = new Map([
   ['useAnimatedReaction', [0, 1]],
   ['useWorkletCallback', [0]],
   ['createWorklet', [0]],
+  // animations' callbacks
+  ['withTiming', [2]],
+  ['withSpring', [2]],
+  ['withDecay', [1]],
+  ['withRepeat', [3]],
 ]);
 
 const objectHooks = new Set([
