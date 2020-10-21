@@ -3,12 +3,15 @@
  * Copied from:
  * react-native/Libraries/StyleSheet/normalizeColor.js
  * react-native/Libraries/StyleSheet/processColor.js
+ * https://github.com/wcandillon/react-native-redash/blob/master/src/Colors.ts
  */
 
 /* eslint no-bitwise: 0 */
 
 import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
+import { interpolate } from './interpolation';
+import { Extrapolate } from '../derived';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
@@ -392,60 +395,55 @@ function normalizeColor(color) {
   return null;
 }
 
-export function processColorInitially(color) {
+export const ColorSpace = Object.freeze({
+  RGB: 'rgb',
+  HSV: 'hsv',
+});
+
+export const opacity = (c) => {
   'worklet';
-  if (color === null || color === undefined || typeof color === 'number') {
-    return color;
-  }
+  return ((c >> 24) & 255) / 255;
+};
 
-  let normalizedColor = normalizeColor(color);
-
-  if (normalizedColor === null || normalizedColor === undefined) {
-    return undefined;
-  }
-
-  if (typeof normalizedColor !== 'number') {
-    return null;
-  }
-
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // argb
-  return normalizedColor;
-}
-
-export function isColor(value) {
+export const red = (c) => {
   'worklet';
-  if (typeof value !== 'string') {
-    return false;
-  }
-  return processColorInitially(value) != null;
-}
+  return (c >> 16) & 255;
+};
 
-export default function processColor(color) {
+export const green = (c) => {
   'worklet';
-  let normalizedColor = processColorInitially(color);
-  if (normalizedColor === null || normalizedColor === undefined) {
-    return undefined;
-  }
+  return (c >> 8) & 255;
+};
 
-  if (typeof normalizedColor !== 'number') {
-    return null;
-  }
+export const blue = (c) => {
+  'worklet';
+  return c & 255;
+};
 
+export const rgbaColor = (r, g, b, alpha = 1) => {
+  'worklet';
+  if (Platform.OS === 'web' || !_WORKLET) {
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const a = alpha * 255;
+  const c =
+    a * (1 << 24) +
+    Math.round(r) * (1 << 16) +
+    Math.round(g) * (1 << 8) +
+    Math.round(b);
   if (Platform.OS === 'android') {
-    // Android use 32 bit *signed* integer to represent the color
-    // We utilize the fact that bitwise operations in JS also operates on
-    // signed 32 bit integers, so that we can use those to convert from
-    // *unsigned* to *signed* 32bit int that way.
-    normalizedColor = normalizedColor | 0x0;
+    // on Android color is represented as signed 32 bit int
+    return c < (1 << 31) >>> 0 ? c : c - Math.pow(2, 32);
   }
-
-  return normalizedColor;
-}
+  return c;
+};
 
 /* accepts parameters
  * r  Object = {r:x, g:y, b:z}
  * OR
  * r, g, b
+ * 0 <= r, g, b <= 255
+ * returns 0 <= h, s, v <= 1
  */
 function RGBtoHSV(r, g, b) {
   'worklet';
@@ -490,6 +488,8 @@ function RGBtoHSV(r, g, b) {
  * h  Object = {h:x, s:y, v:z}
  * OR
  * h, s, v
+ * 0 <= h, s, v <= 1
+ * returns 0 <= r, g, b <= 255
  */
 function HSVtoRGB(h, s, v) {
   'worklet';
@@ -531,6 +531,62 @@ function HSVtoRGB(h, s, v) {
   /* eslint-enable */
 }
 
+export const hsvToColor = (h, s, v) => {
+  'worklet';
+  const { r, g, b } = HSVtoRGB(h, s, v);
+  return rgbaColor(r, g, b);
+};
+
+export function processColorInitially(color) {
+  'worklet';
+  if (color === null || color === undefined || typeof color === 'number') {
+    return color;
+  }
+
+  let normalizedColor = normalizeColor(color);
+
+  if (normalizedColor === null || normalizedColor === undefined) {
+    return undefined;
+  }
+
+  if (typeof normalizedColor !== 'number') {
+    return null;
+  }
+
+  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // argb
+  return normalizedColor;
+}
+
+export function isColor(value) {
+  'worklet';
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return processColorInitially(value) != null;
+}
+
+export function processColor(color) {
+  'worklet';
+  let normalizedColor = processColorInitially(color);
+  if (normalizedColor === null || normalizedColor === undefined) {
+    return undefined;
+  }
+
+  if (typeof normalizedColor !== 'number') {
+    return null;
+  }
+
+  if (Platform.OS === 'android') {
+    // Android use 32 bit *signed* integer to represent the color
+    // We utilize the fact that bitwise operations in JS also operates on
+    // signed 32 bit integers, so that we can use those to convert from
+    // *unsigned* to *signed* 32bit int that way.
+    normalizedColor = normalizedColor | 0x0;
+  }
+
+  return normalizedColor;
+}
+
 export function convertToHSVA(color) {
   'worklet';
   const processedColor = processColorInitially(color); // argb;
@@ -547,3 +603,71 @@ export function toRGBA(HSVA) {
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
+
+const interpolateColorsHSV = (value, inputRange, colors) => {
+  'worklet';
+  const colorsAsHSV = colors.map((c) => RGBtoHSV(c));
+  const h = interpolate(
+    value,
+    inputRange,
+    colorsAsHSV.map((c) => c.h),
+    Extrapolate.CLAMP
+  );
+  const s = interpolate(
+    value,
+    inputRange,
+    colorsAsHSV.map((c) => c.s),
+    Extrapolate.CLAMP
+  );
+  const v = interpolate(
+    value,
+    inputRange,
+    colorsAsHSV.map((c) => c.v),
+    Extrapolate.CLAMP
+  );
+  return hsvToColor(h, s, v);
+};
+
+const interpolateColorsRGB = (value, inputRange, colors) => {
+  'worklet';
+  const r = Math.round(
+    interpolate(value, inputRange, colors.map((c) => red(c)), Extrapolate.CLAMP)
+  );
+  const g = Math.round(
+    interpolate(
+      value,
+      inputRange,
+      colors.map((c) => green(c)),
+      Extrapolate.CLAMP
+    )
+  );
+  const b = Math.round(
+    interpolate(
+      value,
+      inputRange,
+      colors.map((c) => blue(c)),
+      Extrapolate.CLAMP
+    )
+  );
+  const a = interpolate(
+    value,
+    inputRange,
+    colors.map((c) => opacity(c)),
+    Extrapolate.CLAMP
+  );
+  return rgbaColor(r, g, b, a);
+};
+
+export const interpolateColor = (
+  value,
+  inputRange,
+  outputRange,
+  colorSpace = ColorSpace.RGB
+) => {
+  'worklet';
+  outputRange = outputRange.map((c) => processColor(c));
+  if (colorSpace === ColorSpace.HSV) {
+    return interpolateColorsHSV(value, inputRange, outputRange);
+  }
+  return interpolateColorsRGB(value, inputRange, outputRange);
+};
