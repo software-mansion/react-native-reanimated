@@ -109,13 +109,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::shared_ptr<Scheduler> scheduler(new REAIOSScheduler(jsInvoker));
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
+  std::shared_ptr<NativeReanimatedModule> module;
 
-  auto requestRender = [reanimatedModule, &animatedRuntime](std::function<void(double)> onRender) {
+  auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = displayLink.timestamp * 1000.0;
-      animatedRuntime->global().setProperty(*animatedRuntime, "_frameTimestamp", frameTimestamp);
+      rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
       onRender(frameTimestamp);
-      animatedRuntime->global().setProperty(*animatedRuntime, "_frameTimestamp", jsi::Value::undefined());
+      rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
     }];
   };
   

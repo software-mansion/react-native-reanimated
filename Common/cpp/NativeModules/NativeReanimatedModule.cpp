@@ -221,7 +221,7 @@ void NativeReanimatedModule::maybeRequestRender()
     requestRender([this](double timestampMs) {
       this->renderRequested = false;
       this->onRender(timestampMs);
-    });
+    }, *this->runtime);
   }
 }
 

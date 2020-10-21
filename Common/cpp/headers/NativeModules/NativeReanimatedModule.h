@@ -62,7 +62,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
   private:
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
-    std::function<void(FrameCallback)> requestRender;
+    std::function<void(FrameCallback, jsi::Runtime&)> requestRender;
     std::shared_ptr<jsi::Value> dummyEvent;
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
