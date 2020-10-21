@@ -73,7 +73,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
-    mutableValue = std::make_shared<MutableValue>(rt, value, module);
+    mutableValue = std::make_shared<MutableValue>(rt, value, module, module->scheduler);
   } else if (value.isUndefined()) {
     type = ValueType::UndefinedType;
   } else if (value.isNull()) {
@@ -119,7 +119,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       adaptCache(rt, value);
     } else if (objectType == ValueType::RemoteObjectType) {
       type = ValueType::RemoteObjectType;
-      remoteObject = std::make_shared<RemoteObject>(rt, object, module);
+      remoteObject = std::make_shared<RemoteObject>(rt, object, module, module->scheduler);
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
@@ -138,7 +138,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
 }
 
 std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module));
+  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
   sv->adapt(rt, value, valueType);
   return sv;
 }
