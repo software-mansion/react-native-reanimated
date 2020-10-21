@@ -45,6 +45,17 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
+export function getTimestamp() {
+  'worklet'
+  if (_frameTimestamp) {
+    return _frameTimestamp;
+  }
+  if (_eventTimestamp) {
+    return _eventTimestamp;
+  }
+  return _getCurrentTime();
+}
+
 function workletValueSetter(value) {
   'worklet';
   const previousAnimation = this._animation;
@@ -61,16 +72,13 @@ function workletValueSetter(value) {
     let initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
+    initializeAnimation(getTimestamp());
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
       }
-      if (initializeAnimation) {
-        initializeAnimation(timestamp);
-        initializeAnimation = null; // prevent closure from keeping ref to previous animation
-      }
-      const finished = animation.onFrame(animation, timestamp);
+      const finished = animation.animation(animation, timestamp);
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {

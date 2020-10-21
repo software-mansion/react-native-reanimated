@@ -56,9 +56,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
 
     bool isUIRuntime(jsi::Runtime &rt);
     bool isHostRuntime(jsi::Runtime &rt);
-
-  private:
+  public:
     std::unique_ptr<jsi::Runtime> runtime;
+  private:
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
     std::function<void(FrameCallback)> requestRender;

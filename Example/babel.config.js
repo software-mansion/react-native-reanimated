@@ -20,6 +20,7 @@ module.exports = (api) => {
             {
               alias: {
                 'react-native-reanimated': '../src/Animated',
+                'react-native-gallery-toolkit': './src/repro/libt',
                 react: './node_modules/react',
                 'react-native': './node_modules/react-native',
                 '@babel': './node_modules/@babel',

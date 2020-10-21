@@ -7,6 +7,7 @@ import {
   makeMutable,
   makeRemote,
   requestFrame,
+  getTimestamp,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -83,6 +84,8 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       animation.callStart = (timestamp) => {
         animation.onStart(animation, value, timestamp, lastAnimation);
       };
+      animation.callStart(getTimestamp());
+      animation.callStart = null;
     } else if (typeof animatedProp === 'object') {
       // it is an object
       Object.keys(animatedProp).forEach((key) =>

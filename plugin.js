@@ -56,6 +56,9 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  '_getCurrentTime',
+  '_eventTimestamp',
+  '_frameTimestamp',
   'isNaN',
 ]);
 

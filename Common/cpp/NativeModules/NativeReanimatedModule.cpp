@@ -80,7 +80,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                      platformDepMethodsHolder.updaterFunction,
                                      requestAnimationFrame,
                                      platformDepMethodsHolder.scrollToFunction,
-                                     platformDepMethodsHolder.measuringFunction);
+                                     platformDepMethodsHolder.measuringFunction,
+                                     platformDepMethodsHolder.getCurrentTime);
 }
 
 bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
