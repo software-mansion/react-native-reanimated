@@ -34,3 +34,19 @@ You can add before / after section if you're changing some behavior.
 ### After
 
 -->
+
+## Test code and steps to reproduce
+
+<!--
+Please include code that can be used to test this change and short description how this example should work.
+This snippet should be as minimal as possible and ready to be pasted into editor (don't exclude exports or remove "not important" parts of reproduction example)
+-->
+
+## Checklist
+
+- [ ] Included code example that can be used to test this change
+- [ ] Updated TS types
+- [ ] Added TS types tests
+- [ ] Added unit / integration tests
+- [ ] Updated documentation
+- [ ] Ensured that CI passes
