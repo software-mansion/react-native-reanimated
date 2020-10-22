@@ -2,7 +2,6 @@
 import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
 import NativeReanimated from './NativeReanimated';
-import { runOnJS } from './core';
 
 let IN_STYLE_UPDATER = false;
 
@@ -164,20 +163,8 @@ export function cancelAnimation(sharedValue) {
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
-function callbackDecorator(callback) {
-  'worklet';
-  if (!callback || callback.__worklet) {
-    return callback;
-  }
-  return (isFinished) => {
-    'worklet';
-    runOnJS(callback)(isFinished);
-  };
-}
-
 export function withTiming(toValue, userConfig, callback) {
   'worklet';
-  callback = callbackDecorator(callback);
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -243,7 +230,6 @@ export function withTiming(toValue, userConfig, callback) {
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
-  callback = callbackDecorator(callback);
 
   return defineAnimation(toValue, () => {
     'worklet';
@@ -363,7 +349,6 @@ export function withSpring(toValue, userConfig, callback) {
 
 export function withDecay(userConfig, callback) {
   'worklet';
-  callback = callbackDecorator(callback);
 
   return defineAnimation(0, () => {
     'worklet';
@@ -555,7 +540,6 @@ export function withRepeat(
   callback
 ) {
   'worklet';
-  callback = callbackDecorator(callback);
 
   return defineAnimation(_nextAnimation, () => {
     'worklet';

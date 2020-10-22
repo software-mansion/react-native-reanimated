@@ -5,21 +5,105 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useDerivedValue,
-  withSpring,
   useMapper,
   useEvent,
   useAnimatedProps,
-  withTiming,
   useAnimatedGestureHandler,
   useAnimatedScrollHandler,
+  withTiming,
+  withSpring,
   withDecay,
   withDelay,
   withRepeat,
   withSequence,
+  useAnimatedReaction,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const SimpleTest = () => {
+  const shv = useSharedValue(0);
+  /* CHECK CALLBACKS CREATED ON JS SIDE */
+  shv.value = withTiming(1, null, (finished) => {
+    console.log('timing clb', _WORKLET, finished);
+  });
+  shv.value = withSpring(2, null, (finished) => {
+    console.log('spring clb', _WORKLET, finished);
+  });
+  shv.value = withDecay(null, (finished) => {
+    console.log('decay clb', _WORKLET, finished);
+  });
+  shv.value = withDelay(
+    1000,
+    withTiming(3, null, (finished) => {
+      console.log('delayed timing clb', _WORKLET, finished);
+    })
+  );
+  shv.value = withRepeat(
+    withTiming(4, { duration: 500 }, (finished) => {
+      console.log('repeated timing clb', _WORKLET, finished);
+    }),
+    4,
+    true,
+    (finished) => {
+      console.log('repeat clb final', _WORKLET, finished);
+    }
+  );
+  shv.value = withSequence(
+    withTiming(7, { duration: 500 }, (finished) => {
+      console.log('sequenced timing clb 1', _WORKLET, finished);
+    }),
+    withTiming(8, { duration: 500 }, (finished) => {
+      console.log('sequenced timing clb 2', _WORKLET, finished);
+    }),
+    withTiming(9, { duration: 500 }, (finished) => {
+      console.log('sequenced timing clb 3', _WORKLET, finished);
+    })
+  );
+  /* CHECK CALLBACKS ON UI */
+  useAnimatedReaction(
+    () => {
+      return Math.floor(Math.random() * 20);
+    },
+    (res) => {
+      shv.value = withTiming(1, null, (finished) => {
+        console.log('timing clb', _WORKLET, finished);
+      });
+      shv.value = withSpring(2, null, (finished) => {
+        console.log('spring clb', _WORKLET, finished);
+      });
+      shv.value = withDecay(null, (finished) => {
+        console.log('decay clb', _WORKLET, finished);
+      });
+      shv.value = withDelay(
+        1000,
+        withTiming(3, null, (finished) => {
+          console.log('delayed timing clb', _WORKLET, finished);
+        })
+      );
+      shv.value = withRepeat(
+        withTiming(4, { duration: 500 }, (finished) => {
+          console.log('repeated timing clb', _WORKLET, finished);
+        }),
+        4,
+        true,
+        (finished) => {
+          console.log('repeat clb final', _WORKLET, finished);
+        }
+      );
+      shv.value = withSequence(
+        withTiming(7, { duration: 500 }, (finished) => {
+          console.log('sequenced timing clb 1', _WORKLET, finished);
+        }),
+        withTiming(8, { duration: 500 }, (finished) => {
+          console.log('sequenced timing clb 2', _WORKLET, finished);
+        }),
+        withTiming(9, { duration: 500 }, (finished) => {
+          console.log('sequenced timing clb 3', _WORKLET, finished);
+        })
+      );
+    }
+  );
+  /* */
   // check if certain hooks work
   const sv = useSharedValue(50);
 
@@ -110,8 +194,6 @@ const SimpleTest = () => {
         title="change size(with timing)"
         onPress={() => {
           sv.value = withTiming(updateSV(), null, (finished) => {
-            // callback may run on UI or on JS
-            // 'worklet'
             console.log('timing clb', _WORKLET, finished);
           });
         }}
@@ -120,8 +202,6 @@ const SimpleTest = () => {
         title="change size(with spring)"
         onPress={() => {
           sv.value = withSpring(updateSV(), null, (finished) => {
-            // callback may run on UI or on JS
-            // 'worklet'
             console.log('spring clb', _WORKLET, finished);
           });
         }}
@@ -134,8 +214,6 @@ const SimpleTest = () => {
               velocity: Math.floor(Math.random() * 100 - 50),
             },
             (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('decay clb', _WORKLET, finished);
             }
           );
@@ -147,8 +225,6 @@ const SimpleTest = () => {
           sv.value = withDelay(
             1000,
             withTiming(updateSV(), { duration: 0 }, (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('delayed timing clb', _WORKLET, finished);
             })
           );
@@ -159,18 +235,12 @@ const SimpleTest = () => {
         onPress={() => {
           sv.value = withSequence(
             withTiming(updateSV(), { duration: 500 }, (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('sequenced timing clb 1', _WORKLET, finished);
             }),
             withTiming(updateSV(), { duration: 500 }, (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('sequenced timing clb 2', _WORKLET, finished);
             }),
             withTiming(updateSV(), { duration: 500 }, (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('sequenced timing clb 3', _WORKLET, finished);
             })
           );
@@ -181,15 +251,11 @@ const SimpleTest = () => {
         onPress={() => {
           sv.value = withRepeat(
             withTiming(updateSV(), { duration: 500 }, (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('repeated timing clb', _WORKLET, finished);
             }),
             4,
             true,
             (finished) => {
-              // callback may run on UI or on JS
-              // 'worklet'
               console.log('repeat clb final', _WORKLET, finished);
             }
           );
