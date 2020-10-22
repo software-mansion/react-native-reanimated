@@ -11,11 +11,16 @@ REAIOSScheduler::REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker) {
 
 void REAIOSScheduler::scheduleOnUI(std::function<void()> job) {
   Scheduler::scheduleOnUI(job);
+  if([NSThread isMainThread]) {
+    if (module.lock()) triggerUI();
+    return;
+  }
   dispatch_async(dispatch_get_main_queue(), ^{
-    triggerUI();
+    if (module.lock()) triggerUI();
   });
 }
 
-REAIOSScheduler::~REAIOSScheduler(){}
+REAIOSScheduler::~REAIOSScheduler(){
+}
 
 }

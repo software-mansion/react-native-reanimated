@@ -37,7 +37,7 @@ private:
 
   jsi::Object createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host);
 
-  ShareableValue(NativeReanimatedModule *module): module(module) {}
+  ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s): StoreUser(s), module(module) {}
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
 
