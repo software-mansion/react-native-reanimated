@@ -23,12 +23,15 @@ StoreUser::StoreUser(std::shared_ptr<Scheduler> s): scheduler(s) {
 
 StoreUser::~StoreUser() {
   int id = identifier;
-  scheduler->scheduleOnUI([id]() {
-    const std::lock_guard<std::recursive_mutex> lock(storeMutex);
-    if (StoreUser::store.count(id) > 0) {
-      StoreUser::store.erase(id);
-    }
-  });
+  std::shared_ptr<Scheduler> strongScheduler = scheduler.lock();
+  if (strongScheduler != nullptr) {
+    strongScheduler->scheduleOnUI([id]() {
+      const std::lock_guard<std::recursive_mutex> lock(storeMutex);
+      if (StoreUser::store.count(id) > 0) {
+        StoreUser::store.erase(id);
+      }
+    });
+  }
 }
 
 

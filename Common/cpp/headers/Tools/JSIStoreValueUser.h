@@ -18,7 +18,7 @@ class StoreUser {
   static std::atomic<int> ctr;
   static std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> store;
   static std::recursive_mutex storeMutex;
-  std::shared_ptr<Scheduler> scheduler;
+  std::weak_ptr<Scheduler> scheduler;
   
 public:
   StoreUser(std::shared_ptr<Scheduler> s);
