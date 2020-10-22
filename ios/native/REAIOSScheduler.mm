@@ -5,8 +5,6 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-bool volatile can = true;
-
 REAIOSScheduler::REAIOSScheduler(std::shared_ptr<CallInvoker> jsInvoker) {
   this->jsCallInvoker_ = jsInvoker;
 }
