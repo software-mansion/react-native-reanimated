@@ -19,7 +19,7 @@
     "metro-config": "^0.59.0",
     "react": "16.13.1",
     "react-native": "0.63.2",
-    "react-native-fast-image": "^8.1.5",
+    "react-native-fast-image": "^8.3.2",
     "react-native-gesture-handler": "^1.6.1",
     "react-native-image": "^0.1.1",
     "react-native-safe-area-context": "^3.1.4",
