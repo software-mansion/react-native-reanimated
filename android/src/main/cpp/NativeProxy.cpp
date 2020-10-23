@@ -101,8 +101,10 @@ void NativeProxy::installJSIBindings()
                                                          propObtainer,
                                                          platformDepMethodsHolder);
 
-  this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
+  this->registerEventHandler([module, getCurrentTime](std::string eventName, std::string eventAsString) {
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", getCurrentTime());
     module->onEvent(eventName, eventAsString);
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
   });
 
   runtime_->global().setProperty(

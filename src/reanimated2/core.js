@@ -1,4 +1,4 @@
-/* global _WORKLET */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp */
 
 import NativeReanimated from './NativeReanimated';
 
@@ -47,13 +47,13 @@ export function getViewProp(viewTag, propName) {
 
 export function getTimestamp() {
   'worklet';
-  if ('_frameTimestamp' in global) {
-    return global._frameTimestamp;
+  if (_frameTimestamp) {
+    return _frameTimestamp;
   }
-  if ('_eventTimestamp' in global) {
-    return global._eventTimestamp;
+  if (_eventTimestamp) {
+    return _eventTimestamp;
   }
-  return global._getCurrentTime();
+  return _getCurrentTime();
 }
 
 function workletValueSetter(value) {
