@@ -286,10 +286,6 @@ const names = makeShareable({
 function normalizeColor(color) {
   'worklet';
 
-  const matchers = getMatchers();
-
-  let match;
-
   if (typeof color === 'number') {
     if (color >>> 0 === color && color >= 0 && color <= 0xffffffff) {
       return color;
@@ -300,6 +296,10 @@ function normalizeColor(color) {
   if (typeof color !== 'string') {
     return null;
   }
+
+  const matchers = getMatchers();
+
+  let match;
 
   // Ordered based on occurrences on Facebook codebase
   if ((match = matchers.hex6.exec(color))) {
