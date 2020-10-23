@@ -7,9 +7,6 @@
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
-#include <chrono>
-#include <sys/sysinfo.h>
-#include <cstdlib>
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
