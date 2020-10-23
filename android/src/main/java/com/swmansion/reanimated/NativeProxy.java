@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.os.SystemClock;
 import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
@@ -101,6 +102,11 @@ public class NativeProxy {
   @DoNotStrip
   private void scrollTo(int viewTag, double x, double y, boolean animated) {
     mNodesManager.scrollTo(viewTag, x, y, animated);
+  }
+
+  @DoNotStrip
+  private String getUpTime() {
+    return Long.toString(SystemClock.uptimeMillis());
   }
 
   @DoNotStrip

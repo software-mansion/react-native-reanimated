@@ -8,6 +8,8 @@
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
 #include <chrono>
+#include <sys/sysinfo.h>
+#include <cstdlib>
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
@@ -52,9 +54,13 @@ void NativeProxy::installJSIBindings()
     this->updateProps(rt, viewTag, props);
   };
 
-  auto getCurrentTime = []() {
-    using namespace std::chrono;
-    return 0.0001 * (double)duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  auto getCurrentTime = [this]() {
+      auto method = javaPart_
+                        ->getClass()
+                        ->getMethod<local_ref<JString>()>("getUpTime");
+      local_ref<JString> output = method(javaPart_.get());
+      int64_t res = std::strtoll(output->toStdString().c_str(), NULL, 10);
+      return (double)res;
   };
 
   auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
