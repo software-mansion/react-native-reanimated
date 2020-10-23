@@ -7,6 +7,7 @@
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
+#include <chrono>
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
@@ -51,8 +52,16 @@ void NativeProxy::installJSIBindings()
     this->updateProps(rt, viewTag, props);
   };
 
-  auto requestRender = [this](std::function<void(double)> onRender) {
+  auto getCurrentTime = []() {
+    using namespace std::chrono;
+    return 0.0001 * (double)duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  };
+
+  auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
+    double frameTimestamp = getCurrentTime();
+    rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
     this->requestRender(std::move(onRender));
+    rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   };
 
   auto propObtainer = [this](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
@@ -81,7 +90,8 @@ void NativeProxy::installJSIBindings()
     requestRender,
     propUpdater,
     scrollToFunction,
-    measuringFunction
+    measuringFunction,
+    getCurrentTime,
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,

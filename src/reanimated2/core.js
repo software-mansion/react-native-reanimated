@@ -46,14 +46,14 @@ export function getViewProp(viewTag, propName) {
 }
 
 export function getTimestamp() {
-  'worklet'
-  if (_frameTimestamp) {
-    return _frameTimestamp;
+  'worklet';
+  if ('_frameTimestamp' in global) {
+    return global._frameTimestamp;
   }
-  if (_eventTimestamp) {
-    return _eventTimestamp;
+  if ('_eventTimestamp' in global) {
+    return global._eventTimestamp;
   }
-  return _getCurrentTime();
+  return global._getCurrentTime();
 }
 
 function workletValueSetter(value) {
@@ -69,7 +69,7 @@ function workletValueSetter(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let initializeAnimation = (timestamp) => {
+    const initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
@@ -166,9 +166,9 @@ export const runOnJS = (fun) => {
     return fun;
   }
   if (!fun.__callAsync) {
-    console.log("typ", typeof fun);
-    console.log("name", fun.name);
-    console.log("code", fun.toString());
+    console.log('typ', typeof fun);
+    console.log('name', fun.name);
+    console.log('code', fun.toString());
     throw new Error(
       "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
     );
