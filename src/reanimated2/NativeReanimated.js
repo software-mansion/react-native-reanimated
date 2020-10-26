@@ -1,11 +1,13 @@
-import { TurboModuleRegistry, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import reanimatedJS from './js-reanimated';
 
 const InnerNativeModule =
   Platform.OS === 'web'
     ? false
     : global.__reanimatedModuleProxy ||
-      TurboModuleRegistry.getEnforcing('NativeReanimated');
+      require('react-native').TurboModuleRegistry.getEnforcing(
+        'NativeReanimated'
+      );
 
 const NativeReanimated = {
   native: !!InnerNativeModule,
