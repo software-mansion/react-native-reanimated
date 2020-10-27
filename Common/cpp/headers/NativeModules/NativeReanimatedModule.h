@@ -51,6 +51,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     
     void onRender(double timestampMs);
     void onEvent(std::string eventName, std::string eventAsString);
+    bool isAnyHandlerWaitingForEvent(std::string eventName);
 
     void maybeRequestRender();
 

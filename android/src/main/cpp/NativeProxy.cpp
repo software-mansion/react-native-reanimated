@@ -10,7 +10,6 @@
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
-#include "NativeReanimatedModule.h"
 #include "AndroidScheduler.h"
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
@@ -91,6 +90,8 @@ void NativeProxy::installJSIBindings()
                                                          propObtainer,
                                                          platformDepMethodsHolder);
 
+  _nativeReanimatedModule = module;
+
   this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
     module->onEvent(eventName, eventAsString);
   });
@@ -101,11 +102,16 @@ void NativeProxy::installJSIBindings()
       jsi::Object::createFromHostObject(*runtime_, module));
 }
 
+bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
+  return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
+}
+
 void NativeProxy::registerNatives()
 {
   registerHybrid({
       makeNativeMethod("initHybrid", NativeProxy::initHybrid),
       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+      makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent)
   });
 }
 

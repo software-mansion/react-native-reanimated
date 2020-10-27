@@ -60,6 +60,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
+
 public class NodesManager implements EventDispatcherListener {
 
   private static final Double ZERO = Double.valueOf(0);
@@ -104,7 +106,7 @@ public class NodesManager implements EventDispatcherListener {
 
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
-  private ConcurrentLinkedQueue<Event> mEventQueue = new ConcurrentLinkedQueue<>();
+  private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private boolean mWantRunUpdates;
 
   public double currentFrameTimeMs;
@@ -228,7 +230,8 @@ public class NodesManager implements EventDispatcherListener {
     currentFrameTimeMs = frameTimeNanos / 1000000.;
 
     while (!mEventQueue.isEmpty()) {
-      handleEvent(mEventQueue.poll());
+      CopiedEvent copiedEvent = mEventQueue.poll();
+      handleEvent(copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
     }
 
     if (!mFrameCallbacks.isEmpty()) {
@@ -445,7 +448,15 @@ public class NodesManager implements EventDispatcherListener {
       handleEvent(event);
       performOperations();
     } else {
-      mEventQueue.offer(event);
+      boolean shouldSaveEvent = false;
+      String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
+      int viewTag = event.getViewTag();
+      String key = viewTag + eventName;
+
+      shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
+      if (shouldSaveEvent) {
+        mEventQueue.offer(new CopiedEvent(event));
+      }
       startUpdatingOnAnimationFrame();
     }
   }
@@ -464,6 +475,21 @@ public class NodesManager implements EventDispatcherListener {
       EventNode node = mEventMapping.get(key);
       if (node != null) {
         event.dispatch(node);
+      }
+    }
+  }
+
+  private void handleEvent(int targetTag, String eventName, @Nullable WritableMap event) {
+    if (mCustomEventHandler != null) {
+      mCustomEventHandler.receiveEvent(targetTag, eventName, event);
+    }
+
+    String key = targetTag + eventName;
+
+    if (!mEventMapping.isEmpty()) {
+      EventNode node = mEventMapping.get(key);
+      if (node != null) {
+        node.receiveEvent(targetTag, eventName, event);
       }
     }
   }

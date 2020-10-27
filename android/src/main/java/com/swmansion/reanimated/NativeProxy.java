@@ -83,6 +83,8 @@ public class NativeProxy {
   private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler);
   private native void installJSIBindings();
 
+  public native boolean isAnyHandlerWaitingForEvent(String eventName);
+
   @DoNotStrip
   private void requestRender(AnimationFrameCallback callback) {
     mNodesManager.postOnAnimation(callback);
