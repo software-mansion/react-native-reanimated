@@ -34,6 +34,9 @@ export function transform(value, handler) {
   if (handler.__prefix === undefined) {
     return value;
   }
+  if (handler.__prefix === '-' && value < 0) {
+    value *= -1;
+  }
 
   return handler.__prefix + value + handler.__suffix;
 }
