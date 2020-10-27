@@ -454,7 +454,9 @@ public class NodesManager implements EventDispatcherListener {
       String key = viewTag + eventName;
 
       shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
-      mEventQueue.offer(new CopiedEvent(event));
+      if (shouldSaveEvent) {
+        mEventQueue.offer(new CopiedEvent(event));
+      }
       startUpdatingOnAnimationFrame();
     }
   }
