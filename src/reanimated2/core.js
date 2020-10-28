@@ -98,7 +98,7 @@ function workletValueSetterJS(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.animation)
+    (value !== null && typeof value === 'object' && value.onFrame)
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;

@@ -9,6 +9,7 @@ import Animated, {
   Easing,
   useAnimatedRef,
   measure,
+  runOnJS,
 } from 'react-native-reanimated';
 import {
   Dimensions,
@@ -102,7 +103,7 @@ function ListItem({ item, index, onPress }) {
       x.value = measurements.pageX;
       y.value = measurements.pageY - HEADER_HEIGHT;
 
-      handlePress();
+      runOnJS(handlePress)();
     },
   });
 
@@ -177,7 +178,9 @@ function ImageTransition({ activeImage, onClose }) {
             {
               duration: 16,
             },
-            onClose
+            () => {
+              runOnJS(onClose)();
+            }
           );
         });
 
