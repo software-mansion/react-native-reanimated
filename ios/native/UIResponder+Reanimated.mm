@@ -31,7 +31,13 @@
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-      auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+      //auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+      #ifdef RNVERSION == 62
+        auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
+        auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
+      #elif RNVERSION == 63
+        auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+      #endif
       runtime.global().setProperty(runtime,
                                    jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
                                    jsi::Object::createFromHostObject(runtime, reanimatedModule)
