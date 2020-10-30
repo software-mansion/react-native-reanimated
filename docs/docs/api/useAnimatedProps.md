@@ -49,6 +49,6 @@ function App() {
   });
 
   // attach animated props to an SVG path using animatedProps
-  return <Svg><AnimatedPath animatedProps={animatedProps} fill="black"></Svg>
+  return <Svg><AnimatedPath animatedProps={animatedProps} fill="black" /></Svg>
 }
 ```
