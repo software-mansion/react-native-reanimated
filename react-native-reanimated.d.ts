@@ -451,6 +451,17 @@ declare module 'react-native-reanimated' {
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => R;
 
+    enum ColorSpace {
+      RGB,
+      HSV,
+    }
+    export function interpolateColor(
+      value: number,
+      inputRange: number[],
+      outputRange: string[],
+      colorSpace: ColorSpace
+    ): string | number;
+
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
@@ -726,6 +737,7 @@ declare module 'react-native-reanimated' {
   export const useDerivedValue: typeof Animated.useDerivedValue;
   export const useWorkletCallback: typeof Animated.useWorkletCallback;
   export const createWorklet: typeof Animated.createWorklet;
+  export const interpolateColor: typeof Animated.interpolateColor;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
