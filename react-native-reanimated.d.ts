@@ -443,10 +443,20 @@ declare module 'react-native-reanimated' {
     export function runOnUI<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
+    export function runOnJS<A extends any[], R>(
+      fn: (...args: A) => R
+    ): (...args: Parameters<typeof fn>) => void;
     export function processColor(color: number | string): number;
     export function createWorklet<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => R;
+
+    export function interpolateColor(
+      value: number,
+      inputRange: number[],
+      outputRange: string[],
+      colorSpace?: 'RGB' | 'HSV'
+    ): string | number;
 
     type DependencyList = ReadonlyArray<any>;
 
@@ -713,6 +723,7 @@ declare module 'react-native-reanimated' {
   export const spring: typeof Animated.spring;
   export const SpringUtils: typeof Animated.SpringUtils;
   export const runOnUI: typeof Animated.runOnUI;
+  export const runOnJS: typeof Animated.runOnJS;
   export const processColor: typeof Animated.processColor;
   export const useValue: typeof Animated.useValue;
   export const useSharedValue: typeof Animated.useSharedValue;
@@ -722,6 +733,7 @@ declare module 'react-native-reanimated' {
   export const useDerivedValue: typeof Animated.useDerivedValue;
   export const useWorkletCallback: typeof Animated.useWorkletCallback;
   export const createWorklet: typeof Animated.createWorklet;
+  export const interpolateColor: typeof Animated.interpolateColor;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;

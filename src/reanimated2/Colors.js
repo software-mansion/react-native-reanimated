@@ -395,11 +395,6 @@ function normalizeColor(color) {
   return null;
 }
 
-export const ColorSpace = Object.freeze({
-  RGB: 'rgb',
-  HSV: 'hsv',
-});
-
 export const opacity = (c) => {
   'worklet';
   return ((c >> 24) & 255) / 255;
@@ -662,12 +657,17 @@ export const interpolateColor = (
   value,
   inputRange,
   outputRange,
-  colorSpace = ColorSpace.RGB
+  colorSpace = 'RGB'
 ) => {
   'worklet';
   outputRange = outputRange.map((c) => processColor(c));
-  if (colorSpace === ColorSpace.HSV) {
+  if (colorSpace === 'HSV') {
     return interpolateColorsHSV(value, inputRange, outputRange);
   }
-  return interpolateColorsRGB(value, inputRange, outputRange);
+  if (colorSpace === 'RGB') {
+    return interpolateColorsRGB(value, inputRange, outputRange);
+  }
+  throw new Error(
+    `invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+  );
 };

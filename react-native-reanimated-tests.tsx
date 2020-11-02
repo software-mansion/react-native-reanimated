@@ -25,6 +25,7 @@ import Animated, {
   createWorklet,
   runOnUI,
   useAnimatedReaction,
+  interpolateColor,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -435,6 +436,18 @@ function UseAnimatedReactionTest() {
     },
     [state]
   );
+
+  return null;
+}
+
+
+// interpolateColor
+function interpolateColorTest() {
+  const sv = useSharedValue(0);
+
+  interpolateColor(sv.value, [0, 1], ['red', 'blue']);
+  interpolateColor(sv.value, [0, 1], ['#00FF00', '#0000FF'], 'RGB');
+  interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
 
   return null;
 }
