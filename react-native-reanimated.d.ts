@@ -451,15 +451,11 @@ declare module 'react-native-reanimated' {
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => R;
 
-    enum ColorSpace {
-      RGB,
-      HSV,
-    }
     export function interpolateColor(
       value: number,
       inputRange: number[],
       outputRange: string[],
-      colorSpace: ColorSpace
+      colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
     type DependencyList = ReadonlyArray<any>;
