@@ -122,7 +122,7 @@ On iOS installation is automatic.
 
 > **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
 > use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
-> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/installation#ios).
+> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/2.0.0-alpha.7/installation#ios).
 
 > **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag:
 > `DONT_AUTOINSTALL_REANIMATED`.
