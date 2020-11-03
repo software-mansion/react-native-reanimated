@@ -23,8 +23,17 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(viewTag, updates, maybeViewRef) {
+export default function updateProps(
+  viewTag,
+  updates,
+  maybeViewRef,
+  maybeViewName
+) {
   'worklet';
+
+  if (maybeViewName) {
+    maybeViewName = maybeViewName.value;
+  }
 
   if (Platform.OS !== 'web') {
     Object.keys(updates).forEach((key) => {
@@ -37,5 +46,5 @@ export default function updateProps(viewTag, updates, maybeViewRef) {
   const updatePropsInternal =
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
-  updatePropsInternal(viewTag, updates, maybeViewRef);
+  updatePropsInternal(viewTag, updates, maybeViewRef, maybeViewName);
 }

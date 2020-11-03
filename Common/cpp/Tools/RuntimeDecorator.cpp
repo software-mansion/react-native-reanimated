@@ -59,7 +59,10 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
       ) -> jsi::Value {
     const auto viewTag = args[0].asNumber();
     const auto params = args[1].asObject(rt);
-    updater(rt, viewTag, params);
+    // args[2] is maybeViewRef which is only for web and will be undefined here
+    // view name is passed only on iOS
+    const jsi::Value* maybeViewName = &args[3];
+    updater(rt, viewTag, params, *maybeViewName);
     return jsi::Value::undefined();
   };
   jsi::Value updateProps = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);

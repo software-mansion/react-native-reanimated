@@ -216,6 +216,19 @@ export default function createAnimatedComponent(Component) {
     }
 
     _attachPropUpdater() {
+      if (Platform.OS === 'ios') {
+        for (const key in this.props) {
+          const value = this.props[key];
+          if (key === 'style' || key === 'animatedProps') {
+            const props = Array.isArray(value) ? value : [value];
+            props.forEach((prop) => {
+              if (prop && prop.viewName && !prop.viewName.value) {
+                prop.viewName.value = this._obtainViewName();
+              }
+            });
+          }
+        }
+      }
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.set(viewTag, this);
       if (NODE_MAPPING.size === 1) {
@@ -342,6 +355,18 @@ export default function createAnimatedComponent(Component) {
         }
       }
       return props;
+    }
+
+    _obtainViewName(forceComponent) {
+      const component = forceComponent || this._component;
+      try {
+        const viewConf = component.viewConfig || component.root.viewConfig;
+        return viewConf.uiViewClassName;
+      } catch (e) {
+        if (e.name === 'TypeError') {
+          // probably invalid access to object - stay idle, `name` will just remain undefined
+        }
+      }
     }
 
     render() {
