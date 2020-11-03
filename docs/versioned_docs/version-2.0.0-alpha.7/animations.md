@@ -44,7 +44,7 @@ As a result, when we tap on the "Move" button the animated box jumps to a new, r
 
 ![](/react-native-reanimated/docs/shared-values/sv-immediate.gif)
 
-With Reanimated 2, such Shared Value updates can be transformed to an animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/widthSpring).
+With Reanimated 2, such Shared Value updates can be transformed to an animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
 The only change that we can do now, is to wrap random offset value in `withSpring` call as shown below:
 
 ```js {3}
@@ -117,7 +117,7 @@ To illustrate how interruptions perform in practice, please take a look at the b
 Reanimated currently provides three built-in animation helpers: [`withTiming`](api/withTiming), [`withSpring`](api/withSpring), and [`withDecay`](api/widthDecay).
 As there are ways of expanding that with your own, custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), we are not yet ready to document that as we still plan some changes of that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provides a great flexibility.
-Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](api/withTiming) and [`withSpring`](api/widthSpring) for the complete set of parameters.
+Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](api/withTiming) and [`withSpring`](api/withSpring) for the complete set of parameters.
 
 Both animation helper methods share a similar structure.
 They take target value as the first parameter, configuration object as the second, and finally a callback method as the last parameter.
