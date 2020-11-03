@@ -129,7 +129,7 @@ This is what you will observe:
 
 Animations in Reanimated 2 are first-class citizens, and the library comes bundled with a number of utility methods that help you run and customize animations (refer to the section about [animations](animations) to learn about the APIs in Reanimated 2 for controlling animations).
 One of the ways for animation to be launched is by starting an animated transition of a Shared Value.
-This can be done by wrapping target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](api/withTiming) or [`withSpring`](api/widthSpring)):
+This can be done by wrapping target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring)):
 
 ```js
 import { withTiming } from 'react-native-reanimated';
