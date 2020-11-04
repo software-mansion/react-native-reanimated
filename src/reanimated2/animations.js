@@ -601,6 +601,7 @@ export function withRepeat(
   });
 }
 
+/* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function delay(delayMs, _nextAnimation) {
   'worklet';
   console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
@@ -620,7 +621,6 @@ export function repeat(
   return withRepeat(_nextAnimation, numberOfReps, reverse, callback);
 }
 
-/* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function loop(nextAnimation, numberOfLoops = 1) {
   'worklet';
   console.warn('Method `loop` is deprecated. Please use `withRepeat` instead');
