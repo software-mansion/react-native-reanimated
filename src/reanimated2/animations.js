@@ -601,6 +601,12 @@ export function withRepeat(
   });
 }
 
+export function delay(delayMs, _nextAnimation) {
+  'worklet';
+  console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
+  return withDelay(delayMs, _nextAnimation);
+}
+
 export function repeat(
   _nextAnimation,
   numberOfReps = 2,
@@ -619,12 +625,6 @@ export function loop(nextAnimation, numberOfLoops = 1) {
   'worklet';
   console.warn('Method `loop` is deprecated. Please use `withRepeat` instead');
   return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);
-}
-
-export function delay(delayMs, _nextAnimation) {
-  'worklet';
-  console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
-  return withDelay(delayMs, _nextAnimation);
 }
 
 export function sequence(..._animations) {
