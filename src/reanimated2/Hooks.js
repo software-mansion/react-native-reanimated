@@ -573,14 +573,6 @@ export function useAnimatedRef() {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction(prepare, react, dependencies) {
-  const inputsRef = useRef(null);
-  if (inputsRef.current === null) {
-    inputsRef.current = {
-      inputs: Object.values(prepare._closure),
-    };
-  }
-  const { inputs } = inputsRef.current;
-
   if (dependencies === undefined) {
     dependencies = [
       Object.values(prepare._closure),
@@ -598,7 +590,7 @@ export function useAnimatedReaction(prepare, react, dependencies) {
       const input = prepare();
       react(input);
     };
-    const mapperId = startMapper(fun, inputs, []);
+    const mapperId = startMapper(fun, Object.values(prepare._closure), []);
     return () => {
       stopMapper(mapperId);
     };
