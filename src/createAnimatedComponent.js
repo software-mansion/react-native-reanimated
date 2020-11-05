@@ -356,15 +356,9 @@ export default function createAnimatedComponent(Component) {
     }
 
     _obtainViewName() {
-      try {
-        const viewConf =
-          this._component.viewConfig || this._component.root.viewConfig;
-        return viewConf.uiViewClassName;
-      } catch (e) {
-        if (e.name === 'TypeError') {
-          // probably invalid access to object - stay idle, `name` will just remain undefined
-        }
-      }
+      const viewConf =
+        this._component?.viewConfig || this._component?.root?.viewConfig;
+      return viewConf.uiViewClassName;
     }
 
     render() {
