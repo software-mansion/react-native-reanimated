@@ -78,6 +78,10 @@
     _shouldInterceptMountingBlock = NO;
     [[uiManager observerCoordinator] addObserver:self];
   }
+    
+  _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  [_displayLink setPaused:true];
   return self;
 }
 
@@ -93,7 +97,7 @@
 
 - (void)operationsBatchDidComplete
 {
-  if (_displayLink) {
+  if (![_displayLink isPaused]) {
     // if display link is set it means some of the operations that have run as a part of the batch
     // requested updates. We want updates to be run in the same frame as in which operations have
     // been scheduled as it may mean the new view has just been mounted and expects its initial
@@ -131,7 +135,6 @@
 
 - (void)startUpdatingOnAnimationFrame
 {
-  if (!_displayLink) {
     // Setting _currentAnimationTimestamp here is connected with manual triggering of performOperations
     // in operationsBatchDidComplete. If new node has been created and clock has not been started,
     // _displayLink won't be initialized soon enough and _displayLink.timestamp will be 0.
@@ -139,16 +142,13 @@
     // evaluation, it could be used it here. In usual case, CACurrentMediaTime is not being used in
     // favor of setting it with _displayLink.timestamp in onAnimationFrame method.
     _currentAnimationTimestamp = CACurrentMediaTime();
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-  }
+    [_displayLink setPaused:false];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
   if (_displayLink) {
-    [_displayLink invalidate];
-    _displayLink = nil;
+    [_displayLink setPaused:true];
   }
 }
 
