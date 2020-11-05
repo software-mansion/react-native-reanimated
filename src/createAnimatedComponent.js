@@ -216,19 +216,6 @@ export default function createAnimatedComponent(Component) {
     }
 
     _attachPropUpdater() {
-      if (Platform.OS === 'ios') {
-        for (const key in this.props) {
-          const value = this.props[key];
-          if (key === 'style' || key === 'animatedProps') {
-            const props = Array.isArray(value) ? value : [value];
-            props.forEach((prop) => {
-              if (prop && prop.viewName && !prop.viewName.value) {
-                prop.viewName.value = this._obtainViewName();
-              }
-            });
-          }
-        }
-      }
       const viewTag = findNodeHandle(this);
       NODE_MAPPING.set(viewTag, this);
       if (NODE_MAPPING.size === 1) {
@@ -242,14 +229,25 @@ export default function createAnimatedComponent(Component) {
         : [this.props.style];
       styles = flattenArray(styles);
       const viewTag = findNodeHandle(this);
+      const viewName = this._obtainViewName();
       styles.forEach((style) => {
-        if (style && style.viewTag !== undefined) {
-          style.viewTag.value = viewTag;
+        if (style) {
+          if (style.viewTag) {
+            style.viewTag.value = viewTag;
+          }
+          if (style.viewName) {
+            style.viewName.value = viewName;
+          }
         }
       });
       // attach animatedProps property
       if (this.props.animatedProps) {
-        this.props.animatedProps.viewTag.value = viewTag;
+        if (this.props.animatedProps.viewTag) {
+          this.props.animatedProps.viewTag.value = viewTag;
+        }
+        if (this.props.animatedProps.viewName) {
+          this.props.animatedProps.viewName.value = viewName;
+        }
       }
     }
 
@@ -357,10 +355,10 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
-    _obtainViewName(forceComponent) {
-      const component = forceComponent || this._component;
+    _obtainViewName() {
       try {
-        const viewConf = component.viewConfig || component.root.viewConfig;
+        const viewConf =
+          this._component.viewConfig || this._component.root.viewConfig;
         return viewConf.uiViewClassName;
       } catch (e) {
         if (e.name === 'TypeError') {
