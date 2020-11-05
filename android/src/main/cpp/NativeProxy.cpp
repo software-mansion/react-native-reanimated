@@ -46,7 +46,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 void NativeProxy::installJSIBindings()
 {
 
-  auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Object &props, const jsi::Value& viewName) {
+  auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
   };

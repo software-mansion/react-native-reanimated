@@ -188,7 +188,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state, maybeViewRef, maybeViewName) {
+function styleUpdater(viewTag, updater, state, maybeViewRef, viewName) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -236,7 +236,7 @@ function styleUpdater(viewTag, updater, state, maybeViewRef, maybeViewName) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates, maybeViewRef, maybeViewName);
+      updateProps(viewTag.value, viewName, updates, maybeViewRef);
     }
 
     if (!allFinished) {
@@ -267,7 +267,7 @@ function styleUpdater(viewTag, updater, state, maybeViewRef, maybeViewName) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff, maybeViewRef, maybeViewName);
+    updateProps(viewTag.value, viewName, diff, maybeViewRef);
   }
 }
 
@@ -295,12 +295,11 @@ export function useAnimatedStyle(updater, dependencies) {
 
   const { remoteState, initial } = initRef.current;
   const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
-  const maybeViewName = Platform.OS === 'ios' ? viewName : undefined;
 
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewTag, updater, remoteState, maybeViewRef, maybeViewName);
+      styleUpdater(viewTag, updater, remoteState, maybeViewRef, viewName);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {

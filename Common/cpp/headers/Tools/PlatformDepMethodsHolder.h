@@ -8,7 +8,7 @@ using namespace facebook;
 namespace reanimated
 {
 
-using UpdaterFunction = std::function<void(jsi::Runtime &rt, int viewTag, const jsi::Object& object, const jsi::Value& viewName)>;
+using UpdaterFunction = std::function<void(jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &object)>;
 using RequestRender = std::function<void(std::function<void(double)>)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasuringFunction = std::function<std::vector<std::pair<std::string, double>>(int)>;

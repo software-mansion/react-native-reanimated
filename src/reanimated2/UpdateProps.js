@@ -23,16 +23,12 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(
-  viewTag,
-  updates,
-  maybeViewRef,
-  maybeViewName
-) {
+export default function updateProps(viewTag, viewName, updates, maybeViewRef) {
   'worklet';
-
-  if (maybeViewName) {
-    maybeViewName = maybeViewName.value;
+  if (viewName && viewName.value) {
+    viewName = viewName.value;
+  } else {
+    viewName = 'RCTView';
   }
 
   if (Platform.OS !== 'web') {
@@ -46,5 +42,5 @@ export default function updateProps(
   const updatePropsInternal =
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
-  updatePropsInternal(viewTag, updates, maybeViewRef, maybeViewName);
+  updatePropsInternal(viewTag, viewName, updates, maybeViewRef);
 }
