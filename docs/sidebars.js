@@ -9,6 +9,7 @@ module.exports = {
       'events',
       'architecture',
       'migration',
+      'web-support',
       'troubleshooting',
     ],
     'API Reference': [
@@ -21,15 +22,16 @@ module.exports = {
           'api/useAnimatedGestureHandler',
           'api/useAnimatedRef',
           'api/useAnimatedReaction',
+          'api/useAnimatedProps',
         ],
         Animations: [
           'api/withTiming',
           'api/withSpring',
           'api/withDecay',
           'api/cancelAnimation',
-          'api/delay',
-          'api/sequence',
-          'api/repeat',
+          'api/withDelay',
+          'api/withSequence',
+          'api/withRepeat',
         ],
         'Native methods': [
           'api/nativeMethods/measure',

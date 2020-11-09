@@ -3,8 +3,8 @@ import Animated, {
   withTiming,
   Easing,
   useAnimatedStyle,
-  repeat,
-  sequence,
+  withRepeat,
+  withSequence,
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
 import React from 'react';
@@ -32,11 +32,11 @@ export default function WobbleExample(props) {
       <Button
         title="start"
         onPress={() => {
-          rotation.value = sequence(
+          rotation.value = withSequence(
             // deviate left to start from -ANGLE
             withTiming(-ANGLE, { duration: TIME / 2, easing: EASING }),
             // wobble between -ANGLE and ANGLE 7 times
-            repeat(
+            withRepeat(
               withTiming(ANGLE, {
                 duration: TIME,
                 easing: EASING,

@@ -126,6 +126,7 @@ function asyncMeasure(animatedRef) {
 
 function SectionHeader({ title, animatedRef, contentHeight, show }) {
   const applyMeasure = ({ x, y, width, height, pageX, pageY }) => {
+    'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
         duration: 500,

@@ -39,9 +39,9 @@ function App() {
     // draw a circle
     const path = `
     M 100, 100
-    m -${radius}, 0
-    a ${radius},${radius} 0 1,0 ${radius * 2},0
-    a ${radius},${radius} 0 1,0 ${-radius * 2},0
+    m -${radius.value}, 0
+    a ${radius.value},${radius.value} 0 1,0 ${radius.value * 2},0
+    a ${radius.value},${radius.value} 0 1,0 ${-radius.value * 2},0
     `;
     return {
       d: path
@@ -49,6 +49,6 @@ function App() {
   });
 
   // attach animated props to an SVG path using animatedProps
-  return <Svg><Path animatedProps={animatedProps}/ fill="black"></Svg>
+  return <Svg><AnimatedPath animatedProps={animatedProps} fill="black" /></Svg>
 }
 ```

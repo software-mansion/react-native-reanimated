@@ -1,6 +1,10 @@
+global._globalSetter = (name, val) => {
+  global[name] = val;
+};
+
 export default {
   installCoreFunctions: () => {},
-  makeShareable: () => {},
+  makeShareable: (worklet) => worklet,
   makeMutable: () => {},
   makeRemote: () => {},
   startMapper: () => {},

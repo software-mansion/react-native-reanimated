@@ -3,6 +3,7 @@ import { waitForDetailed } from './helpers';
 import {
   runOnUI,
   processColor as reaProcessColor,
+  runOnJS,
 } from 'react-native-reanimated';
 import { processColor } from 'react-native';
 
@@ -36,7 +37,7 @@ export function test(t) {
         runOnUI(() => {
           'worklet';
           const uiResult = reaProcessColor(color);
-          jsCallback(color, uiResult);
+          runOnJS(jsCallback)(color, uiResult);
         })();
       });
       const colorsProcessed = await waitForDetailed(

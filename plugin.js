@@ -15,6 +15,13 @@ const functionHooks = new Map([
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
+  ['useWorkletCallback', [0]],
+  ['createWorklet', [0]],
+  // animations' callbacks
+  ['withTiming', [2]],
+  ['withSpring', [2]],
+  ['withDecay', [1]],
+  ['withRepeat', [3]],
 ]);
 
 const objectHooks = new Set([
@@ -24,6 +31,8 @@ const objectHooks = new Set([
 
 const globals = new Set([
   'this',
+  'console',
+  '_globalSetter',
   'Date',
   'Array',
   'ArrayBuffer',
@@ -40,6 +49,9 @@ const globals = new Set([
   'requestAnimationFrame',
   '_WORKLET',
   'arguments',
+  'Boolean',
+  'parseInt',
+  'parseFloat',
   'Map',
   'Set',
   '_log',
@@ -49,6 +61,7 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  'isNaN',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
@@ -102,10 +115,13 @@ const blacklistedFunctions = new Set([
   'bind',
   'apply',
   'call',
+  '__callAsync',
 ]);
 
 class ClosureGenerator {
-  trie = [{}, false];
+  constructor() {
+    this.trie = [{}, false];
+  }
 
   mergeAns(oldAns, newAns) {
     const [purePath, node] = oldAns;
@@ -209,43 +225,42 @@ class ClosureGenerator {
 }
 
 function buildWorkletString(t, fun, closureVariables, name) {
+  function prependClosureVariablesIfNecessary(closureVariables, body) {
+    if (closureVariables.length === 0) {
+      return body;
+    }
+
+    return t.blockStatement([
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          t.objectPattern(
+            closureVariables.map((variable) =>
+              t.objectProperty(
+                t.identifier(variable.name),
+                t.identifier(variable.name),
+                false,
+                true
+              )
+            )
+          ),
+          t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
+        ),
+      ]),
+      body,
+    ]);
+  }
+
   fun.traverse({
     enter(path) {
       t.removeComments(path.node);
     },
   });
 
-  let workletFunction;
-  if (closureVariables.length > 0) {
-    workletFunction = t.functionExpression(
-      t.identifier(name),
-      fun.node.params,
-      t.blockStatement([
-        t.variableDeclaration('const', [
-          t.variableDeclarator(
-            t.objectPattern(
-              closureVariables.map((variable) =>
-                t.objectProperty(
-                  t.identifier(variable.name),
-                  t.identifier(variable.name),
-                  false,
-                  true
-                )
-              )
-            ),
-            t.memberExpression(t.identifier('jsThis'), t.identifier('_closure'))
-          ),
-        ]),
-        fun.get('body').node,
-      ])
-    );
-  } else {
-    workletFunction = t.functionExpression(
-      t.identifier(name),
-      fun.node.params,
-      fun.get('body').node
-    );
-  }
+  const workletFunction = t.functionExpression(
+    t.identifier(name),
+    fun.node.params,
+    prependClosureVariablesIfNecessary(closureVariables, fun.get('body').node)
+  );
 
   return generate(workletFunction, { compact: true }).code;
 }
@@ -255,11 +270,7 @@ function processWorkletFunction(t, fun) {
     return;
   }
 
-  let functionName = '_f';
-
-  if (fun.node.id) {
-    functionName = fun.node.id.name;
-  }
+  const functionName = fun.node.id ? fun.node.id.name : '_f';
 
   const closure = new Map();
   const outputs = new Set();
@@ -408,9 +419,7 @@ function processWorkletFunction(t, fun) {
   );
 }
 
-function processIfWorkletNode(t, path) {
-  const fun = path;
-
+function processIfWorkletNode(t, fun) {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -436,7 +445,10 @@ function processIfWorkletNode(t, path) {
 }
 
 function processWorklets(t, path, processor) {
-  const name = path.node.callee.name;
+  const name =
+    path.node.callee.type === 'MemberExpression'
+      ? path.node.callee.property.name
+      : path.node.callee.name;
   if (
     objectHooks.has(name) &&
     path.get('arguments.0').type === 'ObjectExpression'
@@ -465,9 +477,9 @@ const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
   try {
     const blacklistedPluginObject = require(pluginName);
     // All Babel polyfills use the declare method that's why we can create them like that.
-    // https://github.com/babel/babel/blob/main/packages/babel-helper-plugin-utils/src/index.js#L1
+    // https://github.com/babel/babel/blob/32279147e6a69411035dd6c43dc819d668c74466/packages/babel-helper-plugin-utils/src/index.js#L1
     const blacklistedPlugin = blacklistedPluginObject.default({
-      assertVersion: (x) => true,
+      assertVersion: (_x) => true,
     });
 
     visitors.explode(blacklistedPlugin.visitor);

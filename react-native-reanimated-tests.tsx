@@ -1,12 +1,11 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Button, View } from 'react-native';
-import { 
+import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
-  TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -18,10 +17,15 @@ import Animated, {
   withTiming,
   withSpring,
   cancelAnimation,
-  delay,
-  repeat,
-  sequence,
+  withDelay,
+  withRepeat,
+  withSequence,
   withDecay,
+  useWorkletCallback,
+  createWorklet,
+  runOnUI,
+  useAnimatedReaction,
+  interpolateColor,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -47,6 +51,9 @@ const styles = StyleSheet.create({
 // useSharedValue
 function SharedValueTest() {
   const translate = useSharedValue(0);
+  const translate2 = useSharedValue(0, true);
+  const translate3 = useSharedValue(0, false);
+
   return <Animated.View style={styles.container} />;
 }
 
@@ -99,7 +106,10 @@ function AnimatedScrollHandlerTest() {
 // useAnimatedGestureHandler with context
 function AnimatedGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, ctx) => {
       ctx.startX = x.value;
     },
@@ -128,7 +138,9 @@ function AnimatedGestureHandlerTest() {
 
 function AnimatedPinchGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PinchGestureHandlerGestureEvent
+  >({
     onActive: (event) => {
       x.value = event.scale;
     },
@@ -235,8 +247,8 @@ function CancelAnimationTest() {
   );
 }
 
-// delay
-function DelayTest() {
+// withDelay
+function WithDelayTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -246,7 +258,7 @@ function DelayTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = delay(1000, withTiming(70));
+      x.value = withDelay(1000, withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -265,8 +277,8 @@ function DelayTest() {
   );
 }
 
-// repeat
-function RepeatTest() {
+// withRepeat
+function WithRepeatTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -276,7 +288,7 @@ function RepeatTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = repeat(withTiming(70), 1, true);
+      x.value = withRepeat(withTiming(70), 1, true);
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -295,8 +307,8 @@ function RepeatTest() {
   );
 }
 
-// sequence
-function SequenceTest() {
+// withSequence
+function WithSequenceTest() {
   const x = useSharedValue(0);
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, _ctx) => {
@@ -306,7 +318,7 @@ function SequenceTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = sequence(withTiming(70), withTiming(70));
+      x.value = withSequence(withTiming(70), withTiming(70));
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -359,4 +371,83 @@ function WithDecayTest() {
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
   );
+}
+
+// useWorkletCallback
+function UseWorkletCallbackTest() {
+  const callback = useWorkletCallback((a: number, b: number) => {
+    return a + b;
+  }, []);
+
+  runOnUI(() => {
+    const res = callback(1, 1);
+
+    console.log(res);
+  })();
+
+  return <Animated.View style={styles.container} />;
+}
+
+// createWorklet
+function CreateWorkletTest() {
+  const callback = createWorklet((a: number, b: number) => {
+    return a + b;
+  });
+
+  runOnUI(() => {
+    const res = callback(1, 1);
+
+    console.log(res);
+  })();
+
+  return <Animated.View style={styles.container} />;
+}
+
+// useWorkletCallback
+function UseAnimatedReactionTest() {
+  const [state, setState] = useState();
+  const sv = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    }
+  );
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    },
+    []
+  );
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value) => {
+      console.log(value);
+    },
+    [state]
+  );
+
+  return null;
+}
+
+
+// interpolateColor
+function interpolateColorTest() {
+  const sv = useSharedValue(0);
+
+  interpolateColor(sv.value, [0, 1], ['red', 'blue']);
+  interpolateColor(sv.value, [0, 1], ['#00FF00', '#0000FF'], 'RGB');
+  interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
+
+  return null;
 }

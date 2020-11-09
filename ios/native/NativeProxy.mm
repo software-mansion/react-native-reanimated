@@ -127,6 +127,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
                                                                             propObtainer,
                                                                             platformDepMethodsHolder
                                                                             ));
+  
+  scheduler->setModule(module);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);

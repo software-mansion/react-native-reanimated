@@ -1,3 +1,5 @@
+/* global _WORKLET */
+
 import NativeReanimated from './NativeReanimated';
 
 global.__reanimatedWorkletInit = function(worklet) {
@@ -45,7 +47,6 @@ export function getViewProp(viewTag, propName) {
 
 function workletValueSetter(value) {
   'worklet';
-
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
@@ -53,23 +54,23 @@ function workletValueSetter(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.animation)
+    (value !== null && typeof value === 'object' && value.onFrame)
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let callStart = (timestamp) => {
-      animation.start(animation, this.value, timestamp, previousAnimation);
+    let initializeAnimation = (timestamp) => {
+      animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
       }
-      if (callStart) {
-        callStart(timestamp);
-        callStart = null; // prevent closure from keeping ref to previous animation
+      if (initializeAnimation) {
+        initializeAnimation(timestamp);
+        initializeAnimation = null; // prevent closure from keeping ref to previous animation
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {
@@ -97,23 +98,23 @@ function workletValueSetterJS(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.animation)
+    (value !== null && typeof value === 'object' && value.onFrame)
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let callStart = (timestamp) => {
-      animation.start(animation, this.value, timestamp, previousAnimation);
+    let initializeAnimation = (timestamp) => {
+      animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
       }
-      if (callStart) {
-        callStart(timestamp);
-        callStart = null; // prevent closure from keeping ref to previous animation
+      if (initializeAnimation) {
+        initializeAnimation(timestamp);
+        initializeAnimation = null; // prevent closure from keeping ref to previous animation
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       this._setValue(animation.current);
       if (finished) {
@@ -150,3 +151,28 @@ export function startMapper(mapper, inputs = [], outputs = []) {
 export function stopMapper(mapperId) {
   NativeReanimated.stopMapper(mapperId);
 }
+
+export const runOnJS = (fun) => {
+  'worklet';
+  if (!_WORKLET) {
+    return fun;
+  }
+  if (!fun.__callAsync) {
+    throw new Error(
+      "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
+    );
+  } else {
+    return fun.__callAsync;
+  }
+};
+
+const capturableConsole = console;
+runOnUI(() => {
+  'worklet';
+  const console = {
+    log: runOnJS(capturableConsole.log),
+    warn: runOnJS(capturableConsole.warn),
+    error: runOnJS(capturableConsole.error),
+  };
+  _globalSetter('console', console); // eslint-disable-line
+})();

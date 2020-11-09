@@ -24,7 +24,7 @@ class MutableValue : public jsi::HostObject, public std::enable_shared_from_this
   jsi::Value getValue(jsi::Runtime &rt);
 
   public:
-  MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module);
+  MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module, std::shared_ptr<Scheduler> s);
 
   public:
   void set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);

@@ -1,7 +1,7 @@
 ---
-id: sequence
-title: sequence
-sidebar_label: sequence
+id: withSequence
+title: withSequence
+sidebar_label: withSequence
 ---
 
 Runs the provided animations in a sequence.
@@ -25,6 +25,6 @@ We start a sequence of timing animations: first from 0 to 70 and then back to 0.
 The sequence will will result in the value returning to the original position.
 
 ```js
-sharedValue.value = sequence(withTiming(70), withTiming(0))
+sharedValue.value = withSequence(withTiming(70), withTiming(0))
 ```
 

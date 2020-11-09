@@ -29,11 +29,6 @@ module.exports = {
           activeBaseRegex: `docs/(?!next)`,
           items: [
             {
-              label: 'Master',
-              to: 'docs/next/',
-              activeBasePath: 'docs/next',
-            },
-            {
               label: versions[0],
               to: 'docs/',
               activeBaseRegex: `docs/(?!${versions.join('|')}|next)`,
@@ -42,6 +37,11 @@ module.exports = {
               label: version,
               to: `docs/${version}/`,
             })),
+            {
+              label: 'Master/Unreleased',
+              to: 'docs/next/',
+              activeBasePath: 'docs/next',
+            },
           ],
         },
         // {to: 'blog', label: 'Blog', position: 'left'},

@@ -12,6 +12,7 @@ import MeasureTest from './MeasureTest';
 import FastRefreshTest from './FastRefreshTest';
 import ScrollToTest from './scrollToTest';
 import AnimatedReactionTest from './AnimatedReactionTest';
+import AnimationsTest from './Animations';
 
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
@@ -35,6 +36,10 @@ const SCREENS = {
   AnimatedReactionTest: {
     screen: AnimatedReactionTest,
     title: '🆕 Animated reaction test',
+  },
+  AnimationsTest: {
+    screen: AnimationsTest,
+    title: 'Animations',
   },
 };
 

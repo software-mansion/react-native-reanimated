@@ -94,8 +94,8 @@ std::vector<jsi::PropNameID> MutableValue::getPropertyNames(jsi::Runtime &rt) {
   return result;
 }
 
-MutableValue::MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module):
-module(module), value(ShareableValue::adapt(rt, initial, module)) {
+MutableValue::MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module, std::shared_ptr<Scheduler> s):
+StoreUser(s), module(module), value(ShareableValue::adapt(rt, initial, module)) {
 }
 
 unsigned long int MutableValue::addListener(unsigned long id, std::function<void ()> listener) {

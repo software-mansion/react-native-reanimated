@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -14,14 +14,14 @@ import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
-export function useSharedValue(init) {
+export function useSharedValue(init, shouldRebuild = true) {
   const ref = useRef(null);
   if (ref.current === null) {
     ref.current = {
       mutable: makeMutable(init),
       last: init,
     };
-  } else if (init !== ref.current.last) {
+  } else if (init !== ref.current.last && shouldRebuild) {
     ref.current.last = init;
     ref.current.mutable.value = init;
   }
@@ -61,7 +61,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       );
       return animatedProp;
     }
-    if (typeof animatedProp === 'object' && animatedProp.animation) {
+    if (typeof animatedProp === 'object' && animatedProp.onFrame) {
       const animation = animatedProp;
 
       let value = animation.current;
@@ -70,7 +70,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (lastValue.animation !== undefined) {
+          } else if (lastValue.onFrame !== undefined) {
             // it was an animation before, copy its state
             value = lastAnimation.current;
           }
@@ -81,7 +81,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       }
 
       animation.callStart = (timestamp) => {
-        animation.start(animation, value, timestamp, lastAnimation);
+        animation.onStart(animation, value, timestamp, lastAnimation);
       };
     } else if (typeof animatedProp === 'object') {
       // it is an object
@@ -109,12 +109,12 @@ function runAnimations(animation, timestamp, key, result) {
         }
       });
       return allFinished;
-    } else if (typeof animation === 'object' && animation.animation) {
+    } else if (typeof animation === 'object' && animation.onFrame) {
       if (animation.callStart) {
         animation.callStart(timestamp);
         animation.callStart = null;
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
@@ -147,7 +147,7 @@ function isAnimated(prop) {
       return prop.some(isAnimated);
     }
     if (typeof prop === 'object') {
-      if (prop.animation) {
+      if (prop.onFrame) {
         return true;
       }
       return Object.keys(prop).some((key) => isAnimated(prop[key]));
@@ -187,7 +187,6 @@ function styleDiff(oldStyle, newStyle) {
 function styleUpdater(viewTag, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
-
   const newValues = updater() || {};
   const oldValues = state.last;
 
@@ -573,14 +572,17 @@ export function useAnimatedRef() {
  * the first worklet defines the inputs, in other words on which shared values change will it be called.
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
-export function useAnimatedReaction(prepare, react) {
-  const inputsRef = useRef(null);
-  if (inputsRef.current === null) {
-    inputsRef.current = {
-      inputs: Object.values(prepare._closure),
-    };
+export function useAnimatedReaction(prepare, react, dependencies) {
+  if (dependencies === undefined) {
+    dependencies = [
+      Object.values(prepare._closure),
+      Object.values(react._closure),
+      prepare.__workletHash,
+      react.__workletHash,
+    ];
+  } else {
+    dependencies.push(prepare.__workletHash, react.__workletHash);
   }
-  const { inputs } = inputsRef.current;
 
   useEffect(() => {
     const fun = () => {
@@ -588,9 +590,17 @@ export function useAnimatedReaction(prepare, react) {
       const input = prepare();
       react(input);
     };
-    const mapperId = startMapper(fun, inputs, []);
+    const mapperId = startMapper(fun, Object.values(prepare._closure), []);
     return () => {
       stopMapper(mapperId);
     };
-  }, inputs);
+  }, dependencies);
+}
+
+export function useWorkletCallback(fun, deps) {
+  return useCallback(fun, deps);
+}
+
+export function createWorklet(fun) {
+  return fun;
 }
