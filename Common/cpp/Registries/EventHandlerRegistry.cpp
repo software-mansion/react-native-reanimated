@@ -4,13 +4,13 @@
 namespace reanimated {
 
 void EventHandlerRegistry::registerEventHandler(std::shared_ptr<EventHandler> eventHandler) {
-  const std::lock_guard<std::mutex> lock(instanceMutex);
+  const std::lock_guard<std::recursive_mutex> lock(instanceMutex);
   eventMappings[eventHandler->eventName][eventHandler->id] = eventHandler;
   eventHandlers[eventHandler->id] = eventHandler;
 }
 
 void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
-  const std::lock_guard<std::mutex> lock(instanceMutex);
+  const std::lock_guard<std::recursive_mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
     eventMappings[handlerIt->second->eventName].erase(id);
@@ -18,7 +18,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 }
 
 void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName, std::string eventPayload) {
-  const std::lock_guard<std::mutex> lock(instanceMutex);
+  const std::lock_guard<std::recursive_mutex> lock(instanceMutex);
   auto handlersIt = eventMappings.find(eventName);
   if (handlersIt != eventMappings.end()) {
     // We receive here a JS Map with JSON as a value of NativeMap key
@@ -39,6 +39,7 @@ void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName,
 }
 
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {
+  const std::lock_guard<std::recursive_mutex> lock(instanceMutex);
   auto it = eventMappings.find(eventName);
   return (it != eventMappings.end()) and (!(it->second).empty());
 }
