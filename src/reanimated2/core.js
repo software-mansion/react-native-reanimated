@@ -12,7 +12,10 @@ function pushFrame(frame) {
 
 export function requestFrame(frame) {
   'worklet';
-
+  if (_frameTimestamp) {
+    frame(_frameTimestamp);
+    return;
+  }
   if (NativeReanimated.native) {
     requestAnimationFrame(frame);
   } else {
@@ -92,7 +95,12 @@ function workletValueSetter(value) {
 
     this._animation = animation;
 
-    requestAnimationFrame(step);
+    if (_frameTimestamp) {
+      // frame
+      step(_frameTimestamp);
+    } else {
+      requestAnimationFrame(step);
+    }
   } else {
     this._value = value;
   }

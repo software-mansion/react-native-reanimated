@@ -232,14 +232,13 @@ void NativeReanimatedModule::onRender(double timestampMs)
     Logger::log(str.c_str());
   try
   {
-    mapperRegistry->execute(*runtime);
-
     std::vector<FrameCallback> callbacks = frameCallbacks;
     frameCallbacks.clear();
     for (auto callback : callbacks)
     {
       callback(timestampMs);
     }
+    mapperRegistry->execute(*runtime);
 
     if (mapperRegistry->needRunOnRender())
     {
