@@ -231,10 +231,8 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(this);
       const viewName = this._getViewName();
       styles.forEach((style) => {
-        if (style) {
-          if (style.viewDescriptor) {
-            style.viewDescriptor.value = { tag: viewTag, name: viewName };
-          }
+        if (style?.viewDescriptor) {
+          style.viewDescriptor.value = { tag: viewTag, name: viewName };
         }
       });
       // attach animatedProps property
