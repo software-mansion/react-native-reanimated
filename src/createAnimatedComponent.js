@@ -229,7 +229,7 @@ export default function createAnimatedComponent(Component) {
         : [this.props.style];
       styles = flattenArray(styles);
       const viewTag = findNodeHandle(this);
-      const viewName = this._obtainViewName();
+      const viewName = this._getViewName();
       styles.forEach((style) => {
         if (style) {
           if (style.viewTag) {
@@ -355,10 +355,10 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
-    _obtainViewName() {
+    _getViewName() {
       const viewConf =
         this._component?.viewConfig || this._component?.root?.viewConfig;
-      return viewConf.uiViewClassName;
+      return viewConf?.uiViewClassName;
     }
 
     render() {

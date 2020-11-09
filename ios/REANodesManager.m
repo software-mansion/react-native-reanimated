@@ -480,7 +480,7 @@
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
-           viewName:(nonnull NSString *)viewName
+           withName:(nonnull NSString *)viewName
 {
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
