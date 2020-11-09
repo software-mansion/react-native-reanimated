@@ -443,6 +443,8 @@ export const Pager = typedMemo(function Pager<
         ? -getPageTranslate(nextIndex)
         : -getPageTranslate(index.value));
 
+      console.log('on end');
+
       onChangePageAnimation(!shouldMoveToNextPage);
 
       if (shouldMoveToNextPage) {

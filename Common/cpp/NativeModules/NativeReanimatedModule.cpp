@@ -227,6 +227,9 @@ void NativeReanimatedModule::maybeRequestRender()
 
 void NativeReanimatedModule::onRender(double timestampMs)
 {
+    std::string str = "-- native render ";
+    str += std::to_string(timestampMs);
+    Logger::log(str.c_str());
   try
   {
     mapperRegistry->execute(*runtime);

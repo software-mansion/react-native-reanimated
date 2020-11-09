@@ -70,10 +70,12 @@ function workletValueSetter(value) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
     const initializeAnimation = (timestamp) => {
+      console.log('start ' + timestamp);
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
     const step = (timestamp) => {
+      console.log('step ' + timestamp);
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
