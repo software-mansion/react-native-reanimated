@@ -232,21 +232,18 @@ export default function createAnimatedComponent(Component) {
       const viewName = this._getViewName();
       styles.forEach((style) => {
         if (style) {
-          if (style.viewTag) {
-            style.viewTag.value = viewTag;
-          }
-          if (style.viewName) {
-            style.viewName.value = viewName;
+          if (style.viewDescriptor) {
+            style.viewDescriptor.value = { tag: viewTag, name: viewName };
           }
         }
       });
       // attach animatedProps property
       if (this.props.animatedProps) {
-        if (this.props.animatedProps.viewTag) {
-          this.props.animatedProps.viewTag.value = viewTag;
-        }
-        if (this.props.animatedProps.viewName) {
-          this.props.animatedProps.viewName.value = viewName;
+        if (this.props.animatedProps.viewDescriptor) {
+          this.props.animatedProps.viewDescriptor.value = {
+            tag: viewTag,
+            name: viewName,
+          };
         }
       }
     }
@@ -311,7 +308,7 @@ export default function createAnimatedComponent(Component) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map((style) => {
-            if (style && style.viewTag) {
+            if (style && style.viewDescriptor) {
               // this is how we recognize styles returned by useAnimatedStyle
               if (style.viewRef.current === null) {
                 style.viewRef.current = this;
