@@ -73,12 +73,10 @@ function workletValueSetter(value) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
     const initializeAnimation = (timestamp) => {
-      console.log('start ' + timestamp);
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
     const step = (timestamp) => {
-      console.log('step ' + timestamp);
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
@@ -176,9 +174,6 @@ export const runOnJS = (fun) => {
     return fun;
   }
   if (!fun.__callAsync) {
-    console.log('typ', typeof fun);
-    console.log('name', fun.name);
-    console.log('code', fun.toString());
     throw new Error(
       "Attempting to call runOnJS with an object that is not a host function. Using runOnJS is only possible with methods that are defined on the main React-Native Javascript thread and that aren't marked as worklets"
     );

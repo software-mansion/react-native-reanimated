@@ -253,7 +253,6 @@ export function withSpring(toValue, userConfig, callback) {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
-      console.log('deltaTime', deltaTime);
       animation.lastTimestamp = now;
 
       const c = config.damping;
