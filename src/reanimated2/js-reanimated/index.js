@@ -2,7 +2,7 @@ import JSReanimated from './JSReanimated';
 
 const reanimatedJS = new JSReanimated();
 
-global._updatePropsJS = (viewTag, updates, viewRef) => {
+global._updatePropsJS = (viewTag, viewName, updates, viewRef) => {
   if (viewRef.current && viewRef.current._component) {
     const [rawStyles] = Object.keys(updates).reduce(
       (acc, key) => {
