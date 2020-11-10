@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
  */
 
 // makeMutable
-function SharedValueTest() {
+function MakeMutableTest() {
   const mut = makeMutable(0);
   const mut2 = makeMutable(true);
 
