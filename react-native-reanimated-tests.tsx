@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
 // @TODO: add reanimated 1 tests here
 
 /**
- * Reanimated 2 Function
+ * Reanimated 2 Functions
  */
 
 // makeMutable
