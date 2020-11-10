@@ -35,3 +35,7 @@ const Comp = () => {
   return <View ref={aref} />;
 };
 ```
+
+### Note
+
+You can use `measure()` only on rendered components. Good practice is to wrap function call with `try{} catch{}` if there is a possibility to call function on item which is not rendered, for example: invisible item on screen from FlatList.
