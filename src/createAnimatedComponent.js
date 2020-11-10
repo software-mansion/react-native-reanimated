@@ -350,6 +350,14 @@ export default function createAnimatedComponent(Component) {
       return props;
     }
 
+    /**
+     * this method fetches view name for the UI.
+     * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+     * The name we're looking for is in the field named uiViewClassName.
+     * The root field comes from svg where it pushes view's config in the sub object under the 'root' key(https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Shape.tsx#L244)
+     *
+     * this method returns either view's UI name or undefined - that could happen if there was no viewConfig in the object where we look for it. A predictible case of that would be similar to svg's behavior of some external library(like putting rn's view config in some other place than just inside the component). In that case it should be handled explicitly here.
+     */
     _getViewName() {
       const viewConf =
         this._component?.viewConfig || this._component?.root?.viewConfig;
