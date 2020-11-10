@@ -136,6 +136,8 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   };
   jsi::Value timeFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
   rt.global().setProperty(rt, "_getCurrentTime", timeFun);
+
+  rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
 }
 
 }
