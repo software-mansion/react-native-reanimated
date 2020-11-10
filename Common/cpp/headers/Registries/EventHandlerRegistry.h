@@ -17,7 +17,7 @@ class EventHandler;
 class EventHandlerRegistry {
   std::map<std::string, std::unordered_map<unsigned long, std::shared_ptr<EventHandler>>> eventMappings;
   std::map<unsigned long, std::shared_ptr<EventHandler>> eventHandlers;
-  std::recursive_mutex instanceMutex;
+  std::mutex instanceMutex;
 
 public:
   void registerEventHandler(std::shared_ptr<EventHandler> eventHandler);
