@@ -458,6 +458,10 @@ declare module 'react-native-reanimated' {
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
+    export function makeMutable<T>(
+      initialValue: T
+    ): SharedValue<T>;
+
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
