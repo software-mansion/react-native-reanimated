@@ -38,4 +38,4 @@ const Comp = () => {
 
 ### Note
 
-You can use `measure()` only on rendered components. Well practise is wrap function call with `try{} catch{}` if there exists possibility to call function on non rendered item, for example: Non visible item on screen from FlatList.
+You can use `measure()` only on rendered components. Good practice is to wrap function call with `try{} catch{}` if there is a possibility to call function on item which is not rendered, for example: invisible item on screen from FlatList.
