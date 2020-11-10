@@ -104,7 +104,7 @@ export default class Easing {
    * n = 5: http://easings.net/#easeInQuint
    */
   static poly(n) {
-    return t => pow(t, n);
+    return (t) => pow(t, n);
   }
 
   /**
@@ -146,7 +146,7 @@ export default class Easing {
    */
   static elastic(bounciness = 1) {
     const p = bounciness * Math.PI;
-    return t =>
+    return (t) =>
       sub(
         1,
         multiply(pow(cos(multiply(t, Math.PI, 0.5)), 3), cos(multiply(t, p)))
@@ -165,7 +165,7 @@ export default class Easing {
     if (s === undefined) {
       s = 1.70158;
     }
-    return t => multiply(t, t, sub(multiply(add(s, 1), t), s));
+    return (t) => multiply(t, t, sub(multiply(add(s, 1), t), s));
   }
 
   /**
@@ -174,7 +174,7 @@ export default class Easing {
    * http://easings.net/#easeInBounce
    */
   static bounce(t) {
-    const sq = v => multiply(7.5625, v, v);
+    const sq = (v) => multiply(7.5625, v, v);
     return cond(
       lessThan(t, 1 / 2.75),
       sq(t),
@@ -198,7 +198,7 @@ export default class Easing {
    * http://cubic-bezier.com/
    */
   static bezier(x1, y1, x2, y2) {
-    return t => new AnimatedBezier(t, x1, y1, x2, y2);
+    return (t) => new AnimatedBezier(t, x1, y1, x2, y2);
   }
 
   /**
@@ -212,7 +212,7 @@ export default class Easing {
    * Runs an easing function backwards.
    */
   static out(easing) {
-    return t => sub(1, easing(sub(1, t)));
+    return (t) => sub(1, easing(sub(1, t)));
   }
 
   /**
@@ -221,7 +221,7 @@ export default class Easing {
    * duration.
    */
   static inOut(easing) {
-    return t =>
+    return (t) =>
       cond(
         lessThan(t, 0.5),
         divide(easing(multiply(t, 2)), 2),

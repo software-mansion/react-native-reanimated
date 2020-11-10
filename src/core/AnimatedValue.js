@@ -10,7 +10,11 @@ import { val } from '../val';
 export default class AnimatedValue extends InternalAnimatedValue {
   setValue(value) {
     this.__detachAnimation(this._animation);
-    if (Platform.OS === 'web' || Platform.OS === 'windows' || Platform.OS === 'macos') {
+    if (
+      Platform.OS === 'web' ||
+      Platform.OS === 'windows' ||
+      Platform.OS === 'macos'
+    ) {
       this._updateValue(val(value));
     } else {
       if (ReanimatedModule.setValue && typeof value === 'number') {

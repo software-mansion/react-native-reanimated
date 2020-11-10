@@ -33,7 +33,7 @@ export default function createEventObjectProxyPolyfill() {
     zoomScale: {},
     contentInset: { right: {}, top: {}, left: {}, bottom: {} },
   };
-  const traverse = obj => {
+  const traverse = (obj) => {
     for (const key in obj) {
       traverse(obj[key]);
       Object.assign(obj[key], { __isProxy: true });

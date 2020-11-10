@@ -20,7 +20,7 @@ function createOldAnimationObject(node, animationStateDefaults, value, config) {
   let wasStopped = false;
   let animationCallback;
   const animation = {
-    start: currentAnimationCallback => {
+    start: (currentAnimationCallback) => {
       animationCallback = currentAnimationCallback;
       if (isStarted) {
         animationCallback && animationCallback({ finished: false });
@@ -91,7 +91,7 @@ function createOldAnimationObject(node, animationStateDefaults, value, config) {
       wasStopped = true;
       evaluateOnce(set(currentState.finished, 1), currentState.finished);
     },
-    __stopImmediately_testOnly: result => {
+    __stopImmediately_testOnly: (result) => {
       animation.stop();
       isDone = result;
       value.__detachAnimation(animation);
