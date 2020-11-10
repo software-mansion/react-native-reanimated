@@ -1,3 +1,4 @@
+/* global _frameTimestamp */
 import { useEffect, useRef, useCallback } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
@@ -260,7 +261,6 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
     state.isAnimationCancelled = true;
     state.animations = {};
   }
-
 
   // calculate diff
   const diff = styleDiff(oldValues, newValues);

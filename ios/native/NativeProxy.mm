@@ -9,8 +9,6 @@
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
-#import <chrono>
-#import <ctime>
 
 namespace reanimated {
 
@@ -124,7 +122,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     return CACurrentMediaTime() * 1000;
   };
   
-  
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
@@ -134,12 +131,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
   
 module = std::make_shared<NativeReanimatedModule>(jsInvoker,
-                                                                            scheduler,
-                                                                            std::move(animatedRuntime),
-                                                                            errorHandler,
-                                                                            propObtainer,
-                                                                            platformDepMethodsHolder
-                                                                            );
+                                                  scheduler,
+                                                  std::move(animatedRuntime),
+                                                  errorHandler,
+                                                  propObtainer,
+                                                  platformDepMethodsHolder
+                                                  );
   
   scheduler->setModule(module);
 

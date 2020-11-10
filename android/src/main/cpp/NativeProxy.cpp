@@ -55,8 +55,7 @@ void NativeProxy::installJSIBindings()
                         ->getClass()
                         ->getMethod<local_ref<JString>()>("getUpTime");
       local_ref<JString> output = method(javaPart_.get());
-      int64_t res = std::strtoll(output->toStdString().c_str(), NULL, 10);
-      return (double)res;
+      return (double)std::strtoll(output->toStdString().c_str(), NULL, 10);
   };
 
   auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
