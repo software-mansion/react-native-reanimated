@@ -250,12 +250,17 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      requestFrame(frame);
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = {};
   }
+
 
   // calculate diff
   const diff = styleDiff(oldValues, newValues);

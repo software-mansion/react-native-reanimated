@@ -12,10 +12,6 @@ function pushFrame(frame) {
 
 export function requestFrame(frame) {
   'worklet';
-  if (_frameTimestamp) {
-    frame(_frameTimestamp);
-    return;
-  }
   if (NativeReanimated.native) {
     requestAnimationFrame(frame);
   } else {
