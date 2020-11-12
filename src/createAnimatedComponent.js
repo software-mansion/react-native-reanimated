@@ -10,17 +10,11 @@ import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
-import {
-  getWhitelistedNativeProps,
-  getWhitelistedUIProps,
-  addWhitelistedUIProps,
-} from './ConfigHelper';
+import { updateWhitelistProps } from './ConfigHelper';
 
 const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
 const NODE_MAPPING = new Map();
-
-const whitelistViewNamesUpdated = [];
 
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
@@ -246,7 +240,9 @@ export default function createAnimatedComponent(Component) {
        */
       const viewName = hostInstance.viewConfig.uiViewClassName;
       // update UI props whitelist for this view
-      this._updateWhitelistProps(hostInstance);
+      if (this._hasReanimated2Props(styles)) {
+        updateWhitelistProps(hostInstance);
+      }
 
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
@@ -262,6 +258,20 @@ export default function createAnimatedComponent(Component) {
           };
         }
       }
+    }
+
+    _hasReanimated2Props(flattenStyles) {
+      if (this.props.animatedProps?.viewDescriptor) {
+        return true;
+      }
+      if (this.props.style) {
+        for (const style of flattenStyles) {
+          if (typeof style === 'object' && 'viewDescriptor' in style) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     _detachPropUpdater() {
@@ -366,35 +376,6 @@ export default function createAnimatedComponent(Component) {
         }
       }
       return props;
-    }
-
-    /**
-     * updates UI props whitelist for given view host instance
-     * this will work just once for every view name
-     */
-    _updateWhitelistProps(hostInstance) {
-      const viewName = hostInstance.viewConfig.uiViewClassName;
-      const props = hostInstance.viewConfig.validAttributes;
-
-      // update whitelist of UI props for this view name only once
-      if (whitelistViewNamesUpdated.indexOf(viewName) === -1) {
-        const propsToAdd = {};
-        const existingNativeProps = Object.keys(getWhitelistedNativeProps());
-        const existingUIProps = Object.keys(getWhitelistedUIProps());
-        Object.keys(props).forEach((key) => {
-          // we don't want to add native props as they affect layout
-          // we also skip props which repeat here
-          if (
-            existingNativeProps.indexOf(key) === -1 &&
-            existingUIProps.indexOf(key) === -1
-          ) {
-            propsToAdd[key] = true;
-          }
-        });
-        addWhitelistedUIProps(propsToAdd);
-
-        whitelistViewNamesUpdated.push(viewName);
-      }
     }
 
     render() {

@@ -125,12 +125,34 @@ export function addWhitelistedUIProps(props) {
   configureProps();
 }
 
-export function getWhitelistedUIProps() {
-  return Object.assign({}, UI_THREAD_PROPS_WHITELIST);
-}
+const whitelistViewNamesUpdated = [];
+/**
+ * updates UI props whitelist for given view host instance
+ * this will work just once for every view name
+ */
+export function updateWhitelistProps(hostInstance) {
+  const viewName = hostInstance.viewConfig.uiViewClassName;
+  const props = hostInstance.viewConfig.validAttributes;
 
-export function getWhitelistedNativeProps() {
-  return Object.assign({}, NATIVE_THREAD_PROPS_WHITELIST);
+  // update whitelist of UI props for this view name only once
+  if (whitelistViewNamesUpdated.indexOf(viewName) === -1) {
+    const propsToAdd = {};
+    const existingNativeProps = Object.keys(NATIVE_THREAD_PROPS_WHITELIST);
+    const existingUIProps = Object.keys(UI_THREAD_PROPS_WHITELIST);
+    Object.keys(props).forEach((key) => {
+      // we don't want to add native props as they affect layout
+      // we also skip props which repeat here
+      if (
+        existingNativeProps.indexOf(key) === -1 &&
+        existingUIProps.indexOf(key) === -1
+      ) {
+        propsToAdd[key] = true;
+      }
+    });
+    addWhitelistedUIProps(propsToAdd);
+
+    whitelistViewNamesUpdated.push(viewName);
+  }
 }
 
 configureProps();
