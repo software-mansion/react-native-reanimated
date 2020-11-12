@@ -236,8 +236,18 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
-      const viewTag = findNodeHandle(this);
-      const viewName = this._findViewName();
+
+      const hostInstance = ReactNative.findHostInstance_DEPRECATED(this);
+      // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+      const viewTag = hostInstance._nativeTag;
+      /**
+       * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+       * The name we're looking for is in the field named uiViewClassName.
+       */
+      const viewName = hostInstance.viewConfig.uiViewClassName;
+      // update UI props whitelist for this view
+      this._updateWhitelistProps(hostInstance);
+
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
@@ -359,17 +369,12 @@ export default function createAnimatedComponent(Component) {
     }
 
     /**
-     * this method fetches view name for the UI.
-     * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
-     * The name we're looking for is in the field named uiViewClassName.
-     *
-     * Also whitelist props are being updated here
+     * updates UI props whitelist for given view host instance
+     * this will work just once for every view name
      */
-    _findViewName() {
-      const hostInstance = ReactNative.findHostInstance_DEPRECATED(this)
-        .viewConfig;
-      const viewName = hostInstance.uiViewClassName;
-      const props = hostInstance.validAttributes;
+    _updateWhitelistProps(hostInstance) {
+      const viewName = hostInstance.viewConfig.uiViewClassName;
+      const props = hostInstance.viewConfig.validAttributes;
 
       // update whitelist of UI props for this view name only once
       if (whitelistViewNamesUpdated.indexOf(viewName) === -1) {
