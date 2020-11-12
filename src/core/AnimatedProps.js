@@ -24,7 +24,10 @@ function sanitizeProps(inputProps) {
 
 export function createOrReusePropsNode(props, callback, oldNode) {
   if (props.style) {
-    const style = createOrReuseStyleNode(props.style, oldNode && oldNode._props.style);
+    const style = createOrReuseStyleNode(
+      props.style,
+      oldNode && oldNode._props.style
+    );
     if (style) {
       props = {
         ...props,
@@ -46,7 +49,7 @@ class AnimatedProps extends AnimatedNode {
   constructor(props, config, callback) {
     super(
       { type: 'props', props: config },
-      Object.values(props).filter(n => !(n instanceof AnimatedEvent))
+      Object.values(props).filter((n) => !(n instanceof AnimatedEvent))
     );
     this._config = config;
     this._props = props;

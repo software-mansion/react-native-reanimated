@@ -6,7 +6,7 @@ const UPDATED_NODES = [];
 let loopID = 1;
 let propUpdatesEnqueued = null;
 let nodeCount = 0;
-let callID = "";
+let callID = '';
 
 export function getCallID() {
   return callID;
@@ -17,7 +17,14 @@ export function setCallID(nextCallID) {
 }
 
 function sanitizeConfig(config) {
-  if (Platform.OS === 'web' || Platform.OS === 'windows' || Platform.OS === 'macos' || ['undefined', 'string', 'function', 'boolean', 'number'].includes(typeof config)) {
+  if (
+    Platform.OS === 'web' ||
+    Platform.OS === 'windows' ||
+    Platform.OS === 'macos' ||
+    ['undefined', 'string', 'function', 'boolean', 'number'].includes(
+      typeof config
+    )
+  ) {
     return config;
   } else if (Array.isArray(config)) {
     return config.map(sanitizeConfig);
@@ -38,7 +45,7 @@ function sanitizeConfig(config) {
 
 function runPropUpdates() {
   const visitedNodes = new Set();
-  const findAndUpdateNodes = node => {
+  const findAndUpdateNodes = (node) => {
     if (!node) {
       console.warn('findAndUpdateNodes was passed a nullish node');
       return;
@@ -70,10 +77,9 @@ function runPropUpdates() {
 }
 
 export default class AnimatedNode {
-
   __nodeID;
-  __lastLoopID = { "": -1 };
-  __memoizedValue = { "": null };
+  __lastLoopID = { '': -1 };
+  __memoizedValue = { '': null };
   __children = [];
 
   constructor(nodeConfig, inputNodes) {
@@ -81,7 +87,7 @@ export default class AnimatedNode {
     this.__nodeConfig = sanitizeConfig(nodeConfig);
     this.__initialized = false;
     this.__inputNodes =
-      inputNodes && inputNodes.filter(node => node instanceof AnimatedNode);
+      inputNodes && inputNodes.filter((node) => node instanceof AnimatedNode);
   }
 
   toString() {
