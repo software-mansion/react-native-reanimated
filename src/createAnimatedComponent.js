@@ -1,5 +1,6 @@
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
+import ReactNative from 'react-native/Libraries/Renderer/shims/ReactNative';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
@@ -9,10 +10,17 @@ import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
+import {
+  getWhitelistedNativeProps,
+  getWhitelistedUIProps,
+  addWhitelistedUIProps,
+} from './ConfigHelper';
 
 const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
 const NODE_MAPPING = new Map();
+
+const whitelistViewNamesUpdated = [];
 
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
@@ -229,7 +237,7 @@ export default function createAnimatedComponent(Component) {
         : [this.props.style];
       styles = flattenArray(styles);
       const viewTag = findNodeHandle(this);
-      const viewName = this._getViewName();
+      const viewName = this._findViewName();
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
@@ -354,14 +362,36 @@ export default function createAnimatedComponent(Component) {
      * this method fetches view name for the UI.
      * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
      * The name we're looking for is in the field named uiViewClassName.
-     * The root field comes from svg where it pushes view's config in the sub object under the 'root' key(https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Shape.tsx#L244)
      *
-     * this method returns either view's UI name or undefined - that could happen if there was no viewConfig in the object where we look for it. A predictible case of that would be similar to svg's behavior of some external library(like putting rn's view config in some other place than just inside the component). In that case it should be handled explicitly here.
+     * Also whitelist props are being updated here
      */
-    _getViewName() {
-      const viewConf =
-        this._component?.viewConfig || this._component?.root?.viewConfig;
-      return viewConf?.uiViewClassName;
+    _findViewName() {
+      const hostInstance = ReactNative.findHostInstance_DEPRECATED(this)
+        .viewConfig;
+      const viewName = hostInstance.uiViewClassName;
+      const props = hostInstance.validAttributes;
+
+      // update whitelist of UI props for this view name only once
+      if (whitelistViewNamesUpdated.indexOf(viewName) === -1) {
+        const propsToAdd = {};
+        const existingNativeProps = Object.keys(getWhitelistedNativeProps());
+        const existingUIProps = Object.keys(getWhitelistedUIProps());
+        Object.keys(props).forEach((key) => {
+          // we don't want to add native props as they affect layout
+          // we also skip props which repeat here
+          if (
+            existingNativeProps.indexOf(key) === -1 &&
+            existingUIProps.indexOf(key) === -1
+          ) {
+            propsToAdd[key] = true;
+          }
+        });
+        addWhitelistedUIProps(propsToAdd);
+
+        whitelistViewNamesUpdated.push(viewName);
+      }
+
+      return viewName;
     }
 
     render() {

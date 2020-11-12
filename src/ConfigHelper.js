@@ -23,33 +23,6 @@ let UI_THREAD_PROPS_WHITELIST = {
   scaleY: true,
   translateX: true,
   translateY: true,
-  /* SVG */
-  fill: true,
-  fillOpacity: true,
-  fillRule: true,
-  stroke: true,
-  strokeWidth: true,
-  strokeOpacity: true,
-  strokeLinecap: true,
-  strokeLinejoin: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  rotation: true,
-  scale: true,
-  origin: true,
-  originX: true,
-  originY: true,
-  cx: true,
-  cy: true,
-  r: true,
-  rx: true,
-  ry: true,
-  x1: true,
-  x2: true,
-  y1: true,
-  y2: true,
-  points: true,
-  d: true,
 };
 
 /**
@@ -150,6 +123,14 @@ export function addWhitelistedNativeProps(props) {
 export function addWhitelistedUIProps(props) {
   UI_THREAD_PROPS_WHITELIST = { ...UI_THREAD_PROPS_WHITELIST, ...props };
   configureProps();
+}
+
+export function getWhitelistedUIProps() {
+  return Object.assign({}, UI_THREAD_PROPS_WHITELIST);
+}
+
+export function getWhitelistedNativeProps() {
+  return Object.assign({}, NATIVE_THREAD_PROPS_WHITELIST);
 }
 
 configureProps();
