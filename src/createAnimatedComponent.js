@@ -10,7 +10,7 @@ import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
-import { updateWhitelistProps } from './ConfigHelper';
+import { adaptViewConfig } from './ConfigHelper';
 
 const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
@@ -241,7 +241,7 @@ export default function createAnimatedComponent(Component) {
       const viewName = hostInstance.viewConfig.uiViewClassName;
       // update UI props whitelist for this view
       if (this._hasReanimated2Props(styles)) {
-        updateWhitelistProps(hostInstance);
+        adaptViewConfig(hostInstance.viewConfig);
       }
 
       styles.forEach((style) => {
