@@ -395,8 +395,6 @@ export default function createAnimatedComponent(Component) {
 
         whitelistViewNamesUpdated.push(viewName);
       }
-
-      return viewName;
     }
 
     render() {
