@@ -250,13 +250,11 @@ export default function createAnimatedComponent(Component) {
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps) {
-        if (this.props.animatedProps.viewDescriptor) {
-          this.props.animatedProps.viewDescriptor.value = {
-            tag: viewTag,
-            name: viewName,
-          };
-        }
+      if (this.props.animatedProps?.viewDescriptor) {
+        this.props.animatedProps.viewDescriptor.value = {
+          tag: viewTag,
+          name: viewName,
+        };
       }
     }
 
