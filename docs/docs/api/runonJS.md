@@ -4,30 +4,49 @@ title: runOnJS
 sidebar_label: runOnJS
 ---
 
-When you call a function on UI thread you can't be sure if you call a worklet or a callback from JS thread. To make it more transparent we introduce runOnJS method which calls a callback asynchronously. If you call a callback without this method then an exception will be thrown.
+When you call a function on UI thread you can't be sure if you call a worklet or a callback from JS thread. To make it more transparent we introduced `runOnJS`, which calls a callback asynchronously. An exception will be thrown if you call a JS callback without this function.
 
-#### Note
-
-If you want to invoke some function from external library in `runOnJS` please wrap it into a separate function.
-
-Code like this may not work:
-
-```js
-useDerivedValue(() => {
-    runOnJS(externalLibraryFunction)(args);
-});
-```
-
-But something like this will work:
-
-```js
-const wrapper = (args) => {
-    externalLibraryFunction(args)
-}
-useDerivedValue(() => {
-    runOnJS(wrapper)(args);
-});
-```
+> ### Note
+>
+> If you want to invoke some function from external library in `runOnJS` please wrap it into a separate function.
+>
+> Code like this may not work:
+>
+>```js
+>useDerivedValue(() => {
+>    runOnJS(externalLibraryFunction)(args);
+>});
+>```
+>
+>But something like this will work:
+>
+>```js
+>const wrapper = (args) => {
+>    externalLibraryFunction(args)
+>}
+>useDerivedValue(() => {
+>    runOnJS(wrapper)(args);
+>});
+>```
+>
+>This is because internally `runOnJS` uses `Object.defineProperty`. Therefore if we want to call a method of some object we may not have an access to `this` inside a called function.
+>
+>This code shows how it works:
+>
+>```js
+>class A {
+>  foo() {
+>    //... playing with [this]
+>  }
+>}
+>
+>const a = new A();
+>const ob = {}
+>Object.defineProperty(ob, 'foo', {enumerable: false, value: a.foo}); // we do something like this in runOnJS
+>
+>a.foo(5); // normal [this] access
+>ob.foo(5); // [this] is not correct
+>```
 
 ### Arguments
 
