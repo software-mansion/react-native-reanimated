@@ -137,14 +137,12 @@ export function adaptViewConfig(viewConfig) {
   // update whitelist of UI props for this view name only once
   if (!whitelistViewNamesUpdated.has(viewName)) {
     const propsToAdd = {};
-    const existingNativeProps = Object.keys(NATIVE_THREAD_PROPS_WHITELIST);
-    const existingUIProps = Object.keys(UI_THREAD_PROPS_WHITELIST);
     Object.keys(props).forEach((key) => {
       // we don't want to add native props as they affect layout
       // we also skip props which repeat here
       if (
-        existingNativeProps.indexOf(key) === -1 &&
-        existingUIProps.indexOf(key) === -1
+        !(key in NATIVE_THREAD_PROPS_WHITELIST) &&
+        !(key in UI_THREAD_PROPS_WHITELIST)
       ) {
         propsToAdd[key] = true;
       }
