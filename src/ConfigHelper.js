@@ -125,7 +125,7 @@ export function addWhitelistedUIProps(props) {
   configureProps();
 }
 
-const whitelistViewNamesUpdated = new Set();
+const PROCESSED_VIEW_NAMES = new Set();
 /**
  * updates UI props whitelist for given view host instance
  * this will work just once for every view name
@@ -135,7 +135,7 @@ export function adaptViewConfig(viewConfig) {
   const props = viewConfig.validAttributes;
 
   // update whitelist of UI props for this view name only once
-  if (!whitelistViewNamesUpdated.has(viewName)) {
+  if (!PROCESSED_VIEW_NAMES.has(viewName)) {
     const propsToAdd = {};
     Object.keys(props).forEach((key) => {
       // we don't want to add native props as they affect layout
@@ -149,7 +149,7 @@ export function adaptViewConfig(viewConfig) {
     });
     addWhitelistedUIProps(propsToAdd);
 
-    whitelistViewNamesUpdated.add(viewName);
+    PROCESSED_VIEW_NAMES.add(viewName);
   }
 }
 
