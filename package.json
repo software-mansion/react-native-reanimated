@@ -27,7 +27,10 @@
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",
-    "mock.js"
+    "mock.js",
+    "!__snapshots__",
+    "!*.test.js",
+    "!*.test.js.map"
   ],
   "repository": {
     "type": "git",
