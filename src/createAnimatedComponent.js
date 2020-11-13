@@ -1,5 +1,6 @@
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
+import ReactNative from 'react-native/Libraries/Renderer/shims/ReactNative';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
@@ -9,6 +10,7 @@ import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
+import { adaptViewConfig } from './ConfigHelper';
 
 const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
@@ -228,16 +230,46 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
-      const viewTag = findNodeHandle(this);
+
+      const hostInstance = ReactNative.findHostInstance_DEPRECATED(this);
+      // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+      const viewTag = hostInstance._nativeTag;
+      /**
+       * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+       * The name we're looking for is in the field named uiViewClassName.
+       */
+      const viewName = hostInstance.viewConfig?.uiViewClassName;
+      // update UI props whitelist for this view
+      if (this._hasReanimated2Props(styles)) {
+        adaptViewConfig(hostInstance.viewConfig);
+      }
+
       styles.forEach((style) => {
-        if (style && style.viewTag !== undefined) {
-          style.viewTag.value = viewTag;
+        if (style?.viewDescriptor) {
+          style.viewDescriptor.value = { tag: viewTag, name: viewName };
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps) {
-        this.props.animatedProps.viewTag.value = viewTag;
+      if (this.props.animatedProps?.viewDescriptor) {
+        this.props.animatedProps.viewDescriptor.value = {
+          tag: viewTag,
+          name: viewName,
+        };
       }
+    }
+
+    _hasReanimated2Props(flattenStyles) {
+      if (this.props.animatedProps?.viewDescriptor) {
+        return true;
+      }
+      if (this.props.style) {
+        for (const style of flattenStyles) {
+          if (typeof style === 'object' && 'viewDescriptor' in style) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     _detachPropUpdater() {
@@ -300,7 +332,7 @@ export default function createAnimatedComponent(Component) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map((style) => {
-            if (style && style.viewTag) {
+            if (style && style.viewDescriptor) {
               // this is how we recognize styles returned by useAnimatedStyle
               if (style.viewRef.current === null) {
                 style.viewRef.current = this;
