@@ -238,7 +238,7 @@ export default function createAnimatedComponent(Component) {
        * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
        * The name we're looking for is in the field named uiViewClassName.
        */
-      const viewName = hostInstance.viewConfig.uiViewClassName;
+      const viewName = hostInstance.viewConfig?.uiViewClassName;
       // update UI props whitelist for this view
       if (this._hasReanimated2Props(styles)) {
         adaptViewConfig(hostInstance.viewConfig);
