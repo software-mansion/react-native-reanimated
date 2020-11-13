@@ -53,7 +53,7 @@ declare module 'react-native-reanimated' {
 
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
-      outputRange: ReadonlyArray<Adaptable<number>>;
+      outputRange: ReadonlyArray<Adaptable<number | string>>;
       extrapolate?: Extrapolate;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
@@ -420,7 +420,10 @@ declare module 'react-native-reanimated' {
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
       sharedValue: T
     ): void;
-    export function withDelay(delayMS: number, delayedAnimation: number): number;
+    export function withDelay(
+      delayMS: number,
+      delayedAnimation: number
+    ): number;
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
