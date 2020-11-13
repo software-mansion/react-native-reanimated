@@ -72,7 +72,10 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (lastValue.onFrame !== undefined) {
+          } else if (
+            lastValue.onFrame !== undefined &&
+            lastAnimation?.current
+          ) {
             // it was an animation before, copy its state
             value = lastAnimation.current;
           }
