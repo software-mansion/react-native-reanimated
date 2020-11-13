@@ -1,0 +1,16 @@
+name: Check versions
+on:
+  issues:
+    types: [edited, labeled, unlabeled]
+
+jobs:
+  check_issue:
+    runs-on: ubuntu-latest
+    name: Validate issue
+    steps:
+    - name: Validate issue
+      id: validate-issue
+      uses: karol-bisztyga/issue-validator@v1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        required-sections: bug,Description,Steps To Reproduce,Expected behavior,Actual behavior,Package versions;Feature request,Description,Motivation;Question,Description
