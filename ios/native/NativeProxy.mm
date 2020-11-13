@@ -86,13 +86,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
     [reanimatedModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] viewName:@"RCTView"];
   };
-
-  auto requestRender = [reanimatedModule](std::function<void(double)> onRender) {
-    [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      onRender(displayLink.timestamp * 1000.0);
-    }];
-  };
   
+
   RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
   auto measuringFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
     return measure(viewTag, uiManager);
@@ -112,21 +107,36 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::shared_ptr<Scheduler> scheduler(new REAIOSScheduler(jsInvoker));
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
+  std::shared_ptr<NativeReanimatedModule> module;
 
+  auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
+    [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
+      double frameTimestamp = displayLink.timestamp * 1000.0;
+      rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
+      onRender(frameTimestamp);
+      rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
+    }];
+  };
+  
+  auto getCurrentTime = []() {
+    return CACurrentMediaTime() * 1000;
+  };
+  
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
     scrollToFunction,
-    measuringFunction
+    measuringFunction,
+    getCurrentTime,
   };
   
-  std::shared_ptr<NativeReanimatedModule> module(new NativeReanimatedModule(jsInvoker,
-                                                                            scheduler,
-                                                                            std::move(animatedRuntime),
-                                                                            errorHandler,
-                                                                            propObtainer,
-                                                                            platformDepMethodsHolder
-                                                                            ));
+module = std::make_shared<NativeReanimatedModule>(jsInvoker,
+                                                  scheduler,
+                                                  std::move(animatedRuntime),
+                                                  errorHandler,
+                                                  propObtainer,
+                                                  platformDepMethodsHolder
+                                                  );
   
   scheduler->setModule(module);
 
@@ -135,7 +145,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
 
     eventAsString = "{ NativeMap:"  + eventAsString + "}";
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", CACurrentMediaTime() * 1000);
     module->onEvent(eventNameString, eventAsString);
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
   }];
 
   return module;

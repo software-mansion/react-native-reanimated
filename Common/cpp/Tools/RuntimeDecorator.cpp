@@ -9,7 +9,8 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
                                         UpdaterFunction updater,
                                         RequestFrameFunction requestFrame,
                                         ScrollToFunction scrollTo,
-                                        MeasuringFunction measure) {
+                                        MeasuringFunction measure,
+                                        TimeProviderFunction getCurrentTime) {
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   
   jsi::Object dummyGlobal(rt);
@@ -124,6 +125,19 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   };
   jsi::Value globalSetter = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_globalSetter"), 1, clb5);
   rt.global().setProperty(rt, "_globalSetter", globalSetter);
+  
+  auto clb6 = [getCurrentTime](
+      jsi::Runtime &rt,
+      const jsi::Value &thisValue,
+      const jsi::Value *args,
+      size_t count
+      ) -> jsi::Value {
+    return getCurrentTime();
+  };
+  jsi::Value timeFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
+  rt.global().setProperty(rt, "_getCurrentTime", timeFun);
+
+  rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
 }
 
 }

@@ -1,3 +1,4 @@
+/* global _frameTimestamp */
 import { useEffect, useRef, useCallback } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
@@ -7,6 +8,7 @@ import {
   makeMutable,
   makeRemote,
   requestFrame,
+  getTimestamp,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -83,6 +85,8 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       animation.callStart = (timestamp) => {
         animation.onStart(animation, value, timestamp, lastAnimation);
       };
+      animation.callStart(getTimestamp());
+      animation.callStart = null;
     } else if (typeof animatedProp === 'object') {
       // it is an object
       Object.keys(animatedProp).forEach((key) =>
@@ -247,7 +251,11 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      requestFrame(frame);
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
     }
   } else {
     state.isAnimationCancelled = true;

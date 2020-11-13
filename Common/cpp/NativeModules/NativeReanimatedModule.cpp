@@ -80,7 +80,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                      platformDepMethodsHolder.updaterFunction,
                                      requestAnimationFrame,
                                      platformDepMethodsHolder.scrollToFunction,
-                                     platformDepMethodsHolder.measuringFunction);
+                                     platformDepMethodsHolder.measuringFunction,
+                                     platformDepMethodsHolder.getCurrentTime);
 }
 
 bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
@@ -220,7 +221,7 @@ void NativeReanimatedModule::maybeRequestRender()
     requestRender([this](double timestampMs) {
       this->renderRequested = false;
       this->onRender(timestampMs);
-    });
+    }, *this->runtime);
   }
 }
 
@@ -228,14 +229,13 @@ void NativeReanimatedModule::onRender(double timestampMs)
 {
   try
   {
-    mapperRegistry->execute(*runtime);
-
     std::vector<FrameCallback> callbacks = frameCallbacks;
     frameCallbacks.clear();
     for (auto callback : callbacks)
     {
       callback(timestampMs);
     }
+    mapperRegistry->execute(*runtime);
 
     if (mapperRegistry->needRunOnRender())
     {
