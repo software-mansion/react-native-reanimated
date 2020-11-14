@@ -26,7 +26,9 @@ import Animated, {
   runOnUI,
   useAnimatedReaction,
   interpolateColor,
-  makeMutable
+  makeMutable,
+  interpolateNode,
+  useValue,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -453,7 +455,6 @@ function UseAnimatedReactionTest() {
   return null;
 }
 
-
 // interpolateColor
 function interpolateColorTest() {
   const sv = useSharedValue(0);
@@ -463,4 +464,12 @@ function interpolateColorTest() {
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
 
   return null;
+}
+
+function interpolateNodeTest() {
+  const value = useValue(0);
+  interpolateNode(value, {
+    inputRange: [0, 1],
+    outputRange: ['0deg', '100deg'],
+  });
 }
