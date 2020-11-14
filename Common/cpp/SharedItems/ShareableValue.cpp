@@ -13,10 +13,10 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
 std::string CALLBACK_ERROR_PREFIX = R"(
 Tried to synchronously call function {)";
-std::string CALLBACK_ERROR_SUFFIX = R"(} from a diffrent thread.
+std::string CALLBACK_ERROR_SUFFIX = R"(} from a different thread.
 Solution is:
-a) if you want to synchronously execute this method, mark it as a worklet
-b) if you want to execute this method on the JS thread, wrap it using runOnJS
+a) If you want to synchronously execute this method, mark it as a Worklet
+b) If you want to execute this method on the JS thread, wrap it using runOnJS
 )";
   
 void addHiddenProperty(jsi::Runtime &rt,
