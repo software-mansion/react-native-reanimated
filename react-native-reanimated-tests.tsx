@@ -470,6 +470,6 @@ function interpolateNodeTest() {
   const value = useValue(0);
   interpolateNode(value, {
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: ['0deg', '100deg'],
   });
 }

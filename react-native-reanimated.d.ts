@@ -420,10 +420,7 @@ declare module 'react-native-reanimated' {
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
       sharedValue: T
     ): void;
-    export function withDelay(
-      delayMS: number,
-      delayedAnimation: number
-    ): number;
+    export function withDelay(delayMS: number, delayedAnimation: number): number;
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
