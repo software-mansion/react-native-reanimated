@@ -139,6 +139,7 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   rt.global().setProperty(rt, "_getCurrentTime", timeFun);
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
+  rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 }
 
 }
