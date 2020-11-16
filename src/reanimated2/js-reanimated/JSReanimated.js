@@ -15,6 +15,10 @@ export default class JSReanimated {
     this.maybeRequestRender();
   }
 
+  getTimestamp() {
+    return window.performance.now();
+  }
+
   maybeRequestRender() {
     if (!this._renderRequested) {
       this._renderRequested = true;
@@ -22,7 +26,7 @@ export default class JSReanimated {
       requestAnimationFrame((timestampMs) => {
         this._renderRequested = false;
 
-        this._onRender(timestampMs);
+        this._onRender(this.getTimestamp());
       });
     }
   }
