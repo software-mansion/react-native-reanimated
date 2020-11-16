@@ -1,6 +1,7 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp */
 
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -44,7 +45,7 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
-export function getTimestamp() {
+function _getTimestamp() {
   'worklet';
   if (_frameTimestamp) {
     return _frameTimestamp;
@@ -53,6 +54,14 @@ export function getTimestamp() {
     return _eventTimestamp;
   }
   return _getCurrentTime();
+}
+
+export function getTimestamp() {
+  'worklet';
+  if (Platform.OS === 'web') {
+    return NativeReanimated.getTimestamp();
+  }
+  return _getTimestamp();
 }
 
 function workletValueSetter(value) {

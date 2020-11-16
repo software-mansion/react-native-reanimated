@@ -1,6 +1,5 @@
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import ReactNative from 'react-native/Libraries/Renderer/shims/ReactNative';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
 import AnimatedEvent from './core/AnimatedEvent';
@@ -11,6 +10,7 @@ import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
+import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 
 const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
@@ -230,18 +230,23 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
-
-      const hostInstance = ReactNative.findHostInstance_DEPRECATED(this);
-      // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-      const viewTag = hostInstance._nativeTag;
-      /**
-       * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
-       * The name we're looking for is in the field named uiViewClassName.
-       */
-      const viewName = hostInstance.viewConfig?.uiViewClassName;
-      // update UI props whitelist for this view
-      if (this._hasReanimated2Props(styles)) {
-        adaptViewConfig(hostInstance.viewConfig);
+      let viewTag, viewName;
+      if (Platform.OS === 'web') {
+        viewTag = findNodeHandle(this);
+        viewName = null;
+      } else {
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+        viewTag = hostInstance._nativeTag;
+        /**
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * The name we're looking for is in the field named uiViewClassName.
+         */
+        viewName = hostInstance.viewConfig?.uiViewClassName;
+        // update UI props whitelist for this view
+        if (this._hasReanimated2Props(styles)) {
+          adaptViewConfig(hostInstance.viewConfig);
+        }
       }
 
       styles.forEach((style) => {
