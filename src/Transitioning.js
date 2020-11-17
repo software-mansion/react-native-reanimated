@@ -31,10 +31,10 @@ function configFromProps(type, props) {
  * react native we could rewrite it using hooks or `static contextType` API.
  */
 function wrapTransitioningContext(Comp) {
-  return props => {
+  return (props) => {
     return (
       <TransitioningContext.Consumer>
-        {context => <Comp context={context} {...props} />}
+        {(context) => <Comp context={context} {...props} />}
       </TransitioningContext.Consumer>
     );
   };

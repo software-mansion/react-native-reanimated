@@ -15,7 +15,7 @@ function initializeConstantValues() {
   if (CONSTANT_VALUES.size !== 0) {
     return;
   }
-  [0, -1, 1, -2, 2].forEach(v =>
+  [0, -1, 1, -2, 2].forEach((v) =>
     CONSTANT_VALUES.set(v, new InternalAnimatedValue(v, true))
   );
 }
@@ -33,10 +33,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
   }
 
   constructor(value, constant = false) {
-    invariant(
-      value !== null,
-      'Animated.Value cannot be set to the null'
-    );
+    invariant(value !== null, 'Animated.Value cannot be set to the null');
     super({ type: 'value', value: sanitizeValue(value) });
     this._startingValue = this._value = value;
     this._animation = null;
@@ -48,7 +45,7 @@ export default class InternalAnimatedValue extends AnimatedNode {
       if (ReanimatedModule.getValue) {
         ReanimatedModule.getValue(
           this.__nodeID,
-          val => (this.__nodeConfig.value = val)
+          (val) => (this.__nodeConfig.value = val)
         );
       } else {
         this.__nodeConfig.value = this.__getValue();

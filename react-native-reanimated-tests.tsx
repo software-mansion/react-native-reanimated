@@ -26,6 +26,9 @@ import Animated, {
   runOnUI,
   useAnimatedReaction,
   interpolateColor,
+  makeMutable,
+  interpolateNode,
+  useValue,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -43,6 +46,18 @@ const styles = StyleSheet.create({
  */
 
 // @TODO: add reanimated 1 tests here
+
+/**
+ * Reanimated 2 Functions
+ */
+
+// makeMutable
+function MakeMutableTest() {
+  const mut = makeMutable(0);
+  const mut2 = makeMutable(true);
+
+  return <Animated.View style={styles.container} />;
+}
 
 /**
  * Reanimated 2 Hooks
@@ -440,7 +455,6 @@ function UseAnimatedReactionTest() {
   return null;
 }
 
-
 // interpolateColor
 function interpolateColorTest() {
   const sv = useSharedValue(0);
@@ -450,4 +464,12 @@ function interpolateColorTest() {
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
 
   return null;
+}
+
+function interpolateNodeTest() {
+  const value = useValue(0);
+  interpolateNode(value, {
+    inputRange: [0, 1],
+    outputRange: ['0deg', '100deg'],
+  });
 }

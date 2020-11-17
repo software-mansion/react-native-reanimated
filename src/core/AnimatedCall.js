@@ -16,7 +16,7 @@ class AnimatedCall extends AnimatedNode {
 
   constructor(args, jsFunction) {
     invariant(
-      args.every(el => el instanceof AnimatedNode),
+      args.every((el) => el instanceof AnimatedNode),
       `Reanimated: Animated.call node args should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
     );
     super({ type: 'call', input: args }, args);

@@ -14,11 +14,11 @@ class AnimatedCallFunc extends AnimatedNode {
       `Reanimated: AnimatedCallFunc 'what' argument should be of type AnimatedNode but got ${what}`
     );
     invariant(
-      args.every(el => el instanceof AnimatedNode),
+      args.every((el) => el instanceof AnimatedNode),
       `Reanimated: every AnimatedCallFunc 'args' argument should be of type AnimatedNode but got ${args}`
     );
     invariant(
-      params.every(el => el instanceof AnimatedNode),
+      params.every((el) => el instanceof AnimatedNode),
       `Reanimated: every AnimatedCallFunc 'params' argument should be of type AnimatedNode but got ${params}`
     );
     super(
@@ -64,5 +64,5 @@ class AnimatedCallFunc extends AnimatedNode {
 }
 
 export function createAnimatedCallFunc(proc, args, params) {
-  return new AnimatedCallFunc(proc, args.map(p => adapt(p)), params);
+  return new AnimatedCallFunc(proc, args.map((p) => adapt(p)), params);
 }

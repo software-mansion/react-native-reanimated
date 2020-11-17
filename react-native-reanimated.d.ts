@@ -54,7 +54,7 @@ declare module 'react-native-reanimated' {
 
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
-      outputRange: ReadonlyArray<Adaptable<number>>;
+      outputRange: ReadonlyArray<Adaptable<number | string>>;
       extrapolate?: Extrapolate;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
@@ -459,6 +459,10 @@ declare module 'react-native-reanimated' {
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
+    export function makeMutable<T extends SharedValueType>(
+      initialValue: T
+    ): SharedValue<T>;
+
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
@@ -727,6 +731,7 @@ declare module 'react-native-reanimated' {
   export const runOnUI: typeof Animated.runOnUI;
   export const runOnJS: typeof Animated.runOnJS;
   export const processColor: typeof Animated.processColor;
+  export const makeMutable: typeof Animated.makeMutable;
   export const useValue: typeof Animated.useValue;
   export const useSharedValue: typeof Animated.useSharedValue;
   export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
