@@ -269,7 +269,7 @@ export default function createAnimatedComponent(Component) {
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
-          if (typeof style === 'object' && 'viewDescriptor' in style) {
+          if (style?.hasOwnProperty('viewDescriptor')) {
             return true;
           }
         }
