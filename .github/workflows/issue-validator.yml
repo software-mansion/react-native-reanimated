@@ -1,4 +1,4 @@
-name: Check versions
+name: Validate issues
 on:
   issues:
     types: [edited, labeled, unlabeled]
