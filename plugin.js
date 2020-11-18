@@ -43,6 +43,7 @@ const globals = new Set([
   'Number',
   'Object',
   'String',
+  'Symbol',
   'undefined',
   'null',
   'UIManager',
