@@ -10,6 +10,7 @@
 #include "FrozenObject.h"
 #include <functional>
 #include <thread>
+#include <future>
 #include <memory>
 #include "JSIStoreValueUser.h"
 
@@ -61,7 +62,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::unique_ptr<jsi::Runtime> rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
-                                               PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
+                                               PlatformDepMethodsHolder platformDepMethodsHolder,
+                                               std::function<std::unique_ptr<jsi::Runtime>()> runtimeObtainer) : NativeReanimatedModuleSpec(jsInvoker),
                                                   runtime(std::move(rt)),
                                                   mapperRegistry(new MapperRegistry()),
                                                   eventHandlerRegistry(new EventHandlerRegistry()),
@@ -69,7 +71,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                   propObtainer(propObtainer),
                                                   errorHandler(errorHandler),
                                                   workletsCache(new WorkletsCache()),
-                                                  scheduler(scheduler)
+                                                  scheduler(scheduler),
+                                                  runtimeObtainer(runtimeObtainer)
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
@@ -188,6 +191,73 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
   });
 
   return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::spawnThread(jsi::Runtime &rt, const jsi::Value &operations) {
+  Logger::log("HERE spawning thread...");
+  jsi::Object object = operations.asObject(rt);
+  if (object.isFunction(rt)) {
+    if (!object.getProperty(rt, "__worklet").isUndefined()) {
+
+      const size_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+      std::string str = "here 1 thread id: ";
+      str += std::to_string(thread_id);
+      Logger::log(str.c_str());
+        
+      std::unique_ptr<jsi::Runtime> customRuntime = runtimeObtainer();
+        
+      std::string strutf8 = object.getProperty(rt, "asString").asString(rt).utf8(rt);
+        jsi::String jsis = jsi::String::createFromUtf8(*customRuntime, strutf8);
+        jsi::Value v(*customRuntime , jsis);
+        std::shared_ptr<jsi::StringBuffer> buf = std::make_shared<jsi::StringBuffer>(strutf8);
+        //jsi::Value val = customRuntime->evaluateJavaScript(buf, "experimental_call");
+        
+        auto customGlobal = customRuntime->global();//.getPropertyAsFunction(rt, "eval");
+        auto global = rt.global();
+        
+        auto arr1 = global.getPropertyNames(rt);
+        auto arr2 = customGlobal.getPropertyNames(*customRuntime);
+        
+        // ...there's no eval on custom global... :/
+        
+        //jsi::Object o = v.getObject(*customRuntime); // error
+        // auto pureCxxFun = object.asFunction(rt).getHostFunction(rt); // not working
+      
+      //jsi::Function jsiFunction = object.asFunction(*customRuntime); // error
+      //jsi::Function fff = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "customFunc"), 0, warnFunction);
+        volatile int x = 9;
+/*
+        jsi::Value val(std::move(operations));
+        volatile int x = 9;
+      //Logger::log("calling worklet");
+      //jsiFunction.call(rt, jsi::Value::undefined());
+/*
+      auto fun = [&rt, &jsiFunction]() -> void {
+        const size_t thread_id2 = std::hash<std::thread::id>{}(std::this_thread::get_id());
+        std::string str = "here 2 thread id: ";
+        str += std::to_string(thread_id2);
+        Logger::log(str.c_str());
+        // ...
+
+        jsiFunction.call(rt, jsi::Value::undefined());
+      };
+      //std::thread t1(fun);
+        //t1.join();
+      std::async(fun);
+      */
+    }
+  }
+  /*
+  auto fun = [&rt, &thisValue, &res]() -> void {
+    const size_t thread_id2 = std::hash<std::thread::id>{}(std::this_thread::get_id());
+    std::string str = "here 2 thread id: ";
+    str += std::to_string(thread_id2);
+    Logger::log(str.c_str());
+    // ...
+  };
+  std::thread t1(fun);
+  */
+    return jsi::Value::undefined();
 }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString)

@@ -31,7 +31,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
                            std::unique_ptr<jsi::Runtime> rt,
                            std::shared_ptr<ErrorHandler> errorHandler,
                            std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
-                           PlatformDepMethodsHolder platformDepMethodsHolder);
+                           PlatformDepMethodsHolder platformDepMethodsHolder,
+                           std::function<std::unique_ptr<jsi::Runtime>()> runtimeObtainer);
 
     virtual ~NativeReanimatedModule();
 
@@ -48,7 +49,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
 
     jsi::Value getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) override;
-    
+
+    jsi::Value spawnThread(jsi::Runtime &rt, const jsi::Value &operations) override;
+
     void onRender(double timestampMs);
     void onEvent(std::string eventName, std::string eventAsString);
     bool isAnyHandlerWaitingForEvent(std::string eventName);
@@ -67,6 +70,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     std::vector<FrameCallback> frameCallbacks;
     bool renderRequested = false;
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
+    std::function<std::unique_ptr<jsi::Runtime>()> runtimeObtainer;
   public:
   std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;

@@ -3,6 +3,7 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   Easing,
+  spawnThread,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
@@ -19,6 +20,11 @@ export default function AnimatedStyleUpdateExample(props) {
     return {
       width: withTiming(randomWidth.value, config),
     };
+  });
+
+  spawnThread(() => {
+    'worklet';
+    console.log('huge calculations in progress...');
   });
 
   return (

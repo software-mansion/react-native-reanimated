@@ -89,6 +89,16 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getViewProp(
     return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_spawnThread(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+        ->spawnThread(rt, std::move(args[0]));
+    return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["installCoreFunctions"] = MethodMetadata{
@@ -115,6 +125,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
 
   methodMap_["getViewProp"] = MethodMetadata{
     3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
+
+  methodMap_["spawnThread"] = MethodMetadata{
+      3, __hostFunction_NativeReanimatedModuleSpec_spawnThread};
 }
 
 }
