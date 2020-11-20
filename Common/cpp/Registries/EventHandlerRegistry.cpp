@@ -18,27 +18,34 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 }
 
 void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName, std::string eventPayload) {
-  const std::lock_guard<std::mutex> lock(instanceMutex);
-  auto handlersIt = eventMappings.find(eventName);
-  if (handlersIt != eventMappings.end()) {
-    // We receive here a JS Map with JSON as a value of NativeMap key
-    // { NativeMap: { "jsonProp": "json value" } }
-    // So we need to extract only JSON part
-    std::string delimimter = "NativeMap:";
-    auto positionToSplit = eventPayload.find(delimimter) + delimimter.size();
-    auto lastBracketCharactedPosition = eventPayload.size() - positionToSplit - 1;
-    auto eventJSON = eventPayload.substr(positionToSplit,  lastBracketCharactedPosition);
-
-    auto eventObject = jsi::Value::createFromJsonUtf8(rt, (uint8_t*)(&eventJSON[0]), eventJSON.size());
-
-    eventObject.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
-    for (auto handler : handlersIt->second) {
-      handler.second->process(rt, eventObject);
+  std::vector<std::shared_ptr<EventHandler>> handlersForEvent;
+  {
+    const std::lock_guard<std::mutex> lock(instanceMutex);
+    auto handlersIt = eventMappings.find(eventName);
+    if (handlersIt != eventMappings.end()) {
+      for (auto handler : handlersIt->second) {
+        handlersForEvent.push_back(handler.second);
+      }
     }
+  }
+  // We receive here a JS Map with JSON as a value of NativeMap key
+  // { NativeMap: { "jsonProp": "json value" } }
+  // So we need to extract only JSON part
+  std::string delimimter = "NativeMap:";
+  auto positionToSplit = eventPayload.find(delimimter) + delimimter.size();
+  auto lastBracketCharactedPosition = eventPayload.size() - positionToSplit - 1;
+  auto eventJSON = eventPayload.substr(positionToSplit,  lastBracketCharactedPosition);
+
+  auto eventObject = jsi::Value::createFromJsonUtf8(rt, (uint8_t*)(&eventJSON[0]), eventJSON.size());
+
+  eventObject.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
+  for (auto handler : handlersForEvent) {
+    handler->process(rt, eventObject);
   }
 }
 
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {
+  const std::lock_guard<std::mutex> lock(instanceMutex);
   auto it = eventMappings.find(eventName);
   return (it != eventMappings.end()) and (!(it->second).empty());
 }

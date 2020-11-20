@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 import {
   PanGestureHandler,
@@ -112,7 +113,9 @@ function ListItem({ item, onRemove }) {
   const styles = useAnimatedStyle(() => {
     if (isRemoving.value) {
       return {
-        height: withTiming(0, timingConfig, onRemove),
+        height: withTiming(0, timingConfig, () => {
+          runOnJS(onRemove)();
+        }),
         transform: [
           {
             translateX: withTiming(-windowDimensions.width, timingConfig),

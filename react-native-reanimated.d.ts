@@ -9,6 +9,7 @@ declare module 'react-native-reanimated' {
     ImageProps,
     ScrollViewProps,
     StyleProp,
+    RegisteredStyle,
     ViewStyle,
     TextStyle,
     ImageStyle,
@@ -53,7 +54,7 @@ declare module 'react-native-reanimated' {
 
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
-      outputRange: ReadonlyArray<Adaptable<number>>;
+      outputRange: ReadonlyArray<Adaptable<number | string>>;
       extrapolate?: Extrapolate;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
@@ -482,9 +483,10 @@ declare module 'react-native-reanimated' {
       effects: (dependencies: D) => void,
       deps?: DependencyList
     );
-
+                        
+    export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
-      T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
+      T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,

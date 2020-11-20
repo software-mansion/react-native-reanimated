@@ -43,6 +43,7 @@ const globals = new Set([
   'Number',
   'Object',
   'String',
+  'Symbol',
   'undefined',
   'null',
   'UIManager',
@@ -61,6 +62,9 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  '_getCurrentTime',
+  '_eventTimestamp',
+  '_frameTimestamp',
   'isNaN',
 ]);
 

@@ -1,9 +1,46 @@
-/* global _WORKLET */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp */
 
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
+};
+
+function _toArrayReanimated(object) {
+  'worklet';
+  if (Array.isArray(object)) {
+    return object;
+  }
+  if (
+    typeof Symbol !== 'undefined' &&
+    (typeof Symbol === 'function' ? Symbol.iterator : '@@iterator') in
+      Object(object)
+  )
+    return Array.from(object);
+  throw new 'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'();
+}
+
+function _mergeObjectsReanimated() {
+  'worklet';
+  return Object.assign.apply(null, arguments);
+}
+
+global.__reanimatedWorkletInit = function(worklet) {
+  worklet.__worklet = true;
+
+  if (worklet._closure) {
+    const closure = worklet._closure;
+    Object.keys(closure).forEach((key) => {
+      if (key === '_toConsumableArray') {
+        closure[key] = _toArrayReanimated;
+      }
+
+      if (key === '_objectSpread') {
+        closure[key] = _mergeObjectsReanimated;
+      }
+    });
+  }
 };
 
 function pushFrame(frame) {
@@ -12,7 +49,6 @@ function pushFrame(frame) {
 
 export function requestFrame(frame) {
   'worklet';
-
   if (NativeReanimated.native) {
     requestAnimationFrame(frame);
   } else {
@@ -45,6 +81,25 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
+function _getTimestamp() {
+  'worklet';
+  if (_frameTimestamp) {
+    return _frameTimestamp;
+  }
+  if (_eventTimestamp) {
+    return _eventTimestamp;
+  }
+  return _getCurrentTime();
+}
+
+export function getTimestamp() {
+  'worklet';
+  if (Platform.OS === 'web') {
+    return NativeReanimated.getTimestamp();
+  }
+  return _getTimestamp();
+}
+
 function workletValueSetter(value) {
   'worklet';
   const previousAnimation = this._animation;
@@ -58,17 +113,14 @@ function workletValueSetter(value) {
   ) {
     // animated set
     const animation = typeof value === 'function' ? value() : value;
-    let initializeAnimation = (timestamp) => {
+    const initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
+    initializeAnimation(getTimestamp());
     const step = (timestamp) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
-      }
-      if (initializeAnimation) {
-        initializeAnimation(timestamp);
-        initializeAnimation = null; // prevent closure from keeping ref to previous animation
       }
       const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
@@ -82,7 +134,12 @@ function workletValueSetter(value) {
 
     this._animation = animation;
 
-    requestAnimationFrame(step);
+    if (_frameTimestamp) {
+      // frame
+      step(_frameTimestamp);
+    } else {
+      requestAnimationFrame(step);
+    }
   } else {
     this._value = value;
   }
