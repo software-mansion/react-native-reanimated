@@ -69,9 +69,11 @@ declare module 'react-native-reanimated' {
 
     type RawSharedValue = number | string | boolean | object;
     type SharedValueType = RawSharedValue | RawSharedValue[];
-    export type SharedValue<T extends SharedValueType> = {
-      value: T;
-    };
+    export type SharedValue<T> = 
+        T extends boolean ? { value: boolean }:
+        T extends SharedValueType ? { value: T } :
+        never;
+
 
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
@@ -468,7 +470,7 @@ declare module 'react-native-reanimated' {
     export function useSharedValue<T>(
       initialValue: T,
       shouldRebuild?: boolean
-    ): T extends SharedValueType ? SharedValue<T> : never;
+    ): SharedValue<T>;
 
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T,
