@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.0.0-alpha.8.1",
+  "version": "2.0.0-alpha.9.1",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -30,7 +30,10 @@
     "README.md",
     "react-native-reanimated.d.ts",
     "mock.js",
-    "plugin.js"
+    "plugin.js",
+    "!__snapshots__",
+    "!*.test.js",
+    "!*.test.js.map"
   ],
   "repository": {
     "type": "git",
@@ -63,6 +66,11 @@
     "@babel/preset-typescript": "^7.7.4",
     "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
+    "@types/babel-types": "^7.0.9",
+    "@types/babel__core": "^7.1.12",
+    "@types/babel__generator": "^7.6.2",
+    "@types/babel__traverse": "^7.0.15",
+    "@types/jest": "^26.0.15",
     "@types/react-native": "^0.62.13",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",

@@ -19,7 +19,7 @@ describe('Reanimated backward compatible API', () => {
     ReanimatedModule.getNumberOfNodes = () => numberOfNodes;
   });
 
-  const checkIfNodesGetDetachedCorrectly = animation => {
+  const checkIfNodesGetDetachedCorrectly = (animation) => {
     class TestComponent extends React.Component {
       constructor(props) {
         super(props);

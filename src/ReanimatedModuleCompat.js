@@ -21,6 +21,8 @@ export default {
     // noop
   },
   async animateNextTransition() {
-    console.warn('Reanimated: animateNextTransition is unimplemented on current platform');
+    console.warn(
+      'Reanimated: animateNextTransition is unimplemented on current platform'
+    );
   },
 };

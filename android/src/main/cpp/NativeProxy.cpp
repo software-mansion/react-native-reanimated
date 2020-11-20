@@ -46,12 +46,24 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 void NativeProxy::installJSIBindings()
 {
 
-  auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Object &props) {
+  auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) {
+    // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
   };
 
-  auto requestRender = [this](std::function<void(double)> onRender) {
+  auto getCurrentTime = [this]() {
+      auto method = javaPart_
+                        ->getClass()
+                        ->getMethod<local_ref<JString>()>("getUpTime");
+      local_ref<JString> output = method(javaPart_.get());
+      return (double)std::strtoll(output->toStdString().c_str(), NULL, 10);
+  };
+
+  auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
+    double frameTimestamp = getCurrentTime();
+    rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
     this->requestRender(std::move(onRender));
+    rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   };
 
   auto propObtainer = [this](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
@@ -80,7 +92,8 @@ void NativeProxy::installJSIBindings()
     requestRender,
     propUpdater,
     scrollToFunction,
-    measuringFunction
+    measuringFunction,
+    getCurrentTime,
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
@@ -92,8 +105,10 @@ void NativeProxy::installJSIBindings()
 
   _nativeReanimatedModule = module;
 
-  this->registerEventHandler([module](std::string eventName, std::string eventAsString) {
+  this->registerEventHandler([module, getCurrentTime](std::string eventName, std::string eventAsString) {
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", getCurrentTime());
     module->onEvent(eventName, eventAsString);
+    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
   });
 
   runtime_->global().setProperty(

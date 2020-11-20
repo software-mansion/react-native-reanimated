@@ -14,8 +14,12 @@ function sanitizeArgMapping(argMapping) {
   const eventMappings = [];
   const alwaysNodes = [];
 
-  const getNode = node => {
-    if (Platform.OS === 'web' || Platform.OS === 'windows' || Platform.OS === 'macos') {
+  const getNode = (node) => {
+    if (
+      Platform.OS === 'web' ||
+      Platform.OS === 'windows' ||
+      Platform.OS === 'macos'
+    ) {
       return node;
     }
     return node.__nodeID;

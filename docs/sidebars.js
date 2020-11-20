@@ -37,6 +37,7 @@ module.exports = {
           'api/nativeMethods/measure',
           'api/nativeMethods/scrollTo',
         ],
+        Miscellaneous: ['api/runOnJS'],
       },
     ],
   },

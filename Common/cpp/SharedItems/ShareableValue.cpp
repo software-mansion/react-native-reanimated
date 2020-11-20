@@ -13,10 +13,10 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
 std::string CALLBACK_ERROR_PREFIX = R"(
 Tried to synchronously call function {)";
-std::string CALLBACK_ERROR_SUFFIX = R"(} from a diffrent thread.
+std::string CALLBACK_ERROR_SUFFIX = R"(} from a different thread.
 Solution is:
-a) if you want to synchronously execute this method, mark it as a worklet
-b) if you want to execute this method on the JS thread, wrap it using runOnJS
+a) If you want to synchronously execute this method, mark it as a Worklet
+b) If you want to execute this method on the JS thread, wrap it using runOnJS
 )";
   
 void addHiddenProperty(jsi::Runtime &rt,
@@ -275,6 +275,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));
         std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+        auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
 
         auto clb = [=](
                    jsi::Runtime &rt,
@@ -301,7 +302,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
            return res;
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "workletFunction"), 0, clb);
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
       } else {
         // when run outside of UI thread we enqueue a call on the UI thread
         auto retain_this = shared_from_this();
@@ -353,7 +354,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           });
           return jsi::Value::undefined();
         };
-        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "workletFunction"), 0, clb);
+        return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_workletFunction"), 0, clb);
       }
   }
   throw "convert error";
