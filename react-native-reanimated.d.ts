@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject, ComponentType } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -242,7 +242,7 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent(component: any): any;
+    export function createAnimatedComponent<T extends ComponentType>(component: T): T;
 
     // classes
     export {
