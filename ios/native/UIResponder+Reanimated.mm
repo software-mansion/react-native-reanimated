@@ -8,7 +8,7 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
 
-#if RNVERSION == 62
+#if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
 #endif
 
@@ -35,10 +35,10 @@
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-      #if RNVERSION == 62
+      #if RNVERSION < 63
         auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
         auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
-      #elif RNVERSION == 63 || RNVERSION == 64
+      #else
         auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
       #endif
       runtime.global().setProperty(runtime,
