@@ -287,8 +287,8 @@ declare module 'react-native-reanimated' {
       r: Adaptable<number>,
       g: Adaptable<number>,
       b: Adaptable<number>,
-      a?: Adaptable<number>,
-    ): AnimatedNode<number>;
+      a?: Adaptable<number>
+    ): AnimatedNode<number | string>;
     export function diff(value: Adaptable<number>): AnimatedNode<number>;
     export function diffClamp(
       value: Adaptable<number>,
@@ -306,9 +306,9 @@ declare module 'react-native-reanimated' {
         outputColorRange
       }: {
         inputRange: ReadonlyArray<Adaptable<number>>;
-        outputColorRange: (string | number)[];
+        outputColorRange: ReadonlyArray<Adaptable<number | string>>;
       }
-    ): AnimatedNode<number>;
+    ): AnimatedNode<number | string>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
