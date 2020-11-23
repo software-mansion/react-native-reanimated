@@ -72,7 +72,10 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (lastValue.onFrame !== undefined) {
+          } else if (
+            lastValue.onFrame !== undefined &&
+            lastAnimation?.current
+          ) {
             // it was an animation before, copy its state
             value = lastAnimation.current;
           }
@@ -188,7 +191,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state, maybeViewRef) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -236,7 +239,7 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates, maybeViewRef);
+      updateProps(viewDescriptor, updates, maybeViewRef);
     }
 
     if (!allFinished) {
@@ -267,12 +270,12 @@ function styleUpdater(viewTag, updater, state, maybeViewRef) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff, maybeViewRef);
+    updateProps(viewDescriptor, diff, maybeViewRef);
   }
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewTag = useSharedValue(-1);
+  const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
@@ -298,7 +301,7 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewTag, updater, remoteState, maybeViewRef);
+      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
@@ -323,7 +326,7 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   return {
-    viewTag,
+    viewDescriptor,
     initial,
     viewRef,
   };

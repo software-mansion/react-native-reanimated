@@ -83,6 +83,32 @@ function AnimatedStyleTest() {
   return <Animated.View style={[styles.box, animatedStyle]} />;
 }
 
+// useAnimatedStyle with arrays (invalid return)
+function AnimatedStyleArrayTest() {
+  const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be an array.
+  const animatedStyle = useAnimatedStyle(() => {
+    return [styles.box, { width: width.value }];
+  });
+  return <Animated.View style={[styles.box, animatedStyle]} />;
+}
+
+// useAnimatedStyle with null (invalid return)
+function AnimatedStyleNullTest() {
+  const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be "false".
+  const animatedStyle = useAnimatedStyle(() => false);
+  return <Animated.View style={[styles.box, animatedStyle]} />;
+}
+
+// useAnimatedStyle with number (invalid return)
+function AnimatedStyleNumberTest() {
+  const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be a number.
+  const animatedStyle = useAnimatedStyle(() => 5);
+  return <Animated.View style={[styles.box, animatedStyle]} />;
+}
+
 // useDerivedValue
 function DerivedValueTest() {
   const progress = useSharedValue(0);
