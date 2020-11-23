@@ -7,12 +7,11 @@ import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
+import setAndForwardRef from './setAndForwardRef';
 
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
-
-const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
 
 const NODE_MAPPING = new Map();
 

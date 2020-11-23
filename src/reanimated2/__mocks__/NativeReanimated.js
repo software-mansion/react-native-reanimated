@@ -11,4 +11,5 @@ export default {
   stopMapper: () => {},
   registerEventHandler: () => {},
   unregisterEventHandler: () => {},
+  getViewProp: () => {},
 };
