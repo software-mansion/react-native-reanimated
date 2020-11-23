@@ -38,7 +38,7 @@
       #if RNVERSION == 62
         auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
         auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
-      #elif RNVERSION == 63
+      #elif RNVERSION == 63 || RNVERSION == 64
         auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
       #endif
       runtime.global().setProperty(runtime,
