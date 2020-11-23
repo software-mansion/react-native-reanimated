@@ -322,8 +322,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             params.push_back(ShareableValue::adapt(rt, args[i], module));
           }
           
-          module->scheduler->scheduleOnUI([retain_this, params, &module] {
-            jsi::Runtime &rt = *retain_this->module->runtime.get();
+          module->scheduler->scheduleOnUI([retain_this, params] {
+            NativeReanimatedModule *module = retain_this->module;
+            jsi::Runtime &rt = *module->runtime.get();
             auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
             std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
@@ -344,8 +345,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             
             } catch(std::exception &e) {
               std::string str = e.what();
-              retain_this->module->errorHandler->setError(str);
-              retain_this->module->errorHandler->raise();
+              module->errorHandler->setError(str);
+              module->errorHandler->raise();
             }
             rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
             
