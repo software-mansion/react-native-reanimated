@@ -29,6 +29,8 @@ import Animated, {
   makeMutable,
   interpolateNode,
   useValue,
+  color,
+  interpolateColors,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -498,4 +500,21 @@ function interpolateNodeTest() {
     inputRange: [0, 1],
     outputRange: ['0deg', '100deg'],
   });
+}
+
+function colorTest() {
+  const r = useValue(255);
+  const g = useValue(255);
+  const b = useValue(255);
+  const a = useValue(255);
+  return color(r, g, b, a);
+}
+
+function interpolateColorsTest() {
+  const animationValue = useValue(0);
+  const color = interpolateColors(animationValue, {
+    inputRange: [0, 1],
+    outputColorRange: ['red', 'blue'],
+  });
+  return color;
 }
