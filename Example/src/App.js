@@ -15,6 +15,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import Reanimated1 from '../reanimated1/App';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
+import SharedAnimatedStyleUpdateExample from './SharedAnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import ScrollEventExample from './ScrollEventExample';
@@ -33,6 +34,10 @@ const SCREENS = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
+  },
+  SharedAnimatedStyle: {
+    screen: SharedAnimatedStyleUpdateExample,
+    title: '🆕 Shared Animated Style Update',
   },
   WobbleExample: {
     screen: WobbleExample,

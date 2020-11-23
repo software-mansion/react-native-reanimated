@@ -144,6 +144,31 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
   return sv;
 }
 
+std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
+  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
+  if(value.isObject()){
+    auto object = value.asObject(rt);
+    if(object.hasProperty(rt, "__setItem")) {
+      originalValue->adaptSet(rt, originalValue, value, valueType);
+      return originalValue;
+    }
+  }
+  sv->adapt(rt, value, valueType);
+  return sv;
+}
+
+void ShareableValue::adaptSet(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, ValueType objectType) {
+  auto object = value.asObject(rt);
+  auto setItem = object.getProperty(rt, "__setItem");
+  if(!setItem.isUndefined()) {
+    //temorarty, to change on std::set
+    frozenArray.push_back(adapt(rt, setItem, module));
+  }
+  else {
+    throw "Invalid value type";
+  }
+}
+
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (module->isUIRuntime(rt)) {

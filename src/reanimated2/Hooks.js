@@ -275,7 +275,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
+  const viewDescriptor = useSharedValue([], false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);

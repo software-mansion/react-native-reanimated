@@ -52,12 +52,14 @@ private:
 
   ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s): StoreUser(s), module(module) {}
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
+  void adaptSet(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
 
 public:
   ValueType type = ValueType::UndefinedType;
   std::shared_ptr<MutableValue> mutableValue;
   static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType objectType = ValueType::UndefinedType);
+  static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, NativeReanimatedModule *module, ValueType objectType = ValueType::UndefinedType);
   jsi::Value getValue(jsi::Runtime &rt);
 
 };

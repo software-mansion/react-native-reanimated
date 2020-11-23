@@ -251,7 +251,9 @@ export default function createAnimatedComponent(Component) {
 
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
-          style.viewDescriptor.value = { tag: viewTag, name: viewName };
+          style.viewDescriptor.value = {
+            __setItem: { tag: viewTag, name: viewName },
+          };
         }
       });
       // attach animatedProps property
