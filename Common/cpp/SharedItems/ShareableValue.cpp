@@ -314,15 +314,13 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             ) -> jsi::Value {
           // TODO: we should find thread based on runtime such that we could also call UI methods
           // from RN and not only RN methods from UI
-          
-          auto module = retain_this->module;
 
           std::vector<std::shared_ptr<ShareableValue>> params;
           for (int i = 0; i < count; ++i) {
-            params.push_back(ShareableValue::adapt(rt, args[i], module));
+            params.push_back(ShareableValue::adapt(rt, args[i], retain_this->module));
           }
           
-          module->scheduler->scheduleOnUI([retain_this, params] {
+          retain_this->module->scheduler->scheduleOnUI([retain_this, params] {
             NativeReanimatedModule *module = retain_this->module;
             jsi::Runtime &rt = *module->runtime.get();
             auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
