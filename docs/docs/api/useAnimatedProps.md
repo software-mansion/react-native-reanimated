@@ -23,8 +23,7 @@ In the example below we use [`react-native-svg`](https://github.com/react-native
 
 ```js {12-16}
 import { StyleSheet } from 'react-native';
-import {
-  Animated,
+import Animated, {
   useSharedValue,
   useAnimatedProps,
 } from 'react-native-reanimated';
