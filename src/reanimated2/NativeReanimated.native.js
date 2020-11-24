@@ -1,5 +1,8 @@
 import { TurboModuleRegistry } from 'react-native';
 
+// eslint-disable-next-line
+import reanimatedJS from './js-reanimated';
+
 const InnerNativeModule =
   global.__reanimatedModuleProxy ||
   TurboModuleRegistry.getEnforcing('NativeReanimated');
