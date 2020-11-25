@@ -2,7 +2,6 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
-#import <React/JSCExecutorFactory.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
@@ -10,6 +9,14 @@
 
 #if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
+#endif
+
+#if __has_include(<React/HermesExecutorFactory.h>)
+#import <React/HermesExecutorFactory.h>
+typedef HermesExecutorFactory ExecutorFactory;
+#else
+#import <React/JSCExecutorFactory.h>
+typedef JSCExecutorFactory ExecutorFactory;
 #endif
 
 #ifndef DONT_AUTOINSTALL_REANIMATED
@@ -29,7 +36,8 @@
   [bridge updateModuleWithInstance:eventDispatcher];
    _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
-  return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+
+  return std::make_unique<ExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
