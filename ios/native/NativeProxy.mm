@@ -10,6 +10,10 @@
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
+#if __has_include(<hermes/hermes.h>)
+#import <hermes/hermes.h>
+#endif
+
 namespace reanimated {
 
 using namespace facebook;
@@ -88,13 +92,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
     [reanimatedModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] withName:nsViewName];
   };
-  
+
 
   RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
   auto measuringFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
     return measure(viewTag, uiManager);
   };
-  
+
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
   };
@@ -107,7 +111,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
 
   std::shared_ptr<Scheduler> scheduler(new REAIOSScheduler(jsInvoker));
+
+#if __has_include(<hermes/hermes.h>)
+  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+#else
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+#endif
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
 
@@ -119,11 +128,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
     }];
   };
-  
+
   auto getCurrentTime = []() {
     return CACurrentMediaTime() * 1000;
   };
-  
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
@@ -131,7 +140,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     measuringFunction,
     getCurrentTime,
   };
-  
+
 module = std::make_shared<NativeReanimatedModule>(jsInvoker,
                                                   scheduler,
                                                   std::move(animatedRuntime),
@@ -139,7 +148,7 @@ module = std::make_shared<NativeReanimatedModule>(jsInvoker,
                                                   propObtainer,
                                                   platformDepMethodsHolder
                                                   );
-  
+
   scheduler->setModule(module);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
