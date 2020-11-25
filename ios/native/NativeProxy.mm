@@ -5,13 +5,14 @@
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "NativeMethods.h"
-#import <jsi/JSCRuntime.h>
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
 #if __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
+#else
+#import <jsi/JSCRuntime.h>
 #endif
 
 namespace reanimated {
