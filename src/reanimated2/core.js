@@ -226,11 +226,6 @@ export const runOnJS = (fun) => {
 const capturableConsole = console;
 runOnUI(() => {
   'worklet';
-  // global._setGlobalConsole({
-  //   log: runOnJS(capturableConsole.log),
-  //   warn: runOnJS(capturableConsole.warn),
-  //   error: runOnJS(capturableConsole.error),
-  // });
   const console = {
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
