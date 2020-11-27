@@ -32,7 +32,7 @@ const objectHooks = new Set([
 const globals = new Set([
   'this',
   'console',
-  '_globalSetter',
+  '_setGlobalConsole',
   'Date',
   'Array',
   'ArrayBuffer',
