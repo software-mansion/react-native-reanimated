@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./scripts/generateIndex.js && react-native start",
-    "start-web": "node ./scripts/generateIndex.js --web && expo start --web-only --web",
+    "start-web": "node ./scripts/generateIndex.js --web && yarn web",
     "start-test": "node ./scripts/generateIndex.js --test && react-native start",
     "start-test-suite": "node ./scripts/generateIndex.js --test-suite && react-native start",
     "generate": "node ./scripts/generateIndex.js",
@@ -13,7 +13,7 @@
     "generate-test-suite": "node ./scripts/generateIndex.js --test-suite",
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
-    "web": "expo start --web-only --web",
+    "web": "expo start --web || expo start --web --web-only",
     "lint": "eslint ."
   },
   "dependencies": {
