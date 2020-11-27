@@ -2,7 +2,7 @@
 import { processColor } from './Colors';
 import { makeShareable } from './core';
 import { Platform } from 'react-native';
-import { _updatePropsJS } from './js-reanimated/index'; // eslint-disable-line
+import { _updatePropsJS } from './js-reanimated/index';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
