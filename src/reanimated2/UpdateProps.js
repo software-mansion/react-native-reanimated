@@ -2,7 +2,6 @@
 import { processColor } from './Colors';
 import { makeShareable } from './core';
 import { Platform } from 'react-native';
-import { _updatePropsJS } from './js-reanimated/index';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
@@ -38,7 +37,9 @@ export default function updateProps(viewDescriptor, updates, maybeViewRef) {
   }
 
   const updatePropsInternal =
-    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+    typeof _updateProps === 'undefined'
+      ? require('./js-reanimated/index')._updatePropsJS
+      : _updateProps;
 
   updatePropsInternal(
     viewDescriptor.value.tag,
