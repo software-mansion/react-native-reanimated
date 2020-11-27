@@ -4,7 +4,7 @@ const reanimatedJS = new JSReanimated();
 
 global._frameTimestamp = null;
 
-global._updatePropsJS = (viewTag, viewName, updates, viewRef) => {
+export const _updatePropsJS = (viewTag, viewName, updates, viewRef) => {
   if (viewRef.current && viewRef.current._component) {
     const [rawStyles] = Object.keys(updates).reduce(
       (acc, key) => {
@@ -20,8 +20,8 @@ global._updatePropsJS = (viewTag, viewName, updates, viewRef) => {
   }
 };
 
-global._globalSetter = (name, val) => {
-  global[name] = val;
+global._setGlobalConsole = (val) => {
+  global.console = val;
 };
 
 export default reanimatedJS;
