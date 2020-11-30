@@ -459,7 +459,7 @@ function processIfWorkletNode(t, fun, fileName) {
   });
 }
 
-function processWorklets(t, path, processor, fileName) {
+function processWorklets(t, path, fileName) {
   const name =
     path.node.callee.type === 'MemberExpression'
       ? path.node.callee.property.name
@@ -474,13 +474,17 @@ function processWorklets(t, path, processor, fileName) {
       return;
     }
     for (let i = 0; i < objectPath.container.length; i++) {
-      processor(t, objectPath.getSibling(i).get('value'), fileName);
+      processWorkletFunction(
+        t,
+        objectPath.getSibling(i).get('value'),
+        fileName
+      );
     }
   } else {
     const indexes = functionHooks.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processor(t, path.get(`arguments.${index}`), fileName);
+        processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
       });
     }
   }
@@ -544,12 +548,7 @@ module.exports = function({ types: t }) {
     visitor: {
       CallExpression: {
         exit(path, state) {
-          processWorklets(
-            t,
-            path,
-            processWorkletFunction, // TODO move this inside this func instead of processor...
-            state.file.opts.filename
-          );
+          processWorklets(t, path, state.file.opts.filename);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
