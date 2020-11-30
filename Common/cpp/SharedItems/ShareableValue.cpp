@@ -299,7 +299,11 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
              this->module->errorHandler->raise();
            } catch(...) {
              // TODO find out a way to get the error's message on hermes
+             jsi::Value workletHash = jsThis->getProperty(rt, "__workletHash");
              std::string str = "Javascript worklet error";
+             if (workletHash.isNumber()) {
+               str += ", in worklet with __workletHash=" + std::to_string((int)workletHash.getNumber());
+             }
              module->errorHandler->setError(str);
              module->errorHandler->raise();
            }
@@ -352,7 +356,11 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               module->errorHandler->raise();
             } catch(...) {
               // TODO find out a way to get the error's message on hermes
+              jsi::Value workletHash = jsThis.getProperty(rt, "__workletHash");
               std::string str = "Javascript worklet error";
+              if (workletHash.isNumber()) {
+                str += ", in worklet with __workletHash=" + std::to_string((int)workletHash.getNumber());
+              }
               module->errorHandler->setError(str);
               module->errorHandler->raise();
             }
