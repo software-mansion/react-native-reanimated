@@ -1,4 +1,4 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
@@ -231,5 +231,5 @@ runOnUI(() => {
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),
   };
-  _globalSetter('console', console); // eslint-disable-line
+  _setGlobalConsole(console);
 })();

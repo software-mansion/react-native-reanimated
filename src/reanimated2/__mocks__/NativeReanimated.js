@@ -1,5 +1,5 @@
-global._globalSetter = (name, val) => {
-  global[name] = val;
+global._setGlobalConsole = (val) => {
+  global.console = val;
 };
 
 export default {
