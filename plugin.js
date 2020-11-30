@@ -269,7 +269,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun) {
+function processWorkletFunction(t, fun, fileName) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
@@ -393,6 +393,17 @@ function processWorkletFunction(t, fun) {
         )
       ),
       t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__fileName'),
+            false
+          ),
+          t.stringLiteral(fileName)
+        )
+      ),
+      t.expressionStatement(
         t.callExpression(
           t.memberExpression(
             t.identifier('global'),
@@ -423,7 +434,7 @@ function processWorkletFunction(t, fun) {
   );
 }
 
-function processIfWorkletNode(t, fun) {
+function processIfWorkletNode(t, fun, fileName) {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -441,14 +452,14 @@ function processIfWorkletNode(t, fun) {
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun);
+          processWorkletFunction(t, fun, fileName);
         }
       }
     },
   });
 }
 
-function processWorklets(t, path, processor) {
+function processWorklets(t, path, processor, fileName) {
   const name =
     path.node.callee.type === 'MemberExpression'
       ? path.node.callee.property.name
@@ -463,13 +474,13 @@ function processWorklets(t, path, processor) {
       return;
     }
     for (let i = 0; i < objectPath.container.length; i++) {
-      processor(t, objectPath.getSibling(i).get('value'));
+      processor(t, objectPath.getSibling(i).get('value'), fileName);
     }
   } else {
     const indexes = functionHooks.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processor(t, path.get(`arguments.${index}`));
+        processor(t, path.get(`arguments.${index}`), fileName);
       });
     }
   }
@@ -532,13 +543,18 @@ module.exports = function({ types: t }) {
   return {
     visitor: {
       CallExpression: {
-        exit(path) {
-          processWorklets(t, path, processWorkletFunction);
+        exit(path, state) {
+          processWorklets(
+            t,
+            path,
+            processWorkletFunction, // TODO move this inside this func instead of processor...
+            state.file.opts.filename
+          );
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        exit(path) {
-          processIfWorkletNode(t, path);
+        exit(path, state) {
+          processIfWorkletNode(t, path, state.file.opts.filename);
         },
       },
     },
