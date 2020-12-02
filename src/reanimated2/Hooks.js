@@ -72,15 +72,17 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (
-            lastValue.onFrame !== undefined &&
-            lastAnimation?.current
-          ) {
-            // it was an animation before, copy its state
-            value = lastAnimation.current;
+          } else if (lastValue.onFrame !== undefined) {
+            if (lastAnimation?.current) {
+              // it was an animation before, copy its state
+              value = lastAnimation.current;
+            } else if (lastValue?.current) {
+              // it was initialized
+              value = lastValue.current;
+            }
           }
         } else {
-          // previously it was a plan value, just set it as starting point
+          // previously it was a plain value, just set it as starting point
           value = lastValue;
         }
       }
