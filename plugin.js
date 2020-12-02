@@ -352,6 +352,12 @@ function processWorkletFunction(t, fun, fileName) {
   const funString = buildWorkletString(t, fun, variables, functionName);
   const workletHash = hash(funString);
 
+  const loc = fun?.node?.loc?.start;
+  if (loc) {
+    const { line, column } = loc;
+    fileName = `${fileName} (${line}:${column})`;
+  }
+
   const newFun = t.functionExpression(
     fun.id,
     [],
