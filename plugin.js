@@ -403,7 +403,7 @@ function processWorkletFunction(t, fun, fileName) {
           '=',
           t.memberExpression(
             privateFunctionId,
-            t.identifier('__fileName'),
+            t.identifier('__location'),
             false
           ),
           t.stringLiteral(fileName)

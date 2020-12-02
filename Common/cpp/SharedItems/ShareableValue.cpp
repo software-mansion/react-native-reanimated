@@ -299,10 +299,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
              this->module->errorHandler->raise();
            } catch(...) {
                // TODO find out a way to get the error's message on hermes
-               jsi::Value fileName = jsThis->getProperty(rt, "__fileName");
+               jsi::Value location = jsThis->getProperty(rt, "__location");
                std::string str = "Javascript worklet error";
-               if (fileName.isString()) {
-                 str += "\nIn file: " + fileName.asString(rt).utf8(rt);
+               if (location.isString()) {
+                 str += "\nIn file: " + location.asString(rt).utf8(rt);
                }
                module->errorHandler->setError(str);
                module->errorHandler->raise();
@@ -356,10 +356,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               module->errorHandler->raise();
             } catch(...) {
               // TODO find out a way to get the error's message on hermes
-              jsi::Value fileName = jsThis.getProperty(rt, "__fileName");
+              jsi::Value location = jsThis.getProperty(rt, "__location");
               std::string str = "Javascript worklet error";
-              if (fileName.isString()) {
-                str += "\nIn file: " + fileName.asString(rt).utf8(rt);
+              if (location.isString()) {
+                str += "\nIn file: " + location.asString(rt).utf8(rt);
               }
               module->errorHandler->setError(str);
               module->errorHandler->raise();
