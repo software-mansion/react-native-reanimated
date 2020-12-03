@@ -35,7 +35,8 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *) viewName
-                            nativeProps:(NSMutableDictionary *)nativeProps;
+                            nativeProps:(NSMutableDictionary *)nativeProps
+                       trySynchronously:(BOOL)trySync;
 - (void)getValue:(REANodeID)nodeID
         callback:(RCTResponseSenderBlock)callback;
 

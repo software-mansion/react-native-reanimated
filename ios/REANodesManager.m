@@ -42,8 +42,6 @@
 
 @interface REANodesManager() <RCTUIManagerObserver>
 
-@property BOOL shouldInterceptMountingBlock;
-
 @end
 
 
@@ -58,6 +56,7 @@
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
+  BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
 }
@@ -75,18 +74,12 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
-    _shouldInterceptMountingBlock = NO;
-    [[uiManager observerCoordinator] addObserver:self];
   }
     
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
   [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   [_displayLink setPaused:true];
   return self;
-}
-
-- (void)dealloc {
-  [[_uiManager observerCoordinator] removeObserver:self];
 }
 
 - (void)invalidate
@@ -181,11 +174,34 @@
 }
 
 - (BOOL)uiManager:(RCTUIManager *)manager performMountingWithBlock:(RCTUIManagerMountingBlock)block {
-  if (_shouldInterceptMountingBlock) {
-    _mounting = block;
-    return YES;
-  }
-  return NO;
+  RCTAssert(_mounting == nil, @"Mouting block is expected to not be set");
+  _mounting = block;
+  return YES;
+}
+
+- (void)runUIManagerBatchSync {
+  // before we run uimanager batch complete, we override coordinator observers list
+  // to avoid observers from firing. This is done because we only want the uimanager
+  // related operations to run and not all other operations (including the ones enqueued
+  // by reanimated or native animated modules) from being scheduled. If we were to allow
+  // other modules to execute some logic from this sync uimanager run there is a possibility
+  // that the commands will execute out of order or that we intercept a batch of commands that
+  // those modules may be in a middle of (we verify that batch isn't in progress for uimodule
+  // but can't do the same for all remaining modules)
+
+  // store reference to the observers array
+  id oldObservers = [self.uiManager.observerCoordinator valueForKey:@"_observers"];
+
+  // temporarily replace observers with a table conatining just nodesmanager (we need
+  // this to capture mounting block)
+  NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
+  [soleObserver addObject:self];
+  [self.uiManager.observerCoordinator setValue:soleObserver forKey:@"_observers"];
+
+  // run batch
+  [self.uiManager batchDidComplete];
+  // restore old observers table
+  [self.uiManager.observerCoordinator setValue:oldObservers forKey:@"_observers"];
 }
 
 - (void)performOperations
@@ -196,6 +212,9 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+
+    BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
+    _tryRunBatchUpdatesSynchronously = NO;
     
     __weak typeof(self) weakSelf = self;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
@@ -204,10 +223,13 @@
       if (strongSelf == nil) {
         return;
       }
-      NSMutableArray *pendingUIBlocks = [strongSelf.uiManager valueForKey:@"_pendingUIBlocks"];
-      bool canPerformLayout = ([pendingUIBlocks count] == 0);
+      BOOL canUpdateSynchronously = trySynchronously;
+      if (canUpdateSynchronously) {
+        NSMutableArray *pendingUIBlocks = [strongSelf.uiManager valueForKey:@"_pendingUIBlocks"];
+        canUpdateSynchronously = ([pendingUIBlocks count] == 0);
+      }
       
-      if (!canPerformLayout) {
+      if (!canUpdateSynchronously) {
         dispatch_semaphore_signal(semaphore);
       }
       
@@ -215,16 +237,16 @@
         copiedOperationsQueue[i](strongSelf.uiManager);
       }
       
-      if (canPerformLayout) {
-        strongSelf.shouldInterceptMountingBlock = YES;
-        [strongSelf.uiManager batchDidComplete];
-        strongSelf.shouldInterceptMountingBlock = NO;
+      if (canUpdateSynchronously) {
+        [strongSelf runUIManagerBatchSync];
         dispatch_semaphore_signal(semaphore);
       } else {
         [strongSelf.uiManager setNeedsLayout];
       }
     });
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    if (trySynchronously) {
+      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    }
     
     if (_mounting) {
       _mounting();
@@ -236,7 +258,11 @@
 
 - (void)enqueueUpdateViewOnNativeThread:(nonnull NSNumber *)reactTag
                                viewName:(NSString *) viewName
-                            nativeProps:(NSMutableDictionary *)nativeProps {
+                            nativeProps:(NSMutableDictionary *)nativeProps
+                       trySynchronously:(BOOL)trySync {
+  if (trySync) {
+    _tryRunBatchUpdatesSynchronously = YES;
+  }
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
@@ -506,7 +532,7 @@
      props:uiProps];
     }
     if (nativeProps.count > 0) {
-      [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps];
+      [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
     }
     if (jsProps.count > 0) {
       [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
