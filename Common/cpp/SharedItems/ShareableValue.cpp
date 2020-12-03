@@ -295,8 +295,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
              }
            } catch(std::exception &e) {
              std::string str = e.what();
-             this->module->errorHandler->setError(str);
-             this->module->errorHandler->raise();
+             module->errorHandler->setError(str);
+             module->errorHandler->raise();
            }
 
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
