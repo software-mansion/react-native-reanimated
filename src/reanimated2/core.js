@@ -111,8 +111,18 @@ function workletValueSetter(value) {
     typeof value === 'function' ||
     (value !== null && typeof value === 'object' && value.onFrame)
   ) {
-    // animated set
     const animation = typeof value === 'function' ? value() : value;
+    // prevent setting again to the same value
+    // and triggering the mappers that treat this value as an input
+    // note that this will work for most animations
+    // this assumes that toValue === current DOES MEAN that the animation's done
+    if (
+      this._value === animation.toValue &&
+      animation.toValue === animation.current
+    ) {
+      return;
+    }
+    // animated set
     const initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
@@ -141,6 +151,11 @@ function workletValueSetter(value) {
       requestAnimationFrame(step);
     }
   } else {
+    // prevent setting again to the same value
+    // and triggering the mappers that treat this value as an input
+    if (this._value === value) {
+      return;
+    }
     this._value = value;
   }
 }
