@@ -202,6 +202,9 @@ public class NodesManager implements EventDispatcherListener {
                 @Override
                 public void runGuarded() {
                   boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  if (!shouldDispatchUpdates) {
+                    semaphore.release();
+                  }
                   while (!copiedOperationsQueue.isEmpty()) {
                     NativeUpdateOperation op = copiedOperationsQueue.remove();
                     ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
@@ -211,8 +214,8 @@ public class NodesManager implements EventDispatcherListener {
                   }
                   if (shouldDispatchUpdates) {
                     mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                    semaphore.release();
                   }
-                  semaphore.release();
                 }
               });
       while (true) {

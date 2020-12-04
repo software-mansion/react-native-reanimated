@@ -40,6 +40,50 @@
 
 @end
 
+@interface RCTUIManager (SyncUpdates)
+
+- (BOOL)hasEnqueuedUICommands;
+
+- (void)runSyncUIUpdatesWithObserver:(id<RCTUIManagerObserver>)observer;
+
+@end
+
+@implementation RCTUIManager (SyncUpdates)
+
+- (BOOL)hasEnqueuedUICommands
+{
+  // Accessing some private bits of RCTUIManager to provide missing functionality
+  return [[self valueForKey:@"_pendingUIBlocks"] count] > 0;
+}
+
+- (void)runSyncUIUpdatesWithObserver:(id<RCTUIManagerObserver>)observer
+{
+  // before we run uimanager batch complete, we override coordinator observers list
+  // to avoid observers from firing. This is done because we only want the uimanager
+  // related operations to run and not all other operations (including the ones enqueued
+  // by reanimated or native animated modules) from being scheduled. If we were to allow
+  // other modules to execute some logic from this sync uimanager run there is a possibility
+  // that the commands will execute out of order or that we intercept a batch of commands that
+  // those modules may be in a middle of (we verify that batch isn't in progress for uimodule
+  // but can't do the same for all remaining modules)
+
+  // store reference to the observers array
+  id oldObservers = [self.observerCoordinator valueForKey:@"_observers"];
+
+  // temporarily replace observers with a table conatining just nodesmanager (we need
+  // this to capture mounting block)
+  NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
+  [soleObserver addObject:observer];
+  [self.observerCoordinator setValue:soleObserver forKey:@"_observers"];
+
+  // run batch
+  [self batchDidComplete];
+  // restore old observers table
+  [self.observerCoordinator setValue:oldObservers forKey:@"_observers"];
+}
+
+@end
+
 @interface REANodesManager() <RCTUIManagerObserver>
 
 @end
@@ -179,31 +223,6 @@
   return YES;
 }
 
-- (void)runUIManagerBatchSync {
-  // before we run uimanager batch complete, we override coordinator observers list
-  // to avoid observers from firing. This is done because we only want the uimanager
-  // related operations to run and not all other operations (including the ones enqueued
-  // by reanimated or native animated modules) from being scheduled. If we were to allow
-  // other modules to execute some logic from this sync uimanager run there is a possibility
-  // that the commands will execute out of order or that we intercept a batch of commands that
-  // those modules may be in a middle of (we verify that batch isn't in progress for uimodule
-  // but can't do the same for all remaining modules)
-
-  // store reference to the observers array
-  id oldObservers = [self.uiManager.observerCoordinator valueForKey:@"_observers"];
-
-  // temporarily replace observers with a table conatining just nodesmanager (we need
-  // this to capture mounting block)
-  NSHashTable<id<RCTUIManagerObserver>> *soleObserver = [NSHashTable new];
-  [soleObserver addObject:self];
-  [self.uiManager.observerCoordinator setValue:soleObserver forKey:@"_observers"];
-
-  // run batch
-  [self.uiManager batchDidComplete];
-  // restore old observers table
-  [self.uiManager.observerCoordinator setValue:oldObservers forKey:@"_observers"];
-}
-
 - (void)performOperations
 {
   if (_wantRunUpdates) {
@@ -223,11 +242,7 @@
       if (strongSelf == nil) {
         return;
       }
-      BOOL canUpdateSynchronously = trySynchronously;
-      if (canUpdateSynchronously) {
-        NSMutableArray *pendingUIBlocks = [strongSelf.uiManager valueForKey:@"_pendingUIBlocks"];
-        canUpdateSynchronously = ([pendingUIBlocks count] == 0);
-      }
+      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands];
       
       if (!canUpdateSynchronously) {
         dispatch_semaphore_signal(semaphore);
@@ -238,7 +253,7 @@
       }
       
       if (canUpdateSynchronously) {
-        [strongSelf runUIManagerBatchSync];
+        [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
       } else {
         [strongSelf.uiManager setNeedsLayout];
