@@ -295,8 +295,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
              }
            } catch(std::exception &e) {
              std::string str = e.what();
-             this->module->errorHandler->setError(str);
-             this->module->errorHandler->raise();
+             module->errorHandler->setError(str);
+             module->errorHandler->raise();
            } catch(...) {
                // TODO find out a way to get the error's message on hermes
                jsi::Value location = jsThis->getProperty(rt, "__location");
