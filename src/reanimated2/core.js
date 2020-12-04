@@ -114,12 +114,8 @@ function workletValueSetter(value) {
     const animation = typeof value === 'function' ? value() : value;
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
-    // note that this will work for most animations
-    // this assumes that toValue === current DOES MEAN that the animation's done
-    if (
-      this._value === animation.toValue &&
-      animation.toValue === animation.current
-    ) {
+    // this happens when the animation's target value is set to the same value as a current one
+    if (this._value === animation.current) {
       return;
     }
     // animated set
