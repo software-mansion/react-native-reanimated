@@ -50,8 +50,8 @@ function getMatchers() {
   return cachedMatchers;
 }
 // cachedMatchers is lazy loaded and it is frozen when worklet is being created,
-// is possible to call getMatchers() when object is freezed then cachedMatchers
-// has no assigned regexs
+// it is possible to call getMatchers() when the object is frozen, then cachedMatchers
+// has no assigned regexes
 getMatchers();
 
 function hue2rgb(p, q, t) {
