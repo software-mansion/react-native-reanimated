@@ -352,10 +352,17 @@ function processWorkletFunction(t, fun, fileName) {
   const funString = buildWorkletString(t, fun, variables, functionName);
   const workletHash = hash(funString);
 
-  const loc = fun?.node?.loc?.start;
-  if (loc) {
-    const { line, column } = loc;
-    fileName = `${fileName} (${line}:${column})`;
+  try {
+    // try to append location in file
+    const loc = fun.node.loc.start;
+    if (loc) {
+      const { line, column } = loc;
+      fileName = `${fileName} (${line}:${column})`;
+    }
+  } catch (e) {
+    if (!(e instanceof TypeError)) {
+      throw e;
+    }
   }
 
   const newFun = t.functionExpression(
