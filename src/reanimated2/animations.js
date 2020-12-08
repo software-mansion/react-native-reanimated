@@ -139,7 +139,7 @@ export function decorateAnimation(animation) {
   };
 }
 
-function defineAnimation(starting, factory) {
+export function defineAnimation(starting, factory) {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting;

@@ -1,44 +1,24 @@
-import Animated, {
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-  Easing,
-} from 'react-native-reanimated';
-import { View, Button } from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
+import { View, Text } from 'react-native';
+import Animated, { useAnimatedGestureHandler, runOnJS } from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
-export default function AnimatedStyleUpdateExample(props) {
-  const randomWidth = useSharedValue(10);
+export default function App() {
+  const [state, setState] = useState(false);
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezier(0.5, 0.01, 0, 1),
-  };
-
-  const style = useAnimatedStyle(() => {
-    return {
-      width: withTiming(randomWidth.value, config),
-    };
-  });
+  const gh = useAnimatedGestureHandler({
+    onStart:() => {
+      runOnJS(setState)(true);
+    },
+  })
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
-      <Button
-        title="toggle"
-        onPress={() => {
-          randomWidth.value = Math.random() * 350;
-        }}
-      />
+    <View style={{flex:1, backgroundColor: 'yellow'}}>
+      <PanGestureHandler onGestureEvent={gh}>
+        <Animated.View>
+          <Text>test</Text>
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   );
 }

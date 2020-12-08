@@ -44,5 +44,6 @@ export default class WorkletEventHandler {
         NativeModule.unregisterEventHandler(id)
       );
     this.registrations = undefined;
+    //this.worklet = null;
   }
 }

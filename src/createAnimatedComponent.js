@@ -105,6 +105,9 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         const prop = this.props[key];
+        if (prop.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current
+        }
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
@@ -117,7 +120,10 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current
+        }
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
@@ -145,6 +151,9 @@ export default function createAnimatedComponent(Component) {
       }
       for (const key in prevProps) {
         const prop = this.props[key];
+        if (prop.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current
+        }
         if (prop instanceof AnimatedEvent) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
@@ -160,6 +169,9 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         const prop = this.props[key];
+        if (prop.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current
+        }
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { StyleSheet, View, Text, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -87,10 +87,14 @@ const timingConfig = {
 function ListItem({ item, onRemove }) {
   const isRemoving = useSharedValue(false);
   const translateX = useSharedValue(0);
+  // Declare stateful value
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const handler = useAnimatedGestureHandler({
     onStart: (evt, ctx) => {
       ctx.startX = translateX.value;
+      // Modify stateful value from worklet
+      runOnJS(setIsSwiping)(true);
     },
 
     onActive: (evt, ctx) => {
