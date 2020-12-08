@@ -104,9 +104,9 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(node);
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
         if (prop.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current
+          prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
@@ -122,7 +122,7 @@ export default function createAnimatedComponent(Component) {
       for (const key in this.props) {
         let prop = this.props[key];
         if (prop.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current
+          prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
@@ -139,7 +139,10 @@ export default function createAnimatedComponent(Component) {
       let viewTag;
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
         } else if (
@@ -150,9 +153,9 @@ export default function createAnimatedComponent(Component) {
         }
       }
       for (const key in prevProps) {
-        const prop = this.props[key];
+        let prop = this.props[key];
         if (prop.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current
+          prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
           if (!nextEvts.has(prop.__nodeID)) {
@@ -168,9 +171,9 @@ export default function createAnimatedComponent(Component) {
       }
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
         if (prop.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current
+          prop = prop.current;
         }
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
@@ -371,11 +374,14 @@ export default function createAnimatedComponent(Component) {
           // alltogether. Therefore we provide a dummy callback here to allow
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
-        } else if (value instanceof WorkletEventHandler) {
-          if (value.eventNames.length > 0) {
-            value.eventNames.forEach((eventName) => {
-              props[eventName] = value.listeners
-                ? value.listeners[eventName]
+        } else if (
+          value.current &&
+          value.current instanceof WorkletEventHandler
+        ) {
+          if (value.current.eventNames.length > 0) {
+            value.current.eventNames.forEach((eventName) => {
+              props[eventName] = value.current.listeners
+                ? value.current.listeners[eventName]
                 : dummyListener;
             });
           } else {
