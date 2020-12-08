@@ -17442,7 +17442,15 @@ This comes from the fact that TurboModules are not yet rolled out in the React N
 But even without that there are a few ways how we can simplify the installation.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`We currently only support Hermes JS VM on Android.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
 You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
 We are looking into this problem and hope to have it resolved really soon.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
-As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.`)));};MDXContent.isMDXComponent=true;
+As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("li",{parentName:"ul"},`With Reanimated you can't animate virtual components of layout. For example, you can’t animate nested `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"li"},`<Text>`),` components because React Native changes  `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",{parentName:"li"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{}),`<Text>
+   string1
+   <Text>string2</Text>
+</Text>
+`)),` to  `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("pre",{parentName:"li"},Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("code",Object(_home_runner_work_react_native_reanimated_react_native_reanimated_docs_node_modules_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"])({parentName:"pre"},{}),`<RCTTextView>
+   string1
+   <RCTVirtualText>string2</RCTVirtualText>
+</RCTTextView>
+`)),` and the `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"li"},`RCTVirtualText`),` is a virtual component.`)));};MDXContent.isMDXComponent=true;
 
 /***/ }),
 /* 165 */

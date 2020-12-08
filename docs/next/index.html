@@ -8,7 +8,7 @@
 <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-41044622-6","auto"),ga("send","pageview")</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script><title data-react-helmet="true">About React Native Reanimated | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="next"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="About React Native Reanimated | React Native Reanimated"><meta data-react-helmet="true" name="description" content="This is a documentation website of Reanimated 2 alpha release."><meta data-react-helmet="true" property="og:description" content="This is a documentation website of Reanimated 2 alpha release."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/next/about"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/next/about"><link rel="stylesheet" href="/react-native-reanimated/styles.ed7ac305.css">
 <link rel="preload" href="/react-native-reanimated/styles.f6bec165.js" as="script">
-<link rel="preload" href="/react-native-reanimated/runtime~main.c06cb767.js" as="script">
+<link rel="preload" href="/react-native-reanimated/runtime~main.7d7306e4.js" as="script">
 <link rel="preload" href="/react-native-reanimated/main.48d27179.js" as="script">
 <link rel="preload" href="/react-native-reanimated/1.5b1d5dd3.js" as="script">
 <link rel="preload" href="/react-native-reanimated/2.8b85f7b0.js" as="script">
@@ -16,7 +16,7 @@
 <link rel="preload" href="/react-native-reanimated/1be78505.3c929bdb.js" as="script">
 <link rel="preload" href="/react-native-reanimated/213.1215d221.js" as="script">
 <link rel="preload" href="/react-native-reanimated/724a6873.125c7db7.js" as="script">
-<link rel="preload" href="/react-native-reanimated/3d8d21df.e3fa02ec.js" as="script">
+<link rel="preload" href="/react-native-reanimated/3d8d21df.97dedfbb.js" as="script">
 </head>
 <body>
 <div id="__docusaurus">
@@ -51,9 +51,9 @@ This comes from the fact that TurboModules are not yet rolled out in the React N
 But even without that there are a few ways how we can simplify the installation.</li><li>We currently only support Hermes JS VM on Android.</li><li>As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
 You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.</li><li>The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
 We are looking into this problem and hope to have it resolved really soon.</li><li>JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.</li><li>Objects passed to worklets from React Native don&#x27;t have the correct prototype set in JavaScript.
-As a result, such objects aren&#x27;t enumerable, that is you can&#x27;t use &quot;for in&quot; constructs, spread operator (three dots), or functions like Object.assign with them.</li></ul></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a href="https://www.swmansion.com/" target="_blank" rel="noopener noreferrer" class="navbar__brand footer-image-link"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
+As a result, such objects aren&#x27;t enumerable, that is you can&#x27;t use &quot;for in&quot; constructs, spread operator (three dots), or functions like Object.assign with them.</li><li>With Reanimated you can&#x27;t animate virtual components of layout. For example, you can’t animate nested <code>&lt;Text&gt;</code> components because React Native changes  <div class="mdxCodeBlock_1WSO"><div class="codeBlockContent_3RXF"><button type="button" aria-label="Copy code to clipboard" class="copyButton_1PCb">Copy</button><div tabindex="0" class="prism-code language-undefined codeBlock_1wn8"><div class="codeBlockLines_3HrO" style="color:#ffffff;background-color:#001a72"><div class="token-line" style="color:#ffffff"><span class="token plain">&lt;Text&gt;</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">   string1</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">   &lt;Text&gt;string2&lt;/Text&gt;</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">&lt;/Text&gt;</span></div></div></div></div></div> to  <div class="mdxCodeBlock_1WSO"><div class="codeBlockContent_3RXF"><button type="button" aria-label="Copy code to clipboard" class="copyButton_1PCb">Copy</button><div tabindex="0" class="prism-code language-undefined codeBlock_1wn8"><div class="codeBlockLines_3HrO" style="color:#ffffff;background-color:#001a72"><div class="token-line" style="color:#ffffff"><span class="token plain">&lt;RCTTextView&gt;</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">   string1</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">   &lt;RCTVirtualText&gt;string2&lt;/RCTVirtualText&gt;</span></div><div class="token-line" style="color:#ffffff"><span class="token plain">&lt;/RCTTextView&gt;</span></div></div></div></div></div> and the <code>RCTVirtualText</code> is a virtual component.</li></ul></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a href="https://www.swmansion.com/" target="_blank" rel="noopener noreferrer" class="navbar__brand footer-image-link"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
 <script src="/react-native-reanimated/styles.f6bec165.js"></script>
-<script src="/react-native-reanimated/runtime~main.c06cb767.js"></script>
+<script src="/react-native-reanimated/runtime~main.7d7306e4.js"></script>
 <script src="/react-native-reanimated/main.48d27179.js"></script>
 <script src="/react-native-reanimated/1.5b1d5dd3.js"></script>
 <script src="/react-native-reanimated/2.8b85f7b0.js"></script>
@@ -61,6 +61,6 @@ As a result, such objects aren&#x27;t enumerable, that is you can&#x27;t use &qu
 <script src="/react-native-reanimated/1be78505.3c929bdb.js"></script>
 <script src="/react-native-reanimated/213.1215d221.js"></script>
 <script src="/react-native-reanimated/724a6873.125c7db7.js"></script>
-<script src="/react-native-reanimated/3d8d21df.e3fa02ec.js"></script>
+<script src="/react-native-reanimated/3d8d21df.97dedfbb.js"></script>
 </body>
 </html>
