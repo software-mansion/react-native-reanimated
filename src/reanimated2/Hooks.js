@@ -47,7 +47,15 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
-  return initRef.current;
+
+  useEffect(() => {
+    return () => {
+      initRef.current.unregisterFromEvents();
+      initRef.current = null;
+    }
+  }, []);
+
+  return initRef;
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -423,6 +431,13 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(()=>{
+    return () => {
+      initRef.current = null;
+    }
+  },[]);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
