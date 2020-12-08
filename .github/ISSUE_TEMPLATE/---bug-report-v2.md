@@ -6,6 +6,11 @@ labels: "\U0001F41E Bug, Reanimated2"
 assignees: ''
 ---
 
+<!--
+NOTE: please submit only bug reports here, any new questions or feature requests should be submitted in Discussions:
+https://github.com/software-mansion/react-native-reanimated/discussions
+ -->
+
 ## Description
 
 <!--
