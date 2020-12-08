@@ -17,10 +17,10 @@ Please follow the below instructions for Android and iOS.
 We realize the project setup is very complex and you may not want to add that to your existing app rightaway.
 If you just want to play with Reanimated 2, we made a clean repo that has all the steps configured so that you can pull it from github and give the new version a shot.
 
-[Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git checkout:
+[Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git clone:
 
 ```bash
-> git checkout git@github.com:software-mansion-labs/reanimated-2-playground.git
+> git clone git@github.com:software-mansion-labs/reanimated-2-playground.git
 ```
 
 Continue with the instruction below if you'd like to install Reanimated v2 on an existing or new React Native project.
@@ -38,6 +38,7 @@ First step is to install `react-native-reanimated` alpha as a dependency in your
 To use experimental support of Reanimated 2 in the Expo managed apps follow [their installation instructions](https://docs.expo.io/versions/latest/sdk/reanimated/).
 
 ### Using master branch builds
+
 To use Reanimated 2 built from the master branch:
 
 - go to the ["Build npm package" workflow in Reanimated repository](https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22)
