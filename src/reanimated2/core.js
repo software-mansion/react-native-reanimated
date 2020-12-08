@@ -241,6 +241,7 @@ runOnUI(() => {
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),
+    info: runOnJS(capturableConsole.info),
   };
   _setGlobalConsole(console);
 })();
