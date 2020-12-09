@@ -435,7 +435,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
 
   const handler = (event) => {
     'worklet';
-    event = Platform.OS === 'web' ? event : event.nativeEvent;
+    event = Platform.OS === 'web' ? event.nativeEvent : event;
 
     const FAILED = 1;
     const BEGAN = 2;
