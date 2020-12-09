@@ -1,8 +1,9 @@
 ## Running the example
 
 - clone the repository
+- `yarn install` at main directory
 - `cd Example/`
-- `yarn install`
+- `yarn install` again
 
 ### Running on iOS
 
