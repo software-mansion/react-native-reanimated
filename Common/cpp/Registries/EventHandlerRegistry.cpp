@@ -14,6 +14,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
     eventMappings[handlerIt->second->eventName].erase(id);
+    eventHandlers.erase(handlerIt);
   }
 }
 
