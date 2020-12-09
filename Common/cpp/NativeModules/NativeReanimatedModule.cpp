@@ -207,56 +207,58 @@ jsi::Value NativeReanimatedModule::spawnThread(jsi::Runtime &rt, const jsi::Valu
       std::unique_ptr<jsi::Runtime> customRuntime = runtimeObtainer();
         
       std::string strutf8 = object.getProperty(rt, "asString").asString(rt).utf8(rt);
-        jsi::String jsis = jsi::String::createFromUtf8(*customRuntime, strutf8);
-        jsi::Value v(*customRuntime , jsis);
-        std::shared_ptr<jsi::StringBuffer> buf = std::make_shared<jsi::StringBuffer>(strutf8);
-        //jsi::Value val = customRuntime->evaluateJavaScript(buf, "experimental_call");
-        
-        auto customGlobal = customRuntime->global();//.getPropertyAsFunction(rt, "eval");
-        auto global = rt.global();
-        
-        auto arr1 = global.getPropertyNames(rt);
-        auto arr2 = customGlobal.getPropertyNames(*customRuntime);
-        
-        // ...there's no eval on custom global... :/
-        
-        //jsi::Object o = v.getObject(*customRuntime); // error
-        // auto pureCxxFun = object.asFunction(rt).getHostFunction(rt); // not working
+      jsi::String jsis = jsi::String::createFromUtf8(*customRuntime, strutf8);
+      jsi::Value v(*customRuntime , jsis);
+      std::shared_ptr<jsi::StringBuffer> buf = std::make_shared<jsi::StringBuffer>(strutf8);
+      //jsi::Value val = customRuntime->evaluateJavaScript(buf, "experimental_call");
       
-      //jsi::Function jsiFunction = object.asFunction(*customRuntime); // error
-      //jsi::Function fff = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "customFunc"), 0, warnFunction);
-        volatile int x = 9;
-/*
-        jsi::Value val(std::move(operations));
-        volatile int x = 9;
-      //Logger::log("calling worklet");
-      //jsiFunction.call(rt, jsi::Value::undefined());
-/*
-      auto fun = [&rt, &jsiFunction]() -> void {
-        const size_t thread_id2 = std::hash<std::thread::id>{}(std::this_thread::get_id());
-        std::string str = "here 2 thread id: ";
-        str += std::to_string(thread_id2);
-        Logger::log(str.c_str());
-        // ...
+      auto customGlobal = customRuntime->global();//.getPropertyAsFunction(rt, "eval");
+      auto global = rt.global();
+        auto arr1 = global.getPropertyNames(rt);
+        std::string s = "------------------------- normal global " + std::to_string((int)arr1.size(rt));
+        Logger::log(s.c_str());
+        int count = 0;
+        for (int i=0;i<arr1.size(rt); ++i) {
+            jsi::Value v = arr1.getValueAtIndex(rt, i);
+            if (v.isString()) {
+                ++count;
+                std::string str = v.asString(rt).utf8(rt);
+                str = "loop > " + str;
+                Logger::log(str.c_str());
+            }
+        }
+      auto arr2 = customGlobal.getPropertyNames(*customRuntime);
+        s = std::to_string(count) + "------------------------- custom global " + std::to_string((int)arr2.size(*customRuntime));
+        Logger::log(s.c_str());
+        for (int i=0;i<arr2.size(*customRuntime); ++i) {
+            jsi::Value v = arr2.getValueAtIndex(*customRuntime, i);
+            if (v.isString()) {
+                std::string str = v.asString(*customRuntime).utf8(*customRuntime);
+                str = "loop > " + str;
+                Logger::log(str.c_str());
+            }
+        }
+        
+        // EVAL TEST...
+        const char* code1 = "(function(){console.log('siema1'); return 66;})";
+        const char* code2 = "(function(){console.log('siema2'); return 77;})";
+        
+        jsi::Function aaa = rt.global().getPropertyAsFunction(rt, "eval").call(rt, code1).getObject(rt).getFunction(rt);
+        
+        jsi::Function bbb = customRuntime->global().getPropertyAsFunction(*customRuntime, "eval").call(*customRuntime, code2).getObject(*customRuntime).getFunction(*customRuntime);
 
-        jsiFunction.call(rt, jsi::Value::undefined());
-      };
-      //std::thread t1(fun);
-        //t1.join();
-      std::async(fun);
-      */
+        try {
+            jsi::Value v1 = aaa.call(rt, nullptr, 0);
+            jsi::Value v2 = bbb.call(*customRuntime, nullptr, 0);
+            volatile int xa = 99;
+        } catch(std::exception &e) {
+            std::string se = e.what();
+            Logger::log(se.c_str());
+        }
+        
+        volatile int x = 9;
     }
   }
-  /*
-  auto fun = [&rt, &thisValue, &res]() -> void {
-    const size_t thread_id2 = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    std::string str = "here 2 thread id: ";
-    str += std::to_string(thread_id2);
-    Logger::log(str.c_str());
-    // ...
-  };
-  std::thread t1(fun);
-  */
     return jsi::Value::undefined();
 }
 
