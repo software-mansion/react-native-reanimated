@@ -42,6 +42,10 @@ const NativeReanimated = {
   getViewProp(viewTag, propName, callback) {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   },
+
+  spawnThread(operations) {
+    return InnerNativeModule.spawnThread(operations);
+  },
 };
 
 export default NativeReanimated;
