@@ -42,7 +42,7 @@ export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
-  if (initRef.current === null || (Platform.OS === 'web' && rebuild)) {
+  if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
@@ -433,51 +433,55 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   );
   initRef.current.savedDependencies = dependencies;
 
-  return useEvent(
-    (event) => {
-      'worklet';
-      const FAILED = 1;
-      const BEGAN = 2;
-      const CANCELLED = 3;
-      const ACTIVE = 4;
-      const END = 5;
+  const handler = (event) => {
+    'worklet';
+    event = Platform.OS === 'web' ? event.nativeEvent : event;
 
-      if (event.state === BEGAN && handlers.onStart) {
-        handlers.onStart(event, context);
-      }
-      if (event.state === ACTIVE && handlers.onActive) {
-        handlers.onActive(event, context);
-      }
-      if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
-        handlers.onEnd(event, context);
-      }
-      if (
-        event.oldState === BEGAN &&
-        event.state === FAILED &&
-        handlers.onFail
-      ) {
-        handlers.onFail(event, context);
-      }
-      if (
-        event.oldState === ACTIVE &&
-        event.state === CANCELLED &&
-        handlers.onCancel
-      ) {
-        handlers.onCancel(event, context);
-      }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state !== BEGAN &&
-        event.state !== ACTIVE &&
-        handlers.onFinish
-      ) {
-        handlers.onFinish(
-          event,
-          context,
-          event.state === CANCELLED || event.state === FAILED
-        );
-      }
-    },
+    const FAILED = 1;
+    const BEGAN = 2;
+    const CANCELLED = 3;
+    const ACTIVE = 4;
+    const END = 5;
+
+    if (event.state === BEGAN && handlers.onStart) {
+      handlers.onStart(event, context);
+    }
+    if (event.state === ACTIVE && handlers.onActive) {
+      handlers.onActive(event, context);
+    }
+    if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
+      handlers.onEnd(event, context);
+    }
+    if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
+      handlers.onFail(event, context);
+    }
+    if (
+      event.oldState === ACTIVE &&
+      event.state === CANCELLED &&
+      handlers.onCancel
+    ) {
+      handlers.onCancel(event, context);
+    }
+    if (
+      (event.oldState === BEGAN || event.oldState === ACTIVE) &&
+      event.state !== BEGAN &&
+      event.state !== ACTIVE &&
+      handlers.onFinish
+    ) {
+      handlers.onFinish(
+        event,
+        context,
+        event.state === CANCELLED || event.state === FAILED
+      );
+    }
+  };
+
+  if (Platform.OS === 'web') {
+    return handler;
+  }
+
+  return useEvent(
+    handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     dependenciesDiffer
   );
