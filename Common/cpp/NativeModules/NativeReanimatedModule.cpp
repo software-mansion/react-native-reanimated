@@ -196,71 +196,37 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
 jsi::Value NativeReanimatedModule::spawnThread(jsi::Runtime &rt, const jsi::Value &operations) {
   Logger::log("HERE spawning thread...");
   jsi::Object object = operations.asObject(rt);
-  if (object.isFunction(rt)) {
-    if (!object.getProperty(rt, "__worklet").isUndefined()) {
 
-      const size_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
-      std::string str = "here 1 thread id: ";
-      str += std::to_string(thread_id);
-      Logger::log(str.c_str());
-        
-      std::unique_ptr<jsi::Runtime> customRuntime = runtimeObtainer();
-        
-      std::string strutf8 = object.getProperty(rt, "asString").asString(rt).utf8(rt);
-      jsi::String jsis = jsi::String::createFromUtf8(*customRuntime, strutf8);
-      jsi::Value v(*customRuntime , jsis);
-      std::shared_ptr<jsi::StringBuffer> buf = std::make_shared<jsi::StringBuffer>(strutf8);
-      //jsi::Value val = customRuntime->evaluateJavaScript(buf, "experimental_call");
-      
-      auto customGlobal = customRuntime->global();//.getPropertyAsFunction(rt, "eval");
-      auto global = rt.global();
-        auto arr1 = global.getPropertyNames(rt);
-        std::string s = "------------------------- normal global " + std::to_string((int)arr1.size(rt));
-        Logger::log(s.c_str());
-        int count = 0;
-        for (int i=0;i<arr1.size(rt); ++i) {
-            jsi::Value v = arr1.getValueAtIndex(rt, i);
-            if (v.isString()) {
-                ++count;
-                std::string str = v.asString(rt).utf8(rt);
-                str = "loop > " + str;
-                Logger::log(str.c_str());
-            }
-        }
-      auto arr2 = customGlobal.getPropertyNames(*customRuntime);
-        s = std::to_string(count) + "------------------------- custom global " + std::to_string((int)arr2.size(*customRuntime));
-        Logger::log(s.c_str());
-        for (int i=0;i<arr2.size(*customRuntime); ++i) {
-            jsi::Value v = arr2.getValueAtIndex(*customRuntime, i);
-            if (v.isString()) {
-                std::string str = v.asString(*customRuntime).utf8(*customRuntime);
-                str = "loop > " + str;
-                Logger::log(str.c_str());
-            }
-        }
-        
-        // EVAL TEST...
-        const char* code1 = "(function(){console.log('siema1'); return 66;})";
-        const char* code2 = "(function(){console.log('siema2'); return 77;})";
-        
-        jsi::Function aaa = rt.global().getPropertyAsFunction(rt, "eval").call(rt, code1).getObject(rt).getFunction(rt);
-        
-        jsi::Function bbb = customRuntime->global().getPropertyAsFunction(*customRuntime, "eval").call(*customRuntime, code2).getObject(*customRuntime).getFunction(*customRuntime);
-
-        try {
-            jsi::Value v1 = aaa.call(rt, nullptr, 0);
-            jsi::Value v2 = bbb.call(*customRuntime, nullptr, 0);
-            volatile int xa = 99;
-        } catch(std::exception &e) {
-            std::string se = e.what();
-            Logger::log(se.c_str());
-        }
-        
-        volatile int x = 9;
-    }
-  }
+  if (!object.isFunction(rt) || object.getProperty(rt, "__worklet").isUndefined()) {
+    errorHandler->setError("Function passed to spawnThread doesn't seem to be a worklet");
+    errorHandler->raise();
     return jsi::Value::undefined();
-}
+  }
+  std::string asString = "(" + object.getProperty(rt, "asString").asString(rt).utf8(rt) + ")";
+    const int threadId = ++this->currentThreadId;
+    Th th = {asString, nullptr};
+    this->threads.insert(std::make_pair(threadId, th));
+
+    auto job = [this, threadId]() {
+      Th th = this->threads.at(threadId);
+      std::unique_ptr<jsi::Runtime> customRuntime = runtimeObtainer();
+      RuntimeDecorator::addLog(*customRuntime);
+      jsi::Function fun = workletsCache->functionFromString(*customRuntime, th.str);
+      jsi::Value result = jsi::Value::undefined();
+      try {
+        result = fun.call(*customRuntime, nullptr, 0);
+      }
+      catch (std::exception &e) {
+        std::string str = e.what();
+        errorHandler->setError(str);
+        errorHandler->raise();
+      }
+      return result;
+    };
+
+    threads.at(threadId).thread = std::make_shared<std::thread>(job);
+    return jsi::Value::undefined();
+  }
 
 void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsString)
 {

@@ -18,6 +18,7 @@ public:
                                ScrollToFunction scrollTo,
                                MeasuringFunction measure,
                                TimeProviderFunction getCurrentTime);
+  static void addLog(jsi::Runtime &rt);
 };
 
 }

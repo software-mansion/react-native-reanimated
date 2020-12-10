@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <memory>
 #include <vector>
+#include <thread>
+#include <unordered_map>
 
 namespace reanimated
 {
@@ -76,6 +78,13 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
   std::shared_ptr<WorkletsCache> workletsCache;
   std::shared_ptr<ShareableValue> valueSetter;
   std::shared_ptr<Scheduler> scheduler;
+  
+  struct Th {
+    std::string str;
+    std::shared_ptr<std::thread> thread;
+  };
+  int currentThreadId = 0;
+  std::unordered_map<int, Th> threads;
 };
 
 } // namespace reanimated
