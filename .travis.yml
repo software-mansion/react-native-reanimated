@@ -52,10 +52,10 @@ jobs:
       os: osx
       xcode_workspace: './ios/ReanimatedExample.xcworkspace'
       xcode_scheme: ReanimatedExample
-      xcode_sdk: iphonesimulator9.0
-      osx_image: xcode10.1
+      xcode_sdk: iphonesimulator12.4
+      osx_image: xcode12.2
       podfile: './ios/Podfile'
-      xcode_destination: platform=iOS Simulator,OS=11.4,name=iPhone X
+      xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env: NODE_VERSION=10.15.3
 
       branches:
