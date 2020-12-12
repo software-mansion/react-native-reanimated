@@ -68,13 +68,7 @@ declare module 'react-native-reanimated' {
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
 
-    type RawSharedValue = number | string | boolean | object;
-    type SharedValueType = RawSharedValue | RawSharedValue[];
-    export type SharedValue<T> = 
-        T extends boolean ? { value: boolean }:
-        T extends SharedValueType ? { value: T } :
-        never;
-
+    export type SharedValue<T> = { value: T};
 
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
@@ -420,8 +414,8 @@ declare module 'react-native-reanimated' {
       userConfig: WithDecayConfig,
       callback?: (isFinished: boolean) => void
     ): number;
-    export function cancelAnimation<T extends SharedValue<SharedValueType>>(
-      sharedValue: T
+    export function cancelAnimation<T>(
+      sharedValue: SharedValue<T>
     ): void;
     export function withDelay(delayMS: number, delayedAnimation: number): number;
     export function withRepeat(
@@ -461,7 +455,7 @@ declare module 'react-native-reanimated' {
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
-    export function makeMutable<T extends SharedValueType>(
+    export function makeMutable<T>(
       initialValue: T
     ): SharedValue<T>;
 
@@ -473,7 +467,7 @@ declare module 'react-native-reanimated' {
       shouldRebuild?: boolean
     ): SharedValue<T>;
 
-    export function useDerivedValue<T extends SharedValueType>(
+    export function useDerivedValue<T>(
       processor: () => T,
       deps?: DependencyList
     ): SharedValue<T>;
