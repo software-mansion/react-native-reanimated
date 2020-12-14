@@ -236,7 +236,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
         return jsi::Value(rt, *hostFunction->get());
       } else {
-        // function is accessed from a different runtme, we wrap function in host func that'd enqueue
+        // function is accessed from a different runtime, we wrap function in host func that'd enqueue
         // call on an appropriate thread
         
         auto module = this->module;
@@ -319,10 +319,19 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                res = funPtr->call(rt, args, count);
              }
            } catch(std::exception &e) {
-               std::string str = e.what();
-             this->module->errorHandler->setError(str);
-             this->module->errorHandler->raise();
-           }
+             std::string str = e.what();
+             module->errorHandler->setError(str);
+             module->errorHandler->raise();
+           } catch(...) {
+               // TODO find out a way to get the error's message on hermes
+               jsi::Value location = jsThis->getProperty(rt, "__location");
+               std::string str = "Javascript worklet error";
+               if (location.isString()) {
+                 str += "\nIn file: " + location.asString(rt).utf8(rt);
+               }
+               module->errorHandler->setError(str);
+               module->errorHandler->raise();
+             }
 
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
            return res;
@@ -339,16 +348,15 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             ) -> jsi::Value {
           // TODO: we should find thread based on runtime such that we could also call UI methods
           // from RN and not only RN methods from UI
-          
-          auto module = retain_this->module;
 
           std::vector<std::shared_ptr<ShareableValue>> params;
           for (int i = 0; i < count; ++i) {
-            params.push_back(ShareableValue::adapt(rt, args[i], module));
+            params.push_back(ShareableValue::adapt(rt, args[i], retain_this->module));
           }
           
-          module->scheduler->scheduleOnUI([retain_this, params, &module] {
-            jsi::Runtime &rt = *retain_this->module->runtime.get();
+          retain_this->module->scheduler->scheduleOnUI([retain_this, params] {
+            NativeReanimatedModule *module = retain_this->module;
+            jsi::Runtime &rt = *module->runtime.get();
             auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
             std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
@@ -369,6 +377,15 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             
             } catch(std::exception &e) {
               std::string str = e.what();
+              module->errorHandler->setError(str);
+              module->errorHandler->raise();
+            } catch(...) {
+              // TODO find out a way to get the error's message on hermes
+              jsi::Value location = jsThis.getProperty(rt, "__location");
+              std::string str = "Javascript worklet error";
+              if (location.isString()) {
+                str += "\nIn file: " + location.asString(rt).utf8(rt);
+              }
               module->errorHandler->setError(str);
               module->errorHandler->raise();
             }

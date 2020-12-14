@@ -2,13 +2,14 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject, ComponentType } from 'react';
   import {
     ViewProps,
     TextProps,
     ImageProps,
     ScrollViewProps,
     StyleProp,
+    RegisteredStyle,
     ViewStyle,
     TextStyle,
     ImageStyle,
@@ -241,7 +242,7 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent(component: any): any;
+    export function createAnimatedComponent<S extends object, P extends { style?: StyleProp<S>; }>(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
 
     // classes
     export {
@@ -336,7 +337,7 @@ declare module 'react-native-reanimated' {
       g: Adaptable<number>,
       b: Adaptable<number>,
       a?: Adaptable<number>
-    ): AnimatedNode<number>;
+    ): AnimatedNode<number | string>;
     export function diff(value: Adaptable<number>): AnimatedNode<number>;
     export function diffClamp(
       value: Adaptable<number>,
@@ -354,9 +355,9 @@ declare module 'react-native-reanimated' {
         outputColorRange,
       }: {
         inputRange: ReadonlyArray<Adaptable<number>>;
-        outputColorRange: (string | number)[];
+        outputColorRange: ReadonlyArray<Adaptable<number | string>>;
       }
-    ): AnimatedNode<number>;
+    ): AnimatedNode<number | string>;
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
@@ -480,9 +481,10 @@ declare module 'react-native-reanimated' {
       effects: (dependencies: D) => void,
       deps?: DependencyList
     );
-
+                        
+    export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
-      T extends StyleProp<AnimateStyle<ViewStyle | ImageStyle | TextStyle>>
+      T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,

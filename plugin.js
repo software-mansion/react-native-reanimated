@@ -32,7 +32,7 @@ const objectHooks = new Set([
 const globals = new Set([
   'this',
   'console',
-  '_globalSetter',
+  '_setGlobalConsole',
   'Date',
   'Array',
   'ArrayBuffer',
@@ -43,6 +43,7 @@ const globals = new Set([
   'Number',
   'Object',
   'String',
+  'Symbol',
   'undefined',
   'null',
   'UIManager',
@@ -268,7 +269,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun) {
+function processWorkletFunction(t, fun, fileName) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
@@ -351,6 +352,14 @@ function processWorkletFunction(t, fun) {
   const funString = buildWorkletString(t, fun, variables, functionName);
   const workletHash = hash(funString);
 
+  const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
+  if (loc) {
+    const { line, column } = loc;
+    if (typeof line === 'number' && typeof column === 'number') {
+      fileName = `${fileName} (${line}:${column})`;
+    }
+  }
+
   const newFun = t.functionExpression(
     fun.id,
     [],
@@ -392,6 +401,17 @@ function processWorkletFunction(t, fun) {
         )
       ),
       t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__location'),
+            false
+          ),
+          t.stringLiteral(fileName)
+        )
+      ),
+      t.expressionStatement(
         t.callExpression(
           t.memberExpression(
             t.identifier('global'),
@@ -422,7 +442,7 @@ function processWorkletFunction(t, fun) {
   );
 }
 
-function processIfWorkletNode(t, fun) {
+function processIfWorkletNode(t, fun, fileName) {
   fun.traverse({
     DirectiveLiteral(path) {
       const value = path.node.value;
@@ -440,14 +460,14 @@ function processIfWorkletNode(t, fun) {
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun);
+          processWorkletFunction(t, fun, fileName);
         }
       }
     },
   });
 }
 
-function processWorklets(t, path, processor) {
+function processWorklets(t, path, fileName) {
   const name =
     path.node.callee.type === 'MemberExpression'
       ? path.node.callee.property.name
@@ -462,13 +482,17 @@ function processWorklets(t, path, processor) {
       return;
     }
     for (let i = 0; i < objectPath.container.length; i++) {
-      processor(t, objectPath.getSibling(i).get('value'));
+      processWorkletFunction(
+        t,
+        objectPath.getSibling(i).get('value'),
+        fileName
+      );
     }
   } else {
     const indexes = functionHooks.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
-        processor(t, path.get(`arguments.${index}`));
+        processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
       });
     }
   }
@@ -531,13 +555,13 @@ module.exports = function({ types: t }) {
   return {
     visitor: {
       CallExpression: {
-        exit(path) {
-          processWorklets(t, path, processWorkletFunction);
+        exit(path, state) {
+          processWorklets(t, path, state.file.opts.filename);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        exit(path) {
-          processIfWorkletNode(t, path);
+        exit(path, state) {
+          processIfWorkletNode(t, path, state.file.opts.filename);
         },
       },
     },

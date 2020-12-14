@@ -1,10 +1,46 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
+};
+
+function _toArrayReanimated(object) {
+  'worklet';
+  if (Array.isArray(object)) {
+    return object;
+  }
+  if (
+    typeof Symbol !== 'undefined' &&
+    (typeof Symbol === 'function' ? Symbol.iterator : '@@iterator') in
+      Object(object)
+  )
+    return Array.from(object);
+  throw new 'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'();
+}
+
+function _mergeObjectsReanimated() {
+  'worklet';
+  return Object.assign.apply(null, arguments);
+}
+
+global.__reanimatedWorkletInit = function(worklet) {
+  worklet.__worklet = true;
+
+  if (worklet._closure) {
+    const closure = worklet._closure;
+    Object.keys(closure).forEach((key) => {
+      if (key === '_toConsumableArray') {
+        closure[key] = _toArrayReanimated;
+      }
+
+      if (key === '_objectSpread') {
+        closure[key] = _mergeObjectsReanimated;
+      }
+    });
+  }
 };
 
 function pushFrame(frame) {
@@ -75,8 +111,14 @@ function workletValueSetter(value) {
     typeof value === 'function' ||
     (value !== null && typeof value === 'object' && value.onFrame)
   ) {
-    // animated set
     const animation = typeof value === 'function' ? value() : value;
+    // prevent setting again to the same value
+    // and triggering the mappers that treat this value as an input
+    // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
+    if (this._value === animation.current) {
+      return;
+    }
+    // animated set
     const initializeAnimation = (timestamp) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
@@ -105,6 +147,11 @@ function workletValueSetter(value) {
       requestAnimationFrame(step);
     }
   } else {
+    // prevent setting again to the same value
+    // and triggering the mappers that treat this value as an input
+    if (this._value === value) {
+      return;
+    }
     this._value = value;
   }
 }
@@ -194,6 +241,7 @@ runOnUI(() => {
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),
+    info: runOnJS(capturableConsole.info),
   };
-  _globalSetter('console', console); // eslint-disable-line
+  _setGlobalConsole(console);
 })();

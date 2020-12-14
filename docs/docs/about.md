@@ -65,3 +65,18 @@ Below we highlight some of the problems that we are aware of (in most of the cas
 - JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.
 - Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
   As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.
+- With Reanimated you can't animate virtual components of layout. For example, you can’t animate nested `<Text>` components because React Native changes  
+   ```
+   <Text>
+      string1
+      <Text>string2</Text>
+   </Text>
+   ```  
+   to  
+   ```
+   <RCTTextView>
+      string1
+      <RCTVirtualText>string2</RCTVirtualText>
+   </RCTTextView>
+   ```  
+   and the `RCTVirtualText` is a virtual component.
