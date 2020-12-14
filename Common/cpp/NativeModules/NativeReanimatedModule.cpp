@@ -138,6 +138,7 @@ void NativeReanimatedModule::stopMapper(jsi::Runtime &rt, const jsi::Value &mapp
   unsigned long id = mapperId.asNumber();
   scheduler->scheduleOnUI([=] {
     mapperRegistry->stopMapper(id);
+    maybeRequestRender();
   });
 }
 
