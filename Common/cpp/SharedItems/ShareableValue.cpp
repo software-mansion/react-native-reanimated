@@ -101,7 +101,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         type = ValueType::WorkletFunctionType;
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
         if (isRNRuntime) {
-          addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
+          // addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
     } else if (object.isArray(rt)) {
@@ -126,7 +126,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ObjectType;
       frozenObject = std::make_shared<FrozenObject>(rt, object, module);
       if (isRNRuntime) {
-        addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
+        // addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         freeze(rt, object);
       }
     }
@@ -173,7 +173,7 @@ jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> f
   jsi::Object obj = frozenObject->shallowClone(rt);
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
-  addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
+  // addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
   addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
   return freeze.call(rt, obj);
 }
