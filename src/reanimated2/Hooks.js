@@ -52,7 +52,7 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
     return () => {
       initRef.current.unregisterFromEvents();
       initRef.current = null;
-    }
+    };
   }, []);
 
   return initRef;
@@ -319,6 +319,12 @@ export function useAnimatedStyle(updater, dependencies) {
     };
   }, dependencies);
 
+  useEffect(() => {
+    return () => {
+      initRef.current = undefined;
+    };
+  }, []);
+
   // check for invalid usage of shared values in returned object
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
@@ -432,11 +438,11 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     };
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     return () => {
       initRef.current = null;
-    }
-  },[]);
+    };
+  }, []);
 
   const { context, savedDependencies } = initRef.current;
 
