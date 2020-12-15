@@ -511,6 +511,7 @@ declare module 'react-native-reanimated' {
     ): (...args: Parameters<typeof fn>) => R;
 
     export function useAnimatedRef<T extends Component>(): RefObject<T>;
+    export function defineAnimation<T>(starting: any, factory: () => T): number;
     export function measure<T extends Component>(
       ref: RefObject<T>
     ): {
@@ -744,6 +745,7 @@ declare module 'react-native-reanimated' {
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
+  export const defineAnimation: typeof Animated.defineAnimation;
   export const measure: typeof Animated.measure;
   export const scrollTo: typeof Animated.scrollTo;
   export const withTiming: typeof Animated.withTiming;
