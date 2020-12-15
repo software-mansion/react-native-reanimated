@@ -9,6 +9,7 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
+  makeMutableSet,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -29,6 +30,14 @@ export function useSharedValue(init, shouldRebuild = true) {
   }
 
   return ref.current.mutable;
+}
+
+export function useMutableSet(init) {
+  const ref = useRef(null);
+  if (ref.current === null) {
+    ref.current = makeMutableSet();
+  }
+  return ref.current;
 }
 
 export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
@@ -277,7 +286,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewDescriptor = useSharedValue([], false);
+  const viewDescriptor = useMutableSet();
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);

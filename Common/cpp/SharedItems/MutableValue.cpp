@@ -7,7 +7,7 @@ namespace reanimated {
 
 void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
   std::lock_guard<std::mutex> lock(readWriteMutex);
-  value = ShareableValue::adapt(rt, value, newValue, module);
+  value = ShareableValue::adapt(rt, newValue, module);
   
   std::shared_ptr<MutableValue> thiz = shared_from_this();
   auto notifyListeners = [thiz] () {
@@ -108,6 +108,4 @@ void MutableValue::removeListener(unsigned long listenerId) {
     listeners.erase(listenerId);
   }
 }
-
-
 }

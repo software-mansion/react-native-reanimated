@@ -41,6 +41,15 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_makeRemote(
     ->makeRemote(rt, std::move(args[0]));
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_makeMutableSet(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+    ->makeMutableSet(rt, std::move(args[0]));
+}
+
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_startMapper(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -101,7 +110,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
       1, __hostFunction_NativeReanimatedModuleSpec_makeMutable};
   methodMap_["makeRemote"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_makeRemote};
-      
+  methodMap_["makeMutableSet"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_makeMutableSet};
 
   methodMap_["startMapper"] = MethodMetadata{
     3, __hostFunction_NativeReanimatedModuleSpec_startMapper};

@@ -208,6 +208,10 @@ export function makeMutable(value) {
   return NativeReanimated.makeMutable(value);
 }
 
+export function makeMutableSet(value) {
+  return NativeReanimated.makeMutableSet(value);
+}
+
 export function makeRemote(object = {}) {
   return NativeReanimated.makeRemote(object);
 }

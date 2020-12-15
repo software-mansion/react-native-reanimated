@@ -3,6 +3,7 @@
 #include "NativeReanimatedModule.h"
 #include "Logger.h"
 #include "MutableValue.h"
+#include "MutableSet.h"
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
 #include "FrozenObject.h"
@@ -75,6 +76,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
     mutableValue = std::make_shared<MutableValue>(rt, value, module, module->scheduler);
+  } else if (objectType == ValueType::SharedSet) {
+    type = ValueType::SharedSet;
+    mutableSet = std::make_shared<MutableSet>(rt, value, module, module->scheduler);
   } else if (value.isUndefined()) {
     type = ValueType::UndefinedType;
   } else if (value.isNull()) {
@@ -144,32 +148,7 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
   return sv;
 }
 
-std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
-  if(value.isObject()){
-    auto object = value.asObject(rt);
-    if(object.hasProperty(rt, "__setItem")) {
-      originalValue->adaptSet(rt, originalValue, value, valueType);
-      return originalValue;
-    }
-  }
-  sv->adapt(rt, value, valueType);
-  return sv;
-}
-
-void ShareableValue::adaptSet(jsi::Runtime &rt, std::shared_ptr<ShareableValue> &originalValue, const jsi::Value &value, ValueType objectType) {
-  auto object = value.asObject(rt);
-  auto setItem = object.getProperty(rt, "__setItem");
-  if(!setItem.isUndefined()) {
-    //temorarty, to change on std::set
-    frozenArray.push_back(adapt(rt, setItem, module));
-  }
-  else {
-    throw "Invalid value type";
-  }
-}
-
-jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
+jsi::Value ShareableValue::	getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (module->isUIRuntime(rt)) {
     if (remoteValue.expired()) {
@@ -231,6 +210,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return createHost(rt, remoteObject);
     case ValueType::MutableValueType:
       return createHost(rt, mutableValue);
+    case ValueType::SharedSet:
+      return createHost(rt, mutableSet);
     case ValueType::HostFunctionType:
       if (hostRuntime == &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
