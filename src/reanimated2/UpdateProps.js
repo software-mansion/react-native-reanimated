@@ -27,13 +27,13 @@ const ColorProperties = makeShareable(colorProps);
 export default function updateProps(viewDescriptor, updates, maybeViewRef) {
   'worklet';
 
-  const updateSingleProps = (viewDescriptorValue) => {
-    const viewName = viewDescriptorValue.name || 'RCTView';
+  const updateSingleProps = (_viewDescriptorValue, _updates, _maybeViewRef) => {
+    const viewName = _viewDescriptorValue.name || 'RCTView';
 
     if (Platform.OS !== 'web') {
-      Object.keys(updates).forEach((key) => {
+      Object.keys(_updates).forEach((key) => {
         if (ColorProperties.indexOf(key) !== -1) {
-          updates[key] = processColor(updates[key]);
+          _updates[key] = processColor(_updates[key]);
         }
       });
     }
@@ -42,18 +42,18 @@ export default function updateProps(viewDescriptor, updates, maybeViewRef) {
       typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
     updatePropsInternal(
-      viewDescriptorValue.tag,
+      _viewDescriptorValue.tag,
       viewName,
-      updates,
-      maybeViewRef
+      _updates,
+      _maybeViewRef
     );
   };
 
   if ('__mutableSet' in viewDescriptor) {
-    viewDescriptor.setItems.forEach((item) => {
-      updateSingleProps(item);
+    viewDescriptor.setItems.forEach((item, index) => {
+      updateSingleProps(item, updates, maybeViewRef?.current[index]);
     });
   } else {
-    updateSingleProps(viewDescriptor.value);
+    updateSingleProps(viewDescriptor.value, updates, maybeViewRef);
   }
 }

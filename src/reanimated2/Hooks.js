@@ -289,7 +289,7 @@ export function useAnimatedStyle(updater, dependencies) {
   const viewDescriptor = useMutableSet();
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
-  const viewRef = useRef(null);
+  const viewRef = useRef([]);
 
   // build dependencies
   if (dependencies === undefined) {

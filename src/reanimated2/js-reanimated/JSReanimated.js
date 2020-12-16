@@ -1,5 +1,6 @@
 import MapperRegistry from './MapperRegistry';
 import MutableValue from './MutableValue';
+import MutableSet from './MutableSet';
 import Mapper from './Mapper';
 
 export default class JSReanimated {
@@ -56,6 +57,10 @@ export default class JSReanimated {
 
   makeMutable(value) {
     return new MutableValue(value, this._valueSetter);
+  }
+
+  makeMutableSet(value) {
+    return new MutableSet(value);
   }
 
   makeRemote(object) {

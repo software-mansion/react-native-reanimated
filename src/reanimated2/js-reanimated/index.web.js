@@ -5,7 +5,7 @@ const reanimatedJS = new JSReanimated();
 global._frameTimestamp = null;
 
 export const _updatePropsJS = (viewTag, viewName, updates, viewRef) => {
-  if (viewRef.current && viewRef.current._component) {
+  if (viewRef && viewRef._component) {
     const [rawStyles] = Object.keys(updates).reduce(
       (acc, key) => {
         const value = updates[key];
@@ -16,7 +16,7 @@ export const _updatePropsJS = (viewTag, viewName, updates, viewRef) => {
       [{}, {}]
     );
 
-    viewRef.current._component.setNativeProps({ style: rawStyles });
+    viewRef._component.setNativeProps({ style: rawStyles });
   }
 };
 
