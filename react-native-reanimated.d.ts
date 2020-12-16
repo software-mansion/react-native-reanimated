@@ -425,7 +425,8 @@ declare module 'react-native-reanimated' {
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
-      reverse?: boolean
+      reverse?: boolean,
+      callback?: (isFinished: boolean) => void
     ): number;
     export function withSequence(...animations: [number, ...number[]]): number;
 
