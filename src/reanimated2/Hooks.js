@@ -35,7 +35,7 @@ export function useSharedValue(init, shouldRebuild = true) {
 export function useMutableSet(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutableSet();
+    ref.current = makeMutableSet(init);
   }
   return ref.current;
 }

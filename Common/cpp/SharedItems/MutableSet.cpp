@@ -6,51 +6,56 @@
 
 namespace reanimated {
 
-void MutableSet::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
-  std::lock_guard<std::mutex> lock(readWriteMutex);
-  value = ShareableValue::adapt(rt, newValue, module);
-}
-
-jsi::Value MutableSet::getValue(jsi::Runtime &rt) {
-  std::lock_guard<std::mutex> lock(readWriteMutex);
-  return value->getValue(rt);
-}
-
 void MutableSet::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &newValue) {
+  std::lock_guard<std::mutex> lock(readWriteMutex);
   auto propName = name.utf8(rt);
   if (propName == "setItems") {
-    //todo
+    setItems.clear();
+    init(rt, newValue);
   }
 }
 
 jsi::Value MutableSet::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   auto propName = name.utf8(rt);
   if (propName == "setItems") {
+    std::lock_guard<std::mutex> lock(readWriteMutex);
     jsi::Array array(rt, setItems.size());
     int index = 0;
     std::set<std::shared_ptr<ShareableValue>>::iterator it = setItems.begin();
     while (it != setItems.end()) {
-      array.setValueAtIndex(rt, index, (*it)->getValue(rt));
-      index++; it++;
+      array.setValueAtIndex(rt, index++, (*it++)->getValue(rt));
     }
     return array;
   }
   else if (propName == "add") {
     return jsi::Function::createFromHostFunction(rt, name, 1,
-        [&module = module, &setItems = setItems]
-        (facebook::jsi::Runtime &rt,
-         const facebook::jsi::Value &thisVal,
-         const facebook::jsi::Value *args,
-         size_t count
-        ) {
-          std::shared_ptr<ShareableValue> newItem = ShareableValue::adapt(rt, std::move(args[0]), module);
-          setItems.insert(newItem);
-          return jsi::Value::null();
-        }
+      [&module = module, &setItems = setItems, &readWriteMutex = readWriteMutex]
+      (facebook::jsi::Runtime &rt,
+       const facebook::jsi::Value &thisVal,
+       const facebook::jsi::Value *args,
+       size_t count
+      ) {
+        std::lock_guard<std::mutex> lock(readWriteMutex);
+        setItems.insert(ShareableValue::adapt(rt, std::move(args[0]), module));
+        return jsi::Value::undefined();
+      }
     );
   }
   else if (propName == "clear") {
-    return getValue(rt);
+    return jsi::Function::createFromHostFunction(rt, name, 0,
+      [&module = module, &setItems = setItems]
+      (facebook::jsi::Runtime &rt,
+       const facebook::jsi::Value &thisVal,
+       const facebook::jsi::Value *args,
+       size_t count
+      ) {
+        setItems.clear();
+        return jsi::Value::undefined();
+      }
+    );
+  }
+  else if (propName == "__mutableSet") {
+    return jsi::Value(true);
   }
 
   return jsi::Value::undefined();
@@ -65,8 +70,34 @@ std::vector<jsi::PropNameID> MutableSet::getPropertyNames(jsi::Runtime &rt) {
   return result;
 }
 
-MutableSet::MutableSet(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module, std::shared_ptr<Scheduler> s):
-StoreUser(s), module(module), value(ShareableValue::adapt(rt, initial, module)) {
+void MutableSet::init(jsi::Runtime &rt, const jsi::Value &value) {
+  if (value.isUndefined()) return;
+  if (value.isObject()) {
+    auto object = value.asObject(rt);
+    if (object.isArray(rt)) {
+      auto array = object.asArray(rt);
+      for (size_t i = 0, size = array.size(rt); i < size; i++) {
+        setItems.insert(ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module));
+      }
+    }
+    else {
+      setItems.insert(ShareableValue::adapt(rt, value, module));
+    }
+  }
+  else {
+    setItems.insert(ShareableValue::adapt(rt, value, module));
+  }
+}
+
+MutableSet::MutableSet(
+  jsi::Runtime &rt,
+  const jsi::Value &initial,
+  NativeReanimatedModule *module,
+  std::shared_ptr<Scheduler> s
+) :
+  StoreUser(s),
+  module(module) {
+    init(rt, initial);
 }
 
 }
