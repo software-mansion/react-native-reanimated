@@ -216,10 +216,14 @@ function WithTimingTest() {
   const width = useSharedValue(50);
   const style = useAnimatedStyle(() => {
     return {
-      width: withTiming(width.value, {
-        duration: 500,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      }),
+      width: withTiming(
+        width.value,
+        {
+          duration: 500,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        },
+        (finished) => {}
+      ),
     };
   });
   return (
@@ -241,7 +245,7 @@ function WithSpringTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = withSpring(0);
+      x.value = withSpring(0, {}, (finished) => {});
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
@@ -331,7 +335,7 @@ function WithRepeatTest() {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
-      x.value = withRepeat(withTiming(70), 1, true);
+      x.value = withRepeat(withTiming(70), 1, true, (finished) => {});
     },
   });
   const animatedStyle = useAnimatedStyle(() => {
