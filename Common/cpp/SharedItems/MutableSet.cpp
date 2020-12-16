@@ -43,7 +43,7 @@ jsi::Value MutableSet::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
   }
   else if (propName == "clear") {
     return jsi::Function::createFromHostFunction(rt, name, 0,
-      [&module = module, &setItems = setItems]
+      [&setItems = setItems]
       (facebook::jsi::Runtime &rt,
        const facebook::jsi::Value &thisVal,
        const facebook::jsi::Value *args,
