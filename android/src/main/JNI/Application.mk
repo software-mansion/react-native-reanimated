@@ -1,11 +1,11 @@
 ifdef $(CI)
 APP_ABI := x86
 else
-APP_ABI := all
+APP_ABI := armeabi-v7a x86 arm64-v8a x86_64
 endif
 
 APP_BUILD_SCRIPT := Android.mk
-APP_PLATFORM := android-18
+APP_PLATFORM := android-21
 
 APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 

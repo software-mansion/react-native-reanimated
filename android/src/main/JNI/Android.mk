@@ -32,8 +32,8 @@ include $(BUILD_SHARED_LIBRARY)
 # start | build empty library which is needed by CallInvokerHolderImpl.java
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := turbomodulejsijni
-include $(BUILD_SHARED_LIBRARY)
+#LOCAL_MODULE := turbomodulejsijni2
+#include $(BUILD_SHARED_LIBRARY)
 # end
 
 include $(LOCAL_PATH)/react/Android.mk
