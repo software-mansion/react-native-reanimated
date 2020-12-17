@@ -125,11 +125,9 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
-    //auto mapper = std::make_shared<Mapper>(this, newMapperId, std::move(mapperFunction), inputMutables, outputMutables);
-      std::shared_ptr<jsi::Function> funptr = std::make_shared<jsi::Function>(std::move(mapperFunction));
-      std::shared_ptr<Mapper> mptr = std::make_shared<Mapper>(this, newMapperId, funptr, inputMutables, outputMutables);
-    //new Mapper(this, newMapperId, funptr, inputMutables, outputMutables);
-    mapperRegistry->startMapper(mptr);
+    std::shared_ptr<jsi::Function> mapperFunctionPointer = std::make_shared<jsi::Function>(std::move(mapperFunction));
+    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(this, newMapperId, mapperFunctionPointer, inputMutables, outputMutables);
+    mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
   });
 
