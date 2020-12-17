@@ -42,7 +42,7 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   useEffect(() => {
     return () => {
       initRef.current.unregisterFromEvents();
-      initRef.current = undefined;
+      initRef.current = null;
     };
   }, []);
 
@@ -312,7 +312,8 @@ export function useAnimatedStyle(updater, dependencies) {
 
   useEffect(() => {
     return () => {
-      initRef.current = undefined;
+      initRef.current = null;
+      viewRef.current = null;
     };
   }, []);
 
@@ -373,7 +374,7 @@ export function useDerivedValue(processor, dependencies) {
 
   useEffect(() => {
     return () => {
-      initRef.current = undefined;
+      initRef.current = null;
     };
   }, []);
 
@@ -513,6 +514,13 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
