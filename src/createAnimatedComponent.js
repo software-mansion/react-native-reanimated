@@ -105,7 +105,7 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         let prop = this.props[key];
-        if (prop.current && prop.current instanceof WorkletEventHandler) {
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
           prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
@@ -121,7 +121,7 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         let prop = this.props[key];
-        if (prop.current && prop.current instanceof WorkletEventHandler) {
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
           prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
@@ -140,7 +140,7 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         let prop = this.props[key];
-        if (prop.current && prop.current instanceof WorkletEventHandler) {
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
           prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
@@ -154,7 +154,7 @@ export default function createAnimatedComponent(Component) {
       }
       for (const key in prevProps) {
         let prop = this.props[key];
-        if (prop.current && prop.current instanceof WorkletEventHandler) {
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
           prop = prop.current;
         }
         if (prop instanceof AnimatedEvent) {
@@ -172,7 +172,7 @@ export default function createAnimatedComponent(Component) {
 
       for (const key in this.props) {
         let prop = this.props[key];
-        if (prop.current && prop.current instanceof WorkletEventHandler) {
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
           prop = prop.current;
         }
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
@@ -375,7 +375,7 @@ export default function createAnimatedComponent(Component) {
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
         } else if (
-          value.current &&
+          value?.current &&
           value.current instanceof WorkletEventHandler
         ) {
           if (value.current.eventNames.length > 0) {
