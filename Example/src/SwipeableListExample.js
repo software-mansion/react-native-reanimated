@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -50,34 +50,133 @@ const data = [
 ];
 
 export default function SwipableList() {
+  function onRemove() {
+    alert('Removed');
+  }
 
   return (
     <View style={s.container}>
       <FlatList
         data={data}
-        renderItem={({ item }) => <ListItem />}
+        renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
         keyExtractor={(item) => item.id}
       />
     </View>
   );
 }
 
-function ListItem() {
-  const [isSwiping, setIsSwiping] = useState(false);
+const springConfig = (velocity) => {
+  'worklet';
+
+  return {
+    stiffness: 1000,
+    damping: 500,
+    mass: 3,
+    overshootClamping: true,
+    restDisplacementThreshold: 0.01,
+    restSpeedThreshold: 0.01,
+    velocity,
+  };
+};
+
+const timingConfig = {
+  duration: 400,
+  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+};
+
+function ListItem({ item, onRemove }) {
+  const isRemoving = useSharedValue(false);
+  const translateX = useSharedValue(0);
 
   const handler = useAnimatedGestureHandler({
     onStart: (evt, ctx) => {
-      runOnJS(setIsSwiping)(true);
+      ctx.startX = translateX.value;
+    },
+
+    onActive: (evt, ctx) => {
+      const nextTranslate = evt.translationX + ctx.startX;
+      translateX.value = Math.min(0, Math.max(nextTranslate, MAX_TRANSLATE));
+    },
+
+    onEnd: (evt) => {
+      if (evt.velocityX < -20) {
+        translateX.value = withSpring(
+          MAX_TRANSLATE,
+          springConfig(evt.velocityX)
+        );
+      } else {
+        translateX.value = withSpring(0, springConfig(evt.velocityX));
+      }
     },
   });
+
+  const styles = useAnimatedStyle(() => {
+    if (isRemoving.value) {
+      return {
+        height: withTiming(0, timingConfig, () => {
+          runOnJS(onRemove)();
+        }),
+        transform: [
+          {
+            translateX: withTiming(-windowDimensions.width, timingConfig),
+          },
+        ],
+      };
+    }
+
+    return {
+      height: 78,
+      transform: [
+        {
+          translateX: translateX.value,
+        },
+      ],
+    };
+  });
+
+  function handleRemove() {
+    isRemoving.value = true;
+  }
+
+  const removeButton = {
+    title: 'Delete',
+    backgroundColor: 'red',
+    color: 'white',
+    onPress: handleRemove,
+  };
 
   return (
     <View style={s.item}>
       <PanGestureHandler activeOffsetX={[-10, 10]} onGestureEvent={handler}>
-        <Animated.View >
-          <Text>list item</Text>
+        <Animated.View style={styles}>
+          <ListItemContent item={item} />
+
+          <View style={s.buttonsContainer}>
+            <Button item={removeButton} />
+          </View>
         </Animated.View>
       </PanGestureHandler>
+    </View>
+  );
+}
+
+function Button({ item }) {
+  return (
+    <View style={[s.button, { backgroundColor: item.backgroundColor }]}>
+      <TouchableOpacity onPress={item.onPress} style={s.buttonInner}>
+        <Text style={{ color: item.color }}>{item.title}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ListItemContent({ item }) {
+  return (
+    <View style={s.itemContainer}>
+      <View style={s.avatarContainer}>
+        <Text style={s.avatarText}>{item.title[0]}</Text>
+      </View>
+      <Text style={s.title}>{item.title}</Text>
     </View>
   );
 }
