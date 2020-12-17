@@ -1,12 +1,12 @@
 export default class MutableSet {
   __mutableSet = true;
-  setItems = [];
+  value = [];
 
   add = (item) => {
-    this.setItems.push(item);
+    this.value.push(item);
   };
 
   clear = () => {
-    this.setItems = [];
+    this.value = [];
   };
 }

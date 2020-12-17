@@ -32,11 +32,18 @@ export function useSharedValue(init, shouldRebuild = true) {
   return ref.current.mutable;
 }
 
-export function useMutableSet(init) {
+export function useMutableSet(init, handler, dependencies) {
   const ref = useRef(null);
   if (ref.current === null) {
     ref.current = makeMutableSet(init);
   }
+
+  useEffect(() => {
+    if (handler !== undefined) {
+      handler(ref.current);
+    }
+  }, dependencies);
+
   return ref.current;
 }
 

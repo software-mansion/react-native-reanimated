@@ -16,7 +16,7 @@ class MutableSet : public jsi::HostObject, public StoreUser {
   private:
   NativeReanimatedModule *module;
   std::mutex readWriteMutex;
-  std::set<std::shared_ptr<ShareableValue>> setItems;
+  std::set<std::shared_ptr<ShareableValue>> items;
   void init(jsi::Runtime &rt, const jsi::Value &value);
 
   public:
