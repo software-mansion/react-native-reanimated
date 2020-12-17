@@ -31,15 +31,6 @@ export function useSharedValue(init, shouldRebuild = true) {
   return ref.current.mutable;
 }
 
-export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
-  useEffect(() => {
-    const mapperId = startMapper(fun, inputs, outputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-  }, dependencies);
-}
-
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
   if (initRef.current === null) {
@@ -51,7 +42,7 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   useEffect(() => {
     return () => {
       initRef.current.unregisterFromEvents();
-      initRef.current = null;
+      initRef.current = undefined;
     };
   }, []);
 
@@ -379,6 +370,12 @@ export function useDerivedValue(processor, dependencies) {
       stopMapper(mapperId);
     };
   }, dependencies);
+
+  useEffect(() => {
+    return () => {
+      initRef.current = undefined;
+    };
+  }, []);
 
   return sharedValue;
 }
