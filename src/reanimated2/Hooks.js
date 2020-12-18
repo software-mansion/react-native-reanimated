@@ -47,15 +47,6 @@ export function useMutableSet(init, handler, dependencies) {
   return ref.current;
 }
 
-export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
-  useEffect(() => {
-    const mapperId = startMapper(fun, inputs, outputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-  }, dependencies);
-}
-
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
   if (initRef.current === null) {
@@ -63,7 +54,15 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
-  return initRef.current;
+
+  useEffect(() => {
+    return () => {
+      initRef.current.unregisterFromEvents();
+      initRef.current = null;
+    };
+  }, []);
+
+  return initRef;
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -327,6 +326,13 @@ export function useAnimatedStyle(updater, dependencies) {
     };
   }, dependencies);
 
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+      viewRef.current = null;
+    };
+  }, []);
+
   // check for invalid usage of shared values in returned object
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
@@ -381,6 +387,12 @@ export function useDerivedValue(processor, dependencies) {
       stopMapper(mapperId);
     };
   }, dependencies);
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
 
   return sharedValue;
 }
@@ -439,6 +451,13 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
@@ -511,6 +530,13 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
