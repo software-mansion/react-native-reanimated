@@ -148,7 +148,7 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
   return sv;
 }
 
-jsi::Value ShareableValue::	getValue(jsi::Runtime &rt) {
+jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (module->isUIRuntime(rt)) {
     if (remoteValue.expired()) {

@@ -71,7 +71,9 @@ std::vector<jsi::PropNameID> MutableSet::getPropertyNames(jsi::Runtime &rt) {
 }
 
 void MutableSet::init(jsi::Runtime &rt, const jsi::Value &value) {
-  if (value.isUndefined()) return;
+  if (value.isUndefined()) {
+    return;
+  }
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (object.isArray(rt)) {
@@ -79,14 +81,10 @@ void MutableSet::init(jsi::Runtime &rt, const jsi::Value &value) {
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         items.insert(ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module));
       }
-    }
-    else {
-      items.insert(ShareableValue::adapt(rt, value, module));
+      return;
     }
   }
-  else {
-    items.insert(ShareableValue::adapt(rt, value, module));
-  }
+  items.insert(ShareableValue::adapt(rt, value, module));
 }
 
 MutableSet::MutableSet(
