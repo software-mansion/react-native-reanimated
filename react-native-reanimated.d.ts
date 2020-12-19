@@ -2,7 +2,13 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentType } from 'react';
+  import {
+    ComponentClass,
+    ReactNode,
+    Component,
+    RefObject,
+    ComponentType,
+  } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -52,10 +58,15 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
+    type ExtrapolateParameter =
+      | Extrapolate
+      | { extrapolateLeft?: Extrapolate; extrapolateRight?: Extrapolate }
+      | undefined;
+
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
       outputRange: ReadonlyArray<Adaptable<number | string>>;
-      extrapolate?: Extrapolate;
+      extrapolate?: ExtrapolateParameter;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
     }
@@ -242,7 +253,10 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent<S extends object, P extends { style?: StyleProp<S>; }>(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
+    export function createAnimatedComponent<
+      S extends object,
+      P extends { style?: StyleProp<S> }
+    >(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
 
     // classes
     export {
@@ -421,7 +435,10 @@ declare module 'react-native-reanimated' {
     export function cancelAnimation<T extends SharedValue<SharedValueType>>(
       sharedValue: T
     ): void;
-    export function withDelay(delayMS: number, delayedAnimation: number): number;
+    export function withDelay(
+      delayMS: number,
+      delayedAnimation: number
+    ): number;
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
@@ -482,8 +499,10 @@ declare module 'react-native-reanimated' {
       effects: (dependencies: D) => void,
       deps?: DependencyList
     );
-                        
-    export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+    export type AnimatedStyleProp<T extends object> =
+      | AnimateStyle<T>
+      | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
       T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList): T;
