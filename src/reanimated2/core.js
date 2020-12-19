@@ -2,6 +2,7 @@
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { getWebTimestamp } from './platform-specific/web/Timestamp';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -95,7 +96,7 @@ function _getTimestamp() {
 export function getTimestamp() {
   'worklet';
   if (Platform.OS === 'web') {
-    return NativeReanimated.getTimestamp();
+    return getWebTimestamp();
   }
   return _getTimestamp();
 }
