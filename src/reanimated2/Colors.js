@@ -12,8 +12,8 @@ import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
 import { interpolate } from './interpolation';
 import { Extrapolate } from '../derived';
-import { webRGB } from './platform-specific/RNColors.web';
-import { colorTo32bitInt, convertToSigned } from './platform-specific/RNColors.android';
+import { webRGB } from './platform-specific/web/Colors';
+import { colorTo32bitInt, convertToSigned } from './platform-specific/android/Colors';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
