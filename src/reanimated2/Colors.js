@@ -424,7 +424,7 @@ export const blue = (c) => {
 export const rgbaColor = (r, g, b, alpha = 1) => {
   'worklet';
   if (Platform.OS === 'web' || !_WORKLET) {
-    return webRGB(r, g, b);
+    return webRGB(r, g, b, alpha);
   }
   const a = alpha * 255;
   const c =
