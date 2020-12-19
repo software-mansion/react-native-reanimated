@@ -34,7 +34,8 @@ function validateType(type) {
 
   if (
     (typeof type === 'object' &&
-      ((!type.extrapolateLeft || !type.extrapolateRight) &&
+      (!type.extrapolateLeft &&
+        !type.extrapolateRight &&
         Object.keys(type).length >= 1 &&
         type.constructor === Object)) ||
     (Object.keys(type).length > 2 && type.constructor === Object)
