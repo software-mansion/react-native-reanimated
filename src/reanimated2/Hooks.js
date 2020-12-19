@@ -15,6 +15,7 @@ import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { webEventAccess } from './platform-specific/web/eventAccess';
 
 export function useSharedValue(init, shouldRebuild = true) {
   const ref = useRef(null);
@@ -454,7 +455,9 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
 
   const handler = (event) => {
     'worklet';
-    event = Platform.OS === 'web' ? event.nativeEvent : event;
+    if (Platform.OS === 'web') {
+      event = webEventAccess(event);
+    }
 
     const FAILED = 1;
     const BEGAN = 2;
