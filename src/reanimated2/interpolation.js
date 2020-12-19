@@ -19,6 +19,70 @@ function getVal(config) {
   }
 }
 
+function validateType(type) {
+  'worklet';
+
+  if (
+    (typeof type === 'object' &&
+      (!type.extrapolateLeft || !type.extrapolateRight) &&
+      Object.keys(type).length >= 1 &&
+      type.constructor === Object) ||
+    (typeof type === 'object' &&
+      Object.keys(type).length > 2 &&
+      type.constructor === Object)
+  ) {
+    throw new Error(
+      `Reanimated: config object is not valid please provide valid config, for example:
+       interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      })`
+    );
+  }
+
+  if (
+    typeof type === 'object' &&
+    type.extrapolateLeft &&
+    (type.extrapolateLeft !== Extrapolate.EXTEND &&
+      type.extrapolateLeft !== Extrapolate.CLAMP &&
+      type.extrapolateLeft !== Extrapolate.IDENTITY)
+  ) {
+    throw new Error(
+      `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+       interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: 'clamp',
+      })`
+    );
+  }
+
+  if (
+    typeof type === 'object' &&
+    type.extrapolateRight &&
+    (type.extrapolateRight !== Extrapolate.EXTEND &&
+      type.extrapolateRight !== Extrapolate.CLAMP &&
+      type.extrapolateRight !== Extrapolate.IDENTITY)
+  ) {
+    throw new Error(
+      `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+       interpolate(value, [inputRange], [outputRange], {
+        extrapolateRight: 'clamp',
+      })`
+    );
+  }
+
+  if (
+    typeof type === 'string' &&
+    (type !== Extrapolate.EXTEND &&
+      type !== Extrapolate.CLAMP &&
+      type !== Extrapolate.IDENTITY)
+  ) {
+    throw new Error(
+      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+       interpolate(value, [inputRange], [outputRange], "clamp")`
+    );
+  }
+}
+
 function internalInterpolate(x, l, r, ll, rr, type) {
   'worklet';
   if (r - l === 0) return ll;
@@ -28,9 +92,11 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 
   const config = { type, coef, val, ll, rr, x };
 
+  validateType(type);
+
   // TODO: support default values in worklets:
   // e.g. function interplate(x, input, output, type = Extrapolate.CLAMP)
-  type = type || Extrapolate.EXTEND;
+  // type = type || Extrapolate.EXTEND;
 
   if (typeof type === 'object') {
     if (coef * val < coef * ll) {
