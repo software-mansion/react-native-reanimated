@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   interpolate,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
@@ -26,64 +26,81 @@ function ExtrapolationExample() {
       translation.y.value = ctx.startY + event.translationY;
     },
     onEnd: (_) => {
-      translation.x.value = withSpring(50);
-      translation.y.value = withSpring(0);
+      translation.x.value = withTiming(50);
+      translation.y.value = withTiming(0);
     },
   });
 
-  const stylez = useAnimatedStyle(() => {
-    const height = Math.round(
-      interpolate(translation.x.value, [0, 25], [75, 100], {
+  const button1Style = useAnimatedStyle(() => {
+    const translateX = Math.round(
+      interpolate(translation.y.value, [0, -75], [0, -75], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'extend',
       })
     );
 
     return {
-      transform: [
-        { translateX: translation.x.value },
-        { translateY: translation.y.value },
-      ],
-      height,
+      transform: [{ translateX }, { translateY: translation.y.value }],
+    };
+  });
+  const button2Style = useAnimatedStyle(() => {
+    const translateY = Math.round(
+      interpolate(translation.y.value, [0, -75], [0, -150], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      })
+    );
+
+    return {
+      transform: [{ translateY }],
     };
   });
 
-  return (
-    <View style={{ flex: 1, margin: 50 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-        }}>
-        <Text style={{ position: 'absolute' }}>
-          Extrapolate Left: Clamp | Extrapolate Right: Extend
-        </Text>
-      </View>
-      <View
-        style={{
-          alignSelf: 'center',
-          position: 'absolute',
-          borderWidth: 1,
-          height: 500,
-        }}
-      />
+  const button3Style = useAnimatedStyle(() => {
+    const translateX = Math.round(
+      interpolate(translation.y.value, [0, -75], [0, 75], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      })
+    );
 
+    return {
+      transform: [{ translateX }, { translateY: translation.y.value }],
+    };
+  });
+
+  const stylez = useAnimatedStyle(() => ({
+    transform: [{ translateY: translation.y.value }],
+  }));
+
+  return (
+    <>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View
           style={[
-            {
-              // position: 'absolute',
-              top: 200,
-              left: 120,
-              width: 40,
-              height: 40,
-              backgroundColor: '#001a72',
-            },
+            styles.circle,
+            { zIndex: 1, backgroundColor: '#001a72' },
             stylez,
           ]}
         />
       </PanGestureHandler>
-    </View>
+      <Animated.View style={[styles.circle, button1Style]} />
+      <Animated.View style={[styles.circle, button2Style]} />
+      <Animated.View style={[styles.circle, button3Style]} />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  circle: {
+    width: 50,
+    height: 50,
+    position: 'absolute',
+    top: 400,
+    alignSelf: 'center',
+    borderRadius: 25,
+    backgroundColor: 'red',
+  },
+});
 
 export default ExtrapolationExample;
