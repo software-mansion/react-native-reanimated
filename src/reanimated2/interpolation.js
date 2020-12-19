@@ -19,17 +19,25 @@ function getVal(config) {
   }
 }
 
+function isExtrapolate(value) {
+  'worklet';
+
+  return (
+    value !== Extrapolate.EXTEND &&
+    value !== Extrapolate.CLAMP &&
+    value !== Extrapolate.IDENTITY
+  );
+}
+
 function validateType(type) {
   'worklet';
 
   if (
     (typeof type === 'object' &&
-      (!type.extrapolateLeft || !type.extrapolateRight) &&
-      Object.keys(type).length >= 1 &&
-      type.constructor === Object) ||
-    (typeof type === 'object' &&
-      Object.keys(type).length > 2 &&
-      type.constructor === Object)
+      ((!type.extrapolateLeft || !type.extrapolateRight) &&
+        Object.keys(type).length >= 1 &&
+        type.constructor === Object)) ||
+    (Object.keys(type).length > 2 && type.constructor === Object)
   ) {
     throw new Error(
       `Reanimated: config object is not valid please provide valid config, for example:
@@ -43,9 +51,7 @@ function validateType(type) {
   if (
     typeof type === 'object' &&
     type.extrapolateLeft &&
-    (type.extrapolateLeft !== Extrapolate.EXTEND &&
-      type.extrapolateLeft !== Extrapolate.CLAMP &&
-      type.extrapolateLeft !== Extrapolate.IDENTITY)
+    isExtrapolate(type.extrapolateLeft)
   ) {
     throw new Error(
       `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
@@ -58,9 +64,7 @@ function validateType(type) {
   if (
     typeof type === 'object' &&
     type.extrapolateRight &&
-    (type.extrapolateRight !== Extrapolate.EXTEND &&
-      type.extrapolateRight !== Extrapolate.CLAMP &&
-      type.extrapolateRight !== Extrapolate.IDENTITY)
+    isExtrapolate(type.extrapolateRight)
   ) {
     throw new Error(
       `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
@@ -70,12 +74,7 @@ function validateType(type) {
     );
   }
 
-  if (
-    typeof type === 'string' &&
-    (type !== Extrapolate.EXTEND &&
-      type !== Extrapolate.CLAMP &&
-      type !== Extrapolate.IDENTITY)
-  ) {
+  if (typeof type === 'string' && isExtrapolate(type)) {
     throw new Error(
       `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
        interpolate(value, [inputRange], [outputRange], "clamp")`
