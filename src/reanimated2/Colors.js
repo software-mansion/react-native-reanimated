@@ -12,6 +12,8 @@ import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
 import { interpolate } from './interpolation';
 import { Extrapolate } from '../derived';
+import { webRGB } from './platform-specific/RNColors.web';
+import { colorTo32bitInt, convertToSigned } from './platform-specific/RNColors.android';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
@@ -422,7 +424,7 @@ export const blue = (c) => {
 export const rgbaColor = (r, g, b, alpha = 1) => {
   'worklet';
   if (Platform.OS === 'web' || !_WORKLET) {
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    return webRGB(r, g, b);
   }
   const a = alpha * 255;
   const c =
@@ -431,8 +433,7 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
     Math.round(g) * (1 << 8) +
     Math.round(b);
   if (Platform.OS === 'android') {
-    // on Android color is represented as signed 32 bit int
-    return c < (1 << 31) >>> 0 ? c : c - Math.pow(2, 32);
+    return colorTo32bitInt(c);
   }
   return c;
 };
@@ -576,11 +577,7 @@ export function processColor(color) {
   }
 
   if (Platform.OS === 'android') {
-    // Android use 32 bit *signed* integer to represent the color
-    // We utilize the fact that bitwise operations in JS also operates on
-    // signed 32 bit integers, so that we can use those to convert from
-    // *unsigned* to *signed* 32bit int that way.
-    normalizedColor = normalizedColor | 0x0;
+    normalizedColor = convertToSigned(normalizedColor);
   }
 
   return normalizedColor;
