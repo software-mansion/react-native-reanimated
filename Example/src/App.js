@@ -14,6 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import Reanimated1 from '../reanimated1/App';
 
+import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -30,6 +31,10 @@ import LiquidSwipe from './LiquidSwipe';
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
 const SCREENS = {
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: '🆕 Extrapolation Example',
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
