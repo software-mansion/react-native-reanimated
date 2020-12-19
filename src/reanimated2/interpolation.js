@@ -1,5 +1,24 @@
 import { Extrapolate } from '../derived/interpolate';
 
+function getVal(config) {
+  'worklet';
+
+  const { type, coef, val, ll, rr, x } = config;
+
+  switch (type) {
+    case Extrapolate.IDENTITY:
+      return x;
+    case Extrapolate.CLAMP:
+      if (coef * val < coef * ll) {
+        return ll;
+      }
+      return rr;
+    case Extrapolate.EXTEND:
+    default:
+      return val;
+  }
+}
+
 function internalInterpolate(x, l, r, ll, rr, type) {
   'worklet';
   if (r - l === 0) return ll;
@@ -7,24 +26,24 @@ function internalInterpolate(x, l, r, ll, rr, type) {
   const val = ll + progress * (rr - ll);
   const coef = rr >= ll ? 1 : -1;
 
+  const config = { type, coef, val, ll, rr, x };
+
   // TODO: support default values in worklets:
   // e.g. function interplate(x, input, output, type = Extrapolate.CLAMP)
   type = type || Extrapolate.EXTEND;
 
-  if (coef * val < coef * ll || coef * val > coef * rr) {
-    switch (type) {
-      case Extrapolate.IDENTITY:
-        return x;
-      case Extrapolate.CLAMP:
-        if (coef * val < coef * ll) {
-          return ll;
-        }
-        return rr;
-      case Extrapolate.EXTEND:
-      default:
-        return val;
+  if (typeof type === 'object') {
+    if (coef * val < coef * ll) {
+      return getVal({ ...config, type: type.extrapolateLeft });
+    } else if (coef * val > coef * rr) {
+      return getVal({ ...config, type: type.extrapolateRight });
     }
   }
+
+  if (coef * val < coef * ll || coef * val > coef * rr) {
+    return getVal(config);
+  }
+
   return val;
 }
 
@@ -35,6 +54,7 @@ export function interpolate(x, input, output, type) {
       'Reanimated: interpolate from V1 has been renamed to interpolateNode.'
     );
   }
+
   const length = input.length;
   let narrowedInput = [];
   if (x < input[0]) {

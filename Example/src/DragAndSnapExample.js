@@ -31,13 +31,20 @@ function DragAndSnap() {
   });
 
   const stylez = useAnimatedStyle(() => {
-    const H = Math.round(
-      interpolate(translation.x.value, [0, 300], [0, 360], 'clamp')
-    );
     const S = Math.round(
-      interpolate(translation.y.value, [0, 500], [100, 50], 'clamp')
+      interpolate(translation.y.value, [0, 100], [50, 100], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      })
     );
-    const backgroundColor = `hsl(${H},${S}%,50%)`;
+
+    // console.log("VALUE IS", translation.y.value);
+
+    // const S = Math.round(
+    //   interpolate(translation.y.value, [0, 100], [50, 100], 'clamp')
+    // );
+
+    const backgroundColor = `hsl(${S},${S}%,50%)`;
     return {
       transform: [
         {
@@ -47,6 +54,7 @@ function DragAndSnap() {
           translateY: translation.y.value,
         },
       ],
+      width: S * 2,
       backgroundColor,
     };
   });
@@ -57,6 +65,7 @@ function DragAndSnap() {
         <Animated.View
           style={[
             {
+              top: 200,
               width: 40,
               height: 40,
             },
