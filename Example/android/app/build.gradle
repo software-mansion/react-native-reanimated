@@ -73,8 +73,8 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    entryFile: "index.js",
-    enableHermes:true,
+        entryFile   : "index.js",
+        enableHermes: true,
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -115,6 +115,11 @@ android {
     signingConfigs {
     }
     buildTypes {
+        debug {
+            packagingOptions {
+                doNotStrip "**/**/*.so"
+            }
+        }
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -125,7 +130,7 @@ android {
         variant.outputs.each { output ->
             // For each separate APK per architecture, set a unique version code as described here:
             // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
-            def versionCodes = ["armeabi-v7a":1, "x86":2]
+            def versionCodes = ["armeabi-v7a": 1, "x86": 2]
             def abi = output.getFilter(OutputFile.ABI)
             if (abi != null) {  // null for the universal-debug, universal-release variants
                 output.versionCodeOverride =
@@ -140,16 +145,10 @@ android {
     }
 
     packagingOptions {
-        pickFirst 'lib/x86/libc++_shared.so'
-        pickFirst 'lib/x86_64/libjsc.so'
+        pickFirst 'lib/**/libc++_shared.so'
+        pickFirst 'lib/**/libreanimated.so'
         pickFirst 'lib/arm64-v8a/libjsc.so'
-        pickFirst 'lib/arm64-v8a/libc++_shared.so'
-        pickFirst 'lib/x86_64/libc++_shared.so'
-        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
-        pickFirst 'lib/armeabi-v7a/libreanimated.so'
-        pickFirst 'lib/x86_64/libreanimated.so'
-        pickFirst 'lib/x86/libreanimated.so'
-        pickFirst 'lib/arm64-v8a/libreanimated.so'
+        pickFirst 'lib/x86_64/libjsc.so'
     }
 }
 
@@ -166,16 +165,16 @@ dependencies {
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
-        exclude group:'com.facebook.fbjni'
+        exclude group: 'com.facebook.fbjni'
     }
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
-        exclude group:'com.facebook.flipper'
+        exclude group: 'com.facebook.flipper'
     }
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
-        exclude group:'com.facebook.flipper'
+        exclude group: 'com.facebook.flipper'
     }
 
-    def hermesPath = "../../node_modules/hermes-engine/android/";
+    def hermesPath = "../../node_modules/hermes-engine/android/"
     debugImplementation files(hermesPath + "hermes-debug.aar")
     releaseImplementation files(hermesPath + "hermes-release.aar")
 }
