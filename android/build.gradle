@@ -1,5 +1,8 @@
 def localProps = new Properties()
-localProps.load(new InputStreamReader(new FileInputStream(file("local.properties")), "UTF-8"))
+def localPropertiesFile = file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
+}
 def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
 
 buildscript {
