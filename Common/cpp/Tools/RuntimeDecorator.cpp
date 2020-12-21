@@ -25,7 +25,8 @@ void RuntimeDecorator::addLog(jsi::Runtime &rt) {
     return jsi::Value::undefined();
     };
   jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
-	rt.global().setProperty(rt, "_log", log);
+  rt.global().setProperty(rt, "_log", log);
+  rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
 }
 
 void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,

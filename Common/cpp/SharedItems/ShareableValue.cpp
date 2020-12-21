@@ -52,7 +52,7 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
-  bool isRNRuntime = !(module->isUIRuntime(rt));
+  bool isNotUIRuntime = !(module->isUIRuntime(rt));
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
     jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
@@ -99,8 +99,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
-        frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-        if (isRNRuntime) {
+        frozenObject = std::make_shared<FrozenObject>(rt, object, module, customThreadId);
+        if (isNotUIRuntime) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
@@ -124,8 +124,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
-      frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-      if (isRNRuntime) {
+      frozenObject = std::make_shared<FrozenObject>(rt, object, module, customThreadId);
+      if (isNotUIRuntime) {
         addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         freeze(rt, object);
       }
@@ -138,15 +138,15 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   }
 }
 
-std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
+std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType, const int customThreadId) {
+  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler, customThreadId));
   sv->adapt(rt, value, valueType);
   return sv;
 }
 
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
-  if (module->isUIRuntime(rt)) {
+  if (module->isUIRuntime(rt) || customThreadId != -1) {
     if (remoteValue.expired()) {
       auto ref = getWeakRef(rt);
       remoteValue = ref;
@@ -200,7 +200,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return array;
     }
     case ValueType::RemoteObjectType:
-     if (module->isUIRuntime(rt)) {
+      if (module->isUIRuntime(rt) || customThreadId != -1) { // todo check this(custom threads)
         remoteObject->maybeInitializeOnUIRuntime(rt);
       }
       return createHost(rt, remoteObject);
@@ -270,11 +270,13 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::WorkletFunctionType:
       auto module = this->module;
       auto frozenObject = this->frozenObject;
-      if (module->isUIRuntime(rt)) {
+      if (module->isUIRuntime(rt) || customThreadId != -1) {
         // when running on UI thread we prep a function
+        // for the custom threads we also just want to prepare
 
-        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));
-        std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(rt));
+        // cache will not work for custom threads because for every thread we have a different RT
+        std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject, customThreadId));
         auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
 
         auto clb = [=](

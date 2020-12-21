@@ -4,45 +4,76 @@ import Animated, {
   useAnimatedStyle,
   Easing,
   spawnThread,
+  runOnUI,
+  runOnJS,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
 
-export default function AnimatedStyleUpdateExample(props) {
-  const randomWidth = useSharedValue(10);
+export default function App() {
+  const sv = useSharedValue(0);
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezier(0.5, 0.01, 0, 1),
-  };
+  console.log('here 1');
+  // for(let i=0;i<3000000000;++i) {}
+  console.log('here 2');
+  /* * /
+  useAnimatedStyle(() => {
+    sv;
+    console.log('siema', _WORKLET)
+    return {};
+  })
+/*
+  runOnUI(() => {
+    'worklet';
+    sv.value = 1;
+    console.log('> run on ui #1 begin', _WORKLET);
+    // for(let i=0;i<3000000000;++i) {}
+    console.log('> run on ui #1 end', _WORKLET);
+  })();
 
-  const style = useAnimatedStyle(() => {
-    return {
-      width: withTiming(randomWidth.value, config),
-    };
-  });
-
+  console.log('here 3');
+/* */
+/* */
+  // thread 1
+  const vvv = 99;
   spawnThread(() => {
     'worklet';
-    console.log('huge calculations in progress...');
+    _log('> spawn thread #1 start ' + vvv);
+    sv.value = 1;
+    // vvv;// nie ma krasha
+    // sv.value; // jest krasz
+    // po prostu shared value nie jest przystosowane do innych watkow niz js/ui najwyrazniej...
+    // vvv;
+    for (let i = 0; i < 3000000000; ++i) {}
+    sv.value = 2;
+    _log('> spawn thread #1 end');
+    return Math.random() * 100;
   });
+  // thread 2
+  /* * /
+  spawnThread(() => {
+    'worklet';
+    _log('> spawn thread #2 start');
+    // sv.value = 3;
+    for (let i = 0; i < 3000000000; ++i) {}
+    _log('> spawn thread #2 end');
+    return Math.random() * 100;
+  });
+  */
+  //
 
+  setTimeout(() => {
+    console.log('here timeout');
+  }, 100);
+
+  console.log('here 4');
+/* */
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
+    <View>
       <Button
-        title="toggle"
+        title="read sv"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
+          console.log(sv.value)
         }}
       />
     </View>

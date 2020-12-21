@@ -4,11 +4,11 @@
 
 namespace reanimated {
 
-FrozenObject::FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeReanimatedModule *module) {
+FrozenObject::FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeReanimatedModule *module, const int customThreadId) : customThreadId(customThreadId) {
   auto propertyNames = object.getPropertyNames(rt);
   for (size_t i = 0, count = propertyNames.size(rt); i < count; i++) {
     auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    map[propertyName.utf8(rt)] = ShareableValue::adapt(rt, object.getProperty(rt, propertyName), module);
+    map[propertyName.utf8(rt)] = ShareableValue::adapt(rt, object.getProperty(rt, propertyName), module, ValueType::UndefinedType, customThreadId);
   }
 }
 

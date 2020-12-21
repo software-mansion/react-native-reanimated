@@ -42,6 +42,7 @@ private:
   std::shared_ptr<RemoteObjectInitializer> remoteObjectInitializer;
   std::shared_ptr<RemoteObject> remoteObject;
   std::vector<std::shared_ptr<ShareableValue>> frozenArray;
+  const int customThreadId;
 
   std::unique_ptr<jsi::Value> hostValue;
   std::weak_ptr<jsi::Value> remoteValue;
@@ -50,14 +51,14 @@ private:
 
   jsi::Object createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host);
 
-  ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s): StoreUser(s), module(module) {}
+  ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s, const int customThreadId = -1) : StoreUser(s), module(module), customThreadId(customThreadId) {}
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
 
 public:
   ValueType type = ValueType::UndefinedType;
   std::shared_ptr<MutableValue> mutableValue;
-  static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType objectType = ValueType::UndefinedType);
+  static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType = ValueType::UndefinedType, const int customThreadId = -1);
   jsi::Value getValue(jsi::Runtime &rt);
 
 };

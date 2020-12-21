@@ -80,11 +80,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
   std::shared_ptr<Scheduler> scheduler;
   
   struct Th {
-    std::string str;
+    std::unique_ptr<jsi::Runtime> rt;
     std::shared_ptr<std::thread> thread;
+    std::shared_ptr<ShareableValue> worklet;
   };
   int currentThreadId = 0;
-  std::unordered_map<int, Th> threads;
+  std::unordered_map<int, std::shared_ptr<Th>> threads;
 };
 
 } // namespace reanimated
