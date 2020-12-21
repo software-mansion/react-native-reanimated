@@ -12,13 +12,13 @@ using RequestFrameFunction = std::function<void(std::function<void(double)>)>;
 
 class RuntimeDecorator {
 public:
-  static void addNativeObjects(jsi::Runtime &rt,
+  static void decorateCustomThread(jsi::Runtime &rt);
+  static void decorateUI(jsi::Runtime &rt,
                                UpdaterFunction updater,
                                RequestFrameFunction requestFrame,
                                ScrollToFunction scrollTo,
                                MeasuringFunction measure,
                                TimeProviderFunction getCurrentTime);
-  static void addLog(jsi::Runtime &rt);
 };
 
 }

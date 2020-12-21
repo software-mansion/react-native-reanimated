@@ -79,7 +79,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     maybeRequestRender();
   };
 
-  RuntimeDecorator::addNativeObjects(*runtime,
+  RuntimeDecorator::decorateUI(*runtime,
                                      platformDepMethodsHolder.updaterFunction,
                                      requestAnimationFrame,
                                      platformDepMethodsHolder.scrollToFunction,
@@ -213,10 +213,10 @@ jsi::Value NativeReanimatedModule::spawnThread(jsi::Runtime &rt, const jsi::Valu
     std::unique_ptr<jsi::Runtime> customRuntime = runtimeObtainer();
     std::shared_ptr<Th> th = this->threads.at(threadId);
     th->rt = std::move(customRuntime);
-    RuntimeDecorator::addLog(*th->rt);
+    RuntimeDecorator::decorateCustomThread(*th->rt);
     jsi::Value result = jsi::Value::undefined();
 
-    jsi::Function func = workletShareable->getValue(*th->rt).asObject(*th->rt).asFunction(*th->rt);
+    jsi::Function func = workletShareable->getValue(*th->rt, threadId).asObject(*th->rt).asFunction(*th->rt);
     std::shared_ptr<jsi::Function> funcPtr = std::make_shared<jsi::Function>(std::move(func));
     try {
       result = funcPtr->callWithThis(*th->rt, *funcPtr);

@@ -144,9 +144,9 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
   return sv;
 }
 
-jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
+jsi::Value ShareableValue::getValue(jsi::Runtime &rt, const int customThreadId) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
-  if (module->isUIRuntime(rt) || customThreadId != -1) {
+  if (module->isUIRuntime(rt)) {
     if (remoteValue.expired()) {
       auto ref = getWeakRef(rt);
       remoteValue = ref;
@@ -157,7 +157,11 @@ jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
     }
     return jsi::Value(rt, *remoteValue.lock());
   } else {
-    if (hostValue.get() == nullptr) {
+    std::string s = hostValue.get() == nullptr ? "true" : "false";
+    if (hostValue.get() == nullptr || customThreadId != -1) {
+      // recreate objects for custom threads, because for every one of them
+      // there is a separate RT - we have to avoid errors caused by
+      // accessing the value created with a different RT
       hostValue = std::make_unique<jsi::Value>(rt, toJSValue(rt));
     }
     return jsi::Value(rt, *hostValue);
@@ -168,9 +172,9 @@ jsi::Object ShareableValue::createHost(jsi::Runtime &rt, std::shared_ptr<jsi::Ho
   return jsi::Object::createFromHostObject(rt, host);
 }
 
-jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> frozenObject) {
+jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> frozenObject, const int customThreadId) {
   jsi::Object __reanimatedHiddenHost = jsi::Object::createFromHostObject(rt, frozenObject);
-  jsi::Object obj = frozenObject->shallowClone(rt);
+  jsi::Object obj = frozenObject->shallowClone(rt, customThreadId);
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
   addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
@@ -191,7 +195,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::StringType:
       return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
     case ValueType::ObjectType:
-      return createFrozenWrapper(rt, frozenObject);
+      return createFrozenWrapper(rt, frozenObject, customThreadId);
     case ValueType::ArrayType: {
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {
@@ -274,7 +278,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // when running on UI thread we prep a function
         // for the custom threads we also just want to prepare
 
-        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(rt));
+        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(rt, customThreadId));
         // cache will not work for custom threads because for every thread we have a different RT
         std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject, customThreadId));
         auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
@@ -334,7 +338,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           retain_this->module->scheduler->scheduleOnUI([retain_this, params] {
             NativeReanimatedModule *module = retain_this->module;
             jsi::Runtime &rt = *module->runtime.get();
-            auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
+            auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject, retain_this->customThreadId).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
             std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
             

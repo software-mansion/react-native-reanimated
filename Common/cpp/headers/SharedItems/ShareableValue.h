@@ -59,8 +59,7 @@ public:
   ValueType type = ValueType::UndefinedType;
   std::shared_ptr<MutableValue> mutableValue;
   static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType = ValueType::UndefinedType, const int customThreadId = -1);
-  jsi::Value getValue(jsi::Runtime &rt);
-
+  jsi::Value getValue(jsi::Runtime &rt, const int customThreadId = -1);
 };
 
 }

@@ -19,7 +19,7 @@ export default function App() {
   /* * /
   useAnimatedStyle(() => {
     sv;
-    console.log('siema', _WORKLET)
+    console.log('here', _WORKLET)
     return {};
   })
 /*
@@ -40,10 +40,6 @@ export default function App() {
     'worklet';
     _log('> spawn thread #1 start ' + vvv);
     sv.value = 1;
-    // vvv;// nie ma krasha
-    // sv.value; // jest krasz
-    // po prostu shared value nie jest przystosowane do innych watkow niz js/ui najwyrazniej...
-    // vvv;
     for (let i = 0; i < 3000000000; ++i) {}
     sv.value = 2;
     _log('> spawn thread #1 end');

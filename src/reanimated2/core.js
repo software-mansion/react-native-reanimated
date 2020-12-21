@@ -245,3 +245,20 @@ runOnUI(() => {
   };
   _setGlobalConsole(console);
 })();
+
+export function spawnThread(operations) {
+  const target = () => {
+    'worklet';
+    const console = {
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+
+    operations();
+  };
+
+  return NativeReanimated.spawnThread(target);
+}

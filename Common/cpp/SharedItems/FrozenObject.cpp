@@ -12,10 +12,11 @@ FrozenObject::FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeRe
   }
 }
 
-jsi::Object FrozenObject::shallowClone(jsi::Runtime &rt) {
+jsi::Object FrozenObject::shallowClone(jsi::Runtime &rt, const int customThreadId) {
+  this->customThreadId = (this->customThreadId == -1 && this->customThreadId != customThreadId) ? customThreadId : this->customThreadId;
   jsi::Object object(rt);
   for (auto prop : map) {
-    object.setProperty(rt, jsi::String::createFromUtf8(rt, prop.first), prop.second->getValue(rt));
+    object.setProperty(rt, jsi::String::createFromUtf8(rt, prop.first), prop.second->getValue(rt, customThreadId));
   }
   return object;
 }
