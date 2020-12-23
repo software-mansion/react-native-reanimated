@@ -51,7 +51,7 @@ export default function updateProps(viewDescriptor, updates, maybeViewRef) {
 
   if ('__mutableSet' in viewDescriptor) {
     let i = 0;
-    viewDescriptor.value.forEach((item) => {
+    viewDescriptor.mapper.value.forEach((item) => {
       updateSingleProps(item, updates, maybeViewRef?.current[i++]);
     });
   } else {

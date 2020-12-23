@@ -27,20 +27,6 @@ jsi::Value MutableSet::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     }
     return array;
   }
-  else if (propName == "add") {
-    return jsi::Function::createFromHostFunction(rt, name, 1,
-      [&module = module, &items = items, &readWriteMutex = readWriteMutex]
-      (facebook::jsi::Runtime &rt,
-       const facebook::jsi::Value &thisVal,
-       const facebook::jsi::Value *args,
-       size_t count
-      ) {
-        std::lock_guard<std::mutex> lock(readWriteMutex);
-        auto result = items.insert(ShareableValue::adapt(rt, std::move(args[0]), module));
-        return jsi::Value(result.second);
-      }
-    );
-  }
   else if (propName == "clear") {
     return jsi::Function::createFromHostFunction(rt, name, 0,
       [&items = items]
@@ -65,7 +51,6 @@ std::vector<jsi::PropNameID> MutableSet::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, std::string("__mutableSet")));
   result.push_back(jsi::PropNameID::forUtf8(rt, std::string("value")));
-  result.push_back(jsi::PropNameID::forUtf8(rt, std::string("add")));
   result.push_back(jsi::PropNameID::forUtf8(rt, std::string("clear")));
   return result;
 }

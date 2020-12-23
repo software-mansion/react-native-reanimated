@@ -77,6 +77,7 @@ export default function createAnimatedComponent(Component) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      this._detachStyleMapper();
     }
 
     componentDidMount() {
@@ -130,6 +131,10 @@ export default function createAnimatedComponent(Component) {
           prop.unregisterFromEvents();
         }
       }
+    }
+
+    _detachStyleMapper() {
+      // let { viewTag, viewName } = this._getViewDescriptor();
     }
 
     _reattachNativeEvents(prevProps) {
@@ -239,11 +244,7 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    _attachAnimatedStyles() {
-      let styles = Array.isArray(this.props.style)
-        ? this.props.style
-        : [this.props.style];
-      styles = flattenArray(styles);
+    _getViewDescriptor() {
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -257,8 +258,20 @@ export default function createAnimatedComponent(Component) {
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance.viewConfig?.uiViewClassName;
+      }
+      return { viewTag, viewName };
+    }
+
+    _attachAnimatedStyles() {
+      let styles = Array.isArray(this.props.style)
+        ? this.props.style
+        : [this.props.style];
+      styles = flattenArray(styles);
+      const { viewTag, viewName } = this._getViewDescriptor();
+      if (Platform.OS !== 'web') {
         // update UI props whitelist for this view
         if (this._hasReanimated2Props(styles)) {
+          const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
           adaptViewConfig(hostInstance.viewConfig);
         }
       }

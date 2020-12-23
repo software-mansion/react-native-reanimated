@@ -34,14 +34,37 @@ export function useSharedValue(init, shouldRebuild = true) {
 
 export function useMutableSet(init, handler, dependencies) {
   const ref = useRef(null);
+  const buffer = useRef(null);
   if (ref.current === null) {
-    ref.current = makeMutableSet(init);
+    buffer.current = {
+      batch: [],
+      waitForSync: false,
+    };
+    ref.current = {
+      __mutableSet: true,
+      mapper: makeMutableSet(init),
+      add: (item) => {
+        buffer.current.batch.push(item);
+
+        if (!buffer.current.waitForSync) {
+          buffer.current.waitForSync = true;
+          setImmediate(() => {
+            const items = ref.current.mapper.value;
+            ref.current.mapper.value = items.concat(buffer.current.batch);
+            buffer.current.waitForSync = false;
+          });
+        }
+      },
+    };
   }
 
   useEffect(() => {
     if (handler !== undefined) {
       handler(ref.current);
     }
+    return () => {
+      ref.current.mapper.clear();
+    };
   }, dependencies);
 
   return ref.current;
@@ -292,7 +315,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewDescriptor = useMutableSet();
+  const viewDescriptor = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef([]);
