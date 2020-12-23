@@ -9,7 +9,14 @@
  */
 
 const React = require('react');
-const { View, Text, Image, Animated, Platform, processColor } = require('react-native');
+const {
+  View,
+  Text,
+  Image,
+  Animated,
+  Platform,
+  processColor,
+} = require('react-native');
 
 function NOOP() {}
 
@@ -91,7 +98,7 @@ const Reanimated = {
   Clock: NOOP,
   Node: NOOP,
   Value: AnimatedValue,
-  
+
   EasingNode: {
     linear: NOOP,
     ease: NOOP,
@@ -117,7 +124,7 @@ const Reanimated = {
   },
 
   processColor,
-  
+
   add: (...vals) =>
     new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc + v)),
   sub: (...vals) =>
@@ -194,6 +201,7 @@ const Reanimated = {
   diff: NOOP,
   diffClamp: NOOP,
   interpolateNode: NOOP,
+  interpolateColors: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
@@ -213,6 +221,7 @@ const Reanimated = {
   proc: (cb) => cb,
 
   useCode: NOOP,
+  useValue: (a) => new AnimatedValue(a),
   createAnimatedComponent: (Component) => Component,
 };
 
