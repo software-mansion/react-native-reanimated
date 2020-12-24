@@ -227,6 +227,6 @@ Updating values | Using `value.setValue` method (which is an async call when the
 Reading values | Register listener with `value.addListener` to get all animated value updates. | By reading `.value` property you can access the current value stored in the Shared Value (both from the UI and React Native JS thread).
 Running animations | Use `Animated.spring`, `Animated.timing` (or others), pass Animated Value as an argument, and run `.start()` method to launch the animation. | Update `.value` prop as usual while wrapping the target with one of the animation utility methods (e.g., `withTiming`).
 Stopping animations | Hold the reference to the animation object returned by `Animated.timing` and similar, then call `stopAnimation()` method on it. | Use `cancelAnimation` method and pass the Shared Value that runs the animation.
-Interpolating | Use `interplate()` member method of Animated Value. | Use an `interpolate` method that takes a number and config similar to Animated's interpolate, then returns an interpolated number. This can be used along with `useDerivedValue` if you need a Shared Value that automatically tracks the interpolation of another Shared Value.
+Interpolating | Use `interpolate()` member method of Animated Value. | Use an `interpolate` method that takes a number and config similar to Animated's interpolate, then returns an interpolated number. This can be used along with `useDerivedValue` if you need a Shared Value that automatically tracks the interpolation of another Shared Value.
 
 
