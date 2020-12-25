@@ -476,7 +476,7 @@ declare module 'react-native-reanimated' {
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T,
       deps?: DependencyList
-    ): SharedValue<T>;
+    ): DerivedValue<T>;
 
     export function useAnimatedReaction<D>(
       dependencies: () => D,
