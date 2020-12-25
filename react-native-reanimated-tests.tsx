@@ -117,7 +117,8 @@ function DerivedValueTest() {
   const width = useDerivedValue(() => {
     return progress.value * 250;
   });
-
+  // @ts-expect-error width is readonly
+  width.value = 100;
   return (
     <Button title="Random" onPress={() => (progress.value = Math.random())} />
   );
