@@ -76,6 +76,9 @@ function runPropUpdates() {
   loopID += 1;
 }
 
+const scheduleUpdates =
+  Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
+
 export default class AnimatedNode {
   __nodeID;
   __lastLoopID = { '': -1 };
@@ -141,7 +144,7 @@ export default class AnimatedNode {
   __markUpdated() {
     UPDATED_NODES.push(this);
     if (!propUpdatesEnqueued) {
-      propUpdatesEnqueued = setImmediate(runPropUpdates);
+      propUpdatesEnqueued = scheduleUpdates(runPropUpdates);
     }
   }
 
