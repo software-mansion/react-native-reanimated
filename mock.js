@@ -234,9 +234,8 @@ module.exports = {
 
   default: {
     ...Reanimated,
-    ReanimatedV2Mocks: ReanimatedV2,
+    ...ReanimatedV2,
   },
-  ...ReanimatedV2,
 
   Transitioning: {
     View: createTransitioningComponent(View),
