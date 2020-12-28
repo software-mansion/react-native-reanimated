@@ -132,15 +132,6 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    _detachStyleMapper() {
-      const viewTag = this._getNativeViewTag();
-      this.styles.forEach((style) => {
-        if (style?.viewDescriptor) {
-          style.viewDescriptor.remove(viewTag);
-        }
-      });
-    }
-
     _reattachNativeEvents(prevProps) {
       const node = this._getEventViewRef();
       const attached = new Set();
@@ -253,7 +244,6 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
-      this.styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);

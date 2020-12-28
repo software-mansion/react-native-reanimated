@@ -110,9 +110,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         frozenArray.push_back(adapt(rt, array.getValueAtIndex(rt, i), module));
       }
-        size_t size = array.size(rt);
-    }
-    else if (object.isHostObject<MutableValue>(rt)) {
+    } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
       mutableValue = object.getHostObject<MutableValue>(rt);
       adaptCache(rt, value);

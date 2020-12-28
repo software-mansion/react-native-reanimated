@@ -102,6 +102,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
   methodMap_["makeRemote"] = MethodMetadata{
       1, __hostFunction_NativeReanimatedModuleSpec_makeRemote};
 
+
   methodMap_["startMapper"] = MethodMetadata{
     3, __hostFunction_NativeReanimatedModuleSpec_startMapper};
   methodMap_["stopMapper"] = MethodMetadata{
