@@ -12,8 +12,8 @@ const ReanimatedV2 = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
 
-  withTiming: (toValue, config, cb) => {
-    cb && setTimeout(() => cb(true), config?.duration ?? 300);
+  withTiming: (toValue, _, cb) => {
+    cb && setTimeout(() => cb(true), 0);
     return toValue;
   },
   withSpring: (toValue, _, cb) => {
