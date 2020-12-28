@@ -58,7 +58,6 @@ function flattenArray(array) {
 }
 
 export default function createAnimatedComponent(Component) {
-  console.log('createAnimatedComponent');
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -72,14 +71,12 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
-      console.log('createAnimatedComponent - constructor');
     }
 
     componentWillUnmount() {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
-      this._detachStyleMapper();
     }
 
     componentDidMount() {
@@ -251,16 +248,6 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    _getNativeViewTag() {
-      if (Platform.OS === 'web') {
-        return findNodeHandle(this);
-      } else {
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
-        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        return hostInstance._nativeTag;
-      }
-    }
-
     _attachAnimatedStyles() {
       let styles = Array.isArray(this.props.style)
         ? this.props.style
@@ -293,10 +280,10 @@ export default function createAnimatedComponent(Component) {
       });
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptor) {
-        this.props.animatedProps.viewDescriptor.value = {
+        this.props.animatedProps.viewDescriptor.add({
           tag: viewTag,
           name: viewName,
-        };
+        });
       }
     }
 

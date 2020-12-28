@@ -30,23 +30,15 @@ export function useSharedValue(init, shouldRebuild = true) {
 
   return ref.current.mutable;
 }
-let cnt = 0;
-export function useMutableSet(init, handler, dependencies) {
-  cnt++;
-  console.log('useMutableSet', '(' + cnt + ')');
 
+export function useMutableSet(init, handler, dependencies) {
   let data = {
     __mutableSet: true,
     batchToInsert: [],
     waitForInsertSync: false,
-    batchToRemove: [],
-    waitForRemoveSync: false,
     mapper: makeMutable(init),
-    tagToIndex: {},
-    id: cnt,
 
     add: (item) => {
-      console.log('add', item.tag, '(' + data.id + ')');
       data.batchToInsert.push(item);
       if (!data.waitForInsertSync) {
         data.waitForInsertSync = true;
@@ -57,43 +49,6 @@ export function useMutableSet(init, handler, dependencies) {
           data.mapper.value = items;
           data.batchToInsert = [];
           data.waitForInsertSync = false;
-          items.forEach((item, index) => {
-            data.tagToIndex[item.tag] = index;
-          });
-          console.log(items);
-        });
-      }
-    },
-
-    remove: (viewTag) => {
-      console.log('remove', viewTag, data.id, '(' + data.id + ')');
-      if (!data) return;
-      data.batchToRemove.push(data.tagToIndex[viewTag]);
-
-      if (!data.waitForRemoveSync) {
-        data.waitForRemoveSync = true;
-        console.log(data);
-
-        setImmediate(() => {
-          const items = data.mapper.value;
-          if (!items) return;
-
-          const newCollention = [];
-          data.batchToRemove.forEach((toRemoveIndex) => {
-            items[toRemoveIndex] = null;
-          });
-          items.forEach((item) => {
-            if (item != null) {
-              newCollention.push(item);
-            }
-          });
-          newCollention.forEach((item, index) => {
-            data.tagToIndex[item.viewTag] = index;
-          });
-
-          data.value = newCollention;
-          data.batchToRemove = [];
-          data.waitForRemoveSync = false;
         });
       }
     },
@@ -104,7 +59,6 @@ export function useMutableSet(init, handler, dependencies) {
       handler(data);
     }
     return () => {
-      console.log('useMutableSet - useEffect', '(' + data.id + ')');
       data = null;
     };
   }, dependencies);
@@ -357,12 +311,6 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  // let viewDescriptor = useRef(null);
-  // if(viewDescriptor.current == null) {
-  //   viewDescriptor.current = useMutableSet([])
-  // }
-  // let descriptor = viewDescriptor.current
-  console.log('useAnimatedStyle');
   const viewDescriptor = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
@@ -399,7 +347,6 @@ export function useAnimatedStyle(updater, dependencies) {
 
   useEffect(() => {
     return () => {
-      console.log('useAnimatedStyle - useEffect');
       initRef.current = null;
       viewRef.current = null;
     };

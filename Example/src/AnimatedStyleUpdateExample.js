@@ -11,7 +11,7 @@ export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
 
   const config = {
-    duration: 500,
+    duration: 2000,
     easing: Easing.bezier(0.5, 0.01, 0, 1),
   };
 
