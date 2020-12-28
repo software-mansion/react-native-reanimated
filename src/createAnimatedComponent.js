@@ -58,6 +58,7 @@ function flattenArray(array) {
 }
 
 export default function createAnimatedComponent(Component) {
+  console.log('createAnimatedComponent');
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -71,6 +72,7 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      console.log('createAnimatedComponent - constructor');
     }
 
     componentWillUnmount() {
@@ -134,7 +136,12 @@ export default function createAnimatedComponent(Component) {
     }
 
     _detachStyleMapper() {
-      // let { viewTag, viewName } = this._getViewDescriptor();
+      const viewTag = this._getNativeViewTag();
+      this.styles.forEach((style) => {
+        if (style?.viewDescriptor) {
+          style.viewDescriptor.remove(viewTag);
+        }
+      });
     }
 
     _reattachNativeEvents(prevProps) {
@@ -244,7 +251,22 @@ export default function createAnimatedComponent(Component) {
       }
     }
 
-    _getViewDescriptor() {
+    _getNativeViewTag() {
+      if (Platform.OS === 'web') {
+        return findNodeHandle(this);
+      } else {
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+        return hostInstance._nativeTag;
+      }
+    }
+
+    _attachAnimatedStyles() {
+      let styles = Array.isArray(this.props.style)
+        ? this.props.style
+        : [this.props.style];
+      styles = flattenArray(styles);
+      this.styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -258,20 +280,8 @@ export default function createAnimatedComponent(Component) {
          * The name we're looking for is in the field named uiViewClassName.
          */
         viewName = hostInstance.viewConfig?.uiViewClassName;
-      }
-      return { viewTag, viewName };
-    }
-
-    _attachAnimatedStyles() {
-      let styles = Array.isArray(this.props.style)
-        ? this.props.style
-        : [this.props.style];
-      styles = flattenArray(styles);
-      const { viewTag, viewName } = this._getViewDescriptor();
-      if (Platform.OS !== 'web') {
         // update UI props whitelist for this view
         if (this._hasReanimated2Props(styles)) {
-          const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
@@ -317,6 +327,7 @@ export default function createAnimatedComponent(Component) {
       this._reattachNativeEvents(prevProps);
 
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
+      this._attachAnimatedStyles();
     }
 
     _setComponentRef = setAndForwardRef({

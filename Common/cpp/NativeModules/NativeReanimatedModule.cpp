@@ -114,11 +114,6 @@ jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value
   return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::makeMutableSet(jsi::Runtime &rt, const jsi::Value &value)
-{
-    return ShareableValue::adapt(rt, value, this, ValueType::SharedSet)->getValue(rt);
-}
-
 jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs)
 {
   static unsigned long MAPPER_ID = 1;

@@ -3,7 +3,6 @@
 #include "NativeReanimatedModule.h"
 #include "Logger.h"
 #include "MutableValue.h"
-#include "MutableSet.h"
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
 #include "FrozenObject.h"
@@ -76,9 +75,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
     mutableValue = std::make_shared<MutableValue>(rt, value, module, module->scheduler);
-  } else if (objectType == ValueType::SharedSet) {
-    type = ValueType::SharedSet;
-    mutableSet = std::make_shared<MutableSet>(rt, value, module, module->scheduler);
   } else if (value.isUndefined()) {
     type = ValueType::UndefinedType;
   } else if (value.isNull()) {
@@ -212,8 +208,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return createHost(rt, remoteObject);
     case ValueType::MutableValueType:
       return createHost(rt, mutableValue);
-    case ValueType::SharedSet:
-      return createHost(rt, mutableSet);
     case ValueType::HostFunctionType:
       if (hostRuntime == &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
