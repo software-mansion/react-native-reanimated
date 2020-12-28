@@ -364,7 +364,7 @@ export default function createAnimatedComponent(Component) {
           const processedStyle = styles.map((style) => {
             if (style && style.viewDescriptor) {
               // this is how we recognize styles returned by useAnimatedStyle
-              style.viewRef.current.push(this);
+              style.viewRef.push(this);
               return style.initial;
             } else {
               return style;

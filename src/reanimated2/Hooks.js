@@ -314,7 +314,7 @@ export function useAnimatedStyle(updater, dependencies) {
   const viewDescriptor = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
-  const viewRef = useRef([]);
+  let viewRef = [];
 
   // build dependencies
   if (dependencies === undefined) {
@@ -348,7 +348,7 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     return () => {
       initRef.current = null;
-      viewRef.current = null;
+      viewRef = null;
     };
   }, []);
 
