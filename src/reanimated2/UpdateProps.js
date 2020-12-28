@@ -50,9 +50,15 @@ export default function updateProps(viewDescriptor, updates, maybeViewRef) {
   };
 
   if ('__mutableSet' in viewDescriptor) {
-    viewDescriptor.mapper.value.forEach((item, index) => {
-      updateSingleProps(item, updates, maybeViewRef[index]);
-    });
+    if (Platform.OS !== 'web') {
+      viewDescriptor.mapper.value.forEach((item, index) => {
+        updateSingleProps(item, updates, null);
+      });
+    } else {
+      viewDescriptor.mapper.value.forEach((item, index) => {
+        updateSingleProps(item, updates, maybeViewRef[index]);
+      });
+    }
   } else {
     updateSingleProps(viewDescriptor.value, updates, maybeViewRef);
   }

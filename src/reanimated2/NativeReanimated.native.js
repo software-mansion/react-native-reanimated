@@ -15,10 +15,6 @@ const NativeReanimated = {
     return InnerNativeModule.makeShareable(value);
   },
 
-  makeMutableSet(value) {
-    return InnerNativeModule.makeMutableSet(value);
-  },
-
   makeMutable(value) {
     return InnerNativeModule.makeMutable(value);
   },

@@ -57,7 +57,6 @@ private:
 public:
   ValueType type = ValueType::UndefinedType;
   std::shared_ptr<MutableValue> mutableValue;
-  std::shared_ptr<MutableSet> mutableSet;
   static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType objectType = ValueType::UndefinedType);
   jsi::Value getValue(jsi::Runtime &rt);
 

@@ -5,7 +5,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
-import React, { useState } from 'react';
+import React from 'react';
 
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
@@ -21,8 +21,6 @@ export default function AnimatedStyleUpdateExample(props) {
     };
   });
 
-  const [count, setCount] = useState(false);
-
   return (
     <View
       style={{
@@ -35,25 +33,10 @@ export default function AnimatedStyleUpdateExample(props) {
           style,
         ]}
       />
-      {count && (
-        <Animated.View
-          style={[
-            { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-            style,
-          ]}
-        />
-      )}
-
       <Button
         title="toggle"
         onPress={() => {
           randomWidth.value = Math.random() * 350;
-        }}
-      />
-      <Button
-        title="toggle2"
-        onPress={() => {
-          setCount(!count);
         }}
       />
     </View>
