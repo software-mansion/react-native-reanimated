@@ -17,6 +17,7 @@ const {
   Platform,
   processColor,
 } = require('react-native');
+const ReanimatedV2 = require('./src/reanimated2/mock');
 
 function NOOP() {}
 
@@ -234,7 +235,10 @@ module.exports = {
 
   ...Reanimated,
 
-  default: Reanimated,
+  default: {
+    ...Reanimated,
+    ...ReanimatedV2,
+  },
 
   Transitioning: {
     View: createTransitioningComponent(View),
