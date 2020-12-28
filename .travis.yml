@@ -52,10 +52,10 @@ jobs:
       os: osx
       xcode_workspace: './ios/ReanimatedExample.xcworkspace'
       xcode_scheme: ReanimatedExample
-      xcode_sdk: iphonesimulator9.0
-      osx_image: xcode10.1
+      xcode_sdk: iphonesimulator12.4
+      osx_image: xcode12.2
       podfile: './ios/Podfile'
-      xcode_destination: platform=iOS Simulator,OS=11.4,name=iPhone X
+      xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
       env: NODE_VERSION=10.15.3
 
       branches:
@@ -80,7 +80,7 @@ jobs:
         - cd ios && pod install && cd ..
 
       script:
-        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -quiet |  egrep '^(/.+:[0-9+:[0-9]+:.error:|fatal|===)' || [[ $? == 1 ]] | uniq && exit ${PIPESTATUS[0]}
+        - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -quiet | xcpretty
 
     - language: node_js
       node_js:

@@ -8,7 +8,7 @@ class AnimatedBlock extends AnimatedNode {
 
   constructor(array) {
     invariant(
-      array.every(el => el instanceof AnimatedNode),
+      array.every((el) => el instanceof AnimatedNode),
       `Reanimated: Animated.block node argument should be an array with elements of type AnimatedNode. One or more of them are not AnimatedNodes`
     );
     super({ type: 'block', block: array }, array);
@@ -21,7 +21,7 @@ class AnimatedBlock extends AnimatedNode {
 
   __onEvaluate() {
     let result;
-    this._array.forEach(node => {
+    this._array.forEach((node) => {
       result = val(node);
     });
     return result;
@@ -47,6 +47,6 @@ function nodify(v) {
 
 export function adapt(v) {
   return Array.isArray(v)
-    ? new AnimatedBlock(v.map(node => adapt(node)))
+    ? new AnimatedBlock(v.map((node) => adapt(node)))
     : nodify(v);
 }

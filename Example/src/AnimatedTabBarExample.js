@@ -5,7 +5,7 @@ import Animated, {
   useDerivedValue,
   interpolate,
   Extrapolate,
-  delay,
+  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 import {
@@ -132,7 +132,7 @@ function ActiveIcon({ item, index, activeIndex, width }) {
     return {
       transform: [
         {
-          translateY: delay(isActive ? 150 : 0, withTiming(yOffset)),
+          translateY: withDelay(isActive ? 150 : 0, withTiming(yOffset)),
         },
       ],
     };

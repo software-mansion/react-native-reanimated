@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   withSpring,
   useAnimatedStyle,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import { Header } from 'react-navigation-stack';
+
+const windowHeight = Dimensions.get('window').height - Header.HEIGHT;
+const size = 40;
 
 function ScrollExample() {
   const transY = useSharedValue(0);
@@ -62,15 +66,22 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
   },
-  half: { flex: 1 },
-  scroll: { flex: 1, backgroundColor: 'yellow' },
+  half: {
+    flex: 1,
+    height: Platform.OS === 'web' ? windowHeight : undefined,
+    overflow: 'hidden',
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'yellow',
+  },
   box: {
     alignSelf: 'center',
     backgroundColor: 'black',
   },
   placeholder: {
-    width: 40,
-    height: 40,
+    width: size,
+    height: size,
     backgroundColor: 'brown',
     marginVertical: 300,
   },

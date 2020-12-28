@@ -7,10 +7,11 @@ import AnimatedNode from './core/AnimatedNode';
 import AnimatedValue from './core/AnimatedValue';
 import { createOrReusePropsNode } from './core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
+import setAndForwardRef from './setAndForwardRef';
 
 import invariant from 'fbjs/lib/invariant';
-
-const setAndForwardRef = require('react-native/Libraries/Utilities/setAndForwardRef');
+import { adaptViewConfig } from './ConfigHelper';
+import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 
 const NODE_MAPPING = new Map();
 
@@ -35,6 +36,25 @@ function hasAnimatedNodes(value) {
     return Object.keys(value).some((key) => hasAnimatedNodes(value[key]));
   }
   return false;
+}
+
+function flattenArray(array) {
+  if (!Array.isArray(array)) {
+    return array;
+  }
+  const resultArr = [];
+
+  const _flattenArray = (arr) => {
+    arr.forEach((item) => {
+      if (Array.isArray(item)) {
+        _flattenArray(item);
+      } else {
+        resultArr.push(item);
+      }
+    });
+  };
+  _flattenArray(array);
+  return resultArr;
 }
 
 export default function createAnimatedComponent(Component) {
@@ -84,7 +104,10 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(node);
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
@@ -97,7 +120,10 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
         } else if (prop instanceof WorkletEventHandler) {
@@ -113,7 +139,10 @@ export default function createAnimatedComponent(Component) {
       let viewTag;
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
         } else if (
@@ -124,7 +153,10 @@ export default function createAnimatedComponent(Component) {
         }
       }
       for (const key in prevProps) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
@@ -139,7 +171,10 @@ export default function createAnimatedComponent(Component) {
       }
 
       for (const key in this.props) {
-        const prop = this.props[key];
+        let prop = this.props[key];
+        if (prop?.current && prop.current instanceof WorkletEventHandler) {
+          prop = prop.current;
+        }
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
@@ -205,19 +240,55 @@ export default function createAnimatedComponent(Component) {
     }
 
     _attachAnimatedStyles() {
-      const styles = Array.isArray(this.props.style)
+      let styles = Array.isArray(this.props.style)
         ? this.props.style
         : [this.props.style];
-      const viewTag = findNodeHandle(this);
+      styles = flattenArray(styles);
+      let viewTag, viewName;
+      if (Platform.OS === 'web') {
+        viewTag = findNodeHandle(this);
+        viewName = null;
+      } else {
+        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+        viewTag = hostInstance._nativeTag;
+        /**
+         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+         * The name we're looking for is in the field named uiViewClassName.
+         */
+        viewName = hostInstance.viewConfig?.uiViewClassName;
+        // update UI props whitelist for this view
+        if (this._hasReanimated2Props(styles)) {
+          adaptViewConfig(hostInstance.viewConfig);
+        }
+      }
+
       styles.forEach((style) => {
-        if (style && style.viewTag !== undefined) {
-          style.viewTag.value = viewTag;
+        if (style?.viewDescriptor) {
+          style.viewDescriptor.value = { tag: viewTag, name: viewName };
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps) {
-        this.props.animatedProps.viewTag.value = viewTag;
+      if (this.props.animatedProps?.viewDescriptor) {
+        this.props.animatedProps.viewDescriptor.value = {
+          tag: viewTag,
+          name: viewName,
+        };
       }
+    }
+
+    _hasReanimated2Props(flattenStyles) {
+      if (this.props.animatedProps?.viewDescriptor) {
+        return true;
+      }
+      if (this.props.style) {
+        for (const style of flattenStyles) {
+          if (style?.hasOwnProperty('viewDescriptor')) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     _detachPropUpdater() {
@@ -280,8 +351,11 @@ export default function createAnimatedComponent(Component) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map((style) => {
-            if (style && style.viewTag) {
+            if (style && style.viewDescriptor) {
               // this is how we recognize styles returned by useAnimatedStyle
+              if (style.viewRef.current === null) {
+                style.viewRef.current = this;
+              }
               return style.initial;
             } else {
               return style;
@@ -300,11 +374,16 @@ export default function createAnimatedComponent(Component) {
           // alltogether. Therefore we provide a dummy callback here to allow
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
-        } else if (value instanceof WorkletEventHandler) {
-          if (value.eventNames.length > 0) {
-            value.eventNames.forEach(
-              (eventName) => (props[eventName] = dummyListener)
-            );
+        } else if (
+          value?.current &&
+          value.current instanceof WorkletEventHandler
+        ) {
+          if (value.current.eventNames.length > 0) {
+            value.current.eventNames.forEach((eventName) => {
+              props[eventName] = value.current.listeners
+                ? value.current.listeners[eventName]
+                : dummyListener;
+            });
           } else {
             props[key] = dummyListener;
           }

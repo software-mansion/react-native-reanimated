@@ -9,8 +9,16 @@ import Animated, {
   Easing,
   useAnimatedRef,
   measure,
+  runOnJS,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View, Image, StatusBar } from 'react-native';
+import {
+  Dimensions,
+  StyleSheet,
+  View,
+  Image,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import {
   ScrollView,
   PanGestureHandler,
@@ -29,6 +37,8 @@ const IMAGE_SIZE =
 const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
+    height:
+      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
   },
 
   scrollContainer: {
@@ -93,7 +103,7 @@ function ListItem({ item, index, onPress }) {
       x.value = measurements.pageX;
       y.value = measurements.pageY - HEADER_HEIGHT;
 
-      handlePress();
+      runOnJS(handlePress)();
     },
   });
 
@@ -168,7 +178,9 @@ function ImageTransition({ activeImage, onClose }) {
             {
               duration: 16,
             },
-            onClose
+            () => {
+              runOnJS(onClose)();
+            }
           );
         });
 

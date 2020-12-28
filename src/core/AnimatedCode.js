@@ -13,7 +13,7 @@ function assertNodesNotNull(code, children, exec) {
   }
 }
 
-function Code({ exec, children, dependencies = [] }) {
+function Code({ exec, children, dependencies }) {
   const nodes = children || exec;
 
   let code = null;

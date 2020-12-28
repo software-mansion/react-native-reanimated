@@ -16,7 +16,7 @@ const boxes = [
     description: (
       <>
         Complexity reduced from tens to just a few methods. Try it out today:
-        Check out our <a href="docs/next/about">Documentation</a>.
+        Check out our <a href="docs/about">Documentation</a>.
       </>
     ),
   },
@@ -71,7 +71,7 @@ function Hero() {
                   'button button--primary button--lg',
                   styles.getStarted
                 )}
-                to={useBaseUrl('docs/next')}>
+                to={useBaseUrl('docs')}>
                 View Docs
               </Link>
               <Link
@@ -143,7 +143,7 @@ function BannerSection() {
                   'button button--primary button--lg',
                   styles.getStarted
                 )}
-                to={useBaseUrl('docs/next/installation')}>
+                to={useBaseUrl('docs/installation')}>
                 Getting Started Guide
               </Link>
             </div>
@@ -204,9 +204,9 @@ function Home() {
                 </div>
                 <p>
                   Or just go to{' '}
-                  <a href="docs/next/installation">Documentation page</a> to see
-                  how you can run it locally with React Native on both Android
-                  and iOS.
+                  <a href="docs/installation">Documentation page</a> to see how
+                  you can run it locally with React Native on both Android and
+                  iOS.
                 </p>
               </div>
             </div>

@@ -9,7 +9,14 @@
  */
 
 const React = require('react');
-const { View, Text, Image, Animated, Platform } = require('react-native');
+const {
+  View,
+  Text,
+  Image,
+  Animated,
+  Platform,
+  processColor,
+} = require('react-native');
 const ReanimatedV2 = require('./src/reanimated2/mock');
 
 function NOOP() {}
@@ -94,11 +101,31 @@ const Reanimated = {
   Node: NOOP,
   Value: AnimatedValue,
 
+  EasingNode: {
+    linear: NOOP,
+    ease: NOOP,
+    quad: NOOP,
+    cubic: NOOP,
+    poly: () => NOOP,
+    sin: NOOP,
+    circle: NOOP,
+    exp: NOOP,
+    elastic: () => NOOP,
+    back: () => NOOP,
+    bounce: () => NOOP,
+    bezier: () => NOOP,
+    in: () => NOOP,
+    out: () => NOOP,
+    inOut: () => NOOP,
+  },
+
   Extrapolate: {
     EXTEND: 'extend',
     CLAMP: 'clamp',
     IDENTITY: 'identity',
   },
+
+  processColor,
 
   add: (...vals) =>
     new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc + v)),
@@ -175,7 +202,8 @@ const Reanimated = {
   },
   diff: NOOP,
   diffClamp: NOOP,
-  interpolate: NOOP,
+  interpolateNode: NOOP,
+  interpolateColors: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
@@ -195,6 +223,7 @@ const Reanimated = {
   proc: (cb) => cb,
 
   useCode: NOOP,
+  useValue: (a) => new AnimatedValue(a),
   createAnimatedComponent: (Component) => Component,
 };
 
@@ -208,24 +237,6 @@ module.exports = {
     ReanimatedV2Mocks: ReanimatedV2,
   },
   ...ReanimatedV2,
-
-  EasingNode: {
-    linear: NOOP,
-    ease: NOOP,
-    quad: NOOP,
-    cubic: NOOP,
-    poly: () => NOOP,
-    sin: NOOP,
-    circle: NOOP,
-    exp: NOOP,
-    elastic: () => NOOP,
-    back: () => NOOP,
-    bounce: () => NOOP,
-    bezier: () => NOOP,
-    in: () => NOOP,
-    out: () => NOOP,
-    inOut: () => NOOP,
-  },
 
   Transitioning: {
     View: createTransitioningComponent(View),

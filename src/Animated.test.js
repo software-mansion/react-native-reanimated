@@ -6,7 +6,7 @@ import renderer from 'react-test-renderer';
 
 jest.mock('./ReanimatedEventEmitter');
 jest.mock('./ReanimatedModule');
-jest.mock('./reanimated2/NativeReanimated.js');
+jest.mock('./reanimated2/NativeReanimated');
 jest.mock('./derived/evaluateOnce');
 jest.mock('./core/AnimatedProps');
 
@@ -19,7 +19,7 @@ describe('Reanimated backward compatible API', () => {
     ReanimatedModule.getNumberOfNodes = () => numberOfNodes;
   });
 
-  const checkIfNodesGetDetachedCorrectly = animation => {
+  const checkIfNodesGetDetachedCorrectly = (animation) => {
     class TestComponent extends React.Component {
       constructor(props) {
         super(props);

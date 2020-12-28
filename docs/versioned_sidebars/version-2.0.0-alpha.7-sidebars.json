@@ -1,0 +1,138 @@
+{
+  "version-2.0.0-alpha.7/docs": [
+    {
+      "type": "category",
+      "label": "Fundamentals",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/about"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/installation"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/worklets"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/shared-values"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/animations"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/events"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/architecture"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/migration"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/web-support"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0-alpha.7/troubleshooting"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "API Reference",
+      "items": [
+        {
+          "type": "category",
+          "label": "Hooks",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useSharedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useAnimatedStyle"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useDerivedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useAnimatedScrollHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useAnimatedGestureHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useAnimatedRef"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/useAnimatedReaction"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withTiming"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withSpring"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withDecay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/cancelAnimation"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withDelay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withSequence"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/withRepeat"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Native methods",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/nativeMethods/measure"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0-alpha.7/api/nativeMethods/scrollTo"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

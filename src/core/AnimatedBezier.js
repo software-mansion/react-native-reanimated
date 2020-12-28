@@ -135,9 +135,7 @@ export default class AnimatedBezier extends AnimatedNode {
       value instanceof AnimatedNode,
       `Reanimated: Bezier node argument should be of type AnimatedNode but got ${value}`
     );
-    super({ type: 'bezier', mX1, mY1, mX2, mY2, input: value }, [
-      value,
-    ]);
+    super({ type: 'bezier', mX1, mY1, mX2, mY2, input: value }, [value]);
     this._value = value;
     this._bezier = bezier(mX1, mY1, mX2, mY2);
   }

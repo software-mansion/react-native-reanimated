@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.0.0-alpha.6",
+  "version": "2.0.0-rc.1",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -11,7 +11,7 @@
     "release": "npm login && release-it",
     "type:check": "tsc"
   },
-  "main": "lib/commonjs/Animated",
+  "main": "src/Animated.js",
   "module": "lib/module/Animated",
   "react-native": "src/Animated",
   "source": "src/Animated",
@@ -30,7 +30,10 @@
     "README.md",
     "react-native-reanimated.d.ts",
     "mock.js",
-    "plugin.js"
+    "plugin.js",
+    "!__snapshots__",
+    "!*.test.js",
+    "!*.test.js.map"
   ],
   "repository": {
     "type": "git",
@@ -48,7 +51,7 @@
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
-    "fbjs": "^1.0.0",
+    "fbjs": "^3.0.0",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
@@ -63,6 +66,11 @@
     "@babel/preset-typescript": "^7.7.4",
     "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
+    "@types/babel-types": "^7.0.9",
+    "@types/babel__core": "^7.1.12",
+    "@types/babel__generator": "^7.6.2",
+    "@types/babel__traverse": "^7.0.15",
+    "@types/jest": "^26.0.15",
     "@types/react-native": "^0.62.13",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
@@ -78,7 +86,7 @@
     "lint-staged": "^10.2.11",
     "prettier": "^1.13.7",
     "react": "^16.11.0",
-    "react-native": "0.63.0",
+    "react-native": "^0.63.2",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
     "release-it": "^13.1.1",

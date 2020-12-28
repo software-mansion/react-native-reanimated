@@ -1,10 +1,13 @@
+global._setGlobalConsole = (val) => {};
+
 export default {
   installCoreFunctions: () => {},
-  makeShareable: () => {},
+  makeShareable: (worklet) => worklet,
   makeMutable: () => {},
   makeRemote: () => {},
   startMapper: () => {},
   stopMapper: () => {},
   registerEventHandler: () => {},
   unregisterEventHandler: () => {},
+  getViewProp: () => {},
 };

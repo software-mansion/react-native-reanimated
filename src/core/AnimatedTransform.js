@@ -5,7 +5,7 @@ import deepEqual from 'fbjs/lib/areEqual';
 function sanitizeTransform(inputTransform) {
   const outputTransform = [];
   let hasAnimatedTransform = false;
-  inputTransform.forEach(transform => {
+  inputTransform.forEach((transform) => {
     for (const key in transform) {
       const value = transform[key];
       if (value instanceof AnimatedNode) {
@@ -27,7 +27,7 @@ function sanitizeTransform(inputTransform) {
 
 function extractAnimatedParentNodes(transform) {
   const parents = [];
-  transform.forEach(transform => {
+  transform.forEach((transform) => {
     for (const key in transform) {
       const value = transform[key];
       if (value instanceof AnimatedNode) {
@@ -64,7 +64,7 @@ class AnimatedTransform extends AnimatedNode {
   }
 
   __onEvaluate() {
-    return this._transform.map(transform => {
+    return this._transform.map((transform) => {
       const result = {};
       for (const key in transform) {
         const value = transform[key];

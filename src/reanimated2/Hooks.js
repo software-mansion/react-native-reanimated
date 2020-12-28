@@ -1,33 +1,34 @@
-import { useEffect, useRef } from 'react';
+/* global _frameTimestamp */
+import { useEffect, useRef, useCallback } from 'react';
 
 import WorkletEventHandler from './WorkletEventHandler';
-import { startMapper, stopMapper, makeMutable, makeRemote } from './core';
+import {
+  startMapper,
+  stopMapper,
+  makeMutable,
+  makeRemote,
+  requestFrame,
+  getTimestamp,
+} from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
+import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
-export function useSharedValue(init) {
+export function useSharedValue(init, shouldRebuild = true) {
   const ref = useRef(null);
   if (ref.current === null) {
     ref.current = {
       mutable: makeMutable(init),
       last: init,
     };
-  } else if (init !== ref.current.last) {
+  } else if (init !== ref.current.last && shouldRebuild) {
     ref.current.last = init;
     ref.current.mutable.value = init;
   }
 
   return ref.current.mutable;
-}
-
-export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
-  useEffect(() => {
-    const mapperId = startMapper(fun, inputs, outputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-  }, dependencies);
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
@@ -37,7 +38,15 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
-  return initRef.current;
+
+  useEffect(() => {
+    return () => {
+      initRef.current.unregisterFromEvents();
+      initRef.current = null;
+    };
+  }, []);
+
+  return initRef;
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -53,7 +62,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
       );
       return animatedProp;
     }
-    if (typeof animatedProp === 'object' && animatedProp.animation) {
+    if (typeof animatedProp === 'object' && animatedProp.onFrame) {
       const animation = animatedProp;
 
       let value = animation.current;
@@ -62,19 +71,26 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (lastValue.animation !== undefined) {
-            // it was an animation before, copy its state
-            value = lastAnimation.current;
+          } else if (lastValue.onFrame !== undefined) {
+            if (lastAnimation?.current) {
+              // it was an animation before, copy its state
+              value = lastAnimation.current;
+            } else if (lastValue?.current) {
+              // it was initialized
+              value = lastValue.current;
+            }
           }
         } else {
-          // previously it was a plan value, just set it as starting point
+          // previously it was a plain value, just set it as starting point
           value = lastValue;
         }
       }
 
       animation.callStart = (timestamp) => {
-        animation.start(animation, value, timestamp, lastAnimation);
+        animation.onStart(animation, value, timestamp, lastAnimation);
       };
+      animation.callStart(getTimestamp());
+      animation.callStart = null;
     } else if (typeof animatedProp === 'object') {
       // it is an object
       Object.keys(animatedProp).forEach((key) =>
@@ -101,12 +117,12 @@ function runAnimations(animation, timestamp, key, result) {
         }
       });
       return allFinished;
-    } else if (typeof animation === 'object' && animation.animation) {
+    } else if (typeof animation === 'object' && animation.onFrame) {
       if (animation.callStart) {
         animation.callStart(timestamp);
         animation.callStart = null;
       }
-      const finished = animation.animation(animation, timestamp);
+      const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
@@ -139,7 +155,7 @@ function isAnimated(prop) {
       return prop.some(isAnimated);
     }
     if (typeof prop === 'object') {
-      if (prop.animation) {
+      if (prop.onFrame) {
         return true;
       }
       return Object.keys(prop).some((key) => isAnimated(prop[key]));
@@ -176,10 +192,9 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewTag, updater, state) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
-
   const newValues = updater() || {};
   const oldValues = state.last;
 
@@ -225,11 +240,11 @@ function styleUpdater(viewTag, updater, state) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewTag.value, updates);
+      updateProps(viewDescriptor, updates, maybeViewRef);
     }
 
     if (!allFinished) {
-      requestAnimationFrame(frame);
+      requestFrame(frame);
     } else {
       state.isAnimationRunning = false;
     }
@@ -240,7 +255,11 @@ function styleUpdater(viewTag, updater, state) {
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      requestAnimationFrame(frame);
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
     }
   } else {
     state.isAnimationCancelled = true;
@@ -252,14 +271,15 @@ function styleUpdater(viewTag, updater, state) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewTag.value, diff);
+    updateProps(viewDescriptor, diff, maybeViewRef);
   }
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewTag = useSharedValue(-1);
+  const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
+  const viewRef = useRef(null);
 
   // build dependencies
   if (dependencies === undefined) {
@@ -277,17 +297,25 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   const { remoteState, initial } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewTag, updater, remoteState);
+      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
       stopMapper(mapperId);
     };
   }, dependencies);
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+      viewRef.current = null;
+    };
+  }, []);
 
   // check for invalid usage of shared values in returned object
   let wrongKey;
@@ -306,8 +334,9 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   return {
-    viewTag,
+    viewDescriptor,
     initial,
+    viewRef,
   };
 }
 
@@ -342,6 +371,12 @@ export function useDerivedValue(processor, dependencies) {
       stopMapper(mapperId);
     };
   }, dependencies);
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
 
   return sharedValue;
 }
@@ -400,6 +435,13 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
@@ -410,51 +452,55 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   );
   initRef.current.savedDependencies = dependencies;
 
-  return useEvent(
-    (event) => {
-      'worklet';
-      const FAILED = 1;
-      const BEGAN = 2;
-      const CANCELLED = 3;
-      const ACTIVE = 4;
-      const END = 5;
+  const handler = (event) => {
+    'worklet';
+    event = Platform.OS === 'web' ? event.nativeEvent : event;
 
-      if (event.state === BEGAN && handlers.onStart) {
-        handlers.onStart(event, context);
-      }
-      if (event.state === ACTIVE && handlers.onActive) {
-        handlers.onActive(event, context);
-      }
-      if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
-        handlers.onEnd(event, context);
-      }
-      if (
-        event.oldState === BEGAN &&
-        event.state === FAILED &&
-        handlers.onFail
-      ) {
-        handlers.onFail(event, context);
-      }
-      if (
-        event.oldState === ACTIVE &&
-        event.state === CANCELLED &&
-        handlers.onCancel
-      ) {
-        handlers.onCancel(event, context);
-      }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state !== BEGAN &&
-        event.state !== ACTIVE &&
-        handlers.onFinish
-      ) {
-        handlers.onFinish(
-          event,
-          context,
-          event.state === CANCELLED || event.state === FAILED
-        );
-      }
-    },
+    const FAILED = 1;
+    const BEGAN = 2;
+    const CANCELLED = 3;
+    const ACTIVE = 4;
+    const END = 5;
+
+    if (event.state === BEGAN && handlers.onStart) {
+      handlers.onStart(event, context);
+    }
+    if (event.state === ACTIVE && handlers.onActive) {
+      handlers.onActive(event, context);
+    }
+    if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
+      handlers.onEnd(event, context);
+    }
+    if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
+      handlers.onFail(event, context);
+    }
+    if (
+      event.oldState === ACTIVE &&
+      event.state === CANCELLED &&
+      handlers.onCancel
+    ) {
+      handlers.onCancel(event, context);
+    }
+    if (
+      (event.oldState === BEGAN || event.oldState === ACTIVE) &&
+      event.state !== BEGAN &&
+      event.state !== ACTIVE &&
+      handlers.onFinish
+    ) {
+      handlers.onFinish(
+        event,
+        context,
+        event.state === CANCELLED || event.state === FAILED
+      );
+    }
+  };
+
+  if (Platform.OS === 'web') {
+    return handler;
+  }
+
+  return useEvent(
+    handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     dependenciesDiffer
   );
@@ -468,6 +514,13 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
@@ -562,14 +615,17 @@ export function useAnimatedRef() {
  * the first worklet defines the inputs, in other words on which shared values change will it be called.
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
-export function useAnimatedReaction(prepare, react) {
-  const inputsRef = useRef(null);
-  if (inputsRef.current === null) {
-    inputsRef.current = {
-      inputs: Object.values(prepare._closure),
-    };
+export function useAnimatedReaction(prepare, react, dependencies) {
+  if (dependencies === undefined) {
+    dependencies = [
+      Object.values(prepare._closure),
+      Object.values(react._closure),
+      prepare.__workletHash,
+      react.__workletHash,
+    ];
+  } else {
+    dependencies.push(prepare.__workletHash, react.__workletHash);
   }
-  const { inputs } = inputsRef.current;
 
   useEffect(() => {
     const fun = () => {
@@ -577,9 +633,17 @@ export function useAnimatedReaction(prepare, react) {
       const input = prepare();
       react(input);
     };
-    const mapperId = startMapper(fun, inputs, []);
+    const mapperId = startMapper(fun, Object.values(prepare._closure), []);
     return () => {
       stopMapper(mapperId);
     };
-  }, inputs);
+  }, dependencies);
+}
+
+export function useWorkletCallback(fun, deps) {
+  return useCallback(fun, deps);
+}
+
+export function createWorklet(fun) {
+  return fun;
 }

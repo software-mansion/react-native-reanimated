@@ -7,7 +7,7 @@ class AnimatedConcat extends AnimatedNode {
   constructor(input) {
     invariant(
       input.every(
-        el =>
+        (el) =>
           el instanceof AnimatedNode ||
           typeof el === 'number' ||
           typeof el === 'string'
