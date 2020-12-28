@@ -32,6 +32,11 @@ include $(BUILD_SHARED_LIBRARY)
 # start | build empty library which is needed by CallInvokerHolderImpl.java
 include $(CLEAR_VARS)
 
+# Don't strip debug builds
+ifeq ($(NATIVE_DEBUG), true)
+    cmd-strip :=
+endif
+
 LOCAL_MODULE := turbomodulejsijni
 include $(BUILD_SHARED_LIBRARY)
 # end
