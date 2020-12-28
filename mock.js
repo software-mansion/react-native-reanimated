@@ -25,6 +25,7 @@ function simulateCallbackFactory(...params) {
   return (callback) => {
     callback &&
       setTimeout(() => {
+        // user defined callback
         // eslint-disable-next-line standard/no-callback-literal
         callback(...params);
       }, 0);
