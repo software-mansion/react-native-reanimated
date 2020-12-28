@@ -1,7 +1,6 @@
 /* eslint-disable standard/no-callback-literal */
-const { Easing } = require('./Easing');
-
 const NOOP = () => {};
+const ID = (t) => t;
 
 const ReanimatedV2 = {
   useSharedValue: (value) => ({ value }),
@@ -36,7 +35,23 @@ const ReanimatedV2 = {
     pageX: 0,
     pageY: 0,
   }),
-  Easing,
+  Easing: {
+    linear: ID,
+    ease: ID,
+    quad: ID,
+    cubic: ID,
+    poly: ID,
+    sin: ID,
+    circle: ID,
+    exp: ID,
+    elastic: ID,
+    back: ID,
+    bounce: ID,
+    bezier: ID,
+    in: ID,
+    out: ID,
+    inOut: ID,
+  },
 };
 
 module.exports = {
