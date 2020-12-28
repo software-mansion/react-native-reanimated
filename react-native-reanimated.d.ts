@@ -73,7 +73,8 @@ declare module 'react-native-reanimated' {
     export type SharedValue<T extends SharedValueType> = {
       value: T;
     };
-
+    export type DerivedValue<T extends SharedValueType> = Readonly<SharedValue<T>>;
+    
     export type Mapping = { [key: string]: Mapping } | Adaptable<any>;
     export type Adaptable<T> =
       | T
@@ -475,7 +476,7 @@ declare module 'react-native-reanimated' {
     export function useDerivedValue<T extends SharedValueType>(
       processor: () => T,
       deps?: DependencyList
-    ): SharedValue<T>;
+    ): DerivedValue<T>;
 
     export function useAnimatedReaction<D>(
       dependencies: () => D,
