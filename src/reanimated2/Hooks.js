@@ -9,6 +9,7 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
+  makeShareable,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
@@ -273,6 +274,11 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   if (Object.keys(diff).length !== 0) {
     updateProps(viewDescriptor, diff, maybeViewRef);
   }
+}
+
+export function UASMinimal(updater) {
+  const mapperId = startMapper(updater, [], []);
+  stopMapper(mapperId);
 }
 
 export function useAnimatedStyle(updater, dependencies) {

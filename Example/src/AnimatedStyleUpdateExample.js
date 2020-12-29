@@ -1,44 +1,166 @@
-import Animated, {
-  useSharedValue,
-  withTiming,
+import {
   useAnimatedStyle,
-  Easing,
+  runOnJS,
+  makeShareable,
+  useSharedValue,
+  UASMinimal,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
-import React from 'react';
+import { View, Text, Button } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 
-export default function AnimatedStyleUpdateExample(props) {
-  const randomWidth = useSharedValue(10);
+function Zerooo() {
+  makeShareable(0);
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezier(0.5, 0.01, 0, 1),
-  };
+  return (<Text>Zerooo</Text>)
+}
 
-  const style = useAnimatedStyle(() => {
+export function OneMakeShareable() {
+  function sth() {}
+
+  class Temp1 {
+    constructor(fun) {
+      this.fun = fun;
+    }
+  }
+
+  const ctx = useRef(null);
+  if (ctx.current === null) {
+    const temp = new Temp1(sth);
+    ctx.current = {
+      t: makeShareable(temp),
+    };
+  }
+
+  useEffect(() => {
+    return () => {
+      ctx.current = undefined;
+    };
+  }, []);
+
+  return <Text>ONE</Text>;
+}
+
+function TwoUAS() {
+  function sth() {}
+  
+  class Temp2 {
+    constructor(fun) {
+      this.fun = fun;
+    }
+  }
+
+  const temp = new Temp2(sth)
+
+  UASMinimal(() => {
+    'worklet';
+    const x = temp;
+  });
+  /** /
+  useAnimatedStyle(() => {
+    runOnJS(temp.fun)();
     return {
-      width: withTiming(randomWidth.value, config),
+      width: 100,
     };
   });
+  /**/
+  return <Text>Two</Text>;
+}
+
+// leak
+const ThreeTest = () => {
+  function sth() {}
+
+  class Temp31 {
+    constructor(fun) {
+      this.fun = fun;
+    }
+  }
+
+  class Temp32 {
+    constructor(fun) {
+      this.fun = fun;
+    }
+  }
+
+  const tempc = new Temp31(sth);
+
+  useEffect(() => {
+    return () => {
+      // tempc.fun = null;
+      // tempc = null;
+    }
+  }, []);
+
+  const wrk = () => {
+    'worklet';
+    const t = tempc; // leak
+    // const o = new Temp32(sth); // no leak
+  };
+
+  let shrb = makeShareable(wrk);
+  shrb = null;
+
+  return <Text>Three</Text>;
+};
+
+// no leak
+const FourTest = () => {
+  function sth() {}
+
+  class Temp4 {
+    constructor(fun) {
+      this.fun = fun;
+    }
+  }
+
+  let shrb = makeShareable(() => {
+    'worklet';
+    const temp = new Temp4(sth);
+  });
+
+  shrb = null;
+
+  return <Text>Four</Text>;
+};
+
+export default function App() {
+  const [state, setState] = useState(0);
+
+  const states = [0, 3];
+  console.log('running example', state);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
+    <View>
       <Button
-        title="toggle"
+        title="change example"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
+          const currentIndex = states.indexOf(state);
+          const newIndex = (currentIndex + 1) % states.length;
+          setState(states[newIndex]);
         }}
       />
+      {states.map((item, index) => {
+        return (
+          <Button
+            key={index}
+            title={`set example to ${item}`}
+            onPress={() => {
+              setState(item);
+            }}
+          />
+        );
+      })}
+      {state === 0 ? (
+        <>
+          <Text>EMPTY</Text>
+        </>
+      ) : (
+        <></>
+      )}
+      {state === 1 ? <OneMakeShareable /> : <></>}
+      {state === 2 ? <TwoUAS /> : <></>}
+      {state === 3 ? <ThreeTest /> : <></>}
+      {state === 4 ? <FourTest /> : <></>}
     </View>
   );
 }

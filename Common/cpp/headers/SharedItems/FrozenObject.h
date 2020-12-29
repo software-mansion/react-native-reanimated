@@ -2,6 +2,7 @@
 
 #include "WorkletsCache.h"
 #include "SharedParent.h"
+#include "Logger.h"
 #include <jsi/jsi.h>
 
 using namespace facebook;
@@ -24,7 +25,7 @@ class FrozenObject : public jsi::HostObject {
 
   FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeReanimatedModule *module);
   jsi::Object shallowClone(jsi::Runtime &rt);
-  bool containsHostFunction = false;
+  bool containsHostFunction = true;
 };
 
 }

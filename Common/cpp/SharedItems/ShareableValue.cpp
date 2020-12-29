@@ -33,7 +33,7 @@ void addHiddenProperty(jsi::Runtime &rt,
 void freeze(jsi::Runtime &rt, jsi::Object &obj) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
-  freeze.call(rt, obj);
+  // freeze.call(rt, obj);
 }
 
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
@@ -179,7 +179,7 @@ jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> f
     addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
     addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
   }
-  return freeze.call(rt, obj);
+  return obj; //freeze.call(rt, obj);
 }
 
 jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
