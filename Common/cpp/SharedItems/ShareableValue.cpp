@@ -13,7 +13,7 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
 std::string CALLBACK_ERROR_SUFFIX = R"(
 
-Solution is:
+Possible solutions are:
 a) If you want to synchronously execute this method, mark it as a Worklet
 b) If you want to execute this method on the JS thread, wrap it using runOnJS )";
   
@@ -225,10 +225,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
           std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
           std::string exceptionMessage = "Tried to synchronously call ";
-          if(hostFunction->functionName == "") {
+          if(hostFunction->functionName.empty()) {
             exceptionMessage += "anonymous function";
-          }
-          else {
+          } else {
             exceptionMessage += "function {" + hostFunction->functionName + "}";
           }
           exceptionMessage += " from a different thread.\n\nOccurred in worklet location: ";
