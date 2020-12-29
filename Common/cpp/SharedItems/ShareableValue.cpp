@@ -6,7 +6,6 @@
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
 #include "FrozenObject.h"
-#include <jsi/jsi.h>
 
 namespace reanimated {
 
