@@ -11,13 +11,11 @@ namespace reanimated {
 
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
-std::string CALLBACK_ERROR_PREFIX = R"(
-Tried to synchronously call function {)";
-std::string CALLBACK_ERROR_SUFFIX = R"(} from a different thread.
-Solution is:
+std::string CALLBACK_ERROR_SUFFIX = R"(
+
+Possible solutions are:
 a) If you want to synchronously execute this method, mark it as a Worklet
-b) If you want to execute this method on the JS thread, wrap it using runOnJS
-)";
+b) If you want to execute this method on the JS thread, wrap it using runOnJS )";
   
 void addHiddenProperty(jsi::Runtime &rt,
                        jsi::Value &&value,
@@ -223,8 +221,21 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
             ) -> jsi::Value {
-          module->errorHandler->setError(CALLBACK_ERROR_PREFIX + hostFunction->functionName + CALLBACK_ERROR_SUFFIX);
+            
+          jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
+          std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
+          std::string exceptionMessage = "Tried to synchronously call ";
+          if(hostFunction->functionName.empty()) {
+            exceptionMessage += "anonymous function";
+          } else {
+            exceptionMessage += "function {" + hostFunction->functionName + "}";
+          }
+          exceptionMessage += " from a different thread.\n\nOccurred in worklet location: ";
+          exceptionMessage += workletLocation;
+          exceptionMessage += CALLBACK_ERROR_SUFFIX;
+          module->errorHandler->setError(exceptionMessage);
           module->errorHandler->raise();
+          
           return jsi::Value::undefined();
         };
         
