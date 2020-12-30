@@ -146,7 +146,6 @@ void cleanupShareable(ShareableValue &sv) {
   }
   if (sv.frozenObject != nullptr) {
     for (auto it = sv.frozenObject->map.begin(); it != sv.frozenObject->map.end(); ++it) {
-      auto itt = *it;
       cleanupShareable(*it->second);
     }
   }
@@ -280,17 +279,17 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               args[i] = params[i]->getValue(*hostRuntime);
             }
              
-              jsi::Value returnedValue = jsi::Value::undefined();
-             
-              auto shared = hostFunction.lock();
-              if (shared != nullptr) {
-                  returnedValue = shared->get()->call(*hostRuntime,
-                                                    static_cast<const jsi::Value*>(args),
-                                                    (size_t)params.size());
-              }
+            jsi::Value returnedValue = jsi::Value::undefined();
+            
+            auto shared = hostFunction.lock();
+            if (shared != nullptr) {
+              returnedValue = shared->get()->call(*hostRuntime,
+                                                static_cast<const jsi::Value*>(args),
+                                                (size_t)params.size());
+            }
              
             delete [] args;
-             // ToDo use returned value to return promise
+            // ToDo use returned value to return promise
           };
           
           module->scheduler->scheduleOnJS(job);
@@ -302,6 +301,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         return wrapperFunction;
       }
     case ValueType::WorkletFunctionType:
+      auto module = this->module;
+      auto frozenObject = this->frozenObject;
       if (module->isUIRuntime(rt)) {
         // when running on UI thread we prep a function
 

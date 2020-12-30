@@ -2,7 +2,6 @@
 
 #include "WorkletsCache.h"
 #include "SharedParent.h"
-#include "Logger.h"
 #include <jsi/jsi.h>
 
 using namespace facebook;
