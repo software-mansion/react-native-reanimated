@@ -325,8 +325,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
       } else {
         // when run outside of UI thread we enqueue a call on the UI thread
-        auto retain_this = shared_from_this();
-        auto clb = [retain_this = std::move(retain_this)](
+        auto clb = [=](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
@@ -337,15 +336,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
           std::vector<std::shared_ptr<ShareableValue>> params;
           for (int i = 0; i < count; ++i) {
-            params.push_back(ShareableValue::adapt(rt, args[i], retain_this->module));
+            params.push_back(ShareableValue::adapt(rt, args[i], module));
           }
           
-          retain_this->module->scheduler->scheduleOnUI([retain_this, params] {
-            NativeReanimatedModule *module = retain_this->module;
+          module->scheduler->scheduleOnUI([=] {
             jsi::Runtime &rt = *module->runtime.get();
-            auto jsThis = createFrozenWrapper(rt, retain_this->frozenObject).getObject(rt);
+            auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
-            std::shared_ptr<jsi::Function> funPtr(retain_this->module->workletsCache->getFunction(rt, retain_this->frozenObject));
+            std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
             
             jsi::Value * args = new jsi::Value[params.size()];
             for (int i = 0; i < params.size(); ++i) {
