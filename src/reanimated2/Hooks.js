@@ -275,15 +275,6 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   }
 }
 
-export function UASMinimal(updater) {
-  const mapperId = startMapper(updater, [], []);
-  useEffect(() => {
-    return () => {
-      stopMapper(mapperId);
-    };
-  }, []);
-}
-
 export function useAnimatedStyle(updater, dependencies) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
