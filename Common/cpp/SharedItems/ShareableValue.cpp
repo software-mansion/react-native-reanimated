@@ -33,7 +33,7 @@ void addHiddenProperty(jsi::Runtime &rt,
 void freeze(jsi::Runtime &rt, jsi::Object &obj) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
-  // freeze.call(rt, obj);
+  freeze.call(rt, obj);
 }
 
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
@@ -140,6 +140,18 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   }
 }
 
+void cleanupShareable(ShareableValue &sv) {
+  if (sv.hostFunction != nullptr) {
+    sv.hostFunction = nullptr;
+  }
+  if (sv.frozenObject != nullptr) {
+    for (auto it = sv.frozenObject->map.begin(); it != sv.frozenObject->map.end(); ++it) {
+      auto itt = *it;
+      cleanupShareable(*it->second);
+    }
+  }
+}
+
 std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
   auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
   sv->adapt(rt, value, valueType);
@@ -179,7 +191,7 @@ jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> f
     addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
     addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
   }
-  return obj; //freeze.call(rt, obj);
+  return freeze.call(rt, obj);
 }
 
 jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
@@ -219,7 +231,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // call on an appropriate thread
         
         auto module = this->module;
-        auto hostFunction = this->hostFunction;
+        std::weak_ptr<HostFunctionHandler> hostFunction = this->hostFunction;
         
         auto warnFunction = [module, hostFunction](
             jsi::Runtime &rt,
@@ -227,14 +239,16 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             const jsi::Value *args,
             size_t count
             ) -> jsi::Value {
-            
+          auto shared = hostFunction.lock();
+          std::string name = (shared != nullptr) ? shared->functionName : "unknown";
+
           jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
           std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
           std::string exceptionMessage = "Tried to synchronously call ";
-          if(hostFunction->functionName.empty()) {
+          if(name.empty()) {
             exceptionMessage += "anonymous function";
           } else {
-            exceptionMessage += "function {" + hostFunction->functionName + "}";
+            exceptionMessage += "function {" + name + "}";
           }
           exceptionMessage += " from a different thread.\n\nOccurred in worklet location: ";
           exceptionMessage += workletLocation;
@@ -266,11 +280,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               args[i] = params[i]->getValue(*hostRuntime);
             }
              
-            jsi::Value returnedValue;
+              jsi::Value returnedValue = jsi::Value::undefined();
              
-            returnedValue = hostFunction->get()->call(*hostRuntime,
-                                              static_cast<const jsi::Value*>(args),
-                                              (size_t)params.size());
+              auto shared = hostFunction.lock();
+              if (shared != nullptr) {
+                  returnedValue = shared->get()->call(*hostRuntime,
+                                                    static_cast<const jsi::Value*>(args),
+                                                    (size_t)params.size());
+              }
              
             delete [] args;
              // ToDo use returned value to return promise

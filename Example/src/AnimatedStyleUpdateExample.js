@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef } from 'react';
 function Zerooo() {
   makeShareable(0);
 
-  return (<Text>Zerooo</Text>)
+  return <Text>Zerooo</Text>;
 }
 
 export function OneMakeShareable() {
@@ -42,14 +42,14 @@ export function OneMakeShareable() {
 
 function TwoUAS() {
   function sth() {}
-  
+
   class Temp2 {
     constructor(fun) {
       this.fun = fun;
     }
   }
 
-  const temp = new Temp2(sth)
+  const temp = new Temp2(sth);
 
   UASMinimal(() => {
     'worklet';
@@ -69,37 +69,36 @@ function TwoUAS() {
 // leak
 const ThreeTest = () => {
   function sth() {}
-
   class Temp31 {
     constructor(fun) {
       this.fun = fun;
     }
   }
-
   class Temp32 {
     constructor(fun) {
       this.fun = fun;
     }
   }
-
   const tempc = new Temp31(sth);
-
   useEffect(() => {
     return () => {
       // tempc.fun = null;
       // tempc = null;
-    }
+    };
   }, []);
-
   const wrk = () => {
     'worklet';
     const t = tempc; // leak
     // const o = new Temp32(sth); // no leak
   };
 
-  let shrb = makeShareable(wrk);
-  shrb = null;
-
+  /**
+   * z wyczyszczeniem tego RN czeka na zwolnienie referencji w c++
+   * a referencja w c++ jest zwalniana w destruktorze(ktory czeka na wyczyszczenie po stronie js)
+   */
+  makeShareable(wrk);
+  // let x = makeShareable(wrk);
+  // x = null;
   return <Text>Three</Text>;
 };
 
@@ -126,7 +125,7 @@ const FourTest = () => {
 export default function App() {
   const [state, setState] = useState(0);
 
-  const states = [0, 3];
+  const states = [0, 2];
   console.log('running example', state);
 
   return (

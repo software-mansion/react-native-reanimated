@@ -14,10 +14,8 @@ class FrozenObject : public jsi::HostObject {
   friend void extractMutables(jsi::Runtime &rt,
                               std::shared_ptr<ShareableValue> sv,
                               std::vector<std::shared_ptr<MutableValue>> &res);
-  friend jsi::Value createFrozenWrapper(ShareableValue *sv,
-                                        jsi::Runtime &rt,
-                                        std::shared_ptr<FrozenObject> frozenObject); // ?? what for ??
-  
+  friend void cleanupShareable(ShareableValue &sv);
+
   private:
   std::unordered_map<std::string, std::shared_ptr<ShareableValue>> map;
 
@@ -25,7 +23,7 @@ class FrozenObject : public jsi::HostObject {
 
   FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeReanimatedModule *module);
   jsi::Object shallowClone(jsi::Runtime &rt);
-  bool containsHostFunction = true;
+  bool containsHostFunction = false;
 };
 
 }

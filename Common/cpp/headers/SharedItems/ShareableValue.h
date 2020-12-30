@@ -31,6 +31,8 @@ friend WorkletsCache;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);
+friend void cleanupShareable(ShareableValue &sv);
+
 private:
   NativeReanimatedModule *module;
   bool boolValue;
@@ -55,6 +57,9 @@ private:
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
 
 public:
+  virtual ~ShareableValue() {
+    cleanupShareable(*this);
+  }
   ValueType type = ValueType::UndefinedType;
   std::shared_ptr<MutableValue> mutableValue;
   static std::shared_ptr<ShareableValue> adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType objectType = ValueType::UndefinedType);
