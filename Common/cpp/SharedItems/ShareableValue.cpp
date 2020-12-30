@@ -279,8 +279,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         return wrapperFunction;
       }
     case ValueType::WorkletFunctionType:
-      auto module = this->module;
-      auto frozenObject = this->frozenObject;
       if (module->isUIRuntime(rt)) {
         // when running on UI thread we prep a function
 
