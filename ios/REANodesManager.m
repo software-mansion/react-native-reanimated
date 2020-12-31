@@ -265,7 +265,6 @@
     }
     
     if (_mounting) {
-      
       _mounting();
       _mounting = nil;
     }
@@ -280,7 +279,8 @@
   if (trySync) {
     _tryRunBatchUpdatesSynchronously = YES;
   }
-  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
+  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
 }
 
