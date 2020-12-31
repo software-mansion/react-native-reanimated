@@ -4,6 +4,7 @@
     "module": "es2015",
     "jsx": "react-native",
     "noEmit": true,
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "lib": ["es2015"]
