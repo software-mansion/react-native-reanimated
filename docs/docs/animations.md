@@ -297,6 +297,73 @@ Below we present the end result:
 
 ![](/react-native-reanimated/docs/animations/wobble.gif)
 
+**A note about `useAnimatedStyle` and `map` components**
+
+When using a map that returns an `Animated.View` with a `useAnimatedStyle` style, the elements cannot share the same returned style. This would cause only the last element to have the value. Because hooks cannot be used in callbacks, you're best to split out the returned `View` into its own functional component.
+
+For example, this would only apply styles to the last element:
+
+```js
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
+function WobbleExample(props) {
+  const rotation = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotateZ: `${rotation.value}deg` }],
+    };
+  });
+
+  return (
+    <>
+      {[0, 1, 2].map(i => (
+        <Animated.View key={`${i}nth-element`} style={[styles.box, animatedStyle]} />
+      ))}
+      <Button
+        title="wobble"
+        onPress={() => {
+          // Your animation logic
+        }}
+      />
+    </>
+  );
+}
+```
+
+But this would apply them to each element:
+
+```js
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+
+function WobbleView = (rotation: Animated.SharedValue) {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotateZ: `${rotation.value}deg` }],
+    };
+  });
+  
+  return <Animated.View key={`${i}nth-element`} style={[styles.box, animatedStyle]} />
+}
+    
+
+function WobbleExample(props) {
+  const rotation = useSharedValue(0);
+
+  return (
+    <>
+      {[0, 1, 2].map(i => (<WobbleView rotation={rotation}/>))}
+      <Button
+        title="wobble"
+        onPress={() => {
+          // Your animation logic
+        }}
+      />
+    </>
+  );
+}
+```
+
 ## Animating Layout Properties
 
 Reanimated makes it possible for animations to be executed by completely avoiding the main React Native's JavaScript thread.
