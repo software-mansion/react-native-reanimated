@@ -140,17 +140,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   }
 }
 
-void cleanupShareable(ShareableValue &sv) {
-  if (sv.hostFunction != nullptr) {
-    sv.hostFunction = nullptr;
-  }
-  if (sv.frozenObject != nullptr) {
-    for (auto it = sv.frozenObject->map.begin(); it != sv.frozenObject->map.end(); ++it) {
-      cleanupShareable(*it->second);
-    }
-  }
-}
-
 std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
   auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
   sv->adapt(rt, value, valueType);
