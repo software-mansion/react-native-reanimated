@@ -299,7 +299,7 @@ Below we present the end result:
 
 **A note about `useAnimatedStyle` and `map` components**
 
-When using a map that returns an `Animated.View` with a `useAnimatedStyle` style, the elements cannot share the same returned style. This would cause only the last element to have the value. Because hooks cannot be used in callbacks, you're best to split out the returned `View` into its own functional component.
+When using a map that returns an `Animated.View` with a `useAnimatedStyle` style, the animated style will only be applied to the last item in the map. Furether, because hooks cannot be used in callbacks, you can't nest the `useAnimatedStyle` directly in the map either. You're best to split out the returned `Animated.View` into its own functional component.
 
 For example, this would only apply styles to the last element:
 
