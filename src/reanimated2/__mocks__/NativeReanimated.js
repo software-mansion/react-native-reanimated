@@ -1,7 +1,5 @@
 import MutableValue from './MutableValue';
 
-global._setGlobalConsole = (val) => {};
-
 export default {
   installCoreFunctions: () => {},
   makeShareable: (worklet) => worklet,

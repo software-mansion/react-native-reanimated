@@ -9,9 +9,10 @@ const ReanimatedV2 = {
   useDerivedValue: (a) => ({ value: a() }),
   useAnimatedScrollHandler: () => NOOP,
   useAnimatedGestureHandler: () => NOOP,
-  useAnimatedStyle: (style) => style,
+  useAnimatedStyle: hooks.useAnimatedStyle,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
+  createWorklet: require('./testUtils').createWorkletMock,
 
   withTiming: (toValue, _, cb) => {
     cb && setTimeout(() => cb(true), 0);

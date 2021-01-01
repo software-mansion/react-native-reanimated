@@ -7,7 +7,7 @@ const traverse = require('@babel/traverse').default;
 const parse = require('@babel/parser').parse;
 
 /**
- * holds a map of hooks names as keys and array of argument indexes which are worklets(starting from 0)
+ * holds a map of hooks names as keys and array of argument indexes which are worklets (starting from 0)
  */
 const functionHooks = new Map([
   ['useAnimatedStyle', [0]],
