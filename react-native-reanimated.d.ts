@@ -482,7 +482,7 @@ declare module 'react-native-reanimated' {
       dependencies: () => D,
       effects: (dependencies: D) => void,
       deps?: DependencyList
-    );
+    ): void;
                         
     export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
