@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentClass } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject } from 'react';
   import {
     ViewProps,
     TextProps,
