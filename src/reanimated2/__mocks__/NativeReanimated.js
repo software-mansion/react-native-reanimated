@@ -1,6 +1,4 @@
-global._globalSetter = (name, val) => {
-  global[name] = val;
-};
+global._setGlobalConsole = (val) => {};
 
 export default {
   installCoreFunctions: () => {},
@@ -11,4 +9,5 @@ export default {
   stopMapper: () => {},
   registerEventHandler: () => {},
   unregisterEventHandler: () => {},
+  getViewProp: () => {},
 };

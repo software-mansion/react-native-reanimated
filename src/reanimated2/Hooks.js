@@ -31,23 +31,22 @@ export function useSharedValue(init, shouldRebuild = true) {
   return ref.current.mutable;
 }
 
-export function useMapper(fun, inputs = [], outputs = [], dependencies = []) {
-  useEffect(() => {
-    const mapperId = startMapper(fun, inputs, outputs);
-    return () => {
-      stopMapper(mapperId);
-    };
-  }, dependencies);
-}
-
 export function useEvent(handler, eventNames = [], rebuild = false) {
   const initRef = useRef(null);
-  if (initRef.current === null || (Platform.OS === 'web' && rebuild)) {
+  if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
     initRef.current.updateWorklet(handler);
   }
-  return initRef.current;
+
+  useEffect(() => {
+    return () => {
+      initRef.current.unregisterFromEvents();
+      initRef.current = null;
+    };
+  }, []);
+
+  return initRef;
 }
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
@@ -72,15 +71,17 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
           if (lastValue.value !== undefined) {
             // previously it was a shared value
             value = lastValue.value;
-          } else if (
-            lastValue.onFrame !== undefined &&
-            lastAnimation?.current
-          ) {
-            // it was an animation before, copy its state
-            value = lastAnimation.current;
+          } else if (lastValue.onFrame !== undefined) {
+            if (lastAnimation?.current) {
+              // it was an animation before, copy its state
+              value = lastAnimation.current;
+            } else if (lastValue?.current) {
+              // it was initialized
+              value = lastValue.current;
+            }
           }
         } else {
-          // previously it was a plan value, just set it as starting point
+          // previously it was a plain value, just set it as starting point
           value = lastValue;
         }
       }
@@ -309,6 +310,13 @@ export function useAnimatedStyle(updater, dependencies) {
     };
   }, dependencies);
 
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+      viewRef.current = null;
+    };
+  }, []);
+
   // check for invalid usage of shared values in returned object
   let wrongKey;
   const isError = Object.keys(initial).some((key) => {
@@ -363,6 +371,12 @@ export function useDerivedValue(processor, dependencies) {
       stopMapper(mapperId);
     };
   }, dependencies);
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
 
   return sharedValue;
 }
@@ -421,6 +435,13 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);
@@ -431,51 +452,55 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   );
   initRef.current.savedDependencies = dependencies;
 
-  return useEvent(
-    (event) => {
-      'worklet';
-      const FAILED = 1;
-      const BEGAN = 2;
-      const CANCELLED = 3;
-      const ACTIVE = 4;
-      const END = 5;
+  const handler = (event) => {
+    'worklet';
+    event = Platform.OS === 'web' ? event.nativeEvent : event;
 
-      if (event.state === BEGAN && handlers.onStart) {
-        handlers.onStart(event, context);
-      }
-      if (event.state === ACTIVE && handlers.onActive) {
-        handlers.onActive(event, context);
-      }
-      if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
-        handlers.onEnd(event, context);
-      }
-      if (
-        event.oldState === BEGAN &&
-        event.state === FAILED &&
-        handlers.onFail
-      ) {
-        handlers.onFail(event, context);
-      }
-      if (
-        event.oldState === ACTIVE &&
-        event.state === CANCELLED &&
-        handlers.onCancel
-      ) {
-        handlers.onCancel(event, context);
-      }
-      if (
-        (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-        event.state !== BEGAN &&
-        event.state !== ACTIVE &&
-        handlers.onFinish
-      ) {
-        handlers.onFinish(
-          event,
-          context,
-          event.state === CANCELLED || event.state === FAILED
-        );
-      }
-    },
+    const FAILED = 1;
+    const BEGAN = 2;
+    const CANCELLED = 3;
+    const ACTIVE = 4;
+    const END = 5;
+
+    if (event.state === BEGAN && handlers.onStart) {
+      handlers.onStart(event, context);
+    }
+    if (event.state === ACTIVE && handlers.onActive) {
+      handlers.onActive(event, context);
+    }
+    if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
+      handlers.onEnd(event, context);
+    }
+    if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
+      handlers.onFail(event, context);
+    }
+    if (
+      event.oldState === ACTIVE &&
+      event.state === CANCELLED &&
+      handlers.onCancel
+    ) {
+      handlers.onCancel(event, context);
+    }
+    if (
+      (event.oldState === BEGAN || event.oldState === ACTIVE) &&
+      event.state !== BEGAN &&
+      event.state !== ACTIVE &&
+      handlers.onFinish
+    ) {
+      handlers.onFinish(
+        event,
+        context,
+        event.state === CANCELLED || event.state === FAILED
+      );
+    }
+  };
+
+  if (Platform.OS === 'web') {
+    return handler;
+  }
+
+  return useEvent(
+    handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     dependenciesDiffer
   );
@@ -489,6 +514,13 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
       savedDependencies: [],
     };
   }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
   const { context, savedDependencies } = initRef.current;
 
   dependencies = buildDependencies(dependencies, handlers);

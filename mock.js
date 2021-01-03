@@ -9,7 +9,15 @@
  */
 
 const React = require('react');
-const { View, Text, Image, Animated, Platform, processColor } = require('react-native');
+const {
+  View,
+  Text,
+  Image,
+  Animated,
+  Platform,
+  processColor,
+} = require('react-native');
+const ReanimatedV2 = require('./src/reanimated2/mock');
 
 function NOOP() {}
 
@@ -17,6 +25,8 @@ function simulateCallbackFactory(...params) {
   return (callback) => {
     callback &&
       setTimeout(() => {
+        // user defined callback
+        // eslint-disable-next-line standard/no-callback-literal
         callback(...params);
       }, 0);
   };
@@ -61,9 +71,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${
-      Component.displayName || Component.name || 'Component'
-    }`;
+    static displayName = `Transitioning.${Component.displayName ||
+      Component.name ||
+      'Component'}`;
 
     setNativeProps() {}
 
@@ -91,7 +101,7 @@ const Reanimated = {
   Clock: NOOP,
   Node: NOOP,
   Value: AnimatedValue,
-  
+
   EasingNode: {
     linear: NOOP,
     ease: NOOP,
@@ -117,7 +127,7 @@ const Reanimated = {
   },
 
   processColor,
-  
+
   add: (...vals) =>
     new AnimatedValue(vals.map((v) => getValue(v)).reduce((acc, v) => acc + v)),
   sub: (...vals) =>
@@ -194,6 +204,7 @@ const Reanimated = {
   diff: NOOP,
   diffClamp: NOOP,
   interpolateNode: NOOP,
+  interpolateColors: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),
   min: (a, b) => Math.min(getValue(a), getValue(b)),
 
@@ -213,7 +224,10 @@ const Reanimated = {
   proc: (cb) => cb,
 
   useCode: NOOP,
+  useValue: (a) => new AnimatedValue(a),
   createAnimatedComponent: (Component) => Component,
+  addWhitelistedUIProps: NOOP,
+  addWhitelistedNativeProps: NOOP,
 };
 
 module.exports = {
@@ -221,7 +235,10 @@ module.exports = {
 
   ...Reanimated,
 
-  default: Reanimated,
+  default: {
+    ...Reanimated,
+    ...ReanimatedV2,
+  },
 
   Transitioning: {
     View: createTransitioningComponent(View),

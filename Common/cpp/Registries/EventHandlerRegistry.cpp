@@ -14,6 +14,10 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
     eventMappings[handlerIt->second->eventName].erase(id);
+    if (eventMappings[handlerIt->second->eventName].empty()) {
+      eventMappings.erase(handlerIt->second->eventName);
+    }
+    eventHandlers.erase(handlerIt);
   }
 }
 
@@ -35,6 +39,10 @@ void EventHandlerRegistry::processEvent(jsi::Runtime &rt, std::string eventName,
   auto positionToSplit = eventPayload.find(delimimter) + delimimter.size();
   auto lastBracketCharactedPosition = eventPayload.size() - positionToSplit - 1;
   auto eventJSON = eventPayload.substr(positionToSplit,  lastBracketCharactedPosition);
+
+  if (eventJSON.compare(std::string("null")) == 0) {
+    return;
+  }
 
   auto eventObject = jsi::Value::createFromJsonUtf8(rt, (uint8_t*)(&eventJSON[0]), eventJSON.size());
 

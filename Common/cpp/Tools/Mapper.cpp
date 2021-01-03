@@ -6,12 +6,12 @@ namespace reanimated {
 
 Mapper::Mapper(NativeReanimatedModule *module,
                unsigned long id,
-               jsi::Function &&mapper,
+               std::shared_ptr<jsi::Function> mapper,
                std::vector<std::shared_ptr<MutableValue>> inputs,
                std::vector<std::shared_ptr<MutableValue>> outputs):
 id(id),
 module(module),
-mapper(std::move(mapper)),
+mapper(mapper),
 inputs(inputs),
 outputs(outputs) {
   auto markDirty = [this, module]() {
@@ -25,7 +25,7 @@ outputs(outputs) {
 
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
-  mapper.callWithThis(rt, mapper);
+  mapper->callWithThis(rt, *mapper);
 }
 
 Mapper::~Mapper() {

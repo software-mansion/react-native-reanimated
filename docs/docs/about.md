@@ -54,14 +54,23 @@ As a consequence we won't be able to support older versions of React Native and 
 
 Below we highlight some of the problems that we are aware of (in most of the cases we actively work on improving these):
 
-- Installation of the library requires many steps and is complicated.
-  This comes from the fact that TurboModules are not yet rolled out in the React Native app template.
-  But even without that there are a few ways how we can simplify the installation.
 - We currently only support Hermes JS VM on Android.
 - As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
   You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.
-- The library causes occasional crashes in development mode while reloading JS bundle or upon hot reload.
-  We are looking into this problem and hope to have it resolved really soon.
-- JavaScript exceptions thrown inside of worklets sometimes give non-descriptive errors and may also result in the app crashing.
 - Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
   As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.
+- With Reanimated you can't animate virtual components of layout. For example, you can’t animate nested `<Text>` components because React Native changes  
+   ```
+   <Text>
+      string1
+      <Text>string2</Text>
+   </Text>
+   ```  
+   to  
+   ```
+   <RCTTextView>
+      string1
+      <RCTVirtualText>string2</RCTVirtualText>
+   </RCTTextView>
+   ```  
+   and the `RCTVirtualText` is a virtual component.

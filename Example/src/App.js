@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
-  YellowBox,
+  LogBox,
 } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
@@ -27,7 +27,7 @@ import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
   AnimatedStyleUpdate: {

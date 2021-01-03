@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
-  YellowBox,
+  LogBox,
 } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
@@ -28,7 +28,7 @@ import LightboxExample from './WebSpecific/LightBoxExample';
 /* masked view does not work * /
 import LiquidSwipe from './LiquidSwipe';
 /**/
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
   AnimatedStyleUpdate: {

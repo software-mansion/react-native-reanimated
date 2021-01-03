@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, YellowBox } from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createStackNavigator } from 'react-navigation-stack';
 
@@ -25,7 +25,7 @@ import TransitionsShuffle from './transitions/shuffle';
 import TransitionsTicket from './transitions/ticket';
 import WidthAndHeight from './widthAndHeight';
 
-YellowBox.ignoreWarnings([
+LogBox.ignoreLogs([
   'Warning: isMounted(...) is deprecated',
   'Module RCTImageLoader',
 ]);
@@ -84,19 +84,19 @@ class MainScreen extends React.Component {
   };
 
   render() {
-    const data = Object.keys(SCREENS).map(key => ({ key }));
+    const data = Object.keys(SCREENS).map((key) => ({ key }));
     return (
       <FlatList
         style={styles.list}
         data={data}
         ItemSeparatorComponent={ItemSeparator}
-        renderItem={props => (
+        renderItem={(props) => (
           <MainScreenItem
             {...props}
             onPressItem={({ key }) => this.props.navigation.navigate(key)}
           />
         )}
-        renderScrollComponent={props => <ScrollView {...props} />}
+        renderScrollComponent={(props) => <ScrollView {...props} />}
       />
     );
   }

@@ -1,6 +1,6 @@
 import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import { FlatList, Platform, YellowBox } from 'react-native';
+import { FlatList, Platform, LogBox } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -14,7 +14,7 @@ import ScrollToTest from './scrollToTest';
 import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
 
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
   SimpleTest: {
