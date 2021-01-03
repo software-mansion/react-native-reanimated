@@ -71,6 +71,10 @@ function SharedValueTest() {
   const translate2 = useSharedValue(0, true);
   const translate3 = useSharedValue(0, false);
 
+  const sharedBool = useSharedValue<boolean>(false);
+  if(sharedBool.value)
+    sharedBool.value = false;
+
   return <Animated.View style={styles.container} />;
 }
 
