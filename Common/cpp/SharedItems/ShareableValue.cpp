@@ -94,11 +94,13 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         type = ValueType::HostFunctionType;
         hostRuntime = &rt;
         hostFunction = std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt);
+        containsHostFunction = true;
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-        if (isRNRuntime) {
+        containsHostFunction |= frozenObject->containsHostFunction;
+        if (isRNRuntime && !containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
@@ -106,7 +108,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
-        frozenArray.push_back(adapt(rt, array.getValueAtIndex(rt, i), module));
+        auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
+        containsHostFunction |= sv->containsHostFunction;
+        frozenArray.push_back(sv);
       }
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
@@ -123,8 +127,11 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
       frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+      containsHostFunction |= frozenObject->containsHostFunction;
       if (isRNRuntime) {
-        addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
+        if (!containsHostFunction) {
+          addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
+        }
         freeze(rt, object);
       }
     }
@@ -171,8 +178,10 @@ jsi::Value createFrozenWrapper(jsi::Runtime &rt, std::shared_ptr<FrozenObject> f
   jsi::Object obj = frozenObject->shallowClone(rt);
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
-  addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
-  addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
+  if (!frozenObject->containsHostFunction) {
+    addHiddenProperty(rt, std::move(__reanimatedHiddenHost), obj, HIDDEN_HOST_OBJECT_PROP);
+    addHiddenProperty(rt, true, obj, ALREADY_CONVERTED);
+  }
   return freeze.call(rt, obj);
 }
 
@@ -260,14 +269,12 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               args[i] = params[i]->getValue(*hostRuntime);
             }
              
-            jsi::Value returnedValue;
-             
-            returnedValue = hostFunction->get()->call(*hostRuntime,
-                                              static_cast<const jsi::Value*>(args),
-                                              (size_t)params.size());
+            jsi::Value returnedValue = hostFunction->get()->call(*hostRuntime,
+                                                static_cast<const jsi::Value*>(args),
+                                                (size_t)params.size());
              
             delete [] args;
-             // ToDo use returned value to return promise
+            // ToDo use returned value to return promise
           };
           
           module->scheduler->scheduleOnJS(job);
