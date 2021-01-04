@@ -496,6 +496,7 @@ function UseAnimatedReactionTest() {
 function interpolateColorTest() {
   const sv = useSharedValue(0);
 
+  interpolateColor(sv.value, [0, 1], [0x00ff00, 0x0000ff]);
   interpolateColor(sv.value, [0, 1], ['red', 'blue']);
   interpolateColor(sv.value, [0, 1], ['#00FF00', '#0000FF'], 'RGB');
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');

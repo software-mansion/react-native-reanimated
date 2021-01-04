@@ -451,8 +451,8 @@ declare module 'react-native-reanimated' {
 
     export function interpolateColor(
       value: number,
-      inputRange: number[],
-      outputRange: string[],
+      inputRange: readonly number[],
+      outputRange: readonly (string | number)[],
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
