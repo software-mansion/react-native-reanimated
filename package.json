@@ -9,7 +9,7 @@
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint": "eslint './src/**/*.js'",
     "release": "npm login && release-it",
-    "type:check": "tsc"
+    "type:check": "yarn tsc"
   },
   "main": "src/Animated.js",
   "module": "lib/module/Animated",

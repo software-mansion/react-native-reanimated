@@ -7,7 +7,8 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "lib": ["es2015"]
+    "lib": ["es6"],
+    "esModuleInterop": true
   },
   "files": ["react-native-reanimated-tests.tsx", "react-native-reanimated.d.ts"]
 }
