@@ -20,6 +20,8 @@ declare module 'react-native-reanimated' {
     ScrollView as ReactNativeScrollView,
     NativeScrollEvent,
     NativeSyntheticEvent,
+    ColorValue,
+    OpaqueColorValue
   } from 'react-native';
   import {
     GestureHandlerGestureEvent,
@@ -401,12 +403,12 @@ declare module 'react-native-reanimated' {
       easing?: EasingFunction;
     }
     export function withTiming(
-      toValue: number,
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>,  // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithTimingConfig,
       callback?: (isFinished: boolean) => void
     ): number;
     export function withSpring(
-      toValue: number,
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithSpringConfig,
       callback?: (isFinished: boolean) => void
     ): number;

@@ -8,9 +8,21 @@ Starts a spring-based animation.
 
 ### Arguments
 
-#### `toValue` [number]
+#### `toValue` [number | string]
 
 The target value at which the spring should settle.
+It can be specified as a color value by providing string like: `rgba(255, 105, 180, 0)`.
+
+Currently supported formats are:
+
+- `"rgb(r, g, b)"`
+- `"rgba(r, g, b, a)"`
+- `"hsl(h, s, l)"`
+- `"hsla(h, s, l, a)"`
+- `"#rgb"`
+- `"#rgba"`
+- `"#rrggbb"`
+- `"#rrggbbaa"`
 
 #### `options` [object]
 
