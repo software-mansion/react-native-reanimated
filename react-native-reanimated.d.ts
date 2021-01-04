@@ -401,17 +401,19 @@ declare module 'react-native-reanimated' {
     ): BackwardCompatibleWrapper;
 
     // reanimated2 animations
+
+    export type StringColor = string; // string as a color value like `"rgba(20,20,20,0)"`
     export interface WithTimingConfig {
       duration?: number;
       easing?: EasingFunction;
     }
     export function withTiming(
-      toValue: number | string, // string as a color value like `"rgba(20,20,20,0)"`
+      toValue: number | StringColor, 
       userConfig?: WithTimingConfig,
       callback?: (isFinished: boolean) => void
     ): number;
     export function withSpring(
-      toValue: number | string, // string as a color value like `"rgba(20,20,20,0)"`,
+      toValue: number | StringColor,
       userConfig?: WithSpringConfig,
       callback?: (isFinished: boolean) => void
     ): number;
