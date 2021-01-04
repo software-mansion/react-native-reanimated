@@ -100,10 +100,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         type = ValueType::WorkletFunctionType;
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
         containsHostFunction |= frozenObject->containsHostFunction;
-        if (isRNRuntime) {
-          if (!containsHostFunction) {
-            addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
-          }
+        if (isRNRuntime && !containsHostFunction) {
+          addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
     } else if (object.isArray(rt)) {
