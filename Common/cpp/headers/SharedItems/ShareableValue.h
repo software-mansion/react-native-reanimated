@@ -32,7 +32,6 @@ friend FrozenObject;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);
-friend void cleanupShareable(ShareableValue &sv);
 
 private:
   NativeReanimatedModule *module;

@@ -225,14 +225,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         
         auto module = this->module;
         auto hostFunction = this->hostFunction;
-
+        
         auto warnFunction = [module, hostFunction](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count
             ) -> jsi::Value {
-
+            
           jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
           std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
           std::string exceptionMessage = "Tried to synchronously call ";
