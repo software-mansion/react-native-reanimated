@@ -10,9 +10,7 @@ FrozenObject::FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeRe
     auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
     std::string nameStr = propertyName.utf8(rt);
     map[nameStr] = ShareableValue::adapt(rt, object.getProperty(rt, propertyName), module);
-    if (map[nameStr]->type == ValueType::HostFunctionType) {
-      this->containsHostFunction = true;
-    }
+    this->containsHostFunction |= map[nameStr]->containsHostFunction;
   }
 }
 

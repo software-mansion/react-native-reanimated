@@ -94,12 +94,14 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         type = ValueType::HostFunctionType;
         hostRuntime = &rt;
         hostFunction = std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt);
+        containsHostFunction = true;
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
         frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+        containsHostFunction |= frozenObject->containsHostFunction;
         if (isRNRuntime) {
-          if (!frozenObject->containsHostFunction) {
+          if (!containsHostFunction) {
             addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
           }
         }
@@ -108,7 +110,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
-        frozenArray.push_back(adapt(rt, array.getValueAtIndex(rt, i), module));
+        auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
+        containsHostFunction |= sv->containsHostFunction;
+        frozenArray.push_back(sv);
       }
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
@@ -125,8 +129,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
       frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+      containsHostFunction |= frozenObject->containsHostFunction;
       if (isRNRuntime) {
-        if (!frozenObject->containsHostFunction) {
+        if (!containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
         freeze(rt, object);
