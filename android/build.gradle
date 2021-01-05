@@ -1,3 +1,10 @@
+def localProps = new Properties()
+def localPropertiesFile = file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
+}
+def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
+
 buildscript {
     repositories {
         jcenter()
@@ -37,6 +44,11 @@ android {
     }
     lintOptions {
         abortOnError false
+    }
+
+    packagingOptions {
+        println "Native libs debug enabled: ${debugNativeLibraries}"
+        doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
     }
 
     tasks.withType(JavaCompile) {
@@ -231,7 +243,7 @@ task downloadNdkBuildDependencies {
  * The search begins at the given base directory (a File object). The returned
  * path is a string.
  */
-def findNodeModulePath(baseDir, packageName) {
+static def findNodeModulePath(baseDir, packageName) {
     def basePath = baseDir.toPath().normalize()
     // Node's module resolution algorithm searches up to the root directory,
     // after which the base path will be null
@@ -245,7 +257,7 @@ def findNodeModulePath(baseDir, packageName) {
     return null
 }
 
-def getNdkBuildName() {
+static def getNdkBuildName() {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         return "ndk-build.cmd"
     } else {
@@ -395,6 +407,7 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
             "REACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react",
             "HERMES_ENGINE=$projectDir/../node_modules/hermes-engine",
             "VM=HERMES",
+            "NATIVE_DEBUG=${debugNativeLibraries}",
             "-C", file("src/main/JNI").absolutePath,
             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors()
     )
@@ -409,7 +422,7 @@ task cleanNdkLibs(type: Exec) {
             "-C", file("src/main/JNI").absolutePath,
             "clean")
     doLast {
-        def aar_path = "$buildDir/outputs/aar";
+        def aar_path = "$buildDir/outputs/aar"
         file(aar_path).delete()
         println("Deleted aar output dir at ${file(aar_path)}")
     }

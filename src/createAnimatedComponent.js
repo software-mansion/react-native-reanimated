@@ -104,14 +104,14 @@ export default function createAnimatedComponent(Component) {
       const viewTag = findNodeHandle(node);
 
       for (const key in this.props) {
-        let prop = this.props[key];
-        if (prop?.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current;
-        }
+        const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
-        } else if (prop instanceof WorkletEventHandler) {
-          prop.registerForEvents(viewTag, key);
+        } else if (
+          prop?.current &&
+          prop.current instanceof WorkletEventHandler
+        ) {
+          prop.current.registerForEvents(viewTag, key);
         }
       }
     }
@@ -120,14 +120,14 @@ export default function createAnimatedComponent(Component) {
       const node = this._getEventViewRef();
 
       for (const key in this.props) {
-        let prop = this.props[key];
-        if (prop?.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current;
-        }
+        const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
-        } else if (prop instanceof WorkletEventHandler) {
-          prop.unregisterFromEvents();
+        } else if (
+          prop?.current &&
+          prop.current instanceof WorkletEventHandler
+        ) {
+          prop.current.unregisterFromEvents();
         }
       }
     }
@@ -139,24 +139,20 @@ export default function createAnimatedComponent(Component) {
       let viewTag;
 
       for (const key in this.props) {
-        let prop = this.props[key];
-        if (prop?.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current;
-        }
+        const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
         } else if (
-          prop instanceof WorkletEventHandler &&
-          viewTag === undefined
+          prop?.current &&
+          prop.current instanceof WorkletEventHandler
         ) {
-          viewTag = prop.viewTag;
+          if (viewTag === undefined) {
+            viewTag = prop.current.viewTag;
+          }
         }
       }
       for (const key in prevProps) {
-        let prop = this.props[key];
-        if (prop?.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current;
-        }
+        const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           if (!nextEvts.has(prop.__nodeID)) {
             // event was in prev props but not in current props, we detach
@@ -165,22 +161,27 @@ export default function createAnimatedComponent(Component) {
             // event was in prev and is still in current props
             attached.add(prop.__nodeID);
           }
-        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
-          prop.unregisterFromEvents();
+        } else if (
+          prop?.current &&
+          prop.current instanceof WorkletEventHandler &&
+          prop.current.reattachNeeded
+        ) {
+          prop.current.unregisterFromEvents();
         }
       }
 
       for (const key in this.props) {
-        let prop = this.props[key];
-        if (prop?.current && prop.current instanceof WorkletEventHandler) {
-          prop = prop.current;
-        }
+        const prop = this.props[key];
         if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
           // not yet attached
           prop.attachEvent(node, key);
-        } else if (prop instanceof WorkletEventHandler && prop.reattachNeeded) {
-          prop.registerForEvents(viewTag, key);
-          prop.reattachNeeded = false;
+        } else if (
+          prop?.current &&
+          prop.current instanceof WorkletEventHandler &&
+          prop.current.reattachNeeded
+        ) {
+          prop.current.registerForEvents(viewTag, key);
+          prop.current.reattachNeeded = false;
         }
       }
     }

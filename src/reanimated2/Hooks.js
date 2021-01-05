@@ -76,7 +76,6 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
 
   useEffect(() => {
     return () => {
-      initRef.current.unregisterFromEvents();
       initRef.current = null;
     };
   }, []);

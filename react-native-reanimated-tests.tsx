@@ -71,6 +71,10 @@ function SharedValueTest() {
   const translate2 = useSharedValue(0, true);
   const translate3 = useSharedValue(0, false);
 
+  const sharedBool = useSharedValue<boolean>(false);
+  if(sharedBool.value)
+    sharedBool.value = false;
+
   return <Animated.View style={styles.container} />;
 }
 
@@ -117,7 +121,8 @@ function DerivedValueTest() {
   const width = useDerivedValue(() => {
     return progress.value * 250;
   });
-
+  // @ts-expect-error width is readonly
+  width.value = 100;
   return (
     <Button title="Random" onPress={() => (progress.value = Math.random())} />
   );
@@ -234,6 +239,26 @@ function WithTimingTest() {
   );
 }
 
+function WithTimingToValueAsColorTest() {
+  const style = useAnimatedStyle(() => {
+    return {
+      width: withTiming(
+        'rgba(255,105,180,0)',
+        {
+          duration: 500,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        },
+        (_finished) => {}
+      ),
+    };
+  });
+  return (
+    <View>
+      <Animated.View style={[styles.box, style]} />
+    </View>
+  );
+}
+
 // withSpring
 function WithSpringTest() {
   const x = useSharedValue(0);
@@ -261,6 +286,19 @@ function WithSpringTest() {
     <PanGestureHandler onGestureEvent={gestureHandler}>
       <Animated.View style={[styles.box, animatedStyle]} />
     </PanGestureHandler>
+  );
+}
+
+function WithSpringToValueAsColorTest() {
+  const style = useAnimatedStyle(() => {
+    return {
+      width: withSpring('rgba(255,105,180,0)', {}, (_finished) => {}),
+    };
+  });
+  return (
+    <View>
+      <Animated.View style={[styles.box, style]} />
+    </View>
   );
 }
 
@@ -297,11 +335,14 @@ function CancelAnimationTest() {
 // withDelay
 function WithDelayTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx: { startX: number }) => {
+    onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -327,11 +368,14 @@ function WithDelayTest() {
 // withRepeat
 function WithRepeatTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx: { startX: number }) => {
+    onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -357,11 +401,14 @@ function WithRepeatTest() {
 // withSequence
 function WithSequenceTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
-    onActive: (event, ctx: { startX: number }) => {
+    onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
     onEnd: (_) => {
@@ -491,6 +538,7 @@ function UseAnimatedReactionTest() {
 function interpolateColorTest() {
   const sv = useSharedValue(0);
 
+  interpolateColor(sv.value, [0, 1], [0x00ff00, 0x0000ff]);
   interpolateColor(sv.value, [0, 1], ['red', 'blue']);
   interpolateColor(sv.value, [0, 1], ['#00FF00', '#0000FF'], 'RGB');
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
