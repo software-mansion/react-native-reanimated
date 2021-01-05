@@ -24,11 +24,15 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(viewDescriptor, updates, maybeViewRef) {
+export default function updateProps(viewDescriptors, updates, maybeViewRef) {
   'worklet';
 
-  const updateSingleProps = (_viewDescriptorValue, _updates, _maybeViewRef) => {
-    const viewName = _viewDescriptorValue.name || 'RCTView';
+  const updateSingleProps = (
+    _viewDescriptorsValue,
+    _updates,
+    _maybeViewRef
+  ) => {
+    const viewName = _viewDescriptorsValue.name || 'RCTView';
 
     if (Platform.OS !== 'web') {
       Object.keys(_updates).forEach((key) => {
@@ -42,24 +46,24 @@ export default function updateProps(viewDescriptor, updates, maybeViewRef) {
       typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
     updatePropsInternal(
-      _viewDescriptorValue.tag,
+      _viewDescriptorsValue.tag,
       viewName,
       _updates,
       _maybeViewRef
     );
   };
 
-  if ('__mutableSet' in viewDescriptor) {
+  if ('__mutableSet' in viewDescriptors) {
     if (Platform.OS !== 'web') {
-      viewDescriptor.mapper.value.forEach((item, index) => {
+      viewDescriptors.mapper.value.forEach((item, index) => {
         updateSingleProps(item, updates, null);
       });
     } else {
-      viewDescriptor.mapper.value.forEach((item, index) => {
+      viewDescriptors.mapper.value.forEach((item, index) => {
         updateSingleProps(item, updates, maybeViewRef[index]);
       });
     }
   } else {
-    updateSingleProps(viewDescriptor.value, updates, maybeViewRef);
+    updateSingleProps(viewDescriptors.value, updates, maybeViewRef);
   }
 }

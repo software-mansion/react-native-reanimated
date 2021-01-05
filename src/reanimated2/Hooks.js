@@ -31,8 +31,8 @@ export function useSharedValue(init, shouldRebuild = true) {
   return ref.current.mutable;
 }
 
-export function useMutableSet(init, handler, dependencies) {
-  let data = {
+export function useMutableSet(init) {
+  const data = {
     __mutableSet: true,
     batchToInsert: [],
     waitForInsertSync: false,
@@ -53,15 +53,6 @@ export function useMutableSet(init, handler, dependencies) {
       }
     },
   };
-
-  useEffect(() => {
-    if (handler !== undefined) {
-      handler(data);
-    }
-    return () => {
-      data = null;
-    };
-  }, dependencies);
 
   return data;
 }
@@ -226,7 +217,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
+function styleUpdater(viewDescriptors, updater, state, maybeViewRef) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -274,7 +265,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef);
+      updateProps(viewDescriptors, updates, maybeViewRef);
     }
 
     if (!allFinished) {
@@ -305,12 +296,12 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef);
+    updateProps(viewDescriptors, diff, maybeViewRef);
   }
 }
 
 export function useAnimatedStyle(updater, dependencies) {
-  const viewDescriptor = useMutableSet([]);
+  const viewDescriptors = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   let viewRef = [];
@@ -336,7 +327,7 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef);
+      styleUpdater(viewDescriptors, updater, remoteState, maybeViewRef);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
@@ -368,7 +359,7 @@ export function useAnimatedStyle(updater, dependencies) {
   }
 
   return {
-    viewDescriptor,
+    viewDescriptors,
     initial,
     viewRef,
   };

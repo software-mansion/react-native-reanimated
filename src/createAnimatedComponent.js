@@ -265,13 +265,13 @@ export default function createAnimatedComponent(Component) {
       }
 
       styles.forEach((style) => {
-        if (style?.viewDescriptor) {
-          style.viewDescriptor.add({ tag: viewTag, name: viewName });
+        if (style?.viewDescriptors) {
+          style.viewDescriptors.add({ tag: viewTag, name: viewName });
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptor) {
-        this.props.animatedProps.viewDescriptor.add({
+      if (this.props.animatedProps?.viewDescriptors) {
+        this.props.animatedProps.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
         });
@@ -279,12 +279,12 @@ export default function createAnimatedComponent(Component) {
     }
 
     _hasReanimated2Props(flattenStyles) {
-      if (this.props.animatedProps?.viewDescriptor) {
+      if (this.props.animatedProps?.viewDescriptors) {
         return true;
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
-          if (style?.hasOwnProperty('viewDescriptor')) {
+          if (style?.hasOwnProperty('viewDescriptors')) {
             return true;
           }
         }
@@ -353,7 +353,7 @@ export default function createAnimatedComponent(Component) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map((style) => {
-            if (style && style.viewDescriptor) {
+            if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewRef.push(this);
               return style.initial;
