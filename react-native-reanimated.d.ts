@@ -186,7 +186,7 @@ declare module 'react-native-reanimated' {
       ? T
       : never;
     export type AdaptTransforms<T> = {
-      [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>;
+      [P in keyof T]: Adaptable<T[P]>;
     };
     export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[];
 
