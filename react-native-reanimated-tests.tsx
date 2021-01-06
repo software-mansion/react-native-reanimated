@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useState } from 'react';
-import { StyleSheet, Button, View, ViewStyle } from 'react-native';
+import { StyleSheet, Button, View } from 'react-native';
 import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
