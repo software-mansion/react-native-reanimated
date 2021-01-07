@@ -255,10 +255,8 @@
       if (canUpdateSynchronously) {
         [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
-        [strongSelf.uiManager setNeedsLayout];
-      } else {
-        [strongSelf.uiManager setNeedsLayout];
       }
+      [strongSelf.uiManager setNeedsLayout];
     });
     if (trySynchronously) {
       dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
