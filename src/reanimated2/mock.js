@@ -54,6 +54,8 @@ const ReanimatedV2 = {
     out: ID,
     inOut: ID,
   },
+
+  runOnJS: (fn) => fn,
 };
 
 module.exports = {
