@@ -251,6 +251,10 @@ export default function createAnimatedComponent(Component) {
         viewName = null;
       } else {
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        if (hostInstance === null) {
+          // in a case when there is no view tag for this component we want to cut further operations that use view tag and name. This happens when a component doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
+          return;
+        }
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance._nativeTag;
         /**
