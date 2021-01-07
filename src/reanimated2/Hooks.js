@@ -417,7 +417,7 @@ function areDependenciesEqual(nextDeps, prevDeps) {
   var objectIs = typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(nextDeps, prevDeps) {
-    if (prevDeps === null) return !1;
+    if (!nextDeps || !prevDeps || (prevDeps.length !== nextDeps.length)) return !1;
     for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++)
       if (!objectIs(nextDeps[i], prevDeps[i])) return !1;
     return !0;
