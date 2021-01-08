@@ -54,10 +54,10 @@ export default function updateProps(
 
   // todo: add a possibility to use all possible built-in adapters
   if (useAdapter) {
-    if (useAdapter.constructor.name === 'Function') {
+    if (typeof useAdapter === 'function') {
       // custom function passed as the adapter
       useAdapter(updates);
-    } else if (useAdapter.constructor.name === 'Array') {
+    } else if (Array.isArray(useAdapter)) {
       // array means we want to use selected built-in adapters
       useAdapter.forEach((adapterName) => {
         if (adapters[adapterName]) {
@@ -66,7 +66,7 @@ export default function updateProps(
       });
     } else {
       throw new Error(
-        `invalid useAdapter type: ${useAdapter.constructor.name}, should be Function or Array`
+        `invalid useAdapter type: ${typeof useAdapter}, should be Function or Array`
       );
     }
   }
