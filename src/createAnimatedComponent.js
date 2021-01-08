@@ -229,7 +229,9 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      this._component.setNativeProps(props);
+      if (this._component.setNativeProps) {
+        this._component.setNativeProps(props);
+      }
     }
 
     _attachPropUpdater() {
