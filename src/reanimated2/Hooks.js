@@ -10,7 +10,7 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps, { adapters } from './UpdateProps';
+import updateProps from './UpdateProps';
 import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
@@ -192,7 +192,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapter) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -240,7 +240,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapter) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapter);
+      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
     }
 
     if (!allFinished) {
@@ -271,35 +271,16 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapter) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapter);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
   }
 }
 
-export function useAnimatedStyle(updater, dependencies, adapterConfig) {
+export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
-  // adapterConfig should be undefined or an object containing
-  //  adapter function(a worklet)
-  //  an array of prop names that should be added to the NATIVE_THREAD_PROPS_WHITELIST
-  const adapter = adapterConfig?.adapter;
-  const addNativeProps = adapterConfig?.addNativeProps;
-  const nativePropsToAdd = {};
-  if (addNativeProps && Array.isArray(addNativeProps)) {
-    addNativeProps.forEach((prop) => {
-      nativePropsToAdd[prop] = true;
-    });
-  }
-  Array.isArray(adapter) &&
-    adapter.forEach((adapterItem) => {
-      const propsToAdd = adapters[adapterItem]?.addNativeProps;
-      Array.isArray(propsToAdd) &&
-        propsToAdd.forEach((prop) => {
-          nativePropsToAdd[prop] = true;
-        });
-    });
-  addWhitelistedNativeProps(nativePropsToAdd);
+  adapters = adapters && Array.isArray(adapters) ? adapters : [adapters];
 
   // build dependencies
   if (dependencies === undefined) {
@@ -322,7 +303,13 @@ export function useAnimatedStyle(updater, dependencies, adapterConfig) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef, adapter);
+      styleUpdater(
+        viewDescriptor,
+        updater,
+        remoteState,
+        maybeViewRef,
+        adapters
+      );
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {
@@ -363,6 +350,16 @@ export function useAnimatedStyle(updater, dependencies, adapterConfig) {
 // TODO: we should make sure that when useAP is used we are not assigning styles
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
+
+export function useAnimatedPropAdapter(adapter, nativeProps) {
+  const nativePropsToAdd = {};
+  nativeProps &&
+    nativeProps.forEach((prop) => {
+      nativePropsToAdd[prop] = true;
+    });
+  addWhitelistedNativeProps(nativePropsToAdd);
+  return adapter;
+}
 
 export function useDerivedValue(processor, dependencies) {
   const initRef = useRef(null);

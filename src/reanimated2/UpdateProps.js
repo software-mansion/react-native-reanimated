@@ -24,57 +24,20 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export const adapters = {
-  SVG: {
-    adapter: (props) => {
-      'worklet';
-      // TODO
-    },
-    addNativeProps: [
-      // ...
-    ],
-  },
-  TextInput: {
-    adapter: (props) => {
-      'worklet';
-      const keys = Object.keys(props);
-      // convert text to value like RN does here: https://github.com/facebook/react-native/blob/master/Libraries/Components/TextInput/TextInput.js#L878
-      if (keys.includes('value')) {
-        props.text = props.value;
-        delete props.value;
-      }
-    },
-    addNativeProps: ['text'],
-  },
-};
-
 export default function updateProps(
   viewDescriptor,
   updates,
   maybeViewRef,
-  useAdapter
+  adapters
 ) {
   'worklet';
 
   const viewName = viewDescriptor.value.name || 'RCTView';
 
-  // todo: add a possibility to use all possible built-in adapters
-  if (useAdapter) {
-    if (typeof useAdapter === 'function') {
-      // custom function passed as the adapter
-      useAdapter(updates);
-    } else if (Array.isArray(useAdapter)) {
-      // array means we want to use selected built-in adapters
-      useAdapter.forEach((adapterName) => {
-        if (adapters[adapterName]) {
-          adapters[adapterName].adapter(updates);
-        }
-      });
-    } else {
-      throw new Error(
-        `invalid useAdapter type: ${typeof useAdapter}, should be Function or Array`
-      );
-    }
+  if (adapters) {
+    adapters.forEach((adapter) => {
+      adapter(updates);
+    });
   }
 
   if (Platform.OS !== 'web') {
