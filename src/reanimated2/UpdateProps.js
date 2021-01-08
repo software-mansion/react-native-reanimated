@@ -52,6 +52,7 @@ export default function updateProps(
 
   const viewName = viewDescriptor.value.name || 'RCTView';
 
+  // todo: add a possibility to use all possible built-in adapters
   if (useAdapter) {
     if (useAdapter.constructor.name === 'Function') {
       // custom function passed as the adapter
