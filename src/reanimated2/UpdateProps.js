@@ -25,9 +25,6 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-/**
- * the goal is to handle a situation when props are set differently directly underneath on the basic components than on a higher layer of components. Let's say we have a library which exports component A; inside of this component we render some other component like View, Text etc. Now we may want to name some of the props differently for some reason. Then, when we want to update animated props it will not work unless we convert them into the proper names/formats.
- */
 const adapters = {
   SVG: (props) => {
     'worklet';
