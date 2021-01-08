@@ -15,6 +15,7 @@ import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 export function useSharedValue(init, shouldRebuild = true) {
   const ref = useRef(null);
@@ -191,13 +192,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(
-  viewDescriptor,
-  updater,
-  state,
-  maybeViewRef,
-  useAdapter
-) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapter) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -245,7 +240,7 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, useAdapter);
+      updateProps(viewDescriptor, updates, maybeViewRef, adapter);
     }
 
     if (!allFinished) {
@@ -276,15 +271,27 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, useAdapter);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapter);
   }
 }
 
-export function useAnimatedStyle(updater, dependencies, useAdapter) {
+export function useAnimatedStyle(updater, dependencies, adapterConfig) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
+  // adapterConfig should be undefined or an object containing
+  //  adapter function(a worklet)
+  //  an array of prop names that should be added to the NATIVE_THREAD_PROPS_WHITELIST
+  const adapter = adapterConfig?.adapter;
+  const addNativeProps = adapterConfig?.addNativeProps;
+  if (addNativeProps && Array.isArray(addNativeProps)) {
+    const obj = {};
+    addNativeProps.forEach((prop) => {
+      obj[prop] = true;
+    });
+    addWhitelistedNativeProps(obj);
+  }
 
   // build dependencies
   if (dependencies === undefined) {
@@ -307,13 +314,7 @@ export function useAnimatedStyle(updater, dependencies, useAdapter) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(
-        viewDescriptor,
-        updater,
-        remoteState,
-        maybeViewRef,
-        useAdapter
-      );
+      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef, adapter);
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {

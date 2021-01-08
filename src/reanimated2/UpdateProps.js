@@ -1,9 +1,8 @@
 /* global _updateProps */
 import { processColor } from './Colors';
-import { makeShareable, runOnJS } from './core';
+import { makeShareable } from './core';
 import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated/index';
-import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
@@ -35,7 +34,6 @@ const adapters = {
     const keys = Object.keys(props);
     // convert text to value like RN does here: https://github.com/facebook/react-native/blob/master/Libraries/Components/TextInput/TextInput.js#L878
     if (keys.includes('value')) {
-      runOnJS(addWhitelistedNativeProps)({ text: true });
       props.text = props.value;
       delete props.value;
     }
