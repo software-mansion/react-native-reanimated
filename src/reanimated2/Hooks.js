@@ -280,8 +280,10 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
-  adapters = adapters && Array.isArray(adapters) ? adapters : [adapters];
+  // todo: should it be possible to attach multiple adapters?
+  adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
 
+  // todo: add adapters to dependencies?
   // build dependencies
   if (dependencies === undefined) {
     dependencies = [...inputs, updater.__workletHash];

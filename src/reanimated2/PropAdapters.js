@@ -17,5 +17,3 @@ export const TextInputAdapter = useAnimatedPropAdapter(
   },
   ['text']
 );
-
-// addWhitelistedNativeProps({text: true});
