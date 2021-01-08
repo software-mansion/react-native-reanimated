@@ -10,7 +10,7 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps from './UpdateProps';
+import updateProps, { adapters } from './UpdateProps';
 import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
@@ -285,13 +285,21 @@ export function useAnimatedStyle(updater, dependencies, adapterConfig) {
   //  an array of prop names that should be added to the NATIVE_THREAD_PROPS_WHITELIST
   const adapter = adapterConfig?.adapter;
   const addNativeProps = adapterConfig?.addNativeProps;
+  const nativePropsToAdd = {};
   if (addNativeProps && Array.isArray(addNativeProps)) {
-    const obj = {};
     addNativeProps.forEach((prop) => {
-      obj[prop] = true;
+      nativePropsToAdd[prop] = true;
     });
-    addWhitelistedNativeProps(obj);
   }
+  Array.isArray(adapter) &&
+    adapter.forEach((adapterItem) => {
+      const propsToAdd = adapters[adapterItem]?.addNativeProps;
+      Array.isArray(propsToAdd) &&
+        propsToAdd.forEach((prop) => {
+          nativePropsToAdd[prop] = true;
+        });
+    });
+  addWhitelistedNativeProps(nativePropsToAdd);
 
   // build dependencies
   if (dependencies === undefined) {

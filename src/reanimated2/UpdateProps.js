@@ -24,19 +24,27 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-const adapters = {
-  SVG: (props) => {
-    'worklet';
-    // TODO
+export const adapters = {
+  SVG: {
+    adapter: (props) => {
+      'worklet';
+      // TODO
+    },
+    addNativeProps: [
+      // ...
+    ],
   },
-  TextInput: (props) => {
-    'worklet';
-    const keys = Object.keys(props);
-    // convert text to value like RN does here: https://github.com/facebook/react-native/blob/master/Libraries/Components/TextInput/TextInput.js#L878
-    if (keys.includes('value')) {
-      props.text = props.value;
-      delete props.value;
-    }
+  TextInput: {
+    adapter: (props) => {
+      'worklet';
+      const keys = Object.keys(props);
+      // convert text to value like RN does here: https://github.com/facebook/react-native/blob/master/Libraries/Components/TextInput/TextInput.js#L878
+      if (keys.includes('value')) {
+        props.text = props.value;
+        delete props.value;
+      }
+    },
+    addNativeProps: ['text'],
   },
 };
 
@@ -59,7 +67,7 @@ export default function updateProps(
       // array means we want to use selected built-in adapters
       useAdapter.forEach((adapterName) => {
         if (adapters[adapterName]) {
-          adapters[adapterName](updates);
+          adapters[adapterName].adapter(updates);
         }
       });
     } else {
