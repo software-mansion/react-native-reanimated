@@ -420,7 +420,7 @@ function areDependenciesEqual(nextDeps, prevDeps) {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }
-    for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    for (let i = 0; i < prevDeps.length; ++i) {
       if (!objectIs(nextDeps[i], prevDeps[i])) {
         return false;
       }
