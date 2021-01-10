@@ -25,8 +25,8 @@ const ReanimatedV2 = {
     cb && setTimeout(() => cb(true), 0);
     return 0;
   },
-  withDelay: () => {
-    return 0;
+  withDelay: (_, animationValue) => {
+    return animationValue;
   },
   cancelAnimation: NOOP,
   delay: (_, b) => b,
