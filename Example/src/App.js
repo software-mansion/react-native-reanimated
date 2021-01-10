@@ -31,10 +31,6 @@ import LiquidSwipe from './LiquidSwipe';
 YellowBox.ignoreWarnings(['Calling `getNode()`']);
 
 const SCREENS = {
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: '🆕 Extrapolation Example',
-  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -82,6 +78,10 @@ const SCREENS = {
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: '🆕 Extrapolation Example',
   },
 };
 

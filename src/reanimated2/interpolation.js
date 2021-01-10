@@ -23,22 +23,32 @@ function isExtrapolate(value) {
   'worklet';
 
   return (
-    value !== Extrapolate.EXTEND &&
-    value !== Extrapolate.CLAMP &&
-    value !== Extrapolate.IDENTITY
+    value === Extrapolate.EXTEND ||
+    value === Extrapolate.CLAMP ||
+    value === Extrapolate.IDENTITY
   );
 }
 
 function validateType(type) {
   'worklet';
 
+  if (!type) {
+    throw new Error(
+      `Reanimated: config object is not valid please provide valid config, for example:
+       interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'extend',
+      }) or interpolate(value, [inputRange], [outputRange], 'clamp)`
+    );
+  }
+
   if (
-    (typeof type === 'object' &&
-      (!type.extrapolateLeft &&
-        !type.extrapolateRight &&
-        Object.keys(type).length >= 1 &&
-        type.constructor === Object)) ||
-    (Object.keys(type).length > 2 && type.constructor === Object)
+    type?.constructor === Object &&
+    ((Object.keys(type).length === 2 &&
+      !('extrapolateLeft' in type && 'extrapolateRight' in type)) ||
+      (Object.keys(type).length === 1 &&
+        !('extrapolateLeft' in type || 'extrapolateRight' in type)) ||
+      Object.keys(type).length > 2)
   ) {
     throw new Error(
       `Reanimated: config object is not valid please provide valid config, for example:
@@ -49,33 +59,27 @@ function validateType(type) {
     );
   }
 
-  if (
-    typeof type === 'object' &&
-    type.extrapolateLeft &&
-    isExtrapolate(type.extrapolateLeft)
-  ) {
-    throw new Error(
-      `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-       interpolate(value, [inputRange], [outputRange], {
-        extrapolateLeft: 'clamp',
-      })`
-    );
+  if (typeof type === 'object') {
+    if ('extrapolateLeft' in type && !isExtrapolate(type.extrapolateLeft)) {
+      throw new Error(
+        `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+         interpolate(value, [inputRange], [outputRange], {
+          extrapolateLeft: 'clamp',
+        })`
+      );
+    }
+
+    if ('extrapolateRight' in type && !isExtrapolate(type.extrapolateRight)) {
+      throw new Error(
+        `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+         interpolate(value, [inputRange], [outputRange], {
+          extrapolateRight: 'clamp',
+        })`
+      );
+    }
   }
 
-  if (
-    typeof type === 'object' &&
-    type.extrapolateRight &&
-    isExtrapolate(type.extrapolateRight)
-  ) {
-    throw new Error(
-      `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-       interpolate(value, [inputRange], [outputRange], {
-        extrapolateRight: 'clamp',
-      })`
-    );
-  }
-
-  if (typeof type === 'string' && isExtrapolate(type)) {
+  if (typeof type === 'string' && !isExtrapolate(type)) {
     throw new Error(
       `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
        interpolate(value, [inputRange], [outputRange], "clamp")`
@@ -83,6 +87,8 @@ function validateType(type) {
   }
 }
 
+// TODO: support default values in worklets:
+// e.g. function interpolate(x, input, output, type = Extrapolate.CLAMP)
 function internalInterpolate(x, l, r, ll, rr, type) {
   'worklet';
   if (r - l === 0) return ll;
@@ -94,16 +100,10 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 
   validateType(type);
 
-  // TODO: support default values in worklets:
-  // e.g. function interplate(x, input, output, type = Extrapolate.CLAMP)
-  // type = type || Extrapolate.EXTEND;
-
   if (typeof type === 'object') {
-    if (coef * val < coef * ll) {
-      return getVal({ ...config, type: type.extrapolateLeft });
-    } else if (coef * val > coef * rr) {
-      return getVal({ ...config, type: type.extrapolateRight });
-    }
+    return coef * val < coef * ll
+      ? getVal({ ...config, type: type.extrapolateLeft })
+      : getVal({ ...config, type: type.extrapolateRight });
   }
 
   if (coef * val < coef * ll || coef * val > coef * rr) {
