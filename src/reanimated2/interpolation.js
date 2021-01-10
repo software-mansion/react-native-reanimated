@@ -32,7 +32,7 @@ function isExtrapolate(value) {
 function validateType(type) {
   'worklet';
 
-  if (!type) {
+  if (!type && type !== undefined) {
     throw new Error(
       `Reanimated: config object is not valid please provide valid config, for example:
        interpolate(value, [inputRange], [outputRange], {
