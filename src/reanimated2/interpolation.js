@@ -51,7 +51,7 @@ function validateType(type) {
       Object.keys(type).length > 2)
   ) {
     throw new Error(
-      `Reanimated: config object is not valid please provide valid config, for example:
+      `Reanimated: config object is not valid, please provide valid config, for example:
        interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'extend',
