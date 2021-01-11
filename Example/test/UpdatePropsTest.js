@@ -19,6 +19,16 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedHello = Animated.createAnimatedComponent(Hello);
 
+const helloAdapter = useAnimatedPropAdapter(
+  (props) => {
+    if (Object.keys(props).includes('helloSize')) {
+      props.fontSize = props.helloSize;
+      delete props.helloSize;
+    }
+  },
+  ['fontSize']
+);
+
 export default function Test() {
   const sv = useSharedValue(10);
 
@@ -57,15 +67,7 @@ export default function Test() {
       };
     },
     undefined,
-    useAnimatedPropAdapter(
-      (props) => {
-        if (Object.keys(props).includes('helloSize')) {
-          props.fontSize = props.helloSize;
-          delete props.helloSize;
-        }
-      },
-      ['fontSize']
-    )
+    helloAdapter
   );
 
   return (
