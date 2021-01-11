@@ -31,6 +31,8 @@ import Animated, {
   useValue,
   color,
   interpolateColors,
+  useAnimatedPropAdapter,
+  useAnimatedProps,
 } from 'react-native-reanimated';
 
 const styles = StyleSheet.create({
@@ -72,8 +74,7 @@ function SharedValueTest() {
   const translate3 = useSharedValue(0, false);
 
   const sharedBool = useSharedValue<boolean>(false);
-  if(sharedBool.value)
-    sharedBool.value = false;
+  if (sharedBool.value) sharedBool.value = false;
 
   return <Animated.View style={styles.container} />;
 }
@@ -569,4 +570,25 @@ function interpolateColorsTest() {
     outputColorRange: ['red', 'blue'],
   });
   return color;
+}
+
+// update props
+function updatePropsTest() {
+  const adapter1 = useAnimatedPropAdapter((props) => {}, []);
+  const adapter2 = useAnimatedPropAdapter((props) => {}, ['prop1', 'prop2']);
+  const adapter3 = useAnimatedPropAdapter(() => {});
+
+  // useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]); // works only for useAnimatedProps
+
+  useAnimatedProps(
+    () => ({}),
+    null,
+    adapter1
+  );
+
+  useAnimatedProps(
+    () => ({}),
+    null,
+    [adapter2, adapter3]
+  );
 }
