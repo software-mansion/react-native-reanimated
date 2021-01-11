@@ -42,12 +42,21 @@ function validateType(type) {
     );
   }
 
+  const hasExtrapolateLeft = Object.prototype.hasOwnProperty.call(
+    type,
+    'extrapolateLeft'
+  );
+  const hasExtrapolateRight = Object.prototype.hasOwnProperty.call(
+    type,
+    'extrapolateRight'
+  );
+
   if (
     type?.constructor === Object &&
     ((Object.keys(type).length === 2 &&
-      !('extrapolateLeft' in type && 'extrapolateRight' in type)) ||
+      !(hasExtrapolateLeft && hasExtrapolateRight)) ||
       (Object.keys(type).length === 1 &&
-        !('extrapolateLeft' in type || 'extrapolateRight' in type)) ||
+        !(hasExtrapolateLeft || hasExtrapolateRight)) ||
       Object.keys(type).length > 2)
   ) {
     throw new Error(
@@ -60,7 +69,7 @@ function validateType(type) {
   }
 
   if (typeof type === 'object') {
-    if ('extrapolateLeft' in type && !isExtrapolate(type.extrapolateLeft)) {
+    if (hasExtrapolateLeft && !isExtrapolate(type.extrapolateLeft)) {
       throw new Error(
         `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
          interpolate(value, [inputRange], [outputRange], {
@@ -69,7 +78,7 @@ function validateType(type) {
       );
     }
 
-    if ('extrapolateRight' in type && !isExtrapolate(type.extrapolateRight)) {
+    if (hasExtrapolateRight && !isExtrapolate(type.extrapolateRight)) {
       throw new Error(
         `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
          interpolate(value, [inputRange], [outputRange], {
