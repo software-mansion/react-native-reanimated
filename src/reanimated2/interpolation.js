@@ -32,13 +32,22 @@ function isExtrapolate(value) {
 function validateType(type) {
   'worklet';
 
+  const EXTRAPOLATE_ERROR_MSG = `Reanimated: config object is not valid, please provide valid config, for example:
+    interpolate(value, [inputRange], [outputRange], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'extend',
+  })`;
+
+  const EXTRAPOLATE_ERROR = (
+    extrapolate
+  ) => `Reanimated: not supported value for "${extrapolate}" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
+    interpolate(value, [inputRange], [outputRange], {
+      ${extrapolate}: 'clamp',
+  })`;
+
   if (!type && type !== undefined) {
     throw new Error(
-      `Reanimated: config object is not valid please provide valid config, for example:
-       interpolate(value, [inputRange], [outputRange], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'extend',
-      }) or interpolate(value, [inputRange], [outputRange], 'clamp')`
+      `${EXTRAPOLATE_ERROR_MSG} or interpolate(value, [inputRange], [outputRange], 'clamp')`
     );
   }
 
@@ -59,32 +68,16 @@ function validateType(type) {
         !(hasExtrapolateLeft || hasExtrapolateRight)) ||
       Object.keys(type).length > 2)
   ) {
-    throw new Error(
-      `Reanimated: config object is not valid, please provide valid config, for example:
-       interpolate(value, [inputRange], [outputRange], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'extend',
-      })`
-    );
+    throw new Error(EXTRAPOLATE_ERROR_MSG);
   }
 
   if (typeof type === 'object') {
     if (hasExtrapolateLeft && !isExtrapolate(type.extrapolateLeft)) {
-      throw new Error(
-        `Reanimated: not supported value for "extrapolateLeft" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-         interpolate(value, [inputRange], [outputRange], {
-          extrapolateLeft: 'clamp',
-        })`
-      );
+      throw new Error(EXTRAPOLATE_ERROR('extrapolateLeft'));
     }
 
     if (hasExtrapolateRight && !isExtrapolate(type.extrapolateRight)) {
-      throw new Error(
-        `Reanimated: not supported value for "extrapolateRight" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-         interpolate(value, [inputRange], [outputRange], {
-          extrapolateRight: 'clamp',
-        })`
-      );
+      throw new Error(EXTRAPOLATE_ERROR('extrapolateRight'));
     }
   }
 
