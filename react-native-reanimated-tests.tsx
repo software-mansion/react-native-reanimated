@@ -74,7 +74,9 @@ function SharedValueTest() {
   const translate3 = useSharedValue(0, false);
 
   const sharedBool = useSharedValue<boolean>(false);
-  if (sharedBool.value) sharedBool.value = false;
+  if (sharedBool.value) {
+    sharedBool.value = false;
+  }
 
   return <Animated.View style={styles.container} />;
 }
@@ -578,7 +580,8 @@ function updatePropsTest() {
   const adapter2 = createAnimatedPropAdapter((props) => {}, ['prop1', 'prop2']);
   const adapter3 = createAnimatedPropAdapter(() => {});
 
-  // useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]); // works only for useAnimatedProps
+  // @ts-expect-error works only for useAnimatedProps
+  useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
   useAnimatedProps(
     () => ({}),

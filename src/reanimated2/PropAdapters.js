@@ -13,8 +13,8 @@ export const SVGAdapter = createAnimatedPropAdapter((props) => {
         );
       }
       const transform = props.transform;
-      const x = props.x || 0;
-      const y = props.y || 0;
+      const x = props.x ?? 0;
+      const y = props.y ?? 0;
       props.transform = [
         { translateX: transform[0] * x + transform[2] * y + transform[4] },
         { translateX: transform[1] * x + transform[3] * y + transform[5] },

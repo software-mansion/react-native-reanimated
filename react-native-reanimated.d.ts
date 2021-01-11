@@ -447,11 +447,11 @@ declare module 'react-native-reanimated' {
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
     
-    type PropsAdapterFunctionType = (props: object) => void;
+    type PropsAdapterFunction = (props: Record<string, unknown>) => void;
     export function createAnimatedPropAdapter(
-      adapter: PropsAdapterFunctionType,
-      nativeProps?: Array<string>
-    ): PropsAdapterFunctionType;
+      adapter: PropsAdapterFunction,
+      nativeProps?: string[]
+    ): PropsAdapterFunction;
 
     export function processColor(color: number | string): number;
     export function createWorklet<A extends any[], R>(
@@ -495,7 +495,7 @@ declare module 'react-native-reanimated' {
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
       deps?: DependencyList | null,
-      adapters?: PropsAdapterFunctionType | Array<PropsAdapterFunctionType> | null
+      adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
     ): T;
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,

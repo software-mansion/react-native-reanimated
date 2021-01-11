@@ -237,10 +237,10 @@ export const runOnJS = (fun) => {
 
 export function createAnimatedPropAdapter(adapter, nativeProps) {
   const nativePropsToAdd = {};
-  nativeProps &&
-    nativeProps.forEach((prop) => {
-      nativePropsToAdd[prop] = true;
-    });
+  // eslint-disable-next-line
+  nativeProps?.forEach((prop) => {
+    nativePropsToAdd[prop] = true;
+  });
   addWhitelistedNativeProps(nativePropsToAdd);
   return adapter;
 }
