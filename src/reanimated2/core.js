@@ -235,7 +235,7 @@ export const runOnJS = (fun) => {
   }
 };
 
-export function useAnimatedPropAdapter(adapter, nativeProps) {
+export function createAnimatedPropAdapter(adapter, nativeProps) {
   const nativePropsToAdd = {};
   nativeProps &&
     nativeProps.forEach((prop) => {

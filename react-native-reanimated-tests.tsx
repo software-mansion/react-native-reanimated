@@ -31,7 +31,7 @@ import Animated, {
   useValue,
   color,
   interpolateColors,
-  useAnimatedPropAdapter,
+  createAnimatedPropAdapter,
   useAnimatedProps,
 } from 'react-native-reanimated';
 
@@ -574,9 +574,9 @@ function interpolateColorsTest() {
 
 // update props
 function updatePropsTest() {
-  const adapter1 = useAnimatedPropAdapter((props) => {}, []);
-  const adapter2 = useAnimatedPropAdapter((props) => {}, ['prop1', 'prop2']);
-  const adapter3 = useAnimatedPropAdapter(() => {});
+  const adapter1 = createAnimatedPropAdapter((props) => {}, []);
+  const adapter2 = createAnimatedPropAdapter((props) => {}, ['prop1', 'prop2']);
+  const adapter3 = createAnimatedPropAdapter(() => {});
 
   // useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]); // works only for useAnimatedProps
 

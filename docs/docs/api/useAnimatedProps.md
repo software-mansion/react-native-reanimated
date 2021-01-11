@@ -62,11 +62,11 @@ function App() {
 }
 ```
 
-# useAnimatedPropAdapter
+# createAnimatedPropAdapter
 
 In some third-party libraries(but also may happen in users' custom components), props are named differently on the API layer than they really are underneath. This tool lets users handle such situations by defining a proper way to convert specific props.
 
-Note: It is recommended to create adapters outside of components. `useAnimatedPropAdapter` is not a hook and should not be called on every component's rerender.
+Note: It is recommended to create adapters outside of components. `createAnimatedPropAdapter` is not a hook and should not be called on every component's rerender.
 
 ### Arguments
 
@@ -89,7 +89,7 @@ class Hello extends React.Component {
 
 const AnimatedHello = Animated.createAnimatedComponent(Hello);
 
-const adapter = useAnimatedPropAdapter(
+const adapter = createAnimatedPropAdapter(
   (props) => {
     if (Object.keys(props).includes('helloSize')) {
       props.fontSize = props.helloSize;

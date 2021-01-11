@@ -448,7 +448,7 @@ declare module 'react-native-reanimated' {
     ): (...args: Parameters<typeof fn>) => void;
     
     type PropsAdapterFunctionType = (props: object) => void;
-    export function useAnimatedPropAdapter(
+    export function createAnimatedPropAdapter(
       adapter: PropsAdapterFunctionType,
       nativeProps?: Array<string>
     ): PropsAdapterFunctionType;
@@ -738,7 +738,7 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const runOnUI: typeof Animated.runOnUI;
   export const runOnJS: typeof Animated.runOnJS;
-  export const useAnimatedPropAdapter: typeof Animated.useAnimatedPropAdapter;
+  export const createAnimatedPropAdapter: typeof Animated.createAnimatedPropAdapter;
   export const processColor: typeof Animated.processColor;
   export const makeMutable: typeof Animated.makeMutable;
   export const useValue: typeof Animated.useValue;

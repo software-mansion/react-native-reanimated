@@ -1,7 +1,7 @@
 import Animated, {
   useSharedValue,
   useAnimatedProps,
-  useAnimatedPropAdapter,
+  createAnimatedPropAdapter,
   TextInputAdapter,
   SVGAdapter,
 } from 'react-native-reanimated';
@@ -19,7 +19,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedHello = Animated.createAnimatedComponent(Hello);
 
-const helloAdapter = useAnimatedPropAdapter(
+const helloAdapter = createAnimatedPropAdapter(
   (props) => {
     if (Object.keys(props).includes('helloSize')) {
       props.fontSize = props.helloSize;

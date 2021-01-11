@@ -1,6 +1,6 @@
-import { useAnimatedPropAdapter } from './core';
+import { createAnimatedPropAdapter } from './core';
 
-export const SVGAdapter = useAnimatedPropAdapter((props) => {
+export const SVGAdapter = createAnimatedPropAdapter((props) => {
   'worklet';
   const keys = Object.keys(props);
   // transform - taken from https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Shape.tsx#L200
@@ -22,7 +22,7 @@ export const SVGAdapter = useAnimatedPropAdapter((props) => {
   // todo: other cases
 });
 
-export const TextInputAdapter = useAnimatedPropAdapter(
+export const TextInputAdapter = createAnimatedPropAdapter(
   (props) => {
     'worklet';
     const keys = Object.keys(props);
