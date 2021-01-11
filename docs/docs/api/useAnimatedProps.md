@@ -61,3 +61,50 @@ function App() {
   );
 }
 ```
+
+# useAnimatedPropAdapter
+
+In some third-party libraries(but also may happen in users' custom components), props are named differently on the API layer than they really are underneath. This tool lets users handle such situations by defining a proper way to convert specific props.
+
+### Arguments
+
+#### `adapter` [Function]
+
+Required parameter, this is a function which would receive an object of props that are supposed to be updated on the UI thread. The function itself doesn't have to return anything - modifying the received object is enough.
+
+#### `nativeProps` [Array]
+
+A list of props which should be added to `NATIVE_THREAD_PROPS_WHITELIST`.
+
+## Example
+
+```js {3,9,24}
+class Hello extends React.Component {
+  render() {
+    return <Text style={{ fontSize: this.props.helloSize }}>Hello</Text>;
+  }
+}
+
+const AnimatedHello = Animated.createAnimatedComponent(Hello);
+
+const adapter = useAnimatedPropAdapter(
+  (props) => {
+    if (Object.keys(props).includes('helloSize')) {
+      props.fontSize = props.helloSize;
+      delete props.helloSize;
+    }
+  },
+  ['fontSize']
+);
+
+export default function Component() {
+  const sv = useSharedValue(14);
+  const helloProps = useAnimatedProps(
+    () => ({ helloSize: sv.value }),
+    null,
+    adapter
+  );
+
+  return <AnimatedHello animatedProps={helloProps} />;
+}
+```
