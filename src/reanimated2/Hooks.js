@@ -281,14 +281,15 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewRef = useRef(null);
   // todo: should it be possible to attach multiple adapters?
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
+  const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
 
-  // todo: add adapters to dependencies?
   // build dependencies
   if (dependencies === undefined) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
     dependencies.push(updater.__workletHash);
   }
+  adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
