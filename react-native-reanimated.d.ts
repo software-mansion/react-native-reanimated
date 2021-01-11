@@ -403,12 +403,12 @@ declare module 'react-native-reanimated' {
       easing?: EasingFunction;
     }
     export function withTiming(
-      toValue: number | string | Exclude<ColorValue, OpaqueColorValue>,  // string as a color value like `"rgba(20,20,20,0)"`
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>,  // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithTimingConfig,
       callback?: (isFinished: boolean) => void
     ): number;
     export function withSpring(
-      toValue: number |string | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithSpringConfig,
       callback?: (isFinished: boolean) => void
     ): number;
