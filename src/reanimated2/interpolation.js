@@ -52,7 +52,7 @@ function validateType(type) {
   );
 
   if (
-    type?.constructor === Object &&
+    typeof type === 'object' &&
     ((Object.keys(type).length === 2 &&
       !(hasExtrapolateLeft && hasExtrapolateRight)) ||
       (Object.keys(type).length === 1 &&
