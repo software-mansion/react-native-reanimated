@@ -283,7 +283,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
 
   // build dependencies
-  if (dependencies === undefined) {
+  if (!dependencies) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
     dependencies.push(updater.__workletHash);
