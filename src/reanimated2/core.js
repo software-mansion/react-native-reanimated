@@ -2,6 +2,7 @@
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -233,6 +234,18 @@ export const runOnJS = (fun) => {
     return fun.__callAsync;
   }
 };
+
+// todo types
+// todo docs
+export function useAnimatedPropAdapter(adapter, nativeProps) {
+  const nativePropsToAdd = {};
+  nativeProps &&
+    nativeProps.forEach((prop) => {
+      nativePropsToAdd[prop] = true;
+    });
+  addWhitelistedNativeProps(nativePropsToAdd);
+  return adapter;
+}
 
 const capturableConsole = console;
 runOnUI(() => {

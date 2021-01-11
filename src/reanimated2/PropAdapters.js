@@ -1,4 +1,4 @@
-import { useAnimatedPropAdapter } from './Hooks';
+import { useAnimatedPropAdapter } from './core';
 
 export const SVGAdapter = useAnimatedPropAdapter((props) => {
   'worklet';

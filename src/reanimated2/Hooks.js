@@ -15,7 +15,6 @@ import { initialUpdaterRun } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
-import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 export function useSharedValue(init, shouldRebuild = true) {
   const ref = useRef(null);
@@ -352,16 +351,6 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 // TODO: we should make sure that when useAP is used we are not assigning styles
 // when you need styles to animated you should always use useAS
 export const useAnimatedProps = useAnimatedStyle;
-
-export function useAnimatedPropAdapter(adapter, nativeProps) {
-  const nativePropsToAdd = {};
-  nativeProps &&
-    nativeProps.forEach((prop) => {
-      nativePropsToAdd[prop] = true;
-    });
-  addWhitelistedNativeProps(nativePropsToAdd);
-  return adapter;
-}
 
 export function useDerivedValue(processor, dependencies) {
   const initRef = useRef(null);
