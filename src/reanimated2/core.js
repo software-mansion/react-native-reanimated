@@ -235,8 +235,6 @@ export const runOnJS = (fun) => {
   }
 };
 
-// todo types
-// todo docs
 export function useAnimatedPropAdapter(adapter, nativeProps) {
   const nativePropsToAdd = {};
   nativeProps &&

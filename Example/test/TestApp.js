@@ -13,6 +13,7 @@ import FastRefreshTest from './FastRefreshTest';
 import ScrollToTest from './scrollToTest';
 import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
+import UpdatePropsTest from './UpdatePropsTest';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -39,7 +40,11 @@ const SCREENS = {
   },
   AnimationsTest: {
     screen: AnimationsTest,
-    title: 'Animations',
+    title: '🆕 Animations',
+  },
+  UpdatePropsTest: {
+    screen: UpdatePropsTest,
+    title: '🆕 Update Props',
   },
 };
 
