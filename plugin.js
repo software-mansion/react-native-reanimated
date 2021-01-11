@@ -7,9 +7,9 @@ const traverse = require('@babel/traverse').default;
 const parse = require('@babel/parser').parse;
 
 /**
- * holds a map of hooks names as keys and array of argument indexes which are worklets(starting from 0)
+ * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
-const functionHooks = new Map([
+const functionArgsToWorkletize = new Map([
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
   ['createAnimatedPropAdapter', [0]],
@@ -490,7 +490,7 @@ function processWorklets(t, path, fileName) {
       );
     }
   } else {
-    const indexes = functionHooks.get(name);
+    const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
       indexes.forEach((index) => {
         processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
