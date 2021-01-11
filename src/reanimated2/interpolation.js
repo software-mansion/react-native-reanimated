@@ -38,7 +38,7 @@ function validateType(type) {
        interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'extend',
-      }) or interpolate(value, [inputRange], [outputRange], 'clamp)`
+      }) or interpolate(value, [inputRange], [outputRange], 'clamp')`
     );
   }
 
@@ -101,9 +101,11 @@ function internalInterpolate(x, l, r, ll, rr, type) {
   validateType(type);
 
   if (typeof type === 'object') {
-    return coef * val < coef * ll
-      ? getVal({ ...config, type: type.extrapolateLeft })
-      : getVal({ ...config, type: type.extrapolateRight });
+    if (coef * val < coef * ll) {
+      return getVal({ ...config, type: type.extrapolateLeft });
+    } else if (coef * val > coef * ll) {
+      return getVal({ ...config, type: type.extrapolateRight });
+    }
   }
 
   if (coef * val < coef * ll || coef * val > coef * rr) {
