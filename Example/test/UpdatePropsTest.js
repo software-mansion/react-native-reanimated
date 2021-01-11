@@ -38,25 +38,17 @@ export default function Test() {
         value: `rnd: ${sv.value}`,
       };
     },
-    undefined,
+    null,
     [TextInputAdapter, SVGAdapter]
   );
 
   const animatedProps = useAnimatedProps(
     () => {
       return {
-        // transform: [1, 0, 0, 1, randomWidth.value * 100, 0], // error
-        transform: [
-          {
-            rotate: sv.value / 100,
-          },
-          {
-            translateX: 200 + sv.value * 2,
-          },
-        ],
+        transform: [1, 0, 0, 1, sv.value, 0],
       };
     },
-    undefined,
+    null,
     [TextInputAdapter, SVGAdapter]
   );
 
@@ -66,7 +58,7 @@ export default function Test() {
         helloSize: sv.value,
       };
     },
-    undefined,
+    null,
     helloAdapter
   );
 
@@ -80,8 +72,6 @@ export default function Test() {
           }}
           style={{ backgroundColor: 'red' }}
         />
-        <AnimatedHello animatedProps={helloProps} />
-        <Animated.View style={[{ height: 50, backgroundColor: 'orange' }]} />
         <Svg
           viewBow="0 0 400 400"
           style={{ borderColor: 'red', borderWidth: 2 }}
@@ -98,6 +88,7 @@ export default function Test() {
           />
         </Svg>
         <AnimatedTextInput value="unknown" animatedProps={tiProps} />
+        <AnimatedHello animatedProps={helloProps} />
       </View>
     </SafeAreaView>
   );
