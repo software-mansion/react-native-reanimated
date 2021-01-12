@@ -24,10 +24,21 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(viewDescriptor, updates, maybeViewRef) {
+export default function updateProps(
+  viewDescriptor,
+  updates,
+  maybeViewRef,
+  adapters
+) {
   'worklet';
 
   const viewName = viewDescriptor.value.name || 'RCTView';
+
+  if (adapters) {
+    adapters.forEach((adapter) => {
+      adapter(updates);
+    });
+  }
 
   if (Platform.OS !== 'web') {
     Object.keys(updates).forEach((key) => {

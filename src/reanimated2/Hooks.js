@@ -196,7 +196,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -244,7 +244,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef);
+      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
     }
 
     if (!allFinished) {
@@ -275,22 +275,25 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
   }
 }
 
-export function useAnimatedStyle(updater, dependencies) {
+export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
+  adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
+  const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
 
   // build dependencies
-  if (dependencies === undefined) {
+  if (!dependencies) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
     dependencies.push(updater.__workletHash);
   }
+  adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
@@ -306,7 +309,13 @@ export function useAnimatedStyle(updater, dependencies) {
   useEffect(() => {
     const fun = () => {
       'worklet';
-      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef);
+      styleUpdater(
+        viewDescriptor,
+        updater,
+        remoteState,
+        maybeViewRef,
+        adapters
+      );
     };
     const mapperId = startMapper(fun, inputs, []);
     return () => {

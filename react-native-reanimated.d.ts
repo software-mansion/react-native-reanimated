@@ -446,6 +446,13 @@ declare module 'react-native-reanimated' {
     export function runOnJS<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
+    
+    type PropsAdapterFunction = (props: Record<string, unknown>) => void;
+    export function createAnimatedPropAdapter(
+      adapter: PropsAdapterFunction,
+      nativeProps?: string[]
+    ): PropsAdapterFunction;
+
     export function processColor(color: number | string): number;
     export function createWorklet<A extends any[], R>(
       fn: (...args: A) => R
@@ -484,10 +491,11 @@ declare module 'react-native-reanimated' {
     export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
       T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
-    >(updater: () => T, deps?: DependencyList): T;
+    >(updater: () => T, deps?: DependencyList | null): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
-      deps?: DependencyList
+      deps?: DependencyList | null,
+      adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
     ): T;
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
@@ -730,6 +738,7 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const runOnUI: typeof Animated.runOnUI;
   export const runOnJS: typeof Animated.runOnJS;
+  export const createAnimatedPropAdapter: typeof Animated.createAnimatedPropAdapter;
   export const processColor: typeof Animated.processColor;
   export const makeMutable: typeof Animated.makeMutable;
   export const useValue: typeof Animated.useValue;

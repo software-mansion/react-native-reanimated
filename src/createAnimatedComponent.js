@@ -229,7 +229,8 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      this._component.setNativeProps(props);
+      // eslint-disable-next-line no-unused-expressions
+      this._component.setNativeProps?.(props);
     }
 
     _attachPropUpdater() {
