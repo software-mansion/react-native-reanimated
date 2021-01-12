@@ -117,15 +117,20 @@ function runAnimations(animation, timestamp, key, result) {
       });
       return allFinished;
     } else if (typeof animation === 'object' && animation.onFrame) {
-      if (animation.callStart) {
-        animation.callStart(timestamp);
-        animation.callStart = null;
-      }
-      const finished = animation.onFrame(animation, timestamp);
-      animation.timestamp = timestamp;
-      if (finished) {
-        animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
+      let finished = false;
+      if (animation.finished) {
+        finished = true;
+      } else {
+        if (animation.callStart) {
+          animation.callStart(timestamp);
+          animation.callStart = null;
+        }
+        finished = animation.onFrame(animation, timestamp);
+        animation.timestamp = timestamp;
+        if (finished) {
+          animation.finished = true;
+          animation.callback && animation.callback(true /* finished */);
+        }
       }
       result[key] = animation.current;
       return finished;
