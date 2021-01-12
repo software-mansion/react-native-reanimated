@@ -229,7 +229,7 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      // eslint-disable-next-line
+      // eslint-disable-next-line no-unused-expressions
       this._component.setNativeProps?.(props);
     }
 

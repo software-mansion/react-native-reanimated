@@ -237,7 +237,7 @@ export const runOnJS = (fun) => {
 
 export function createAnimatedPropAdapter(adapter, nativeProps) {
   const nativePropsToAdd = {};
-  // eslint-disable-next-line
+  // eslint-disable-next-line no-unused-expressions
   nativeProps?.forEach((prop) => {
     nativePropsToAdd[prop] = true;
   });
