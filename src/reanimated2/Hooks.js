@@ -11,7 +11,7 @@ import {
   getTimestamp,
 } from './core';
 import updateProps from './UpdateProps';
-import { initialUpdaterRun } from './animations';
+import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
@@ -27,6 +27,12 @@ export function useSharedValue(init, shouldRebuild = true) {
     ref.current.last = init;
     ref.current.mutable.value = init;
   }
+
+  useEffect(() => {
+    return () => {
+      cancelAnimation(ref.current.mutable);
+    };
+  }, []);
 
   return ref.current.mutable;
 }
@@ -104,9 +110,12 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   return prepareAnimation(animatedProp, lastAnimation, lastValue);
 }
 
-function runAnimations(animation, timestamp, key, result) {
+function runAnimations(animation, timestamp, key, result, animationsActive) {
   'worklet';
-  function runAnimations(animation, timestamp, key, result) {
+  function runAnimations(animation, timestamp, key, result, animationsActive) {
+    if (!animationsActive.value) {
+      return true;
+    }
     if (Array.isArray(animation)) {
       result[key] = [];
       let allFinished = true;
@@ -148,7 +157,7 @@ function runAnimations(animation, timestamp, key, result) {
       return true;
     }
   }
-  return runAnimations(animation, timestamp, key, result);
+  return runAnimations(animation, timestamp, key, result, animationsActive);
 }
 
 // TODO: recirsive worklets aren't supported yet
@@ -196,7 +205,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters) {
+function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters, animationsActive) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -233,7 +242,8 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters) {
         animations[propName],
         timestamp,
         propName,
-        updates
+        updates,
+        animationsActive
       );
       if (finished) {
         last[propName] = updates[propName];
@@ -286,6 +296,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewRef = useRef(null);
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
+  const animationsActive = useSharedValue(true);
 
   // build dependencies
   if (!dependencies) {
@@ -314,7 +325,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         updater,
         remoteState,
         maybeViewRef,
-        adapters
+        adapters,
+        animationsActive,
       );
     };
     const mapperId = startMapper(fun, inputs, []);
@@ -327,6 +339,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     return () => {
       initRef.current = null;
       viewRef.current = null;
+      animationsActive.value = false;
     };
   }, []);
 
