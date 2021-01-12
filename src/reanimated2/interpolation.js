@@ -45,7 +45,7 @@ function validateType(type) {
       ${extrapolate}: 'clamp',
   })`;
 
-  if (!type && type !== undefined) {
+  if (!type) {
     throw new Error(
       `${EXTRAPOLATE_ERROR_MSG} or interpolate(value, [inputRange], [outputRange], 'clamp')`
     );
