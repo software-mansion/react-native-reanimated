@@ -6,7 +6,7 @@ export const SVGAdapter = createAnimatedPropAdapter((props) => {
   // transform
   if (keys.includes('transform')) {
     if (Array.isArray(props.transform)) {
-      // case of array with 6 values => https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Shape.tsx#L200
+      // case of array with 6 values => https://github.com/react-native-svg/react-native-svg/blob/b2e2c355204ff4b10973d3afce1495f7e4167ff7/src/elements/Shape.tsx#L200
       if (props.transform.length !== 6) {
         throw new Error(
           `invalid transform length of ${props.transform.length}, should be 6`
@@ -21,7 +21,7 @@ export const SVGAdapter = createAnimatedPropAdapter((props) => {
       ];
     } else if (typeof props.transform === 'string') {
       // case of string 'translate(translateX translateY)'
-      // todo: handle other cases of transform string like here https://github.com/react-native-svg/react-native-svg/blob/develop/src/lib/extract/extractTransform.ts#L184
+      // todo: handle other cases of transform string like here https://github.com/react-native-svg/react-native-svg/blob/b2e2c355204ff4b10973d3afce1495f7e4167ff7/src/lib/extract/extractTransform.ts#L184
       const arr = props.transform
         .replace('translate(', '')
         .replace(')', '')
@@ -36,7 +36,7 @@ export const TextInputAdapter = createAnimatedPropAdapter(
   (props) => {
     'worklet';
     const keys = Object.keys(props);
-    // convert text to value like RN does here: https://github.com/facebook/react-native/blob/master/Libraries/Components/TextInput/TextInput.js#L878
+    // convert text to value like RN does here: https://github.com/facebook/react-native/blob/f2c6279ca497b34d5a2bfbb6f2d33dc7a7bea02a/Libraries/Components/TextInput/TextInput.js#L878
     if (keys.includes('value')) {
       props.text = props.value;
       delete props.value;
