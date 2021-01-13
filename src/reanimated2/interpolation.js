@@ -51,8 +51,9 @@ function validateType(type) {
     );
   }
 
+  // eslint-disable-next-line no-prototype-builtins
   const hasExtrapolateLeft = type.hasOwnProperty('extrapolateLeft');
-  
+  // eslint-disable-next-line no-prototype-builtins
   const hasExtrapolateRight = type.hasOwnProperty('extrapolateRight');
 
   if (
