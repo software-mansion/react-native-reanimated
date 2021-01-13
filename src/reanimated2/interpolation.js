@@ -51,14 +51,10 @@ function validateType(type) {
     );
   }
 
-  const hasExtrapolateLeft = Object.prototype.hasOwnProperty.call(
-    type,
-    'extrapolateLeft'
-  );
-  const hasExtrapolateRight = Object.prototype.hasOwnProperty.call(
-    type,
-    'extrapolateRight'
-  );
+  // eslint-disable-next-line no-prototype-builtins
+  const hasExtrapolateLeft = type.hasOwnProperty('extrapolateLeft');
+  // eslint-disable-next-line no-prototype-builtins
+  const hasExtrapolateRight = type.hasOwnProperty('extrapolateRight');
 
   if (
     typeof type === 'object' &&
