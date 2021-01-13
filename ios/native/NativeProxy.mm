@@ -9,6 +9,7 @@
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
+#import <iostream>
 
 namespace reanimated {
 
@@ -113,7 +114,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      double frameTimestamp = displayLink.timestamp * 1000.0;
+      double frameTimestamp = displayLink.targetTimestamp * 1000;
       rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
       onRender(frameTimestamp);
       rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
