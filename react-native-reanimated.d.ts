@@ -52,7 +52,7 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
-    type ExtrapolateParameter = Extrapolate | { extrapolateLeft?: Extrapolate, extrapolateRight?: Extrapolate } | undefined 
+    type ExtrapolateParameter = Extrapolate | { extrapolateLeft?: Extrapolate, extrapolateRight?: Extrapolate }
 
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
