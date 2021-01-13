@@ -116,7 +116,8 @@ function workletValueSetter(value) {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
-    if (this._value === animation.current) {
+    // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
+    if (this._value === animation.current && !animation.isHigherOrder) {
       return;
     }
     // animated set
