@@ -14,6 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import Reanimated1 from '../reanimated1/App';
 
+import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -77,6 +78,10 @@ const SCREENS = {
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: '🆕 Extrapolation Example',
   },
 };
 
