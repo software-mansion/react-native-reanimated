@@ -126,10 +126,8 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
       });
       return allFinished;
     } else if (typeof animation === 'object' && animation.onFrame) {
-      let finished = false;
-      if (animation.finished) {
-        finished = true;
-      } else {
+      let finished = true;
+      if (!animation.finished) {
         if (animation.callStart) {
           animation.callStart(timestamp);
           animation.callStart = null;
@@ -205,7 +203,14 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef, adapters, animationsActive) {
+function styleUpdater(
+  viewDescriptor,
+  updater,
+  state,
+  maybeViewRef,
+  adapters,
+  animationsActive
+) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -326,7 +331,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         remoteState,
         maybeViewRef,
         adapters,
-        animationsActive,
+        animationsActive
       );
     };
     const mapperId = startMapper(fun, inputs, []);
