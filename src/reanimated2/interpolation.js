@@ -51,14 +51,9 @@ function validateType(type) {
     );
   }
 
-  const hasExtrapolateLeft = Object.prototype.hasOwnProperty.call(
-    type,
-    'extrapolateLeft'
-  );
-  const hasExtrapolateRight = Object.prototype.hasOwnProperty.call(
-    type,
-    'extrapolateRight'
-  );
+  const hasExtrapolateLeft = type.hasOwnProperty('extrapolateLeft');
+  
+  const hasExtrapolateRight = type.hasOwnProperty('extrapolateRight');
 
   if (
     typeof type === 'object' &&
