@@ -30,7 +30,7 @@ Continue with the instruction below if you'd like to install Reanimated v2 on an
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
 ```bash
-> yarn add react-native-reanimated@alpha
+> yarn add react-native-reanimated@next
 ```
 
 ### Reanimated 2 in Expo
