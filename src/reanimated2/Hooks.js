@@ -120,7 +120,9 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
       result[key] = [];
       let allFinished = true;
       animation.forEach((entry, index) => {
-        if (!runAnimations(entry, timestamp, index, result[key])) {
+        if (
+          !runAnimations(entry, timestamp, index, result[key], animationsActive)
+        ) {
           allFinished = false;
         }
       });
@@ -145,7 +147,15 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
       result[key] = {};
       let allFinished = true;
       Object.keys(animation).forEach((k) => {
-        if (!runAnimations(animation[k], timestamp, k, result[key])) {
+        if (
+          !runAnimations(
+            animation[k],
+            timestamp,
+            k,
+            result[key],
+            animationsActive
+          )
+        ) {
           allFinished = false;
         }
       });
