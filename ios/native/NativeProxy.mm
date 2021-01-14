@@ -9,7 +9,6 @@
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
-#import <iostream>
 
 namespace reanimated {
 
@@ -157,4 +156,3 @@ module = std::make_shared<NativeReanimatedModule>(jsInvoker,
 }
 
 }
-
