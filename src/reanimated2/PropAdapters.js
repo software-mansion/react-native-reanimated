@@ -26,7 +26,10 @@ export const SVGAdapter = createAnimatedPropAdapter((props) => {
         .replace('translate(', '')
         .replace(')', '')
         .split(' ');
-      props.transform = [{ translateX: arr[0] }, { translateX: arr[1] }];
+      props.transform = [
+        { translateX: parseFloat(arr[0]) },
+        { translateY: parseFloat(arr[1]) },
+      ];
     }
   }
   // todo: other props
