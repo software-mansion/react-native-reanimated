@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
