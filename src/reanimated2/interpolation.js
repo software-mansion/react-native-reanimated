@@ -45,11 +45,7 @@ function validateType(type) {
       ${extrapolate}: 'clamp',
   })`;
 
-  if (!type) {
-    throw new Error(
-      `${EXTRAPOLATE_ERROR_MSG} or interpolate(value, [inputRange], [outputRange], 'clamp')`
-    );
-  }
+  type = type ?? 'extend';
 
   // eslint-disable-next-line no-prototype-builtins
   const hasExtrapolateLeft = type.hasOwnProperty('extrapolateLeft');
