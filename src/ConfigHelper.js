@@ -101,6 +101,8 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   writingDirection: true,
   /* text color */
   color: true,
+  // For react-native-animateable-text
+  text: true,
   tintColor: true,
   shadowColor: true,
 };
