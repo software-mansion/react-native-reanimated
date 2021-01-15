@@ -79,13 +79,13 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     type = ValueType::NullType;
   } else if (value.isBool()) {
     type = ValueType::BoolType;
-    boolValue = value.getBool();
+    valueContainer = std::make_unique<BooleanValueWrapper>(value.getBool());
   } else if (value.isNumber()) {
     type = ValueType::NumberType;
-    numberValue = value.asNumber();
+    valueContainer = std::make_unique<NumberValueWrapper>(value.asNumber());
   } else if (value.isString()) {
     type = ValueType::StringType;
-    stringValue = value.asString(rt).utf8(rt);
+    valueContainer = std::make_unique<StringValueWrapper>(value.asString(rt).utf8(rt));
   } else if (value.isObject()) {
     auto object = value.asObject(rt);
     if (object.isFunction(rt)) {
@@ -107,11 +107,14 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     } else if (object.isArray(rt)) {
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
+      std::vector<std::shared_ptr<ShareableValue>> result;
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
         containsHostFunction |= sv->containsHostFunction;
-        frozenArray.push_back(sv);
+        frozenArray.push_back(sv); //TODO: to remove
+        result.push_back(sv);
       }
+      valueContainer = std::make_unique<FrozenArrayWrapper>(result);
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
       mutableValue = object.getHostObject<MutableValue>(rt);
@@ -137,7 +140,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     }
   } else if (value.isSymbol()) {
     type = ValueType::StringType;
-    stringValue = value.asSymbol(rt).toString(rt);
+    valueContainer = std::make_unique<StringValueWrapper>(value.asSymbol(rt).toString(rt));
   } else {
     throw "Invalid value type";
   }
@@ -192,11 +195,12 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::NullType:
       return jsi::Value::null();
     case ValueType::BoolType:
-      return jsi::Value(boolValue);
+      return jsi::Value(static_cast<BooleanValueWrapper*>(valueContainer.get())->value);
     case ValueType::NumberType:
-      return jsi::Value(numberValue);
+      return jsi::Value(static_cast<NumberValueWrapper*>(valueContainer.get())->value);
     case ValueType::StringType:
-      return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
+      return jsi::Value(rt, jsi::String::createFromAscii(rt, static_cast<StringValueWrapper*>(valueContainer.get())->value));
+//      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::getString(valueContainer)));
     case ValueType::ObjectType:
       return createFrozenWrapper(rt, frozenObject);
     case ValueType::ArrayType: {

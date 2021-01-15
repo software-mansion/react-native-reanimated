@@ -3,6 +3,8 @@
 #include "WorkletsCache.h"
 #include "SharedParent.h"
 #include "Logger.h"
+#include "ValueWrapper.h"
+#include "HostFunctionHandler.h"
 #include <string>
 #include <mutex>
 #include <unordered_map>
@@ -13,19 +15,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-struct HostFunctionHandler {
-  std::shared_ptr<jsi::Function> pureFunction;
-  std::string functionName;
-  HostFunctionHandler(std::shared_ptr<jsi::Function> f, jsi::Runtime &rt) {
-    pureFunction = f;
-    functionName = f->getProperty(rt, "name").asString(rt).utf8(rt);
-  }
-  
-  std::shared_ptr<jsi::Function> get() {
-    return pureFunction;
-  }
-};
-
 class ShareableValue: public std::enable_shared_from_this<ShareableValue>, public StoreUser {
 friend WorkletsCache;
 friend FrozenObject;
@@ -35,9 +24,11 @@ friend void extractMutables(jsi::Runtime &rt,
 
 private:
   NativeReanimatedModule *module;
-  bool boolValue;
-  double numberValue;
-  std::string stringValue;
+  std::unique_ptr<ValueWrapper> valueContainer;
+  
+//  bool boolValue;
+//  double numberValue;
+//  std::string stringValue;
   std::shared_ptr<HostFunctionHandler> hostFunction;
   jsi::Runtime *hostRuntime;
   std::shared_ptr<FrozenObject> frozenObject;

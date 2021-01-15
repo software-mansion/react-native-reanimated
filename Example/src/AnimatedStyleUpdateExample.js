@@ -9,6 +9,11 @@ import React from 'react';
 
 export default function AnimatedStyleUpdateExample(props) {
   const randomWidth = useSharedValue(10);
+  const v1 = useSharedValue('mleko');
+  const v2 = useSharedValue(true);
+  const v3 = useSharedValue(5);
+
+  console.log(v1, v2, v3);
 
   const config = {
     duration: 500,
