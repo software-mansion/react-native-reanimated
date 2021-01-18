@@ -104,7 +104,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
-        
         std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
         containsHostFunction = frozenObject->containsHostFunction;
         valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject);
@@ -116,7 +115,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
       std::vector<std::shared_ptr<ShareableValue>> result;
-      containsHostFunction = false;
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
         containsHostFunction |= sv->containsHostFunction;
@@ -141,7 +139,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
-      
       std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
       containsHostFunction = frozenObject->containsHostFunction;
       valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject);

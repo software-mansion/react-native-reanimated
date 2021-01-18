@@ -16,11 +16,11 @@ jsi::Function function(jsi::Runtime &rt, const std::string& code) {
 }
 
 std::shared_ptr<jsi::Function> WorkletsCache::getFunction(jsi::Runtime &rt, std::shared_ptr<FrozenObject> frozenObj) {
-  long long workletHash = static_cast<NumberValueWrapper*>(frozenObj->map["__workletHash"]->valueContainer.get())->value;
+  long long workletHash = ValueWrapper::asNumber(frozenObj->map["__workletHash"]->valueContainer);
   if (worklets.count(workletHash) == 0) {
     jsi::Function fun = function(
       rt,
-      static_cast<StringValueWrapper*>(frozenObj->map["asString"]->valueContainer.get())->value
+      ValueWrapper::asString(frozenObj->map["asString"]->valueContainer)
     );
     std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
     worklets[workletHash] = funPtr;
