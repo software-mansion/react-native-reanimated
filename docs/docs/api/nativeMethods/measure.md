@@ -4,7 +4,7 @@ title: measure
 sidebar_label: measure
 ---
 
-Determines the location on screen, width, and height of the given view. Note that these measurements are not available until after the rendering has been completed in native. If you need the measurements as soon as possible, consider using `onLayout` instead.
+Determines the location on screen, width, and height of the given view. Note that these measurements are not available until after the rendering has been completed in native. If you need the measurements as soon as possible, consider using [`onLayout`](https://reactnative.dev/docs/view#onlayout) instead.
 
 This function is implemented on native platforms only. On the web, it's sufficient to use a standard version of the `measure` which is available on most of the default components provided by React Native(it's [here](https://github.com/facebook/react-native/blob/65975dd28de0a7b8b8c4eef6479bf7eee5fcfb93/Libraries/Renderer/shims/ReactNativeTypes.js#L105)). In such a case it should be invoked in the following way(note it's asynchronous so if you want to make it synchronous you should use `Promise`):
 
