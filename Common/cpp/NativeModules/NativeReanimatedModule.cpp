@@ -25,7 +25,7 @@ void extractMutables(jsi::Runtime &rt,
   switch (sv->type)
   {
   case ValueType::MutableValueType:
-    res.push_back(sv->mutableValue);
+    res.push_back(ValueWrapper::asMutableValue(sv->valueContainer));
     break;
   case ValueType::ArrayType:
     for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer))

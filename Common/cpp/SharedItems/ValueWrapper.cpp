@@ -30,6 +30,10 @@ const std::vector<std::shared_ptr<ShareableValue>> ValueWrapper::asFrozenArray(c
   return static_cast<FrozenArrayWrapper*>(valueContainer.get())->value;
 };
 
+const std::shared_ptr<MutableValue> ValueWrapper::asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<MutableValueWrapper*>(valueContainer.get())->value;
+};
+
 const HostFunctionWrapper* ValueWrapper::asHostFunctionWrapper(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<HostFunctionWrapper*>(valueContainer.get());
 };

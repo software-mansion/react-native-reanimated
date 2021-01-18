@@ -75,7 +75,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
-    mutableValue = std::make_shared<MutableValue>(rt, value, module, module->scheduler);
+    valueContainer = std::make_unique<MutableValueWrapper>(
+      std::make_shared<MutableValue>(rt, value, module, module->scheduler)
+    );
   } else if (value.isUndefined()) {
     type = ValueType::UndefinedType;
   } else if (value.isNull()) {
@@ -95,9 +97,9 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       if (object.getProperty(rt, "__worklet").isUndefined()) {
         // not a worklet, we treat this as a host function
         type = ValueType::HostFunctionType;
+        containsHostFunction = true;
         valueContainer = std::make_unique<HostFunctionWrapper>(
           std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt),
-          true,
           &rt
         );
       } else {
@@ -105,8 +107,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         type = ValueType::WorkletFunctionType;
         
         std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-        bool containsHostFunction = frozenObject->containsHostFunction;
-        valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject, containsHostFunction);
+        containsHostFunction = frozenObject->containsHostFunction;
+        valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject);
         if (isRNRuntime && !containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
@@ -115,16 +117,16 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
       std::vector<std::shared_ptr<ShareableValue>> result;
-      bool containsHostFunction = false;
+      containsHostFunction = false;
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
         containsHostFunction |= sv->containsHostFunction;
         result.push_back(sv);
       }
-      valueContainer = std::make_unique<FrozenArrayWrapper>(result, containsHostFunction);
+      valueContainer = std::make_unique<FrozenArrayWrapper>(result);
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
-      mutableValue = object.getHostObject<MutableValue>(rt);
+      valueContainer = std::make_unique<MutableValueWrapper>(object.getHostObject<MutableValue>(rt));
       adaptCache(rt, value);
     } else if (object.isHostObject<RemoteObject>(rt)) {
       type = ValueType::RemoteObjectType;
@@ -142,8 +144,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ObjectType;
       
       std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-      bool containsHostFunction = frozenObject->containsHostFunction;
-      valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject, containsHostFunction);
+      containsHostFunction = frozenObject->containsHostFunction;
+      valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject);
       if (isRNRuntime) {
         if (!containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
@@ -231,7 +233,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return createHost(rt, remoteObject);
     }
     case ValueType::MutableValueType:
-      return createHost(rt, mutableValue);
+      return createHost(rt, ValueWrapper::asMutableValue(valueContainer));
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper = ValueWrapper::asHostFunctionWrapper(valueContainer);
       if (hostFunctionWrapper->hostRuntime == &rt) {

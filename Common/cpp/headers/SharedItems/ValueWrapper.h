@@ -15,9 +15,9 @@ enum WrapperValueTypes {
   STRING,
   HOST_FUNCTION,
   FROZEN_OBJECT,
-  REMOTE_OBJECT_INITIALIZER,
   REMOTE_OBJECT,
-  FROZEN_ARRAY
+  FROZEN_ARRAY,
+  MUTABLE_VALUE,
 };
 
 class HostFunctionWrapper;
@@ -37,6 +37,7 @@ public:
   static const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::vector<std::shared_ptr<ShareableValue>> asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static const std::shared_ptr<MutableValue> asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer);
   
   static const HostFunctionWrapper* asHostFunctionWrapper(const std::unique_ptr<ValueWrapper>& valueContainer);
   
@@ -71,15 +72,12 @@ public:
     : value(_value), ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
   HostFunctionWrapper(
     const std::shared_ptr<HostFunctionHandler> & _value,
-    bool _containsHostFunction,
     jsi::Runtime *_hostRuntime
   )
     : value(_value),
-      containsHostFunction(_containsHostFunction),
       hostRuntime(_hostRuntime),
       ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
   std::shared_ptr<HostFunctionHandler> value;
-  bool containsHostFunction = false;
   jsi::Runtime *hostRuntime;
 };
 
@@ -87,12 +85,7 @@ class FrozenObjectWrapper : public ValueWrapper {
 public:
   FrozenObjectWrapper(const std::shared_ptr<FrozenObject> & _value)
     : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_OBJECT) {};
-  FrozenObjectWrapper(const std::shared_ptr<FrozenObject> & _value, bool _containsHostFunction)
-    : value(_value),
-      containsHostFunction(_containsHostFunction),
-      ValueWrapper(WrapperValueTypes::FROZEN_OBJECT) {};
   std::shared_ptr<FrozenObject> value;
-  bool containsHostFunction = false;
 };
 
 class RemoteObjectWrapper : public ValueWrapper {
@@ -106,12 +99,14 @@ class FrozenArrayWrapper : public ValueWrapper {
 public:
   FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value)
     : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_ARRAY) {};
-  FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value, bool _containsHostFunction)
-    : value(_value),
-      containsHostFunction(_containsHostFunction),
-      ValueWrapper(WrapperValueTypes::FROZEN_ARRAY) {};
   std::vector<std::shared_ptr<ShareableValue>> value;
-  bool containsHostFunction = false;
+};
+
+class MutableValueWrapper : public ValueWrapper {
+public:
+  MutableValueWrapper(const std::shared_ptr<MutableValue> & _value)
+    : value(_value), ValueWrapper(WrapperValueTypes::MUTABLE_VALUE) {};
+  std::shared_ptr<MutableValue> value;
 };
 
 }
