@@ -229,7 +229,8 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      this._component.setNativeProps(props);
+      // eslint-disable-next-line no-unused-expressions
+      this._component.setNativeProps?.(props);
     }
 
     _attachPropUpdater() {
@@ -250,16 +251,17 @@ export default function createAnimatedComponent(Component) {
         viewTag = findNodeHandle(this);
         viewName = null;
       } else {
+        // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance._nativeTag;
+        viewTag = hostInstance?._nativeTag;
         /**
          * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
          * The name we're looking for is in the field named uiViewClassName.
          */
-        viewName = hostInstance.viewConfig?.uiViewClassName;
+        viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (this._hasReanimated2Props(styles)) {
+        if (hostInstance && this._hasReanimated2Props(styles)) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }

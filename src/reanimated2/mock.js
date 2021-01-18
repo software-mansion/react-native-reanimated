@@ -14,21 +14,27 @@ const ReanimatedV2 = {
   useAnimatedReaction: NOOP,
 
   withTiming: (toValue, _, cb) => {
-    cb && setTimeout(() => cb(true), 0);
+    cb && cb(true);
     return toValue;
   },
   withSpring: (toValue, _, cb) => {
-    cb && setTimeout(() => cb(true), 0);
+    cb && cb(true);
     return toValue;
   },
   withDecay: (_, cb) => {
-    cb && setTimeout(() => cb(true), 0);
+    cb && cb(true);
     return 0;
   },
+  withDelay: (_, animationValue) => {
+    return animationValue;
+  },
+  withSequence: (..._animations) => {
+    return 0;
+  },
+  withRepeat: (animation) => {
+    return animation;
+  },
   cancelAnimation: NOOP,
-  delay: (_, b) => b,
-  sequence: () => 0,
-  repeat: (a) => a,
   measure: () => ({
     x: 0,
     y: 0,
@@ -54,6 +60,8 @@ const ReanimatedV2 = {
     out: ID,
     inOut: ID,
   },
+
+  runOnJS: (fn) => fn,
 };
 
 module.exports = {

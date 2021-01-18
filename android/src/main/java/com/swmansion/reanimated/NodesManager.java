@@ -464,7 +464,7 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
 
-      shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
+      shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }

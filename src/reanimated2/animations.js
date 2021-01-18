@@ -21,7 +21,7 @@ export function transform(value, handler) {
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
-    const match = value.match(/([A-Za-z]*)([-\d.]*)([A-Za-z]*)/);
+    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/);
     const prefix = match[1];
     const suffix = match[3];
     const number = match[2];

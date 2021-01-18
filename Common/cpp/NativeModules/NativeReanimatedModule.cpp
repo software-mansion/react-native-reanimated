@@ -6,7 +6,7 @@
 #include "Mapper.h"
 #include "RuntimeDecorator.h"
 #include "EventHandlerRegistry.h"
-#include "EventHandler.h"
+#include "WorkletEventHandler.h"
 #include "FrozenObject.h"
 #include <functional>
 #include <thread>
@@ -153,7 +153,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const 
 
   scheduler->scheduleOnUI([=] {
     auto handlerFunction = handlerShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
-    auto handler = std::make_shared<EventHandler>(newRegistrationId, eventName, std::move(handlerFunction));
+    auto handler = std::make_shared<WorkletEventHandler>(newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(handler);
   });
 

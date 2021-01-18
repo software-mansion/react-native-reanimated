@@ -2,6 +2,7 @@
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
@@ -115,7 +116,8 @@ function workletValueSetter(value) {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
-    if (this._value === animation.current) {
+    // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
+    if (this._value === animation.current && !animation.isHigherOrder) {
       return;
     }
     // animated set
@@ -237,6 +239,16 @@ export const runOnJS = (fun) => {
     return fun.__callAsync;
   }
 };
+
+export function createAnimatedPropAdapter(adapter, nativeProps) {
+  const nativePropsToAdd = {};
+  // eslint-disable-next-line no-unused-expressions
+  nativeProps?.forEach((prop) => {
+    nativePropsToAdd[prop] = true;
+  });
+  addWhitelistedNativeProps(nativePropsToAdd);
+  return adapter;
+}
 
 const capturableConsole = console;
 runOnUI(() => {
