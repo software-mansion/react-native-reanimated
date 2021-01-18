@@ -48,32 +48,32 @@ protected:
 class BooleanValueWrapper : public ValueWrapper {
 public:
   BooleanValueWrapper(const bool _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::BOOLEAN) {};
+    : ValueWrapper(WrapperValueTypes::BOOLEAN), value(_value) {};
   bool value;
 };
 
 class NumberValueWrapper : public ValueWrapper {
 public:
   NumberValueWrapper(const double _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::NUMBER) {};
+    : ValueWrapper(WrapperValueTypes::NUMBER), value(_value) {};
   double value;
 };
 
 class StringValueWrapper : public ValueWrapper {
 public:
   StringValueWrapper(const std::string & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::STRING) {};
+    : ValueWrapper(WrapperValueTypes::STRING), value(_value) {};
   std::string value;
 };
 
 class HostFunctionWrapper : public ValueWrapper {
 public:
   HostFunctionWrapper(const std::shared_ptr<HostFunctionHandler> & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
+    : ValueWrapper(WrapperValueTypes::HOST_FUNCTION), value(_value) {};
   HostFunctionWrapper(
     const std::shared_ptr<HostFunctionHandler> & _value,
     jsi::Runtime *_hostRuntime
-  ) : value(_value), hostRuntime(_hostRuntime), ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
+  ) : ValueWrapper(WrapperValueTypes::HOST_FUNCTION), value(_value), hostRuntime(_hostRuntime) {};
   std::shared_ptr<HostFunctionHandler> value;
   jsi::Runtime *hostRuntime;
 };
@@ -81,28 +81,28 @@ public:
 class FrozenObjectWrapper : public ValueWrapper {
 public:
   FrozenObjectWrapper(const std::shared_ptr<FrozenObject> & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_OBJECT) {};
+    : ValueWrapper(WrapperValueTypes::FROZEN_OBJECT), value(_value) {};
   std::shared_ptr<FrozenObject> value;
 };
 
 class RemoteObjectWrapper : public ValueWrapper {
 public:
   RemoteObjectWrapper(const std::shared_ptr<RemoteObject> & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::REMOTE_OBJECT) {};
+    : ValueWrapper(WrapperValueTypes::REMOTE_OBJECT), value(_value) {};
   std::shared_ptr<RemoteObject> value;
 };
 
 class FrozenArrayWrapper : public ValueWrapper {
 public:
   FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_ARRAY) {};
+    : ValueWrapper(WrapperValueTypes::FROZEN_ARRAY), value(_value) {};
   std::vector<std::shared_ptr<ShareableValue>> value;
 };
 
 class MutableValueWrapper : public ValueWrapper {
 public:
   MutableValueWrapper(const std::shared_ptr<MutableValue> & _value)
-    : value(_value), ValueWrapper(WrapperValueTypes::MUTABLE_VALUE) {};
+    : ValueWrapper(WrapperValueTypes::MUTABLE_VALUE), value(_value) {};
   std::shared_ptr<MutableValue> value;
 };
 
