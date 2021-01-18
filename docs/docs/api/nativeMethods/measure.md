@@ -11,8 +11,8 @@ This function is implemented on native platforms only. On the web, it's sufficie
 ```javascript
 const aref = useAnimatedRef();
 new Promise((resolve, reject) => {
-  if (animatedRef && animatedRef.current) {
-    animatedRef.current.measure((x, y, width, height, pageX, pageY) => {
+  if (aref && aref.current) {
+    aref.current.measure((x, y, width, height, pageX, pageY) => {
       resolve({ x, y, width, height, pageX, pageY });
     });
   } else {
