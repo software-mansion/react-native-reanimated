@@ -30,7 +30,9 @@ public:
     return type;
   }
   
-  static const std::string getString(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static bool asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static double asNumber(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static const std::string asString(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::shared_ptr<HostFunctionHandler> asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);

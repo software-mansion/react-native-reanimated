@@ -31,7 +31,7 @@ private:
 //  std::string stringValue;
 //  std::shared_ptr<HostFunctionHandler> hostFunction;
 //  jsi::Runtime *hostRuntime;
-  //std::shared_ptr<FrozenObject> frozenObject;
+//  std::shared_ptr<FrozenObject> frozenObject;
 //  std::shared_ptr<RemoteObjectInitializer> remoteObjectInitializer;
 //  std::shared_ptr<RemoteObject> remoteObject;
 //  std::vector<std::shared_ptr<ShareableValue>> frozenArray;

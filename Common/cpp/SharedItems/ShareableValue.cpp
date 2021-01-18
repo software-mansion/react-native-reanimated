@@ -208,11 +208,11 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::NullType:
       return jsi::Value::null();
     case ValueType::BoolType:
-      return jsi::Value(static_cast<BooleanValueWrapper*>(valueContainer.get())->value);
+      return jsi::Value(ValueWrapper::asBoolean(valueContainer));
     case ValueType::NumberType:
-      return jsi::Value(static_cast<NumberValueWrapper*>(valueContainer.get())->value);
+      return jsi::Value(ValueWrapper::asNumber(valueContainer));
     case ValueType::StringType:
-      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::getString(valueContainer)));
+      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::asString(valueContainer)));
     case ValueType::ObjectType:
       return createFrozenWrapper(rt, ValueWrapper::asFrozenObject(valueContainer));
     case ValueType::ArrayType: {

@@ -2,7 +2,15 @@
 
 namespace reanimated {
 
-const std::string ValueWrapper::getString(const std::unique_ptr<ValueWrapper>& valueContainer) {
+bool ValueWrapper::asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<BooleanValueWrapper*>(valueContainer.get())->value;
+};
+
+double ValueWrapper::asNumber(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<NumberValueWrapper*>(valueContainer.get())->value;
+};
+
+const std::string ValueWrapper::asString(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<StringValueWrapper*>(valueContainer.get())->value;
 };
 
