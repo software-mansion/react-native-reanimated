@@ -30,14 +30,14 @@ public:
     return type;
   }
   
-  static bool asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static double asNumber(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::string asString(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::shared_ptr<HostFunctionHandler> asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::vector<std::shared_ptr<ShareableValue>> asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static const std::shared_ptr<MutableValue> asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline bool asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline double asNumber(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::string asString(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<HostFunctionHandler> asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::vector<std::shared_ptr<ShareableValue>> asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<MutableValue> asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer);
   
   static const HostFunctionWrapper* asHostFunctionWrapper(const std::unique_ptr<ValueWrapper>& valueContainer);
   
@@ -73,10 +73,7 @@ public:
   HostFunctionWrapper(
     const std::shared_ptr<HostFunctionHandler> & _value,
     jsi::Runtime *_hostRuntime
-  )
-    : value(_value),
-      hostRuntime(_hostRuntime),
-      ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
+  ) : value(_value), hostRuntime(_hostRuntime), ValueWrapper(WrapperValueTypes::HOST_FUNCTION) {};
   std::shared_ptr<HostFunctionHandler> value;
   jsi::Runtime *hostRuntime;
 };
@@ -107,6 +104,42 @@ public:
   MutableValueWrapper(const std::shared_ptr<MutableValue> & _value)
     : value(_value), ValueWrapper(WrapperValueTypes::MUTABLE_VALUE) {};
   std::shared_ptr<MutableValue> value;
+};
+
+inline bool ValueWrapper::asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<BooleanValueWrapper*>(valueContainer.get())->value;
+};
+
+inline double ValueWrapper::asNumber(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<NumberValueWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::string ValueWrapper::asString(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<StringValueWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::shared_ptr<HostFunctionHandler> ValueWrapper::asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<HostFunctionWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::shared_ptr<FrozenObject> ValueWrapper::asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<FrozenObjectWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::shared_ptr<RemoteObject> ValueWrapper::asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<RemoteObjectWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::vector<std::shared_ptr<ShareableValue>> ValueWrapper::asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<FrozenArrayWrapper*>(valueContainer.get())->value;
+};
+
+inline const std::shared_ptr<MutableValue> ValueWrapper::asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<MutableValueWrapper*>(valueContainer.get())->value;
+};
+
+inline const HostFunctionWrapper* ValueWrapper::asHostFunctionWrapper(const std::unique_ptr<ValueWrapper>& valueContainer) {
+  return static_cast<HostFunctionWrapper*>(valueContainer.get());
 };
 
 }

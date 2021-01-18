@@ -61,7 +61,6 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
           type = ValueType::WorkletFunctionType;
         }
-        
         valueContainer = std::make_unique<FrozenObjectWrapper>(
           hiddenProperty.getHostObject<FrozenObject>(rt)
         );
