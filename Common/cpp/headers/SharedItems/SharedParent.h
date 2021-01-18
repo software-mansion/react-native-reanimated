@@ -19,7 +19,6 @@ enum class ValueType {
 class ShareableValue;
 class MutableValue;
 class RemoteObject;
-class RemoteObjectInitializer;
 class NativeReanimatedModule;
 
 }
