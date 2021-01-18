@@ -61,7 +61,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
           type = ValueType::WorkletFunctionType;
         }
-        frozenObject = hiddenProperty.getHostObject<FrozenObject>(rt);
+        
+        valueContainer = std::make_unique<FrozenObjectWrapper>(
+          hiddenProperty.getHostObject<FrozenObject>(rt)
+        );
         if (object.hasProperty(rt, ALREADY_CONVERTED)) {
           adaptCache(rt, value);
         }
@@ -98,8 +101,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
-        frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-        containsHostFunction |= frozenObject->containsHostFunction;
+        
+        std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+        bool containsHostFunction = frozenObject->containsHostFunction;
+        valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject, containsHostFunction);
         if (isRNRuntime && !containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
@@ -129,8 +134,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
-      frozenObject = std::make_shared<FrozenObject>(rt, object, module);
-      containsHostFunction |= frozenObject->containsHostFunction;
+      
+      std::shared_ptr<FrozenObject> frozenObject = std::make_shared<FrozenObject>(rt, object, module);
+      bool containsHostFunction = frozenObject->containsHostFunction;
+      valueContainer = std::make_unique<FrozenObjectWrapper>(frozenObject, containsHostFunction);
       if (isRNRuntime) {
         if (!containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
@@ -202,7 +209,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return jsi::Value(rt, jsi::String::createFromAscii(rt, static_cast<StringValueWrapper*>(valueContainer.get())->value));
 //      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::getString(valueContainer)));
     case ValueType::ObjectType:
-      return createFrozenWrapper(rt, frozenObject);
+      return createFrozenWrapper(rt, ValueWrapper::asFrozenObject(valueContainer));
     case ValueType::ArrayType: {
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {
@@ -291,7 +298,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       }
     case ValueType::WorkletFunctionType:
       auto module = this->module;
-      auto frozenObject = this->frozenObject;
+      auto frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
       if (module->isUIRuntime(rt)) {
         // when running on UI thread we prep a function
 

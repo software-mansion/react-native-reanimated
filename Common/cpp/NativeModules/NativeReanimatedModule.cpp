@@ -35,7 +35,7 @@ void extractMutables(jsi::Runtime &rt,
     break;
   case ValueType::RemoteObjectType:
   case ValueType::ObjectType:
-    for (auto &it : sv->frozenObject->map)
+    for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map)
     {
       extractMutables(rt, it.second, res);
     }

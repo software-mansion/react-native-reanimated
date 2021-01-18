@@ -24,12 +24,13 @@ class ValueWrapper {
 public:
   ValueWrapper() {};
   ValueWrapper(WrapperValueTypes _type) : type(_type) {};
-  public WrapperValueTypes getType() const {
+  WrapperValueTypes getType() const {
     return type;
   }
   
   //TODO: maybe add setters also
   static const std::string getString(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
   //TODO: consider to implement getters for all of types
   
 protected:
@@ -68,7 +69,12 @@ class FrozenObjectWrapper : public ValueWrapper {
 public:
   FrozenObjectWrapper(const std::shared_ptr<FrozenObject> & _value)
     : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_OBJECT) {};
+  FrozenObjectWrapper(const std::shared_ptr<FrozenObject> & _value, bool _containsHostFunction)
+    : value(_value),
+      containsHostFunction(_containsHostFunction),
+      ValueWrapper(WrapperValueTypes::FROZEN_OBJECT) {};
   std::shared_ptr<FrozenObject> value;
+  bool containsHostFunction = false;
 };
 
 class RemoteObjectInitializerWrapper : public ValueWrapper {
