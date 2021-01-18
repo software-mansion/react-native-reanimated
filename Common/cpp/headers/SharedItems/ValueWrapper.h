@@ -28,10 +28,10 @@ public:
     return type;
   }
   
-  //TODO: maybe add setters also
   static const std::string getString(const std::unique_ptr<ValueWrapper>& valueContainer);
   static const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
-  //TODO: consider to implement getters for all of types
+  static const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static const std::vector<std::shared_ptr<ShareableValue>> asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
   
 protected:
   WrapperValueTypes type;
@@ -95,7 +95,12 @@ class FrozenArrayWrapper : public ValueWrapper {
 public:
   FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value)
     : value(_value), ValueWrapper(WrapperValueTypes::FROZEN_ARRAY) {};
+  FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value, bool _containsHostFunction)
+    : value(_value),
+      containsHostFunction(_containsHostFunction),
+      ValueWrapper(WrapperValueTypes::FROZEN_ARRAY) {};
   std::vector<std::shared_ptr<ShareableValue>> value;
+  bool containsHostFunction = false;
 };
 
 }

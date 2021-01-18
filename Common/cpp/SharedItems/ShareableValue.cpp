@@ -113,24 +113,28 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ValueType::ArrayType;
       auto array = object.asArray(rt);
       std::vector<std::shared_ptr<ShareableValue>> result;
+      bool containsHostFunction = false;
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
         auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
         containsHostFunction |= sv->containsHostFunction;
-        frozenArray.push_back(sv); //TODO: to remove
         result.push_back(sv);
       }
-      valueContainer = std::make_unique<FrozenArrayWrapper>(result);
+      valueContainer = std::make_unique<FrozenArrayWrapper>(result, containsHostFunction);
     } else if (object.isHostObject<MutableValue>(rt)) {
       type = ValueType::MutableValueType;
       mutableValue = object.getHostObject<MutableValue>(rt);
       adaptCache(rt, value);
     } else if (object.isHostObject<RemoteObject>(rt)) {
       type = ValueType::RemoteObjectType;
-      remoteObject = object.getHostObject<RemoteObject>(rt);
+      valueContainer = std::make_unique<RemoteObjectWrapper>(
+         object.getHostObject<RemoteObject>(rt)
+      );
       adaptCache(rt, value);
     } else if (objectType == ValueType::RemoteObjectType) {
       type = ValueType::RemoteObjectType;
-      remoteObject = std::make_shared<RemoteObject>(rt, object, module, module->scheduler);
+      valueContainer = std::make_unique<RemoteObjectWrapper>(
+        std::make_shared<RemoteObject>(rt, object, module, module->scheduler)
+      );
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::ObjectType;
@@ -206,22 +210,24 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::NumberType:
       return jsi::Value(static_cast<NumberValueWrapper*>(valueContainer.get())->value);
     case ValueType::StringType:
-      return jsi::Value(rt, jsi::String::createFromAscii(rt, static_cast<StringValueWrapper*>(valueContainer.get())->value));
-//      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::getString(valueContainer)));
+      return jsi::Value(rt, jsi::String::createFromAscii(rt, ValueWrapper::getString(valueContainer)));
     case ValueType::ObjectType:
       return createFrozenWrapper(rt, ValueWrapper::asFrozenObject(valueContainer));
     case ValueType::ArrayType: {
+      auto frozenArray = ValueWrapper::asFrozenArray(valueContainer);
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {
         array.setValueAtIndex(rt, i, frozenArray[i]->toJSValue(rt));
       }
       return array;
     }
-    case ValueType::RemoteObjectType:
-     if (module->isUIRuntime(rt)) {
+    case ValueType::RemoteObjectType: {
+      auto remoteObject = ValueWrapper::asRemoteObject(valueContainer);
+      if (module->isUIRuntime(rt)) {
         remoteObject->maybeInitializeOnUIRuntime(rt);
       }
       return createHost(rt, remoteObject);
+    }
     case ValueType::MutableValueType:
       return createHost(rt, mutableValue);
     case ValueType::HostFunctionType:
