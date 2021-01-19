@@ -377,6 +377,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }, dependencies);
 
   useEffect(() => {
+    animationsActive.value = true;
     return () => {
       initRef.current = null;
       viewRef = null;
