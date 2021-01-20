@@ -49,7 +49,7 @@ export default function Test() {
   const animatedProps = useAnimatedProps(
     () => {
       return {
-        transform: [1, 0, 0, 1, sv.value, 0],
+        transform: [1, 0, 0, 1, sv.value, sv.value],
       };
     },
     null,
