@@ -213,6 +213,19 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
+const validateAnimatedStyles = (styles) => {
+  'worklet';
+  if (typeof styles !== 'object') {
+    throw new Error(
+      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+    );
+  } else if (Array.isArray(styles)) {
+    throw new Error(
+      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    );
+  }
+};
+
 function styleUpdater(
   viewDescriptor,
   updater,
@@ -224,6 +237,7 @@ function styleUpdater(
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
+  validateAnimatedStyles(newValues);
   const oldValues = state.last;
 
   // extract animated props
@@ -323,6 +337,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
+    validateAnimatedStyles(initial);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
