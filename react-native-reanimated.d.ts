@@ -486,7 +486,7 @@ declare module 'react-native-reanimated' {
 
     export function useAnimatedReaction<D>(
       dependencies: () => D,
-      effects: (dependencies: D) => void,
+      effects: (dependencies: D, previousResult: D | null) => void,
       deps?: DependencyList
     ): void;
                         

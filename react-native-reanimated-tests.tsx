@@ -534,6 +534,15 @@ function UseAnimatedReactionTest() {
     [state]
   );
 
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value, previousResult) => {
+      console.log(value, previousResult);
+    }
+  );
+
   return null;
 }
 
