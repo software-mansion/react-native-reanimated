@@ -1,4 +1,4 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
+/* global _WORKLET _frameTimestamp _setGlobalConsole */
 
 import {
   NativeReanimated,
@@ -7,10 +7,6 @@ import {
   installCoreFunctions,
 } from './platform-specific/PlatformSpecific';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
-
-global.__reanimatedWorkletInit = function(worklet) {
-  worklet.__worklet = true;
-};
 
 function _toArrayReanimated(object) {
   'worklet';
@@ -71,17 +67,6 @@ export function getViewProp(viewTag, propName) {
       }
     });
   });
-}
-
-function _getTimestamp() {
-  'worklet';
-  if (_frameTimestamp) {
-    return _frameTimestamp;
-  }
-  if (_eventTimestamp) {
-    return _eventTimestamp;
-  }
-  return _getCurrentTime();
 }
 
 function workletValueSetter(value) {

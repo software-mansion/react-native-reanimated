@@ -1,4 +1,5 @@
 /* global _updatePropsJS */
+import reanimatedJS from '../js-reanimated';
 export { default as reanimatedJS } from '../js-reanimated';
 
 export const rgbaColorForJS = (r, g, b, alpha) => {
@@ -13,7 +14,7 @@ export function getTimestamp() {
   return reanimatedJS.getTimestamp();
 }
 
-export const updatePropsProcessColors = (updates) => {};
+export const updatePropsProcessColors = (updates, colorProperties, processColor)=> {};
 
 export const processEventInHandler = (event) => event.nativeEvent;
 

@@ -7,17 +7,16 @@ import {
   stopMapper,
   makeMutable,
   makeRemote,
-  requestFrame,
-  getTimestamp,
 } from './core';
 import updateProps from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import {
-  NativeReanimated,
   processEventInHandler,
   getEventHandlerResult,
   getMaybeViewRef,
+  getTimestamp,
+  requestFrame,
 } from './platform-specific/PlatformSpecific';
 
 export function useSharedValue(init) {

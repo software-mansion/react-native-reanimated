@@ -1,7 +1,24 @@
-/* global _WORKLET _getTimestamp _updateProps */
-import { processColor } from '../Colors';
+/* global _WORKLET _updateProps _frameTimestamp _eventTimestamp _getCurrentTime */
+/**
+ * this file contains mutual code for both: ios and android
+ */
+
 import { TurboModuleRegistry } from 'react-native';
-import { makeShareable } from '../core';
+
+global.__reanimatedWorkletInit = function(worklet) {
+  worklet.__worklet = true;
+};
+
+function _getTimestamp() {
+  'worklet';
+  if (_frameTimestamp) {
+    return _frameTimestamp;
+  }
+  if (_eventTimestamp) {
+    return _eventTimestamp;
+  }
+  return _getCurrentTime();
+}
 
 export {
   default as RNRenderer,
@@ -63,30 +80,10 @@ export function getTimestamp() {
   return _getTimestamp();
 }
 
-// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-const colorProps = [
-  'backgroundColor',
-  'borderBottomColor',
-  'borderColor',
-  'borderLeftColor',
-  'borderRightColor',
-  'borderTopColor',
-  'borderStartColor',
-  'borderEndColor',
-  'color',
-  'shadowColor',
-  'textDecorationColor',
-  'tintColor',
-  'textShadowColor',
-  'overlayColor',
-];
-
-const ColorProperties = makeShareable(colorProps);
-
-export const updatePropsProcessColors = (updates) => {
+export const updatePropsProcessColors = (updates, colorProperties, processColor) => {
   'worklet';
   Object.keys(updates).forEach((key) => {
-    if (ColorProperties.indexOf(key) !== -1) {
+    if (colorProperties.indexOf(key) !== -1) {
       updates[key] = processColor(updates[key]);
     }
   });
@@ -124,9 +121,16 @@ export const installCoreFunctions = (
   workletValueSetter,
   workletValueSetterJS
 ) => {
+  'worklet';
   NativeReanimated.installCoreFunctions(workletValueSetter);
 };
 
-export const getMaybeViewRef = (viewRef) => null;
+export const getMaybeViewRef = (viewRef) => {
+  'worklet';
+  return null;
+};
 
-export const getUpdateProps = () => _updateProps;
+export const getUpdateProps = () => {
+  'worklet';
+  return _updateProps;;
+};
