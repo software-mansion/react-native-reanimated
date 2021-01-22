@@ -237,7 +237,6 @@ function styleUpdater(
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
-  validateAnimatedStyles(newValues);
   const oldValues = state.last;
 
   // extract animated props
