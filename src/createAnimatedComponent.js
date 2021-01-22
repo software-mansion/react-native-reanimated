@@ -11,7 +11,7 @@ import setAndForwardRef from './setAndForwardRef';
 
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { RNRenderer } from './reanimated2/platform-specific/PlatformSpecific';
 
 const NODE_MAPPING = new Map();
 

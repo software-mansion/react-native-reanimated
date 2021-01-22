@@ -8,10 +8,14 @@
 
 /* eslint no-bitwise: 0 */
 
-import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
 import { interpolate } from './interpolation';
 import { Extrapolate } from '../derived';
+import {
+  rgbaColorForJS,
+  rgbaColorResult,
+  processColorResult,
+} from './platform-specific/PlatformSpecific';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
@@ -421,8 +425,9 @@ export const blue = (c) => {
 
 export const rgbaColor = (r, g, b, alpha = 1) => {
   'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const rgbaForJS = rgbaColorForJS(r, g, b, alpha);
+  if (rgbaForJS) {
+    return rgbaForJS;
   }
   const a = Math.round(alpha * 255);
   const c =
@@ -430,11 +435,7 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
     Math.round(r) * (1 << 16) +
     Math.round(g) * (1 << 8) +
     Math.round(b);
-  if (Platform.OS === 'android') {
-    // on Android color is represented as signed 32 bit int
-    return c < (1 << 31) >>> 0 ? c : c - Math.pow(2, 32);
-  }
-  return c;
+  return rgbaColorResult(c);
 };
 
 /* accepts parameters
@@ -575,15 +576,7 @@ export function processColor(color) {
     return null;
   }
 
-  if (Platform.OS === 'android') {
-    // Android use 32 bit *signed* integer to represent the color
-    // We utilize the fact that bitwise operations in JS also operates on
-    // signed 32 bit integers, so that we can use those to convert from
-    // *unsigned* to *signed* 32bit int that way.
-    normalizedColor = normalizedColor | 0x0;
-  }
-
-  return normalizedColor;
+  return processColorResult(normalizedColor);
 }
 
 export function convertToHSVA(color) {

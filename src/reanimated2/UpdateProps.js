@@ -1,28 +1,8 @@
-/* global _updateProps */
-import { processColor } from './Colors';
-import { makeShareable } from './core';
-import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated/index';
-
-// copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-const colorProps = [
-  'backgroundColor',
-  'borderBottomColor',
-  'borderColor',
-  'borderLeftColor',
-  'borderRightColor',
-  'borderTopColor',
-  'borderStartColor',
-  'borderEndColor',
-  'color',
-  'shadowColor',
-  'textDecorationColor',
-  'tintColor',
-  'textShadowColor',
-  'overlayColor',
-];
-
-const ColorProperties = makeShareable(colorProps);
+import {
+  updatePropsProcessColors,
+  getUpdateProps,
+} from './platform-specific/PlatformSpecific';
 
 export default function updateProps(
   viewDescriptor,
@@ -40,18 +20,9 @@ export default function updateProps(
     });
   }
 
-  if (Platform.OS !== 'web') {
-    Object.keys(updates).forEach((key) => {
-      if (ColorProperties.indexOf(key) !== -1) {
-        updates[key] = processColor(updates[key]);
-      }
-    });
-  }
+  updatePropsProcessColors(updates);
 
-  const updatePropsInternal =
-    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
-
-  updatePropsInternal(
+  getUpdateProps()(
     viewDescriptor.value.tag,
     viewName,
     updates,

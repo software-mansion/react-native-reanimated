@@ -1,7 +1,10 @@
 /* global _WORKLET */
 import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
-import NativeReanimated from './NativeReanimated';
+import {
+  NativeReanimated,
+  defineAnimationResult,
+} from './platform-specific/PlatformSpecific';
 
 let IN_STYLE_UPDATER = false;
 
@@ -151,10 +154,7 @@ export function defineAnimation(starting, factory) {
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimated.native) {
-    return create();
-  }
-  return create;
+  return defineAnimationResult(create);
 }
 
 export function cancelAnimation(sharedValue) {

@@ -1,4 +1,4 @@
-import NativeModule from './NativeReanimated';
+import { NativeReanimated } from './platform-specific/PlatformSpecific';
 
 const jsListener = (eventName, handler) => (evt) => {
   handler({ ...evt.nativeEvent, eventName });

@@ -13,8 +13,12 @@ import {
 import updateProps from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
-import NativeReanimated from './NativeReanimated';
-import { Platform } from 'react-native';
+import {
+  NativeReanimated,
+  processEventInHandler,
+  getEventHandlerResult,
+  getMaybeViewRef,
+} from './platform-specific/PlatformSpecific';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -338,7 +342,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
 
   const { remoteState, initial } = initRef.current;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
+  const maybeViewRef = getMaybeViewRef(viewRef);
 
   useEffect(() => {
     const fun = () => {
@@ -509,7 +513,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
 
   const handler = (event) => {
     'worklet';
-    event = Platform.OS === 'web' ? event.nativeEvent : event;
+    event = processEventInHandler(event);
 
     const FAILED = 1;
     const BEGAN = 2;
@@ -550,15 +554,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     }
   };
 
-  if (Platform.OS === 'web') {
-    return handler;
-  }
-
-  return useEvent(
-    handler,
-    ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
-    dependenciesDiffer
-  );
+  return getEventHandlerResult(useEvent, handler, dependenciesDiffer);
 }
 
 export function useAnimatedScrollHandler(handlers, dependencies) {
