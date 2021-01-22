@@ -14,6 +14,7 @@ import ScrollToTest from './scrollToTest';
 import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
 import UpdatePropsTest from './UpdatePropsTest';
+import AdaptersTest from './AdaptersTest';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -45,6 +46,10 @@ const SCREENS = {
   UpdatePropsTest: {
     screen: UpdatePropsTest,
     title: '🆕 Update Props',
+  },
+  AdaptersTest: {
+    screen: AdaptersTest,
+    title: '🆕 Adapters',
   },
 };
 

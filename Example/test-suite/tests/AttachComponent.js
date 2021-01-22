@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   getViewProp,
 } from 'react-native-reanimated';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, Platform } from 'react-native';
 
 export const name = 'AttachComponent';
 
@@ -57,7 +57,9 @@ export async function test(t, { setPortalChild, cleanupPortal }) {
       // check opacity of Animated.View in Comp
       const viewTag = findNodeHandle(viewRef.current);
       t.expect(viewTag).not.toBe(null);
-      for (let i = 0.1; i <= 1; i += 0.1) {
+      // for android perform the loop only once
+      let i = Platform.OS === 'android' ? 1 : 0.1;
+      do {
         let expectedOp = i;
         const svSet = await callbackRef.current(expectedOp);
         t.expect(svSet).toBe(true);
@@ -66,7 +68,8 @@ export async function test(t, { setPortalChild, cleanupPortal }) {
         opacity = parseFloat(opacity).toFixed(1);
         expectedOp = parseFloat(expectedOp).toFixed(1);
         t.expect(opacity).toBe(expectedOp);
-      }
+        i += 0.1;
+      } while (i < 1);
     });
   });
 }

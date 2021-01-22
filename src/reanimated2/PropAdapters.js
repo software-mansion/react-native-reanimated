@@ -17,7 +17,7 @@ export const SVGAdapter = createAnimatedPropAdapter((props) => {
       const y = props.y ?? 0;
       props.transform = [
         { translateX: transform[0] * x + transform[2] * y + transform[4] },
-        { translateX: transform[1] * x + transform[3] * y + transform[5] },
+        { translateY: transform[1] * x + transform[3] * y + transform[5] },
       ];
     } else if (typeof props.transform === 'string') {
       // case of string 'translate(translateX translateY)'
