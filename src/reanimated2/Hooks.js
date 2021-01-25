@@ -19,19 +19,16 @@ import { Platform } from 'react-native';
 export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = {
-      mutable: makeMutable(init),
-      last: init,
-    };
+    ref.current = makeMutable(init);
   }
 
   useEffect(() => {
     return () => {
-      cancelAnimation(ref.current.mutable);
+      cancelAnimation(ref.current);
     };
   }, []);
 
-  return ref.current.mutable;
+  return ref.current;
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
