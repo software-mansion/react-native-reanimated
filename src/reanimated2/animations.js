@@ -517,8 +517,14 @@ export function withSequence(..._animations) {
       return false;
     }
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(animation, value, now, _) {
+      if (animations.length === 1) {
+        throw Error(
+          'withSequence() animation require more than one animation as argument'
+        );
+      }
       animation.animationIndex = 0;
+      const previousAnimation = animations[animations.length - 1];
       firstAnimation.onStart(firstAnimation, value, now, previousAnimation);
     }
 
@@ -568,7 +574,12 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
+        nextAnimation.onStart(
+          nextAnimation,
+          startValue,
+          now,
+          nextAnimation.previousAnimation
+        );
         return false;
       }
       return false;
