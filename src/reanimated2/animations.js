@@ -517,14 +517,16 @@ export function withSequence(..._animations) {
       return false;
     }
 
-    function onStart(animation, value, now, _) {
+    function onStart(animation, value, now, previousAnimation) {
       if (animations.length === 1) {
         throw Error(
           'withSequence() animation require more than one animation as argument'
         );
       }
       animation.animationIndex = 0;
-      const previousAnimation = animations[animations.length - 1];
+      if (previousAnimation === undefined) {
+        previousAnimation = animations[animations.length - 1];
+      }
       firstAnimation.onStart(firstAnimation, value, now, previousAnimation);
     }
 
