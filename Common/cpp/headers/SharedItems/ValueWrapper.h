@@ -15,18 +15,18 @@ class ValueWrapper {
 public:
   ValueWrapper() {};
   ValueWrapper(ValueType _type) : type(_type) {};
-    ValueType getType() const {
+  ValueType getType() const {
     return type;
   }
   
   static inline bool asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer);
   static inline double asNumber(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::string asString(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::shared_ptr<HostFunctionHandler> asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::shared_ptr<FrozenObject> asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::shared_ptr<RemoteObject> asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::vector<std::shared_ptr<ShareableValue>> asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
-  static inline const std::shared_ptr<MutableValue> asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::string& asString(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<HostFunctionHandler>& asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<FrozenObject>& asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<RemoteObject>& asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline std::vector<std::shared_ptr<ShareableValue>>& asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer);
+  static inline const std::shared_ptr<MutableValue>& asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer);
   
   static const HostFunctionWrapper* asHostFunctionWrapper(const std::unique_ptr<ValueWrapper>& valueContainer);
   
@@ -83,6 +83,7 @@ public:
 
 class FrozenArrayWrapper : public ValueWrapper {
 public:
+  FrozenArrayWrapper() : ValueWrapper(ValueType::FrozenArrayType) {};
   FrozenArrayWrapper(const std::vector<std::shared_ptr<ShareableValue>> & _value)
     : ValueWrapper(ValueType::FrozenArrayType), value(_value) {};
   std::vector<std::shared_ptr<ShareableValue>> value;
@@ -103,27 +104,27 @@ inline double ValueWrapper::asNumber(const std::unique_ptr<ValueWrapper>& valueC
   return static_cast<NumberValueWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::string ValueWrapper::asString(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline const std::string& ValueWrapper::asString(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<StringValueWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::shared_ptr<HostFunctionHandler> ValueWrapper::asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline const std::shared_ptr<HostFunctionHandler>& ValueWrapper::asHostFunction(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<HostFunctionWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::shared_ptr<FrozenObject> ValueWrapper::asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline const std::shared_ptr<FrozenObject>& ValueWrapper::asFrozenObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<FrozenObjectWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::shared_ptr<RemoteObject> ValueWrapper::asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline const std::shared_ptr<RemoteObject>& ValueWrapper::asRemoteObject(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<RemoteObjectWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::vector<std::shared_ptr<ShareableValue>> ValueWrapper::asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline std::vector<std::shared_ptr<ShareableValue>>& ValueWrapper::asFrozenArray(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<FrozenArrayWrapper*>(valueContainer.get())->value;
 };
 
-inline const std::shared_ptr<MutableValue> ValueWrapper::asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer) {
+inline const std::shared_ptr<MutableValue>& ValueWrapper::asMutableValue(const std::unique_ptr<ValueWrapper>& valueContainer) {
   return static_cast<MutableValueWrapper*>(valueContainer.get())->value;
 };
 
