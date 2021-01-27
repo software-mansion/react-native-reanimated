@@ -34,14 +34,14 @@ Pod::Spec.new do |s|
       "ios/**/*.{mm,h,m}",
       "Common/cpp/**/*.cpp",
       "Common/cpp/headers/**/*.h"
-  
+
   s.pod_target_xcconfig    = {
     "USE_HEADERMAP" => "YES",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/Folly\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
-  s.xcconfig               = { 
-    "CLANG_CXX_LANGUAGE_STANDARD" => "gnu++14",
+  s.xcconfig               = {
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/Folly\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags  }
 
@@ -74,7 +74,7 @@ Pod::Spec.new do |s|
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
 
-  if reactVersion.match(/^0.62/) 
+  if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
   else
     s.dependency 'React-callinvoker'
