@@ -7,8 +7,20 @@ ROOT=$(pwd)
 # unset CI so all archs are built
 unset CI
 
+yarn add react-native@0.64.0-rc.2
+
+rm -rf android/build/outputs/aar/*.aar
+cd android 
+gradle clean
+
+gradle :assembleDebug
+cd $ROOT
+
+rm -rf android-npm/react-native-reanimated-64.aar
+cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-64.aar
+
 # PART I - I (install RN)
-yarn add react-native --dev
+yarn add react-native --dev #todo: set 0.63 version
 
 # PART I - II (clean)
 
