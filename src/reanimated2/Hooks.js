@@ -16,25 +16,19 @@ import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
-export function useSharedValue(init, shouldRebuild = true) {
+export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = {
-      mutable: makeMutable(init),
-      last: init,
-    };
-  } else if (init !== ref.current.last && shouldRebuild) {
-    ref.current.last = init;
-    ref.current.mutable.value = init;
+    ref.current = makeMutable(init);
   }
 
   useEffect(() => {
     return () => {
-      cancelAnimation(ref.current.mutable);
+      cancelAnimation(ref.current);
     };
   }, []);
 
-  return ref.current.mutable;
+  return ref.current;
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {

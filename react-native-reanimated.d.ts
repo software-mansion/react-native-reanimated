@@ -2,7 +2,13 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentType } from 'react';
+  import {
+    ComponentClass,
+    ReactNode,
+    Component,
+    RefObject,
+    ComponentType,
+  } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -21,7 +27,7 @@ declare module 'react-native-reanimated' {
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
-    OpaqueColorValue
+    OpaqueColorValue,
   } from 'react-native';
   import {
     GestureHandlerGestureEvent,
@@ -54,7 +60,9 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
-    type ExtrapolateParameter = Extrapolate | { extrapolateLeft?: Extrapolate, extrapolateRight?: Extrapolate }
+    type ExtrapolateParameter =
+      | Extrapolate
+      | { extrapolateLeft?: Extrapolate; extrapolateRight?: Extrapolate };
 
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
@@ -242,7 +250,10 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent<S extends object, P extends { style?: StyleProp<S>; }>(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
+    export function createAnimatedComponent<
+      S extends object,
+      P extends { style?: StyleProp<S> }
+    >(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
 
     // classes
     export {
@@ -405,7 +416,7 @@ declare module 'react-native-reanimated' {
       easing?: EasingFunction;
     }
     export function withTiming(
-      toValue: number | Exclude<ColorValue, OpaqueColorValue>,  // string as a color value like `"rgba(20,20,20,0)"`
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithTimingConfig,
       callback?: (isFinished: boolean) => void
     ): number;
@@ -418,10 +429,11 @@ declare module 'react-native-reanimated' {
       userConfig: WithDecayConfig,
       callback?: (isFinished: boolean) => void
     ): number;
-    export function cancelAnimation<T>(
-      sharedValue: SharedValue<T>
-    ): void;
-    export function withDelay(delayMS: number, delayedAnimation: number): number;
+    export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
+    export function withDelay(
+      delayMS: number,
+      delayedAnimation: number
+    ): number;
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
@@ -448,7 +460,7 @@ declare module 'react-native-reanimated' {
     export function runOnJS<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
-    
+
     type PropsAdapterFunction = (props: Record<string, unknown>) => void;
     export function createAnimatedPropAdapter(
       adapter: PropsAdapterFunction,
@@ -467,17 +479,12 @@ declare module 'react-native-reanimated' {
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
-    export function makeMutable<T>(
-      initialValue: T
-    ): SharedValue<T>;
+    export function makeMutable<T>(initialValue: T): SharedValue<T>;
 
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
-    export function useSharedValue<T>(
-      initialValue: T,
-      shouldRebuild?: boolean
-    ): SharedValue<T>;
+    export function useSharedValue<T>(initialValue: T): SharedValue<T>;
 
     export function useDerivedValue<T>(
       processor: () => T,
@@ -489,8 +496,10 @@ declare module 'react-native-reanimated' {
       react: (prepareResult: D, preparePreviousResult: D | null) => void,
       deps?: DependencyList
     ): void;
-                        
-    export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+    export type AnimatedStyleProp<T extends object> =
+      | AnimateStyle<T>
+      | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
       T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList | null): T;

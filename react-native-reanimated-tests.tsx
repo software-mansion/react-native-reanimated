@@ -70,8 +70,8 @@ function MakeMutableTest() {
 // useSharedValue
 function SharedValueTest() {
   const translate = useSharedValue(0);
-  const translate2 = useSharedValue(0, true);
-  const translate3 = useSharedValue(0, false);
+  const translate2 = useSharedValue(0);
+  const translate3 = useSharedValue(0);
 
   const sharedBool = useSharedValue<boolean>(false);
   if (sharedBool.value) {
