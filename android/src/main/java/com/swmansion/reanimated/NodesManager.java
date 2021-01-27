@@ -136,7 +136,6 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
   private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
-  private boolean mTryRunBatchUpdatesSynchronously = false;
 
   public NodesManager(ReactContext context) {
     mContext = context;
@@ -196,15 +195,13 @@ public class NodesManager implements EventDispatcherListener {
     if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
-      final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
-      mTryRunBatchUpdatesSynchronously = false;
       final Semaphore semaphore = new Semaphore(0);
       mContext.runOnNativeModulesQueueThread(
               // FIXME replace `mContext` with `mContext.getExceptionHandler()` after RN 0.59 support is dropped
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = trySynchronously && UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  boolean shouldDispatchUpdates = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
                   if (!shouldDispatchUpdates) {
                     semaphore.release();
                   }
@@ -221,14 +218,12 @@ public class NodesManager implements EventDispatcherListener {
                   }
                 }
               });
-      if (trySynchronously) {
-        while (true) {
-          try {
-            semaphore.acquire();
-            break;
-          } catch (InterruptedException e) {
-            //noop
-          }
+      while (true) {
+        try {
+          semaphore.acquire();
+          break;
+        } catch (InterruptedException e) {
+          //noop
         }
       }
     }
@@ -407,9 +402,6 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps, boolean trySynchronously) {
-    if (trySynchronously) {
-      mTryRunBatchUpdatesSynchronously = true;
-    }
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
