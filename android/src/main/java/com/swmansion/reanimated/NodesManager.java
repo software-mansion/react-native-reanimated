@@ -401,7 +401,7 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps, boolean trySynchronously) {
+  public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps) {
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
   }
 
@@ -547,7 +547,7 @@ public class NodesManager implements EventDispatcherListener {
                 viewTag, new ReactStylesDiffMap(newUIProps));
       }
       if (hasNativeProps) {
-        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
+        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps);
       }
       if (hasJSProps) {
         WritableMap evt = Arguments.createMap();
