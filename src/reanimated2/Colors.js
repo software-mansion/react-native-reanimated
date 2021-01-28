@@ -567,7 +567,7 @@ export function isColor(value) {
 
 export function processColor(color) {
   'worklet';
-  let normalizedColor = processColorInitially(color);
+  const normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
     return undefined;
   }

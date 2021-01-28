@@ -1,10 +1,6 @@
-/* global _WORKLET */
 import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
-import {
-  NativeReanimated,
-  defineAnimationResult,
-} from './platform-specific/PlatformSpecific';
+import { defineAnimationResult } from './platform-specific/PlatformSpecific';
 
 let IN_STYLE_UPDATER = false;
 
