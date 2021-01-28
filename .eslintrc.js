@@ -19,5 +19,10 @@ module.exports = {
   },
   settings: {
     'import/core-modules': ['react-native-reanimated'],
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.ios.js', '.andoid.js', '.web.js'],
+      },
+    },
   },
 };
