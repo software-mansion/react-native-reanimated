@@ -4,7 +4,9 @@
  */
 
 import { TurboModuleRegistry } from 'react-native';
+import RNRenderer from 'react-native/Libraries/Renderer/shims/ReactNative';
 
+/** core.js */
 global.__reanimatedWorkletInit = function(worklet) {
   worklet.__worklet = true;
 };
@@ -20,15 +22,51 @@ function _getTimestamp() {
   return _getCurrentTime();
 }
 
-export {
-  default as RNRenderer,
-} from 'react-native/Libraries/Renderer/shims/ReactNative';
+export function getTimestamp() {
+  'worklet';
+  return _getTimestamp();
+}
 
+export const requestFrame = (frame) => {
+  'worklet';
+  requestAnimationFrame(frame);
+};
+
+export const installCoreFunctions = (
+  workletValueSetter,
+  workletValueSetterJS
+) => {
+  'worklet';
+  NativeReanimated.installCoreFunctions(workletValueSetter);
+};
+
+/** createAnimatedComponent.js */
+export const getViewData = (component) => {
+  // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
+  const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
+  if (!hostInstance) {
+    throw new Error(
+      'Cannot find host instance for this component. Maybe it renders nothing?'
+    );
+  }
+  // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
+  const viewTag = hostInstance?._nativeTag;
+  /**
+   * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
+   * The name we're looking for is in the field named uiViewClassName.
+   */
+  const viewName = hostInstance?.viewConfig?.uiViewClassName;
+  const viewConfig = hostInstance?.viewConfig;
+
+  return { viewTag, viewName, viewConfig };
+};
+
+/** NativeReanimated.js */
 const InnerNativeModule =
   global.__reanimatedModuleProxy ||
   TurboModuleRegistry.getEnforcing('NativeReanimated');
 
-const NativeReanimated = {
+export const NativeReanimated = {
   native: true,
 
   installCoreFunctions(valueSetter) {
@@ -68,19 +106,18 @@ const NativeReanimated = {
   },
 };
 
-export { NativeReanimated };
-
+/** Colors.js */
 export const rgbaColorForJS = (r, g, b, alpha) => {
   'worklet';
   return _WORKLET ? null : `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-export function getTimestamp() {
-  'worklet';
-  return _getTimestamp();
-}
-
-export const updatePropsProcessColors = (updates, colorProperties, processColor) => {
+/** UpdateProps.js */
+export const updatePropsProcessColors = (
+  updates,
+  colorProperties,
+  processColor
+) => {
   'worklet';
   Object.keys(updates).forEach((key) => {
     if (colorProperties.indexOf(key) !== -1) {
@@ -89,6 +126,12 @@ export const updatePropsProcessColors = (updates, colorProperties, processColor)
   });
 };
 
+export const getUpdateProps = () => {
+  'worklet';
+  return _updateProps;
+};
+
+/** Hooks.js */
 export const processEventInHandler = (event) => {
   'worklet';
   return event;
@@ -107,30 +150,13 @@ export const getEventHandlerResult = (
   );
 };
 
-export const defineAnimationResult = (create) => {
-  'worklet';
-  return _WORKLET ? create() : create;
-};
-
-export const requestFrame = (frame) => {
-  'worklet';
-  requestAnimationFrame(frame);
-};
-
-export const installCoreFunctions = (
-  workletValueSetter,
-  workletValueSetterJS
-) => {
-  'worklet';
-  NativeReanimated.installCoreFunctions(workletValueSetter);
-};
-
 export const getMaybeViewRef = (viewRef) => {
   'worklet';
   return null;
 };
 
-export const getUpdateProps = () => {
+/** animations.js */
+export const defineAnimationResult = (create) => {
   'worklet';
-  return _updateProps;;
+  return _WORKLET ? create() : create;
 };

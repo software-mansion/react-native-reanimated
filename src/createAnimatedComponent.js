@@ -11,7 +11,7 @@ import setAndForwardRef from './setAndForwardRef';
 
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/PlatformSpecific';
+import { getViewData } from './reanimated2/platform-specific/PlatformSpecific';
 
 const NODE_MAPPING = new Map();
 
@@ -246,29 +246,11 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
-      let viewTag, viewName;
-      if (Platform.OS === 'web') {
-        viewTag = findNodeHandle(this);
-        viewName = null;
-      } else {
-        // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
-        if (!hostInstance) {
-          throw new Error(
-            'Cannot find host instance for this component. Maybe it renders nothing?'
-          );
-        }
-        // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance?._nativeTag;
-        /**
-         * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
-         * The name we're looking for is in the field named uiViewClassName.
-         */
-        viewName = hostInstance?.viewConfig?.uiViewClassName;
-        // update UI props whitelist for this view
-        if (hostInstance && this._hasReanimated2Props(styles)) {
-          adaptViewConfig(hostInstance.viewConfig);
-        }
+      const { viewTag, viewName, viewConfig } = getViewData(this);
+
+      // update UI props whitelist for this view
+      if (viewConfig) {
+        adaptViewConfig(viewConfig);
       }
 
       styles.forEach((style) => {
