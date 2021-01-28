@@ -10,7 +10,7 @@ export default class WorkletEventHandler {
     this.eventNames = eventNames;
     this.reattachNeeded = false;
 
-    if (!NativeModule.native) {
+    if (!NativeReanimated.native) {
       this.listeners = eventNames.reduce((acc, eventName) => {
         acc[eventName] = jsListener(eventName, worklet);
         return acc;
@@ -26,11 +26,11 @@ export default class WorkletEventHandler {
   registerForEvents(viewTag, fallbackEventName = undefined) {
     this.viewTag = viewTag;
     this.registrations = this.eventNames.map((eventName) =>
-      NativeModule.registerEventHandler(viewTag + eventName, this.worklet)
+      NativeReanimated.registerEventHandler(viewTag + eventName, this.worklet)
     );
     if (this.registrations.length === 0 && fallbackEventName) {
       this.registrations.push(
-        NativeModule.registerEventHandler(
+        NativeReanimated.registerEventHandler(
           viewTag + fallbackEventName,
           this.worklet
         )
@@ -41,7 +41,7 @@ export default class WorkletEventHandler {
   unregisterFromEvents() {
     this.registrations &&
       this.registrations.forEach((id) =>
-        NativeModule.unregisterEventHandler(id)
+        NativeReanimated.unregisterEventHandler(id)
       );
     this.registrations = undefined;
   }
