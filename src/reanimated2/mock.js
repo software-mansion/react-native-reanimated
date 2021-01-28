@@ -1,11 +1,18 @@
-const hooks = require('./Hooks');
+const useRef = require('react').useRef
 
 /* eslint-disable standard/no-callback-literal */
 const NOOP = () => {};
 const ID = (t) => t;
 
 const ReanimatedV2 = {
-  useSharedValue: hooks.useSharedValue,
+  useSharedValue: (init) => {
+    const ref = useRef(null);
+    if (ref.current === null) {
+      ref.current = { value: init };
+    }
+  
+    return ref.current
+  },
   useDerivedValue: (a) => ({ value: a() }),
   useAnimatedScrollHandler: () => NOOP,
   useAnimatedGestureHandler: () => NOOP,
