@@ -234,6 +234,7 @@ module.exports = {
   __esModule: true,
 
   ...Reanimated,
+  ...ReanimatedV2,
 
   default: {
     ...Reanimated,
