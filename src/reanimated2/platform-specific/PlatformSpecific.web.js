@@ -1,9 +1,12 @@
-/* global _updatePropsJS */
 import { findNodeHandle } from 'react-native';
-import reanimatedJS from '../js-reanimated';
-export { default as reanimatedJS } from '../js-reanimated';
+import reanimatedJS, { _updatePropsJS } from '../js-reanimated';
+export { default as NativeReanimated } from '../js-reanimated';
 
 /** core.js */
+global.__reanimatedWorkletInit = function(worklet) {
+  worklet.__worklet = true;
+};
+
 export function getTimestamp() {
   return reanimatedJS.getTimestamp();
 }
