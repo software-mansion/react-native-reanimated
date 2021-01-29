@@ -70,12 +70,13 @@ $(call import-module,cxxreact)
 $(call import-module,jsi)
 $(call import-module,jsiexecutor)
 $(call import-module,callinvoker)
-$(call import-module,reactperflogger)
 $(call import-module,hermes)
-$(call import-module,runtimeexecutor)
-$(call import-module,react/nativemodule/core)
-
-include $(REACT_SRC_DIR)/reactperflogger/jni/Android.mk
+ifeq ($(REACT_NATIVE_TARGET_VERSION),64)
+  $(call import-module,reactperflogger)
+  $(call import-module,runtimeexecutor)
+  $(call import-module,react/nativemodule/core)
+  include $(REACT_SRC_DIR)/reactperflogger/jni/Android.mk
+endif
 include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
 
 # TODO(ramanpreet):

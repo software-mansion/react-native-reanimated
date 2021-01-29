@@ -37,8 +37,10 @@ ifeq ($(NATIVE_DEBUG), true)
     cmd-strip :=
 endif
 
-# LOCAL_MODULE := turbomodulejsijni
-# include $(BUILD_SHARED_LIBRARY)
+ifneq ($(REACT_NATIVE_TARGET_VERSION),64)
+	LOCAL_MODULE := turbomodulejsijni
+	include $(BUILD_SHARED_LIBRARY)
+endif
 # end
 
 include $(LOCAL_PATH)/react/Android.mk
