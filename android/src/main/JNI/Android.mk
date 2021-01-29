@@ -37,7 +37,7 @@ ifeq ($(NATIVE_DEBUG), true)
     cmd-strip :=
 endif
 
-ifneq ($(REACT_NATIVE_TARGET_VERSION),64)
+ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -lt 64; echo $$?),0)
 	LOCAL_MODULE := turbomodulejsijni
 	include $(BUILD_SHARED_LIBRARY)
 endif
