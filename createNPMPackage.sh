@@ -7,6 +7,7 @@ ROOT=$(pwd)
 # unset CI so all archs are built
 unset CI
 
+rm -rf ./android/src/main/jniLibs
 export REACT_NATIVE_TARGET_VERSION=64
 yarn add react-native@0.64.0-rc.2
 
@@ -21,6 +22,7 @@ rm -rf android-npm/react-native-reanimated-64.aar
 cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-64.aar
 
 # PART I - I (install RN)
+rm -rf ./android/src/main/jniLibs
 export REACT_NATIVE_TARGET_VERSION=63
 yarn add react-native@0.63.3
 
@@ -46,6 +48,7 @@ gradle clean
 cd $ROOT
 
 # part III (add react-native 62 aar to android-npm)
+rm -rf ./android/src/main/jniLibs
 export REACT_NATIVE_TARGET_VERSION=62
 yarn add react-native@0.62.2 --dev
 
