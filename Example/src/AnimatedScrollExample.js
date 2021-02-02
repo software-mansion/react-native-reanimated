@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, Image, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 
-let data = [
+const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },
   { artist: 'John Lennon', song: 'Imagine' },
   { artist: 'U2', song: 'One' },
@@ -23,49 +23,7 @@ let data = [
   { artist: 'Rolling Stones', song: "I Can't Get No Satisfaction" },
   { artist: 'Sex Pistols', song: 'God Save The Queen' },
   { artist: "Guns N' Roses", song: "Sweet Child O'Mine" },
-  { artist: 'The Clash', song: 'London Calling' },
-  { artist: 'The Kinks', song: 'Waterloo Sunset' },
-  { artist: 'The Eagles', song: 'Hotel California' },
-  { artist: 'Elton John', song: 'Your Song' },
-  { artist: 'Led Zeppelin', song: 'Stairway To Heaven' },
-  { artist: 'Chubby Checker', song: 'The Twist' },
-  { artist: 'Oasis', song: 'Live Forever' },
-  { artist: 'Whitney Houston', song: 'I Will Always Love You' },
-  { artist: 'David Bowie', song: 'Life On Mars?' },
-  { artist: 'Elvis Presley', song: 'Heartbreak Hotel' },
-  { artist: 'Judy Garland', song: 'Over The Rainbow' },
-  { artist: 'Marvin Gaye', song: "What's Goin' On" },
-  { artist: 'Bruce Springsteen', song: 'Born To Run' },
-  { artist: 'The Ronettes', song: 'Be My Baby' },
-  { artist: 'Radiohead', song: 'Creep' },
-  { artist: 'Simon & Garfunkel', song: 'Bridge Over Troubled Water' },
-  { artist: 'Aretha Franklin', song: 'Respect' },
-  { artist: 'Sly And The Family Stone', song: 'Family Affair' },
-  { artist: 'ABBA', song: 'Dancing Queen' },
-  { artist: 'The Beach Boys', song: 'Good Vibrations' },
-  { artist: 'Jimi Hendrix', song: 'Purple Haze' },
-  { artist: 'The Beatles', song: 'Yesterday' },
-  { artist: 'Chuck Berry', song: 'Jonny B Good' },
-  { artist: 'Bob Marley', song: 'No Woman No Cry' },
-  { artist: 'Jeff Buckley', song: 'Hallelujah' },
-  { artist: 'The Police', song: 'Every Breath You Take' },
-  { artist: 'The Beatles', song: 'A Day In The Life' },
-  { artist: 'Ben E King', song: 'Stand By Me' },
-  { artist: 'James Brown', song: "Papa's Got A Brand New Bag" },
-  { artist: 'The Rolling Stones', song: 'Gimme Shelter' },
-  { artist: 'Ray Charles', song: "What'd I Say" },
-  { artist: 'Dire Straits', song: 'Sultans Of Swing' },
-  { artist: 'The Beach Boys', song: 'God Only Knows' },
-  { artist: 'The Righteous Brothers', song: "You've Lost That Lovin' Feeling" },
-  { artist: 'The Who', song: 'My Generation' },
-  { artist: 'Martha Reeves and the Vandellas', song: 'Dancing In The Street' },
-  { artist: 'Prince', song: 'When Doves Cry' },
-  { artist: 'Sam Cooke', song: 'A Change Is Gonna Come' },
-  { artist: 'Ike and Tina Turner', song: 'River Deep Mountain High' },
-  { artist: 'The Emotions', song: 'Best Of My Love' },
 ];
-
-data = data.slice(0, 10);
 
 const ITEM_SIZE = {
   size: 250,
@@ -76,12 +34,8 @@ const IPOD_MARGIN = 20;
 const SCREEN_WIDTH =
   Dimensions.get('window').width - IPOD_MARGIN * 2 - SCROLL_MARGIN * 2;
 const BIG_BALL_SIZE = 200;
-const BIG_BALL_MARGIN = 0;
 const SMALL_BALL_SIZE = 50;
-const INNER_BALL_SIZE =
-  BIG_BALL_SIZE - SMALL_BALL_SIZE * 2 - BIG_BALL_MARGIN * 2;
-const DEFAULT_COVER_URI =
-  'https://e7.pngegg.com/pngimages/950/513/png-clipart-eighth-note-musical-note-stem-notes-music-download-graphic-arts.png';
+const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
 function ScrollExample() {
   const position = useSharedValue(0);
@@ -96,13 +50,9 @@ function ScrollExample() {
     let minDistanceIndex = 0;
     for (let i = 0; i < data.length; ++i) {
       const distance = Math.abs(i * itemTotalSize - offset);
-      if (minDistance === undefined) {
+      if (minDistance === undefined || distance < minDistance) {
         minDistance = distance;
-      } else {
-        if (distance < minDistance) {
-          minDistance = distance;
-          minDistanceIndex = i;
-        }
+        minDistanceIndex = i;
       }
     }
 
@@ -194,12 +144,9 @@ function ScrollExample() {
           });
           return (
             <Animated.View key={i} style={[styles.item, uas]}>
-              <Image
-                style={styles.cover}
-                source={{
-                  uri: DEFAULT_COVER_URI,
-                }}
-              />
+              <View style={styles.cover}>
+                <Text style={{ fontSize: 80, textAlign: 'center' }}>♪</Text>
+              </View>
               <Text style={styles.label}>{artist}</Text>
               <Text style={[styles.label, styles.songLabel]}>{song}</Text>
             </Animated.View>
@@ -234,7 +181,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'orange',
   },
   ballWrapper: {
-    borderWidth: BIG_BALL_MARGIN,
+    borderWidth: 0,
     borderRadius: BIG_BALL_SIZE,
     width: BIG_BALL_SIZE,
     height: BIG_BALL_SIZE,
