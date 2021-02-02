@@ -353,7 +353,7 @@ export function withDecay(userConfig, callback) {
   return defineAnimation(0, () => {
     'worklet';
     const config = {
-      deceleration: 0.997,
+      deceleration: 0.998,
       velocityFactor: 1,
     };
     if (userConfig) {
