@@ -60,13 +60,13 @@ function ScrollExample() {
   };
 
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (e, ctx) => {
+    onScroll: (e) => {
       position.value = e.contentOffset.x;
     },
-    onEndDrag: (e, ctx) => {
+    onEndDrag: (e) => {
       scrollToNearestItem(e.contentOffset.x);
     },
-    onMomentumEnd: (e, ctx) => {
+    onMomentumEnd: (e) => {
       scrollToNearestItem(e.contentOffset.x);
     },
   });
