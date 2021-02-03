@@ -405,7 +405,9 @@ export function withDecay(userConfig, callback) {
       if (config.clamp) {
         if (Array.isArray(config.clamp)) {
           if (config.clamp.length !== 2) {
-            console.error(`clamp array must contain 2 items but is given `);
+            console.error(
+              `clamp array must contain 2 items but is given ${config.clamp.length}`
+            );
           }
         } else {
           console.error(
