@@ -115,7 +115,6 @@ export function getTimestamp() {
 
 function workletValueSetter(value) {
   'worklet';
-  console.log('here value setter', value, _WORKLET, new Error().stack);
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
