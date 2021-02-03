@@ -379,7 +379,7 @@ export function withDecay(userConfig, callback) {
           -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
         );
       animation.current =
-        current + (v / (1000 * config.velocityFactor)) * deltaTime;
+        current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
       animation.velocity = v;
       animation.lastTimestamp = now;
 
