@@ -424,7 +424,7 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
   if (Platform.OS === 'web' || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
-  const a = alpha * 255;
+  const a = Math.round(alpha * 255);
   const c =
     a * (1 << 24) +
     Math.round(r) * (1 << 16) +

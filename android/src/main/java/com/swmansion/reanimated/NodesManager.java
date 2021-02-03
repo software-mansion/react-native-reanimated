@@ -204,7 +204,8 @@ public class NodesManager implements EventDispatcherListener {
               new GuardedRunnable(mContext) {
                 @Override
                 public void runGuarded() {
-                  boolean shouldDispatchUpdates = trySynchronously && UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  boolean queueWasEmpty = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
+                  boolean shouldDispatchUpdates = trySynchronously && queueWasEmpty;
                   if (!shouldDispatchUpdates) {
                     semaphore.release();
                   }
@@ -215,8 +216,10 @@ public class NodesManager implements EventDispatcherListener {
                       mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
                     }
                   }
-                  if (shouldDispatchUpdates) {
+                  if (queueWasEmpty) {
                     mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
+                  }
+                  if (shouldDispatchUpdates) {
                     semaphore.release();
                   }
                 }
@@ -464,7 +467,7 @@ public class NodesManager implements EventDispatcherListener {
       int viewTag = event.getViewTag();
       String key = viewTag + eventName;
 
-      shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
+      shouldSaveEvent |= (mCustomEventHandler != null && mNativeProxy != null && mNativeProxy.isAnyHandlerWaitingForEvent(key));
       if (shouldSaveEvent) {
         mEventQueue.offer(new CopiedEvent(event));
       }

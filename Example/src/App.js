@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
-  YellowBox,
+  LogBox,
 } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
@@ -14,6 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import Reanimated1 from '../reanimated1/App';
 
+import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -26,8 +27,9 @@ import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import ScrollExample from './AnimatedScrollExample';
 
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
   AnimatedStyleUpdate: {
@@ -77,6 +79,14 @@ const SCREENS = {
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: '🆕 Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: '🆕 Scroll Example',
   },
 };
 

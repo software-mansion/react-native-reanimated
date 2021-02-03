@@ -28,9 +28,11 @@ struct HostFunctionHandler {
 
 class ShareableValue: public std::enable_shared_from_this<ShareableValue>, public StoreUser {
 friend WorkletsCache;
+friend FrozenObject;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);
+
 private:
   NativeReanimatedModule *module;
   bool boolValue;
@@ -53,6 +55,7 @@ private:
   ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s): StoreUser(s), module(module) {}
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
+  bool containsHostFunction = false;
 
 public:
   ValueType type = ValueType::UndefinedType;

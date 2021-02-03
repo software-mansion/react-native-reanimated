@@ -32,8 +32,15 @@ include $(BUILD_SHARED_LIBRARY)
 # start | build empty library which is needed by CallInvokerHolderImpl.java
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := turbomodulejsijni
-include $(BUILD_SHARED_LIBRARY)
+# Don't strip debug builds
+ifeq ($(NATIVE_DEBUG), true)
+    cmd-strip :=
+endif
+
+ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -lt 64; echo $$?),0)
+	LOCAL_MODULE := turbomodulejsijni
+	include $(BUILD_SHARED_LIBRARY)
+endif
 # end
 
 include $(LOCAL_PATH)/react/Android.mk

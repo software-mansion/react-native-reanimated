@@ -58,7 +58,9 @@ function ScrollableView({ children }) {
 
   const handler = useAnimatedGestureHandler({
     onStart: (evt, ctx) => {
-      ctx.startY = translateY.value;
+      const currentY = translateY.value;
+      ctx.startY = currentY;
+      translateY.value = currentY; // for stop animation
     },
 
     onActive: (evt, ctx) => {

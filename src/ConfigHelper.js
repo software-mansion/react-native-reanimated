@@ -113,16 +113,22 @@ function configureProps() {
 }
 
 export function addWhitelistedNativeProps(props) {
+  const oldSize = Object.keys(NATIVE_THREAD_PROPS_WHITELIST).length;
   NATIVE_THREAD_PROPS_WHITELIST = {
     ...NATIVE_THREAD_PROPS_WHITELIST,
     ...props,
   };
-  configureProps();
+  if (oldSize !== Object.keys(NATIVE_THREAD_PROPS_WHITELIST).length) {
+    configureProps();
+  }
 }
 
 export function addWhitelistedUIProps(props) {
+  const oldSize = Object.keys(UI_THREAD_PROPS_WHITELIST).length;
   UI_THREAD_PROPS_WHITELIST = { ...UI_THREAD_PROPS_WHITELIST, ...props };
-  configureProps();
+  if (oldSize !== Object.keys(UI_THREAD_PROPS_WHITELIST).length) {
+    configureProps();
+  }
 }
 
 const PROCESSED_VIEW_NAMES = new Set();

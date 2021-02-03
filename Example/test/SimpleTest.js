@@ -5,7 +5,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useDerivedValue,
-  useMapper,
   useEvent,
   useAnimatedProps,
   useAnimatedGestureHandler,
@@ -106,11 +105,6 @@ const SimpleTest = () => {
   /* */
   // check if certain hooks work
   const sv = useSharedValue(50);
-
-  useMapper(() => {
-    'worklet';
-    console.log(`sv has been updated to ${sv.value}`);
-  }, [sv]);
 
   useEvent(
     (event) => {

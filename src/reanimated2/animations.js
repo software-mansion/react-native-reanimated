@@ -21,7 +21,7 @@ export function transform(value, handler) {
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
-    const match = value.match(/([A-Za-z]*)([-\d.]*)([A-Za-z]*)/);
+    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/);
     const prefix = match[1];
     const suffix = match[3];
     const number = match[2];
@@ -139,7 +139,7 @@ export function decorateAnimation(animation) {
   };
 }
 
-function defineAnimation(starting, factory) {
+export function defineAnimation(starting, factory) {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting;
@@ -518,7 +518,15 @@ export function withSequence(..._animations) {
     }
 
     function onStart(animation, value, now, previousAnimation) {
+      if (animations.length === 1) {
+        throw Error(
+          'withSequence() animation require more than one animation as argument'
+        );
+      }
       animation.animationIndex = 0;
+      if (previousAnimation === undefined) {
+        previousAnimation = animations[animations.length - 1];
+      }
       firstAnimation.onStart(firstAnimation, value, now, previousAnimation);
     }
 
@@ -568,7 +576,12 @@ export function withRepeat(
           nextAnimation.toValue = animation.startValue;
           animation.startValue = startValue;
         }
-        nextAnimation.onStart(nextAnimation, startValue, now, nextAnimation);
+        nextAnimation.onStart(
+          nextAnimation,
+          startValue,
+          now,
+          nextAnimation.previousAnimation
+        );
         return false;
       }
       return false;

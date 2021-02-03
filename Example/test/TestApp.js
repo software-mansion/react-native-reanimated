@@ -1,6 +1,6 @@
 import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import { FlatList, Platform, YellowBox } from 'react-native';
+import { FlatList, Platform, LogBox } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -13,8 +13,10 @@ import FastRefreshTest from './FastRefreshTest';
 import ScrollToTest from './scrollToTest';
 import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
+import UpdatePropsTest from './UpdatePropsTest';
+import AdaptersTest from './AdaptersTest';
 
-YellowBox.ignoreWarnings(['Calling `getNode()`']);
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
   SimpleTest: {
@@ -39,7 +41,15 @@ const SCREENS = {
   },
   AnimationsTest: {
     screen: AnimationsTest,
-    title: 'Animations',
+    title: '🆕 Animations',
+  },
+  UpdatePropsTest: {
+    screen: UpdatePropsTest,
+    title: '🆕 Update Props',
+  },
+  AdaptersTest: {
+    screen: AdaptersTest,
+    title: '🆕 Adapters',
   },
 };
 
