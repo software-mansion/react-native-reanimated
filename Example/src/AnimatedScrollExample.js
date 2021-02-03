@@ -97,7 +97,7 @@ function ScrollExample() {
       if (crossProd === 0) {
         return;
       }
-      const dist = Math.sqrt(changeVector.x ** 2 + changeVector.y ** 2);
+      const dist = Math.hypot(changeVector.x, changeVector.y);
       // up or down
       const sign = crossProd < 0 ? -1 : 1;
       const arr = [0, itemTotalSize * (data.length - 1)];
