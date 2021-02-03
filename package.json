@@ -86,7 +86,7 @@
     "lint-staged": "^10.2.11",
     "prettier": "^1.13.7",
     "react": "^16.11.0",
-    "react-native": "^0.63.2",
+    "react-native": "0.64.0-rc.2",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "16.9.0",
     "release-it": "^13.1.1",
