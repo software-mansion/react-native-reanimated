@@ -12,7 +12,8 @@ global.__reanimatedWorkletInit = function(worklet) {
 if (
   !(() => {
     'worklet';
-  }).__workletHash
+  }).__workletHash &&
+  !process.env.JEST_WORKER_ID
 ) {
   throw new Error(
     "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
@@ -114,6 +115,7 @@ export function getTimestamp() {
 
 function workletValueSetter(value) {
   'worklet';
+  console.log('here value setter', value, _WORKLET, new Error().stack);
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
