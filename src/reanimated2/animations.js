@@ -401,26 +401,21 @@ export function withDecay(userConfig, callback) {
       }
     }
 
-    function validConfig() {
+    function validateConfig() {
       if (config.clamp) {
         if (Array.isArray(config.clamp)) {
           if (config.clamp.length !== 2) {
-            console.error(
-              '[reanimated] clampy array must contain 2 items but is given ' +
-                config.clamp.length
-            );
+            console.error(`clamp array must contain 2 items but is given `);
           }
         } else {
           console.error(
-            '[reanimated] config.clampy must be an array but is ' +
-              typeof config.clamp
+            `config.clamp must be an array but is ${typeof config.clamp}`
           );
         }
       }
       if (config.velocityFactor <= 0) {
         console.error(
-          '[reanimated] config.velocityFactor must be greather then 0 but is ' +
-            config.velocityFactor
+          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
         );
       }
     }
@@ -430,7 +425,7 @@ export function withDecay(userConfig, callback) {
       animation.lastTimestamp = now;
       animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
-      validConfig();
+      validateConfig();
     }
 
     return {
