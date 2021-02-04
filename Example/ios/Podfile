@@ -15,7 +15,6 @@ def pods()
   pod 'ReactCommon/turbomodule/samples', :path => '../node_modules/react-native/ReactCommon'
 
   # Additional Pods which aren't included in the default Podfile
-  #pod 'React-ART', :path => '../node_modules/react-native/Libraries/ART'
   pod 'Yoga', :path => '../node_modules/react-native/ReactCommon/yoga', :modular_headers => true
   pod 'React-callinvoker', :path => "../node_modules/react-native/ReactCommon/callinvoker"
   use_native_modules!
