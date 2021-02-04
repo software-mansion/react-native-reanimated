@@ -201,13 +201,15 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
         maybeRequestRender();
       }
     }
-    catch (...)
-    {
-      if (!errorHandler->raise())
-      {
-        throw;
-      }
-    }
+    catch(std::exception &e) {
+     std::string str = e.what();
+     this->errorHandler->setError(str);
+     this->errorHandler->raise();
+   } catch(...) {
+     std::string str = "OnEvent error";
+     this->errorHandler->setError(str);
+     this->errorHandler->raise();
+  }
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(std::string eventName) {
@@ -243,13 +245,14 @@ void NativeReanimatedModule::onRender(double timestampMs)
     {
       maybeRequestRender();
     }
-  }
-  catch (...)
-  {
-    if (!errorHandler->raise())
-    {
-      throw;
-    }
+  } catch(std::exception &e) {
+    std::string str = e.what();
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
+  } catch(...) {
+    std::string str = "OnRender error";
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
   }
 }
 
