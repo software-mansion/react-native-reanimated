@@ -206,7 +206,7 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
      this->errorHandler->setError(str);
      this->errorHandler->raise();
    } catch(...) {
-     std::string str = "OnRender error";
+     std::string str = "OnEvent error";
      this->errorHandler->setError(str);
      this->errorHandler->raise();
   }
