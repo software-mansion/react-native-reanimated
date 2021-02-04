@@ -207,13 +207,13 @@ declare module 'react-native-reanimated' {
             ? ReadonlyArray<AnimateStyle<S[K][0]>>
             : S[K] extends object
             ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
-            : S[K] extends (string | undefined)
+            : S[K] extends (ColorValue | undefined)
             ? S[K] | number
             :
                 | S[K]
                 | AnimatedNode<
                     // allow `number` where `string` normally is to support colors
-                    S[K] extends (string | undefined) ? S[K] | number : S[K]
+                    S[K] extends (ColorValue | undefined) ? S[K] | number : S[K]
                   >);
     };
 
