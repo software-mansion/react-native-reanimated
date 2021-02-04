@@ -5,6 +5,7 @@ buildscript {
         buildToolsVersion = "29.0.3"
         minSdkVersion = 21
         compileSdkVersion = 29
+        ndkVersion = ANDROID_NDK_VERSION
         targetSdkVersion = 29
     }
     repositories {
