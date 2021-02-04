@@ -95,7 +95,6 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-    ndkVersion ANDROID_NDK_VERSION
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
