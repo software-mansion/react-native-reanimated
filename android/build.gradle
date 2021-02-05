@@ -442,6 +442,7 @@ task packageNdkLibs(dependsOn: buildReanimated, type: Copy) {
 
 afterEvaluate {
     clean.dependsOn(cleanNdkLibs)
+    preBuild.dependsOn(packageNdkLibs)
 }
 
 repositories {
