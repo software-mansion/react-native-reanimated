@@ -7,10 +7,17 @@ reactVersion = '0.0.0'
 begin
   reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "react-native", "package.json")))["version"]
 rescue
-  reactVersion = '0.63.2'
+  reactVersion = '0.64.0'
 end
 
 rnVersion = reactVersion.split('.')[1]
+
+folly_prefix = ""
+if rnVersion.to_i >= 64
+  folly_prefix = "RCT-"
+end
+
+
 folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 folly_version = '2020.01.13.00'
@@ -37,12 +44,12 @@ Pod::Spec.new do |s|
 
   s.pod_target_xcconfig    = {
     "USE_HEADERMAP" => "YES",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/Folly\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
   }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig               = {
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/Folly\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\"",
                                "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags  }
 
   s.requires_arc = true
@@ -80,7 +87,7 @@ Pod::Spec.new do |s|
     s.dependency 'React-callinvoker'
   end
 
-  s.dependency 'Folly'
+  s.dependency "#{folly_prefix}Folly"
 
 end
 
