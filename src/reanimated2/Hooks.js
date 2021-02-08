@@ -247,7 +247,7 @@ const validateAnimatedStyles = (styles) => {
 };
 
 function styleUpdater(
-  viewDescriptor,
+  viewDescriptors,
   updater,
   state,
   maybeViewRef,
@@ -302,7 +302,7 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+      updateProps(viewDescriptors, updates, maybeViewRef, adapters);
     }
 
     if (!allFinished) {
@@ -333,20 +333,15 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+    updateProps(viewDescriptors, diff, maybeViewRef, adapters);
   }
 }
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
-  // const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
-  // const initRef = useRef(null);
-  // const inputs = Object.values(updater._closure);
-  // const viewRef = useRef(null);
   const viewDescriptors = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   let viewRef = [];
-
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
@@ -393,7 +388,6 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     animationsActive.value = true;
     return () => {
       initRef.current = null;
-      // viewRef.current = null;
       viewRef = null;
       animationsActive.value = false;
     };
