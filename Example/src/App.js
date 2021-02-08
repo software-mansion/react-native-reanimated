@@ -14,6 +14,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 
 import Reanimated1 from '../reanimated1/App';
 
+import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -26,6 +27,7 @@ import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import ScrollExample from './AnimatedScrollExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -77,6 +79,14 @@ const SCREENS = {
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 Liquid Swipe Example',
+  },
+  ExtrapolationExample: {
+    screen: ExtrapolationExample,
+    title: '🆕 Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: '🆕 Scroll Example',
   },
 };
 

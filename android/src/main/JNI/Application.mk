@@ -5,7 +5,11 @@ APP_ABI := all
 endif
 
 APP_BUILD_SCRIPT := Android.mk
-APP_PLATFORM := android-18
+ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -lt 64; echo $$?),0)
+	APP_PLATFORM := android-21
+else
+	APP_PLATFORM := android-18
+endif
 
 APP_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 

@@ -24,8 +24,16 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(viewDescriptors, updates, maybeViewRef) {
+export default function updateProps(
+  viewDescriptors,
+  updates,
+  maybeViewRef,
+  adapters
+) {
   'worklet';
+
+  const updatePropsInternal =
+    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
   const updateSingleProps = (
     _viewDescriptorsValue,
@@ -34,16 +42,19 @@ export default function updateProps(viewDescriptors, updates, maybeViewRef) {
   ) => {
     const viewName = _viewDescriptorsValue.name || 'RCTView';
 
-    if (Platform.OS !== 'web') {
-      Object.keys(_updates).forEach((key) => {
-        if (ColorProperties.indexOf(key) !== -1) {
-          _updates[key] = processColor(_updates[key]);
-        }
+    if (adapters) {
+      adapters.forEach((adapter) => {
+        adapter(updates);
       });
     }
 
-    const updatePropsInternal =
-      typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+    if (Platform.OS !== 'web') {
+      Object.keys(updates).forEach((key) => {
+        if (ColorProperties.indexOf(key) !== -1) {
+          updates[key] = processColor(updates[key]);
+        }
+      });
+    }
 
     updatePropsInternal(
       _viewDescriptorsValue.tag,

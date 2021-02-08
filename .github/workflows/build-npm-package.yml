@@ -16,16 +16,15 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Cache (NDK)
-        uses: actions/cache@v2
-        with:
-          path: ${ANDROID_HOME}/ndk/21.0.6113669
-          key: ndk-cache
-
       - name: Install NDK
-        run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install 'ndk;21.0.6113669'
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r21d
 
       - name: Build package
+        env:
+          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
           ./createNPMPackage.sh
 
