@@ -31,12 +31,12 @@ export function useSharedValue(init) {
   return ref.current;
 }
 
-export function useMutableSet(init) {
+export function useMutableSet() {
   const data = {
     __mutableSet: true,
     batchToInsert: [],
     waitForInsertSync: false,
-    mapper: makeMutable(init),
+    mapper: makeMutable([]),
 
     add: (item) => {
       data.batchToInsert.push(item);
@@ -338,7 +338,6 @@ function styleUpdater(
 }
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
-  const viewDescriptors = useMutableSet([]);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   let viewRef = [];
@@ -355,15 +354,17 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
+    console.log('mleko');
     const initial = initialUpdaterRun(updater);
     validateAnimatedStyles(initial);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
+      viewDescriptors: useMutableSet(),
     };
   }
 
-  const { remoteState, initial } = initRef.current;
+  const { remoteState, initial, viewDescriptors } = initRef.current;
   const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
