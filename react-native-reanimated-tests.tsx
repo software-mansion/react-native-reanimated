@@ -1,6 +1,6 @@
 /* eslint-disable */
-import React, { useState, useCallback } from 'react';
-import { StyleSheet, Button, View, Image, FlatListProps } from 'react-native';
+import React, { useState, useCallback, forwardRef } from 'react';
+import { StyleSheet, Button, View, Image, FlatListProps, ViewProps, ImageProps } from 'react-native';
 import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
@@ -34,6 +34,7 @@ import Animated, {
   interpolateColors,
   createAnimatedPropAdapter,
   useAnimatedProps,
+  useAnimatedRef,
 } from 'react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -46,10 +47,23 @@ type Item = {
   id: number;
 };
 
+const SomeFC = (props: ViewProps) => {
+  return <View {...props} />;
+}
+
+const SomeFCWithRef = forwardRef((props: ViewProps) => {
+  return <View {...props} />;
+});
+
+// Class Component -> Animated Class Component
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const AnimatedTypedFlatList = Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
+
+// Function Component -> Animated Function Component
+const AnimatedFC = Animated.createAnimatedComponent(SomeFC);
+const AnimatedFCWithRef = Animated.createAnimatedComponent(SomeFCWithRef);
 
 function CreateAnimatedComponentTest1() {
   const animatedProps = useAnimatedProps(() => ({ fill: 'blue' }));
@@ -104,6 +118,35 @@ function CreateAnimatedFlatList() {
       />
       <AnimatedImage style={{ flex: 1 }} source={{ uri: "" }} />
     </>
+  )
+}
+
+function TestClassComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+  return (
+    <AnimatedImage
+      ref={animatedRef}
+      source={{ }}
+    />
+  )
+}
+
+function TestFunctionComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return (
+    <AnimatedFC
+      // @ts-expect-error ref is not available on plain function-components
+      ref={animatedRef}
+    />
+  )
+}
+
+function TestFunctionComponentForwardRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return (
+    <AnimatedFCWithRef
+      ref={animatedRef}
+    />
   )
 }
 
