@@ -6,6 +6,7 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
 
 #if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
@@ -37,7 +38,7 @@ typedef JSCExecutorFactory ExecutorFactory;
    _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
 
-  return std::make_unique<ExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
@@ -54,7 +55,7 @@ typedef JSCExecutorFactory ExecutorFactory;
                                    jsi::Object::createFromHostObject(runtime, reanimatedModule)
       );
     }
-  });
+  }));
 }
 
 @end
