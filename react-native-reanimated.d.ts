@@ -2,7 +2,7 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentType, ComponentProps } from 'react';
+  import { ComponentClass, ReactNode, Component, RefObject, ComponentType, ComponentProps, FunctionComponent } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -248,7 +248,7 @@ declare module 'react-native-reanimated' {
     export function createAnimatedComponent<P extends object>(
       component: FunctionComponent<P>
     ): FunctionComponent<AnimateProps<P>>;
-  
+
     // classes
     export {
       AnimatedClock as Clock,
