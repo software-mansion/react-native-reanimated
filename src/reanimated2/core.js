@@ -262,6 +262,7 @@ const capturableConsole = console;
 runOnUI(() => {
   'worklet';
   const console = {
+    debug: runOnJS(capturableConsole.debug),
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),
