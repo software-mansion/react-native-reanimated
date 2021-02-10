@@ -24,18 +24,20 @@ void extractMutables(jsi::Runtime &rt,
 {
   switch (sv->type)
   {
-  case ValueType::MutableValueType:
-    res.push_back(sv->mutableValue);
+  case ValueType::MutableValueType: {
+    auto& mutableValue = ValueWrapper::asMutableValue(sv->valueContainer);
+    res.push_back(mutableValue);
     break;
+  }
   case ValueType::ArrayType:
-    for (auto &it : sv->frozenArray)
+    for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer))
     {
       extractMutables(rt, it, res);
     }
     break;
   case ValueType::RemoteObjectType:
   case ValueType::ObjectType:
-    for (auto &it : sv->frozenObject->map)
+    for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map)
     {
       extractMutables(rt, it.second, res);
     }

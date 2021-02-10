@@ -14,12 +14,13 @@ enum class ValueType {
   MutableValueType, /* object with 'value' property that can be updated and read from any thread */
   HostFunctionType, /* function that will be executed asynchronously on the host runtime */
   WorkletFunctionType, /* function that gets run on the UI thread */
+  FrozenObjectType,
+  FrozenArrayType,
 };
 
 class ShareableValue;
 class MutableValue;
 class RemoteObject;
-class RemoteObjectInitializer;
 class NativeReanimatedModule;
 
 }
