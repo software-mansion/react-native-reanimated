@@ -7,6 +7,10 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
 
+#if RNVERSION >= 64
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#endif
+
 #if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
 #endif
@@ -37,24 +41,30 @@ typedef JSCExecutorFactory ExecutorFactory;
    _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
 
-  return std::make_unique<ExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+  const auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-      #if RNVERSION < 63
-        auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
-        auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
-      #else
-        auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
-      #endif
+#if RNVERSION >= 63
+      auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+#else
+      auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
+      auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
+#endif
       runtime.global().setProperty(runtime,
                                    jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-                                   jsi::Object::createFromHostObject(runtime, reanimatedModule)
-      );
+                                   jsi::Object::createFromHostObject(runtime, reanimatedModule));
     }
-  });
+  };
+
+#if RNVERSION >= 64
+  // installs globals such as console, nativePerformanceNow, etc.
+  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
+#else
+  return std::make_unique<ExecutorFactory>(executor);
+#endif
 }
 
 @end
