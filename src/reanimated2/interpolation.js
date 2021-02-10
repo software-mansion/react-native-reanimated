@@ -96,9 +96,9 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 
   if (typeof type === 'object') {
     if (coef * val < coef * ll) {
-      return getVal({ ...config, type: type.extrapolateLeft });
+      return getVal(Object.assign(config, { type: type.extrapolateLeft }));
     } else if (coef * val > coef * ll) {
-      return getVal({ ...config, type: type.extrapolateRight });
+      return getVal(Object.assign(config, { type: type.extrapolateRight }));
     }
   }
 

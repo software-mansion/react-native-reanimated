@@ -27,6 +27,7 @@ import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import ScrollExample from './AnimatedScrollExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -82,6 +83,10 @@ const SCREENS = {
   ExtrapolationExample: {
     screen: ExtrapolationExample,
     title: '🆕 Extrapolation Example',
+  },
+  ScrollExample: {
+    screen: ScrollExample,
+    title: '🆕 Scroll Example',
   },
 };
 

@@ -253,6 +253,11 @@ export default function createAnimatedComponent(Component) {
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        if (!hostInstance) {
+          throw new Error(
+            'Cannot find host instance for this component. Maybe it renders nothing?'
+          );
+        }
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
         viewTag = hostInstance?._nativeTag;
         /**

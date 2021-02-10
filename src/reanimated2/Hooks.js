@@ -16,25 +16,19 @@ import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
-export function useSharedValue(init, shouldRebuild = true) {
+export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = {
-      mutable: makeMutable(init),
-      last: init,
-    };
-  } else if (init !== ref.current.last && shouldRebuild) {
-    ref.current.last = init;
-    ref.current.mutable.value = init;
+    ref.current = makeMutable(init);
   }
 
   useEffect(() => {
     return () => {
-      cancelAnimation(ref.current.mutable);
+      cancelAnimation(ref.current);
     };
   }, []);
 
-  return ref.current.mutable;
+  return ref.current;
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
@@ -213,6 +207,19 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
+const validateAnimatedStyles = (styles) => {
+  'worklet';
+  if (typeof styles !== 'object') {
+    throw new Error(
+      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+    );
+  } else if (Array.isArray(styles)) {
+    throw new Error(
+      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    );
+  }
+};
+
 function styleUpdater(
   viewDescriptor,
   updater,
@@ -323,6 +330,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
+    validateAnimatedStyles(initial);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -351,6 +359,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }, dependencies);
 
   useEffect(() => {
+    animationsActive.value = true;
     return () => {
       initRef.current = null;
       viewRef.current = null;
@@ -662,6 +671,7 @@ export function useAnimatedRef() {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction(prepare, react, dependencies) {
+  const previous = useSharedValue(null);
   if (dependencies === undefined) {
     dependencies = [
       Object.values(prepare._closure),
@@ -677,7 +687,8 @@ export function useAnimatedReaction(prepare, react, dependencies) {
     const fun = () => {
       'worklet';
       const input = prepare();
-      react(input);
+      react(input, previous.value);
+      previous.value = input;
     };
     const mapperId = startMapper(fun, Object.values(prepare._closure), []);
     return () => {

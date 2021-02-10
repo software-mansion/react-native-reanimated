@@ -1,11 +1,12 @@
 /* eslint-disable */
-import React, { useState } from 'react';
-import { StyleSheet, Button, View } from 'react-native';
+import React, { useState, useCallback, forwardRef } from 'react';
+import { StyleSheet, Button, View, Image, FlatListProps, ViewProps, ImageProps } from 'react-native';
 import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
+  FlatList,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -33,7 +34,122 @@ import Animated, {
   interpolateColors,
   createAnimatedPropAdapter,
   useAnimatedProps,
+  useAnimatedRef,
 } from 'react-native-reanimated';
+
+class Path extends React.Component<{ fill?: string }> {
+  render() {
+    return null;
+  }
+}
+
+type Item = {
+  id: number;
+};
+
+const SomeFC = (props: ViewProps) => {
+  return <View {...props} />;
+}
+
+const SomeFCWithRef = forwardRef((props: ViewProps) => {
+  return <View {...props} />;
+});
+
+// Class Component -> Animated Class Component
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedTypedFlatList = Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
+
+// Function Component -> Animated Function Component
+const AnimatedFC = Animated.createAnimatedComponent(SomeFC);
+const AnimatedFCWithRef = Animated.createAnimatedComponent(SomeFCWithRef);
+
+function CreateAnimatedComponentTest1() {
+  const animatedProps = useAnimatedProps(() => ({ fill: 'blue' }));
+  return (
+    <AnimatedPath animatedProps={animatedProps} />
+  )
+}
+
+function CreateAnimatedComponentTest2() {
+  const animatedProps = useAnimatedProps(() => ({ fill2: 'blue' }));
+  return (
+    // @ts-expect-error
+    <AnimatedPath animatedProps={animatedProps} />
+  )
+}
+
+function CreateAnimatedComponentTest3() {
+  const animatedProps = useAnimatedProps(() => ({ pointerEvents: 'none' } as const));
+  return (
+    <Animated.View animatedProps={animatedProps}>
+      <AnimatedPath />
+    </Animated.View>
+  )
+}
+
+function CreateAnimatedFlatList() {
+  const renderItem = useCallback(
+    ({item, index}: {item: Item[]; index: number}) => {
+      if (Math.random()) {
+        return null;
+      }
+      return (
+        <View style={{width: 100}}>
+        </View>
+      );
+    },
+    [
+    ],
+  );
+  return (
+    <>
+      <AnimatedTypedFlatList
+        style={{ flex: 1 }}
+        data={[]}
+        renderItem={renderItem}
+      />
+      <AnimatedFlatList
+        // @ts-expect-error
+        style={{ flex: 1, red: false }}
+        data={[]}
+        renderItem={() => null}
+      />
+      <AnimatedImage style={{ flex: 1 }} source={{ uri: "" }} />
+    </>
+  )
+}
+
+function TestClassComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+  return (
+    <AnimatedImage
+      ref={animatedRef}
+      source={{ }}
+    />
+  )
+}
+
+function TestFunctionComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return (
+    <AnimatedFC
+      // @ts-expect-error ref is not available on plain function-components
+      ref={animatedRef}
+    />
+  )
+}
+
+function TestFunctionComponentForwardRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return (
+    <AnimatedFCWithRef
+      ref={animatedRef}
+    />
+  )
+}
+
 
 const styles = StyleSheet.create({
   container: {
@@ -70,8 +186,8 @@ function MakeMutableTest() {
 // useSharedValue
 function SharedValueTest() {
   const translate = useSharedValue(0);
-  const translate2 = useSharedValue(0, true);
-  const translate3 = useSharedValue(0, false);
+  const translate2 = useSharedValue(0);
+  const translate3 = useSharedValue(0);
 
   const sharedBool = useSharedValue<boolean>(false);
   if (sharedBool.value) {
@@ -338,10 +454,7 @@ function CancelAnimationTest() {
 // withDelay
 function WithDelayTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    { startX: number }
-  >({
+  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -371,10 +484,7 @@ function WithDelayTest() {
 // withRepeat
 function WithRepeatTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    { startX: number }
-  >({
+  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -404,10 +514,7 @@ function WithRepeatTest() {
 // withSequence
 function WithSequenceTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    { startX: number }
-  >({
+  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -532,6 +639,15 @@ function UseAnimatedReactionTest() {
       console.log(value);
     },
     [state]
+  );
+
+  useAnimatedReaction(
+    () => {
+      return sv.value;
+    },
+    (value, previousResult) => {
+      console.log(value, previousResult);
+    }
   );
 
   return null;
