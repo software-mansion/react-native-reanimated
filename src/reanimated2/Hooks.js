@@ -341,10 +341,9 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       initRef.current.workletViewDescriptors
     );
   }
-
+  dependencies.push(initRef.current.workletViewDescriptors.value);
   const { remoteState, initial, workletViewDescriptors } = initRef.current;
   const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
-
   useEffect(() => {
     const fun = () => {
       'worklet';
