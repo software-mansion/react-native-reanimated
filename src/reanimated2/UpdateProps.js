@@ -40,7 +40,7 @@ export default function updateProps(
     _updates,
     _maybeViewRef
   ) => {
-    const viewName = _viewDescriptorsValue.name || 'RCTView';
+    const viewName = _viewDescriptorsValue?.name || 'RCTView';
 
     if (adapters) {
       adapters.forEach((adapter) => {
@@ -57,24 +57,20 @@ export default function updateProps(
     }
 
     updatePropsInternal(
-      _viewDescriptorsValue.tag,
+      _viewDescriptorsValue?.tag,
       viewName,
       _updates,
       _maybeViewRef
     );
   };
 
-  if ('__mutableSet' in viewDescriptors) {
-    if (Platform.OS !== 'web') {
-      viewDescriptors.mapper.value.forEach((item, index) => {
-        updateSingleProps(item, updates, null);
-      });
-    } else {
-      viewDescriptors.mapper.value.forEach((item, index) => {
-        updateSingleProps(item, updates, maybeViewRef[index]);
-      });
-    }
+  if (Platform.OS !== 'web') {
+    viewDescriptors.value.forEach((item, index) => {
+      updateSingleProps(item, updates, null);
+    });
   } else {
-    updateSingleProps(viewDescriptors.value, updates, maybeViewRef);
+    maybeViewRef.items.forEach((item, index) => {
+      updateSingleProps(null, updates, item);
+    });
   }
 }

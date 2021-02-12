@@ -67,6 +67,8 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    _styles = null;
+    _viewTag = -1;
 
     constructor(props) {
       super(props);
@@ -77,6 +79,7 @@ export default function createAnimatedComponent(Component) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      this._detachStyles();
     }
 
     componentDidMount() {
@@ -128,6 +131,25 @@ export default function createAnimatedComponent(Component) {
           prop.current instanceof WorkletEventHandler
         ) {
           prop.current.unregisterFromEvents();
+        }
+      }
+    }
+
+    _detachStyles() {
+      if (Platform.OS === 'web') {
+        for (const style of this._styles) {
+          if (style.viewsRef) {
+            style.viewsRef.remove(this);
+          }
+        }
+      } else if (this._viewTag !== -1) {
+        for (const style of this._styles) {
+          if (style.viewDescriptors) {
+            style.viewDescriptors.remove(this._viewTag);
+          }
+        }
+        if (this.props.animatedProps?.viewDescriptors) {
+          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
       }
     }
@@ -246,6 +268,7 @@ export default function createAnimatedComponent(Component) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
+      this._styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -270,18 +293,20 @@ export default function createAnimatedComponent(Component) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
-
-      styles.forEach((style) => {
-        if (style?.viewDescriptors) {
-          style.viewDescriptors.add({ tag: viewTag, name: viewName });
-        }
-      });
-      // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptors) {
-        this.props.animatedProps.viewDescriptors.add({
-          tag: viewTag,
-          name: viewName,
+      this._viewTag = viewTag;
+      if (Platform.OS !== 'web') {
+        styles.forEach((style) => {
+          if (style?.viewDescriptors) {
+            style.viewDescriptors.add({ tag: viewTag, name: viewName });
+          }
         });
+        // attach animatedProps property
+        if (this.props.animatedProps?.viewDescriptors) {
+          this.props.animatedProps.viewDescriptors.add({
+            tag: viewTag,
+            name: viewName,
+          });
+        }
       }
     }
 
@@ -362,7 +387,7 @@ export default function createAnimatedComponent(Component) {
           const processedStyle = styles.map((style) => {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
-              style.viewRef.push(this);
+              style.viewsRef.add(this);
               return style.initial;
             } else {
               return style;

@@ -15,6 +15,7 @@ import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -29,32 +30,6 @@ export function useSharedValue(init) {
   }, []);
 
   return ref.current;
-}
-
-export function useMutableSet() {
-  const data = {
-    __mutableSet: true,
-    batchToInsert: [],
-    waitForInsertSync: false,
-    mapper: makeMutable([]),
-
-    add: (item) => {
-      data.batchToInsert.push(item);
-      if (!data.waitForInsertSync) {
-        data.waitForInsertSync = true;
-
-        setImmediate(() => {
-          let items = data.mapper.value;
-          items = items.concat(data.batchToInsert);
-          data.mapper.value = items;
-          data.batchToInsert = [];
-          data.waitForInsertSync = false;
-        });
-      }
-    },
-  };
-
-  return data;
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
@@ -339,8 +314,8 @@ function styleUpdater(
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const initRef = useRef(null);
+  let viewsRef = makeViewsRefSet();
   const inputs = Object.values(updater._closure);
-  let viewRef = [];
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
@@ -353,25 +328,28 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
   adaptersHash && dependencies.push(adaptersHash);
 
+  const viewDescriptors = makeViewDescriptorsSet();
   if (initRef.current === null) {
-    console.log('mleko');
     const initial = initialUpdaterRun(updater);
     validateAnimatedStyles(initial);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
-      viewDescriptors: useMutableSet(),
+      workletViewDescriptors: makeMutable([]),
     };
+    viewDescriptors.rebuildWorkletViewDescriptors(
+      initRef.current.workletViewDescriptors
+    );
   }
 
-  const { remoteState, initial, viewDescriptors } = initRef.current;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
+  const { remoteState, initial, workletViewDescriptors } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
 
   useEffect(() => {
     const fun = () => {
       'worklet';
       styleUpdater(
-        viewDescriptors,
+        workletViewDescriptors,
         updater,
         remoteState,
         maybeViewRef,
@@ -389,7 +367,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     animationsActive.value = true;
     return () => {
       initRef.current = null;
-      viewRef = null;
+      viewsRef = null;
       animationsActive.value = false;
     };
   }, []);
@@ -413,7 +391,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   return {
     viewDescriptors,
     initial,
-    viewRef,
+    viewsRef,
   };
 }
 
