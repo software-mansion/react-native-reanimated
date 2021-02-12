@@ -50,7 +50,7 @@ export default function updateProps(
 
     if (Platform.OS !== 'web') {
       Object.keys(updates).forEach((key) => {
-        if (ColorProperties.indexOf(key) !== -1) {
+        if (ColorProperties.includes(key)) {
           updates[key] = processColor(updates[key]);
         }
       });

@@ -121,6 +121,7 @@ const blacklistedFunctions = new Set([
   'apply',
   'call',
   '__callAsync',
+  'includes',
 ]);
 
 class ClosureGenerator {
