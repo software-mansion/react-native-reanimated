@@ -68,7 +68,6 @@ export default function createAnimatedComponent(Component) {
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
     _styles = null;
-    _viewTag = -1;
 
     constructor(props) {
       super(props);
@@ -142,7 +141,7 @@ export default function createAnimatedComponent(Component) {
             style.viewsRef.remove(this);
           }
         }
-      } else if (this._viewTag !== -1) {
+      } else {
         for (const style of this._styles) {
           if (style.viewDescriptors) {
             style.viewDescriptors.remove(this);
@@ -293,7 +292,6 @@ export default function createAnimatedComponent(Component) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
-      this._viewTag = viewTag;
       if (Platform.OS !== 'web') {
         styles.forEach((style) => {
           if (style?.viewDescriptors) {
