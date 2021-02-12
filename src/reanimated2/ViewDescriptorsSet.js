@@ -5,55 +5,38 @@ export function makeViewDescriptorsSet() {
   const ref = useRef(null);
   if (ref.current === null) {
     const data = {
-      batchToInsert: [],
-      batchToRemove: new Set(),
-      existsTags: new Set(),
+      itemSet: new Set(),
       waitForInsertSync: false,
       waitForRemoveSync: false,
       workletViewDescriptors: makeMutable([]),
-      items: [],
 
       add: (item) => {
-        if (data.existsTags.has(item.tag)) return;
-        data.existsTags.add(item.tag);
-        data.batchToInsert.push(item);
+        data.itemSet.add(item);
 
         if (!data.waitForInsertSync) {
           data.waitForInsertSync = true;
 
           setImmediate(() => {
-            data.items = data.items.concat(data.batchToInsert);
-            data.workletViewDescriptors.value = data.items;
-            data.batchToInsert = [];
+            data.workletViewDescriptors.value = Array.from(data.itemSet);
             data.waitForInsertSync = false;
           });
         }
       },
-      remove: (viewTag) => {
-        data.batchToRemove.add(viewTag);
+      remove: (item) => {
+        data.itemSet.delete(item);
 
         if (!data.waitForRemoveSync) {
           data.waitForRemoveSync = true;
 
           setImmediate(() => {
-            const items = [];
-            for (const item of data.items) {
-              if (data.batchToRemove.has(item.tag)) {
-                data.existsTags.delete(item.tag);
-              } else {
-                items.push(item);
-              }
-            }
-            data.items = items;
-            data.workletViewDescriptors.value = items;
-            data.batchToRemove = new Set();
+            data.workletViewDescriptors.value = Array.from(data.itemSet);
             data.waitForRemoveSync = false;
           });
         }
       },
       rebuildWorkletViewDescriptors: (workletViewDescriptors) => {
         data.workletViewDescriptors = workletViewDescriptors;
-        data.workletViewDescriptors.value = data.items;
+        data.workletViewDescriptors.value = Array.from(data.itemSet);
       },
     };
     ref.current = data;

@@ -145,11 +145,11 @@ export default function createAnimatedComponent(Component) {
       } else if (this._viewTag !== -1) {
         for (const style of this._styles) {
           if (style.viewDescriptors) {
-            style.viewDescriptors.remove(this._viewTag);
+            style.viewDescriptors.remove(this);
           }
         }
         if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
+          this.props.animatedProps.viewDescriptors.remove(this);
         }
       }
     }
