@@ -244,10 +244,28 @@ declare module 'react-native-reanimated' {
 
     export function createAnimatedComponent<P extends object>(
       component: ComponentClass<P>
-    ): ComponentClass<AnimateProps<P>>;
+    ): ComponentClass<
+      AnimateProps<
+        P &
+          ('style' extends keyof P
+            ? {}
+            : {
+                style?: StyleProp<ViewStyle>
+              })
+      >
+    >;
     export function createAnimatedComponent<P extends object>(
       component: FunctionComponent<P>
-    ): FunctionComponent<AnimateProps<P>>;
+    ): FunctionComponent<
+      AnimateProps<
+        P &
+          ('style' extends keyof P
+            ? {}
+            : {
+                style?: StyleProp<ViewStyle>
+              })
+      >
+    >;
 
     // classes
     export {

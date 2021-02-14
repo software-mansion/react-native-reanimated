@@ -121,6 +121,64 @@ function CreateAnimatedFlatList() {
   )
 }
 
+function CreateAnimatedComponentAddsStylePropTest() {
+  const animatedStyle = useAnimatedStyle(() => ({ width: 100 }));
+  const nonAnimatedStyle = { width: 100 };
+  return (
+    <>
+      <AnimatedPath style={animatedStyle} />
+      <AnimatedPath style={nonAnimatedStyle} />
+    </>
+  )
+}
+
+function CreateAnimatedComponentExistingStylePropTest() {
+  const animatedStyle = useAnimatedStyle(() => ({ resizeMode: 'cover' }));
+  const nonAnimatedStyle = { resizeMode: 'cover' } as const;
+  return (
+    <>
+      <AnimatedImage style={animatedStyle} source={{ uri: "" }} />
+      <AnimatedImage style={nonAnimatedStyle} source={{ uri: "" }} />
+    </>
+  )
+}
+
+function CreateAnimatedComponentExistingMismatchingStylePropTest() {
+  const animatedStyle = useAnimatedStyle(() => ({ fontSize: 100 }));
+  const nonAnimatedStyle = { fontSize: 100 }
+  return (
+    <>
+      <AnimatedImage
+        // @ts-expect-error
+        style={animatedStyle}
+        source={{ uri: "" }}
+      />
+      <AnimatedImage
+        // @ts-expect-error
+        style={nonAnimatedStyle}
+        source={{ uri: "" }}
+      />
+    </>
+  )
+}
+
+function CreateAnimatedComponentAddsViewStylePropTest() {
+  const animatedStyle = useAnimatedStyle(() => ({ fontSize: 100 }));
+  const nonAnimatedStyle = { fontSize: 100 }
+  return (
+    <>
+      <AnimatedPath
+        // @ts-expect-error
+        style={animatedStyle}
+      />
+      <AnimatedPath
+        // @ts-expect-error
+        style={nonAnimatedStyle}
+      />
+    </>
+  )
+}
+
 function TestClassComponentRef() {
   const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
   return (
