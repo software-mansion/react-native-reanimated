@@ -312,7 +312,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         return wrapperFunction;
       }
     }
-    case ValueType::WorkletFunctionType:
+    case ValueType::WorkletFunctionType: {
       auto module = this->module;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
       if (module->isUIRuntime(rt)) {
@@ -414,6 +414,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_workletFunction"), 0, clb);
       }
+    }
+    default: {
+      throw "Unable to find conversion method for this type";
+    }
   }
   throw "convert error";
 }
