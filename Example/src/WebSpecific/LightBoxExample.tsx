@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import React, { useState, useRef, useEffect, FC } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,25 +27,29 @@ const NUMBER_OF_IMAGES = 4;
 const IMAGE_SIZE =
   (dimensions.width - GUTTER_WIDTH * (NUMBER_OF_IMAGES - 1)) / NUMBER_OF_IMAGES;
 
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 0,
-    height:
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
-  },
+type ExampleImage = {
+  uri: string;
+  width: number;
+  height: number;
+};
+type ActiveExampleImageProperties = {
+  x: Animated.SharedValue<number>;
+  y: Animated.SharedValue<number>;
+  width: Animated.SharedValue<number>;
+  height: Animated.SharedValue<number>;
+  imageOpacity: Animated.SharedValue<number>;
+};
+type ActiveExampleImage = ActiveExampleImageProperties & {
+  // @ts-ignore: FIXME AnimatedImage type
+  animatedRef: RefObject<ActiveExampleImage>;
+  item: ExampleImage;
+};
 
-  scrollContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'black',
-  },
-});
-
-function ImageList({ images, onItemPress }) {
+type ImageListProps = {
+  images: ExampleImage[];
+  onItemPress;
+};
+const ImageList: FC<ImageListProps> = ({ images, onItemPress }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {images.map((item, i) => (
@@ -51,10 +57,16 @@ function ImageList({ images, onItemPress }) {
       ))}
     </ScrollView>
   );
-}
+};
 
-function ListItem({ item, index, onPress }) {
-  const ref = useRef();
+type ListItemProps = {
+  item: ExampleImage;
+  index: number;
+  onPress;
+};
+const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
+  // @ts-ignore FIXME)TS) createAnimatedComponent type
+  const ref = useRef<AnimatedImage>();
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -77,14 +89,21 @@ function ListItem({ item, index, onPress }) {
       <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
     </TouchableWithoutFeedback>
   );
-}
+};
 
 const timingConfig = {
   duration: 350,
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
-function ImageTransition({ activeImage, onClose }) {
+type ImageTransitionProps = {
+  activeImage: ActiveExampleImage;
+  onClose;
+};
+const ImageTransition: FC<ImageTransitionProps> = ({
+  activeImage,
+  onClose,
+}) => {
   const {
     x,
     item,
@@ -95,6 +114,7 @@ function ImageTransition({ activeImage, onClose }) {
     sv: imageOpacity,
   } = activeImage;
   const { uri } = item;
+  // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
   const y = activeImage.y - Header.HEIGHT;
 
   const animationProgress = useSharedValue(0);
@@ -104,6 +124,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
+    // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
     (dimensions.height - targetHeight) / 2 - Header.HEIGHT
   );
 
@@ -130,7 +151,7 @@ function ImageTransition({ activeImage, onClose }) {
       );
     },
 
-    onEnd: (event, ctx) => {
+    onEnd: () => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -155,7 +176,7 @@ function ImageTransition({ activeImage, onClose }) {
   });
 
   const imageStyles = useAnimatedStyle(() => {
-    const interpolateProgress = (range) =>
+    const interpolateProgress = (range: [number, number]) =>
       interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
 
     const top = translateY.value + interpolateProgress([y, targetY.value]);
@@ -202,9 +223,9 @@ function ImageTransition({ activeImage, onClose }) {
       </PanGestureHandler>
     </View>
   );
-}
+};
 
-const images = Array.from({ length: 30 }, (_, index) => {
+const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   return {
     uri: `https://picsum.photos/id/${index + 10}/400/400`,
     width: dimensions.width,
@@ -212,7 +233,7 @@ const images = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-export default function LightboxExample() {
+const LightboxExample: FC = () => {
   const [activeImage, setActiveImage] = useState(null);
 
   function onItemPress(imageRef, item, sv) {
@@ -251,4 +272,25 @@ export default function LightboxExample() {
       )}
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 0,
+    height:
+      // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
+      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
+  },
+
+  scrollContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
+  },
+});
+
+export default LightboxExample;
