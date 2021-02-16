@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -7,11 +7,11 @@ import Animated, {
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { Header } from 'react-navigation-stack';
-
+// @ts-ignore FIXME(TS) navigation v4 untyped Header.HEIGHT
 const windowHeight = Dimensions.get('window').height - Header.HEIGHT;
 const size = 40;
 
-function ScrollExample() {
+const ScrollExample: FC = () => {
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
 
@@ -19,10 +19,10 @@ function ScrollExample() {
     onScroll: (event) => {
       transY.value = event.contentOffset.y;
     },
-    onBeginDrag: (e) => {
+    onBeginDrag: () => {
       isScrolling.value = true;
     },
-    onEndDrag: (e) => {
+    onEndDrag: () => {
       isScrolling.value = false;
     },
   });
@@ -59,7 +59,7 @@ function ScrollExample() {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
