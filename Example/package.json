@@ -61,6 +61,6 @@
     "react-test-renderer": "17.0.1"
   },
   "resolutions": {
-    "@babel/runtime": "7.12.9"
+    "@babel/runtime": "7.12.13"
   }
 }
