@@ -1,4 +1,6 @@
-import React, { useRef } from 'react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import React, { FC, ReactNode, RefObject, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -11,7 +13,10 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { TapGestureHandler } from 'react-native-gesture-handler';
+import {
+  TapGestureHandler,
+  TapGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
@@ -20,7 +25,7 @@ const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', ''];
 const indices = [0, 1, 2, 3, 4, 5];
 
 function createSharedVariables() {
-  const contentHeights = indices.map((i) => useSharedValue(0));
+  const contentHeights = indices.map(() => useSharedValue(0));
 
   const contentHeightsCopy = contentHeights;
   const result = [useSharedValue(0)];
@@ -86,7 +91,22 @@ export default function MeasureExample() {
   );
 }
 
-function Section({ title, children, height, contentHeight, z, show }) {
+type SectionProps = {
+  title: string;
+  height: Animated.SharedValue<number>;
+  contentHeight: Animated.SharedValue<number>;
+  z: number;
+  show: boolean;
+};
+
+const Section: FC<SectionProps> = ({
+  title,
+  children,
+  height,
+  contentHeight,
+  z,
+  show,
+}) => {
   const aref = useAnimatedRef();
 
   const stylez = useAnimatedStyle(() => {
@@ -104,15 +124,15 @@ function Section({ title, children, height, contentHeight, z, show }) {
         show={show}
       />
       <View>
-        {React.Children.map(children, (element, idx) => {
+        {React.Children.map(children, (element) => {
           return React.cloneElement(element, { ref: aref });
         })}
       </View>
     </Animated.View>
   );
-}
+};
 
-function asyncMeasure(animatedRef) {
+function asyncMeasure(animatedRef: RefObject<React.Component>) {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
       animatedRef.current.measure((x, y, width, height, pageX, pageY) => {
@@ -124,8 +144,20 @@ function asyncMeasure(animatedRef) {
   });
 }
 
-function SectionHeader({ title, animatedRef, contentHeight, show }) {
-  const applyMeasure = ({ x, y, width, height, pageX, pageY }) => {
+type SectionHeaderProps = {
+  title: string;
+  animatedRef: RefObject<React.Component>;
+  contentHeight: Animated.SharedValue<number>;
+  show: boolean;
+};
+
+const SectionHeader: FC<SectionHeaderProps> = ({
+  title,
+  animatedRef,
+  contentHeight,
+  show,
+}) => {
+  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
     'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
@@ -142,7 +174,7 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
 
   let onActiveImpl;
   if (Platform.OS === 'web') {
-    onActiveImpl = async (_, ctx) => {
+    onActiveImpl = async (_, _ctx) => {
       try {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
@@ -151,13 +183,13 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
       }
     };
   } else {
-    onActiveImpl = (_, ctx) => {
+    onActiveImpl = (_, _ctx) => {
       'worklet';
       applyMeasure(measure(animatedRef));
     };
   }
 
-  const handler = useAnimatedGestureHandler({
+  const handler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
     onActive: onActiveImpl,
   });
 
@@ -182,10 +214,10 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
       </View>
     </View>
   );
-}
+};
 
-function RandomContent() {
-  const randomElements = useRef(null);
+const RandomContent: FC = () => {
+  const randomElements = useRef<ReactNode[] | null>(null);
   if (randomElements.current == null) {
     randomElements.current = [];
     const numberOfRandomElements = Math.round(Math.random() * 9 + 1);
@@ -195,9 +227,9 @@ function RandomContent() {
   }
 
   return <View style={styles.randomContent}>{randomElements.current}</View>;
-}
+};
 
-function RandomElement() {
+const RandomElement: FC = () => {
   const randomHeight = useRef(Math.round(Math.random() * 40 + 30));
   const label = useRef(labels[Math.round(Math.random() * 4)]);
 
@@ -208,7 +240,7 @@ function RandomElement() {
       </View>
     </View>
   );
-}
+};
 const styles = StyleSheet.create({
   randomElement: {
     backgroundColor: '#EFEFF4',
