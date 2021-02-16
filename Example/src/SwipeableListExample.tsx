@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { StyleSheet, View, Text, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,12 +13,18 @@ import {
   PanGestureHandler,
   TouchableOpacity,
   FlatList,
+  PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;
 const MAX_TRANSLATE = -BUTTON_WIDTH;
-const data = [
+
+type Data = {
+  id: string;
+  title: string;
+};
+const data: Data[] = [
   {
     id: '1',
     title: 'Kate Bell',
@@ -49,8 +55,9 @@ const data = [
   },
 ];
 
-export default function SwipableList() {
+const SwipableList: FC = () => {
   function onRemove() {
+    // @ts-ignore: FIXME shouldn't be Alert.alert()?
     alert('Removed');
   }
 
@@ -63,9 +70,9 @@ export default function SwipableList() {
       />
     </View>
   );
-}
+};
 
-const springConfig = (velocity) => {
+const springConfig = (velocity: number) => {
   'worklet';
 
   return {
@@ -84,12 +91,22 @@ const timingConfig = {
   easing: Easing.bezier(0.25, 0.1, 0.25, 1),
 };
 
-function ListItem({ item, onRemove }) {
+type ListItemProps = {
+  item: Data;
+  onRemove: () => void;
+};
+const ListItem: FC<ListItemProps> = ({ item, onRemove }) => {
   const isRemoving = useSharedValue(false);
   const translateX = useSharedValue(0);
 
-  const handler = useAnimatedGestureHandler({
-    onStart: (evt, ctx) => {
+  type AnimatedGHContext = {
+    startX: number;
+  };
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_evt, ctx) => {
       ctx.startX = translateX.value;
     },
 
@@ -158,9 +175,14 @@ function ListItem({ item, onRemove }) {
       </PanGestureHandler>
     </View>
   );
-}
-
-function Button({ item }) {
+};
+type ButtonData = {
+  title: string;
+  backgroundColor: string;
+  color: string;
+  onPress: () => void;
+};
+const Button: FC<{ item: ButtonData }> = ({ item }) => {
   return (
     <View style={[s.button, { backgroundColor: item.backgroundColor }]}>
       <TouchableOpacity onPress={item.onPress} style={s.buttonInner}>
@@ -168,9 +190,9 @@ function Button({ item }) {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
-function ListItemContent({ item }) {
+const ListItemContent: FC<{ item: Data }> = ({ item }) => {
   return (
     <View style={s.itemContainer}>
       <View style={s.avatarContainer}>
@@ -179,7 +201,7 @@ function ListItemContent({ item }) {
       <Text style={s.title}>{item.title}</Text>
     </View>
   );
-}
+};
 
 const s = StyleSheet.create({
   container: {
@@ -233,3 +255,5 @@ const s = StyleSheet.create({
     width: windowDimensions.width,
   },
 });
+
+export default SwipableList;
