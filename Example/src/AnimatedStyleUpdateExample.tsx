@@ -5,9 +5,9 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
-import React from 'react';
+import React, { FC } from 'react';
 
-export default function AnimatedStyleUpdateExample(props) {
+const AnimatedStyleUpdateExample: FC = () => {
   const randomWidth = useSharedValue(10);
 
   const config = {
@@ -41,4 +41,6 @@ export default function AnimatedStyleUpdateExample(props) {
       />
     </View>
   );
-}
+};
+
+export default AnimatedStyleUpdateExample;
