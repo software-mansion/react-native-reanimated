@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const hooks = require('./Hooks');
 
 /* eslint-disable standard/no-callback-literal */

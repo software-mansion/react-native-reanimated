@@ -291,6 +291,7 @@ export default function createAnimatedComponent(Component) {
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
+          // eslint-disable-next-line no-prototype-builtins
           if (style?.hasOwnProperty('viewDescriptor')) {
             return true;
           }
