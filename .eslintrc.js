@@ -8,6 +8,7 @@ module.exports = {
     'prettier/flowtype',
     'prettier/react',
     'prettier/standard',
+    'plugin:import/typescript',
   ],
   plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
   env: {
@@ -15,9 +16,11 @@ module.exports = {
     'jest/globals': true,
   },
   rules: {
-    'import/no-unresolved': 2,
-    'react/jsx-uses-vars': 2,
-    'react/jsx-uses-react': 2,
+    'import/no-unresolved': 'error',
+    'react/jsx-uses-vars': 'error',
+    'react/jsx-uses-react': 'error',
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': 'off', // TODO consider enabling this (currently it reports styles defined at the bottom of the file)
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {
@@ -25,6 +28,7 @@ module.exports = {
         'ts-expect-error': 'allow-with-description',
       },
     ],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
   settings: {
     'import/core-modules': ['react-native-reanimated'],
