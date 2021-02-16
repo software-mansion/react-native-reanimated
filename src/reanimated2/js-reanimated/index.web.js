@@ -20,6 +20,8 @@ export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
   }
 };
 
-global._setGlobalConsole = (_val) => {};
+global._setGlobalConsole = (_val) => {
+  // noop
+};
 
 export default reanimatedJS;

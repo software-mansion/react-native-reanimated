@@ -73,7 +73,11 @@ export default class JSReanimated {
     this._mapperRegistry.stopMapper(mapperId);
   }
 
-  registerEventHandler(_eventHash, _eventHandler) {}
+  registerEventHandler(_eventHash, _eventHandler) {
+    // noop
+  }
 
-  unregisterEventHandler(_registrationId) {}
+  unregisterEventHandler(_registrationId) {
+    // noop
+  }
 }
