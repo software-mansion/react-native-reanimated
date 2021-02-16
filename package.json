@@ -7,7 +7,7 @@
     "test": "npm run format && npm run lint && npm run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint './src/**/*.js'",
+    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "release": "npm login && release-it",
     "type:check": "yarn tsc"
   },
@@ -96,7 +96,7 @@
   },
   "lint-staged": {
     "*.js": [
-      "eslint",
+      "eslint --ext '.js,.ts,.tsx' src/",
       "prettier --write"
     ]
   },

@@ -14,7 +14,7 @@
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web || expo start --web --web-only",
-    "lint": "eslint .",
+    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "ts-check": "yarn tsc"
   },
   "dependencies": {
