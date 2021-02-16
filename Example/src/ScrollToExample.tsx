@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -9,7 +9,10 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];
@@ -18,7 +21,7 @@ const range = [0, 9999];
 
 const dotSize = 40;
 
-export default function ScrollToScreen() {
+const ScrollToScreen: FC = () => {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
     const val = range[0] + Math.round(progress.value * (range[1] - range[0]));
@@ -36,15 +39,17 @@ export default function ScrollToScreen() {
       </View>
     </SafeAreaView>
   );
-}
+};
 
-function getDigit(number, i) {
+function getDigit(number: Animated.SharedValue<number>, i: number) {
   return useDerivedValue(() => {
     return Math.floor(number.value / 10 ** i) % 10;
   });
 }
 
-function NumberDisplay({ number }) {
+const NumberDisplay: FC<{ number: Animated.SharedValue<number> }> = ({
+  number,
+}) => {
   return (
     <View style={{ height: 400, width: 200 }}>
       <View
@@ -59,10 +64,10 @@ function NumberDisplay({ number }) {
       </View>
     </View>
   );
-}
+};
 
-function Digit({ digit }) {
-  const aref = useAnimatedRef();
+const Digit: FC<{ digit: Animated.SharedValue<number> }> = ({ digit }) => {
+  const aref = useAnimatedRef<ScrollView>();
 
   useDerivedValue(() => {
     if (Platform.OS === 'web') {
@@ -94,13 +99,18 @@ function Digit({ digit }) {
       </ScrollView>
     </View>
   );
-}
+};
 
-function ProgressBar({ progress }) {
+const ProgressBar: FC<{ progress: Animated.SharedValue<number> }> = ({
+  progress,
+}) => {
   const x = useSharedValue(0);
   const max = useSharedValue(0);
 
-  const handler = useAnimatedGestureHandler({
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { x: number }
+  >({
     onStart: (_, ctx) => {
       ctx.x = x.value;
     },
@@ -153,7 +163,7 @@ function ProgressBar({ progress }) {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   dot: {
@@ -163,3 +173,5 @@ const styles = StyleSheet.create({
     height: dotSize,
   },
 });
+
+export default ScrollToScreen;
