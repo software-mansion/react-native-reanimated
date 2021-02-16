@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -27,15 +27,19 @@ const styles = StyleSheet.create({
   },
 });
 
-export default () => {
+const LiquidSwipe: FC = () => {
   const isBack = useSharedValue(0);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
 
   const maxDist = width - initialSideWidth;
 
+  type AnimatedGHContext = {
+    dragX: number;
+    startY: number;
+  };
   const handler = useAnimatedGestureHandler({
-    onStart: (event, ctx) => {
+    onStart: (event, ctx: AnimatedGHContext) => {
       // stop animating progress, this will also place "isBack" value in the
       // final state (we update isBack in progress animation callback)
       cancelAnimation(progress);
@@ -61,7 +65,7 @@ export default () => {
       }
     },
     onEnd: () => {
-      let goBack;
+      let goBack: number;
       if (isBack.value) {
         goBack = progress.value > 0.5 ? 1 : 0;
       } else {
@@ -103,3 +107,5 @@ export default () => {
     </View>
   );
 };
+
+export default LiquidSwipe;

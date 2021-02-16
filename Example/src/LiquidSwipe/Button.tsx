@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { Dimensions, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -9,7 +9,11 @@ import Animated, {
 const { width } = Dimensions.get('window');
 const size = 50;
 
-export default ({ progress, y }) => {
+type ButtonProps = {
+  progress: Animated.SharedValue<number>;
+  y: Animated.SharedValue<number>;
+};
+const Button: FC<ButtonProps> = ({ progress, y }) => {
   const style = useAnimatedStyle(() => {
     return {
       opacity: interpolate(progress.value, [0, 0.1], [1, 0], Extrapolate.CLAMP),
@@ -47,3 +51,5 @@ export default ({ progress, y }) => {
     </Animated.View>
   );
 };
+
+export default Button;
