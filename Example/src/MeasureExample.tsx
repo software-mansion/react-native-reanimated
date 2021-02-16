@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import React, { FC, ReactNode, RefObject, useRef } from 'react';
+import React, { FC, ReactElement, ReactNode, RefObject, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -124,9 +124,9 @@ const Section: FC<SectionProps> = ({
         show={show}
       />
       <View>
-        {React.Children.map(children, (element) => {
-          return React.cloneElement(element, { ref: aref });
-        })}
+        {React.Children.map(children, (element) =>
+          React.cloneElement(element as ReactElement, { ref: aref })
+        )}
       </View>
     </Animated.View>
   );
@@ -174,7 +174,7 @@ const SectionHeader: FC<SectionHeaderProps> = ({
 
   let onActiveImpl;
   if (Platform.OS === 'web') {
-    onActiveImpl = async (_, _ctx) => {
+    onActiveImpl = async () => {
       try {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
@@ -183,7 +183,7 @@ const SectionHeader: FC<SectionHeaderProps> = ({
       }
     };
   } else {
-    onActiveImpl = (_, _ctx) => {
+    onActiveImpl = () => {
       'worklet';
       applyMeasure(measure(animatedRef));
     };
