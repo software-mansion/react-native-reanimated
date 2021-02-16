@@ -1,5 +1,4 @@
-import { createBrowserApp } from '@react-navigation/web';
-import React from 'react';
+import React, { FC } from 'react';
 import {
   FlatList,
   Platform,
@@ -8,6 +7,8 @@ import {
   View,
   LogBox,
 } from 'react-native';
+// @ts-ignore: no types
+import { createBrowserApp } from '@react-navigation/web';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -28,10 +29,15 @@ import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import ScrollExample from './AnimatedScrollExample';
-
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
-const SCREENS = {
+type Screens = Record<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  { screen: React.ComponentType<any>; title?: string }
+>;
+
+const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -90,6 +96,7 @@ const SCREENS = {
   },
 };
 
+// @ts-ignore: types should be provided after we transition to navigation v5
 function MainScreen({ navigation }) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
@@ -110,23 +117,35 @@ function MainScreen({ navigation }) {
   );
 }
 
+// @ts-ignore: FIXME
 MainScreen.navigationOptions = {
   title: '🎬 Reanimated 2.x Examples',
 };
 
-export function ItemSeparator() {
+export const ItemSeparator: FC = () => {
   return <View style={styles.separator} />;
-}
+};
 
-export function MainScreenItem({ item, onPressItem, screens }) {
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export const MainScreenItem: FC<MainScreenItemProps> = ({
+  item,
+  onPressItem,
+  screens,
+}) => {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
     </RectButton>
   );
-}
+};
 
+// @ts-ignore: types should be provided after we transition to navigation v5
 function LaunchReanimated1({ navigation }) {
   return (
     <>
@@ -178,8 +197,9 @@ export const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
+  web: (input: typeof ExampleApp) =>
+    createBrowserApp(input, { history: 'hash' }),
+  default: (input: typeof ExampleApp) => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);
