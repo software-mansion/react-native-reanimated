@@ -6,12 +6,16 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
-const windowHeight = Dimensions.get('window').height - Header.HEIGHT;
+let HEADER_HEIGHT = 0;
+
+const windowHeight = Dimensions.get('window').height - HEADER_HEIGHT;
 const size = 40;
 
 function ScrollExample() {
+  HEADER_HEIGHT = useHeaderHeight();
+
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
 

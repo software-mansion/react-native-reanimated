@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View, Dimensions, Platform, StyleSheet } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const windowDimensions = Dimensions.get('window');
 
@@ -47,13 +47,15 @@ function friction(value) {
   return res;
 }
 
+let HEADER_HEIGHT = 0;
+
 function ScrollableView({ children }) {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
 
   function onLayout(evt) {
     loverBound.value =
-      windowDimensions.height - Header.HEIGHT - evt.nativeEvent.layout.height;
+      windowDimensions.height - HEADER_HEIGHT - evt.nativeEvent.layout.height;
   }
 
   const handler = useAnimatedGestureHandler({
@@ -129,6 +131,8 @@ function Box({ color }) {
 }
 
 export default function Example() {
+  HEADER_HEIGHT = useHeaderHeight();
+
   return (
     <View style={styles.wrapper}>
       <ScrollableView>
@@ -144,7 +148,7 @@ const styles = StyleSheet.create({
   wrapper: {
     height:
       Platform.OS === 'web'
-        ? windowDimensions.height - Header.HEIGHT
+        ? windowDimensions.height - HEADER_HEIGHT
         : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },

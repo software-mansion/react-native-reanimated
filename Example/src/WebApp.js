@@ -1,16 +1,10 @@
-import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
@@ -103,10 +97,6 @@ function MainScreen({ navigation }) {
   );
 }
 
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Examples',
-};
-
 export function ItemSeparator() {
   return <View style={styles.separator} />;
 }
@@ -120,20 +110,29 @@ export function MainScreenItem({ item, onPressItem, screens }) {
   );
 }
 
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
-);
+const Stack = createStackNavigator();
 
-const ExampleApp = createSwitchNavigator({
-  Reanimated2App,
-});
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          options={{ title: '🎬 Reanimated 2.x Examples' }}
+          component={MainScreen}
+        />
+        {Object.keys(SCREENS).map((name) => (
+          <Stack.Screen
+            key={name}
+            name={name}
+            getComponent={() => SCREENS[name].screen}
+            options={{ title: SCREENS[name].title || name }}
+          />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
 
 export const styles = StyleSheet.create({
   list: {
@@ -155,10 +154,3 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
-
-const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
-});
-
-export default createApp(ExampleApp);

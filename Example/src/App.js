@@ -1,16 +1,10 @@
-import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -90,7 +84,7 @@ const SCREENS = {
   },
 };
 
-function MainScreen({ navigation }) {
+function MainScreen({ navigation, setUseRea2 }) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -105,14 +99,10 @@ function MainScreen({ navigation }) {
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
+      ListFooterComponent={() => <LaunchReanimated1 setUseRea2={setUseRea2} />}
     />
   );
 }
-
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Examples',
-};
 
 export function ItemSeparator() {
   return <View style={styles.separator} />;
@@ -127,34 +117,46 @@ export function MainScreenItem({ item, onPressItem, screens }) {
   );
 }
 
-function LaunchReanimated1({ navigation }) {
+function LaunchReanimated1({ setUseRea2 }) {
   return (
     <>
       <ItemSeparator />
-      <RectButton
-        style={styles.button}
-        onPress={() => navigation.navigate('Reanimated1')}>
+      <RectButton style={styles.button} onPress={() => setUseRea2?.(false)}>
         <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
       </RectButton>
     </>
   );
 }
 
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
+const Stack = createStackNavigator();
+
+const Reanimated2 = (setUseRea2) => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      children={(props) => <MainScreen {...props} setUseRea2={setUseRea2} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
 );
 
-const ExampleApp = createSwitchNavigator({
-  Reanimated2App,
-  Reanimated1,
-});
+export default function App() {
+  const [useRea2, setUseRea2] = React.useState(true);
+
+  return (
+    <NavigationContainer>
+      {useRea2 ? Reanimated2(setUseRea2) : Reanimated1(setUseRea2)}
+    </NavigationContainer>
+  );
+}
 
 export const styles = StyleSheet.create({
   list: {
@@ -176,10 +178,3 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
-
-const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
-});
-
-export default createApp(ExampleApp);

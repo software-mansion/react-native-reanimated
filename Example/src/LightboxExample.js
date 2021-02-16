@@ -24,7 +24,7 @@ import {
   PanGestureHandler,
   TapGestureHandler,
 } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
     height:
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
+      Platform.OS === 'web' ? dimensions.height - useHeaderHeight() : undefined,
   },
 
   scrollContainer: {
@@ -121,7 +121,7 @@ const timingConfig = {
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
-const HEADER_HEIGHT = Header.HEIGHT - StatusBar.currentHeight;
+let HEADER_HEIGHT = StatusBar.currentHeight;
 
 function ImageTransition({ activeImage, onClose }) {
   const { item, x, y, width, height, imageOpacity } = activeImage;
@@ -257,6 +257,8 @@ const images = Array.from({ length: 30 }, (_, index) => {
 
 export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
+
+  HEADER_HEIGHT = useHeaderHeight() - StatusBar.currentHeight;
 
   function onItemPress(animatedRef, item, svs) {
     setActiveImage({

@@ -15,9 +15,11 @@ import {
   PanGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+let HEADER_HEIGHT = 0;
 
 const dimensions = Dimensions.get('window');
 const GUTTER_WIDTH = 3;
@@ -29,7 +31,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
     height:
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
+      Platform.OS === 'web' ? dimensions.height - HEADER_HEIGHT : undefined,
   },
 
   scrollContainer: {
@@ -95,7 +97,7 @@ function ImageTransition({ activeImage, onClose }) {
     sv: imageOpacity,
   } = activeImage;
   const { uri } = item;
-  const y = activeImage.y - Header.HEIGHT;
+  const y = activeImage.y - HEADER_HEIGHT;
 
   const animationProgress = useSharedValue(0);
 
@@ -104,7 +106,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - Header.HEIGHT
+    (dimensions.height - targetHeight) / 2 - HEADER_HEIGHT
   );
 
   const translateX = useSharedValue(0);
@@ -214,6 +216,8 @@ const images = Array.from({ length: 30 }, (_, index) => {
 
 export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
+
+  HEADER_HEIGHT = useHeaderHeight();
 
   function onItemPress(imageRef, item, sv) {
     imageRef.current.measure((x, y, width, height, pageX, pageY) => {
