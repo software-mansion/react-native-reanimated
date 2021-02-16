@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
@@ -7,7 +7,13 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { View, Dimensions, Platform, StyleSheet } from 'react-native';
+import {
+  View,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  LayoutChangeEvent,
+} from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
@@ -26,7 +32,7 @@ const colors = [
 
 const boxHeight = 120;
 
-function friction(value) {
+function friction(value: number) {
   'worklet';
 
   const MAX_FRICTION = 200;
@@ -47,17 +53,21 @@ function friction(value) {
   return res;
 }
 
-function ScrollableView({ children }) {
+const ScrollableView: FC = ({ children }) => {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
 
-  function onLayout(evt) {
+  function onLayout(evt: LayoutChangeEvent) {
     loverBound.value =
+      // @ts-ignore FIXME(TS) navigation v4 untyped Header.HEIGHT
       windowDimensions.height - Header.HEIGHT - evt.nativeEvent.layout.height;
   }
 
+  type AnimatedGHContext = {
+    startY: number;
+  };
   const handler = useAnimatedGestureHandler({
-    onStart: (evt, ctx) => {
+    onStart: (_evt, ctx: AnimatedGHContext) => {
       const currentY = translateY.value;
       ctx.startY = currentY;
       translateY.value = currentY; // for stop animation
@@ -76,7 +86,7 @@ function ScrollableView({ children }) {
       }
     },
 
-    onEnd: (evt, ctx) => {
+    onEnd: (evt, _ctx) => {
       if (translateY.value < loverBound.value || translateY.value > 0) {
         const toValue = translateY.value > 0 ? 0 : loverBound.value;
 
@@ -113,9 +123,9 @@ function ScrollableView({ children }) {
       </PanGestureHandler>
     </View>
   );
-}
+};
 
-function Box({ color }) {
+const Box: FC<{ color: string }> = ({ color }) => {
   return (
     <View
       style={{
@@ -126,9 +136,9 @@ function Box({ color }) {
       }}
     />
   );
-}
+};
 
-export default function Example() {
+const Example: FC = () => {
   return (
     <View style={styles.wrapper}>
       <ScrollableView>
@@ -138,14 +148,17 @@ export default function Example() {
       </ScrollableView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   wrapper: {
     height:
       Platform.OS === 'web'
-        ? windowDimensions.height - Header.HEIGHT
+        ? // @ts-ignore FIXME(TS) navigation v4 untyped Header.HEIGHT
+          windowDimensions.height - Header.HEIGHT
         : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });
+
+export default Example;
