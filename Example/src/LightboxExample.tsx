@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FC, RefObject } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -23,6 +23,7 @@ import {
   ScrollView,
   PanGestureHandler,
   TapGestureHandler,
+  TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
@@ -34,25 +35,36 @@ const NUMBER_OF_IMAGES = 4;
 const IMAGE_SIZE =
   (dimensions.width - GUTTER_WIDTH * (NUMBER_OF_IMAGES - 1)) / NUMBER_OF_IMAGES;
 
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 0,
-    height:
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
-  },
+type ExampleImage = {
+  uri: string;
+  width: number;
+  height: number;
+};
+type ActiveExampleImageProperties = {
+  x: Animated.SharedValue<number>;
+  y: Animated.SharedValue<number>;
+  width: Animated.SharedValue<number>;
+  height: Animated.SharedValue<number>;
+  imageOpacity: Animated.SharedValue<number>;
+};
+type ActiveExampleImage = ActiveExampleImageProperties & {
+  // @ts-ignore: FIXME AnimatedImage type
+  animatedRef: RefObject<ActiveExampleImage>;
+  item: ExampleImage;
+};
 
-  scrollContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'black',
-  },
-});
-
-function ImageList({ images, onItemPress }) {
+type onItemPressFn = <T>(
+  animatedRef: RefObject<T>,
+  item: ExampleImage,
+  svs: ActiveExampleImageProperties
+) => void;
+function ImageList({
+  images,
+  onItemPress,
+}: {
+  images: ExampleImage[];
+  onItemPress: onItemPressFn;
+}) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {images.map((item, i) => (
@@ -62,8 +74,14 @@ function ImageList({ images, onItemPress }) {
   );
 }
 
-function ListItem({ item, index, onPress }) {
-  const ref = useAnimatedRef();
+type ListItemProps = {
+  item: ExampleImage;
+  index: number;
+  onPress: onItemPressFn;
+};
+const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
+  // @ts-ignore: FIXME(TS) correct type for createAnimatedComponent
+  const ref = useAnimatedRef<AnimatedImage>();
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -88,8 +106,8 @@ function ListItem({ item, index, onPress }) {
     onPress(ref, item, { imageOpacity: opacity, width, height, x, y });
   }
 
-  const handler = useAnimatedGestureHandler({
-    onFinish: (evt, ctx, isCanceledOrFailed) => {
+  const handler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
+    onFinish: (_evt, _ctx, isCanceledOrFailed) => {
       if (isCanceledOrFailed) {
         return;
       }
@@ -114,16 +132,23 @@ function ListItem({ item, index, onPress }) {
       </Animated.View>
     </TapGestureHandler>
   );
-}
+};
 
 const timingConfig = {
   duration: 240,
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
+// @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant, StatusBar.currentHeight may be undefined (android only)- check iOS
 const HEADER_HEIGHT = Header.HEIGHT - StatusBar.currentHeight;
 
-function ImageTransition({ activeImage, onClose }) {
+function ImageTransition({
+  activeImage,
+  onClose,
+}: {
+  activeImage: ActiveExampleImage;
+  onClose: () => void;
+}) {
   const { item, x, y, width, height, imageOpacity } = activeImage;
   const { uri } = item;
 
@@ -164,7 +189,7 @@ function ImageTransition({ activeImage, onClose }) {
       );
     },
 
-    onEnd: (event, ctx) => {
+    onEnd: (_event, _ctx) => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -196,7 +221,7 @@ function ImageTransition({ activeImage, onClose }) {
   });
 
   const imageStyles = useAnimatedStyle(() => {
-    const interpolateProgress = (range) =>
+    const interpolateProgress = (range: [number, number]) =>
       interpolate(animationProgress.value, [0, 1], range, Extrapolate.CLAMP);
 
     const top =
@@ -247,7 +272,7 @@ function ImageTransition({ activeImage, onClose }) {
   );
 }
 
-const images = Array.from({ length: 30 }, (_, index) => {
+const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   return {
     uri: `https://picsum.photos/id/${index + 10}/400/400`,
     width: dimensions.width,
@@ -255,10 +280,17 @@ const images = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-export default function LightboxExample() {
-  const [activeImage, setActiveImage] = useState(null);
+const LightboxExample: FC = () => {
+  const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
+    null
+  );
 
-  function onItemPress(animatedRef, item, svs) {
+  function onItemPress(
+    // @ts-ignore: FIXME AnimatedImage type
+    animatedRef: RefObject<AnimatedImage>,
+    item: ExampleImage,
+    svs: ActiveExampleImageProperties
+  ) {
     setActiveImage({
       animatedRef,
       item,
@@ -279,4 +311,25 @@ export default function LightboxExample() {
       )}
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 0,
+    height:
+      // @ts-ignore FIXME(TS) navigation v4 untyped constant
+      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
+  },
+
+  scrollContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
+  },
+});
+
+export default LightboxExample;
