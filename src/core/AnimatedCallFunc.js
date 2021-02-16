@@ -49,7 +49,7 @@ class AnimatedCallFunc extends AnimatedNode {
   }
 
   endContext() {
-    this._params.forEach((param, index) => {
+    this._params.forEach((param) => {
       param.endContext();
     });
     setCallID(this._previousCallID);

@@ -82,7 +82,7 @@ function sanitizeArgMapping(argMapping) {
 }
 
 export default class AnimatedEvent extends AnimatedNode {
-  constructor(argMapping, config = {}) {
+  constructor(argMapping, _config = {}) {
     const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({ type: 'event', argMapping: eventMappings });
     this._alwaysNodes = alwaysNodes;

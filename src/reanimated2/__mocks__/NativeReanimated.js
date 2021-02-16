@@ -1,6 +1,6 @@
 import MutableValue from './MutableValue';
 
-global._setGlobalConsole = (val) => {};
+global._setGlobalConsole = (_val) => {};
 
 export default {
   installCoreFunctions: () => {},
