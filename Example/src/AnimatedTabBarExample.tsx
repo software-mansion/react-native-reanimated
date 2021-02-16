@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,6 +24,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path } from 'react-native-svg';
 import * as shape from 'd3-shape';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 const { width, height } = Dimensions.get('window');
 
@@ -88,14 +89,22 @@ const styles = StyleSheet.create({
   },
 });
 
-function Button({
+type ButtonProps = {
+  item: IconProp;
+  index: number;
+  activeIndex: Animated.SharedValue<number>;
+  width: number;
+  position: number;
+  readonly indicatorPosition: Animated.SharedValue<number>;
+};
+const Button: FC<ButtonProps> = ({
   item,
   index,
   activeIndex,
   width,
   position,
   indicatorPosition,
-}) {
+}) => {
   const staticIconStyle = useAnimatedStyle(() => {
     const visibility = interpolate(
       indicatorPosition.value,
@@ -123,9 +132,20 @@ function Button({
       </View>
     </TouchableWithoutFeedback>
   );
-}
+};
 
-function ActiveIcon({ item, index, activeIndex, width }) {
+type ActiveIconProps = {
+  item: IconProp;
+  index: number;
+  activeIndex: Animated.SharedValue<number>;
+  width: number;
+};
+const ActiveIcon: FC<ActiveIconProps> = ({
+  item,
+  index,
+  activeIndex,
+  width,
+}) => {
   const circleIconStyle = useAnimatedStyle(() => {
     const isActive = index === activeIndex.value;
     const yOffset = isActive ? 0 : 80;
@@ -158,9 +178,9 @@ function ActiveIcon({ item, index, activeIndex, width }) {
       </View>
     </Animated.View>
   );
-}
+};
 
-const Bar = () => {
+const Bar: FC = () => {
   const activeIndex = useSharedValue(0);
 
   const indicatorPosition = useDerivedValue(() => {
@@ -223,7 +243,7 @@ const tabBarStyles = StyleSheet.create({
   },
 });
 
-const TabBar = () => {
+const TabBar: FC = () => {
   return (
     <View style={tabBarStyles.container}>
       <View style={tabBarStyles.dummyPusher} />
