@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { View, Dimensions, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -11,12 +11,16 @@ import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
-function ChatHeads({ children }) {
+const ChatHeads: FC = ({ children }) => {
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
 
+  type AnimatedGHContext = {
+    startX: number;
+    startY: number;
+  };
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx) => {
+    onStart: (_, ctx: AnimatedGHContext) => {
       ctx.startX = transX.value;
       ctx.startY = transY.value;
     },
@@ -28,7 +32,7 @@ function ChatHeads({ children }) {
       const width = windowWidth - 100 - 40; // minus margins & width
       const height = windowHeight - 100 - 40; // minus margins & height
       const toss = 0.2;
-      function clamp(value, min, max) {
+      function clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
       }
       const targetX = clamp(transX.value + toss * event.velocityX, 0, width);
@@ -96,9 +100,13 @@ function ChatHeads({ children }) {
       </PanGestureHandler>
     </>
   );
-}
+};
 
-function Followers({ transX, transY, children }) {
+type FollowersProps = {
+  readonly transX: Animated.SharedValue<number>;
+  readonly transY: Animated.SharedValue<number>;
+};
+const Followers: FC<FollowersProps> = ({ transX, transY, children }) => {
   const myTransX = useDerivedValue(() => {
     return withSpring(transX.value);
   });
@@ -135,9 +143,9 @@ function Followers({ transX, transY, children }) {
       </Animated.View>
     </>
   );
-}
+};
 
-function Main() {
+const Main: FC = () => {
   return (
     <View style={{ flex: 1, margin: 50 }}>
       <ChatHeads>
@@ -148,7 +156,7 @@ function Main() {
       </ChatHeads>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   head: {
