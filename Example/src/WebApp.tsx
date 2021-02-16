@@ -1,5 +1,6 @@
+// @ts-ignore: no types
 import { createBrowserApp } from '@react-navigation/web';
-import React from 'react';
+import React, { FC } from 'react';
 import {
   FlatList,
   Platform,
@@ -29,8 +30,12 @@ import LightboxExample from './WebSpecific/LightBoxExample';
 import LiquidSwipe from './LiquidSwipe';
 /**/
 LogBox.ignoreLogs(['Calling `getNode()`']);
-
-const SCREENS = {
+type Screens = Record<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  { screen: React.ComponentType<any>; title?: string }
+>;
+const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -84,6 +89,7 @@ const SCREENS = {
   /**/
 };
 
+// @ts-ignore: types should be provided after we transition to navigation v5
 function MainScreen({ navigation }) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
@@ -107,18 +113,28 @@ MainScreen.navigationOptions = {
   title: '🎬 Reanimated 2.x Examples',
 };
 
-export function ItemSeparator() {
+export const ItemSeparator: FC = () => {
   return <View style={styles.separator} />;
-}
+};
 
-export function MainScreenItem({ item, onPressItem, screens }) {
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export const MainScreenItem: FC<MainScreenItemProps> = ({
+  item,
+  onPressItem,
+  screens,
+}) => {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
     </RectButton>
   );
-}
+};
 
 const Reanimated2App = createStackNavigator(
   {
@@ -157,8 +173,9 @@ export const styles = StyleSheet.create({
 });
 
 const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
+  web: (input: typeof ExampleApp) =>
+    createBrowserApp(input, { history: 'hash' }),
+  default: (input: typeof ExampleApp) => createAppContainer(input),
 });
 
 export default createApp(ExampleApp);
