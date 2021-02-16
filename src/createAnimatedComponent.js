@@ -419,9 +419,9 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
-    Component.name ||
-    'Component'})`;
+  AnimatedComponent.displayName = `AnimatedComponent(${
+    Component.displayName || Component.name || 'Component'
+  })`;
 
   return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
     return (

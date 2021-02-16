@@ -643,7 +643,7 @@ export function useAnimatedRef() {
   const ref = useRef(null);
 
   if (!ref.current) {
-    const fun = function(component) {
+    const fun = function (component) {
       'worklet';
       // enters when ref is set by attaching to a component
       if (component) {

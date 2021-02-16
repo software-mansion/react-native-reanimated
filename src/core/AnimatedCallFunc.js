@@ -64,5 +64,9 @@ class AnimatedCallFunc extends AnimatedNode {
 }
 
 export function createAnimatedCallFunc(proc, args, params) {
-  return new AnimatedCallFunc(proc, args.map((p) => adapt(p)), params);
+  return new AnimatedCallFunc(
+    proc,
+    args.map((p) => adapt(p)),
+    params
+  );
 }

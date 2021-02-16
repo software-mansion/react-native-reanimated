@@ -1,7 +1,7 @@
 import { cond, block, defined, sub, set, proc } from '../base';
 import AnimatedValue from '../core/InternalAnimatedValue';
 
-const procDiff = proc(function(v, stash, prev) {
+const procDiff = proc(function (v, stash, prev) {
   return block([
     set(stash, cond(defined(prev), sub(v, prev), 0)),
     set(prev, v),
