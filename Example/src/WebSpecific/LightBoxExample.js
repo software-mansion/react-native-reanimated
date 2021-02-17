@@ -19,31 +19,11 @@ import { useHeaderHeight } from '@react-navigation/stack';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-let HEADER_HEIGHT = 0;
-
 const dimensions = Dimensions.get('window');
 const GUTTER_WIDTH = 3;
 const NUMBER_OF_IMAGES = 4;
 const IMAGE_SIZE =
   (dimensions.width - GUTTER_WIDTH * (NUMBER_OF_IMAGES - 1)) / NUMBER_OF_IMAGES;
-
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 0,
-    height:
-      Platform.OS === 'web' ? dimensions.height - HEADER_HEIGHT : undefined,
-  },
-
-  scrollContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'black',
-  },
-});
 
 function ImageList({ images, onItemPress }) {
   return (
@@ -97,7 +77,9 @@ function ImageTransition({ activeImage, onClose }) {
     sv: imageOpacity,
   } = activeImage;
   const { uri } = item;
-  const y = activeImage.y - HEADER_HEIGHT;
+
+  const headerHeight = useHeaderHeight();
+  const y = activeImage.y - headerHeight;
 
   const animationProgress = useSharedValue(0);
 
@@ -106,7 +88,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - HEADER_HEIGHT
+    (dimensions.height - targetHeight) / 2 - headerHeight
   );
 
   const translateX = useSharedValue(0);
@@ -217,8 +199,6 @@ const images = Array.from({ length: 30 }, (_, index) => {
 export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
 
-  HEADER_HEIGHT = useHeaderHeight();
-
   function onItemPress(imageRef, item, sv) {
     imageRef.current.measure((x, y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {
@@ -246,8 +226,12 @@ export default function LightboxExample() {
     setActiveImage(null);
   }
 
+  const headerHeight = useHeaderHeight();
+  const height =
+    Platform.OS === 'web' ? dimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <ImageList onItemPress={onItemPress} images={images} />
 
       {activeImage && (
@@ -256,3 +240,19 @@ export default function LightboxExample() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 0,
+  },
+
+  scrollContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
+  },
+});

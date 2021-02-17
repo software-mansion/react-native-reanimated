@@ -47,15 +47,14 @@ function friction(value) {
   return res;
 }
 
-let HEADER_HEIGHT = 0;
-
 function ScrollableView({ children }) {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
+  const headerHeight = useHeaderHeight();
 
   function onLayout(evt) {
     loverBound.value =
-      windowDimensions.height - HEADER_HEIGHT - evt.nativeEvent.layout.height;
+      windowDimensions.height - headerHeight - evt.nativeEvent.layout.height;
   }
 
   const handler = useAnimatedGestureHandler({
@@ -131,10 +130,13 @@ function Box({ color }) {
 }
 
 export default function Example() {
-  HEADER_HEIGHT = useHeaderHeight();
+  const height =
+    Platform.OS === 'web'
+      ? windowDimensions.height - useHeaderHeight()
+      : undefined;
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { height }]}>
       <ScrollableView>
         {colors.map((color) => (
           <Box color={color} key={color} />
@@ -146,10 +148,6 @@ export default function Example() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    height:
-      Platform.OS === 'web'
-        ? windowDimensions.height - HEADER_HEIGHT
-        : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });

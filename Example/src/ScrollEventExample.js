@@ -8,14 +8,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useHeaderHeight } from '@react-navigation/stack';
 
-let HEADER_HEIGHT = 0;
-
-const windowHeight = Dimensions.get('window').height - HEADER_HEIGHT;
 const size = 40;
 
 function ScrollExample() {
-  HEADER_HEIGHT = useHeaderHeight();
-
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
 
@@ -44,12 +39,17 @@ function ScrollExample() {
     };
   });
 
+  const windowHeight = Dimensions.get('window').height - useHeaderHeight();
+  const headerHeight = {
+    height: Platform.OS === 'web' ? windowHeight : undefined,
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.half}>
+      <View style={[styles.half, headerHeight]}>
         <Animated.View style={[styles.box, stylez]} />
       </View>
-      <View style={styles.half}>
+      <View style={[styles.half, headerHeight]}>
         <Animated.ScrollView
           style={styles.scroll}
           scrollEventThrottle={1}
@@ -72,7 +72,6 @@ const styles = StyleSheet.create({
   },
   half: {
     flex: 1,
-    height: Platform.OS === 'web' ? windowHeight : undefined,
     overflow: 'hidden',
   },
   scroll: {

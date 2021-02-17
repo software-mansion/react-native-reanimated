@@ -34,24 +34,6 @@ const NUMBER_OF_IMAGES = 4;
 const IMAGE_SIZE =
   (dimensions.width - GUTTER_WIDTH * (NUMBER_OF_IMAGES - 1)) / NUMBER_OF_IMAGES;
 
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: 0,
-    height:
-      Platform.OS === 'web' ? dimensions.height - useHeaderHeight() : undefined,
-  },
-
-  scrollContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'black',
-  },
-});
-
 function ImageList({ images, onItemPress }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -65,6 +47,7 @@ function ImageList({ images, onItemPress }) {
 function ListItem({ item, index, onPress }) {
   const ref = useAnimatedRef();
   const opacity = useSharedValue(1);
+  const headerHeight = useHeaderHeight();
 
   const containerStyle = {
     marginRight: (index + 1) % 4 === 0 ? 0 : GUTTER_WIDTH,
@@ -101,7 +84,7 @@ function ListItem({ item, index, onPress }) {
       width.value = measurements.width;
       height.value = measurements.height;
       x.value = measurements.pageX;
-      y.value = measurements.pageY - HEADER_HEIGHT;
+      y.value = measurements.pageY - headerHeight;
 
       runOnJS(handlePress)();
     },
@@ -121,8 +104,6 @@ const timingConfig = {
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
-let HEADER_HEIGHT = StatusBar.currentHeight;
-
 function ImageTransition({ activeImage, onClose }) {
   const { item, x, y, width, height, imageOpacity } = activeImage;
   const { uri } = item;
@@ -138,7 +119,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - HEADER_HEIGHT
+    (dimensions.height - targetHeight) / 2 - useHeaderHeight()
   );
 
   const translateX = useSharedValue(0);
@@ -258,8 +239,6 @@ const images = Array.from({ length: 30 }, (_, index) => {
 export default function LightboxExample() {
   const [activeImage, setActiveImage] = useState(null);
 
-  HEADER_HEIGHT = useHeaderHeight() - StatusBar.currentHeight;
-
   function onItemPress(animatedRef, item, svs) {
     setActiveImage({
       animatedRef,
@@ -272,8 +251,12 @@ export default function LightboxExample() {
     setActiveImage(null);
   }
 
+  const headerHeight = useHeaderHeight() - StatusBar.currentHeight;
+  const height =
+    Platform.OS === 'web' ? dimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <ImageList onItemPress={onItemPress} images={images} />
 
       {activeImage && (
@@ -282,3 +265,19 @@ export default function LightboxExample() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 0,
+  },
+
+  scrollContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
+  },
+});
