@@ -112,6 +112,8 @@ function ImageTransition({ activeImage, onClose }) {
   const scaleFactor = item.width / targetWidth;
   const targetHeight = item.height / scaleFactor;
 
+  const headerHeight = useHeaderHeight();
+
   const animationProgress = useSharedValue(0);
 
   const backdropOpacity = useSharedValue(0);
@@ -119,7 +121,7 @@ function ImageTransition({ activeImage, onClose }) {
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - useHeaderHeight()
+    (dimensions.height - targetHeight) / 2 - headerHeight
   );
 
   const translateX = useSharedValue(0);

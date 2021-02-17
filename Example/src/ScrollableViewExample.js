@@ -130,10 +130,10 @@ function Box({ color }) {
 }
 
 export default function Example() {
+  const headerHeight = useHeaderHeight();
+
   const height =
-    Platform.OS === 'web'
-      ? windowDimensions.height - useHeaderHeight()
-      : undefined;
+    Platform.OS === 'web' ? windowDimensions.height - headerHeight : undefined;
 
   return (
     <View style={[styles.wrapper, { height }]}>

@@ -13,6 +13,7 @@ const size = 40;
 function ScrollExample() {
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
+  const headerHeight = useHeaderHeight();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -39,14 +40,12 @@ function ScrollExample() {
     };
   });
 
-  const windowHeight = Dimensions.get('window').height - useHeaderHeight();
-  const headerHeight = {
-    height: Platform.OS === 'web' ? windowHeight : undefined,
-  };
+  const windowHeight = Dimensions.get('window').height - headerHeight;
+  const height = Platform.OS === 'web' ? windowHeight : undefined;
 
   return (
     <View style={styles.container}>
-      <View style={[styles.half, headerHeight]}>
+      <View style={[styles.half, { height }]}>
         <Animated.View style={[styles.box, stylez]} />
       </View>
       <View style={[styles.half, headerHeight]}>
