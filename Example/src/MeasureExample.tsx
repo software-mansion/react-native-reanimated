@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import React, { FC, ReactElement, ReactNode, RefObject, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +15,31 @@ import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
+
+/**
+ * We need to augment react types because rn for web provides non-standard way of measuring components by injecting `measure` method to the ref.
+ *
+ * Reference:
+ * https://github.com/necolas/react-native-web/blob/c47bec7b93d6a3b7c31bbc8bb2e4acd117b79bfc/packages/react-native-web/src/modules/usePlatformMethods/index.js#L69
+ * https://github.com/necolas/react-native-web/blob/c47bec7b93d6a3b7c31bbc8bb2e4acd117b79bfc/packages/react-native-web/src/exports/UIManager/index.js#L63
+ *  */
+
+/* eslint-disable @typescript-eslint/no-namespace */
+declare module 'react' {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  interface Component {
+    measure?(
+      callback: (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        pageX: number,
+        pageY: number
+      ) => void
+    ): void;
+  }
+}
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
@@ -51,7 +74,7 @@ function createSharedVariables() {
   };
 }
 
-export default function MeasureExample() {
+const MeasureExample: FC = () => {
   const { heights, contentHeights } = createSharedVariables();
 
   return (
@@ -89,7 +112,7 @@ export default function MeasureExample() {
       </SafeAreaView>
     </View>
   );
-}
+};
 
 type SectionProps = {
   title: string;
@@ -132,10 +155,20 @@ const Section: FC<SectionProps> = ({
   );
 };
 
-function asyncMeasure(animatedRef: RefObject<React.Component>) {
+type MeasuredDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pageX: number;
+  pageY: number;
+};
+function asyncMeasure(
+  animatedRef: RefObject<React.Component>
+): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
-      animatedRef.current.measure((x, y, width, height, pageX, pageY) => {
+      animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
         resolve({ x, y, width, height, pageX, pageY });
       });
     } else {
@@ -264,3 +297,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
 });
+
+export default MeasureExample;
