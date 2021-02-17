@@ -14,7 +14,10 @@ import {
   StyleSheet,
   LayoutChangeEvent,
 } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import { Header } from 'react-navigation-stack';
 
 const windowDimensions = Dimensions.get('window');

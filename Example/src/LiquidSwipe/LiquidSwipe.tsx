@@ -8,7 +8,10 @@ import Animated, {
   Extrapolate,
   withSpring,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import Weave from './Weave';
 import { initialSideWidth, initialWaveCenter } from './WeaveHelpers';
 import Content from './Content';
