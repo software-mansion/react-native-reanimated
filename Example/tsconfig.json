@@ -18,10 +18,6 @@
 
     "test/**/*.ts",
     "test/**/*.tsx",
-    "test/**/*.js",
-
-    "test-suite/**/*.ts",
-    "test-suite/**/*.tsx",
-    "test-suite/**/*.js"
+    "test/**/*.js"
   ]
 }
