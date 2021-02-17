@@ -66,8 +66,11 @@ const ScrollableView: FC = ({ children }) => {
   type AnimatedGHContext = {
     startY: number;
   };
-  const handler = useAnimatedGestureHandler({
-    onStart: (_evt, ctx: AnimatedGHContext) => {
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_evt, ctx) => {
       const currentY = translateY.value;
       ctx.startY = currentY;
       translateY.value = currentY; // for stop animation

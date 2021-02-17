@@ -10,7 +10,10 @@ import Animated, {
   Extrapolate,
   interpolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },
@@ -79,8 +82,11 @@ const ScrollExample: FC = () => {
     start: Vector2D;
     last: Vector2D;
   };
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (e, ctx: AnimatedGHContext) => {
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (e, ctx) => {
       ctx.start = { x: e.x, y: e.y };
       ctx.last = ctx.start;
     },

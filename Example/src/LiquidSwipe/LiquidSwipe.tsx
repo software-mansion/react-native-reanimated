@@ -38,8 +38,11 @@ const LiquidSwipe: FC = () => {
     dragX: number;
     startY: number;
   };
-  const handler = useAnimatedGestureHandler({
-    onStart: (event, ctx: AnimatedGHContext) => {
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (event, ctx) => {
       // stop animating progress, this will also place "isBack" value in the
       // final state (we update isBack in progress animation callback)
       cancelAnimation(progress);

@@ -19,8 +19,11 @@ const ChatHeads: FC = ({ children }) => {
     startX: number;
     startY: number;
   };
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: AnimatedGHContext) => {
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, ctx) => {
       ctx.startX = transX.value;
       ctx.startY = transY.value;
     },

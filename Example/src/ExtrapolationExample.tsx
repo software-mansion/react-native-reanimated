@@ -9,7 +9,10 @@ import Animated, {
   withTiming,
   Extrapolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const ExtrapolationExample: FC = () => {
   const translation = {
@@ -20,8 +23,11 @@ const ExtrapolationExample: FC = () => {
     startX: number;
     startY: number;
   };
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: AnimatedGHContext) => {
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, ctx) => {
       ctx.startX = translation.x.value;
       ctx.startY = translation.y.value;
     },

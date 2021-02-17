@@ -19,8 +19,11 @@ const DragAndSnap: FC = () => {
     startX: number;
     startY: number;
   };
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, ctx: AnimatedGHContext) => {
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, ctx) => {
       ctx.startX = translation.x.value;
       ctx.startY = translation.y.value;
     },
