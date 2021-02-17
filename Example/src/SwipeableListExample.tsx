@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { StyleSheet, View, Text, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, Alert } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedGestureHandler,
@@ -57,8 +57,7 @@ const data: Data[] = [
 
 const SwipableList: FC = () => {
   function onRemove() {
-    // @ts-ignore: FIXME shouldn't be Alert.alert()?
-    alert('Removed');
+    Alert.alert('Removed');
   }
 
   return (
