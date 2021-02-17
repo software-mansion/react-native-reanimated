@@ -6,18 +6,5 @@
       "react-native-reanimated": ["./react-native-reanimated.d.ts"]
     }
   },
-  "include": [
-    "index.js",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.js",
-
-    "reanimated1/**/*.ts",
-    "reanimated1/**/*.tsx",
-    "reanimated1/**/*.js",
-
-    "test/**/*.ts",
-    "test/**/*.tsx",
-    "test/**/*.js"
-  ]
+  "include": ["index.js", "src/**/*", "reanimated1/**/*", "test/**/*"]
 }
