@@ -1,6 +1,11 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import React, { useState, useRef, useEffect, FC } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  FC,
+  RefObject,
+  Component,
+} from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,22 +37,28 @@ type ExampleImage = {
   width: number;
   height: number;
 };
-type ActiveExampleImageProperties = {
-  x: Animated.SharedValue<number>;
-  y: Animated.SharedValue<number>;
-  width: Animated.SharedValue<number>;
-  height: Animated.SharedValue<number>;
-  imageOpacity: Animated.SharedValue<number>;
-};
-type ActiveExampleImage = ActiveExampleImageProperties & {
+
+type ActiveExampleImage = {
   // @ts-ignore: FIXME AnimatedImage type
-  animatedRef: RefObject<ActiveExampleImage>;
+  // animatedRef: RefObject<ActiveExampleImage>;
   item: ExampleImage;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  targetHeight: number;
+  targetWidth: number;
+  sv: Animated.SharedValue<number>;
 };
 
+type onItemPressFn = (
+  imageRef: RefObject<Component>,
+  item: ExampleImage,
+  sv: Animated.SharedValue<number>
+) => void;
 type ImageListProps = {
   images: ExampleImage[];
-  onItemPress;
+  onItemPress: onItemPressFn;
 };
 const ImageList: FC<ImageListProps> = ({ images, onItemPress }) => {
   return (
@@ -62,7 +73,7 @@ const ImageList: FC<ImageListProps> = ({ images, onItemPress }) => {
 type ListItemProps = {
   item: ExampleImage;
   index: number;
-  onPress;
+  onPress: onItemPressFn;
 };
 const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
   // @ts-ignore FIXME)TS) createAnimatedComponent type
@@ -98,7 +109,7 @@ const timingConfig = {
 
 type ImageTransitionProps = {
   activeImage: ActiveExampleImage;
-  onClose;
+  onClose: () => void;
 };
 const ImageTransition: FC<ImageTransitionProps> = ({
   activeImage,
@@ -234,10 +245,16 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
 });
 
 const LightboxExample: FC = () => {
-  const [activeImage, setActiveImage] = useState(null);
+  const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
+    null
+  );
 
-  function onItemPress(imageRef, item, sv) {
-    imageRef.current.measure((x, y, width, height, pageX, pageY) => {
+  function onItemPress(
+    imageRef: RefObject<Component>,
+    item: ExampleImage,
+    sv: Animated.SharedValue<number>
+  ) {
+    imageRef.current?.measure?.((_x, _y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {
         return;
       }
