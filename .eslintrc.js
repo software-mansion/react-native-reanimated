@@ -30,7 +30,4 @@ module.exports = {
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
-  settings: {
-    'import/core-modules': ['react-native-reanimated'],
-  },
 };

@@ -121,7 +121,7 @@ class Node {
   mapper = null;
   children = [];
 
-  constructor(mapper, parents = [], children = []) {
+  constructor(mapper, _parents = [], children = []) {
     this.mapper = mapper;
     this.children = children;
   }

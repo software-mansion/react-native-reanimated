@@ -1,7 +1,7 @@
 import { set, add, proc } from '../base';
 import AnimatedValue from '../core/InternalAnimatedValue';
 
-const procAcc = proc(function(v, acc) {
+const procAcc = proc(function (v, acc) {
   return set(acc, add(acc, v));
 });
 
