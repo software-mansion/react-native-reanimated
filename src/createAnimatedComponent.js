@@ -266,7 +266,7 @@ export default function createAnimatedComponent(Component) {
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (hostInstance && this._hasReanimated2Props(styles)) {
+        if (hostInstance && this._hasReanimated2Props(styles) && hostInstance.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }

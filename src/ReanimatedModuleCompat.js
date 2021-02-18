@@ -20,6 +20,15 @@ export default {
   async disconnectNodes() {
     // noop
   },
+  async addListener() {
+    // noop
+  },
+  async removeListeners() {
+    // noop
+  },
+  async removeAllListeners() {
+    // noop
+  },
   async animateNextTransition() {
     console.warn(
       'Reanimated: animateNextTransition is unimplemented on current platform'

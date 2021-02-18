@@ -1,11 +1,9 @@
-const hooks = require('./Hooks');
-
 /* eslint-disable standard/no-callback-literal */
 const NOOP = () => {};
 const ID = (t) => t;
 
 const ReanimatedV2 = {
-  useSharedValue: hooks.useSharedValue,
+  useSharedValue: (v) => { value: v },
   useDerivedValue: (a) => ({ value: a() }),
   useAnimatedScrollHandler: () => NOOP,
   useAnimatedGestureHandler: () => NOOP,

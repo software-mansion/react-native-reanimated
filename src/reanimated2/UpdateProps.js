@@ -2,7 +2,14 @@
 import { processColor } from './Colors';
 import { makeShareable } from './core';
 import { Platform } from 'react-native';
-import { _updatePropsJS } from './js-reanimated/index';
+
+let JSReanimatedModule;
+if(process.env.JEST_WORKER_ID) {
+  JSReanimatedModule = require('./js-reanimated/index.web')
+} else {
+  JSReanimatedModule = require('./js-reanimated/index')
+}
+const { _updatePropsJS } = JSReanimatedModule;
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
