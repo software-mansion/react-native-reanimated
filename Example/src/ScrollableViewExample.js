@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { View, Dimensions, Platform, StyleSheet } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const windowDimensions = Dimensions.get('window');
 
@@ -50,10 +50,11 @@ function friction(value) {
 function ScrollableView({ children }) {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
+  const headerHeight = useHeaderHeight();
 
   function onLayout(evt) {
     loverBound.value =
-      windowDimensions.height - Header.HEIGHT - evt.nativeEvent.layout.height;
+      windowDimensions.height - headerHeight - evt.nativeEvent.layout.height;
   }
 
   const handler = useAnimatedGestureHandler({
@@ -129,8 +130,13 @@ function Box({ color }) {
 }
 
 export default function Example() {
+  const headerHeight = useHeaderHeight();
+
+  const height =
+    Platform.OS === 'web' ? windowDimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { height }]}>
       <ScrollableView>
         {colors.map((color) => (
           <Box color={color} key={color} />
@@ -142,10 +148,6 @@ export default function Example() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    height:
-      Platform.OS === 'web'
-        ? windowDimensions.height - Header.HEIGHT
-        : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });
