@@ -3,7 +3,7 @@ const NOOP = () => {};
 const ID = (t) => t;
 
 const ReanimatedV2 = {
-  useSharedValue: (v) => { value: v },
+  useSharedValue: (v) => ({ value: v }),
   useDerivedValue: (a) => ({ value: a() }),
   useAnimatedScrollHandler: () => NOOP,
   useAnimatedGestureHandler: () => NOOP,
