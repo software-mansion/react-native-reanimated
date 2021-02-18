@@ -1,9 +1,10 @@
-import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import { FlatList, Platform, LogBox } from 'react-native';
+import { FlatList, LogBox } from 'react-native';
+
 import { ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
 import { styles, ItemSeparator, MainScreenItem } from '../src/App';
 
@@ -72,28 +73,26 @@ function MainScreen({ navigation }) {
   );
 }
 
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Tests',
-};
+const Stack = createStackNavigator();
 
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
-);
-
-const TestApp = createSwitchNavigator({
-  Reanimated2App,
-});
-
-const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
-});
-
-export default createApp(TestApp);
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          options={{ title: '🎬 Reanimated 2.x Examples' }}
+          component={MainScreen}
+        />
+        {Object.keys(SCREENS).map((name) => (
+          <Stack.Screen
+            key={name}
+            name={name}
+            getComponent={() => SCREENS[name].screen}
+            options={{ title: SCREENS[name].title || name }}
+          />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

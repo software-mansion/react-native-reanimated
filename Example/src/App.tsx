@@ -1,17 +1,10 @@
 import React, { FC } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-} from 'react-native';
-// @ts-ignore: no types
-import { createBrowserApp } from '@react-navigation/web';
+import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+
+import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -96,8 +89,7 @@ const SCREENS: Screens = {
   },
 };
 
-// @ts-ignore: types should be provided after we transition to navigation v5
-function MainScreen({ navigation }) {
+function MainScreen({ navigation, setUseRea2 }) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -112,15 +104,10 @@ function MainScreen({ navigation }) {
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
+      ListFooterComponent={() => <LaunchReanimated1 setUseRea2={setUseRea2} />}
     />
   );
 }
-
-// @ts-ignore: FIXME
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Examples',
-};
 
 export const ItemSeparator: FC = () => {
   return <View style={styles.separator} />;
@@ -145,35 +132,46 @@ export const MainScreenItem: FC<MainScreenItemProps> = ({
   );
 };
 
-// @ts-ignore: types should be provided after we transition to navigation v5
-function LaunchReanimated1({ navigation }) {
+function LaunchReanimated1({ setUseRea2 }) {
   return (
     <>
       <ItemSeparator />
-      <RectButton
-        style={styles.button}
-        onPress={() => navigation.navigate('Reanimated1')}>
+      <RectButton style={styles.button} onPress={() => setUseRea2?.(false)}>
         <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
       </RectButton>
     </>
   );
 }
 
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
+const Stack = createStackNavigator();
+
+const Reanimated2 = (setUseRea2) => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '🎬 Reanimated 2.x Examples' }}
+      children={(props) => <MainScreen {...props} setUseRea2={setUseRea2} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
 );
 
-const ExampleApp = createSwitchNavigator({
-  Reanimated2App,
-  Reanimated1,
-});
+const App: FC = () => {
+  const [useRea2, setUseRea2] = React.useState(true);
+
+  return (
+    <NavigationContainer>
+      {useRea2 ? Reanimated2(setUseRea2) : Reanimated1(setUseRea2)}
+    </NavigationContainer>
+  );
+};
 
 export const styles = StyleSheet.create({
   list: {
@@ -196,10 +194,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-const createApp = Platform.select({
-  web: (input: typeof ExampleApp) =>
-    createBrowserApp(input, { history: 'hash' }),
-  default: (input: typeof ExampleApp) => createAppContainer(input),
-});
-
-export default createApp(ExampleApp);
+export default App;

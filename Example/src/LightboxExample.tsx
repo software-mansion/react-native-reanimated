@@ -25,7 +25,7 @@ import {
   TapGestureHandler,
   TapGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -83,6 +83,7 @@ const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
   // @ts-ignore: FIXME(TS) correct type for createAnimatedComponent
   const ref = useAnimatedRef<AnimatedImage>();
   const opacity = useSharedValue(1);
+  const headerHeight = useHeaderHeight();
 
   const containerStyle = {
     marginRight: (index + 1) % 4 === 0 ? 0 : GUTTER_WIDTH,
@@ -119,7 +120,7 @@ const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
       width.value = measurements.width;
       height.value = measurements.height;
       x.value = measurements.pageX;
-      y.value = measurements.pageY - HEADER_HEIGHT;
+      y.value = measurements.pageY - headerHeight;
 
       runOnJS(handlePress)();
     },
@@ -139,9 +140,6 @@ const timingConfig = {
   easing: Easing.bezier(0.33, 0.01, 0, 1),
 };
 
-// @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant, StatusBar.currentHeight may be undefined (android only)- check iOS
-const HEADER_HEIGHT = Header.HEIGHT - StatusBar.currentHeight;
-
 function ImageTransition({
   activeImage,
   onClose,
@@ -156,6 +154,8 @@ function ImageTransition({
   const scaleFactor = item.width / targetWidth;
   const targetHeight = item.height / scaleFactor;
 
+  const headerHeight = useHeaderHeight();
+
   const animationProgress = useSharedValue(0);
 
   const backdropOpacity = useSharedValue(0);
@@ -163,7 +163,7 @@ function ImageTransition({
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    (dimensions.height - targetHeight) / 2 - HEADER_HEIGHT
+    (dimensions.height - targetHeight) / 2 - headerHeight
   );
 
   const translateX = useSharedValue(0);
@@ -302,8 +302,12 @@ const LightboxExample: FC = () => {
     setActiveImage(null);
   }
 
+  const headerHeight = useHeaderHeight() - (StatusBar.currentHeight ?? 0);
+  const height =
+    Platform.OS === 'web' ? dimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <ImageList onItemPress={onItemPress} images={images} />
 
       {activeImage && (
@@ -316,9 +320,6 @@ const LightboxExample: FC = () => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
-    height:
-      // @ts-ignore FIXME(TS) navigation v4 untyped constant
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
   },
 
   scrollContainer: {
@@ -331,5 +332,4 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
 });
-
 export default LightboxExample;

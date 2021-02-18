@@ -22,7 +22,7 @@ import {
   PanGestureHandler,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -125,8 +125,9 @@ const ImageTransition: FC<ImageTransitionProps> = ({
     sv: imageOpacity,
   } = activeImage;
   const { uri } = item;
-  // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
-  const y = activeImage.y - Header.HEIGHT;
+
+  const headerHeight = useHeaderHeight();
+  const y = activeImage.y - headerHeight;
 
   const animationProgress = useSharedValue(0);
 
@@ -135,8 +136,7 @@ const ImageTransition: FC<ImageTransitionProps> = ({
 
   const targetX = useSharedValue(0);
   const targetY = useSharedValue(
-    // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
-    (dimensions.height - targetHeight) / 2 - Header.HEIGHT
+    (dimensions.height - targetHeight) / 2 - headerHeight
   );
 
   const translateX = useSharedValue(0);
@@ -280,8 +280,12 @@ const LightboxExample: FC = () => {
     setActiveImage(null);
   }
 
+  const headerHeight = useHeaderHeight();
+  const height =
+    Platform.OS === 'web' ? dimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { height }]}>
       <ImageList onItemPress={onItemPress} images={images} />
 
       {activeImage && (
@@ -294,9 +298,6 @@ const LightboxExample: FC = () => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 0,
-    height:
-      // @ts-ignore: FIXME(TS) Header.HEIGHT untyped constant
-      Platform.OS === 'web' ? dimensions.height - Header.HEIGHT : undefined,
   },
 
   scrollContainer: {

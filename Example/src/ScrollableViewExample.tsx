@@ -18,7 +18,7 @@ import {
   PanGestureHandler,
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const windowDimensions = Dimensions.get('window');
 
@@ -59,11 +59,11 @@ function friction(value: number) {
 const ScrollableView: FC = ({ children }) => {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
+  const headerHeight = useHeaderHeight();
 
   function onLayout(evt: LayoutChangeEvent) {
     loverBound.value =
-      // @ts-ignore FIXME(TS) navigation v4 untyped Header.HEIGHT
-      windowDimensions.height - Header.HEIGHT - evt.nativeEvent.layout.height;
+      windowDimensions.height - headerHeight - evt.nativeEvent.layout.height;
   }
 
   type AnimatedGHContext = {
@@ -145,8 +145,13 @@ const Box: FC<{ color: string }> = ({ color }) => {
 };
 
 const Example: FC = () => {
+  const headerHeight = useHeaderHeight();
+
+  const height =
+    Platform.OS === 'web' ? windowDimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { height }]}>
       <ScrollableView>
         {colors.map((color) => (
           <Box color={color} key={color} />
@@ -158,11 +163,6 @@ const Example: FC = () => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    height:
-      Platform.OS === 'web'
-        ? // @ts-ignore FIXME(TS) navigation v4 untyped Header.HEIGHT
-          windowDimensions.height - Header.HEIGHT
-        : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });

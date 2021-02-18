@@ -203,7 +203,7 @@ PODS:
     - React-jsi (= 0.64.0-rc.2)
     - React-perflogger (= 0.64.0-rc.2)
   - React-jsinspector (0.64.0-rc.2)
-  - react-native-safe-area-context (3.1.8):
+  - react-native-safe-area-context (3.1.9):
     - React-Core
   - React-perflogger (0.64.0-rc.2)
   - React-RCTActionSheet (0.64.0-rc.2):
@@ -281,9 +281,9 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.64.0-rc.2)
   - RNCMaskedView (0.1.10):
     - React
-  - RNGestureHandler (1.9.0):
+  - RNGestureHandler (1.10.1):
     - React-Core
-  - RNReanimated (2.0.0-rc.2):
+  - RNReanimated (2.0.0-rc.3):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -312,7 +312,7 @@ PODS:
     - React-RCTVibration
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (2.13.0):
+  - RNScreens (2.17.1):
     - React-Core
   - RNSVG (12.1.0):
     - React
@@ -433,10 +433,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  DoubleConversion: cde416483dac037923206447da6e1454df403714
+  DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: b21700af840f633338ac968a36da9aa3a8268887
-  FBReactNativeSpec: ac5ae8902727ea99deddd51bc998500c64a27275
-  glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
+  FBReactNativeSpec: c6aa507df7d4d07fd16a910a5265ca59c2761d91
+  glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: fa44b153ba69cb9dd6cec5084b86719e3be7c90b
   RCTTypeSafety: 8e815e0f29ed65901e4e2963a90063a4cfcb7d5e
@@ -448,7 +448,7 @@ SPEC CHECKSUMS:
   React-jsi: 506ee28d88192ca5a722d935376a198c84d9ce4c
   React-jsiexecutor: 6460524de9e4c96a983e52aa63c44603560af362
   React-jsinspector: 611432ab882ba76844598bc5e16bdf10e63816a8
-  react-native-safe-area-context: 79fea126c6830c85f65947c223a5e3058a666937
+  react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   React-perflogger: bca76d7279e5fb9863de266154026e0d5bd79f86
   React-RCTActionSheet: 685edbce7c0ea41c467539899a8c2eea4dc8fde9
   React-RCTAnimation: 325fad5fe7d13823c46753bb76db756737a4df8c
@@ -462,12 +462,12 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 15492c8842d72b14765986b5bfbaaf5468210f13
   ReactCommon: c8ae344df0376e043f2899a5badb60709d24821e
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
-  RNGestureHandler: 9b7e605a741412e20e13c512738a31bd1611759b
-  RNReanimated: 64976b3e52ab719c12f4139ce13edbef2352199a
-  RNScreens: 13f23e5498fb4aa749d19a5eda7f8792fbb9d01f
+  RNGestureHandler: 5e58135436aacc1c5d29b75547d3d2b9430d052c
+  RNReanimated: 31d4b60fe6509e161b4c461dee70d98a9c7af6b6
+  RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 17d4f4db4e2efbaa7c3bc316ce4f762d02c4023d
 
-PODFILE CHECKSUM: 94cfe23319ca508c9d2a42825d71a200c9238fdc
+PODFILE CHECKSUM: 134567898248f45bf80ce9764e5986525ca64d51
 
-COCOAPODS: 1.9.1
+COCOAPODS: 1.9.3

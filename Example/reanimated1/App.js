@@ -1,7 +1,9 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createStackNavigator } from 'react-navigation-stack';
+
+import { createStackNavigator } from '@react-navigation/stack';
 
 import ChatHeads from './chatHeads';
 import Code from './code';
@@ -97,9 +99,23 @@ class MainScreen extends React.Component {
           />
         )}
         renderScrollComponent={(props) => <ScrollView {...props} />}
+        ListFooterComponent={() => (
+          <LaunchReanimated2 setUseRea2={this.props.setUseRea2} />
+        )}
       />
     );
   }
+}
+
+function LaunchReanimated2({ setUseRea2 }) {
+  return (
+    <>
+      <ItemSeparator />
+      <RectButton style={styles.button} onPress={() => setUseRea2?.(true)}>
+        <Text style={styles.buttonText}>🎬 Reanimated 2.x Examples</Text>
+      </RectButton>
+    </>
+  );
 }
 
 const ItemSeparator = () => <View style={styles.separator} />;
@@ -116,17 +132,35 @@ class MainScreenItem extends React.Component {
   }
 }
 
-const ExampleApp = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-    ...INTERACTABLE_SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
+const Stack = createStackNavigator();
+
+const Navigator = (setUseRea2) => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Home"
+      options={{ title: '👵 Reanimated 1.x Examples' }}
+      children={(props) => <MainScreen {...props} setUseRea2={setUseRea2} />}
+    />
+    {Object.keys(SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => SCREENS[name].screen}
+        options={{ title: SCREENS[name].title || name }}
+      />
+    ))}
+    {Object.keys(INTERACTABLE_SCREENS).map((name) => (
+      <Stack.Screen
+        key={name}
+        name={name}
+        getComponent={() => INTERACTABLE_SCREENS[name].screen}
+        options={{ title: INTERACTABLE_SCREENS[name].title || name }}
+      />
+    ))}
+  </Stack.Navigator>
 );
+
+export default Navigator;
 
 const styles = StyleSheet.create({
   list: {
@@ -148,5 +182,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
-
-export default ExampleApp;
