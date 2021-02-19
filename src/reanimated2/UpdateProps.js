@@ -4,10 +4,10 @@ import { makeShareable } from './core';
 import { Platform } from 'react-native';
 
 let JSReanimatedModule;
-if(process.env.JEST_WORKER_ID) {
-  JSReanimatedModule = require('./js-reanimated/index.web')
+if (process.env.JEST_WORKER_ID) {
+  JSReanimatedModule = require('./js-reanimated/index.web');
 } else {
-  JSReanimatedModule = require('./js-reanimated/index')
+  JSReanimatedModule = require('./js-reanimated/index');
 }
 const { _updatePropsJS } = JSReanimatedModule;
 
@@ -35,7 +35,8 @@ export default function updateProps(
   viewDescriptor,
   updates,
   maybeViewRef,
-  adapters
+  adapters,
+  animatedStyle
 ) {
   'worklet';
 
@@ -57,6 +58,10 @@ export default function updateProps(
 
   const updatePropsInternal =
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+
+  if (process.env.JEST_WORKER_ID) {
+    animatedStyle.current.value = { ...updates };
+  }
 
   updatePropsInternal(
     viewDescriptor.value.tag,

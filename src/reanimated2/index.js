@@ -6,7 +6,3 @@ export * from './Easing';
 export * from './NativeMethods';
 export * from './Colors';
 export * from './PropAdapters';
-
-if(process.env.JEST_WORKER_ID) {
-  require('./Jest').SetUpTests();
-}

@@ -67,6 +67,7 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    animatedStyle = { value: {} };
 
     constructor(props) {
       super(props);
@@ -266,7 +267,11 @@ export default function createAnimatedComponent(Component) {
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (hostInstance && this._hasReanimated2Props(styles) && hostInstance.viewConfig) {
+        if (
+          hostInstance &&
+          this._hasReanimated2Props(styles) &&
+          hostInstance.viewConfig
+        ) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
@@ -274,6 +279,7 @@ export default function createAnimatedComponent(Component) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
+          style.animatedStyle.current = this.animatedStyle;
         }
       });
       // attach animatedProps property
@@ -408,6 +414,10 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        props.animatedStyle = this.animatedStyle;
+      }
+
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },

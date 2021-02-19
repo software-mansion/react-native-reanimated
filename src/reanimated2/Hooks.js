@@ -226,7 +226,8 @@ function styleUpdater(
   state,
   maybeViewRef,
   adapters,
-  animationsActive
+  animationsActive,
+  animatedStyle
 ) {
   'worklet';
   const animations = state.animations || {};
@@ -276,7 +277,13 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+      updateProps(
+        viewDescriptor,
+        updates,
+        maybeViewRef,
+        adapters,
+        animatedStyle
+      );
     }
 
     if (!allFinished) {
@@ -307,12 +314,13 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters, animatedStyle);
   }
 }
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
+  const animatedStyle = useRef({});
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
@@ -349,7 +357,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         remoteState,
         maybeViewRef,
         adapters,
-        animationsActive
+        animationsActive,
+        animatedStyle
       );
     };
     const mapperId = startMapper(fun, inputs, []);
@@ -387,6 +396,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     viewDescriptor,
     initial,
     viewRef,
+    animatedStyle,
   };
 }
 
