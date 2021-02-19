@@ -95,13 +95,10 @@ export function getViewProp(viewTag, propName) {
 }
 
 let _getTimestamp;
-if(process.env.JEST_WORKER_ID) {
+if (process.env.JEST_WORKER_ID) {
   _getTimestamp = () => {
-    if (_frameTimestamp) {
-      return _frameTimestamp;
-    }
     return global.performance.now();
-  }
+  };
 } else {
   _getTimestamp = () => {
     'worklet';
@@ -112,7 +109,7 @@ if(process.env.JEST_WORKER_ID) {
       return _eventTimestamp;
     }
     return _getCurrentTime();
-  }
+  };
 }
 
 export function getTimestamp() {
