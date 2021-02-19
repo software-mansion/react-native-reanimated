@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Button } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-hooks';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,10 +12,11 @@ const {
   withReanimatedTimer,
   moveAnimationByTime,
   moveAnimationByFrame,
+  getAnimatedStyle,
 } = JestReanimated;
 
-export default function TestComponent1() {
-  const widthSV = useSharedValue(0);
+export default function TestComponent1(props) {
+  const widthSV = props.sharedValue ? props.sharedValue : useSharedValue(0);
 
   const style = useAnimatedStyle(() => {
     return {
@@ -64,6 +66,17 @@ describe('Tests of animations', () => {
 
     style.width = 100;
     expect(view).toHaveAnimatedStyle(style);
+  });
+
+  test('withTiming animation, get animated style', async () => {
+    jest.useFakeTimers();
+    const { getByTestId } = render(<TestComponent1 />);
+    const view = getByTestId('view');
+    const button = getByTestId('button');
+    fireEvent.press(button);
+    jest.runAllTimers();
+    const style = getAnimatedStyle(view);
+    expect(style.width).toBe(100);
   });
 
   test('withTiming animation, width in a middle of animation', () => {
@@ -117,5 +130,38 @@ describe('Tests of animations', () => {
       moveAnimationByTime(260);
       expect(view).toHaveEqualAnimatedStyle(style);
     });
+  });
+
+  test('withTiming animation, define shared value outside component', () => {
+    withReanimatedTimer(() => {
+      let sharedValue;
+      renderHook(() => {
+        sharedValue = useSharedValue(0);
+      });
+      const { getByTestId } = render(
+        <TestComponent1 sharedValue={sharedValue} />
+      );
+      const view = getByTestId('view');
+      const button = getByTestId('button');
+
+      fireEvent.press(button);
+      moveAnimationByTime(260);
+      expect(view).toHaveAnimatedStyle({ width: 46.08 });
+    });
+  });
+
+  test('withTiming animation, chanche shared value outside component', () => {
+    jest.useFakeTimers();
+    let sharedValue;
+    renderHook(() => {
+      sharedValue = useSharedValue(0);
+    });
+    const { getByTestId } = render(
+      <TestComponent1 sharedValue={sharedValue} />
+    );
+    const view = getByTestId('view');
+    sharedValue.value = 50;
+    jest.runAllTimers();
+    expect(view).toHaveAnimatedStyle({ width: 50 });
   });
 });

@@ -46,6 +46,7 @@
     "@babel/runtime": "^7.12.9",
     "@react-native-community/eslint-config": "^2.0.0",
     "@testing-library/jest-native": "^3.4.3",
+    "@testing-library/react-hooks": "^5.0.3",
     "@testing-library/react-native": "^7.1.0",
     "babel-jest": "^26.6.3",
     "babel-plugin-module-resolver": "^3.2.0",

@@ -1,6 +1,7 @@
 export let withReanimatedTimer;
 export let moveAnimationByTime;
 export let moveAnimationByFrame;
+export let getAnimatedStyle;
 
 export const SetUpTests = (userConfig = {}) => {
   const expect = require('expect');
@@ -107,6 +108,10 @@ export const SetUpTests = (userConfig = {}) => {
       return compareStyle(received, expectedStyle, true);
     },
   });
+
+  getAnimatedStyle = (received) => {
+    return getCurrentStyle(received);
+  };
 
   const setUpReanimatedTimer = () => {
     const MockDate = require('mockdate');
