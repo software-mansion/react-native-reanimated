@@ -60,7 +60,10 @@ export default function updateProps(
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
   if (process.env.JEST_WORKER_ID) {
-    animatedStyle.current.value = { ...updates };
+    animatedStyle.current.value = {
+      ...animatedStyle.current.value,
+      ...updates,
+    };
   }
 
   updatePropsInternal(
