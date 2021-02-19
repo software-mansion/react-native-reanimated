@@ -5,13 +5,13 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  JestReanimated,
 } from 'react-native-reanimated';
-
-import {
+const {
   withReanimatedTimer,
   moveAnimationByTime,
   moveAnimationByFrame,
-} from 'react-native-reanimated/../../src/reanimated2/Jest';
+} = JestReanimated;
 
 export default function TestComponent1() {
   const widthSV = useSharedValue(0);
