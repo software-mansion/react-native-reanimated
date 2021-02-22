@@ -279,7 +279,9 @@ export default function createAnimatedComponent(Component) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
-          style.animatedStyle.current = this.animatedStyle;
+          if (process.env.JEST_WORKER_ID) {
+            style.animatedStyle.current = this.animatedStyle;
+          }
         }
       });
       // attach animatedProps property
