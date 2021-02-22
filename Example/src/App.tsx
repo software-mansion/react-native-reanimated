@@ -27,11 +27,7 @@ import LiquidSwipe from './LiquidSwipe';
 import ScrollExample from './AnimatedScrollExample';
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
-type Screens = Record<
-  string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { screen: React.ComponentType<any>; title?: string }
->;
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
   AnimatedStyleUpdate: {
