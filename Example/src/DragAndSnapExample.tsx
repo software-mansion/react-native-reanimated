@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,7 +13,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-const DragAndSnap: FC = () => {
+function DragAndSnap(): React.ReactElement {
   const translation = {
     x: useSharedValue(0),
     y: useSharedValue(0),
@@ -76,6 +76,6 @@ const DragAndSnap: FC = () => {
       </PanGestureHandler>
     </View>
   );
-};
+}
 
 export default DragAndSnap;

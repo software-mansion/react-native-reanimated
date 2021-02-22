@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC, RefObject } from 'react';
+import React, { useState, useEffect, RefObject } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -79,7 +79,7 @@ type ListItemProps = {
   index: number;
   onPress: onItemPressFn;
 };
-const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
+function ListItem({ item, index, onPress }: ListItemProps) {
   // @ts-ignore: FIXME(TS) correct type for createAnimatedComponent
   const ref = useAnimatedRef<AnimatedImage>();
   const opacity = useSharedValue(1);
@@ -133,7 +133,7 @@ const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
       </Animated.View>
     </TapGestureHandler>
   );
-};
+}
 
 const timingConfig = {
   duration: 240,
@@ -280,7 +280,7 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-const LightboxExample: FC = () => {
+function LightboxExample(): React.ReactElement {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );
@@ -315,7 +315,7 @@ const LightboxExample: FC = () => {
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

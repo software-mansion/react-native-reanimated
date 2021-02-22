@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, ReactNode, RefObject, useRef } from 'react';
+import React, { ReactElement, ReactNode, RefObject, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -49,7 +49,7 @@ function createSharedVariables() {
   };
 }
 
-const MeasureExample: FC = () => {
+function MeasureExample(): React.ReactElement {
   const { heights, contentHeights } = createSharedVariables();
 
   return (
@@ -87,7 +87,7 @@ const MeasureExample: FC = () => {
       </SafeAreaView>
     </View>
   );
-};
+}
 
 type SectionProps = {
   title: string;
@@ -97,14 +97,14 @@ type SectionProps = {
   show: boolean;
 };
 
-const Section: FC<SectionProps> = ({
+function Section({
   title,
   children,
   height,
   contentHeight,
   z,
   show,
-}) => {
+}: React.PropsWithChildren<SectionProps>) {
   const aref = useAnimatedRef();
 
   const stylez = useAnimatedStyle(() => {
@@ -128,7 +128,7 @@ const Section: FC<SectionProps> = ({
       </View>
     </Animated.View>
   );
-};
+}
 
 type MeasuredDimensions = {
   x: number;
@@ -159,12 +159,12 @@ type SectionHeaderProps = {
   show: boolean;
 };
 
-const SectionHeader: FC<SectionHeaderProps> = ({
+function SectionHeader({
   title,
   animatedRef,
   contentHeight,
   show,
-}) => {
+}: SectionHeaderProps) {
   const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
     'worklet';
     if (contentHeight.value === 0) {
@@ -222,9 +222,9 @@ const SectionHeader: FC<SectionHeaderProps> = ({
       </View>
     </View>
   );
-};
+}
 
-const RandomContent: FC = () => {
+function RandomContent() {
   const randomElements = useRef<ReactNode[] | null>(null);
   if (randomElements.current == null) {
     randomElements.current = [];
@@ -235,9 +235,9 @@ const RandomContent: FC = () => {
   }
 
   return <View style={styles.randomContent}>{randomElements.current}</View>;
-};
+}
 
-const RandomElement: FC = () => {
+function RandomElement() {
   const randomHeight = useRef(Math.round(Math.random() * 40 + 30));
   const label = useRef(labels[Math.round(Math.random() * 4)]);
 
@@ -248,7 +248,7 @@ const RandomElement: FC = () => {
       </View>
     </View>
   );
-};
+}
 const styles = StyleSheet.create({
   randomElement: {
     backgroundColor: '#EFEFF4',

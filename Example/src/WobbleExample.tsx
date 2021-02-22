@@ -7,13 +7,13 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { View, Button, StyleSheet } from 'react-native';
-import React, { FC } from 'react';
+import React from 'react';
 
 const ANGLE = 9;
 const TIME = 100;
 const EASING = Easing.elastic(1.5);
 
-const WobbleExample: FC = () => {
+function WobbleExample(): React.ReactElement {
   const rotation = useSharedValue(1);
 
   const style = useAnimatedStyle(() => {
@@ -51,7 +51,7 @@ const WobbleExample: FC = () => {
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   box: {

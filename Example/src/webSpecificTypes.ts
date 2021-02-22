@@ -1,4 +1,3 @@
-// @ts-ignore: needed for interface merging
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
 

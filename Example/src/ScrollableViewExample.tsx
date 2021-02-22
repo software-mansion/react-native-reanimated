@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
@@ -56,7 +56,9 @@ function friction(value: number) {
   return res;
 }
 
-const ScrollableView: FC = ({ children }) => {
+function ScrollableView({
+  children,
+}: React.PropsWithChildren<Record<never, never>>) {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
   const headerHeight = useHeaderHeight();
@@ -129,9 +131,9 @@ const ScrollableView: FC = ({ children }) => {
       </PanGestureHandler>
     </View>
   );
-};
+}
 
-const Box: FC<{ color: string }> = ({ color }) => {
+function Box({ color }: { color: string }) {
   return (
     <View
       style={{
@@ -142,9 +144,9 @@ const Box: FC<{ color: string }> = ({ color }) => {
       }}
     />
   );
-};
+}
 
-const Example: FC = () => {
+function Example(): React.ReactElement {
   const headerHeight = useHeaderHeight();
 
   const height =
@@ -159,7 +161,7 @@ const Example: FC = () => {
       </ScrollableView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   wrapper: {

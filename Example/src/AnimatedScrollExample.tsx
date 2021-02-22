@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -40,7 +40,7 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-const ScrollExample: FC = () => {
+function ScrollExample(): React.ReactElement {
   const position = useSharedValue(0);
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
@@ -179,7 +179,7 @@ const ScrollExample: FC = () => {
       </PanGestureHandler>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   ipod: {

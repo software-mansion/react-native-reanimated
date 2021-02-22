@@ -2,7 +2,6 @@ import React, {
   useState,
   useRef,
   useEffect,
-  FC,
   RefObject,
   Component,
 } from 'react';
@@ -56,11 +55,13 @@ type onItemPressFn = (
   item: ExampleImage,
   sv: Animated.SharedValue<number>
 ) => void;
+
 type ImageListProps = {
   images: ExampleImage[];
   onItemPress: onItemPressFn;
 };
-const ImageList: FC<ImageListProps> = ({ images, onItemPress }) => {
+
+function ImageList({ images, onItemPress }: ImageListProps) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {images.map((item, i) => (
@@ -68,14 +69,14 @@ const ImageList: FC<ImageListProps> = ({ images, onItemPress }) => {
       ))}
     </ScrollView>
   );
-};
+}
 
 type ListItemProps = {
   item: ExampleImage;
   index: number;
   onPress: onItemPressFn;
 };
-const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
+function ListItem({ item, index, onPress }: ListItemProps) {
   // @ts-ignore FIXME)TS) createAnimatedComponent type
   const ref = useRef<AnimatedImage>();
   const opacity = useSharedValue(1);
@@ -100,7 +101,7 @@ const ListItem: FC<ListItemProps> = ({ item, index, onPress }) => {
       <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
     </TouchableWithoutFeedback>
   );
-};
+}
 
 const timingConfig = {
   duration: 350,
@@ -111,10 +112,7 @@ type ImageTransitionProps = {
   activeImage: ActiveExampleImage;
   onClose: () => void;
 };
-const ImageTransition: FC<ImageTransitionProps> = ({
-  activeImage,
-  onClose,
-}) => {
+function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const {
     x,
     item,
@@ -234,7 +232,7 @@ const ImageTransition: FC<ImageTransitionProps> = ({
       </PanGestureHandler>
     </View>
   );
-};
+}
 
 const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   return {
@@ -244,7 +242,7 @@ const images: ExampleImage[] = Array.from({ length: 30 }, (_, index) => {
   };
 });
 
-const LightboxExample: FC = () => {
+function LightboxExample(): React.ReactElement {
   const [activeImage, setActiveImage] = useState<ActiveExampleImage | null>(
     null
   );
@@ -293,7 +291,7 @@ const LightboxExample: FC = () => {
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

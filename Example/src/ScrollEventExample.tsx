@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -10,7 +10,7 @@ import { useHeaderHeight } from '@react-navigation/stack';
 
 const size = 40;
 
-const ScrollExample: FC = () => {
+function ScrollExample(): React.ReactElement {
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
   const headerHeight = useHeaderHeight();
@@ -62,7 +62,7 @@ const ScrollExample: FC = () => {
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

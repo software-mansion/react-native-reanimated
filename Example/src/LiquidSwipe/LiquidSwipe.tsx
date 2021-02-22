@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { ReactComponentElement } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const LiquidSwipe: FC = () => {
+function LiquidSwipe(): React.ReactElement {
   const isBack = useSharedValue(0);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
@@ -112,6 +112,6 @@ const LiquidSwipe: FC = () => {
       </PanGestureHandler>
     </View>
   );
-};
+}
 
 export default LiquidSwipe;

@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, Dimensions, Alert } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -55,7 +55,7 @@ const data: Data[] = [
   },
 ];
 
-const SwipableList: FC = () => {
+function SwipableList(): React.ReactElement {
   function onRemove() {
     Alert.alert('Removed');
   }
@@ -69,7 +69,7 @@ const SwipableList: FC = () => {
       />
     </View>
   );
-};
+}
 
 const springConfig = (velocity: number) => {
   'worklet';
@@ -94,7 +94,7 @@ type ListItemProps = {
   item: Data;
   onRemove: () => void;
 };
-const ListItem: FC<ListItemProps> = ({ item, onRemove }) => {
+function ListItem({ item, onRemove }: ListItemProps) {
   const isRemoving = useSharedValue(false);
   const translateX = useSharedValue(0);
 
@@ -174,14 +174,14 @@ const ListItem: FC<ListItemProps> = ({ item, onRemove }) => {
       </PanGestureHandler>
     </View>
   );
-};
+}
 type ButtonData = {
   title: string;
   backgroundColor: string;
   color: string;
   onPress: () => void;
 };
-const Button: FC<{ item: ButtonData }> = ({ item }) => {
+function Button({ item }: { item: ButtonData }) {
   return (
     <View style={[s.button, { backgroundColor: item.backgroundColor }]}>
       <TouchableOpacity onPress={item.onPress} style={s.buttonInner}>
@@ -189,9 +189,9 @@ const Button: FC<{ item: ButtonData }> = ({ item }) => {
       </TouchableOpacity>
     </View>
   );
-};
+}
 
-const ListItemContent: FC<{ item: Data }> = ({ item }) => {
+function ListItemContent({ item }: { item: Data }) {
   return (
     <View style={s.itemContainer}>
       <View style={s.avatarContainer}>
@@ -200,7 +200,7 @@ const ListItemContent: FC<{ item: Data }> = ({ item }) => {
       <Text style={s.title}>{item.title}</Text>
     </View>
   );
-};
+}
 
 const s = StyleSheet.create({
   container: {

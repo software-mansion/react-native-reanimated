@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { StyleSheet } from 'react-native';
 
 import Animated, {
@@ -14,7 +14,7 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
-const ExtrapolationExample: FC = () => {
+function ExtrapolationExample(): React.ReactElement {
   const translation = {
     x: useSharedValue(50),
     y: useSharedValue(0),
@@ -117,7 +117,7 @@ const ExtrapolationExample: FC = () => {
       <Animated.View style={[styles.circle, button3Style]} />
     </>
   );
-};
+}
 
 const styles = StyleSheet.create({
   circle: {

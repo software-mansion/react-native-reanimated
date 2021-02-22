@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { View, Dimensions, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -14,7 +14,9 @@ import {
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
-const ChatHeads: FC = ({ children }) => {
+function ChatHeads({
+  children,
+}: React.PropsWithChildren<Record<never, never>>) {
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
 
@@ -106,13 +108,17 @@ const ChatHeads: FC = ({ children }) => {
       </PanGestureHandler>
     </>
   );
-};
+}
 
 type FollowersProps = {
   readonly transX: Animated.SharedValue<number>;
   readonly transY: Animated.SharedValue<number>;
 };
-const Followers: FC<FollowersProps> = ({ transX, transY, children }) => {
+function Followers({
+  transX,
+  transY,
+  children,
+}: React.PropsWithChildren<FollowersProps>) {
   const myTransX = useDerivedValue(() => {
     return withSpring(transX.value);
   });
@@ -149,9 +155,9 @@ const Followers: FC<FollowersProps> = ({ transX, transY, children }) => {
       </Animated.View>
     </>
   );
-};
+}
 
-const Main: FC = () => {
+function Main(): React.ReactElement {
   return (
     <View style={{ flex: 1, margin: 50 }}>
       <ChatHeads>
@@ -162,7 +168,7 @@ const Main: FC = () => {
       </ChatHeads>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   head: {

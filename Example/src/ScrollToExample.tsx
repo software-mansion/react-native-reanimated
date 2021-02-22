@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -21,7 +21,7 @@ const range = [0, 9999];
 
 const dotSize = 40;
 
-const ScrollToScreen: FC = () => {
+function ScrollToScreen(): React.ReactElement {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
     const val = range[0] + Math.round(progress.value * (range[1] - range[0]));
@@ -39,7 +39,7 @@ const ScrollToScreen: FC = () => {
       </View>
     </SafeAreaView>
   );
-};
+}
 
 function getDigit(number: Animated.SharedValue<number>, i: number) {
   return useDerivedValue(() => {
@@ -47,9 +47,7 @@ function getDigit(number: Animated.SharedValue<number>, i: number) {
   });
 }
 
-const NumberDisplay: FC<{ number: Animated.SharedValue<number> }> = ({
-  number,
-}) => {
+function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
   return (
     <View style={{ height: 400, width: 200 }}>
       <View
@@ -64,9 +62,9 @@ const NumberDisplay: FC<{ number: Animated.SharedValue<number> }> = ({
       </View>
     </View>
   );
-};
+}
 
-const Digit: FC<{ digit: Animated.SharedValue<number> }> = ({ digit }) => {
+function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
   const aref = useAnimatedRef<ScrollView>();
 
   useDerivedValue(() => {
@@ -99,11 +97,9 @@ const Digit: FC<{ digit: Animated.SharedValue<number> }> = ({ digit }) => {
       </ScrollView>
     </View>
   );
-};
+}
 
-const ProgressBar: FC<{ progress: Animated.SharedValue<number> }> = ({
-  progress,
-}) => {
+function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
   const x = useSharedValue(0);
   const max = useSharedValue(0);
 
@@ -163,7 +159,7 @@ const ProgressBar: FC<{ progress: Animated.SharedValue<number> }> = ({
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   dot: {

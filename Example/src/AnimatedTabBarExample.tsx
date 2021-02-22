@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -97,14 +97,14 @@ type ButtonProps = {
   position: number;
   readonly indicatorPosition: Animated.SharedValue<number>;
 };
-const Button: FC<ButtonProps> = ({
+function Button({
   item,
   index,
   activeIndex,
   width,
   position,
   indicatorPosition,
-}) => {
+}: ButtonProps) {
   const staticIconStyle = useAnimatedStyle(() => {
     const visibility = interpolate(
       indicatorPosition.value,
@@ -132,7 +132,7 @@ const Button: FC<ButtonProps> = ({
       </View>
     </TouchableWithoutFeedback>
   );
-};
+}
 
 type ActiveIconProps = {
   item: IconProp;
@@ -140,12 +140,7 @@ type ActiveIconProps = {
   activeIndex: Animated.SharedValue<number>;
   width: number;
 };
-const ActiveIcon: FC<ActiveIconProps> = ({
-  item,
-  index,
-  activeIndex,
-  width,
-}) => {
+function ActiveIcon({ item, index, activeIndex, width }: ActiveIconProps) {
   const circleIconStyle = useAnimatedStyle(() => {
     const isActive = index === activeIndex.value;
     const yOffset = isActive ? 0 : 80;
@@ -178,9 +173,9 @@ const ActiveIcon: FC<ActiveIconProps> = ({
       </View>
     </Animated.View>
   );
-};
+}
 
-const Bar: FC = () => {
+function Bar() {
   const activeIndex = useSharedValue(0);
 
   const indicatorPosition = useDerivedValue(() => {
@@ -228,7 +223,7 @@ const Bar: FC = () => {
       })}
     </View>
   );
-};
+}
 
 const tabBarStyles = StyleSheet.create({
   container: {
@@ -243,13 +238,13 @@ const tabBarStyles = StyleSheet.create({
   },
 });
 
-const TabBar: FC = () => {
+function TabBar(): React.ReactElement {
   return (
     <View style={tabBarStyles.container}>
       <View style={tabBarStyles.dummyPusher} />
       <Bar />
     </View>
   );
-};
+}
 
 export default TabBar;

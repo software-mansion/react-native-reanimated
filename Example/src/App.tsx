@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
@@ -109,9 +109,9 @@ function MainScreen({ navigation, setUseRea2 }) {
   );
 }
 
-export const ItemSeparator: FC = () => {
+export function ItemSeparator(): React.ReactElement {
   return <View style={styles.separator} />;
-};
+}
 
 type Item = { key: string };
 type MainScreenItemProps = {
@@ -163,7 +163,7 @@ const Reanimated2 = (setUseRea2) => (
   </Stack.Navigator>
 );
 
-const App: FC = () => {
+function App(): React.ReactElement {
   const [useRea2, setUseRea2] = React.useState(true);
 
   return (
@@ -171,7 +171,7 @@ const App: FC = () => {
       {useRea2 ? Reanimated2(setUseRea2) : Reanimated1(setUseRea2)}
     </NavigationContainer>
   );
-};
+}
 
 export const styles = StyleSheet.create({
   list: {
