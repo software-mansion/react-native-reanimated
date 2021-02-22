@@ -3,7 +3,10 @@ import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 
-import { createStackNavigator } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import Reanimated1 from '../reanimated1/App';
@@ -89,7 +92,13 @@ const SCREENS: Screens = {
   },
 };
 
-function MainScreen({ navigation, setUseRea2 }) {
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+  setUseRea2: (useRea2: boolean) => void;
+};
+
+function MainScreen({ navigation, setUseRea2 }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -119,20 +128,24 @@ type MainScreenItemProps = {
   onPressItem: ({ key }: Item) => void;
   screens: Screens;
 };
-export const MainScreenItem: FC<MainScreenItemProps> = ({
+export function MainScreenItem({
   item,
   onPressItem,
   screens,
-}) => {
+}: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
       <Text style={styles.buttonText}>{screens[key].title || key}</Text>
     </RectButton>
   );
-};
+}
 
-function LaunchReanimated1({ setUseRea2 }) {
+function LaunchReanimated1({
+  setUseRea2,
+}: {
+  setUseRea2: (useRea2: boolean) => void;
+}) {
   return (
     <>
       <ItemSeparator />
@@ -145,7 +158,7 @@ function LaunchReanimated1({ setUseRea2 }) {
 
 const Stack = createStackNavigator();
 
-const Reanimated2 = (setUseRea2) => (
+const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
   <Stack.Navigator>
     <Stack.Screen
       name="Home"

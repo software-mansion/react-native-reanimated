@@ -3,7 +3,10 @@ import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 
-import { createStackNavigator } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -81,9 +84,12 @@ const SCREENS: Screens = {
   },
   /**/
 };
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+};
 
-// @ts-ignore: types should be provided after we transition to navigation v5
-function MainScreen({ navigation }) {
+function MainScreen({ navigation }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
