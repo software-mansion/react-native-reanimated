@@ -15,6 +15,11 @@ module.exports = {
     'react-native/react-native': true,
     'jest/globals': true,
   },
+  settings: {
+    'import/resolver': {
+      'babel-module': {},
+    },
+  },
   rules: {
     'import/no-unresolved': 'error',
     'react/jsx-uses-vars': 'error',
