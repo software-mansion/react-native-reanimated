@@ -10,7 +10,10 @@ import Animated, {
   Extrapolate,
   interpolate,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },
@@ -37,14 +40,14 @@ const BIG_BALL_SIZE = 200;
 const SMALL_BALL_SIZE = 50;
 const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
-function ScrollExample() {
+function ScrollExample(): React.ReactElement {
   const position = useSharedValue(0);
-  const animatedRef = useAnimatedRef();
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
   const itemTotalSize = ITEM_SIZE.size + ITEM_SIZE.margin * 2;
   const borderMargin = SCREEN_WIDTH / 2 - itemTotalSize / 2 + ITEM_SIZE.margin;
 
-  const scrollToNearestItem = (offset) => {
+  const scrollToNearestItem = (offset: number) => {
     'worklet';
     let minDistance;
     let minDistanceIndex = 0;
@@ -71,7 +74,18 @@ function ScrollExample() {
     },
   });
 
-  const gestureHandler = useAnimatedGestureHandler({
+  type Vector2D = {
+    x: number;
+    y: number;
+  };
+  type AnimatedGHContext = {
+    start: Vector2D;
+    last: Vector2D;
+  };
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
     onStart: (e, ctx) => {
       ctx.start = { x: e.x, y: e.y };
       ctx.last = ctx.start;
@@ -109,7 +123,7 @@ function ScrollExample() {
       );
       scrollTo(animatedRef, position.value, 0, false);
     },
-    onEnd: (e, ctx) => {
+    onEnd: (_e, _ctx) => {
       scrollToNearestItem(position.value);
     },
   });
@@ -125,7 +139,11 @@ function ScrollExample() {
         onScroll={scrollHandler}>
         {data.map(({ artist, song }, i) => {
           const uas = useAnimatedStyle(() => {
-            const style = {};
+            const style: {
+              opacity?: number;
+              marginLeft?: number;
+              marginRight?: number;
+            } = {};
             const itemDistance =
               Math.abs(position.value - i * itemTotalSize) / itemTotalSize;
             let opacity = 1;

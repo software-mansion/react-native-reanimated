@@ -291,6 +291,7 @@ export default function createAnimatedComponent(Component) {
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
+          // eslint-disable-next-line no-prototype-builtins
           if (style?.hasOwnProperty('viewDescriptor')) {
             return true;
           }
@@ -418,9 +419,9 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
-    Component.name ||
-    'Component'})`;
+  AnimatedComponent.displayName = `AnimatedComponent(${
+    Component.displayName || Component.name || 'Component'
+  })`;
 
   return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
     return (

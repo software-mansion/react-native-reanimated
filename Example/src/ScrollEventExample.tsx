@@ -10,7 +10,7 @@ import { useHeaderHeight } from '@react-navigation/stack';
 
 const size = 40;
 
-function ScrollExample() {
+function ScrollExample(): React.ReactElement {
   const transY = useSharedValue(0);
   const isScrolling = useSharedValue(false);
   const headerHeight = useHeaderHeight();
@@ -19,10 +19,10 @@ function ScrollExample() {
     onScroll: (event) => {
       transY.value = event.contentOffset.y;
     },
-    onBeginDrag: (e) => {
+    onBeginDrag: () => {
       isScrolling.value = true;
     },
-    onEndDrag: (e) => {
+    onEndDrag: () => {
       isScrolling.value = false;
     },
   });
@@ -48,7 +48,7 @@ function ScrollExample() {
       <View style={[styles.half, { height }]}>
         <Animated.View style={[styles.box, stylez]} />
       </View>
-      <View style={[styles.half, headerHeight]}>
+      <View style={[styles.half, { height }]}>
         <Animated.ScrollView
           style={styles.scroll}
           scrollEventThrottle={1}

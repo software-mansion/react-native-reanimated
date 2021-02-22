@@ -49,7 +49,7 @@ class AnimatedCallFunc extends AnimatedNode {
   }
 
   endContext() {
-    this._params.forEach((param, index) => {
+    this._params.forEach((param) => {
       param.endContext();
     });
     setCallID(this._previousCallID);
@@ -64,5 +64,9 @@ class AnimatedCallFunc extends AnimatedNode {
 }
 
 export function createAnimatedCallFunc(proc, args, params) {
-  return new AnimatedCallFunc(proc, args.map((p) => adapt(p)), params);
+  return new AnimatedCallFunc(
+    proc,
+    args.map((p) => adapt(p)),
+    params
+  );
 }

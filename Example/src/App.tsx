@@ -3,7 +3,10 @@ import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 
-import { createStackNavigator } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import Reanimated1 from '../reanimated1/App';
@@ -22,10 +25,11 @@ import AnimatedTabBarExample from './AnimatedTabBarExample';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import ScrollExample from './AnimatedScrollExample';
-
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
-const SCREENS = {
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
+
+const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -84,7 +88,13 @@ const SCREENS = {
   },
 };
 
-function MainScreen({ navigation, setUseRea2 }) {
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+  setUseRea2: (useRea2: boolean) => void;
+};
+
+function MainScreen({ navigation, setUseRea2 }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -104,11 +114,21 @@ function MainScreen({ navigation, setUseRea2 }) {
   );
 }
 
-export function ItemSeparator() {
+export function ItemSeparator(): React.ReactElement {
   return <View style={styles.separator} />;
 }
 
-export function MainScreenItem({ item, onPressItem, screens }) {
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
@@ -117,7 +137,11 @@ export function MainScreenItem({ item, onPressItem, screens }) {
   );
 }
 
-function LaunchReanimated1({ setUseRea2 }) {
+function LaunchReanimated1({
+  setUseRea2,
+}: {
+  setUseRea2: (useRea2: boolean) => void;
+}) {
   return (
     <>
       <ItemSeparator />
@@ -130,7 +154,7 @@ function LaunchReanimated1({ setUseRea2 }) {
 
 const Stack = createStackNavigator();
 
-const Reanimated2 = (setUseRea2) => (
+const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
   <Stack.Navigator>
     <Stack.Screen
       name="Home"
@@ -148,7 +172,7 @@ const Reanimated2 = (setUseRea2) => (
   </Stack.Navigator>
 );
 
-export default function App() {
+function App(): React.ReactElement {
   const [useRea2, setUseRea2] = React.useState(true);
 
   return (
@@ -178,3 +202,5 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
+
+export default App;

@@ -9,7 +9,11 @@ import Animated, {
 const { width } = Dimensions.get('window');
 const size = 50;
 
-export default ({ progress, y }) => {
+type ButtonProps = {
+  progress: Animated.SharedValue<number>;
+  y: Animated.SharedValue<number>;
+};
+function Button({ progress, y }: ButtonProps): React.ReactElement {
   const style = useAnimatedStyle(() => {
     return {
       opacity: interpolate(progress.value, [0, 0.1], [1, 0], Extrapolate.CLAMP),
@@ -46,4 +50,6 @@ export default ({ progress, y }) => {
       <Text>(</Text>
     </Animated.View>
   );
-};
+}
+
+export default Button;

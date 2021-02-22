@@ -7,15 +7,27 @@ import Animated, {
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
-function ChatHeads({ children }) {
+function ChatHeads({
+  children,
+}: React.PropsWithChildren<Record<never, never>>) {
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
 
-  const gestureHandler = useAnimatedGestureHandler({
+  type AnimatedGHContext = {
+    startX: number;
+    startY: number;
+  };
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
     onStart: (_, ctx) => {
       ctx.startX = transX.value;
       ctx.startY = transY.value;
@@ -28,7 +40,7 @@ function ChatHeads({ children }) {
       const width = windowWidth - 100 - 40; // minus margins & width
       const height = windowHeight - 100 - 40; // minus margins & height
       const toss = 0.2;
-      function clamp(value, min, max) {
+      function clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
       }
       const targetX = clamp(transX.value + toss * event.velocityX, 0, width);
@@ -98,7 +110,15 @@ function ChatHeads({ children }) {
   );
 }
 
-function Followers({ transX, transY, children }) {
+type FollowersProps = {
+  readonly transX: Animated.SharedValue<number>;
+  readonly transY: Animated.SharedValue<number>;
+};
+function Followers({
+  transX,
+  transY,
+  children,
+}: React.PropsWithChildren<FollowersProps>) {
   const myTransX = useDerivedValue(() => {
     return withSpring(transX.value);
   });
@@ -137,7 +157,7 @@ function Followers({ transX, transY, children }) {
   );
 }
 
-function Main() {
+function Main(): React.ReactElement {
   return (
     <View style={{ flex: 1, margin: 50 }}>
       <ChatHeads>

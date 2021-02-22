@@ -4,10 +4,10 @@
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "npm run format && npm run lint && npm run test:unit",
+    "test": "yarn run format && yarn run lint-check && yarn run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint './src/**/*.js'",
+    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "release": "npm login && release-it",
     "type:check": "yarn tsc"
   },
@@ -71,12 +71,16 @@
     "@types/babel__generator": "^7.6.2",
     "@types/babel__traverse": "^7.0.15",
     "@types/jest": "^26.0.15",
-    "@types/react-native": "^0.63.43",
+    "@types/react-native": "^0.63.50",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
+    "babel-plugin-module-resolver": "^4.1.0",
     "eslint": "^6.5.1",
     "eslint-config-prettier": "^6.4.0",
     "eslint-config-standard": "^14.1.0",
+    "eslint-import-resolver-babel-module": "^5.2.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
@@ -84,7 +88,7 @@
     "husky": "^4.2.5",
     "jest": "^24.9.0",
     "lint-staged": "^10.2.11",
-    "prettier": "^1.13.7",
+    "prettier": "^2.2.1",
     "react": "17.0.1",
     "react-native": "0.64.0-rc.2",
     "react-native-gesture-handler": "^1.6.1",
@@ -94,7 +98,7 @@
   },
   "lint-staged": {
     "*.js": [
-      "eslint",
+      "eslint --ext '.js,.ts,.tsx' src/",
       "prettier --write"
     ]
   },

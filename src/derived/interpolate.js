@@ -14,7 +14,7 @@ import AnimatedNode from '../core/AnimatedNode';
 import { createAnimatedCond as cond } from '../core/AnimatedCond';
 import { createAnimatedFunction as proc } from '../core/AnimatedFunction';
 
-const interpolateInternalSingleProc = proc(function(
+const interpolateInternalSingleProc = proc(function (
   value,
   inS,
   inE,

@@ -1,15 +1,21 @@
 import MutableValue from './MutableValue';
 
-global._setGlobalConsole = (val) => {};
+global._setGlobalConsole = (_val) => {
+  // noop
+};
+
+const NOOP = () => {
+  // noop
+};
 
 export default {
-  installCoreFunctions: () => {},
+  installCoreFunctions: NOOP,
   makeShareable: (worklet) => worklet,
   makeMutable: (init) => new MutableValue(init),
-  makeRemote: () => {},
-  startMapper: () => {},
-  stopMapper: () => {},
-  registerEventHandler: () => {},
-  unregisterEventHandler: () => {},
-  getViewProp: () => {},
+  makeRemote: NOOP,
+  startMapper: NOOP,
+  stopMapper: NOOP,
+  registerEventHandler: NOOP,
+  unregisterEventHandler: NOOP,
+  getViewProp: NOOP,
 };

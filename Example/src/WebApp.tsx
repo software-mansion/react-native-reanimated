@@ -3,7 +3,10 @@ import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 
-import { createStackNavigator } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -23,8 +26,8 @@ import LightboxExample from './WebSpecific/LightBoxExample';
 import LiquidSwipe from './LiquidSwipe';
 /**/
 LogBox.ignoreLogs(['Calling `getNode()`']);
-
-const SCREENS = {
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
+const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -77,8 +80,12 @@ const SCREENS = {
   },
   /**/
 };
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
+};
 
-function MainScreen({ navigation }) {
+function MainScreen({ navigation }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -97,11 +104,21 @@ function MainScreen({ navigation }) {
   );
 }
 
-export function ItemSeparator() {
+export function ItemSeparator(): React.ReactElement {
   return <View style={styles.separator} />;
 }
 
-export function MainScreenItem({ item, onPressItem, screens }) {
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
@@ -112,7 +129,7 @@ export function MainScreenItem({ item, onPressItem, screens }) {
 
 const Stack = createStackNavigator();
 
-export default function App() {
+function App(): React.ReactElement {
   return (
     <NavigationContainer>
       <Stack.Navigator>
@@ -154,3 +171,4 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
+export default App;
