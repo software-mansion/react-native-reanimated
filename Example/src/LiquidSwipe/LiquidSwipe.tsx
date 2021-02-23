@@ -8,7 +8,10 @@ import Animated, {
   Extrapolate,
   withSpring,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import Weave from './Weave';
 import { initialSideWidth, initialWaveCenter } from './WeaveHelpers';
 import Content from './Content';
@@ -27,14 +30,21 @@ const styles = StyleSheet.create({
   },
 });
 
-export default () => {
+function LiquidSwipe(): React.ReactElement {
   const isBack = useSharedValue(0);
   const centerY = useSharedValue(initialWaveCenter);
   const progress = useSharedValue(0);
 
   const maxDist = width - initialSideWidth;
 
-  const handler = useAnimatedGestureHandler({
+  type AnimatedGHContext = {
+    dragX: number;
+    startY: number;
+  };
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
     onStart: (event, ctx) => {
       // stop animating progress, this will also place "isBack" value in the
       // final state (we update isBack in progress animation callback)
@@ -61,7 +71,7 @@ export default () => {
       }
     },
     onEnd: () => {
-      let goBack;
+      let goBack: number;
       if (isBack.value) {
         goBack = progress.value > 0.5 ? 1 : 0;
       } else {
@@ -102,4 +112,6 @@ export default () => {
       </PanGestureHandler>
     </View>
   );
-};
+}
+
+export default LiquidSwipe;

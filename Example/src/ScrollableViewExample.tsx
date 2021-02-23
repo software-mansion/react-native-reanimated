@@ -7,9 +7,18 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { View, Dimensions, Platform, StyleSheet } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { Header } from 'react-navigation-stack';
+import {
+  View,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  LayoutChangeEvent,
+} from 'react-native';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
+import { useHeaderHeight } from '@react-navigation/stack';
 
 const windowDimensions = Dimensions.get('window');
 
@@ -26,7 +35,7 @@ const colors = [
 
 const boxHeight = 120;
 
-function friction(value) {
+function friction(value: number) {
   'worklet';
 
   const MAX_FRICTION = 200;
@@ -47,17 +56,26 @@ function friction(value) {
   return res;
 }
 
-function ScrollableView({ children }) {
+function ScrollableView({
+  children,
+}: React.PropsWithChildren<Record<never, never>>) {
   const translateY = useSharedValue(0);
   const loverBound = useSharedValue(0);
+  const headerHeight = useHeaderHeight();
 
-  function onLayout(evt) {
+  function onLayout(evt: LayoutChangeEvent) {
     loverBound.value =
-      windowDimensions.height - Header.HEIGHT - evt.nativeEvent.layout.height;
+      windowDimensions.height - headerHeight - evt.nativeEvent.layout.height;
   }
 
-  const handler = useAnimatedGestureHandler({
-    onStart: (evt, ctx) => {
+  type AnimatedGHContext = {
+    startY: number;
+  };
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_evt, ctx) => {
       const currentY = translateY.value;
       ctx.startY = currentY;
       translateY.value = currentY; // for stop animation
@@ -76,7 +94,7 @@ function ScrollableView({ children }) {
       }
     },
 
-    onEnd: (evt, ctx) => {
+    onEnd: (evt, _ctx) => {
       if (translateY.value < loverBound.value || translateY.value > 0) {
         const toValue = translateY.value > 0 ? 0 : loverBound.value;
 
@@ -115,7 +133,7 @@ function ScrollableView({ children }) {
   );
 }
 
-function Box({ color }) {
+function Box({ color }: { color: string }) {
   return (
     <View
       style={{
@@ -128,9 +146,14 @@ function Box({ color }) {
   );
 }
 
-export default function Example() {
+function Example(): React.ReactElement {
+  const headerHeight = useHeaderHeight();
+
+  const height =
+    Platform.OS === 'web' ? windowDimensions.height - headerHeight : undefined;
+
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { height }]}>
       <ScrollableView>
         {colors.map((color) => (
           <Box color={color} key={color} />
@@ -142,10 +165,8 @@ export default function Example() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    height:
-      Platform.OS === 'web'
-        ? windowDimensions.height - Header.HEIGHT
-        : undefined,
     overflow: Platform.OS === 'web' ? 'hidden' : undefined,
   },
 });
+
+export default Example;

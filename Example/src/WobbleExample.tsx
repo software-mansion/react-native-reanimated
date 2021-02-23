@@ -13,7 +13,7 @@ const ANGLE = 9;
 const TIME = 100;
 const EASING = Easing.elastic(1.5);
 
-export default function WobbleExample(props) {
+function WobbleExample(): React.ReactElement {
   const rotation = useSharedValue(1);
 
   const style = useAnimatedStyle(() => {
@@ -63,3 +63,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#001a72',
   },
 });
+
+export default WobbleExample;

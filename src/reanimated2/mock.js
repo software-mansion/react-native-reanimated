@@ -1,5 +1,7 @@
 /* eslint-disable standard/no-callback-literal */
-const NOOP = () => {};
+const NOOP = () => {
+  // noop
+};
 const ID = (t) => t;
 
 const ReanimatedV2 = {

@@ -1,20 +1,14 @@
-import { createBrowserApp } from '@react-navigation/web';
 import React from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
 
-import Reanimated1 from '../reanimated1/App';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 
-import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -24,14 +18,16 @@ import MeasureExample from './MeasureExample';
 import SwipeableListExample from './SwipeableListExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import ScrollToExample from './ScrollToExample';
+/* font awesome does not work * /
 import AnimatedTabBarExample from './AnimatedTabBarExample';
-import LightboxExample from './LightboxExample';
+/**/
+import LightboxExample from './WebSpecific/LightBoxExample';
+/* masked view does not work * /
 import LiquidSwipe from './LiquidSwipe';
-import ScrollExample from './AnimatedScrollExample';
-
+/**/
 LogBox.ignoreLogs(['Calling `getNode()`']);
-
-const SCREENS = {
+type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
+const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: '🆕 Animated Style Update',
@@ -72,25 +68,24 @@ const SCREENS = {
     screen: ScrollableViewExample,
     title: '🆕 (advanced) ScrollView imitation',
   },
+  /** /
   AnimatedTabBarExample: {
     screen: AnimatedTabBarExample,
     title: '🆕 (advanced) Tab Bar Example',
   },
+  /** /
   LiquidSwipe: {
     screen: LiquidSwipe,
     title: '🆕 Liquid Swipe Example',
   },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: '🆕 Extrapolation Example',
-  },
-  ScrollExample: {
-    screen: ScrollExample,
-    title: '🆕 Scroll Example',
-  },
+  /**/
+};
+type RootStackParams = { Home: undefined } & { [key: string]: undefined };
+type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParams, 'Home'>;
 };
 
-function MainScreen({ navigation }) {
+function MainScreen({ navigation }: MainScreenProps) {
   const data = Object.keys(SCREENS).map((key) => ({ key }));
   return (
     <FlatList
@@ -105,20 +100,25 @@ function MainScreen({ navigation }) {
         />
       )}
       renderScrollComponent={(props) => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 navigation={navigation} />}
     />
   );
 }
 
-MainScreen.navigationOptions = {
-  title: '🎬 Reanimated 2.x Examples',
-};
-
-export function ItemSeparator() {
+export function ItemSeparator(): React.ReactElement {
   return <View style={styles.separator} />;
 }
 
-export function MainScreenItem({ item, onPressItem, screens }) {
+type Item = { key: string };
+type MainScreenItemProps = {
+  item: Item;
+  onPressItem: ({ key }: Item) => void;
+  screens: Screens;
+};
+export function MainScreenItem({
+  item,
+  onPressItem,
+  screens,
+}: MainScreenItemProps): React.ReactElement {
   const { key } = item;
   return (
     <RectButton style={styles.button} onPress={() => onPressItem(item)}>
@@ -127,34 +127,29 @@ export function MainScreenItem({ item, onPressItem, screens }) {
   );
 }
 
-function LaunchReanimated1({ navigation }) {
+const Stack = createStackNavigator();
+
+function App(): React.ReactElement {
   return (
-    <>
-      <ItemSeparator />
-      <RectButton
-        style={styles.button}
-        onPress={() => navigation.navigate('Reanimated1')}>
-        <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
-      </RectButton>
-    </>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          options={{ title: '🎬 Reanimated 2.x Examples' }}
+          component={MainScreen}
+        />
+        {Object.keys(SCREENS).map((name) => (
+          <Stack.Screen
+            key={name}
+            name={name}
+            getComponent={() => SCREENS[name].screen}
+            options={{ title: SCREENS[name].title || name }}
+          />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const Reanimated2App = createStackNavigator(
-  {
-    Main: { screen: MainScreen },
-    ...SCREENS,
-  },
-  {
-    initialRouteName: 'Main',
-    headerMode: 'screen',
-  }
-);
-
-const ExampleApp = createSwitchNavigator({
-  Reanimated2App,
-  Reanimated1,
-});
 
 export const styles = StyleSheet.create({
   list: {
@@ -176,10 +171,4 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 });
-
-const createApp = Platform.select({
-  web: (input) => createBrowserApp(input, { history: 'hash' }),
-  default: (input) => createAppContainer(input),
-});
-
-export default createApp(ExampleApp);
+export default App;

@@ -318,7 +318,7 @@ function normalizeColor(color) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
-      (parse255(match[2]) << 16) | // g
+        (parse255(match[2]) << 16) | // g
         (parse255(match[3]) << 8) |
         0x000000ff) >>> // a
       0
@@ -329,7 +329,7 @@ function normalizeColor(color) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
-      (parse255(match[2]) << 16) | // g
+        (parse255(match[2]) << 16) | // g
         (parse255(match[3]) << 8) |
         parse1(match[4])) >>> // a
       0
@@ -340,11 +340,11 @@ function normalizeColor(color) {
     return (
       Number.parseInt(
         match[1] +
-        match[1] + // r
-        match[2] +
-        match[2] + // g
-        match[3] +
-        match[3] + // b
+          match[1] + // r
+          match[2] +
+          match[2] + // g
+          match[3] +
+          match[3] + // b
           'ff', // a
         16
       ) >>> 0
@@ -360,11 +360,11 @@ function normalizeColor(color) {
     return (
       Number.parseInt(
         match[1] +
-        match[1] + // r
-        match[2] +
-        match[2] + // g
-        match[3] +
-        match[3] + // b
+          match[1] + // r
+          match[2] +
+          match[2] + // g
+          match[3] +
+          match[3] + // b
           match[4] +
           match[4], // a
         16
@@ -630,7 +630,12 @@ const interpolateColorsHSV = (value, inputRange, colors) => {
 const interpolateColorsRGB = (value, inputRange, colors) => {
   'worklet';
   const r = Math.round(
-    interpolate(value, inputRange, colors.map((c) => red(c)), Extrapolate.CLAMP)
+    interpolate(
+      value,
+      inputRange,
+      colors.map((c) => red(c)),
+      Extrapolate.CLAMP
+    )
   );
   const g = Math.round(
     interpolate(

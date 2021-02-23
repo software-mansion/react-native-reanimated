@@ -153,7 +153,6 @@ const procSpring = proc(
         velocity,
         position,
         time,
-        // @ts-ignore
         prevPosition,
       },
       {
@@ -170,14 +169,7 @@ const procSpring = proc(
 
 export default (
   clock,
-  {
-    finished,
-    velocity,
-    position,
-    time,
-    // @ts-ignore
-    prevPosition,
-  },
+  { finished, velocity, position, time, prevPosition },
   {
     toValue,
     damping,

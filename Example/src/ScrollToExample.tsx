@@ -9,7 +9,10 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];
@@ -18,7 +21,7 @@ const range = [0, 9999];
 
 const dotSize = 40;
 
-export default function ScrollToScreen() {
+function ScrollToScreen(): React.ReactElement {
   const progress = useSharedValue(0);
   const number = useDerivedValue(() => {
     const val = range[0] + Math.round(progress.value * (range[1] - range[0]));
@@ -38,13 +41,13 @@ export default function ScrollToScreen() {
   );
 }
 
-function getDigit(number, i) {
+function getDigit(number: Animated.SharedValue<number>, i: number) {
   return useDerivedValue(() => {
     return Math.floor(number.value / 10 ** i) % 10;
   });
 }
 
-function NumberDisplay({ number }) {
+function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
   return (
     <View style={{ height: 400, width: 200 }}>
       <View
@@ -61,8 +64,8 @@ function NumberDisplay({ number }) {
   );
 }
 
-function Digit({ digit }) {
-  const aref = useAnimatedRef();
+function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
+  const aref = useAnimatedRef<ScrollView>();
 
   useDerivedValue(() => {
     if (Platform.OS === 'web') {
@@ -96,11 +99,14 @@ function Digit({ digit }) {
   );
 }
 
-function ProgressBar({ progress }) {
+function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
   const x = useSharedValue(0);
   const max = useSharedValue(0);
 
-  const handler = useAnimatedGestureHandler({
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { x: number }
+  >({
     onStart: (_, ctx) => {
       ctx.x = x.value;
     },
@@ -163,3 +169,5 @@ const styles = StyleSheet.create({
     height: dotSize,
   },
 });
+
+export default ScrollToScreen;

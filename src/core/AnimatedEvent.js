@@ -52,7 +52,7 @@ function sanitizeArgMapping(argMapping) {
     traverse(ev, []);
   } else if (typeof ev === 'function') {
     const proxyHandler = {
-      get: function(target, name) {
+      get: function (target, name) {
         if (name === '__isProxy') {
           return true;
         }
@@ -61,7 +61,7 @@ function sanitizeArgMapping(argMapping) {
         }
         return target[name];
       },
-      set: function(target, prop, value) {
+      set: function (target, prop, value) {
         if (prop === '__val') {
           target[prop] = value;
           return true;
@@ -82,7 +82,7 @@ function sanitizeArgMapping(argMapping) {
 }
 
 export default class AnimatedEvent extends AnimatedNode {
-  constructor(argMapping, config = {}) {
+  constructor(argMapping, _config = {}) {
     const { eventMappings, alwaysNodes } = sanitizeArgMapping(argMapping);
     super({ type: 'event', argMapping: eventMappings });
     this._alwaysNodes = alwaysNodes;

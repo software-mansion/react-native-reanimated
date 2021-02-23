@@ -4,7 +4,7 @@ import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 };
 
@@ -39,7 +39,7 @@ function _mergeObjectsReanimated() {
   return Object.assign.apply(null, arguments);
 }
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 
   if (worklet._closure) {
@@ -70,7 +70,7 @@ export function requestFrame(frame) {
 }
 
 global._WORKLET = false;
-global._log = function(s) {
+global._log = function (s) {
   console.log(s);
 };
 

@@ -2,16 +2,16 @@ export default {
   async disconnectNodeFromView() {
     // noop
   },
-  async attachEvent(viewTag, eventName, nodeID) {
+  async attachEvent(_viewTag, _eventName, _nodeID) {
     // noop
   },
-  async detachEvent(viewTag, eventName, nodeID) {
+  async detachEvent(_viewTag, _eventName, _nodeID) {
     // noop
   },
-  async createNode(nodeID, config) {
+  async createNode(_nodeID, _config) {
     // noop
   },
-  async dropNode(nodeID) {
+  async dropNode(_nodeID) {
     // noop
   },
   async configureProps() {
