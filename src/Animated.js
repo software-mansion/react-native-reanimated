@@ -24,7 +24,6 @@ import {
 import SpringUtils from './animations/SpringUtils';
 import useValue from './useValue';
 import * as reanimated2 from './reanimated2';
-import * as Jest from './reanimated2/Jest';
 
 const decayWrapper = backwardCompatibleAnimWrapper(
   decay,
@@ -98,5 +97,3 @@ export {
   // hooks
   useValue,
 };
-
-export const JestReanimated = Jest;

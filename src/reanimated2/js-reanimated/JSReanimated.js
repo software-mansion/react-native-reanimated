@@ -8,10 +8,12 @@ export default class JSReanimated {
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
   _frames = [];
-  timeProvider = null
+  timeProvider = null;
 
   constructor() {
-    this.timeProvider = process.env.JEST_WORKER_ID ? global.performance : window.performance;
+    this.timeProvider = process.env.JEST_WORKER_ID
+      ? { now: () => Date.now() }
+      : window.performance;
   }
 
   pushFrame(frame) {

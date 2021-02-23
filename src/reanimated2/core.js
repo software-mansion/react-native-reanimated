@@ -97,7 +97,7 @@ export function getViewProp(viewTag, propName) {
 let _getTimestamp;
 if (process.env.JEST_WORKER_ID) {
   _getTimestamp = () => {
-    return global.performance.now();
+    return Date.now();
   };
 } else {
   _getTimestamp = () => {

@@ -280,6 +280,12 @@ export default function createAnimatedComponent(Component) {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
           if (process.env.JEST_WORKER_ID) {
+            /**
+             * We need to connect Jest's TestObject instance whose contains just props object
+             * with the updateProps() function where we update the properties of the component.
+             * We can't update props object directly because TestObject contains a copy of props - look at render function:
+             * const props = this._filterNonAnimatedProps(this.props);
+             */
             style.animatedStyle.current = this.animatedStyle;
           }
         }

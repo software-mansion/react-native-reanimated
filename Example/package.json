@@ -14,7 +14,6 @@
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web || expo start --web --web-only",
-    "jest": "jest",
     "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "ts-check": "yarn tsc"
   },
@@ -45,9 +44,6 @@
     "@babel/plugin-proposal-optional-chaining": "^7.12.13",
     "@babel/runtime": "^7.12.9",
     "@react-native-community/eslint-config": "^2.0.0",
-    "@testing-library/jest-native": "^3.4.3",
-    "@testing-library/react-hooks": "^5.0.3",
-    "@testing-library/react-native": "^7.1.0",
     "@types/d3-shape": "^2.0.0",
     "@types/react": "^17.0.2",
     "@types/react-native": "^0.63.50",

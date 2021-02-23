@@ -1,14 +1,14 @@
-import Animated, { Easing } from './Animated';
-import ReanimatedModule from './ReanimatedModule';
+import Animated, { Easing } from '../src/Animated';
+import ReanimatedModule from '../src/ReanimatedModule';
 import React from 'react';
 
 import renderer from 'react-test-renderer';
 
-jest.mock('./ReanimatedEventEmitter');
-jest.mock('./ReanimatedModule');
-jest.mock('./reanimated2/NativeReanimated');
-jest.mock('./derived/evaluateOnce');
-jest.mock('./core/AnimatedProps');
+jest.mock('../src/ReanimatedEventEmitter');
+jest.mock('../src/ReanimatedModule');
+jest.mock('../src/reanimated2/NativeReanimated');
+jest.mock('../src/derived/evaluateOnce');
+jest.mock('../src/core/AnimatedProps');
 
 const { Value, timing, spring, decay } = Animated;
 describe('Reanimated backward compatible API', () => {
