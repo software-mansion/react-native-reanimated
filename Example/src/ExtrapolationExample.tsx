@@ -43,16 +43,10 @@ function ExtrapolationExample(): React.ReactElement {
 
   const button1Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(
-        translation.y.value,
-        [0, -75],
-        [0, -75],
-        // @ts-ignore: FIXME(TS) fix Reanimated types
-        {
-          extrapolateLeft: Extrapolate.CLAMP,
-          extrapolateRight: Extrapolate.EXTEND,
-        }
-      )
+      interpolate(translation.y.value, [0, -75], [0, -75], {
+        extrapolateLeft: Extrapolate.CLAMP,
+        extrapolateRight: Extrapolate.EXTEND,
+      })
     );
 
     return {
@@ -61,16 +55,10 @@ function ExtrapolationExample(): React.ReactElement {
   });
   const button2Style = useAnimatedStyle(() => {
     const translateY = Math.round(
-      interpolate(
-        translation.y.value,
-        [0, -75],
-        [0, -150],
-        // @ts-ignore: FIXME(TS) fix Reanimated types
-        {
-          extrapolateLeft: Extrapolate.CLAMP,
-          extrapolateRight: Extrapolate.EXTEND,
-        }
-      )
+      interpolate(translation.y.value, [0, -75], [0, -150], {
+        extrapolateLeft: Extrapolate.CLAMP,
+        extrapolateRight: Extrapolate.EXTEND,
+      })
     );
 
     return {
@@ -80,16 +68,10 @@ function ExtrapolationExample(): React.ReactElement {
 
   const button3Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(
-        translation.y.value,
-        [0, -75],
-        [0, 75],
-        // @ts-ignore: FIXME(TS) fix Reanimated types
-        {
-          extrapolateLeft: Extrapolate.CLAMP,
-          extrapolateRight: Extrapolate.EXTEND,
-        }
-      )
+      interpolate(translation.y.value, [0, -75], [0, 75], {
+        extrapolateLeft: Extrapolate.CLAMP,
+        extrapolateRight: Extrapolate.EXTEND,
+      })
     );
 
     return {
