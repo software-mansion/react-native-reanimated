@@ -18,6 +18,8 @@ public:
   ValueType getType() const {
     return type;
   }
+    
+  virtual ~ValueWrapper() {}
   
   static inline bool asBoolean(const std::unique_ptr<ValueWrapper>& valueContainer);
   static inline double asNumber(const std::unique_ptr<ValueWrapper>& valueContainer);
