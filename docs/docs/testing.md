@@ -65,7 +65,7 @@ Timer:
 ```js
 test('stop in a middle of animation', () => {
   withReanimatedTimer(() => {
-    const style = getDefaultStyle();
+    const style = { width: 0 };
 
     const { getByTestId } = render(<AnimatedComponent />);
     const view = getByTestId('view');
