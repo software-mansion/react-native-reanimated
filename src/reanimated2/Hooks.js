@@ -321,7 +321,7 @@ function styleUpdater(
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
-  const inputs = Object.values(updater._closure ? updater._closure : {});
+  const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;

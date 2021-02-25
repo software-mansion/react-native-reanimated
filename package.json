@@ -52,6 +52,7 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
     "fbjs": "^3.0.0",
+    "mockdate": "^3.0.2",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
@@ -88,11 +89,9 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "expect": "^26.6.2",
     "husky": "^4.2.5",
     "jest": "^24.9.0",
     "lint-staged": "^10.2.11",
-    "mockdate": "^3.0.2",
     "prettier": "^2.2.1",
     "react": "17.0.1",
     "react-native": "0.64.0-rc.2",

@@ -67,11 +67,13 @@ export default function createAnimatedComponent(Component) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
-    animatedStyle = { value: {} };
 
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        this.animatedStyle = { value: {} };
+      }
     }
 
     componentWillUnmount() {
@@ -286,6 +288,10 @@ export default function createAnimatedComponent(Component) {
              * We can't update props object directly because TestObject contains a copy of props - look at render function:
              * const props = this._filterNonAnimatedProps(this.props);
              */
+            this.animatedStyle.value = {
+              ...this.animatedStyle.value,
+              ...style.initial,
+            };
             style.animatedStyle.current = this.animatedStyle;
           }
         }

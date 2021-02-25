@@ -12,7 +12,7 @@ Add the following line to your `jest-setup.js` file:
 ```js
 require('./node_modules/react-native-reanimated/src/reanimated2/jestUtils').setUpTests();
 ```
-`setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps. 
+`setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps.
 
 To be sure, check if your `jest.config.js` file contains:
 ```js
@@ -27,15 +27,15 @@ setupFiles: ['./jest-setup.js'],
 #### Style checker
 - Checking equality of selected styles with current component styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle)`
-  `component` - tested component    
-  `expectedStyle` - conntains expected styles of testing component, for example `{ width: 100 }`    
+  `component` - tested component  
+  `expectedStyle` - conntains expected styles of testing component, for example `{ width: 100 }`
 
 - Checking equality of all current component styles with expected styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle, {exact: true})`
 
 - You can get all styles of tested component by using `getDefaultStyle`
-  #### `getDefaultStyle(component)`  
-  `component` - tested component    
+  #### `getDefaultStyle(component)`
+  `component` - tested component
 
 #### Timers
 You can use jest timers to control animation
@@ -56,7 +56,7 @@ Inside of `withReanimatedTimer` you can use `moveAnimationByTime(timeInMs)` or `
   `timeInMs` - the duration specifying for how long animation should be moved forward. Should have an integer value.
 - Move animation by specific amount of animation frame.
   #### `moveAnimationByFrame(numberOfFrames)`
-  `numberOfFrames` - number of animation frames to run. Should have an integer value.  
+  `numberOfFrames` - number of animation frames to run. Should have an integer value.
 
 ## Example
 
