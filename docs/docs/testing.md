@@ -8,13 +8,13 @@ Reanimated test mocks use web implementation of Reanimated2. Before you begin us
 
 ## Setup
 
-To your `jest-setup.js` file add the following line:
+Add the following line to your `jest-setup.js` file:
 ```js
 require('./node_modules/react-native-reanimated/src/reanimated2/jestUtils').setUpTests();
 ```
-`setUpTests({ fps: 60 })` can take optional config argument with specific frameRate. By default it is 60fps.  
+`setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`, setting framerate to 60fps. 
 
-To be sure, check your `jest.config.js` file to contains:
+To be sure, check if your `jest.config.js` file contains:
 ```js
 ...
 preset: 'react-native',
@@ -27,15 +27,15 @@ setupFiles: ['./jest-setup.js'],
 #### Style checker
 - Checking equality of selected styles with current component styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle)`
-  `component: obj` - tested component  
-  `expectedStyle: obj ` - conntains expected styles of testing component, for example `{ width: 100 }`  
+  `component` - tested component    
+  `expectedStyle` - conntains expected styles of testing component, for example `{ width: 100 }`    
 
-- Checking equality all current component styles with expected styles
-  #### `expect(component).toHaveAnimatedStyle(expectedStyle, true)`
+- Checking equality of all current component styles with expected styles
+  #### `expect(component).toHaveAnimatedStyle(expectedStyle, {exact: true})`
 
 - You can get all styles of tested component by using `getDefaultStyle`
   #### `getDefaultStyle(component)`  
-  `component: obj` - tested component  
+  `component` - tested component    
 
 #### Timers
 You can use jest timers to control animation
@@ -50,13 +50,13 @@ withReanimatedTimer(() => {
   // call animation
 })
 ```
-inside of `withReanimatedTimer` you can use `moveAnimationByTime(timeInMs)` or `moveAnimationByFrame(amountOfFrames)` functions
-- Move animation by specific time. You can select time of running animation and check value of style after this time.
+Inside of `withReanimatedTimer` you can use `moveAnimationByTime(timeInMs)` or `moveAnimationByFrame(amountOfFrames)` functions
+- Move animation by a specified number of frames. You can specify the running duration of the animation and check the value of styles afterward.
   #### `moveAnimationByTime(timeInMs)`
-  `timeInMs: number` - time of runing animation  
+  `timeInMs` - the duration specifying for how long animation should be moved forward. Should have an integer value.
 - Move animation by specific amount of animation frame.
-  #### `moveAnimationByFrame(amountOfFrame)`
-  `amountOfFrames: number` - amount of frames of animation to run  
+  #### `moveAnimationByFrame(numberOfFrames)`
+  `numberOfFrames` - number of animation frames to run. Should have an integer value.  
 
 ## Example
 

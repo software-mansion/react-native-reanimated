@@ -59,17 +59,14 @@ const findStyleDiff = (current, expect, requireAllMatch) => {
   return { isEqual, diffs };
 };
 
-const compareStyle = (received, expectedStyle, requireAllMatch = false) => {
+const compareStyle = (received, expectedStyle, config) => {
   const { isValid, message } = checkValidation(received);
   if (!isValid) {
     return { message: () => message, pass: false };
   }
+  const { exact } = config;
   const currentStyle = getCurrentStyle(received);
-  const { isEqual, diffs } = findStyleDiff(
-    currentStyle,
-    expectedStyle,
-    requireAllMatch
-  );
+  const { isEqual, diffs } = findStyleDiff(currentStyle, expectedStyle, exact);
 
   if (isEqual) {
     return { message: () => 'ok', pass: true };
@@ -144,8 +141,8 @@ export const setUpTests = (userConfig = {}) => {
   };
 
   expect.extend({
-    toHaveAnimatedStyle(received, expectedStyle, requireAllMatch = false) {
-      return compareStyle(received, expectedStyle, requireAllMatch);
+    toHaveAnimatedStyle(received, expectedStyle, config = {}) {
+      return compareStyle(received, expectedStyle, config);
     },
   });
 };
