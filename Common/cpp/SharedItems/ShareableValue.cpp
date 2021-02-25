@@ -57,7 +57,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     if (!(hiddenValue.isUndefined())) {
       jsi::Object hiddenProperty = hiddenValue.asObject(rt);
       if (hiddenProperty.isHostObject<FrozenObject>(rt)) {
-        type = ValueType::ObjectType;
+        type = ValueType::FrozenObjectType;
         if (object.hasProperty(rt, "__worklet") && object.isFunction(rt)) {
           type = ValueType::WorkletFunctionType;
         }
@@ -112,7 +112,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         }
       }
     } else if (object.isArray(rt)) {
-      type = ValueType::ArrayType;
+      type = ValueType::FrozenArrayType;
       auto array = object.asArray(rt);
       valueContainer = std::make_unique<FrozenArrayWrapper>();
       auto& frozenArray = ValueWrapper::asFrozenArray(valueContainer);
@@ -138,7 +138,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       );
     } else {
       // create frozen object based on a copy of a given object
-      type = ValueType::ObjectType;
+      type = ValueType::FrozenObjectType;
       valueContainer = std::make_unique<FrozenObjectWrapper>(
         std::make_shared<FrozenObject>(rt, object, module)
       );
@@ -215,11 +215,11 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       auto& stringValue = ValueWrapper::asString(valueContainer);
       return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
     }
-    case ValueType::ObjectType: {
+    case ValueType::FrozenObjectType: {
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       return createFrozenWrapper(rt, frozenObject);
     }
-    case ValueType::ArrayType: {
+    case ValueType::FrozenArrayType: {
       auto& frozenArray = ValueWrapper::asFrozenArray(valueContainer);
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {
