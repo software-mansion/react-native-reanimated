@@ -145,6 +145,15 @@ export const setUpTests = (userConfig = {}) => {
       return compareStyle(received, expectedStyle, config);
     },
   });
+
+  jest.mock(
+    './js-reanimated',
+    () => require('./js-reanimated/index.web').default
+  );
+  jest.mock(
+    './NativeReanimated',
+    () => require('./NativeReanimated.js').default
+  );
 };
 
 export const getAnimatedStyle = (received) => {
