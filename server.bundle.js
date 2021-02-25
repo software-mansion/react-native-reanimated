@@ -18651,7 +18651,7 @@ function someWorklet() {
 function someWorklet() {
   'worklet';
   console.log("I'm on UI but can call methods from the RN thread");
-  callback('can pass arguments too');
+  runOnJS(callback)('can pass arguments too');
 }
 `)),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("h2",{"id":"using-hooks"},`Using hooks`),Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("p",null,`In practice, when writing animations and interactions with Reanimated, you will rarely need to create worklets using `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`'worklet'`),` directive (just take a look at `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`Example/`),` folder to see we don't have that many occurences of the directive).
 What you will be using most of the time instead, are worklets that can be constructed by one of the hooks from Reanimated API, e.g. `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`useAnimatedStyle`),`, `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`useDerivedValue`),`, `,Object(_mdx_js_react__WEBPACK_IMPORTED_MODULE_2__[/* mdx */ "b"])("inlineCode",{parentName:"p"},`useAnimatedGestureHandler`),`, etc.
