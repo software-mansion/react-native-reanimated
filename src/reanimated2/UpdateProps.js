@@ -31,13 +31,12 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(
+export const updateProps = (
   viewDescriptor,
   updates,
   maybeViewRef,
-  adapters,
-  animatedStyle
-) {
+  adapters
+) => {
   'worklet';
 
   const viewName = viewDescriptor.value.name || 'RCTView';
@@ -59,17 +58,27 @@ export default function updateProps(
   const updatePropsInternal =
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
 
-  if (process.env.JEST_WORKER_ID) {
-    animatedStyle.current.value = {
-      ...animatedStyle.current.value,
-      ...updates,
-    };
-  }
-
   updatePropsInternal(
     viewDescriptor.value.tag,
     viewName,
     updates,
     maybeViewRef
   );
-}
+};
+
+export const updatePropsJestWrapper = (
+  viewDescriptor,
+  updates,
+  maybeViewRef,
+  adapters,
+  animatedStyle
+) => {
+  animatedStyle.current.value = {
+    ...animatedStyle.current.value,
+    ...updates,
+  };
+
+  updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+};
+
+export default updateProps;

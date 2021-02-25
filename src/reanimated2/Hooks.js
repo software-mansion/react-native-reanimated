@@ -10,7 +10,7 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps from './UpdateProps';
+import updateProps, { updatePropsJestWrapper } from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
@@ -226,6 +226,97 @@ function styleUpdater(
   state,
   maybeViewRef,
   adapters,
+  animationsActive
+) {
+  'worklet';
+  const animations = state.animations || {};
+  const newValues = updater() || {};
+  const oldValues = state.last;
+
+  // extract animated props
+  let hasAnimations = false;
+  Object.keys(animations).forEach((key) => {
+    const value = newValues[key];
+    if (!isAnimated(value)) {
+      delete animations[key];
+    }
+  });
+  Object.keys(newValues).forEach((key) => {
+    const value = newValues[key];
+    if (isAnimated(value)) {
+      prepareAnimation(value, animations[key], oldValues[key]);
+      animations[key] = value;
+      hasAnimations = true;
+    }
+  });
+
+  function frame(timestamp) {
+    const { animations, last, isAnimationCancelled } = state;
+    if (isAnimationCancelled) {
+      state.isAnimationRunning = false;
+      return;
+    }
+
+    const updates = {};
+    let allFinished = true;
+    Object.keys(animations).forEach((propName) => {
+      const finished = runAnimations(
+        animations[propName],
+        timestamp,
+        propName,
+        updates,
+        animationsActive
+      );
+      if (finished) {
+        last[propName] = updates[propName];
+        delete animations[propName];
+      } else {
+        allFinished = false;
+      }
+    });
+
+    if (Object.keys(updates).length) {
+      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+    }
+
+    if (!allFinished) {
+      requestFrame(frame);
+    } else {
+      state.isAnimationRunning = false;
+    }
+  }
+
+  if (hasAnimations) {
+    state.animations = animations;
+    if (!state.isAnimationRunning) {
+      state.isAnimationCancelled = false;
+      state.isAnimationRunning = true;
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
+    }
+  } else {
+    state.isAnimationCancelled = true;
+    state.animations = {};
+  }
+
+  // calculate diff
+  const diff = styleDiff(oldValues, newValues);
+  state.last = Object.assign({}, oldValues, newValues);
+
+  if (Object.keys(diff).length !== 0) {
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+  }
+}
+
+function jestStyleUpdater(
+  viewDescriptor,
+  updater,
+  state,
+  maybeViewRef,
+  adapters,
   animationsActive,
   animatedStyle
 ) {
@@ -277,7 +368,7 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updateProps(
+      updatePropsJestWrapper(
         viewDescriptor,
         updates,
         maybeViewRef,
@@ -314,7 +405,13 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters, animatedStyle);
+    updatePropsJestWrapper(
+      viewDescriptor,
+      diff,
+      maybeViewRef,
+      adapters,
+      animatedStyle
+    );
   }
 }
 
@@ -352,18 +449,33 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
-    const fun = () => {
-      'worklet';
-      styleUpdater(
-        viewDescriptor,
-        updater,
-        remoteState,
-        maybeViewRef,
-        adapters,
-        animationsActive,
-        animatedStyle
-      );
-    };
+    let fun;
+    if (process.env.JEST_WORKER_ID) {
+      fun = () => {
+        'worklet';
+        jestStyleUpdater(
+          viewDescriptor,
+          updater,
+          remoteState,
+          maybeViewRef,
+          adapters,
+          animationsActive,
+          animatedStyle
+        );
+      };
+    } else {
+      fun = () => {
+        'worklet';
+        styleUpdater(
+          viewDescriptor,
+          updater,
+          remoteState,
+          maybeViewRef,
+          adapters,
+          animationsActive
+        );
+      };
+    }
     const mapperId = startMapper(fun, inputs, []);
     return () => {
       stopMapper(mapperId);
@@ -395,12 +507,11 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     );
   }
 
-  return {
-    viewDescriptor,
-    initial,
-    viewRef,
-    animatedStyle,
-  };
+  if (process.env.JEST_WORKER_ID) {
+    return { viewDescriptor, initial, viewRef, animatedStyle };
+  } else {
+    return { viewDescriptor, initial, viewRef };
+  }
 }
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
