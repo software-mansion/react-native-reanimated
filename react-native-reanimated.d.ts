@@ -2,7 +2,15 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentType, ComponentProps, FunctionComponent } from 'react';
+  import {
+    ComponentClass,
+    ReactNode,
+    Component,
+    RefObject,
+    ComponentType,
+    ComponentProps,
+    FunctionComponent,
+  } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -184,36 +192,34 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils;
 
-    export type TransformStyleTypes = TransformsStyle['transform'] extends (
+    export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
-      | undefined)
+      | undefined
       ? T
       : never;
     export type AdaptTransforms<T> = {
       [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>;
     };
-    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[];
+    export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
     export type AnimateStyle<S> = {
       [K in keyof S]: K extends 'transform'
         ? AnimatedTransform
-        : (S[K] extends ReadonlyArray<any>
-            ? ReadonlyArray<AnimateStyle<S[K][0]>>
-            : S[K] extends object
-            ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
-            : S[K] extends (ColorValue | undefined)
-            ? S[K] | number
-            :
-                | S[K]
-                | AnimatedNode<
-                    // allow `number` where `string` normally is to support colors
-                    S[K] extends (ColorValue | undefined) ? S[K] | number : S[K]
-                  >);
+        : S[K] extends ReadonlyArray<any>
+        ? ReadonlyArray<AnimateStyle<S[K][0]>>
+        : S[K] extends object
+        ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
+        : S[K] extends ColorValue | undefined
+        ? S[K] | number
+        :
+            | S[K]
+            | AnimatedNode<
+                // allow `number` where `string` normally is to support colors
+                S[K] extends ColorValue | undefined ? S[K] | number : S[K]
+              >;
     };
 
-    export type AnimateProps<
-      P extends object
-    > = {
+    export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
@@ -235,9 +241,7 @@ declare module 'react-native-reanimated' {
     export class Image extends Component<AnimateProps<ImageProps>> {
       getNode(): ReactNativeImage;
     }
-    export class ScrollView extends Component<
-      AnimateProps<ScrollViewProps>
-    > {
+    export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
@@ -371,7 +375,7 @@ declare module 'react-native-reanimated' {
       x: number,
       input: Array<number>,
       output: Array<number>,
-      type?: Extrapolate
+      type?: ExtrapolateParameter
     ): number;
 
     // animations
