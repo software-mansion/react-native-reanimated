@@ -119,13 +119,13 @@ export const withReanimatedTimer = (animatonTest) => {
   afterTest();
 };
 
-export const moveAnimationByTime = (time = frameTime) => {
+export const advanceAnimationByTime = (time = frameTime) => {
   for (let i = 0; i < Math.ceil(time / frameTime); i++) {
     tickTravel();
   }
 };
 
-export const moveAnimationByFrame = (count) => {
+export const advanceAnimationByFrame = (count) => {
   for (let i = 0; i < count; i++) {
     tickTravel();
   }

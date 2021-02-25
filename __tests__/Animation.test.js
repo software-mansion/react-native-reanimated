@@ -9,8 +9,8 @@ import Animated, {
 } from '../src/';
 import {
   withReanimatedTimer,
-  moveAnimationByTime,
-  moveAnimationByFrame,
+  advanceAnimationByTime,
+  advanceAnimationByFrame,
   getAnimatedStyle,
 } from '../src/reanimated2/jestUtils';
 
@@ -96,20 +96,20 @@ describe('Tests of animations', () => {
       expect(view).toHaveAnimatedStyle(style);
 
       fireEvent.press(button);
-      moveAnimationByTime(260);
+      advanceAnimationByTime(260);
       style.width = 46.08; // value of component width after 260ms of animation
       expect(view).toHaveAnimatedStyle(style);
     });
   });
 
-  test('withTiming animation, use animation timer and move by 10 frames of animation', () => {
+  test('withTiming animation, use animation timer and advance by 10 frames of animation', () => {
     withReanimatedTimer(() => {
       const { getByTestId } = render(<AnimatedComponent />);
       const view = getByTestId('view');
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      moveAnimationByFrame(10);
+      advanceAnimationByFrame(10);
       // value of component width after 10 frames of animation
       expect(view).toHaveAnimatedStyle({ width: 16.588799999999996 });
     });
@@ -124,7 +124,7 @@ describe('Tests of animations', () => {
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      moveAnimationByTime(260);
+      advanceAnimationByTime(260);
       style.width = 46.08; // value of component width after 260ms of animation
       expect(view).toHaveAnimatedStyle(style, true);
     });
@@ -143,7 +143,7 @@ describe('Tests of animations', () => {
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      moveAnimationByTime(260);
+      advanceAnimationByTime(260);
       // value of component width after 260ms of animation
       expect(view).toHaveAnimatedStyle({ width: 46.08 });
     });

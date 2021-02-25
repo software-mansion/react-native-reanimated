@@ -28,7 +28,7 @@ setupFiles: ['./jest-setup.js'],
 - Checking equality of selected styles with current component styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle)`
   `component` - tested component  
-  `expectedStyle` - conntains expected styles of testing component, for example `{ width: 100 }`
+  `expectedStyle` - contains expected styles of testing component, for example `{ width: 100 }`
 
 - Checking equality of all current component styles with expected styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle, {exact: true})`
@@ -50,12 +50,12 @@ withReanimatedTimer(() => {
   // call animation
 })
 ```
-Inside of `withReanimatedTimer` you can use `moveAnimationByTime(timeInMs)` or `moveAnimationByFrame(amountOfFrames)` functions
-- Move animation by a specified number of frames. You can specify the running duration of the animation and check the value of styles afterward.
-  #### `moveAnimationByTime(timeInMs)`
-  `timeInMs` - the duration specifying for how long animation should be moved forward. Should have an integer value.
-- Move animation by specific amount of animation frame.
-  #### `moveAnimationByFrame(numberOfFrames)`
+Inside of `withReanimatedTimer` you can use `advanceAnimationByTime(timeInMs)` or `advanceAnimationByFrame(amountOfFrames)` functions
+- Advance animation by a specified number of frames. You can specify the running duration of the animation and check the value of styles afterward.
+  #### `advanceAnimationByTime(timeInMs)`
+  `timeInMs` - the duration specifying for how long animation should be advanced forward. Should have an integer value.
+- Advance animation by specific amount of animation frame.
+  #### `advanceAnimationByFrame(numberOfFrames)`
   `numberOfFrames` - number of animation frames to run. Should have an integer value.
 
 ## Example
