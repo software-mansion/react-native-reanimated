@@ -146,10 +146,7 @@ export const setUpTests = (userConfig = {}) => {
     },
   });
 
-  jest.mock(
-    './js-reanimated',
-    () => require('./js-reanimated/index.web').default
-  );
+  jest.mock('./js-reanimated', () => require('./js-reanimated/index.web'));
   jest.mock(
     './NativeReanimated',
     () => require('./NativeReanimated.js').default
