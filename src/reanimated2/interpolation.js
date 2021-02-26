@@ -114,6 +114,9 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 export function interpolate(x, input, output, type) {
   'worklet';
   if (x && x.__nodeID) {
+    console.warn(`Interpolate was renamed to InterpolateNode with Reanimated 2 stable release. 
+    We tried to migrate your code automatically.
+    However, we may have missed something. Please, use InterpolateNode`);
     return interpolateNode.apply(undefined, arguments);
   }
 
