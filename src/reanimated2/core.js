@@ -8,16 +8,11 @@ global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 };
 
-// check if a worklet can be created successfully(in order to detect a lack of babel plugin)
-if (
-  !(() => {
-    'worklet';
-  }).__workletHash &&
-  !process.env.JEST_WORKER_ID
-) {
-  throw new Error(
-    "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
-  );
+if (!global._setGlobalConsole) {
+  // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
+  global._setGlobalConsole = () => {
+    // noop
+  };
 }
 
 function _toArrayReanimated(object) {

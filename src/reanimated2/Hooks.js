@@ -311,7 +311,21 @@ function styleUpdater(
   }
 }
 
+const checkPluginState = () => {
+  if (
+    !(() => {
+      'worklet';
+    }).__workletHash &&
+    !process.env.JEST_WORKER_ID
+  ) {
+    throw new Error(
+      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+    );
+  }
+};
+
 export function useAnimatedStyle(updater, dependencies, adapters) {
+  checkPluginState();
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
