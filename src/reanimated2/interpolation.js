@@ -1,4 +1,6 @@
-import { Extrapolate } from '../derived/interpolate';
+import interpolateNode,{
+  Extrapolate
+} from '../derived/interpolate';
 
 function getVal(config) {
   'worklet';
@@ -112,9 +114,7 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 export function interpolate(x, input, output, type) {
   'worklet';
   if (x && x.__nodeID) {
-    throw new Error(
-      'Reanimated: interpolate from V1 has been renamed to interpolateNode.'
-    );
+    return interpolateNode.apply(undefined, arguments);
   }
 
   const length = input.length;

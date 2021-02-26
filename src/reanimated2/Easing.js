@@ -1,3 +1,5 @@
+/* global _WORKLET */
+import EasingNode from '../Easing';
 import { Bezier } from './Bezier';
 
 /**
@@ -235,7 +237,7 @@ function inOut(easing) {
   };
 }
 
-export const Easing = {
+const EasingObject = {
   linear,
   ease,
   quad,
@@ -252,3 +254,33 @@ export const Easing = {
   out,
   inOut,
 };
+
+function createChecker(worklet, prevWorkletName, prevArgs) {
+  function checkIfReaOne() {
+    'worklet'
+    if (arguments && (!_WORKLET)) {
+      for (let i = 0; i < arguments.length; i++) {
+        const arg = arguments[i];
+        if (arg && arg.__nodeID) {
+          if (prevWorkletName) {
+            return EasingNode[prevWorkletName].apply(undefined, prevArgs);
+          }
+          return EasingNode[worklet.name].apply(undefined, arguments);
+        }
+      }
+    }
+    const res = worklet.apply(this, arguments);
+    if ((!_WORKLET) && res && (typeof res === 'function') && res.__worklet) {
+      return createChecker(res, worklet.name, arguments);
+    }
+    return res;
+  }
+  return checkIfReaOne;
+}
+
+Object.keys(EasingObject).forEach((key) => {
+  EasingObject[key] = createChecker(EasingObject[key]);
+});
+
+export const Easing = EasingObject;
+export default Easing;
