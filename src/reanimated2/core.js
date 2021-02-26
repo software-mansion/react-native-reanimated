@@ -8,12 +8,25 @@ global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 };
 
-if (!global._setGlobalConsole) {
+if (global._setGlobalConsole === undefined) {
   // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
   global._setGlobalConsole = () => {
     // noop
   };
 }
+
+export const checkPluginState = () => {
+  if (
+    !(() => {
+      'worklet';
+    }).__workletHash &&
+    !process.env.JEST_WORKER_ID
+  ) {
+    throw new Error(
+      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+    );
+  }
+};
 
 function _toArrayReanimated(object) {
   'worklet';
@@ -74,6 +87,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
+  checkPluginState();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -214,14 +228,17 @@ NativeReanimated.installCoreFunctions(
 );
 
 export function makeMutable(value) {
+  checkPluginState();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
+  checkPluginState();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
+  checkPluginState();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
@@ -231,6 +248,7 @@ export function stopMapper(mapperId) {
 
 export const runOnJS = (fun) => {
   'worklet';
+  checkPluginState();
   if (!_WORKLET) {
     return fun;
   }
