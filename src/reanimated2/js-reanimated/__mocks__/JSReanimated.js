@@ -1,6 +1,6 @@
-import MapperRegistry from './MapperRegistry';
-import MutableValue from './MutableValue';
-import Mapper from './Mapper';
+import MapperRegistry from '../MapperRegistry';
+import MutableValue from '../MutableValue';
+import Mapper from '../Mapper';
 
 export default class JSReanimated {
   native = false;
@@ -15,7 +15,7 @@ export default class JSReanimated {
   }
 
   getTimestamp() {
-    return this.window.performance.now();
+    return Date.now();
   }
 
   maybeRequestRender() {

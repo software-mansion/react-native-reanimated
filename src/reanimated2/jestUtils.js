@@ -155,6 +155,7 @@ export const setUpTests = (userConfig = {}) => {
   jest.mock('./UpdateProps.js');
   jest.mock('./Hooks.js');
   jest.mock('../createAnimatedComponent.js');
+  jest.mock('./js-reanimated/JSReanimated.js');
 };
 
 export const getAnimatedStyle = (received) => {
