@@ -8,15 +8,15 @@
 <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-41044622-6","auto"),ga("send","pageview")</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script><title data-react-helmet="true">cancelAnimation | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="2.0.0-rc.2"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="cancelAnimation | React Native Reanimated"><meta data-react-helmet="true" name="description" content="Starts a time-based animation."><meta data-react-helmet="true" property="og:description" content="Starts a time-based animation."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/api/cancelAnimation"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/api/cancelAnimation"><link rel="stylesheet" href="/react-native-reanimated/styles.ed7ac305.css">
 <link rel="preload" href="/react-native-reanimated/styles.9b4a9ffc.js" as="script">
-<link rel="preload" href="/react-native-reanimated/runtime~main.39015dac.js" as="script">
-<link rel="preload" href="/react-native-reanimated/main.023e0df6.js" as="script">
-<link rel="preload" href="/react-native-reanimated/1.bb828411.js" as="script">
-<link rel="preload" href="/react-native-reanimated/2.13d5deab.js" as="script">
-<link rel="preload" href="/react-native-reanimated/3.5f1d4a68.js" as="script">
-<link rel="preload" href="/react-native-reanimated/1be78505.a95a3659.js" as="script">
-<link rel="preload" href="/react-native-reanimated/244.85b14809.js" as="script">
+<link rel="preload" href="/react-native-reanimated/runtime~main.8d3a3b42.js" as="script">
+<link rel="preload" href="/react-native-reanimated/main.0ec4434b.js" as="script">
+<link rel="preload" href="/react-native-reanimated/1.2cbb55c8.js" as="script">
+<link rel="preload" href="/react-native-reanimated/2.3dff3e85.js" as="script">
+<link rel="preload" href="/react-native-reanimated/3.f0edff7b.js" as="script">
+<link rel="preload" href="/react-native-reanimated/1be78505.0ff54d45.js" as="script">
+<link rel="preload" href="/react-native-reanimated/245.4efdac70.js" as="script">
 <link rel="preload" href="/react-native-reanimated/359ddaea.b5f84098.js" as="script">
-<link rel="preload" href="/react-native-reanimated/2d8b9563.4a39b440.js" as="script">
+<link rel="preload" href="/react-native-reanimated/2d8b9563.c3b040dd.js" as="script">
 </head>
 <body>
 <div id="__docusaurus">
@@ -24,14 +24,14 @@
 If there was no animation started on that value, or the animation completed, no error will be thrown.</p><h2><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="example"></a>Example<a aria-hidden="true" tabindex="-1" class="hash-link" href="#example" title="Direct link to heading">#</a></h2><div class="mdxCodeBlock_1WSO"><div class="codeBlockContent_3RXF"><button type="button" aria-label="Copy code to clipboard" class="copyButton_1PCb">Copy</button><div tabindex="0" class="prism-code language-js codeBlock_1wn8"><div class="codeBlockLines_3HrO" style="color:#ffffff;background-color:#001a72"><div class="token-line" style="color:#ffffff"><span class="token keyword" style="color:#8ed3ef">const</span><span class="token plain"> someValue </span><span class="token operator" style="color:#ffaaa8">=</span><span class="token plain"> </span><span class="token function" style="color:#a3b8ff">useSharedValue</span><span class="token punctuation" style="color:#ffee86">(</span><span class="token number" style="color:#ffaaa8">0</span><span class="token punctuation" style="color:#ffee86">)</span><span class="token punctuation" style="color:#ffee86">;</span><span class="token plain"></span></div><div class="token-line" style="color:#ffffff"><span class="token plain" style="display:inline-block">
 </span></div><div class="token-line" style="color:#ffffff"><span class="token plain"></span><span class="token keyword" style="color:#8ed3ef">const</span><span class="token plain"> gestureHandler </span><span class="token operator" style="color:#ffaaa8">=</span><span class="token plain"> </span><span class="token function" style="color:#a3b8ff">useAnimatedGestureHandler</span><span class="token punctuation" style="color:#ffee86">(</span><span class="token punctuation" style="color:#ffee86">{</span><span class="token plain"></span></div><div class="token-line" style="color:#ffffff"><span class="token plain">  </span><span class="token function-variable function" style="color:#a3b8ff">onStart</span><span class="token punctuation" style="color:#ffee86">:</span><span class="token plain"> </span><span class="token punctuation" style="color:#ffee86">(</span><span class="token parameter">_</span><span class="token parameter punctuation" style="color:#ffee86">,</span><span class="token parameter"> ctx</span><span class="token punctuation" style="color:#ffee86">)</span><span class="token plain"> </span><span class="token arrow operator" style="color:#ffaaa8">=&gt;</span><span class="token plain"> </span><span class="token punctuation" style="color:#ffee86">{</span><span class="token plain"></span></div><div class="token-line docusaurus-highlight-code-line" style="color:#ffffff"><span class="token plain">    </span><span class="token function" style="color:#a3b8ff">cancelAnimation</span><span class="token punctuation" style="color:#ffee86">(</span><span class="token plain">someValue</span><span class="token punctuation" style="color:#ffee86">)</span><span class="token punctuation" style="color:#ffee86">;</span><span class="token plain"></span></div><div class="token-line" style="color:#ffffff"><span class="token plain">  </span><span class="token punctuation" style="color:#ffee86">}</span><span class="token punctuation" style="color:#ffee86">,</span><span class="token plain"></span></div><div class="token-line" style="color:#ffffff"><span class="token plain"></span><span class="token punctuation" style="color:#ffee86">}</span><span class="token punctuation" style="color:#ffee86">)</span><span class="token punctuation" style="color:#ffee86">;</span></div></div></div></div></div></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a href="https://www.swmansion.com/" target="_blank" rel="noopener noreferrer" class="navbar__brand footer-image-link"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
 <script src="/react-native-reanimated/styles.9b4a9ffc.js"></script>
-<script src="/react-native-reanimated/runtime~main.39015dac.js"></script>
-<script src="/react-native-reanimated/main.023e0df6.js"></script>
-<script src="/react-native-reanimated/1.bb828411.js"></script>
-<script src="/react-native-reanimated/2.13d5deab.js"></script>
-<script src="/react-native-reanimated/3.5f1d4a68.js"></script>
-<script src="/react-native-reanimated/1be78505.a95a3659.js"></script>
-<script src="/react-native-reanimated/244.85b14809.js"></script>
+<script src="/react-native-reanimated/runtime~main.8d3a3b42.js"></script>
+<script src="/react-native-reanimated/main.0ec4434b.js"></script>
+<script src="/react-native-reanimated/1.2cbb55c8.js"></script>
+<script src="/react-native-reanimated/2.3dff3e85.js"></script>
+<script src="/react-native-reanimated/3.f0edff7b.js"></script>
+<script src="/react-native-reanimated/1be78505.0ff54d45.js"></script>
+<script src="/react-native-reanimated/245.4efdac70.js"></script>
 <script src="/react-native-reanimated/359ddaea.b5f84098.js"></script>
-<script src="/react-native-reanimated/2d8b9563.4a39b440.js"></script>
+<script src="/react-native-reanimated/2d8b9563.c3b040dd.js"></script>
 </body>
 </html>
