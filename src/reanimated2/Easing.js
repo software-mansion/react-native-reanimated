@@ -255,7 +255,7 @@ const EasingObject = {
   inOut,
 };
 
-function createChecker(worklet, prevWorkletName, prevArgs) {
+function createChecker(worklet, workletName, prevArgs) {
   function checkIfReaOne() {
     'worklet'
     if (arguments && (!_WORKLET)) {
@@ -263,16 +263,16 @@ function createChecker(worklet, prevWorkletName, prevArgs) {
         const arg = arguments[i];
         if (arg && arg.__nodeID) {
           console.warn(`Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`);
-          if (prevWorkletName) {
-            return EasingNode[prevWorkletName].apply(undefined, prevArgs);
+          if (prevArgs) {
+            return EasingNode[workletName].apply(undefined, prevArgs).apply(undefined, arguments);
           }
-          return EasingNode[worklet.name].apply(undefined, arguments);
+          return EasingNode[workletName].apply(undefined, arguments);
         }
       }
     }
     const res = worklet.apply(this, arguments);
     if ((!_WORKLET) && res && (typeof res === 'function') && res.__worklet) {
-      return createChecker(res, worklet.name, arguments);
+      return createChecker(res, workletName, arguments);
     }
     return res;
   }
@@ -285,7 +285,7 @@ function createChecker(worklet, prevWorkletName, prevArgs) {
 }
 
 Object.keys(EasingObject).forEach((key) => {
-  EasingObject[key] = createChecker(EasingObject[key]);
+  EasingObject[key] = createChecker(EasingObject[key], key);
 });
 
 export const Easing = EasingObject;
