@@ -48,7 +48,7 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
   return initRef;
 }
 
-function prepareAnimation(animatedProp, lastAnimation, lastValue) {
+export function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   'worklet';
   function prepareAnimation(animatedProp, lastAnimation, lastValue) {
     if (Array.isArray(animatedProp)) {
@@ -104,7 +104,13 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   return prepareAnimation(animatedProp, lastAnimation, lastValue);
 }
 
-function runAnimations(animation, timestamp, key, result, animationsActive) {
+export function runAnimations(
+  animation,
+  timestamp,
+  key,
+  result,
+  animationsActive
+) {
   'worklet';
   function runAnimations(animation, timestamp, key, result, animationsActive) {
     if (!animationsActive.value) {
@@ -163,7 +169,7 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 }
 
 // TODO: recirsive worklets aren't supported yet
-function isAnimated(prop) {
+export function isAnimated(prop) {
   'worklet';
   function isAnimated(prop) {
     if (Array.isArray(prop)) {
@@ -180,7 +186,7 @@ function isAnimated(prop) {
   return isAnimated(prop);
 }
 
-function styleDiff(oldStyle, newStyle) {
+export function styleDiff(oldStyle, newStyle) {
   'worklet';
   const diff = {};
   Object.keys(oldStyle).forEach((key) => {
@@ -207,7 +213,7 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-const validateAnimatedStyles = (styles) => {
+export const validateAnimatedStyles = (styles) => {
   'worklet';
   if (typeof styles !== 'object') {
     throw new Error(
