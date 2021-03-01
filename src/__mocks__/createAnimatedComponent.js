@@ -1,17 +1,17 @@
 import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
-import ReanimatedEventEmitter from './ReanimatedEventEmitter';
+import ReanimatedEventEmitter from '../ReanimatedEventEmitter';
 
-import AnimatedEvent from './core/AnimatedEvent';
-import AnimatedNode from './core/AnimatedNode';
-import AnimatedValue from './core/AnimatedValue';
-import { createOrReusePropsNode } from './core/AnimatedProps';
-import WorkletEventHandler from './reanimated2/WorkletEventHandler';
-import setAndForwardRef from './setAndForwardRef';
+import AnimatedEvent from '../core/AnimatedEvent';
+import AnimatedNode from '../core/AnimatedNode';
+import AnimatedValue from '../core/AnimatedValue';
+import { createOrReusePropsNode } from '../core/AnimatedProps';
+import WorkletEventHandler from '../reanimated2/WorkletEventHandler';
+import setAndForwardRef from '../setAndForwardRef';
 
 import invariant from 'fbjs/lib/invariant';
-import { adaptViewConfig } from './ConfigHelper';
-import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { adaptViewConfig } from '../ConfigHelper';
+import { RNRenderer } from '../reanimated2/platform-specific/RNRenderer';
 
 const NODE_MAPPING = new Map();
 
@@ -71,6 +71,7 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      this.animatedStyle = { value: {} };
     }
 
     componentWillUnmount() {
@@ -278,6 +279,17 @@ export default function createAnimatedComponent(Component) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
+          /**
+           * We need to connect Jest's TestObject instance whose contains just props object
+           * with the updateProps() function where we update the properties of the component.
+           * We can't update props object directly because TestObject contains a copy of props - look at render function:
+           * const props = this._filterNonAnimatedProps(this.props);
+           */
+          this.animatedStyle.value = {
+            ...this.animatedStyle.value,
+            ...style.initial,
+          };
+          style.animatedStyle.current = this.animatedStyle;
         }
       });
       // attach animatedProps property
@@ -413,6 +425,8 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      props.animatedStyle = this.animatedStyle;
+
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
