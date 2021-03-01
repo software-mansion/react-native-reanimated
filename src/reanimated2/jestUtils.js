@@ -147,14 +147,11 @@ export const setUpTests = (userConfig = {}) => {
   });
 
   jest.mock('./js-reanimated', () => require('./js-reanimated/index.web'));
+  jest.mock('../ReanimatedModule', () => require('../ReanimatedModuleCompat'));
   jest.mock(
     './NativeReanimated',
     () => require('./NativeReanimated.js').default
   );
-  jest.mock('./UpdateProps.js');
-  jest.mock('./Hooks.js');
-  jest.mock('../createAnimatedComponent.js');
-  jest.mock('./js-reanimated/JSReanimated.js');
 };
 
 export const getAnimatedStyle = (received) => {

@@ -59,4 +59,19 @@ export const updateProps = (
   );
 };
 
+export const updatePropsJestWrapper = (
+  viewDescriptor,
+  updates,
+  maybeViewRef,
+  adapters,
+  animatedStyle
+) => {
+  animatedStyle.current.value = {
+    ...animatedStyle.current.value,
+    ...updates,
+  };
+
+  updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+};
+
 export default updateProps;

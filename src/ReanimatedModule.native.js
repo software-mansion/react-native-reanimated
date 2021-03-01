@@ -1,8 +1,5 @@
-let Module;
-if (process.env.JEST_WORKER_ID) {
-  Module = require('./ReanimatedModuleCompat').default;
-} else {
-  Module = require('react-native').NativeModules.ReanimatedModule;
-}
+import { NativeModules } from 'react-native';
 
-export default Module;
+const { ReanimatedModule } = NativeModules;
+
+export default ReanimatedModule;
