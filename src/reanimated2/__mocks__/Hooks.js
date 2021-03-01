@@ -1,7 +1,7 @@
 /* global _frameTimestamp */
 import { useEffect, useRef, useCallback } from 'react';
 
-import WorkletEventHandler from './WorkletEventHandler';
+import WorkletEventHandler from '../WorkletEventHandler';
 import {
   startMapper,
   stopMapper,
@@ -9,11 +9,11 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
-} from './core';
+} from '../core';
 import updateProps from './UpdateProps';
-import { initialUpdaterRun, cancelAnimation } from './animations';
-import { getTag } from './NativeMethods';
-import NativeReanimated from './NativeReanimated';
+import { initialUpdaterRun, cancelAnimation } from '../animations';
+import { getTag } from '../NativeMethods';
+import NativeReanimated from '../NativeReanimated';
 import { Platform } from 'react-native';
 
 export function useSharedValue(init) {
@@ -226,7 +226,8 @@ function styleUpdater(
   state,
   maybeViewRef,
   adapters,
-  animationsActive
+  animationsActive,
+  animatedStyle
 ) {
   'worklet';
   const animations = state.animations || {};
@@ -276,7 +277,13 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+      updateProps(
+        viewDescriptor,
+        updates,
+        maybeViewRef,
+        adapters,
+        animatedStyle
+      );
     }
 
     if (!allFinished) {
@@ -307,7 +314,7 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters, animatedStyle);
   }
 }
 
@@ -319,6 +326,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
+  const animatedStyle = useRef({});
 
   // build dependencies
   if (!dependencies) {
@@ -349,7 +357,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         remoteState,
         maybeViewRef,
         adapters,
-        animationsActive
+        animationsActive,
+        animatedStyle
       );
     };
     const mapperId = startMapper(fun, inputs, []);
@@ -383,7 +392,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     );
   }
 
-  return { viewDescriptor, initial, viewRef };
+  return { viewDescriptor, initial, viewRef, animatedStyle };
 }
 
 // TODO: we should make sure that when useAP is used we are not assigning styles

@@ -152,6 +152,9 @@ export const setUpTests = (userConfig = {}) => {
     './NativeReanimated',
     () => require('./NativeReanimated.js').default
   );
+  jest.mock('./UpdateProps.js');
+  jest.mock('./Hooks.js');
+  jest.mock('../createAnimatedComponent.js');
 };
 
 export const getAnimatedStyle = (received) => {

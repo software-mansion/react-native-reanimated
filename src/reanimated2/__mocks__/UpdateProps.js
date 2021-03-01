@@ -1,8 +1,8 @@
 /* global _updateProps */
-import { processColor } from './Colors';
-import { makeShareable } from './core';
+import { processColor } from '../Colors';
+import { makeShareable } from '../core';
 import { Platform } from 'react-native';
-import { _updatePropsJS } from './js-reanimated';
+import { _updatePropsJS } from '../js-reanimated';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
@@ -28,7 +28,8 @@ export const updateProps = (
   viewDescriptor,
   updates,
   maybeViewRef,
-  adapters
+  adapters,
+  animatedStyle
 ) => {
   'worklet';
 
@@ -47,6 +48,11 @@ export const updateProps = (
       }
     });
   }
+
+  animatedStyle.current.value = {
+    ...animatedStyle.current.value,
+    ...updates,
+  };
 
   const updatePropsInternal =
     typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
