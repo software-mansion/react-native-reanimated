@@ -147,7 +147,6 @@ export const setUpTests = (userConfig = {}) => {
   });
 
   jest.mock('./js-reanimated', () => require('./js-reanimated/index.web'));
-  jest.mock('../ReanimatedModule', () => require('../ReanimatedModuleCompat'));
   jest.mock(
     './NativeReanimated',
     () => require('./NativeReanimated.js').default
