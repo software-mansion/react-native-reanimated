@@ -248,7 +248,6 @@ export function stopMapper(mapperId) {
 
 export const runOnJS = (fun) => {
   'worklet';
-  checkPluginState();
   if (!_WORKLET) {
     return fun;
   }
