@@ -276,6 +276,11 @@ function createChecker(worklet, prevWorkletName, prevArgs) {
     }
     return res;
   }
+  // use original worklet on UI side
+  checkIfReaOne._closure = worklet._closure;
+  checkIfReaOne.asString = worklet.asString;
+  checkIfReaOne.__workletHash = worklet.__workletHash;
+  checkIfReaOne.__location = worklet.__location;
   return checkIfReaOne;
 }
 
