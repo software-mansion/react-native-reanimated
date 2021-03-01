@@ -52,6 +52,7 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
     "fbjs": "^3.0.0",
+    "mockdate": "^3.0.2",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
@@ -66,6 +67,9 @@
     "@babel/preset-typescript": "^7.7.4",
     "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
+    "@testing-library/jest-native": "^3.4.3",
+    "@testing-library/react-hooks": "^5.0.3",
+    "@testing-library/react-native": "^7.1.0",
     "@types/babel-types": "^7.0.9",
     "@types/babel__core": "^7.1.12",
     "@types/babel__generator": "^7.6.2",

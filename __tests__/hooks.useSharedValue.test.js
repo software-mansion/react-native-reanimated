@@ -1,10 +1,10 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
-import Animated, { useSharedValue } from '../Animated';
+import Animated, { useSharedValue } from '../src/Animated';
 
-jest.mock('../ReanimatedEventEmitter');
-jest.mock('../ReanimatedModule');
-jest.mock('./NativeReanimated');
+jest.mock('../src/ReanimatedEventEmitter');
+jest.mock('../src/ReanimatedModule');
+jest.mock('../src/reanimated2/NativeReanimated');
 
 describe('useSharedValue', () => {
   it('retains value on rerender', () => {

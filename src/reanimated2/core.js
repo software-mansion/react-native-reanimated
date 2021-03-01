@@ -103,15 +103,22 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
-function _getTimestamp() {
-  'worklet';
-  if (_frameTimestamp) {
-    return _frameTimestamp;
-  }
-  if (_eventTimestamp) {
-    return _eventTimestamp;
-  }
-  return _getCurrentTime();
+let _getTimestamp;
+if (process.env.JEST_WORKER_ID) {
+  _getTimestamp = () => {
+    return Date.now();
+  };
+} else {
+  _getTimestamp = () => {
+    'worklet';
+    if (_frameTimestamp) {
+      return _frameTimestamp;
+    }
+    if (_eventTimestamp) {
+      return _eventTimestamp;
+    }
+    return _getCurrentTime();
+  };
 }
 
 export function getTimestamp() {

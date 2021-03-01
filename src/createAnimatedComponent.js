@@ -71,6 +71,9 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        this.animatedStyle = { value: {} };
+      }
     }
 
     componentWillUnmount() {
@@ -266,7 +269,11 @@ export default function createAnimatedComponent(Component) {
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (hostInstance && this._hasReanimated2Props(styles)) {
+        if (
+          hostInstance &&
+          this._hasReanimated2Props(styles) &&
+          hostInstance.viewConfig
+        ) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
@@ -274,6 +281,19 @@ export default function createAnimatedComponent(Component) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
+          if (process.env.JEST_WORKER_ID) {
+            /**
+             * We need to connect Jest's TestObject instance whose contains just props object
+             * with the updateProps() function where we update the properties of the component.
+             * We can't update props object directly because TestObject contains a copy of props - look at render function:
+             * const props = this._filterNonAnimatedProps(this.props);
+             */
+            this.animatedStyle.value = {
+              ...this.animatedStyle.value,
+              ...style.initial,
+            };
+            style.animatedStyle.current = this.animatedStyle;
+          }
         }
       });
       // attach animatedProps property
@@ -409,6 +429,10 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        props.animatedStyle = this.animatedStyle;
+      }
+
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },

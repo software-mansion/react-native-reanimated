@@ -1,4 +1,4 @@
-import plugin from '../../plugin';
+import plugin from '../plugin';
 import { transform } from '@babel/core';
 import traverse from '@babel/traverse';
 

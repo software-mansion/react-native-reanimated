@@ -40,5 +40,6 @@ module.exports = {
         Miscellaneous: ['api/runOnJS'],
       },
     ],
+    Guides: ['testing'],
   },
 };
