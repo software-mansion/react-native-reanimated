@@ -262,9 +262,7 @@ function createChecker(worklet, prevWorkletName, prevArgs) {
       for (let i = 0; i < arguments.length; i++) {
         const arg = arguments[i];
         if (arg && arg.__nodeID) {
-          console.warn(`Interpolate was renamed to InterpolateNode with Reanimated 2 stable release. 
-    We tried to migrate your code automatically.
-    However, we may have missed something. Please, use InterpolateNode`);
+          console.warn(`Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`);
           if (prevWorkletName) {
             return EasingNode[prevWorkletName].apply(undefined, prevArgs);
           }
