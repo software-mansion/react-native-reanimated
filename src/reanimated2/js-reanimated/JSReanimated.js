@@ -15,7 +15,7 @@ export default class JSReanimated {
   }
 
   getTimestamp() {
-    return this.window.performance.now();
+    return window.performance.now();
   }
 
   maybeRequestRender() {
