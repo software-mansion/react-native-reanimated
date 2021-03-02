@@ -12,15 +12,16 @@ PROJECT_FILES := $(PROJECT_FILES:$(LOCAL_PATH)/%=%)
 
 LOCAL_SRC_FILES := $(PROJECT_FILES)
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH) \
-	$(LOCAL_PATH)/../cpp/headers \
-	$(LOCAL_PATH)/../Common/cpp/headers \
-	$(LOCAL_PATH)/../Common/cpp/headers/NativeModules \
-	$(LOCAL_PATH)/../Common/cpp/headers/Registries \
-	$(LOCAL_PATH)/../Common/cpp/headers/SharedItems \
-	$(LOCAL_PATH)/../Common/cpp/headers/SpecTools \
-	$(LOCAL_PATH)/../Common/cpp/headers/Tools \
-	$(HERMES_ENGINE)/android/include \
+LOCAL_C_INCLUDES := $(LOCAL_PATH)
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/hidden_headers
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../cpp/headers
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers/NativeModules
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers/Registries
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers/SharedItems
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers/SpecTools
+LOCAL_C_INCLUDES +=	$(LOCAL_PATH)/../Common/cpp/headers/Tools
+LOCAL_C_INCLUDES +=	$(HERMES_ENGINE)/android/include
 
 LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
 
