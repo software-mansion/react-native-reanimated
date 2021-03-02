@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/cpp/hidden_headers/LoggerInterface.h"
+#include "ReanimatedHiddenHeaders.h"
 #include <stdio.h>
 
 namespace reanimated {
