@@ -44,8 +44,7 @@ Pod::Spec.new do |s|
   ]
 
   s.preserve_paths = [
-    "ios/**/*.h",
-    "Common/cpp/headers/**/*.h"
+    "Common/cpp/hidden_headers/**"
   ]
 
   s.pod_target_xcconfig    = {

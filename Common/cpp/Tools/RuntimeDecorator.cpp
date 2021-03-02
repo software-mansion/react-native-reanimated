@@ -1,5 +1,5 @@
 #include "RuntimeDecorator.h"
-#include "Logger.h"
+#include "Common/cpp/hidden_headers/Logger.h"
 #include <unordered_map>
 #include <memory>
 
