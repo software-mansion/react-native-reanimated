@@ -2,7 +2,6 @@
 
 #include "WorkletsCache.h"
 #include "SharedParent.h"
-#include "Logger.h"
 #include "ValueWrapper.h"
 #include "HostFunctionHandler.h"
 #include "JSIStoreValueUser.h"

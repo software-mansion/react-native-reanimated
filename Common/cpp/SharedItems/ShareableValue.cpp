@@ -1,7 +1,6 @@
 #include "ShareableValue.h"
 #include "SharedParent.h"
 #include "NativeReanimatedModule.h"
-#include "Logger.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
