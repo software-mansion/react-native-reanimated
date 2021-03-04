@@ -212,7 +212,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       return jsi::Value(ValueWrapper::asNumber(valueContainer));
     case ValueType::StringType: {
       auto& stringValue = ValueWrapper::asString(valueContainer);
-      return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
+      return jsi::Value(rt, jsi::String::createFromUtf8(rt, stringValue));
     }
     case ValueType::FrozenObjectType: {
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
