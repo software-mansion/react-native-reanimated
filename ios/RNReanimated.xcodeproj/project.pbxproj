@@ -37,6 +37,21 @@
 		A12DA6BF22EC22E400E8271A /* REAFunctionNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BA22EC22E300E8271A /* REAFunctionNode.m */; };
 		A12DA6C022EC22E400E8271A /* REACallFuncNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */; };
 		A12DA6C122EC22E400E8271A /* REACallFuncNode.m in Sources */ = {isa = PBXBuildFile; fileRef = A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */; };
+		B86B452225F294C500CA0B60 /* WorkletEventHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F125F294C500CA0B60 /* WorkletEventHandler.cpp */; };
+		B86B452325F294C500CA0B60 /* Mapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F225F294C500CA0B60 /* Mapper.cpp */; };
+		B86B452425F294C500CA0B60 /* JSIStoreValueUser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F325F294C500CA0B60 /* JSIStoreValueUser.cpp */; };
+		B86B452525F294C500CA0B60 /* Scheduler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F425F294C500CA0B60 /* Scheduler.cpp */; };
+		B86B452625F294C500CA0B60 /* RuntimeDecorator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F525F294C500CA0B60 /* RuntimeDecorator.cpp */; };
+		B86B452725F294C500CA0B60 /* MapperRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F725F294C500CA0B60 /* MapperRegistry.cpp */; };
+		B86B452825F294C500CA0B60 /* WorkletsCache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F825F294C500CA0B60 /* WorkletsCache.cpp */; };
+		B86B452925F294C500CA0B60 /* EventHandlerRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44F925F294C500CA0B60 /* EventHandlerRegistry.cpp */; };
+		B86B452A25F294C500CA0B60 /* NativeReanimatedModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44FB25F294C500CA0B60 /* NativeReanimatedModule.cpp */; };
+		B86B452B25F294C500CA0B60 /* NativeReanimatedModuleSpec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44FC25F294C500CA0B60 /* NativeReanimatedModuleSpec.cpp */; };
+		B86B452C25F294C500CA0B60 /* MutableValueSetterProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44FE25F294C500CA0B60 /* MutableValueSetterProxy.cpp */; };
+		B86B452D25F294C500CA0B60 /* RemoteObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B44FF25F294C500CA0B60 /* RemoteObject.cpp */; };
+		B86B452E25F294C500CA0B60 /* ShareableValue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B450025F294C500CA0B60 /* ShareableValue.cpp */; };
+		B86B452F25F294C500CA0B60 /* FrozenObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B450125F294C500CA0B60 /* FrozenObject.cpp */; };
+		B86B453025F294C500CA0B60 /* MutableValue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B86B450225F294C500CA0B60 /* MutableValue.cpp */; };
 		FDBB1777229BF0DE00D1E455 /* REAModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2A209062F100EEC73A /* REAModule.m */; };
 		FDBB1778229BF0DE00D1E455 /* REANodesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 440FEC2B209062F100EEC73A /* REANodesManager.m */; };
 		FDBB1779229BF0E700D1E455 /* REATransitionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 44125DBF22538E6D003C1762 /* REATransitionManager.m */; };
@@ -141,6 +156,45 @@
 		A12DA6BB22EC22E300E8271A /* REACallFuncNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REACallFuncNode.h; sourceTree = "<group>"; };
 		A12DA6BC22EC22E300E8271A /* REACallFuncNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = REACallFuncNode.m; sourceTree = "<group>"; };
 		A12DA6BD22EC22E300E8271A /* REAFunctionNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = REAFunctionNode.h; sourceTree = "<group>"; };
+		B86B44F125F294C500CA0B60 /* WorkletEventHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WorkletEventHandler.cpp; sourceTree = "<group>"; };
+		B86B44F225F294C500CA0B60 /* Mapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mapper.cpp; sourceTree = "<group>"; };
+		B86B44F325F294C500CA0B60 /* JSIStoreValueUser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSIStoreValueUser.cpp; sourceTree = "<group>"; };
+		B86B44F425F294C500CA0B60 /* Scheduler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Scheduler.cpp; sourceTree = "<group>"; };
+		B86B44F525F294C500CA0B60 /* RuntimeDecorator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RuntimeDecorator.cpp; sourceTree = "<group>"; };
+		B86B44F725F294C500CA0B60 /* MapperRegistry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapperRegistry.cpp; sourceTree = "<group>"; };
+		B86B44F825F294C500CA0B60 /* WorkletsCache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WorkletsCache.cpp; sourceTree = "<group>"; };
+		B86B44F925F294C500CA0B60 /* EventHandlerRegistry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventHandlerRegistry.cpp; sourceTree = "<group>"; };
+		B86B44FB25F294C500CA0B60 /* NativeReanimatedModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NativeReanimatedModule.cpp; sourceTree = "<group>"; };
+		B86B44FC25F294C500CA0B60 /* NativeReanimatedModuleSpec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NativeReanimatedModuleSpec.cpp; sourceTree = "<group>"; };
+		B86B44FE25F294C500CA0B60 /* MutableValueSetterProxy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MutableValueSetterProxy.cpp; sourceTree = "<group>"; };
+		B86B44FF25F294C500CA0B60 /* RemoteObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RemoteObject.cpp; sourceTree = "<group>"; };
+		B86B450025F294C500CA0B60 /* ShareableValue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShareableValue.cpp; sourceTree = "<group>"; };
+		B86B450125F294C500CA0B60 /* FrozenObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrozenObject.cpp; sourceTree = "<group>"; };
+		B86B450225F294C500CA0B60 /* MutableValue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MutableValue.cpp; sourceTree = "<group>"; };
+		B86B450425F294C500CA0B60 /* SpeedChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpeedChecker.h; sourceTree = "<group>"; };
+		B86B450525F294C500CA0B60 /* LoggerInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggerInterface.h; sourceTree = "<group>"; };
+		B86B450625F294C500CA0B60 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
+		B86B450925F294C500CA0B60 /* ReanimatedHiddenHeaders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReanimatedHiddenHeaders.h; sourceTree = "<group>"; };
+		B86B450A25F294C500CA0B60 /* JSIStoreValueUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSIStoreValueUser.h; sourceTree = "<group>"; };
+		B86B450B25F294C500CA0B60 /* Scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Scheduler.h; sourceTree = "<group>"; };
+		B86B450C25F294C500CA0B60 /* Mapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mapper.h; sourceTree = "<group>"; };
+		B86B450D25F294C500CA0B60 /* RuntimeDecorator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RuntimeDecorator.h; sourceTree = "<group>"; };
+		B86B450E25F294C500CA0B60 /* PlatformDepMethodsHolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlatformDepMethodsHolder.h; sourceTree = "<group>"; };
+		B86B450F25F294C500CA0B60 /* WorkletEventHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WorkletEventHandler.h; sourceTree = "<group>"; };
+		B86B451125F294C500CA0B60 /* EventHandlerRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventHandlerRegistry.h; sourceTree = "<group>"; };
+		B86B451225F294C500CA0B60 /* MapperRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapperRegistry.h; sourceTree = "<group>"; };
+		B86B451325F294C500CA0B60 /* WorkletsCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WorkletsCache.h; sourceTree = "<group>"; };
+		B86B451525F294C500CA0B60 /* NativeReanimatedModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeReanimatedModule.h; sourceTree = "<group>"; };
+		B86B451625F294C500CA0B60 /* NativeReanimatedModuleSpec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeReanimatedModuleSpec.h; sourceTree = "<group>"; };
+		B86B451825F294C500CA0B60 /* FrozenObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrozenObject.h; sourceTree = "<group>"; };
+		B86B451925F294C500CA0B60 /* HostFunctionHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HostFunctionHandler.h; sourceTree = "<group>"; };
+		B86B451A25F294C500CA0B60 /* SharedParent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SharedParent.h; sourceTree = "<group>"; };
+		B86B451B25F294C500CA0B60 /* MutableValueSetterProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MutableValueSetterProxy.h; sourceTree = "<group>"; };
+		B86B451C25F294C500CA0B60 /* MutableValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MutableValue.h; sourceTree = "<group>"; };
+		B86B451D25F294C500CA0B60 /* RemoteObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RemoteObject.h; sourceTree = "<group>"; };
+		B86B451E25F294C500CA0B60 /* ValueWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ValueWrapper.h; sourceTree = "<group>"; };
+		B86B451F25F294C500CA0B60 /* ShareableValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShareableValue.h; sourceTree = "<group>"; };
+		B86B452125F294C500CA0B60 /* ErrorHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErrorHandler.h; sourceTree = "<group>"; };
 		FDBB176E229BF04900D1E455 /* libRNReanimated-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libRNReanimated-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -246,7 +300,151 @@
 				440FEC2B209062F100EEC73A /* REANodesManager.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 				FDBB176E229BF04900D1E455 /* libRNReanimated-tvOS.a */,
+				B86B44EE25F294C500CA0B60 /* Common */,
 			);
+			sourceTree = "<group>";
+		};
+		B86B44EE25F294C500CA0B60 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44EF25F294C500CA0B60 /* cpp */,
+			);
+			name = Common;
+			path = ../Common;
+			sourceTree = "<group>";
+		};
+		B86B44EF25F294C500CA0B60 /* cpp */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44F025F294C500CA0B60 /* Tools */,
+				B86B44F625F294C500CA0B60 /* Registries */,
+				B86B44FA25F294C500CA0B60 /* NativeModules */,
+				B86B44FD25F294C500CA0B60 /* SharedItems */,
+				B86B450325F294C500CA0B60 /* hidden_headers */,
+				B86B450725F294C500CA0B60 /* headers */,
+			);
+			path = cpp;
+			sourceTree = "<group>";
+		};
+		B86B44F025F294C500CA0B60 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44F125F294C500CA0B60 /* WorkletEventHandler.cpp */,
+				B86B44F225F294C500CA0B60 /* Mapper.cpp */,
+				B86B44F325F294C500CA0B60 /* JSIStoreValueUser.cpp */,
+				B86B44F425F294C500CA0B60 /* Scheduler.cpp */,
+				B86B44F525F294C500CA0B60 /* RuntimeDecorator.cpp */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
+		B86B44F625F294C500CA0B60 /* Registries */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44F725F294C500CA0B60 /* MapperRegistry.cpp */,
+				B86B44F825F294C500CA0B60 /* WorkletsCache.cpp */,
+				B86B44F925F294C500CA0B60 /* EventHandlerRegistry.cpp */,
+			);
+			path = Registries;
+			sourceTree = "<group>";
+		};
+		B86B44FA25F294C500CA0B60 /* NativeModules */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44FB25F294C500CA0B60 /* NativeReanimatedModule.cpp */,
+				B86B44FC25F294C500CA0B60 /* NativeReanimatedModuleSpec.cpp */,
+			);
+			path = NativeModules;
+			sourceTree = "<group>";
+		};
+		B86B44FD25F294C500CA0B60 /* SharedItems */ = {
+			isa = PBXGroup;
+			children = (
+				B86B44FE25F294C500CA0B60 /* MutableValueSetterProxy.cpp */,
+				B86B44FF25F294C500CA0B60 /* RemoteObject.cpp */,
+				B86B450025F294C500CA0B60 /* ShareableValue.cpp */,
+				B86B450125F294C500CA0B60 /* FrozenObject.cpp */,
+				B86B450225F294C500CA0B60 /* MutableValue.cpp */,
+			);
+			path = SharedItems;
+			sourceTree = "<group>";
+		};
+		B86B450325F294C500CA0B60 /* hidden_headers */ = {
+			isa = PBXGroup;
+			children = (
+				B86B450425F294C500CA0B60 /* SpeedChecker.h */,
+				B86B450525F294C500CA0B60 /* LoggerInterface.h */,
+				B86B450625F294C500CA0B60 /* Logger.h */,
+			);
+			path = hidden_headers;
+			sourceTree = "<group>";
+		};
+		B86B450725F294C500CA0B60 /* headers */ = {
+			isa = PBXGroup;
+			children = (
+				B86B450825F294C500CA0B60 /* Tools */,
+				B86B451025F294C500CA0B60 /* Registries */,
+				B86B451425F294C500CA0B60 /* NativeModules */,
+				B86B451725F294C500CA0B60 /* SharedItems */,
+				B86B452025F294C500CA0B60 /* SpecTools */,
+			);
+			path = headers;
+			sourceTree = "<group>";
+		};
+		B86B450825F294C500CA0B60 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				B86B450925F294C500CA0B60 /* ReanimatedHiddenHeaders.h */,
+				B86B450A25F294C500CA0B60 /* JSIStoreValueUser.h */,
+				B86B450B25F294C500CA0B60 /* Scheduler.h */,
+				B86B450C25F294C500CA0B60 /* Mapper.h */,
+				B86B450D25F294C500CA0B60 /* RuntimeDecorator.h */,
+				B86B450E25F294C500CA0B60 /* PlatformDepMethodsHolder.h */,
+				B86B450F25F294C500CA0B60 /* WorkletEventHandler.h */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
+		B86B451025F294C500CA0B60 /* Registries */ = {
+			isa = PBXGroup;
+			children = (
+				B86B451125F294C500CA0B60 /* EventHandlerRegistry.h */,
+				B86B451225F294C500CA0B60 /* MapperRegistry.h */,
+				B86B451325F294C500CA0B60 /* WorkletsCache.h */,
+			);
+			path = Registries;
+			sourceTree = "<group>";
+		};
+		B86B451425F294C500CA0B60 /* NativeModules */ = {
+			isa = PBXGroup;
+			children = (
+				B86B451525F294C500CA0B60 /* NativeReanimatedModule.h */,
+				B86B451625F294C500CA0B60 /* NativeReanimatedModuleSpec.h */,
+			);
+			path = NativeModules;
+			sourceTree = "<group>";
+		};
+		B86B451725F294C500CA0B60 /* SharedItems */ = {
+			isa = PBXGroup;
+			children = (
+				B86B451825F294C500CA0B60 /* FrozenObject.h */,
+				B86B451925F294C500CA0B60 /* HostFunctionHandler.h */,
+				B86B451A25F294C500CA0B60 /* SharedParent.h */,
+				B86B451B25F294C500CA0B60 /* MutableValueSetterProxy.h */,
+				B86B451C25F294C500CA0B60 /* MutableValue.h */,
+				B86B451D25F294C500CA0B60 /* RemoteObject.h */,
+				B86B451E25F294C500CA0B60 /* ValueWrapper.h */,
+				B86B451F25F294C500CA0B60 /* ShareableValue.h */,
+			);
+			path = SharedItems;
+			sourceTree = "<group>";
+		};
+		B86B452025F294C500CA0B60 /* SpecTools */ = {
+			isa = PBXGroup;
+			children = (
+				B86B452125F294C500CA0B60 /* ErrorHandler.h */,
+			);
+			path = SpecTools;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -332,19 +530,28 @@
 				440FEC2E209062F100EEC73A /* READebugNode.m in Sources */,
 				440FEC37209062F100EEC73A /* REASetNode.m in Sources */,
 				440FEC3A209062F100EEC73A /* REAModule.m in Sources */,
+				B86B452B25F294C500CA0B60 /* NativeReanimatedModuleSpec.cpp in Sources */,
+				B86B452D25F294C500CA0B60 /* RemoteObject.cpp in Sources */,
 				44125DCE2253A038003C1762 /* REATransitionValues.m in Sources */,
+				B86B452225F294C500CA0B60 /* WorkletEventHandler.cpp in Sources */,
 				44125DC82253906B003C1762 /* REAAllTransitions.m in Sources */,
 				A12DA6B722EC228D00E8271A /* REAParamNode.m in Sources */,
 				44125DC022538E6D003C1762 /* REATransitionManager.m in Sources */,
 				440FEC39209062F100EEC73A /* REABlockNode.m in Sources */,
+				B86B452C25F294C500CA0B60 /* MutableValueSetterProxy.cpp in Sources */,
 				A12DA6C022EC22E400E8271A /* REACallFuncNode.m in Sources */,
 				440FEC33209062F100EEC73A /* REABezierNode.m in Sources */,
+				B86B452425F294C500CA0B60 /* JSIStoreValueUser.cpp in Sources */,
+				B86B452625F294C500CA0B60 /* RuntimeDecorator.cpp in Sources */,
 				44125DC322538F68003C1762 /* REATransition.m in Sources */,
 				440FEC2D209062F100EEC73A /* REAStyleNode.m in Sources */,
 				440FEC31209062F100EEC73A /* REACondNode.m in Sources */,
 				44125DD12253A3C0003C1762 /* RCTConvert+REATransition.m in Sources */,
+				B86B452925F294C500CA0B60 /* EventHandlerRegistry.cpp in Sources */,
 				440FEC2C209062F100EEC73A /* REAPropsNode.m in Sources */,
 				A12DA6BE22EC22E400E8271A /* REAFunctionNode.m in Sources */,
+				B86B452F25F294C500CA0B60 /* FrozenObject.cpp in Sources */,
+				B86B452325F294C500CA0B60 /* Mapper.cpp in Sources */,
 				440FEC3B209062F100EEC73A /* REANodesManager.m in Sources */,
 				440FEC36209062F100EEC73A /* REAEventNode.m in Sources */,
 				44125DCB22539177003C1762 /* REATransitionAnimation.m in Sources */,
@@ -352,9 +559,15 @@
 				440FEC2F209062F100EEC73A /* REAClockNodes.m in Sources */,
 				660A44292119B821006BFD5E /* REAConcatNode.m in Sources */,
 				440FEC38209062F100EEC73A /* REAOperatorNode.m in Sources */,
+				B86B452E25F294C500CA0B60 /* ShareableValue.cpp in Sources */,
+				B86B452825F294C500CA0B60 /* WorkletsCache.cpp in Sources */,
+				B86B453025F294C500CA0B60 /* MutableValue.cpp in Sources */,
+				B86B452725F294C500CA0B60 /* MapperRegistry.cpp in Sources */,
 				440FEC34209062F100EEC73A /* REANode.m in Sources */,
+				B86B452525F294C500CA0B60 /* Scheduler.cpp in Sources */,
 				440FEC30209062F100EEC73A /* REAValueNode.m in Sources */,
 				440FEC32209062F100EEC73A /* REAJSCallNode.m in Sources */,
+				B86B452A25F294C500CA0B60 /* NativeReanimatedModule.cpp in Sources */,
 				440FEC35209062F100EEC73A /* REATransformNode.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
