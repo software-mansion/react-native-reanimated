@@ -76,12 +76,12 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     maybeRequestRender();
   };
 
-  RuntimeDecorator::addNativeObjects(*runtime,
-                                     platformDepMethodsHolder.updaterFunction,
-                                     requestAnimationFrame,
-                                     platformDepMethodsHolder.scrollToFunction,
-                                     platformDepMethodsHolder.measuringFunction,
-                                     platformDepMethodsHolder.getCurrentTime);
+  RuntimeDecorator::decorateUIRuntime(*runtime,
+                                      platformDepMethodsHolder.updaterFunction,
+                                      requestAnimationFrame,
+                                      platformDepMethodsHolder.scrollToFunction,
+                                      platformDepMethodsHolder.measuringFunction,
+                                      platformDepMethodsHolder.getCurrentTime);
 }
 
 bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)

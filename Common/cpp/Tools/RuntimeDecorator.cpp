@@ -5,12 +5,13 @@
 
 namespace reanimated {
 
-void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
-                                        UpdaterFunction updater,
-                                        RequestFrameFunction requestFrame,
-                                        ScrollToFunction scrollTo,
-                                        MeasuringFunction measure,
-                                        TimeProviderFunction getCurrentTime) {
+void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
+                                         UpdaterFunction updater,
+                                         RequestFrameFunction requestFrame,
+                                         ScrollToFunction scrollTo,
+                                         MeasuringFunction measure,
+                                         TimeProviderFunction getCurrentTime) {
+  rt.global().setProperty(rt, "_UI", jsi::Value(true));
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   
   jsi::Object dummyGlobal(rt);
@@ -142,4 +143,9 @@ void RuntimeDecorator::addNativeObjects(jsi::Runtime &rt,
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 }
 
+void RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
+  auto isUi = rt.global().getProperty(rt, "_UI");
+  return isUi.isBool() && isUi.getBool();
+}
+  
 }
