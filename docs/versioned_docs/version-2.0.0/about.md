@@ -4,7 +4,7 @@ title: About React Native Reanimated
 sidebar_label: About
 ---
 
-> This is a documentation website of Reanimated 2 alpha release.
+> This is a documentation website of Reanimated 2 stable release.
 > If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x.x/).
 
 Reanimated is a React Native library that allows for creating smooth animations and interactions that runs on the UI thread.
