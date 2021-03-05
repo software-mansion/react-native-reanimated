@@ -34,7 +34,7 @@ jsi::Value MutableValue::getValue(jsi::Runtime &rt) {
 void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &newValue) {
   auto propName = name.utf8(rt);
 
-  if (module->isHostRuntime(rt)) {
+  if (RuntimeDecorator::isReactRuntime(rt)) {
     if (propName == "value") {
       auto shareable = ShareableValue::adapt(rt, newValue, module);
       module->scheduler->scheduleOnUI([this, shareable] {
