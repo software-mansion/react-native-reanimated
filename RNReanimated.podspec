@@ -37,10 +37,15 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "9.0", :tvos => "9.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.source_files =
-      "ios/**/*.{mm,h,m}",
-      "Common/cpp/**/*.cpp",
-      "Common/cpp/headers/**/*.h"
+  s.source_files = [
+    "ios/**/*.{mm,h,m}",
+    "Common/cpp/**/*.cpp",
+    "Common/cpp/headers/**/*.h"
+  ]
+
+  s.preserve_paths = [
+    "Common/cpp/hidden_headers/**"
+  ]
 
   s.pod_target_xcconfig    = {
     "USE_HEADERMAP" => "YES",

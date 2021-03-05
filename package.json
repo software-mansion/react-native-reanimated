@@ -1,13 +1,13 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "npm run format && npm run lint && npm run test:unit",
+    "test": "yarn run format && yarn run lint-check && yarn run test:unit",
     "test:unit": "jest",
     "format": "prettier --write --list-different './src/**/*.js'",
-    "lint": "eslint './src/**/*.js'",
+    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "release": "npm login && release-it",
     "type:check": "yarn tsc"
   },
@@ -52,6 +52,7 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
     "fbjs": "^3.0.0",
+    "mockdate": "^3.0.2",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
@@ -66,17 +67,24 @@
     "@babel/preset-typescript": "^7.7.4",
     "@react-native-community/bob": "^0.14.3",
     "@react-native-community/eslint-config": "^0.0.5",
+    "@testing-library/jest-native": "^3.4.3",
+    "@testing-library/react-hooks": "^5.0.3",
+    "@testing-library/react-native": "^7.1.0",
     "@types/babel-types": "^7.0.9",
     "@types/babel__core": "^7.1.12",
     "@types/babel__generator": "^7.6.2",
     "@types/babel__traverse": "^7.0.15",
     "@types/jest": "^26.0.15",
-    "@types/react-native": "^0.63.43",
+    "@types/react-native": "^0.63.50",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^24.9.0",
+    "babel-plugin-module-resolver": "^4.1.0",
     "eslint": "^6.5.1",
     "eslint-config-prettier": "^6.4.0",
     "eslint-config-standard": "^14.1.0",
+    "eslint-import-resolver-babel-module": "^5.2.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
@@ -84,7 +92,7 @@
     "husky": "^4.2.5",
     "jest": "^24.9.0",
     "lint-staged": "^10.2.11",
-    "prettier": "^1.13.7",
+    "prettier": "^2.2.1",
     "react": "17.0.1",
     "react-native": "0.64.0-rc.2",
     "react-native-gesture-handler": "^1.6.1",
@@ -94,7 +102,7 @@
   },
   "lint-staged": {
     "*.js": [
-      "eslint",
+      "eslint --ext '.js,.ts,.tsx' src/",
       "prettier --write"
     ]
   },

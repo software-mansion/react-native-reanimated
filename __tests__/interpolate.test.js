@@ -1,8 +1,8 @@
-import interpolate from './interpolate';
-import AnimatedValue from '../core/AnimatedValue';
+import interpolate from '../src/derived/interpolate';
+import AnimatedValue from '../src/core/AnimatedValue';
 
-jest.mock('../ReanimatedEventEmitter');
-jest.mock('../ReanimatedModule');
+jest.mock('../src/ReanimatedEventEmitter');
+jest.mock('../src/ReanimatedModule');
 
 const value = new AnimatedValue(0);
 

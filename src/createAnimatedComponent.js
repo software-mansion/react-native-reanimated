@@ -18,7 +18,7 @@ const NODE_MAPPING = new Map();
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
-  console.log("mleko")
+  console.log('mleko');
 }
 
 function dummyListener() {
@@ -74,6 +74,9 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        this.animatedStyle = { value: {} };
+      }
     }
 
     componentWillUnmount() {
@@ -290,25 +293,41 @@ export default function createAnimatedComponent(Component) {
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (hostInstance && this._hasReanimated2Props(styles)) {
+        if (
+          hostInstance &&
+          this._hasReanimated2Props(styles) &&
+          hostInstance.viewConfig
+        ) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
       this._viewTag = viewTag;
       // console.log(viewTag, styles)
-      if (Platform.OS !== 'web') {
-        styles.forEach((style) => {
-          if (style?.viewDescriptors) {
-            style.viewDescriptors.add({ tag: viewTag, name: viewName });
+
+      styles.forEach((style) => {
+        if (style?.viewDescriptors) {
+          style.viewDescriptors.add({ tag: viewTag, name: viewName });
+          if (process.env.JEST_WORKER_ID) {
+            /**
+             * We need to connect Jest's TestObject instance whose contains just props object
+             * with the updateProps() function where we update the properties of the component.
+             * We can't update props object directly because TestObject contains a copy of props - look at render function:
+             * const props = this._filterNonAnimatedProps(this.props);
+             */
+            this.animatedStyle.value = {
+              ...this.animatedStyle.value,
+              ...style.initial,
+            };
+            style.animatedStyle.current = this.animatedStyle;
           }
-        });
-        // attach animatedProps property
-        if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.add({
-            tag: viewTag,
-            name: viewName,
-          });
         }
+      });
+      // attach animatedProps property
+      if (this.props.animatedProps?.viewDescriptor) {
+        this.props.animatedProps.viewDescriptors.add({
+          tag: viewTag,
+          name: viewName,
+        });
       }
     }
 
@@ -318,6 +337,7 @@ export default function createAnimatedComponent(Component) {
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
+          // eslint-disable-next-line no-prototype-builtins
           if (style?.hasOwnProperty('viewDescriptors')) {
             return true;
           }
@@ -434,6 +454,10 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        props.animatedStyle = this.animatedStyle;
+      }
+
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
@@ -444,9 +468,9 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
-    Component.name ||
-    'Component'})`;
+  AnimatedComponent.displayName = `AnimatedComponent(${
+    Component.displayName || Component.name || 'Component'
+  })`;
 
   return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
     return (

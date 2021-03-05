@@ -1,6 +1,16 @@
-/* eslint-disable */
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useCallback, forwardRef } from 'react';
-import { StyleSheet, Button, View, Image, FlatListProps, ViewProps, ImageProps } from 'react-native';
+import {
+  StyleSheet,
+  Button,
+  View,
+  Image,
+  FlatListProps,
+  ViewProps,
+  ImageProps,
+} from 'react-native';
 import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
@@ -49,7 +59,7 @@ type Item = {
 
 const SomeFC = (props: ViewProps) => {
   return <View {...props} />;
-}
+};
 
 const SomeFCWithRef = forwardRef((props: ViewProps) => {
   return <View {...props} />;
@@ -59,7 +69,9 @@ const SomeFCWithRef = forwardRef((props: ViewProps) => {
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-const AnimatedTypedFlatList = Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
+const AnimatedTypedFlatList = Animated.createAnimatedComponent<
+  FlatListProps<Item[]>
+>(FlatList);
 
 // Function Component -> Animated Function Component
 const AnimatedFC = Animated.createAnimatedComponent(SomeFC);
@@ -67,9 +79,7 @@ const AnimatedFCWithRef = Animated.createAnimatedComponent(SomeFCWithRef);
 
 function CreateAnimatedComponentTest1() {
   const animatedProps = useAnimatedProps(() => ({ fill: 'blue' }));
-  return (
-    <AnimatedPath animatedProps={animatedProps} />
-  )
+  return <AnimatedPath animatedProps={animatedProps} />;
 }
 
 function CreateAnimatedComponentTest2() {
@@ -77,31 +87,29 @@ function CreateAnimatedComponentTest2() {
   return (
     // @ts-expect-error
     <AnimatedPath animatedProps={animatedProps} />
-  )
+  );
 }
 
 function CreateAnimatedComponentTest3() {
-  const animatedProps = useAnimatedProps(() => ({ pointerEvents: 'none' } as const));
+  const animatedProps = useAnimatedProps(
+    () => ({ pointerEvents: 'none' } as const)
+  );
   return (
     <Animated.View animatedProps={animatedProps}>
       <AnimatedPath />
     </Animated.View>
-  )
+  );
 }
 
 function CreateAnimatedFlatList() {
   const renderItem = useCallback(
-    ({item, index}: {item: Item[]; index: number}) => {
+    ({ item, index }: { item: Item[]; index: number }) => {
       if (Math.random()) {
         return null;
       }
-      return (
-        <View style={{width: 100}}>
-        </View>
-      );
+      return <View style={{ width: 100 }}></View>;
     },
-    [
-    ],
+    []
   );
   return (
     <>
@@ -116,19 +124,14 @@ function CreateAnimatedFlatList() {
         data={[]}
         renderItem={() => null}
       />
-      <AnimatedImage style={{ flex: 1 }} source={{ uri: "" }} />
+      <AnimatedImage style={{ flex: 1 }} source={{ uri: '' }} />
     </>
-  )
+  );
 }
 
 function TestClassComponentRef() {
   const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
-  return (
-    <AnimatedImage
-      ref={animatedRef}
-      source={{ }}
-    />
-  )
+  return <AnimatedImage ref={animatedRef} source={{}} />;
 }
 
 function TestFunctionComponentRef() {
@@ -138,18 +141,13 @@ function TestFunctionComponentRef() {
       // @ts-expect-error ref is not available on plain function-components
       ref={animatedRef}
     />
-  )
+  );
 }
 
 function TestFunctionComponentForwardRef() {
   const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-  return (
-    <AnimatedFCWithRef
-      ref={animatedRef}
-    />
-  )
+  return <AnimatedFCWithRef ref={animatedRef} />;
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -454,7 +452,10 @@ function CancelAnimationTest() {
 // withDelay
 function WithDelayTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -484,7 +485,10 @@ function WithDelayTest() {
 // withRepeat
 function WithRepeatTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -514,7 +518,10 @@ function WithRepeatTest() {
 // withSequence
 function WithSequenceTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { startX: number }
+  >({
     onStart: (_, _ctx) => {
       cancelAnimation(x);
     },
@@ -579,12 +586,12 @@ function WithDecayTest() {
 
 // useWorkletCallback
 function UseWorkletCallbackTest() {
-  const callback = useWorkletCallback((a: number, b: number) => {
+  const workletCallback = useWorkletCallback((a: number, b: number) => {
     return a + b;
   }, []);
 
   runOnUI(() => {
-    const res = callback(1, 1);
+    const res = workletCallback(1, 1);
 
     console.log(res);
   })();
@@ -594,12 +601,12 @@ function UseWorkletCallbackTest() {
 
 // createWorklet
 function CreateWorkletTest() {
-  const callback = createWorklet((a: number, b: number) => {
+  const workletCallback = createWorklet((a: number, b: number) => {
     return a + b;
   });
 
   runOnUI(() => {
-    const res = callback(1, 1);
+    const res = workletCallback(1, 1);
 
     console.log(res);
   })();
@@ -699,15 +706,7 @@ function updatePropsTest() {
   // @ts-expect-error works only for useAnimatedProps
   useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
-  useAnimatedProps(
-    () => ({}),
-    null,
-    adapter1
-  );
+  useAnimatedProps(() => ({}), null, adapter1);
 
-  useAnimatedProps(
-    () => ({}),
-    null,
-    [adapter2, adapter3]
-  );
+  useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }

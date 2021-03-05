@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { ReactElement, ReactNode, RefObject, useRef } from 'react';
 import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -11,7 +11,10 @@ import Animated, {
   useDerivedValue,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { TapGestureHandler } from 'react-native-gesture-handler';
+import {
+  TapGestureHandler,
+  TapGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const sectionHeaderHeight = 40;
@@ -20,7 +23,7 @@ const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', ''];
 const indices = [0, 1, 2, 3, 4, 5];
 
 function createSharedVariables() {
-  const contentHeights = indices.map((i) => useSharedValue(0));
+  const contentHeights = indices.map(() => useSharedValue(0));
 
   const contentHeightsCopy = contentHeights;
   const result = [useSharedValue(0)];
@@ -46,7 +49,7 @@ function createSharedVariables() {
   };
 }
 
-export default function MeasureExample() {
+function MeasureExample(): React.ReactElement {
   const { heights, contentHeights } = createSharedVariables();
 
   return (
@@ -86,7 +89,22 @@ export default function MeasureExample() {
   );
 }
 
-function Section({ title, children, height, contentHeight, z, show }) {
+type SectionProps = {
+  title: string;
+  height: Animated.SharedValue<number>;
+  contentHeight: Animated.SharedValue<number>;
+  z: number;
+  show: boolean;
+};
+
+function Section({
+  title,
+  children,
+  height,
+  contentHeight,
+  z,
+  show,
+}: React.PropsWithChildren<SectionProps>) {
   const aref = useAnimatedRef();
 
   const stylez = useAnimatedStyle(() => {
@@ -104,18 +122,28 @@ function Section({ title, children, height, contentHeight, z, show }) {
         show={show}
       />
       <View>
-        {React.Children.map(children, (element, idx) => {
-          return React.cloneElement(element, { ref: aref });
-        })}
+        {React.Children.map(children, (element) =>
+          React.cloneElement(element as ReactElement, { ref: aref })
+        )}
       </View>
     </Animated.View>
   );
 }
 
-function asyncMeasure(animatedRef) {
+type MeasuredDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pageX: number;
+  pageY: number;
+};
+function asyncMeasure(
+  animatedRef: RefObject<React.Component>
+): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
-      animatedRef.current.measure((x, y, width, height, pageX, pageY) => {
+      animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
         resolve({ x, y, width, height, pageX, pageY });
       });
     } else {
@@ -124,8 +152,20 @@ function asyncMeasure(animatedRef) {
   });
 }
 
-function SectionHeader({ title, animatedRef, contentHeight, show }) {
-  const applyMeasure = ({ x, y, width, height, pageX, pageY }) => {
+type SectionHeaderProps = {
+  title: string;
+  animatedRef: RefObject<React.Component>;
+  contentHeight: Animated.SharedValue<number>;
+  show: boolean;
+};
+
+function SectionHeader({
+  title,
+  animatedRef,
+  contentHeight,
+  show,
+}: SectionHeaderProps) {
+  const applyMeasure = ({ height }: ReturnType<typeof measure>) => {
     'worklet';
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
@@ -142,7 +182,7 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
 
   let onActiveImpl;
   if (Platform.OS === 'web') {
-    onActiveImpl = async (_, ctx) => {
+    onActiveImpl = async () => {
       try {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
@@ -151,13 +191,13 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
       }
     };
   } else {
-    onActiveImpl = (_, ctx) => {
+    onActiveImpl = () => {
       'worklet';
       applyMeasure(measure(animatedRef));
     };
   }
 
-  const handler = useAnimatedGestureHandler({
+  const handler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
     onActive: onActiveImpl,
   });
 
@@ -185,7 +225,7 @@ function SectionHeader({ title, animatedRef, contentHeight, show }) {
 }
 
 function RandomContent() {
-  const randomElements = useRef(null);
+  const randomElements = useRef<ReactNode[] | null>(null);
   if (randomElements.current == null) {
     randomElements.current = [];
     const numberOfRandomElements = Math.round(Math.random() * 9 + 1);
@@ -232,3 +272,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
 });
+
+export default MeasureExample;

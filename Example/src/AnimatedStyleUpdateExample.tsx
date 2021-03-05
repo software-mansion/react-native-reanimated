@@ -7,7 +7,7 @@ import Animated, {
 import { View, Button, Text, ScrollView } from 'react-native';
 import React, { useState } from 'react';
 
-export default function AnimatedStyleUpdateExample(props) {
+function AnimatedStyleUpdateExample(): React.ReactElement {
   const randomWidth = useSharedValue(10);
 
   const [counter, setCounter] = useState(0);
@@ -110,3 +110,5 @@ export default function AnimatedStyleUpdateExample(props) {
     </ScrollView>
   );
 }
+
+export default AnimatedStyleUpdateExample;

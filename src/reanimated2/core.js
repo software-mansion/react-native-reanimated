@@ -4,21 +4,29 @@ import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 };
 
-// check if a worklet can be created successfully(in order to detect a lack of babel plugin)
-if (
-  !(() => {
-    'worklet';
-  }).__workletHash &&
-  !process.env.JEST_WORKER_ID
-) {
-  throw new Error(
-    "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
-  );
+if (global._setGlobalConsole === undefined) {
+  // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
+  global._setGlobalConsole = () => {
+    // noop
+  };
 }
+
+export const checkPluginState = () => {
+  if (
+    !(() => {
+      'worklet';
+    }).__workletHash &&
+    !process.env.JEST_WORKER_ID
+  ) {
+    throw new Error(
+      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+    );
+  }
+};
 
 function _toArrayReanimated(object) {
   'worklet';
@@ -39,7 +47,7 @@ function _mergeObjectsReanimated() {
   return Object.assign.apply(null, arguments);
 }
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 
   if (worklet._closure) {
@@ -70,7 +78,7 @@ export function requestFrame(frame) {
 }
 
 global._WORKLET = false;
-global._log = function(s) {
+global._log = function (s) {
   console.log(s);
 };
 
@@ -79,6 +87,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
+  checkPluginState();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -94,15 +103,22 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
-function _getTimestamp() {
-  'worklet';
-  if (_frameTimestamp) {
-    return _frameTimestamp;
-  }
-  if (_eventTimestamp) {
-    return _eventTimestamp;
-  }
-  return _getCurrentTime();
+let _getTimestamp;
+if (process.env.JEST_WORKER_ID) {
+  _getTimestamp = () => {
+    return Date.now();
+  };
+} else {
+  _getTimestamp = () => {
+    'worklet';
+    if (_frameTimestamp) {
+      return _frameTimestamp;
+    }
+    if (_eventTimestamp) {
+      return _eventTimestamp;
+    }
+    return _getCurrentTime();
+  };
 }
 
 export function getTimestamp() {
@@ -219,14 +235,17 @@ NativeReanimated.installCoreFunctions(
 );
 
 export function makeMutable(value) {
+  checkPluginState();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
+  checkPluginState();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
+  checkPluginState();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
@@ -262,11 +281,11 @@ const capturableConsole = console;
 runOnUI(() => {
   'worklet';
   const console = {
+    debug: runOnJS(capturableConsole.debug),
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),
     info: runOnJS(capturableConsole.info),
-    debug: runOnJS(capturableConsole.debug),
   };
   _setGlobalConsole(console);
 })();

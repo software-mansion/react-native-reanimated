@@ -2,7 +2,7 @@
 import { processColor } from './Colors';
 import { makeShareable } from './core';
 import { Platform } from 'react-native';
-import { _updatePropsJS } from './js-reanimated/index';
+import { _updatePropsJS } from './js-reanimated';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 const colorProps = [
@@ -24,12 +24,12 @@ const colorProps = [
 
 const ColorProperties = makeShareable(colorProps);
 
-export default function updateProps(
+export const updateProps = (
   viewDescriptors,
   updates,
   maybeViewRef,
   adapters
-) {
+) => {
   'worklet';
 
   const updatePropsInternal =
@@ -65,12 +65,29 @@ export default function updateProps(
   };
   // console.log(viewDescriptors.value.length, updates)
   if (Platform.OS !== 'web') {
-    viewDescriptors.value.forEach((item, index) => {
+    viewDescriptors.value.forEach((item, _) => {
       updateSingleProps(item, updates, null);
     });
   } else {
-    maybeViewRef.items.forEach((item, index) => {
+    maybeViewRef.items.forEach((item, _) => {
       updateSingleProps(null, updates, item);
     });
   }
-}
+};
+
+export const updatePropsJestWrapper = (
+  viewDescriptor,
+  updates,
+  maybeViewRef,
+  adapters,
+  animatedStyle
+) => {
+  animatedStyle.current.value = {
+    ...animatedStyle.current.value,
+    ...updates,
+  };
+
+  updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+};
+
+export default updateProps;

@@ -8,22 +8,28 @@ export default class JSReanimated {
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
   _frames = [];
+  timeProvider = null;
+
+  constructor() {
+    this.timeProvider = process.env.JEST_WORKER_ID
+      ? { now: () => Date.now() }
+      : window.performance;
+  }
 
   pushFrame(frame) {
     this._frames.push(frame);
-
     this.maybeRequestRender();
   }
 
   getTimestamp() {
-    return window.performance.now();
+    return this.timeProvider.now();
   }
 
   maybeRequestRender() {
     if (!this._renderRequested) {
       this._renderRequested = true;
 
-      requestAnimationFrame((timestampMs) => {
+      requestAnimationFrame((_timestampMs) => {
         this._renderRequested = false;
 
         this._onRender(this.getTimestamp());
@@ -73,7 +79,11 @@ export default class JSReanimated {
     this._mapperRegistry.stopMapper(mapperId);
   }
 
-  registerEventHandler(eventHash, eventHandler) {}
+  registerEventHandler(_eventHash, _eventHandler) {
+    // noop
+  }
 
-  unregisterEventHandler(registrationId) {}
+  unregisterEventHandler(_registrationId) {
+    // noop
+  }
 }
