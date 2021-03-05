@@ -2,6 +2,8 @@
 
 #include "WorkletsCache.h"
 #include "SharedParent.h"
+#include "ErrorHandler.h"
+#include "Scheduler.h"
 #include <jsi/jsi.h>
 
 using namespace facebook;
@@ -19,7 +21,7 @@ class FrozenObject : public jsi::HostObject {
 
   public:
 
-  FrozenObject(jsi::Runtime &rt, const jsi::Object &object, NativeReanimatedModule *module);
+  FrozenObject(jsi::Runtime &rt, const jsi::Object &object, std::shared_ptr<ErrorHandler> errorHandler, std::shared_ptr<Scheduler> uiScheduler, std::shared_ptr<ShareableValue> valueSetter);
   jsi::Object shallowClone(jsi::Runtime &rt);
   bool containsHostFunction = false;
 };

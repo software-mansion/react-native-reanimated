@@ -5,6 +5,7 @@
 #include "ValueWrapper.h"
 #include "HostFunctionHandler.h"
 #include "JSIStoreValueUser.h"
+#include "ErrorHandler.h"
 #include <string>
 #include <mutex>
 #include <unordered_map>
@@ -22,13 +23,17 @@ friend void extractMutables(jsi::Runtime &rt,
                             std::vector<std::shared_ptr<MutableValue>> &res);
 
 private:
-  NativeReanimatedModule *module;
+  std::shared_ptr<ErrorHandler> errorHandler;
+  std::shared_ptr<Scheduler> uiScheduler;
+  std::shared_ptr<ShareableValue> valueSetter;
   std::unique_ptr<ValueWrapper> valueContainer;
   std::unique_ptr<jsi::Value> hostValue;
   std::weak_ptr<jsi::Value> remoteValue;
   bool containsHostFunction = false;
 
-  ShareableValue(NativeReanimatedModule *module, std::shared_ptr<Scheduler> s): StoreUser(s), module(module) {}
+  ShareableValue(std::shared_ptr<ErrorHandler> errorHandler,
+                 std::shared_ptr<Scheduler> uiScheduler,
+                 std::shared_ptr<ShareableValue> valueSetter): StoreUser(uiScheduler), uiScheduler(uiScheduler), errorHandler(errorHandler), valueSetter(valueSetter) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt);
   jsi::Object createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host);
@@ -40,7 +45,9 @@ public:
   static std::shared_ptr<ShareableValue> adapt(
     jsi::Runtime &rt,
     const jsi::Value &value,
-    NativeReanimatedModule *module,
+    std::shared_ptr<ErrorHandler> errorHandler,
+    std::shared_ptr<Scheduler> uiScheduler,
+    std::shared_ptr<ShareableValue> valueSetter,
     ValueType objectType = ValueType::UndefinedType
   );
   jsi::Value getValue(jsi::Runtime &rt);

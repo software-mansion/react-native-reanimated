@@ -83,10 +83,11 @@ class Scheduler {
     virtual void scheduleOnUI(std::function<void()> job);
     virtual void triggerUI();
     virtual ~Scheduler();
+  
+    std::weak_ptr<NativeReanimatedModule> module;
   protected:
     Queue<std::function<void()>> uiJobs;
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
-    std::weak_ptr<NativeReanimatedModule> module;
 };
 
 }

@@ -8,7 +8,7 @@ namespace reanimated {
 
 void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
   std::lock_guard<std::mutex> lock(readWriteMutex);
-  value = ShareableValue::adapt(rt, newValue, module);
+  value = ShareableValue::adapt(rt, newValue, errorHandler, uiScheduler, valueSetter);
 
   std::shared_ptr<MutableValue> thiz = shared_from_this();
   auto notifyListeners = [thiz] () {
@@ -20,7 +20,7 @@ void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
   if (RuntimeDecorator::isUIRuntime(rt)) {
     notifyListeners();
   } else {
-    module->scheduler->scheduleOnUI([notifyListeners] {
+    uiScheduler->scheduleOnUI([notifyListeners] {
       notifyListeners();
     });
   }
@@ -36,12 +36,12 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
 
   if (RuntimeDecorator::isReactRuntime(rt)) {
     if (propName == "value") {
-      auto shareable = ShareableValue::adapt(rt, newValue, module);
-      module->scheduler->scheduleOnUI([this, shareable] {
-        jsi::Runtime &rt = *this->module->runtime.get();
+      auto shareable = ShareableValue::adapt(rt, newValue, errorHandler, uiScheduler, valueSetter);
+      uiScheduler->scheduleOnUI([this, shareable] {
+        jsi::Runtime &rt = *this->uiScheduler->module.lock()->runtime.get();
         auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
         jsi::Value newValue = shareable->getValue(rt);
-        module->valueSetter->getValue(rt)
+        valueSetter->getValue(rt)
           .asObject(rt)
           .asFunction(rt)
           .callWithThis(rt, setterProxy, newValue);
@@ -53,7 +53,7 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
   // UI thread
   if (propName == "value") {
     auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
-    module->valueSetter->getValue(rt)
+    valueSetter->getValue(rt)
       .asObject(rt)
       .asFunction(rt)
       .callWithThis(rt, setterProxy, newValue);
@@ -95,8 +95,8 @@ std::vector<jsi::PropNameID> MutableValue::getPropertyNames(jsi::Runtime &rt) {
   return result;
 }
 
-MutableValue::MutableValue(jsi::Runtime &rt, const jsi::Value &initial, NativeReanimatedModule *module, std::shared_ptr<Scheduler> s):
-StoreUser(s), module(module), value(ShareableValue::adapt(rt, initial, module)) {
+MutableValue::MutableValue(jsi::Runtime &rt, const jsi::Value &initial, std::shared_ptr<ErrorHandler> errorHandler, std::shared_ptr<Scheduler> uiScheduler, std::shared_ptr<ShareableValue> valueSetter):
+StoreUser(uiScheduler), errorHandler(errorHandler), valueSetter(valueSetter), value(ShareableValue::adapt(rt, initial, errorHandler, uiScheduler, valueSetter)) {
 }
 
 unsigned long int MutableValue::addListener(unsigned long id, std::function<void ()> listener) {

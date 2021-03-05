@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
   std::vector<std::shared_ptr<MutableValue>> res;
   for (size_t i = 0, size = array.size(rt); i < size; i++)
   {
-    auto shareable = ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module);
+    auto shareable = ShareableValue::adapt(rt, array.getValueAtIndex(rt, i), module->errorHandler, module->scheduler, module->valueSetter);
     extractMutables(rt, shareable, res);
   }
   return res;
@@ -86,22 +86,22 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
 {
-  this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);
+  this->valueSetter = ShareableValue::adapt(rt, valueSetter, this->errorHandler, this->scheduler, this->valueSetter);
 }
 
 jsi::Value NativeReanimatedModule::makeShareable(jsi::Runtime &rt, const jsi::Value &value)
 {
-  return ShareableValue::adapt(rt, value, this)->getValue(rt);
+  return ShareableValue::adapt(rt, value, this->errorHandler, this->scheduler, this->valueSetter)->getValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeMutable(jsi::Runtime &rt, const jsi::Value &value)
 {
-  return ShareableValue::adapt(rt, value, this, ValueType::MutableValueType)->getValue(rt);
+  return ShareableValue::adapt(rt, value, this->errorHandler, this->scheduler, this->valueSetter, ValueType::MutableValueType)->getValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value &value)
 {
-  return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
+  return ShareableValue::adapt(rt, value, this->errorHandler, this->scheduler, this->valueSetter, ValueType::RemoteObjectType)->getValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs)
@@ -109,7 +109,7 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
   static unsigned long MAPPER_ID = 1;
 
   unsigned long newMapperId = MAPPER_ID++;
-  auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
+  auto mapperShareable = ShareableValue::adapt(rt, worklet, this->errorHandler, this->scheduler, this->valueSetter);
   auto inputMutables = extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
   auto outputMutables = extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
 
@@ -139,7 +139,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const 
 
   unsigned long newRegistrationId = EVENT_HANDLER_ID++;
   auto eventName = eventHash.asString(rt).utf8(rt);
-  auto handlerShareable = ShareableValue::adapt(rt, worklet, this);
+  auto handlerShareable = ShareableValue::adapt(rt, worklet, this->errorHandler, this->scheduler, this->valueSetter);
 
   scheduler->scheduleOnUI([=] {
     auto handlerFunction = handlerShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
