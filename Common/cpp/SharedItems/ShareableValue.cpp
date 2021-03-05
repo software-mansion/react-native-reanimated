@@ -419,7 +419,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       throw "Unable to find conversion method for this type";
     }
   }
-  throw "convert error";
 }
 
 }
