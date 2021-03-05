@@ -7,7 +7,8 @@
  */
 
 /* eslint no-bitwise: 0 */
-
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
 import { interpolate } from './interpolation';

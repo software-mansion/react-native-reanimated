@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import interpolateNode, {
   Extrapolate,
 } from '../reanimated1/derived/interpolate';

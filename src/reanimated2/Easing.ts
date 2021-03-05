@@ -1,4 +1,7 @@
 /* global _WORKLET */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
 
