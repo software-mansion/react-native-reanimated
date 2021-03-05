@@ -230,6 +230,8 @@ function styleUpdater(
   animationsActive
 ) {
   'worklet';
+  console.log("styleUpdater", viewDescriptors.value.length)
+  // console.log("styleUpdater", viewDescriptors.value)
   const animations = state.animations || {};
   const newValues = updater() || {};
   const oldValues = state.last;
@@ -277,6 +279,8 @@ function styleUpdater(
     });
 
     if (Object.keys(updates).length) {
+      // console.log(updates, animations)
+      // console.log("frame", viewDescriptors.value.length)
       updateProps(viewDescriptors, updates, maybeViewRef, adapters);
     }
 
@@ -308,6 +312,7 @@ function styleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
+    console.log("first update", viewDescriptors.value.length)
     updateProps(viewDescriptors, diff, maybeViewRef, adapters);
   }
 }
@@ -343,11 +348,15 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
   dependencies.push(initRef.current.workletViewDescriptors.value);
   const { remoteState, initial, workletViewDescriptors } = initRef.current;
+  dependencies.push(workletViewDescriptors);
   const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
   useEffect(() => {
+    const cp = {value: viewDescriptors.items};
+    console.log("startMapper:", workletViewDescriptors.value.length)
     const fun = () => {
       'worklet';
       styleUpdater(
+        // cp,
         workletViewDescriptors,
         updater,
         remoteState,
