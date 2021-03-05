@@ -195,6 +195,7 @@
 		B86B451E25F294C500CA0B60 /* ValueWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ValueWrapper.h; sourceTree = "<group>"; };
 		B86B451F25F294C500CA0B60 /* ShareableValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShareableValue.h; sourceTree = "<group>"; };
 		B86B452125F294C500CA0B60 /* ErrorHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErrorHandler.h; sourceTree = "<group>"; };
+		B86B461025F2B3E800CA0B60 /* RuntimeManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RuntimeManager.h; sourceTree = "<group>"; };
 		FDBB176E229BF04900D1E455 /* libRNReanimated-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libRNReanimated-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -435,6 +436,7 @@
 				B86B451D25F294C500CA0B60 /* RemoteObject.h */,
 				B86B451E25F294C500CA0B60 /* ValueWrapper.h */,
 				B86B451F25F294C500CA0B60 /* ShareableValue.h */,
+				B86B461025F2B3E800CA0B60 /* RuntimeManager.h */,
 			);
 			path = SharedItems;
 			sourceTree = "<group>";

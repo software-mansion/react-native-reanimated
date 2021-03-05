@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <memory>
 #include <vector>
+#include "RuntimeManager.h"
 
 namespace reanimated
 {
@@ -20,7 +21,7 @@ class MutableValue;
 class MapperRegistry;
 class EventHandlerRegistry;
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec
+class NativeReanimatedModule : public NativeReanimatedModuleSpec, public RuntimeManager
 {
   friend ShareableValue;
   friend MutableValue;
@@ -54,8 +55,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     bool isAnyHandlerWaitingForEvent(std::string eventName);
 
     void maybeRequestRender();
-  public:
-    std::unique_ptr<jsi::Runtime> runtime;
   private:
     std::shared_ptr<MapperRegistry> mapperRegistry;
     std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -65,10 +64,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     bool renderRequested = false;
     std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
   public:
-  std::shared_ptr<ErrorHandler> errorHandler;
-  std::shared_ptr<WorkletsCache> workletsCache;
-  std::shared_ptr<ShareableValue> valueSetter;
-  std::shared_ptr<Scheduler> scheduler;
+    std::shared_ptr<WorkletsCache> workletsCache;
 };
 
 } // namespace reanimated
