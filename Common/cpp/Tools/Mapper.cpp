@@ -1,22 +1,23 @@
 #include "Mapper.h"
 #include "SharedParent.h"
 #include "MutableValue.h"
+#include "RuntimeManager.h"
 
 namespace reanimated {
 
-Mapper::Mapper(NativeReanimatedModule *module,
+Mapper::Mapper(RuntimeManager *runtimeManager,
                unsigned long id,
                std::shared_ptr<jsi::Function> mapper,
                std::vector<std::shared_ptr<MutableValue>> inputs,
                std::vector<std::shared_ptr<MutableValue>> outputs):
 id(id),
-module(module),
+runtimeManager(runtimeManager),
 mapper(mapper),
 inputs(inputs),
 outputs(outputs) {
-  auto markDirty = [this, module]() {
+  auto markDirty = [this, runtimeManager]() {
     this->dirty = true;
-    module->maybeRequestRender();
+    runtimeManager->maybeRequestRender();
   };
   for (auto input : inputs) {
     input->addListener(id, markDirty);

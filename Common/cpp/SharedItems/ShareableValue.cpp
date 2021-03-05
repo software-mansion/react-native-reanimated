@@ -1,6 +1,6 @@
 #include "ShareableValue.h"
 #include "SharedParent.h"
-#include "NativeReanimatedModule.h"
+#include "RuntimeManager.h"
 #include "MutableValue.h"
 #include "MutableValueSetterProxy.h"
 #include "RemoteObject.h"
@@ -75,7 +75,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   if (objectType == ValueType::MutableValueType) {
     type = ValueType::MutableValueType;
     valueContainer = std::make_unique<MutableValueWrapper>(
-      std::make_shared<MutableValue>(rt, value, module, module->scheduler)
+      std::make_shared<MutableValue>(rt, value, runtimeManager, runtimeManager->scheduler)
     );
   } else if (value.isUndefined()) {
     type = ValueType::UndefinedType;
@@ -104,7 +104,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
-        valueContainer = std::make_unique<FrozenObjectWrapper>(std::make_shared<FrozenObject>(rt, object, module));
+        valueContainer = std::make_unique<FrozenObjectWrapper>(std::make_shared<FrozenObject>(rt, object, runtimeManager));
         auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
         containsHostFunction |= frozenObject->containsHostFunction;
         if (isRNRuntime && !containsHostFunction) {
@@ -117,7 +117,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       valueContainer = std::make_unique<FrozenArrayWrapper>();
       auto& frozenArray = ValueWrapper::asFrozenArray(valueContainer);
       for (size_t i = 0, size = array.size(rt); i < size; i++) {
-        auto sv = adapt(rt, array.getValueAtIndex(rt, i), module);
+        auto sv = adapt(rt, array.getValueAtIndex(rt, i), runtimeManager);
         containsHostFunction |= sv->containsHostFunction;
         frozenArray.push_back(sv);
       }
@@ -134,13 +134,13 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
     } else if (objectType == ValueType::RemoteObjectType) {
       type = ValueType::RemoteObjectType;
       valueContainer = std::make_unique<RemoteObjectWrapper>(
-        std::make_shared<RemoteObject>(rt, object, module, module->scheduler)
+        std::make_shared<RemoteObject>(rt, object, runtimeManager, runtimeManager->scheduler)
       );
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::FrozenObjectType;
       valueContainer = std::make_unique<FrozenObjectWrapper>(
-        std::make_shared<FrozenObject>(rt, object, module)
+        std::make_shared<FrozenObject>(rt, object, runtimeManager)
       );
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       containsHostFunction |= frozenObject->containsHostFunction;
@@ -159,8 +159,8 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
   }
 }
 
-std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
+std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, RuntimeManager *runtimeManager, ValueType valueType) {
+  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(runtimeManager, runtimeManager->scheduler));
   sv->adapt(rt, value, valueType);
   return sv;
 }
@@ -247,10 +247,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // function is accessed from a different runtime, we wrap function in host func that'd enqueue
         // call on an appropriate thread
 
-        auto module = this->module;
+        auto runtimeManager = this->runtimeManager;
         auto hostFunction = hostFunctionWrapper->value;
 
-        auto warnFunction = [module, hostFunction](
+        auto warnFunction = [runtimeManager, hostFunction](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
@@ -268,14 +268,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           exceptionMessage += " from a different thread.\n\nOccurred in worklet location: ";
           exceptionMessage += workletLocation;
           exceptionMessage += CALLBACK_ERROR_SUFFIX;
-          module->errorHandler->setError(exceptionMessage);
-          module->errorHandler->raise();
+          runtimeManager->errorHandler->setError(exceptionMessage);
+          runtimeManager->errorHandler->raise();
 
           return jsi::Value::undefined();
         };
 
         auto hostRuntime = hostFunctionWrapper->hostRuntime;
-        auto clb = [module, hostFunction, hostRuntime](
+        auto clb = [runtimeManager, hostFunction, hostRuntime](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
@@ -286,7 +286,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
           std::vector<std::shared_ptr<ShareableValue>> params;
           for (int i = 0; i < count; ++i) {
-            params.push_back(ShareableValue::adapt(rt, args[i], module));
+            params.push_back(ShareableValue::adapt(rt, args[i], runtimeManager));
           }
 
           std::function<void()> job = [hostFunction, hostRuntime, params] {
@@ -303,7 +303,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             // ToDo use returned value to return promise
           };
 
-          module->scheduler->scheduleOnJS(job);
+          runtimeManager->scheduler->scheduleOnJS(job);
           return jsi::Value::undefined();
         };
         jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, warnFunction);
@@ -313,13 +313,13 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       }
     }
     case ValueType::WorkletFunctionType: {
-      auto module = this->module;
+      auto runtimeManager = this->runtimeManager;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
       if (RuntimeDecorator::isUIRuntime(rt)) {
         // when running on UI thread we prep a function
 
-        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));
-        std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+        auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*runtimeManager->runtime));
+        std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
         auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
 
         auto clb = [=](
@@ -347,8 +347,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               if (location.isString()) {
                 str += "\nIn file: " + location.asString(rt).utf8(rt);
               }
-              module->errorHandler->setError(str);
-              module->errorHandler->raise();
+              runtimeManager->errorHandler->setError(str);
+              runtimeManager->errorHandler->raise();
             }
 
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
@@ -368,14 +368,14 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
           std::vector<std::shared_ptr<ShareableValue>> params;
           for (int i = 0; i < count; ++i) {
-            params.push_back(ShareableValue::adapt(rt, args[i], module));
+            params.push_back(ShareableValue::adapt(rt, args[i], runtimeManager));
           }
 
-          module->scheduler->scheduleOnUI([=] {
-            jsi::Runtime &rt = *module->runtime.get();
+          runtimeManager->scheduler->scheduleOnUI([=] {
+            jsi::Runtime &rt = *runtimeManager->runtime.get();
             auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
-            std::shared_ptr<jsi::Function> funPtr(module->workletsCache->getFunction(rt, frozenObject));
+            std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
 
             jsi::Value * args = new jsi::Value[params.size()];
             for (int i = 0; i < params.size(); ++i) {
@@ -393,8 +393,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 
             } catch(std::exception &e) {
               std::string str = e.what();
-              module->errorHandler->setError(str);
-              module->errorHandler->raise();
+              runtimeManager->errorHandler->setError(str);
+              runtimeManager->errorHandler->raise();
             } catch(...) {
               // TODO find out a way to get the error's message on hermes
               jsi::Value location = jsThis.getProperty(rt, "__location");
@@ -402,8 +402,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               if (location.isString()) {
                 str += "\nIn file: " + location.asString(rt).utf8(rt);
               }
-              module->errorHandler->setError(str);
-              module->errorHandler->raise();
+              runtimeManager->errorHandler->setError(str);
+              runtimeManager->errorHandler->raise();
             }
             rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
 

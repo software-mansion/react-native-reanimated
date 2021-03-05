@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ShareableValue.h"
-#include "NativeReanimatedModule.h"
+#include "RuntimeManager.h"
 #include <stdio.h>
 #include <jsi/jsi.h>
 
@@ -15,14 +15,14 @@ class Mapper : public std::enable_shared_from_this<Mapper> {
   friend MapperRegistry;
 private:
   unsigned long id;
-  NativeReanimatedModule *module;
+  RuntimeManager *runtimeManager;
   std::shared_ptr<jsi::Function> mapper;
   std::vector<std::shared_ptr<MutableValue>> inputs;
   std::vector<std::shared_ptr<MutableValue>> outputs;
   bool dirty = true;
 
 public:
-  Mapper(NativeReanimatedModule *module,
+  Mapper(RuntimeManager *runtimeManager,
          unsigned long id,
          std::shared_ptr<jsi::Function> mapper,
          std::vector<std::shared_ptr<MutableValue>> inputs,
