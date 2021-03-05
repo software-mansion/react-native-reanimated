@@ -143,9 +143,13 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 }
 
-void RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
+bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
   auto isUi = rt.global().getProperty(rt, "_UI");
   return isUi.isBool() && isUi.getBool();
 }
   
+bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
+  return !isUIRuntime(rt);
+}
+
 }

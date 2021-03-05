@@ -24,7 +24,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
 {
   friend ShareableValue;
   friend MutableValue;
-  
+
   public:
     NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                            std::shared_ptr<Scheduler> scheduler,
@@ -48,15 +48,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
     void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
 
     jsi::Value getViewProp(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &propName, const jsi::Value &callback) override;
-    
+
     void onRender(double timestampMs);
     void onEvent(std::string eventName, std::string eventAsString);
     bool isAnyHandlerWaitingForEvent(std::string eventName);
 
     void maybeRequestRender();
-
-    bool isUIRuntime(jsi::Runtime &rt);
-    bool isHostRuntime(jsi::Runtime &rt);
   public:
     std::unique_ptr<jsi::Runtime> runtime;
   private:

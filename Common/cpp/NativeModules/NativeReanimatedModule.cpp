@@ -84,16 +84,6 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       platformDepMethodsHolder.getCurrentTime);
 }
 
-bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
-{
-  return runtime.get() == &rt;
-}
-
-bool NativeReanimatedModule::isHostRuntime(jsi::Runtime &rt)
-{
-  return !isUIRuntime(rt);
-}
-
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
 {
   this->valueSetter = ShareableValue::adapt(rt, valueSetter, this);

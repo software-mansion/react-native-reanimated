@@ -2,27 +2,28 @@
 #include "SharedParent.h"
 #include "ShareableValue.h"
 #include "NativeReanimatedModule.h"
+#include "RuntimeDecorator.h"
 
 namespace reanimated {
 
 void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
   std::lock_guard<std::mutex> lock(readWriteMutex);
   value = ShareableValue::adapt(rt, newValue, module);
-  
+
   std::shared_ptr<MutableValue> thiz = shared_from_this();
   auto notifyListeners = [thiz] () {
     for (auto listener : thiz->listeners) {
       listener.second();
     }
   };
-  
-  if (module->isUIRuntime(rt)) {
+
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     notifyListeners();
   } else {
     module->scheduler->scheduleOnUI([notifyListeners] {
       notifyListeners();
     });
-  } 
+  }
 }
 
 jsi::Value MutableValue::getValue(jsi::Runtime &rt) {
@@ -72,7 +73,7 @@ jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return getValue(rt);
   }
 
-  if (module->isUIRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     // _value and _animation should be accessed from UI only
     if (propName == "_value") {
       return getValue(rt);
