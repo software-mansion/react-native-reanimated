@@ -7,12 +7,19 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
 
-#if RNVERSION >= 64
+#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
+#else
+#define RCTJSIExecutorRuntimeInstaller(x) x
 #endif
 
-#if RNVERSION < 63
+#if __has_include(<ReactCommon/CallInvoker.h>)
+#import <ReactCommon/CallInvoker.h>
+#define NEW_CALL_INVOKER
+#elif __has_include(<ReactCommon/BridgeJSCallInvoker.h>)
 #import <ReactCommon/BridgeJSCallInvoker.h>
+#else
+#error JS-CallInvoker import could not be found!
 #endif
 
 #if __has_include(<React/HermesExecutorFactory.h>)
@@ -47,24 +54,20 @@ typedef JSCExecutorFactory ExecutorFactory;
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-#if RNVERSION >= 63
-      auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+#ifdef NEW_CALL_INVOKER
+      auto callInvoker = bridge.jsCallInvoker;
 #else
       auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
-      auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
 #endif
+      auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
       runtime.global().setProperty(runtime,
                                    jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
                                    jsi::Object::createFromHostObject(runtime, reanimatedModule));
     }
   };
 
-#if RNVERSION >= 64
   // installs globals such as console, nativePerformanceNow, etc.
   return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
-#else
-  return std::make_unique<ExecutorFactory>(executor);
-#endif
 }
 
 @end
