@@ -3,7 +3,7 @@ import interpolate from '../derived/interpolate';
 import InternalAnimatedValue from './InternalAnimatedValue';
 import { Platform } from 'react-native';
 import { evaluateOnce } from '../derived/evaluateOnce';
-import ReanimatedModule from '../ReanimatedModule';
+import ReanimatedModule from '../../ReanimatedModule';
 import { val } from '../val';
 
 // Animated value wrapped with extra methods for omit cycle of dependencies

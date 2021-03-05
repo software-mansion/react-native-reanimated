@@ -1,6 +1,6 @@
-import interpolateNode,{
-  Extrapolate
-} from '../derived/interpolate';
+import interpolateNode, {
+  Extrapolate,
+} from '../reanimated1/derived/interpolate';
 
 function getVal(config) {
   'worklet';
@@ -114,7 +114,9 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 export function interpolate(x, input, output, type) {
   'worklet';
   if (x && x.__nodeID) {
-    console.warn(`interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`);
+    console.warn(
+      `interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`
+    );
     return interpolateNode.apply(undefined, arguments);
   }
 

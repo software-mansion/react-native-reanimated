@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, findNodeHandle } from 'react-native';
-import ReanimatedModule from './ReanimatedModule';
+import ReanimatedModule from '../ReanimatedModule';
 
 const TransitioningContext = React.createContext();
 

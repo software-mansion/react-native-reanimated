@@ -1,5 +1,5 @@
 import { Platform, findNodeHandle } from 'react-native';
-import ReanimatedModule from '../ReanimatedModule';
+import ReanimatedModule from '../../ReanimatedModule';
 
 import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';

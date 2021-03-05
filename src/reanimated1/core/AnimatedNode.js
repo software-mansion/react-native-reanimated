@@ -1,4 +1,4 @@
-import ReanimatedModule from '../ReanimatedModule';
+import ReanimatedModule from '../../ReanimatedModule';
 import { Platform } from 'react-native';
 
 const UPDATED_NODES = [];
