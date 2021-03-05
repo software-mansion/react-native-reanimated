@@ -92,7 +92,5 @@ Pod::Spec.new do |s|
     s.dependency 'React-callinvoker'
   end
 
-  s.dependency "#{folly_prefix}Folly"
-
 end
 
