@@ -1,4 +1,5 @@
 import invariant from 'fbjs/lib/invariant';
+import { NativeModules } from 'react-native';
 import { val } from '../val';
 import { adapt, createAnimatedBlock as block } from './AnimatedBlock';
 import { createAnimatedCall as call } from './AnimatedCall';
@@ -35,12 +36,15 @@ class AnimatedDebug extends AnimatedNode {
 
 export function createAnimatedDebug(message, value) {
   if (__DEV__) {
-    const runningInRemoteDebugger = typeof atob !== 'undefined';
     // hack to detect if app is running in remote debugger
     // https://stackoverflow.com/questions/39022216
+    const runningInRemoteDebugger = typeof atob !== 'undefined';
 
+    // read the executionEnvironment off of expo-constants without explicitly
+    // depending on the package
     const runningInExpoShell =
-      global.Expo && global.Expo.Constants.appOwnership !== 'standalone';
+      NativeModules.NativeUnimoduleProxy?.modulesConstants?.ExponentConstants
+        ?.executionEnvironment === 'storeClient';
 
     if (runningInRemoteDebugger || runningInExpoShell) {
       // When running in expo or remote debugger we use JS console.log to output variables
