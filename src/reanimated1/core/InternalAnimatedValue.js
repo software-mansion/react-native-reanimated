@@ -1,6 +1,6 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
-import ReanimatedModule from '../ReanimatedModule';
+import ReanimatedModule from '../../ReanimatedModule';
 import invariant from 'fbjs/lib/invariant';
 
 function sanitizeValue(value) {
