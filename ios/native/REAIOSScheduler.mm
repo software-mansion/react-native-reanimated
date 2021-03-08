@@ -1,4 +1,5 @@
 #include "REAIOSScheduler.h"
+#include "RuntimeManager.h"
 
 namespace reanimated {
 
@@ -25,10 +26,10 @@ void REAIOSScheduler::scheduleOnUI(std::function<void()> job) {
     return;
   }
 
-  __block std::weak_ptr<NativeReanimatedModule> blockModule = runtimeManager;
+  __block std::weak_ptr<RuntimeManager> blockRuntimeManager = runtimeManager;
 
   dispatch_async(dispatch_get_main_queue(), ^{
-    if (blockModule.lock()) triggerUI();
+    if (blockRuntimeManager.lock()) triggerUI();
   });
 }
 
