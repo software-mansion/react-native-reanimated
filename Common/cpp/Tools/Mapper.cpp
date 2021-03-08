@@ -5,19 +5,19 @@
 
 namespace reanimated {
 
-Mapper::Mapper(RuntimeManager *runtimeManager,
+Mapper::Mapper(NativeReanimatedModule *module,
                unsigned long id,
                std::shared_ptr<jsi::Function> mapper,
                std::vector<std::shared_ptr<MutableValue>> inputs,
                std::vector<std::shared_ptr<MutableValue>> outputs):
 id(id),
-runtimeManager(runtimeManager),
+module(module),
 mapper(mapper),
 inputs(inputs),
 outputs(outputs) {
-  auto markDirty = [this, runtimeManager]() {
+  auto markDirty = [this, module]() {
     this->dirty = true;
-    runtimeManager->maybeRequestRender();
+    module->maybeRequestRender();
   };
   for (auto input : inputs) {
     input->addListener(id, markDirty);
