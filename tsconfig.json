@@ -19,5 +19,9 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "lib/reanimated2/"
   },
-  "include": ["src/reanimated2/**/*.ts", "react-native-reanimated.d.ts"]
+  "include": [
+    "src/reanimated2/**/*.ts",
+    "react-native-reanimated.d.ts",
+    "react-native-reanimated-tests.tsx"
+  ]
 }
