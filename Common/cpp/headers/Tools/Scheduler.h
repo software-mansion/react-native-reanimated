@@ -6,7 +6,6 @@
 #include <condition_variable>
 #include <functional>
 #include <ReactCommon/CallInvoker.h>
-#include "RuntimeManager.h"
 
 namespace reanimated
 {
@@ -74,7 +73,7 @@ class Queue
   std::condition_variable cond_;
 };
 
-class NativeReanimatedModule;
+class RuntimeManager;
 
 class Scheduler {
   public:
