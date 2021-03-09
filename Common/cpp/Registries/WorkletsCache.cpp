@@ -7,7 +7,7 @@ using namespace facebook;
 namespace reanimated
 {
 
-std::unordered_map<long long, std::shared_ptr<jsi::Function>> worklets;
+static std::unordered_map<long long, std::shared_ptr<jsi::Function>> worklets;
 
 jsi::Value eval(jsi::Runtime &rt, const char *code) {
   return rt.global().getPropertyAsFunction(rt, "eval").call(rt, code);
