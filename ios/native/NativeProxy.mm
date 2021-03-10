@@ -111,7 +111,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       return val;
   };
 
-  std::shared_ptr<Scheduler> scheduler(new REAIOSScheduler(jsInvoker));
+  std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
 
 #if __has_include(<hermes/hermes.h>)
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
