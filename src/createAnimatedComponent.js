@@ -18,7 +18,6 @@ const NODE_MAPPING = new Map();
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
-  console.log('mleko');
 }
 
 function dummyListener() {
@@ -302,7 +301,6 @@ export default function createAnimatedComponent(Component) {
         }
       }
       this._viewTag = viewTag;
-      // console.log(viewTag, styles)
 
       styles.forEach((style) => {
         if (style?.viewDescriptors) {
