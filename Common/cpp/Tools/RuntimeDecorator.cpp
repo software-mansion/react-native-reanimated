@@ -5,23 +5,17 @@
 
 namespace reanimated {
 
-void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
-                                         UpdaterFunction updater,
-                                         RequestFrameFunction requestFrame,
-                                         ScrollToFunction scrollTo,
-                                         MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime) {
-  rt.global().setProperty(rt, "_UI", jsi::Value(true));
+void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt) {
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   
   jsi::Object dummyGlobal(rt);
-  auto dummyFunction = [requestFrame](
-     jsi::Runtime &rt,
-     const jsi::Value &thisValue,
-     const jsi::Value *args,
-     size_t count
-     ) -> jsi::Value {
-   return jsi::Value::undefined();
+  auto dummyFunction = [](
+                                      jsi::Runtime &rt,
+                                      const jsi::Value &thisValue,
+                                      const jsi::Value *args,
+                                      size_t count
+                                      ) -> jsi::Value {
+    return jsi::Value::undefined();
   };
   jsi::Function __reanimatedWorkletInit = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction);
   
@@ -29,13 +23,13 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   rt.global().setProperty(rt, "global", dummyGlobal);
   
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
-
+  
   auto callback = [](
-      jsi::Runtime &rt,
-      const jsi::Value &thisValue,
-      const jsi::Value *args,
-      size_t count
-      ) -> jsi::Value {
+                     jsi::Runtime &rt,
+                     const jsi::Value &thisValue,
+                     const jsi::Value *args,
+                     size_t count
+                     ) -> jsi::Value {
     const jsi::Value *value = &args[0];
     if (value->isString()) {
       Logger::log(value->getString(rt).utf8(rt).c_str());
@@ -47,10 +41,31 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
       Logger::log("unsupported value type");
     }
     return jsi::Value::undefined();
-    };
+  };
   jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
-	rt.global().setProperty(rt, "_log", log);
+  rt.global().setProperty(rt, "_log", log);
+  
+  auto setGlobalConsole = [](
+                             jsi::Runtime &rt,
+                             const jsi::Value &thisValue,
+                             const jsi::Value *args,
+                             size_t count
+                             ) -> jsi::Value {
+    rt.global().setProperty(rt, "console", args[0]);
+    return jsi::Value::undefined();
+  };
+  rt.global().setProperty(rt, "_setGlobalConsole", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_setGlobalConsole"), 1, setGlobalConsole));
+}
 
+void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
+                                         UpdaterFunction updater,
+                                         RequestFrameFunction requestFrame,
+                                         ScrollToFunction scrollTo,
+                                         MeasuringFunction measure,
+                                         TimeProviderFunction getCurrentTime) {
+  RuntimeDecorator::decorateRuntime(rt);
+  
+  rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
   auto clb = [updater](
       jsi::Runtime &rt,
@@ -115,18 +130,6 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
   rt.global().setProperty(rt, "_measure", measureFunction);
-  
-  auto clb5 = [](
-      jsi::Runtime &rt,
-      const jsi::Value &thisValue,
-      const jsi::Value *args,
-      size_t count
-      ) -> jsi::Value {
-    rt.global().setProperty(rt, "console", args[0]);
-    return jsi::Value::undefined();
-  };
-  jsi::Value setGlobalConsole = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_setGlobalConsole"), 1, clb5);
-  rt.global().setProperty(rt, "_setGlobalConsole", setGlobalConsole);
   
   auto clb6 = [getCurrentTime](
       jsi::Runtime &rt,
