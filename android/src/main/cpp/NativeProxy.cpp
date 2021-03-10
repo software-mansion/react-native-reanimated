@@ -92,7 +92,7 @@ void NativeProxy::installJSIBindings()
 
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 
-  std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
+  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
