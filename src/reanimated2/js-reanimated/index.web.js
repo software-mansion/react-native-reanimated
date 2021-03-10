@@ -5,7 +5,7 @@ const reanimatedJS = new JSReanimated();
 global._frameTimestamp = null;
 
 export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
-  if (viewRef.current && viewRef.current._component) {
+  if (viewRef?._component) {
     const [rawStyles] = Object.keys(updates).reduce(
       (acc, key) => {
         const value = updates[key];
