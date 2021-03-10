@@ -1,5 +1,5 @@
 /* global _WORKLET */
-import EasingNode from '../Easing';
+import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
 
 /**

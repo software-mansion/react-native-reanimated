@@ -1,4 +1,6 @@
-import interpolateNode, { Extrapolate } from '../derived/interpolate';
+import interpolateNode, {
+  Extrapolate,
+} from '../reanimated1/derived/interpolate';
 
 function getVal(config) {
   'worklet';

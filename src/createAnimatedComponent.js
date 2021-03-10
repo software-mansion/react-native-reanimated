@@ -2,10 +2,10 @@ import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
-import AnimatedEvent from './core/AnimatedEvent';
-import AnimatedNode from './core/AnimatedNode';
-import AnimatedValue from './core/AnimatedValue';
-import { createOrReusePropsNode } from './core/AnimatedProps';
+import AnimatedEvent from './reanimated1/core/AnimatedEvent';
+import AnimatedNode from './reanimated1/core/AnimatedNode';
+import AnimatedValue from './reanimated1/core/AnimatedValue';
+import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 

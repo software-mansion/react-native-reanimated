@@ -1,5 +1,5 @@
-import interpolate from '../src/derived/interpolate';
-import AnimatedValue from '../src/core/AnimatedValue';
+import interpolate from '../src/reanimated1/derived/interpolate';
+import AnimatedValue from '../src/reanimated1/core/AnimatedValue';
 
 jest.mock('../src/ReanimatedEventEmitter');
 jest.mock('../src/ReanimatedModule');

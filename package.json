@@ -26,6 +26,7 @@
     "android/",
     "ios/",
     "!ios/build/",
+    "!android/build/",
     "RNReanimated.podspec",
     "README.md",
     "react-native-reanimated.d.ts",

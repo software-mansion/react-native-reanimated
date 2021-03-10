@@ -11,7 +11,7 @@
 import { Platform } from 'react-native';
 import { makeRemote, makeShareable } from './core';
 import { interpolate } from './interpolation';
-import { Extrapolate } from '../derived';
+import { Extrapolate } from '../reanimated1/derived';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
