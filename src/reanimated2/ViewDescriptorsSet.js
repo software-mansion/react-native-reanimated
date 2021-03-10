@@ -55,7 +55,6 @@ export function makeViewDescriptorsSet() {
       },
       rebuildWorkletViewDescriptors: (workletViewDescriptors) => {
         data.workletViewDescriptors = workletViewDescriptors;
-        data.workletViewDescriptors.value = data.items;
       },
     };
     ref.current = data;

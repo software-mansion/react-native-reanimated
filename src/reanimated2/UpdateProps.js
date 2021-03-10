@@ -63,7 +63,6 @@ export const updateProps = (
       _maybeViewRef
     );
   };
-  // console.log(viewDescriptors.value.length, updates)
   if (Platform.OS !== 'web') {
     viewDescriptors.value.forEach((item, _) => {
       updateSingleProps(item, updates, null);
