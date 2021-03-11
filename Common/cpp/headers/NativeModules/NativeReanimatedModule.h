@@ -3,7 +3,6 @@
 #include "NativeReanimatedModuleSpec.h"
 #include "Scheduler.h"
 #include "ErrorHandler.h"
-#include "WorkletsCache.h"
 #include "RuntimeDecorator.h"
 #include "PlatformDepMethodsHolder.h"
 #include <unistd.h>
@@ -63,8 +62,6 @@ private:
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
-public:
-  std::shared_ptr<WorkletsCache> workletsCache;
 };
 
 } // namespace reanimated

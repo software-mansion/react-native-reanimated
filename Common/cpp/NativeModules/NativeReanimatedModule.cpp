@@ -67,8 +67,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                   mapperRegistry(new MapperRegistry()),
                                                   eventHandlerRegistry(new EventHandlerRegistry()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
-                                                  propObtainer(propObtainer),
-                                                  workletsCache(new WorkletsCache())
+                                                  propObtainer(propObtainer)
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
