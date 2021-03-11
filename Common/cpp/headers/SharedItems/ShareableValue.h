@@ -30,14 +30,14 @@ private:
   std::weak_ptr<jsi::Value> remoteValue;
   bool containsHostFunction = false;
 
-  ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s): StoreUser(s), runtimeManager(runtimeManager) {}
-
   jsi::Value toJSValue(jsi::Runtime &rt);
   jsi::Object createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host);
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
 
 public:
+  ShareableValue(RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s): StoreUser(s), runtimeManager(runtimeManager) {}
+  
   ValueType type = ValueType::UndefinedType;
   static std::shared_ptr<ShareableValue> adapt(
     jsi::Runtime &rt,
