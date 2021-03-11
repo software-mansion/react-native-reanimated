@@ -6,7 +6,6 @@
 #include "RemoteObject.h"
 #include "FrozenObject.h"
 #include "RuntimeDecorator.h"
-#include "WorkletsCache.h"
 
 namespace reanimated {
 
@@ -320,7 +319,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         // when running on UI thread we prep a function
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*runtimeManager->runtime));
-        std::shared_ptr<jsi::Function> funPtr(WorkletsCache::getFunction(rt, frozenObject));
+        std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
         auto name = funPtr->getProperty(rt, "name").asString(rt).utf8(rt);
 
         auto clb = [=](
@@ -376,7 +375,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             jsi::Runtime &rt = *runtimeManager->runtime.get();
             auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
             auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
-            std::shared_ptr<jsi::Function> funPtr(WorkletsCache::getFunction(rt, frozenObject));
+            std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
 
             jsi::Value * args = new jsi::Value[params.size()];
             for (int i = 0; i < params.size(); ++i) {
