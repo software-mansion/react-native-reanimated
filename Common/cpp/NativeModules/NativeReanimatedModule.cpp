@@ -64,8 +64,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                PlatformDepMethodsHolder platformDepMethodsHolder) :
                                                   NativeReanimatedModuleSpec(jsInvoker),
                                                   RuntimeManager(std::move(rt), errorHandler, scheduler),
-                                                  mapperRegistry(new MapperRegistry()),
-                                                  eventHandlerRegistry(new EventHandlerRegistry()),
+                                                  mapperRegistry(std::make_shared<MapperRegistry>()),
+                                                  eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
                                                   propObtainer(propObtainer)
 {
@@ -162,7 +162,7 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
   const int viewTagInt = (int)viewTag.asNumber();
   std::string propNameStr = propName.asString(rt).utf8(rt);
   jsi::Function fun = callback.getObject(rt).asFunction(rt);
-  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+  std::shared_ptr<jsi::Function> funPtr = std::make_shared<jsi::Function>(std::move(fun));
 
   scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
     const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);

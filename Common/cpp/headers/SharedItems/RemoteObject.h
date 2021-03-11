@@ -15,7 +15,7 @@ private:
 public:
   void maybeInitializeOnUIRuntime(jsi::Runtime &rt);
   RemoteObject(jsi::Runtime &rt, jsi::Object &object, RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s):
-     StoreUser(s), initializer(new FrozenObject(rt, object, runtimeManager)) {}
+     StoreUser(s), initializer(std::make_shared<FrozenObject>(FrozenObject(rt, object, runtimeManager))) {}
   void set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name);
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt);

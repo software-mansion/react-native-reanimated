@@ -22,8 +22,7 @@ std::shared_ptr<jsi::Function> WorkletsCache::getFunction(jsi::Runtime &rt, std:
       rt,
       ValueWrapper::asString(frozenObj->map["asString"]->valueContainer)
     );
-    std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
-    worklets[workletHash] = funPtr;
+    worklets[workletHash] = std::make_shared<jsi::Function>(std::move(func));
   }
   return worklets[workletHash];
 }

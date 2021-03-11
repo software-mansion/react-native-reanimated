@@ -160,7 +160,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
 }
 
 std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, RuntimeManager *runtimeManager, ValueType valueType) {
-  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(runtimeManager, runtimeManager->scheduler));
+  auto sv = std::make_shared<ShareableValue>(runtimeManager, runtimeManager->scheduler);
   sv->adapt(rt, value, valueType);
   return sv;
 }
