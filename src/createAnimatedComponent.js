@@ -314,7 +314,7 @@ export default function createAnimatedComponent(Component) {
              */
             this.animatedStyle.value = {
               ...this.animatedStyle.value,
-              ...style.initial,
+              ...style.initial.value,
             };
             style.animatedStyle.current = this.animatedStyle;
           }
@@ -408,7 +408,7 @@ export default function createAnimatedComponent(Component) {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              return style.initial;
+              return style.initial.value;
             } else {
               return style;
             }
@@ -417,8 +417,8 @@ export default function createAnimatedComponent(Component) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial).forEach((key) => {
-            props[key] = value.initial[key];
+          Object.keys(value.initial.value).forEach((key) => {
+            props[key] = value.initial.value[key];
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components

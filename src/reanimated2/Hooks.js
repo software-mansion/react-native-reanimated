@@ -437,12 +437,14 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   adaptersHash && dependencies.push(adaptersHash);
 
   const viewDescriptors = makeViewDescriptorsSet();
-  const initial = initialUpdaterRun(updater);
   if (initRef.current === null) {
-    validateAnimatedStyles(initial);
+    const initialStyle = initialUpdaterRun(updater);
+    validateAnimatedStyles(initialStyle);
     initRef.current = {
-      initial,
-      remoteState: makeRemote({ last: initial }),
+      initial: {
+        value: null,
+      },
+      remoteState: makeRemote({ last: initialStyle }),
       workletViewDescriptors: makeMutable([]),
     };
     viewDescriptors.rebuildWorkletViewDescriptors(
@@ -450,8 +452,9 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     );
   }
   dependencies.push(initRef.current.workletViewDescriptors.value);
-  const { remoteState, workletViewDescriptors } = initRef.current;
+  const { initial, remoteState, workletViewDescriptors } = initRef.current;
   const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+  initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
     if (process.env.JEST_WORKER_ID) {
