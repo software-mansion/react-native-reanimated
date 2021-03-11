@@ -27,8 +27,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec, public Runtime
   friend MutableValue;
 
 public:
-  static NativeReanimatedModule* instance;
-
   NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                          std::shared_ptr<Scheduler> scheduler,
                          std::unique_ptr<jsi::Runtime> rt,
