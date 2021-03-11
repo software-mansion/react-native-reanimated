@@ -65,6 +65,8 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          TimeProviderFunction getCurrentTime) {
   RuntimeDecorator::decorateRuntime(rt);
   
+  // This property is not really used, it's just for debugging purposes.
+  // To find out if a Runtime supports adapted worklets, use the _WORKLET global.
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
   auto clb = [updater](
@@ -146,13 +148,13 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 }
 
-bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
-  auto isUi = rt.global().getProperty(rt, "_UI");
+bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
+  auto isUi = rt.global().getProperty(rt, "_WORKLET");
   return isUi.isBool() && isUi.getBool();
 }
   
 bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
-  return !isUIRuntime(rt);
+  return !isWorkletRuntime(rt);
 }
 
 }

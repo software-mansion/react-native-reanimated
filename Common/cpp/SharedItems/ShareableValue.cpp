@@ -40,7 +40,7 @@ void freeze(jsi::Runtime &rt, jsi::Object &obj) {
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
-  if (RuntimeDecorator::isUIRuntime(rt)) {
+  if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
       remoteValue = getWeakRef(rt);
     }
@@ -168,7 +168,7 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
 
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
-  if (RuntimeDecorator::isUIRuntime(rt)) {
+  if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
       auto ref = getWeakRef(rt);
       remoteValue = ref;
@@ -230,7 +230,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::RemoteObjectType: {
       auto& remoteObject = ValueWrapper::asRemoteObject(valueContainer);
-      if (RuntimeDecorator::isUIRuntime(rt)) {
+      if (RuntimeDecorator::isWorkletRuntime(rt)) {
         remoteObject->maybeInitializeOnUIRuntime(rt);
       }
       return createHost(rt, remoteObject);
@@ -316,7 +316,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::WorkletFunctionType: {
       auto runtimeManager = this->runtimeManager;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
-      if (RuntimeDecorator::isUIRuntime(rt)) {
+      if (RuntimeDecorator::isWorkletRuntime(rt)) {
         // when running on UI thread we prep a function
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*runtimeManager->runtime));

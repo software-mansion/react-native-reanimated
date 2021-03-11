@@ -20,7 +20,7 @@ public:
                                 MeasuringFunction measure,
                                 TimeProviderFunction getCurrentTime);
   
-  static bool isUIRuntime(jsi::Runtime &rt);
+  static bool isWorkletRuntime(jsi::Runtime &rt);
   static bool isReactRuntime(jsi::Runtime &rt);
 };
 
