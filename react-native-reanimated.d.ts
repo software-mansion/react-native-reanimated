@@ -198,7 +198,7 @@ declare module 'react-native-reanimated' {
       ? T
       : never;
     export type AdaptTransforms<T> = {
-      [P in keyof T]: Adaptable<T[P] extends string ? number | string : T[P]>;
+      [P in keyof T]: Adaptable<T[P]>;
     };
     export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
@@ -208,7 +208,7 @@ declare module 'react-native-reanimated' {
         : S[K] extends ReadonlyArray<any>
         ? ReadonlyArray<AnimateStyle<S[K][0]>>
         : S[K] extends object
-        ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
+        ? AnimateStyle<S[K]>
         : S[K] extends ColorValue | undefined
         ? S[K] | number
         :

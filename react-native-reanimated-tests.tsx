@@ -253,11 +253,32 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
+      color: "red",
+      backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
         },
+        {
+          rotate: `${Math.PI}rad`
+        }
       ],
+    };
+  });
+  // @ts-expect-error
+  const style2 = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: Math.PI
+        }
+      ],
+    };
+  });
+  // @ts-expect-error
+  const style3 = useAnimatedStyle(() => {
+    return {
+      color: {}
     };
   });
   return (
