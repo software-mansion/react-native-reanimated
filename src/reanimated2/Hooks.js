@@ -10,25 +10,25 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps from './UpdateProps';
-import { initialUpdaterRun } from './animations';
+import updateProps, { updatePropsJestWrapper } from './UpdateProps';
+import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
-export function useSharedValue(init, shouldRebuild = true) {
+export function useSharedValue(init) {
   const ref = useRef(null);
   if (ref.current === null) {
-    ref.current = {
-      mutable: makeMutable(init),
-      last: init,
-    };
-  } else if (init !== ref.current.last && shouldRebuild) {
-    ref.current.last = init;
-    ref.current.mutable.value = init;
+    ref.current = makeMutable(init);
   }
 
-  return ref.current.mutable;
+  useEffect(() => {
+    return () => {
+      cancelAnimation(ref.current);
+    };
+  }, []);
+
+  return ref.current;
 }
 
 export function useEvent(handler, eventNames = [], rebuild = false) {
@@ -71,10 +71,10 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
             // previously it was a shared value
             value = lastValue.value;
           } else if (lastValue.onFrame !== undefined) {
-            if (lastAnimation?.current) {
+            if (lastAnimation?.current !== undefined) {
               // it was an animation before, copy its state
               value = lastAnimation.current;
-            } else if (lastValue?.current) {
+            } else if (lastValue?.current !== undefined) {
               // it was initialized
               value = lastValue.current;
             }
@@ -104,28 +104,36 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   return prepareAnimation(animatedProp, lastAnimation, lastValue);
 }
 
-function runAnimations(animation, timestamp, key, result) {
+function runAnimations(animation, timestamp, key, result, animationsActive) {
   'worklet';
-  function runAnimations(animation, timestamp, key, result) {
+  function runAnimations(animation, timestamp, key, result, animationsActive) {
+    if (!animationsActive.value) {
+      return true;
+    }
     if (Array.isArray(animation)) {
       result[key] = [];
       let allFinished = true;
       animation.forEach((entry, index) => {
-        if (!runAnimations(entry, timestamp, index, result[key])) {
+        if (
+          !runAnimations(entry, timestamp, index, result[key], animationsActive)
+        ) {
           allFinished = false;
         }
       });
       return allFinished;
     } else if (typeof animation === 'object' && animation.onFrame) {
-      if (animation.callStart) {
-        animation.callStart(timestamp);
-        animation.callStart = null;
-      }
-      const finished = animation.onFrame(animation, timestamp);
-      animation.timestamp = timestamp;
-      if (finished) {
-        animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
+      let finished = true;
+      if (!animation.finished) {
+        if (animation.callStart) {
+          animation.callStart(timestamp);
+          animation.callStart = null;
+        }
+        finished = animation.onFrame(animation, timestamp);
+        animation.timestamp = timestamp;
+        if (finished) {
+          animation.finished = true;
+          animation.callback && animation.callback(true /* finished */);
+        }
       }
       result[key] = animation.current;
       return finished;
@@ -133,7 +141,15 @@ function runAnimations(animation, timestamp, key, result) {
       result[key] = {};
       let allFinished = true;
       Object.keys(animation).forEach((k) => {
-        if (!runAnimations(animation[k], timestamp, k, result[key])) {
+        if (
+          !runAnimations(
+            animation[k],
+            timestamp,
+            k,
+            result[key],
+            animationsActive
+          )
+        ) {
           allFinished = false;
         }
       });
@@ -143,7 +159,7 @@ function runAnimations(animation, timestamp, key, result) {
       return true;
     }
   }
-  return runAnimations(animation, timestamp, key, result);
+  return runAnimations(animation, timestamp, key, result, animationsActive);
 }
 
 // TODO: recirsive worklets aren't supported yet
@@ -191,7 +207,27 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
-function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
+const validateAnimatedStyles = (styles) => {
+  'worklet';
+  if (typeof styles !== 'object') {
+    throw new Error(
+      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+    );
+  } else if (Array.isArray(styles)) {
+    throw new Error(
+      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    );
+  }
+};
+
+function styleUpdater(
+  viewDescriptor,
+  updater,
+  state,
+  maybeViewRef,
+  adapters,
+  animationsActive
+) {
   'worklet';
   const animations = state.animations || {};
   const newValues = updater() || {};
@@ -228,7 +264,8 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
         animations[propName],
         timestamp,
         propName,
-        updates
+        updates,
+        animationsActive
       );
       if (finished) {
         last[propName] = updates[propName];
@@ -239,7 +276,7 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
     });
 
     if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef);
+      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
     }
 
     if (!allFinished) {
@@ -270,25 +307,138 @@ function styleUpdater(viewDescriptor, updater, state, maybeViewRef) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
   }
 }
 
-export function useAnimatedStyle(updater, dependencies) {
+function jestStyleUpdater(
+  viewDescriptor,
+  updater,
+  state,
+  maybeViewRef,
+  adapters,
+  animationsActive,
+  animatedStyle
+) {
+  'worklet';
+  const animations = state.animations || {};
+  const newValues = updater() || {};
+  const oldValues = state.last;
+
+  // extract animated props
+  let hasAnimations = false;
+  Object.keys(animations).forEach((key) => {
+    const value = newValues[key];
+    if (!isAnimated(value)) {
+      delete animations[key];
+    }
+  });
+  Object.keys(newValues).forEach((key) => {
+    const value = newValues[key];
+    if (isAnimated(value)) {
+      prepareAnimation(value, animations[key], oldValues[key]);
+      animations[key] = value;
+      hasAnimations = true;
+    }
+  });
+
+  function frame(timestamp) {
+    const { animations, last, isAnimationCancelled } = state;
+    if (isAnimationCancelled) {
+      state.isAnimationRunning = false;
+      return;
+    }
+
+    const updates = {};
+    let allFinished = true;
+    Object.keys(animations).forEach((propName) => {
+      const finished = runAnimations(
+        animations[propName],
+        timestamp,
+        propName,
+        updates,
+        animationsActive
+      );
+      if (finished) {
+        last[propName] = updates[propName];
+        delete animations[propName];
+      } else {
+        allFinished = false;
+      }
+    });
+
+    if (Object.keys(updates).length) {
+      updatePropsJestWrapper(
+        viewDescriptor,
+        updates,
+        maybeViewRef,
+        adapters,
+        animatedStyle
+      );
+    }
+
+    if (!allFinished) {
+      requestFrame(frame);
+    } else {
+      state.isAnimationRunning = false;
+    }
+  }
+
+  if (hasAnimations) {
+    state.animations = animations;
+    if (!state.isAnimationRunning) {
+      state.isAnimationCancelled = false;
+      state.isAnimationRunning = true;
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
+    }
+  } else {
+    state.isAnimationCancelled = true;
+    state.animations = {};
+  }
+
+  // calculate diff
+  const diff = styleDiff(oldValues, newValues);
+  state.last = Object.assign({}, oldValues, newValues);
+
+  if (Object.keys(diff).length !== 0) {
+    updatePropsJestWrapper(
+      viewDescriptor,
+      diff,
+      maybeViewRef,
+      adapters,
+      animatedStyle
+    );
+  }
+}
+
+export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
+  adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
+  const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
+  const animationsActive = useSharedValue(true);
+  let animatedStyle;
+  if (process.env.JEST_WORKER_ID) {
+    animatedStyle = useRef({});
+  }
 
   // build dependencies
-  if (dependencies === undefined) {
+  if (!dependencies) {
     dependencies = [...inputs, updater.__workletHash];
   } else {
     dependencies.push(updater.__workletHash);
   }
+  adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
     const initial = initialUpdaterRun(updater);
+    validateAnimatedStyles(initial);
     initRef.current = {
       initial,
       remoteState: makeRemote({ last: initial }),
@@ -299,10 +449,33 @@ export function useAnimatedStyle(updater, dependencies) {
   const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
 
   useEffect(() => {
-    const fun = () => {
-      'worklet';
-      styleUpdater(viewDescriptor, updater, remoteState, maybeViewRef);
-    };
+    let fun;
+    if (process.env.JEST_WORKER_ID) {
+      fun = () => {
+        'worklet';
+        jestStyleUpdater(
+          viewDescriptor,
+          updater,
+          remoteState,
+          maybeViewRef,
+          adapters,
+          animationsActive,
+          animatedStyle
+        );
+      };
+    } else {
+      fun = () => {
+        'worklet';
+        styleUpdater(
+          viewDescriptor,
+          updater,
+          remoteState,
+          maybeViewRef,
+          adapters,
+          animationsActive
+        );
+      };
+    }
     const mapperId = startMapper(fun, inputs, []);
     return () => {
       stopMapper(mapperId);
@@ -310,9 +483,11 @@ export function useAnimatedStyle(updater, dependencies) {
   }, dependencies);
 
   useEffect(() => {
+    animationsActive.value = true;
     return () => {
       initRef.current = null;
       viewRef.current = null;
+      animationsActive.value = false;
     };
   }, []);
 
@@ -332,11 +507,11 @@ export function useAnimatedStyle(updater, dependencies) {
     );
   }
 
-  return {
-    viewDescriptor,
-    initial,
-    viewRef,
-  };
+  if (process.env.JEST_WORKER_ID) {
+    return { viewDescriptor, initial, viewRef, animatedStyle };
+  } else {
+    return { viewDescriptor, initial, viewRef };
+  }
 }
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
@@ -393,7 +568,7 @@ function buildWorkletsHash(handlers) {
 
 // builds dependencies array for gesture handlers
 function buildDependencies(dependencies, handlers) {
-  if (dependencies === undefined) {
+  if (!dependencies) {
     dependencies = Object.keys(handlers).map((handlerKey) => {
       const handler = handlers[handlerKey];
       return {
@@ -417,10 +592,15 @@ function areDependenciesEqual(nextDeps, prevDeps) {
   var objectIs = typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(nextDeps, prevDeps) {
-    if (prevDeps === null) return !1;
-    for (var i = 0; i < prevDeps.length && i < nextDeps.length; i++)
-      if (!objectIs(nextDeps[i], prevDeps[i])) return !1;
-    return !0;
+    if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
+      return false;
+    }
+    for (let i = 0; i < prevDeps.length; ++i) {
+      if (!objectIs(nextDeps[i], prevDeps[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   return areHookInputsEqual(nextDeps, prevDeps);
@@ -587,7 +767,7 @@ export function useAnimatedRef() {
   const ref = useRef(null);
 
   if (!ref.current) {
-    const fun = function(component) {
+    const fun = function (component) {
       'worklet';
       // enters when ref is set by attaching to a component
       if (component) {
@@ -615,6 +795,7 @@ export function useAnimatedRef() {
  * the second one can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
  */
 export function useAnimatedReaction(prepare, react, dependencies) {
+  const previous = useSharedValue(null);
   if (dependencies === undefined) {
     dependencies = [
       Object.values(prepare._closure),
@@ -630,7 +811,8 @@ export function useAnimatedReaction(prepare, react, dependencies) {
     const fun = () => {
       'worklet';
       const input = prepare();
-      react(input);
+      react(input, previous.value);
+      previous.value = input;
     };
     const mapperId = startMapper(fun, Object.values(prepare._closure), []);
     return () => {

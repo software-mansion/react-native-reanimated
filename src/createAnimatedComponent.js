@@ -2,10 +2,10 @@ import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
-import AnimatedEvent from './core/AnimatedEvent';
-import AnimatedNode from './core/AnimatedNode';
-import AnimatedValue from './core/AnimatedValue';
-import { createOrReusePropsNode } from './core/AnimatedProps';
+import AnimatedEvent from './reanimated1/core/AnimatedEvent';
+import AnimatedNode from './reanimated1/core/AnimatedNode';
+import AnimatedValue from './reanimated1/core/AnimatedValue';
+import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 
@@ -71,6 +71,9 @@ export default function createAnimatedComponent(Component) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        this.animatedStyle = { value: {} };
+      }
     }
 
     componentWillUnmount() {
@@ -229,7 +232,8 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      this._component.setNativeProps(props);
+      // eslint-disable-next-line no-unused-expressions
+      this._component.setNativeProps?.(props);
     }
 
     _attachPropUpdater() {
@@ -250,16 +254,26 @@ export default function createAnimatedComponent(Component) {
         viewTag = findNodeHandle(this);
         viewName = null;
       } else {
+        // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
+        if (!hostInstance) {
+          throw new Error(
+            'Cannot find host instance for this component. Maybe it renders nothing?'
+          );
+        }
         // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
-        viewTag = hostInstance._nativeTag;
+        viewTag = hostInstance?._nativeTag;
         /**
          * RN uses viewConfig for components for storing different properties of the component(example: https://github.com/facebook/react-native/blob/master/Libraries/Components/ScrollView/ScrollViewViewConfig.js#L16).
          * The name we're looking for is in the field named uiViewClassName.
          */
-        viewName = hostInstance.viewConfig?.uiViewClassName;
+        viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (this._hasReanimated2Props(styles)) {
+        if (
+          hostInstance &&
+          this._hasReanimated2Props(styles) &&
+          hostInstance.viewConfig
+        ) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
@@ -267,6 +281,19 @@ export default function createAnimatedComponent(Component) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
+          if (process.env.JEST_WORKER_ID) {
+            /**
+             * We need to connect Jest's TestObject instance whose contains just props object
+             * with the updateProps() function where we update the properties of the component.
+             * We can't update props object directly because TestObject contains a copy of props - look at render function:
+             * const props = this._filterNonAnimatedProps(this.props);
+             */
+            this.animatedStyle.value = {
+              ...this.animatedStyle.value,
+              ...style.initial,
+            };
+            style.animatedStyle.current = this.animatedStyle;
+          }
         }
       });
       // attach animatedProps property
@@ -284,6 +311,7 @@ export default function createAnimatedComponent(Component) {
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
+          // eslint-disable-next-line no-prototype-builtins
           if (style?.hasOwnProperty('viewDescriptor')) {
             return true;
           }
@@ -401,6 +429,10 @@ export default function createAnimatedComponent(Component) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
+      if (process.env.JEST_WORKER_ID) {
+        props.animatedStyle = this.animatedStyle;
+      }
+
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
@@ -411,9 +443,9 @@ export default function createAnimatedComponent(Component) {
     }
   }
 
-  AnimatedComponent.displayName = `AnimatedComponent(${Component.displayName ||
-    Component.name ||
-    'Component'})`;
+  AnimatedComponent.displayName = `AnimatedComponent(${
+    Component.displayName || Component.name || 'Component'
+  })`;
 
   return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
     return (

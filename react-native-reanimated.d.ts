@@ -2,7 +2,15 @@
 // TypeScript Version: 2.8
 
 declare module 'react-native-reanimated' {
-  import { ComponentClass, ReactNode, Component, RefObject, ComponentType } from 'react';
+  import {
+    ComponentClass,
+    ReactNode,
+    Component,
+    RefObject,
+    ComponentType,
+    ComponentProps,
+    FunctionComponent,
+  } from 'react';
   import {
     ViewProps,
     TextProps,
@@ -21,7 +29,7 @@ declare module 'react-native-reanimated' {
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
-    OpaqueColorValue
+    OpaqueColorValue,
   } from 'react-native';
   import {
     GestureHandlerGestureEvent,
@@ -54,10 +62,14 @@ declare module 'react-native-reanimated' {
       IDENTITY = 'identity',
     }
 
+    type ExtrapolateParameter =
+      | Extrapolate
+      | { extrapolateLeft?: Extrapolate; extrapolateRight?: Extrapolate };
+
     interface InterpolationConfig {
       inputRange: ReadonlyArray<Adaptable<number>>;
       outputRange: ReadonlyArray<Adaptable<number | string>>;
-      extrapolate?: Extrapolate;
+      extrapolate?: ExtrapolateParameter;
       extrapolateLeft?: Extrapolate;
       extrapolateRight?: Extrapolate;
     }
@@ -180,43 +192,37 @@ declare module 'react-native-reanimated' {
 
     export const SpringUtils: SpringUtils;
 
-    export type TransformStyleTypes = TransformsStyle['transform'] extends (
+    export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
-      | undefined)
+      | undefined
       ? T
       : never;
     export type AdaptTransforms<T> = {
       [P in keyof T]: Adaptable<T[P]>;
     };
-    export type AnimatedTransform = (AdaptTransforms<TransformStyleTypes>)[];
+    export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
 
-    export type AnimateStyle<S extends object> = {
+    export type AnimateStyle<S> = {
       [K in keyof S]: K extends 'transform'
         ? AnimatedTransform
-        : (S[K] extends ReadonlyArray<any>
-            ? ReadonlyArray<AnimateStyle<S[K][0]>>
-            : S[K] extends object
-            ? AnimateStyle<S[K]> // allow `number` where `string` normally is to support colors
-            : S[K] extends (ColorValue | undefined)
-            ? S[K] | number
-            :
-                | S[K]
-                | AnimatedNode<
-                    // allow `number` where `string` normally is to support colors
-                    S[K] extends (ColorValue | undefined) ? S[K] | number : S[K]
-                  >);
+        : S[K] extends ReadonlyArray<any>
+        ? ReadonlyArray<AnimateStyle<S[K][0]>>
+        : S[K] extends object
+        ? AnimateStyle<S[K]>
+        : S[K] extends ColorValue | undefined
+        ? S[K] | number
+        :
+            | S[K]
+            | AnimatedNode<
+                S[K] extends ColorValue | undefined ? S[K] | number : S[K]
+              >;
     };
 
-    export type AnimateProps<
-      S extends object,
-      P extends {
-        style?: StyleProp<S>;
-      }
-    > = {
+    export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<S>>
+        ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
-    };
+    } & { animatedProps?: AnimateProps<P> };
 
     type CodeProps = {
       exec?: AnimatedNode<number>;
@@ -225,22 +231,26 @@ declare module 'react-native-reanimated' {
     };
 
     // components
-    export class View extends Component<AnimateProps<ViewStyle, ViewProps>> {
+    export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
     }
-    export class Text extends Component<AnimateProps<TextStyle, TextProps>> {
+    export class Text extends Component<AnimateProps<TextProps>> {
       getNode(): ReactNativeText;
     }
-    export class Image extends Component<AnimateProps<ImageStyle, ImageProps>> {
+    export class Image extends Component<AnimateProps<ImageProps>> {
       getNode(): ReactNativeImage;
     }
-    export class ScrollView extends Component<
-      AnimateProps<ViewStyle, ScrollViewProps>
-    > {
+    export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export function createAnimatedComponent<S extends object, P extends { style?: StyleProp<S>; }>(component: ComponentType<P>): ComponentType<AnimateProps<S, P>>;
+
+    export function createAnimatedComponent<P extends object>(
+      component: ComponentClass<P>
+    ): ComponentClass<AnimateProps<P>>;
+    export function createAnimatedComponent<P extends object>(
+      component: FunctionComponent<P>
+    ): FunctionComponent<AnimateProps<P>>;
 
     // classes
     export {
@@ -364,7 +374,7 @@ declare module 'react-native-reanimated' {
       x: number,
       input: Array<number>,
       output: Array<number>,
-      type?: Extrapolate
+      type?: ExtrapolateParameter
     ): number;
 
     // animations
@@ -403,7 +413,7 @@ declare module 'react-native-reanimated' {
       easing?: EasingFunction;
     }
     export function withTiming(
-      toValue: number | Exclude<ColorValue, OpaqueColorValue>,  // string as a color value like `"rgba(20,20,20,0)"`
+      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
       userConfig?: WithTimingConfig,
       callback?: (isFinished: boolean) => void
     ): number;
@@ -416,10 +426,11 @@ declare module 'react-native-reanimated' {
       userConfig: WithDecayConfig,
       callback?: (isFinished: boolean) => void
     ): number;
-    export function cancelAnimation<T>(
-      sharedValue: SharedValue<T>
-    ): void;
-    export function withDelay(delayMS: number, delayedAnimation: number): number;
+    export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
+    export function withDelay(
+      delayMS: number,
+      delayedAnimation: number
+    ): number;
     export function withRepeat(
       animation: number,
       numberOfReps?: number,
@@ -446,6 +457,13 @@ declare module 'react-native-reanimated' {
     export function runOnJS<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
+
+    type PropsAdapterFunction = (props: Record<string, unknown>) => void;
+    export function createAnimatedPropAdapter(
+      adapter: PropsAdapterFunction,
+      nativeProps?: string[]
+    ): PropsAdapterFunction;
+
     export function processColor(color: number | string): number;
     export function createWorklet<A extends any[], R>(
       fn: (...args: A) => R
@@ -458,17 +476,12 @@ declare module 'react-native-reanimated' {
       colorSpace?: 'RGB' | 'HSV'
     ): string | number;
 
-    export function makeMutable<T>(
-      initialValue: T
-    ): SharedValue<T>;
+    export function makeMutable<T>(initialValue: T): SharedValue<T>;
 
     type DependencyList = ReadonlyArray<any>;
 
     // reanimated2 hooks
-    export function useSharedValue<T>(
-      initialValue: T,
-      shouldRebuild?: boolean
-    ): SharedValue<T>;
+    export function useSharedValue<T>(initialValue: T): SharedValue<T>;
 
     export function useDerivedValue<T>(
       processor: () => T,
@@ -476,18 +489,21 @@ declare module 'react-native-reanimated' {
     ): DerivedValue<T>;
 
     export function useAnimatedReaction<D>(
-      dependencies: () => D,
-      effects: (dependencies: D) => void,
+      prepare: () => D,
+      react: (prepareResult: D, preparePreviousResult: D | null) => void,
       deps?: DependencyList
     ): void;
-                        
-    export type AnimatedStyleProp<T extends object> = AnimateStyle<T> | RegisteredStyle<AnimateStyle<T>>;
+
+    export type AnimatedStyleProp<T extends object> =
+      | AnimateStyle<T>
+      | RegisteredStyle<AnimateStyle<T>>;
     export function useAnimatedStyle<
       T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
-    >(updater: () => T, deps?: DependencyList): T;
+    >(updater: () => T, deps?: DependencyList | null): T;
     export function useAnimatedProps<T extends {}>(
       updater: () => T,
-      deps?: DependencyList
+      deps?: DependencyList | null,
+      adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
     ): T;
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
@@ -730,6 +746,7 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const runOnUI: typeof Animated.runOnUI;
   export const runOnJS: typeof Animated.runOnJS;
+  export const createAnimatedPropAdapter: typeof Animated.createAnimatedPropAdapter;
   export const processColor: typeof Animated.processColor;
   export const makeMutable: typeof Animated.makeMutable;
   export const useValue: typeof Animated.useValue;

@@ -2,9 +2,30 @@
 
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
+};
+
+if (global._setGlobalConsole === undefined) {
+  // it can happen when Reanimated plugin wasn't added, but the user uses the only API from version 1
+  global._setGlobalConsole = () => {
+    // noop
+  };
+}
+
+export const checkPluginState = () => {
+  if (
+    !(() => {
+      'worklet';
+    }).__workletHash &&
+    !process.env.JEST_WORKER_ID
+  ) {
+    throw new Error(
+      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+    );
+  }
 };
 
 function _toArrayReanimated(object) {
@@ -26,7 +47,7 @@ function _mergeObjectsReanimated() {
   return Object.assign.apply(null, arguments);
 }
 
-global.__reanimatedWorkletInit = function(worklet) {
+global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
 
   if (worklet._closure) {
@@ -57,7 +78,7 @@ export function requestFrame(frame) {
 }
 
 global._WORKLET = false;
-global._log = function(s) {
+global._log = function (s) {
   console.log(s);
 };
 
@@ -66,6 +87,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
+  checkPluginState();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -81,15 +103,22 @@ export function getViewProp(viewTag, propName) {
   });
 }
 
-function _getTimestamp() {
-  'worklet';
-  if (_frameTimestamp) {
-    return _frameTimestamp;
-  }
-  if (_eventTimestamp) {
-    return _eventTimestamp;
-  }
-  return _getCurrentTime();
+let _getTimestamp;
+if (process.env.JEST_WORKER_ID) {
+  _getTimestamp = () => {
+    return Date.now();
+  };
+} else {
+  _getTimestamp = () => {
+    'worklet';
+    if (_frameTimestamp) {
+      return _frameTimestamp;
+    }
+    if (_eventTimestamp) {
+      return _eventTimestamp;
+    }
+    return _getCurrentTime();
+  };
 }
 
 export function getTimestamp() {
@@ -115,7 +144,8 @@ function workletValueSetter(value) {
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
-    if (this._value === animation.current) {
+    // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
+    if (this._value === animation.current && !animation.isHigherOrder) {
       return;
     }
     // animated set
@@ -205,14 +235,17 @@ NativeReanimated.installCoreFunctions(
 );
 
 export function makeMutable(value) {
+  checkPluginState();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
+  checkPluginState();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
+  checkPluginState();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
@@ -234,10 +267,21 @@ export const runOnJS = (fun) => {
   }
 };
 
+export function createAnimatedPropAdapter(adapter, nativeProps) {
+  const nativePropsToAdd = {};
+  // eslint-disable-next-line no-unused-expressions
+  nativeProps?.forEach((prop) => {
+    nativePropsToAdd[prop] = true;
+  });
+  addWhitelistedNativeProps(nativePropsToAdd);
+  return adapter;
+}
+
 const capturableConsole = console;
 runOnUI(() => {
   'worklet';
   const console = {
+    debug: runOnJS(capturableConsole.debug),
     log: runOnJS(capturableConsole.log),
     warn: runOnJS(capturableConsole.warn),
     error: runOnJS(capturableConsole.error),

@@ -1,12 +1,10 @@
 #include "NativeReanimatedModule.h"
-#include "Logger.h"
-#include "SpeedChecker.h"
 #include "ShareableValue.h"
 #include "MapperRegistry.h"
 #include "Mapper.h"
 #include "RuntimeDecorator.h"
 #include "EventHandlerRegistry.h"
-#include "EventHandler.h"
+#include "WorkletEventHandler.h"
 #include "FrozenObject.h"
 #include <functional>
 #include <thread>
@@ -24,18 +22,20 @@ void extractMutables(jsi::Runtime &rt,
 {
   switch (sv->type)
   {
-  case ValueType::MutableValueType:
-    res.push_back(sv->mutableValue);
+  case ValueType::MutableValueType: {
+    auto& mutableValue = ValueWrapper::asMutableValue(sv->valueContainer);
+    res.push_back(mutableValue);
     break;
-  case ValueType::ArrayType:
-    for (auto &it : sv->frozenArray)
+  }
+  case ValueType::FrozenArrayType:
+    for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer))
     {
       extractMutables(rt, it, res);
     }
     break;
   case ValueType::RemoteObjectType:
-  case ValueType::ObjectType:
-    for (auto &it : sv->frozenObject->map)
+  case ValueType::FrozenObjectType:
+    for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map)
     {
       extractMutables(rt, it.second, res);
     }
@@ -153,7 +153,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(jsi::Runtime &rt, const 
 
   scheduler->scheduleOnUI([=] {
     auto handlerFunction = handlerShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
-    auto handler = std::make_shared<EventHandler>(newRegistrationId, eventName, std::move(handlerFunction));
+    auto handler = std::make_shared<WorkletEventHandler>(newRegistrationId, eventName, std::move(handlerFunction));
     eventHandlerRegistry->registerEventHandler(handler);
   });
 
@@ -201,13 +201,15 @@ void NativeReanimatedModule::onEvent(std::string eventName, std::string eventAsS
         maybeRequestRender();
       }
     }
-    catch (...)
-    {
-      if (!errorHandler->raise())
-      {
-        throw;
-      }
-    }
+    catch(std::exception &e) {
+     std::string str = e.what();
+     this->errorHandler->setError(str);
+     this->errorHandler->raise();
+   } catch(...) {
+     std::string str = "OnEvent error";
+     this->errorHandler->setError(str);
+     this->errorHandler->raise();
+  }
 }
 
 bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(std::string eventName) {
@@ -243,13 +245,14 @@ void NativeReanimatedModule::onRender(double timestampMs)
     {
       maybeRequestRender();
     }
-  }
-  catch (...)
-  {
-    if (!errorHandler->raise())
-    {
-      throw;
-    }
+  } catch(std::exception &e) {
+    std::string str = e.what();
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
+  } catch(...) {
+    std::string str = "OnRender error";
+    this->errorHandler->setError(str);
+    this->errorHandler->raise();
   }
 }
 

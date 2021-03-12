@@ -7,7 +7,7 @@ jobs:
     - language: android
       jdk: openjdk8
       env:
-        - NODE_VERSION=10.15.3
+        - NODE_VERSION=14.14.0
         - ANDROID_API=29
         - ANDROID_BUILD_TOOLS=29.0.2
       before_cache:
@@ -42,6 +42,7 @@ jobs:
         - yarn
 
       before_script:
+        - export ANDROID_NDK=$ANDROID_HOME/ndk-bundle
         - export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk-bundle
         - export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
 
@@ -56,7 +57,7 @@ jobs:
       osx_image: xcode12.2
       podfile: './ios/Podfile'
       xcode_destination: platform=iOS Simulator,OS=12.2,name=iPhone X
-      env: NODE_VERSION=10.15.3
+      env: NODE_VERSION=14.14.0
 
       branches:
         only:
@@ -84,7 +85,7 @@ jobs:
 
     - language: node_js
       node_js:
-        - 10
+        - 14
       cache:
         directories:
           - node_modules

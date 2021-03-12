@@ -2,14 +2,25 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/NativeProxy.h>
 #import <RNReanimated/REAModule.h>
-#import <React/JSCExecutorFactory.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
 
-#if RNVERSION == 62
+#if RNVERSION >= 64
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#endif
+
+#if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
+#endif
+
+#if __has_include(<React/HermesExecutorFactory.h>)
+#import <React/HermesExecutorFactory.h>
+typedef HermesExecutorFactory ExecutorFactory;
+#else
+#import <React/JSCExecutorFactory.h>
+typedef JSCExecutorFactory ExecutorFactory;
 #endif
 
 #ifndef DONT_AUTOINSTALL_REANIMATED
@@ -29,24 +40,31 @@
   [bridge updateModuleWithInstance:eventDispatcher];
    _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
-  return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+
+  const auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-      #if RNVERSION == 62
-        auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
-        auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
-      #elif RNVERSION == 63
-        auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
-      #endif
+#if RNVERSION >= 63
+      auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+#else
+      auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
+      auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
+#endif
       runtime.global().setProperty(runtime,
                                    jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-                                   jsi::Object::createFromHostObject(runtime, reanimatedModule)
-      );
+                                   jsi::Object::createFromHostObject(runtime, reanimatedModule));
     }
-  });
+  };
+
+#if RNVERSION >= 64
+  // installs globals such as console, nativePerformanceNow, etc.
+  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
+#else
+  return std::make_unique<ExecutorFactory>(executor);
+#endif
 }
 
 @end

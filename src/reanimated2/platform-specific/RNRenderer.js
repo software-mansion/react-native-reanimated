@@ -1,3 +1,1 @@
-export {
-  default as RNRenderer,
-} from 'react-native/Libraries/Renderer/shims/ReactNative';
+export { default as RNRenderer } from 'react-native/Libraries/Renderer/shims/ReactNative';
