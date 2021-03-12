@@ -1,3 +1,5 @@
+/* global _WORKLET */
+import EasingNode from '../Easing';
 import { Bezier } from './Bezier';
 
 /**
@@ -235,7 +237,7 @@ function inOut(easing) {
   };
 }
 
-export const Easing = {
+const EasingObject = {
   linear,
   ease,
   quad,
@@ -252,3 +254,39 @@ export const Easing = {
   out,
   inOut,
 };
+
+function createChecker(worklet, workletName, prevArgs) {
+  function checkIfReaOne() {
+    'worklet'
+    if (arguments && (!_WORKLET)) {
+      for (let i = 0; i < arguments.length; i++) {
+        const arg = arguments[i];
+        if (arg && arg.__nodeID) {
+          console.warn(`Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`);
+          if (prevArgs) {
+            return EasingNode[workletName].apply(undefined, prevArgs).apply(undefined, arguments);
+          }
+          return EasingNode[workletName].apply(undefined, arguments);
+        }
+      }
+    }
+    const res = worklet.apply(this, arguments);
+    if ((!_WORKLET) && res && (typeof res === 'function') && res.__worklet) {
+      return createChecker(res, workletName, arguments);
+    }
+    return res;
+  }
+  // use original worklet on UI side
+  checkIfReaOne._closure = worklet._closure;
+  checkIfReaOne.asString = worklet.asString;
+  checkIfReaOne.__workletHash = worklet.__workletHash;
+  checkIfReaOne.__location = worklet.__location;
+  return checkIfReaOne;
+}
+
+Object.keys(EasingObject).forEach((key) => {
+  EasingObject[key] = createChecker(EasingObject[key], key);
+});
+
+export const Easing = EasingObject;
+export default Easing;

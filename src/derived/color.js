@@ -12,7 +12,7 @@ import {
 } from '../base';
 import AnimatedNode from '../core/AnimatedNode';
 
-const procColor = proc(function(r, g, b, a) {
+const procColor = proc(function (r, g, b, a) {
   const color = add(
     multiply(a, 1 << 24),
     multiply(round(r), 1 << 16),

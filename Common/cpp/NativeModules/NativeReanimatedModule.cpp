@@ -1,6 +1,4 @@
 #include "NativeReanimatedModule.h"
-#include "Logger.h"
-#include "SpeedChecker.h"
 #include "ShareableValue.h"
 #include "MapperRegistry.h"
 #include "Mapper.h"
@@ -24,18 +22,20 @@ void extractMutables(jsi::Runtime &rt,
 {
   switch (sv->type)
   {
-  case ValueType::MutableValueType:
-    res.push_back(sv->mutableValue);
+  case ValueType::MutableValueType: {
+    auto& mutableValue = ValueWrapper::asMutableValue(sv->valueContainer);
+    res.push_back(mutableValue);
     break;
-  case ValueType::ArrayType:
-    for (auto &it : sv->frozenArray)
+  }
+  case ValueType::FrozenArrayType:
+    for (auto &it : ValueWrapper::asFrozenArray(sv->valueContainer))
     {
       extractMutables(rt, it, res);
     }
     break;
   case ValueType::RemoteObjectType:
-  case ValueType::ObjectType:
-    for (auto &it : sv->frozenObject->map)
+  case ValueType::FrozenObjectType:
+    for (auto &it : ValueWrapper::asFrozenObject(sv->valueContainer)->map)
     {
       extractMutables(rt, it.second, res);
     }
