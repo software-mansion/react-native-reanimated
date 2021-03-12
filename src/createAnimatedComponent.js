@@ -396,7 +396,7 @@ export default function createAnimatedComponent(Component) {
         } else if (key === 'animatedProps') {
           Object.keys(value.initial).forEach((key) => {
             props[key] = value.initial[key];
-            if (value.viewRef?.current === null) {
+            if (value.viewRef.current === null) {
               value.viewRef.current = this;
             }
           });
