@@ -1,3 +1,7 @@
+// spread and rest parameters can't be used in worklets right now
+/* eslint-disable prefer-rest-params */
+/* eslint-disable prefer-spread */
+
 /* global _WORKLET */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck

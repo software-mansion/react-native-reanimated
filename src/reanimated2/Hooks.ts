@@ -591,7 +591,7 @@ function areDependenciesEqual(nextDeps, prevDeps) {
     return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
     /* eslint-enable no-self-compare */
   }
-  var objectIs = typeof Object.is === 'function' ? Object.is : is;
+  const objectIs = typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(nextDeps, prevDeps) {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
