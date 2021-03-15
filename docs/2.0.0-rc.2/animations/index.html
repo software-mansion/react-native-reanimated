@@ -8,7 +8,7 @@
 <script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-41044622-6","auto"),ga("send","pageview")</script>
 <script async src="https://www.google-analytics.com/analytics.js"></script><title data-react-helmet="true">Animations | React Native Reanimated</title><meta data-react-helmet="true" name="docsearch:version" content="2.0.0-rc.2"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" property="og:title" content="Animations | React Native Reanimated"><meta data-react-helmet="true" name="description" content="Animations are first-class citizens in Reanimated 2."><meta data-react-helmet="true" property="og:description" content="Animations are first-class citizens in Reanimated 2."><meta data-react-helmet="true" property="og:url" content="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/2.0.0-rc.2/animations"><link data-react-helmet="true" rel="shortcut icon" href="/react-native-reanimated/img/SWM_Fav_192x192.png"><link data-react-helmet="true" rel="canonical" href="https://docs.swmansion.com/react-native-reanimated//react-native-reanimated/docs/2.0.0-rc.2/animations"><link rel="stylesheet" href="/react-native-reanimated/styles.ed7ac305.css">
 <link rel="preload" href="/react-native-reanimated/styles.c4c3d651.js" as="script">
-<link rel="preload" href="/react-native-reanimated/runtime~main.284a6a05.js" as="script">
+<link rel="preload" href="/react-native-reanimated/runtime~main.65543f77.js" as="script">
 <link rel="preload" href="/react-native-reanimated/main.12ecefbe.js" as="script">
 <link rel="preload" href="/react-native-reanimated/1.df373a77.js" as="script">
 <link rel="preload" href="/react-native-reanimated/2.7170a3c5.js" as="script">
@@ -16,7 +16,7 @@
 <link rel="preload" href="/react-native-reanimated/1be78505.258ce248.js" as="script">
 <link rel="preload" href="/react-native-reanimated/186.b4a32e95.js" as="script">
 <link rel="preload" href="/react-native-reanimated/ad0e7624.129ca43b.js" as="script">
-<link rel="preload" href="/react-native-reanimated/0c75caf8.6c630632.js" as="script">
+<link rel="preload" href="/react-native-reanimated/0c75caf8.ac0d7192.js" as="script">
 </head>
 <body>
 <div id="__docusaurus">
@@ -51,7 +51,7 @@ Whenever you make animated updates of Shared Values, or you specify animations i
 In the former case, when you make an update to Shared Value that is being animated, the framework won&#x27;t wait for the previous animation to finish, but will immediately initiate a new transition starting from the current position of the previous animation.
 Interruptions also work correctly for animations defined in <code>useAnimatedStyle</code> hook.
 When the style is updated and the target value for a given property has changed compared to the last time when the style hook was run, the new animation will launch immediately starting from the current position of the property.</p><p>We believe that the described behavior, when it comes to interruptions, is desirable in the majority of the usecases, and hence we made it the default.
-In case you&#x27;d like to wait with the next animation until the previous one is finished, or in the case you&#x27;d like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/cancelAnimation"><code>cancelAnimation</code></a> method in the latter case.</p><p>To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:</p><p><img src="/react-native-reanimated/docs/shared-values/sv-interruption.gif"></p><h2><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="customizing-animations"></a>Customizing Animations<a aria-hidden="true" tabindex="-1" class="hash-link" href="#customizing-animations" title="Direct link to heading">#</a></h2><p>Reanimated currently provides three built-in animation helpers: <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withTiming"><code>withTiming</code></a>, <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withSpring"><code>withSpring</code></a>, and <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/widthDecay"><code>withDecay</code></a>.
+In case you&#x27;d like to wait with the next animation until the previous one is finished, or in the case you&#x27;d like to cancel currently running animation prior to starting a new one, you can still do it using animation callbacks in the former, or <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/cancelAnimation"><code>cancelAnimation</code></a> method in the latter case.</p><p>To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:</p><p><img src="/react-native-reanimated/docs/shared-values/sv-interruption.gif"></p><h2><a aria-hidden="true" tabindex="-1" class="anchor enhancedAnchor_3mK7" id="customizing-animations"></a>Customizing Animations<a aria-hidden="true" tabindex="-1" class="hash-link" href="#customizing-animations" title="Direct link to heading">#</a></h2><p>Reanimated currently provides three built-in animation helpers: <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withTiming"><code>withTiming</code></a>, <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withSpring"><code>withSpring</code></a>, and <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withDecay"><code>withDecay</code></a>.
 As there are ways of expanding that with your own, custom animations (animation helpers are built on top of the <a href="/react-native-reanimated/docs/2.0.0-rc.2/worklets">worklets</a> abstraction), we are not yet ready to document that as we still plan some changes of that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provides a great flexibility.
 Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withTiming"><code>withTiming</code></a> and <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/withSpring"><code>withSpring</code></a> for the complete set of parameters.</p><p>Both animation helper methods share a similar structure.
@@ -117,7 +117,7 @@ It works in a very similar way to <code>useAnimatedStyle</code> but instead of e
 Then, in order to hook animated props to a view, we provide the resulting object as <code>animatedProps</code> property to the &quot;Animated&quot; version of the view type we want to render (e.g. <code>Animated.View</code>).
 Please check the documentation of <a href="/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedProps"><code>useAnimatedProps</code></a> hook for usage examples.</p></div></article></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="footer-container"><a href="https://www.swmansion.com/" target="_blank" rel="noopener noreferrer" class="navbar__brand footer-image-link"><img class="navbar__logo" src="/react-native-reanimated/img/swmLogo.svg" alt="Software Mansion logo"></a><div class="githubStarLink"><span><a href="https://github.com/software-mansion/react-native-reanimated" data-icon="octicon-star" data-show-count="true" aria-label="Star software-mansion/react-native-reanimated on GitHub">Star</a></span></div></div></footer></div>
 <script src="/react-native-reanimated/styles.c4c3d651.js"></script>
-<script src="/react-native-reanimated/runtime~main.284a6a05.js"></script>
+<script src="/react-native-reanimated/runtime~main.65543f77.js"></script>
 <script src="/react-native-reanimated/main.12ecefbe.js"></script>
 <script src="/react-native-reanimated/1.df373a77.js"></script>
 <script src="/react-native-reanimated/2.7170a3c5.js"></script>
@@ -125,6 +125,6 @@ Please check the documentation of <a href="/react-native-reanimated/docs/2.0.0-r
 <script src="/react-native-reanimated/1be78505.258ce248.js"></script>
 <script src="/react-native-reanimated/186.b4a32e95.js"></script>
 <script src="/react-native-reanimated/ad0e7624.129ca43b.js"></script>
-<script src="/react-native-reanimated/0c75caf8.6c630632.js"></script>
+<script src="/react-native-reanimated/0c75caf8.ac0d7192.js"></script>
 </body>
 </html>
