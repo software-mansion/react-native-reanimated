@@ -116,7 +116,7 @@ To illustrate how interruptions perform in practice, please take a look at the b
 
 ## Customizing Animations
 
-Reanimated currently provides three built-in animation helpers: [`withTiming`](api/withTiming), [`withSpring`](api/withSpring), and [`withDecay`](api/widthDecay).
+Reanimated currently provides three built-in animation helpers: [`withTiming`](api/withTiming), [`withSpring`](api/withSpring), and [`withDecay`](api/withDecay).
 As there are ways of expanding that with your own, custom animations (animation helpers are built on top of the [worklets](worklets) abstraction), we are not yet ready to document that as we still plan some changes of that part of the API.
 However, the built-in methods along with the animation modifiers (that we discuss later on), already provides a great flexibility.
 Below we discuss some of the most common configuration options of the animation helpers, and we refer to the documentation page of [`withTiming`](api/withTiming) and [`withSpring`](api/withSpring) for the complete set of parameters.
