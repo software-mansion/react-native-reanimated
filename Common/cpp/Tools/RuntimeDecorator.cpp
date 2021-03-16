@@ -11,7 +11,6 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
   // This property will be used for debugging
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
-  jsi::Object dummyGlobal(rt);
   auto dummyFunction = [](
                                       jsi::Runtime &rt,
                                       const jsi::Value &thisValue,
@@ -20,10 +19,7 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
                                       ) -> jsi::Value {
     return jsi::Value::undefined();
   };
-  jsi::Function __reanimatedWorkletInit = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction);
-
-  dummyGlobal.setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "__reanimatedWorkletInit", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction));
 
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
 
@@ -58,6 +54,8 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
     return jsi::Value::undefined();
   };
   rt.global().setProperty(rt, "_setGlobalConsole", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_setGlobalConsole"), 1, setGlobalConsole));
+
+  rt.global().setProperty(rt, "global", rt.global());
 }
 
 void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
