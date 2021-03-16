@@ -12,7 +12,7 @@ using RequestFrameFunction = std::function<void(std::function<void(double)>)>;
 
 class RuntimeDecorator {
 public:
-  static void decorateRuntime(jsi::Runtime &rt);
+  static void decorateRuntime(jsi::Runtime &rt, std::string label);
   static void decorateUIRuntime(jsi::Runtime &rt,
                                 UpdaterFunction updater,
                                 RequestFrameFunction requestFrame,
