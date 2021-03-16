@@ -1,5 +1,5 @@
 /* global _WORKLET */
-import EasingNode from '../Easing';
+import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
 
 /**
@@ -257,21 +257,25 @@ const EasingObject = {
 
 function createChecker(worklet, workletName, prevArgs) {
   function checkIfReaOne() {
-    'worklet'
-    if (arguments && (!_WORKLET)) {
+    'worklet';
+    if (arguments && !_WORKLET) {
       for (let i = 0; i < arguments.length; i++) {
         const arg = arguments[i];
         if (arg && arg.__nodeID) {
-          console.warn(`Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`);
+          console.warn(
+            `Easing was renamed to EasingNode in Reanimated 2. Please use EasingNode instead`
+          );
           if (prevArgs) {
-            return EasingNode[workletName].apply(undefined, prevArgs).apply(undefined, arguments);
+            return EasingNode[workletName]
+              .apply(undefined, prevArgs)
+              .apply(undefined, arguments);
           }
           return EasingNode[workletName].apply(undefined, arguments);
         }
       }
     }
     const res = worklet.apply(this, arguments);
-    if ((!_WORKLET) && res && (typeof res === 'function') && res.__worklet) {
+    if (!_WORKLET && res && typeof res === 'function' && res.__worklet) {
       return createChecker(res, workletName, arguments);
     }
     return res;
