@@ -493,11 +493,26 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   // check for invalid usage of shared values in returned object
   let wrongKey;
-  const isError = Object.keys(initial).some((key) => {
-    const element = initial[key];
+  const isObjectInvalid = (element, key) => {
     const result = typeof element === 'object' && element.value !== undefined;
     if (result) {
       wrongKey = key;
+    }
+    return result;
+  };
+  const isError = Object.keys(initial).some((key) => {
+    const element = initial[key];
+    let result = false;
+    if (key === 'transform') {
+      for (const transformItem of element) {
+        const item = Object.values(transformItem)[0];
+        result = isObjectInvalid(item, key);
+        if (result) {
+          break;
+        }
+      }
+    } else {
+      result = isObjectInvalid(element, key);
     }
     return result;
   });
