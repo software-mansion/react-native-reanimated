@@ -15,17 +15,21 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
-export const checkPluginState = () => {
+export const checkPluginState = (thworError = true) => {
   if (
     !(() => {
       'worklet';
     }).__workletHash &&
     !process.env.JEST_WORKER_ID
   ) {
-    throw new Error(
-      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
-    );
+    if (thworError) {
+      throw new Error(
+        "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+      );
+    }
+    return false;
   }
+  return true;
 };
 
 function _toArrayReanimated(object) {
@@ -278,14 +282,15 @@ export function createAnimatedPropAdapter(adapter, nativeProps) {
 }
 
 const capturableConsole = console;
-runOnUI(() => {
-  'worklet';
-  const console = {
-    debug: runOnJS(capturableConsole.debug),
-    log: runOnJS(capturableConsole.log),
-    warn: runOnJS(capturableConsole.warn),
-    error: runOnJS(capturableConsole.error),
-    info: runOnJS(capturableConsole.info),
-  };
-  _setGlobalConsole(console);
-})();
+checkPluginState(false) &&
+  runOnUI(() => {
+    'worklet';
+    const console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+  })();
