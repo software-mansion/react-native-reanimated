@@ -25,8 +25,8 @@ LOCAL_C_INCLUDES += $(HERMES_ENGINE)/android/include
 
 LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
 
-LOCAL_STATIC_LIBRARIES := libjsi callinvokerholder
-LOCAL_SHARED_LIBRARIES := libhermes libfolly_json libfbjni libreactnativejni
+LOCAL_STATIC_LIBRARIES := libjsi libjsc jscruntime callinvokerholder
+LOCAL_SHARED_LIBRARIES := libhermes libfolly_json libjsc libfbjni libreactnativejni
 
 include $(BUILD_SHARED_LIBRARY)
 

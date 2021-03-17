@@ -462,6 +462,7 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation "org.webkit:android-jsc:+"
     implementation "androidx.transition:transition:1.1.0"
     api("com.facebook.fbjni:fbjni-java-only:0.0.3")
     extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")

@@ -53,6 +53,7 @@
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
     "fbjs": "^3.0.0",
+    "jsc-android": "^241213.1.0",
     "mockdate": "^3.0.2",
     "string-hash-64": "^1.0.3"
   },
