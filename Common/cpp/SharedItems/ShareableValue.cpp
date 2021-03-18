@@ -250,7 +250,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper = ValueWrapper::asHostFunctionWrapper(valueContainer);
-      auto hostRuntime = hostFunctionWrapper->value->hostRuntime;
+      auto& hostRuntime = hostFunctionWrapper->value->hostRuntime;
       if (hostRuntime == &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
         
