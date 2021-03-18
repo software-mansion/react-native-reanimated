@@ -104,12 +104,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         if (!primalFunction.isUndefined()) {
             jsi::Object handlerAsObject = primalFunction.asObject(rt);
             std::shared_ptr<HostFunctionHandler> handler = handlerAsObject.getHostObject<HostFunctionHandler>(rt);
-            valueContainer = std::make_unique<HostFunctionWrapper>(handler, &rt);
+            valueContainer = std::make_unique<HostFunctionWrapper>(handler);
         } else {
             valueContainer = std::make_unique<HostFunctionWrapper>(
-              std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt),
-              &rt
-            );
+              std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt));
         }
         
       } else {
@@ -272,7 +270,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             ) -> jsi::Value {
             
           jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
-            std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
+          std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
           std::string exceptionMessage = "Tried to synchronously call ";
           if(hostFunction->functionName.empty()) {
             exceptionMessage += "anonymous function";
