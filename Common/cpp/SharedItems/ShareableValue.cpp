@@ -10,6 +10,8 @@ namespace reanimated {
 
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED= "__alreadyConverted";
+const char *CALL_ASYNC = "__callAsync";
+const char *PRIMAL_FUNCTION = "__primalFunction";
 std::string CALLBACK_ERROR_SUFFIX = R"(
 
 Possible solutions are:
@@ -96,13 +98,22 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         // not a worklet, we treat this as a host function
         type = ValueType::HostFunctionType;
         containsHostFunction = true;
-        valueContainer = std::make_unique<HostFunctionWrapper>(
-          std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt),
-          &rt
-        );
+          
+        //Check if it's a hostFunction wrapper
+        jsi::Value primalFunction = object.getProperty(rt, PRIMAL_FUNCTION);
+        if (!primalFunction.isUndefined()) {
+            jsi::Object handlerAsObject = primalFunction.asObject(rt);
+            std::shared_ptr<HostFunctionHandler> handler = handlerAsObject.getHostObject<HostFunctionHandler>(rt);
+            valueContainer = std::make_unique<HostFunctionWrapper>(handler);
+        } else {
+            valueContainer = std::make_unique<HostFunctionWrapper>(
+              std::make_shared<HostFunctionHandler>(std::make_shared<jsi::Function>(object.asFunction(rt)), rt));
+        }
+        
       } else {
         // a worklet
         type = ValueType::WorkletFunctionType;
+        
         valueContainer = std::make_unique<FrozenObjectWrapper>(std::make_shared<FrozenObject>(rt, object, module));
         auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
         containsHostFunction |= frozenObject->containsHostFunction;
@@ -239,8 +250,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper = ValueWrapper::asHostFunctionWrapper(valueContainer);
-      if (hostFunctionWrapper->hostRuntime == &rt) {
+      auto& hostRuntime = hostFunctionWrapper->value->hostRuntime;
+      if (hostRuntime == &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
+        
         return jsi::Value(rt, *hostFunctionWrapper->value->get());
       } else {
         // function is accessed from a different runtime, we wrap function in host func that'd enqueue
@@ -273,7 +286,6 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         };
         
-        auto hostRuntime = hostFunctionWrapper->hostRuntime;
         auto clb = [module, hostFunction, hostRuntime](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -307,7 +319,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
         };
         jsi::Function wrapperFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, warnFunction);
         jsi::Function res = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "hostFunction"), 0, clb);
-        addHiddenProperty(rt, std::move(res), wrapperFunction, "__callAsync");
+        addHiddenProperty(rt, std::move(res), wrapperFunction, CALL_ASYNC);
+        jsi::Object functionHandler = createHost(rt, hostFunctionWrapper->value);
+        addHiddenProperty(rt, std::move(functionHandler), wrapperFunction, PRIMAL_FUNCTION);
         return wrapperFunction;
       }
     }
