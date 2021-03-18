@@ -1,11 +1,8 @@
-import { TurboModuleRegistry } from 'react-native';
-
-const InnerNativeModule =
-  global.__reanimatedModuleProxy ||
-  TurboModuleRegistry.getEnforcing('NativeReanimated');
+const InnerNativeModule = global.__reanimatedModuleProxy;
 
 const NativeReanimated = {
   native: true,
+  useOnlyV1: InnerNativeModule == null,
 
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);

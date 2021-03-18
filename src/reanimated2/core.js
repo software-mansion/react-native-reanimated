@@ -15,13 +15,12 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
+const testWorklet = () => {
+  'worklet';
+};
+
 export const checkPluginState = () => {
-  if (
-    !(() => {
-      'worklet';
-    }).__workletHash &&
-    !process.env.JEST_WORKER_ID
-  ) {
+  if (!testWorklet.__workletHash && !process.env.JEST_WORKER_ID) {
     throw new Error(
       "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
     );
@@ -230,10 +229,6 @@ function workletValueSetterJS(value) {
   }
 }
 
-NativeReanimated.installCoreFunctions(
-  NativeReanimated.native ? workletValueSetter : workletValueSetterJS
-);
-
 export function makeMutable(value) {
   checkPluginState();
   return NativeReanimated.makeMutable(value);
@@ -277,15 +272,21 @@ export function createAnimatedPropAdapter(adapter, nativeProps) {
   return adapter;
 }
 
-const capturableConsole = console;
-runOnUI(() => {
-  'worklet';
-  const console = {
-    debug: runOnJS(capturableConsole.debug),
-    log: runOnJS(capturableConsole.log),
-    warn: runOnJS(capturableConsole.warn),
-    error: runOnJS(capturableConsole.error),
-    info: runOnJS(capturableConsole.info),
-  };
-  _setGlobalConsole(console);
-})();
+if (!NativeReanimated.useOnlyV1) {
+  NativeReanimated.installCoreFunctions(
+    NativeReanimated.native ? workletValueSetter : workletValueSetterJS
+  );
+
+  const capturableConsole = console;
+  runOnUI(() => {
+    'worklet';
+    const console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+  })();
+}
