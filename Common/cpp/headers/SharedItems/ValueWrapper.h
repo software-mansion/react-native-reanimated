@@ -64,9 +64,8 @@ public:
   HostFunctionWrapper(
     const std::shared_ptr<HostFunctionHandler> & _value,
     jsi::Runtime *_hostRuntime
-  ) : ValueWrapper(ValueType::HostFunctionType), value(_value), hostRuntime(_hostRuntime) {};
+  ) : ValueWrapper(ValueType::HostFunctionType), value(_value){};
   std::shared_ptr<HostFunctionHandler> value;
-  jsi::Runtime *hostRuntime;
 };
 
 class FrozenObjectWrapper : public ValueWrapper {
