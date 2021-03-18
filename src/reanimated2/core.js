@@ -21,7 +21,7 @@ const testWorklet = () => {
 
 export const checkPluginState = () => {
   if (!testWorklet.__workletHash && !process.env.JEST_WORKER_ID) {
-    throw new Error(
+    console.warn(
       "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
     );
   }
