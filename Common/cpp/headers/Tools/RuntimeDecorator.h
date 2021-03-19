@@ -3,6 +3,7 @@
 #include "PlatformDepMethodsHolder.h"
 #include <stdio.h>
 #include <jsi/jsi.h>
+#include "LayoutAnimationsProxy.h"
 
 using namespace facebook;
 
@@ -18,7 +19,8 @@ public:
                                 RequestFrameFunction requestFrame,
                                 ScrollToFunction scrollTo,
                                 MeasuringFunction measure,
-                                TimeProviderFunction getCurrentTime);
+                                TimeProviderFunction getCurrentTime,
+                                std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
   
   /**
    Returns true if the given Runtime is the Reanimated UI-Thread Runtime.

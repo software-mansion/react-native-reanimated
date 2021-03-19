@@ -7,6 +7,9 @@
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
+#import "LayoutAnimationsProxy.h"
+#import "REAAnimationsManager.h"
+#import "REAReactBatchObserver.h"
 
 #if __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
@@ -112,9 +115,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
 
 #if __has_include(<hermes/hermes.h>)
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
@@ -133,7 +136,58 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   auto getCurrentTime = []() {
     return CACurrentMediaTime() * 1000;
   };
+  
+  // Layout Animations start
+  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
+  
+  auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
+    if (animationsManager) {
+      NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
+      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt: tag]];
+    }
+  };
+  
+  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+    if (animationsManager) {
+      [animationsManager notifyAboutEnd:[NSNumber numberWithInt: tag] cancelled:isCancelled];
+    }
+  };
+  
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  [animationsManager setAnimationStartingBlock:^(NSNumber * _Nonnull tag, NSString * type,  NSDictionary* _Nonnull values, NSNumber* depth) {
+    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+    if (wrt.expired()) {
+      return;
+    }
+    jsi::Object yogaValues(*rt);
+    for (NSString *key in values.allKeys) {
+      NSNumber* value = values[key];
+      yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
+    }
+    
+    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+      jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
+      startAnimationForTag.call(*rt, jsi::Value([tag intValue]), jsi::String::createFromAscii(*rt, std::string([type UTF8String])), yogaValues, jsi::Value([depth intValue]));
+    }
+  }];
 
+  
+  [animationsManager setRemovingConfigBlock:^(NSNumber* _Nonnull tag) {
+    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+    if (wrt.expired()) {
+      return;
+    }
+    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+      jsi::Function removeConfig = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
+      removeConfig.call(*rt, jsi::Value([tag intValue]));
+    }
+  }];
+  
+  // Layout Animations end
+  
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
@@ -144,9 +198,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   module = std::make_shared<NativeReanimatedModule>(jsInvoker,
                                                     scheduler,
-                                                    std::move(animatedRuntime),
+                                                    animatedRuntime,
                                                     errorHandler,
                                                     propObtainer,
+                                                    layoutAnimationsProxy,
                                                     platformDepMethodsHolder
                                                     );
 

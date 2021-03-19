@@ -268,8 +268,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             size_t count
             ) -> jsi::Value {
 
-          jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
-          std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
+         // jsi::Value jsThis = rt.global().getProperty(rt, "jsThis");
+         // std::string workletLocation = jsThis.asObject(rt).getProperty(rt, "__location").toString(rt).utf8(rt);
           std::string exceptionMessage = "Tried to synchronously call ";
           if(hostFunction->functionName.empty()) {
             exceptionMessage += "anonymous function";
@@ -277,7 +277,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             exceptionMessage += "function {" + hostFunction->functionName + "}";
           }
           exceptionMessage += " from a different thread.\n\nOccurred in worklet location: ";
-          exceptionMessage += workletLocation;
+         // exceptionMessage += workletLocation;
           exceptionMessage += CALLBACK_ERROR_SUFFIX;
           runtimeManager->errorHandler->setError(exceptionMessage);
           runtimeManager->errorHandler->raise();

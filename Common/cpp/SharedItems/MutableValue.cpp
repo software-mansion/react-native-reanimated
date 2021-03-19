@@ -67,6 +67,23 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
     }
   }
 
+  // UI thread
+  if (propName == "value") {
+    auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
+    module->valueSetter->getValue(rt)
+      .asObject(rt)
+      .asFunction(rt)
+      .callWithThis(rt, setterProxy, newValue);
+  } else if (propName == "_animation") {
+    // TODO: assert to allow animation to be set from UI only
+    if (animation.expired()) {
+      animation = getWeakRef(rt);
+    }
+    *animation.lock() = jsi::Value(rt, newValue);
+  } else if (propName == "_value") {
+    auto setter = std::make_shared<MutableValueSetterProxy>(shared_from_this());
+    setter->set(rt, jsi::PropNameID::forAscii(rt, "_value"), newValue);
+  }
 }
 
 jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
