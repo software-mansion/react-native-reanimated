@@ -7,6 +7,8 @@
 #include <react/jni/WritableNativeMap.h>
 #include "NativeReanimatedModule.h"
 #include <ReactCommon/CallInvokerHolder.h>
+#include <ReactCommon/RuntimeExecutor.h>
+#include <react/jni/JavaScriptExecutorHolder.h>
 #include <memory>
 #include <unordered_map>
 
@@ -82,14 +84,19 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
         jni::alias_ref<jhybridobject> jThis,
         jlong jsContext,
         jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-        jni::alias_ref<AndroidScheduler::javaobject> scheduler);
+        jni::alias_ref<AndroidScheduler::javaobject> scheduler,
+        JavaScriptExecutorHolder* javaScriptExecutor);
   static void registerNatives();
+  static JavaScriptExecutorHolder* _javaScriptExecutor;
 
 
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *runtime_;
+  std::shared_ptr<JSExecutorFactory> factory;
+  std::unique_ptr<JSExecutor> executor;
+  std::unique_ptr<jsi::Runtime> animatedRuntime;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
   std::shared_ptr<Scheduler> scheduler_;
@@ -100,6 +107,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void registerEventHandler(std::function<void(std::string,std::string)> handler);
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  jsi::Runtime getRuntime();
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 
   explicit NativeProxy(

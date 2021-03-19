@@ -4,7 +4,7 @@ import Animated, {
   useAnimatedStyle,
   Easing,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { View, Button, LogBox } from 'react-native';
 import React from 'react';
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
@@ -20,7 +20,8 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       width: withTiming(randomWidth.value, config),
     };
   });
-
+  LogBox.ignoreLogs(["mleko"])
+  console.warn("mleko")
   return (
     <View
       style={{

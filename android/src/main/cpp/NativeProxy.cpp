@@ -14,6 +14,13 @@
 #include "AndroidScheduler.h"
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
+#include <jsireact/JSIExecutor.h>
+
+/*#if __has_include(<hermes/hermes.h>)
+#import <hermes/hermes.h>
+#else
+#import <jsi/JSCRuntime.h>
+#endif*/
 
 namespace reanimated
 {
@@ -32,21 +39,24 @@ NativeProxy::NativeProxy(
 {
 }
 
+JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
+
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler)
+    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    JavaScriptExecutorHolder* javaScriptExecutor)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
+  _javaScriptExecutor = javaScriptExecutor;
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
 
 void NativeProxy::installJSIBindings()
 {
-
   auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
@@ -91,9 +101,39 @@ void NativeProxy::installJSIBindings()
     scrollTo(viewTag, x, y, animated);
   };
 
+  /*#if __has_include(<hermes/hermes.h>)
+    std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  #else
+    std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+  #endif*/
+
+  //work
   //std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-  //auto animatedRuntime2 = facebook::jsc::makeJSCRuntime();
+  //std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+
+  //v1
+  /*
+  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
+  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  std::shared_ptr<JSExecutorFactory> factory = _javaScriptExecutor->getExecutorFactory();
+  std::unique_ptr<JSExecutor> executor = factory.get()->createJSExecutor(delegate, jsQueue);
+  JSIExecutor* executorJSI = static_cast<JSIExecutor*>(executor.get());
+  struct JSIExecutorUnPrivate { std::shared_ptr<jsi::Runtime> runtime_; };
+  JSIExecutorUnPrivate* unPrivate = reinterpret_cast<JSIExecutorUnPrivate*>(&executorJSI);
+  std::shared_ptr<jsi::Runtime> animatedRuntimeSP = unPrivate->runtime_;
+  std::unique_ptr<jsi::Runtime> animatedRuntime = std::unique_ptr<jsi::Runtime>(animatedRuntimeSP.get());
+  auto tmp = animatedRuntime->global();
+  auto tmp2 = animatedRuntime->description();
+  */
+  //v2
+  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
+  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  factory = _javaScriptExecutor->getExecutorFactory();
+  executor = factory.get()->createJSExecutor(delegate, jsQueue);
+  animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
+  auto tmp = animatedRuntime->global();
+  auto tmp1 = animatedRuntime.get()->global();
+  auto tmp2 = animatedRuntime->description();
 
   std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
 
@@ -107,7 +147,7 @@ void NativeProxy::installJSIBindings()
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
                                                          scheduler_,
-                                                         std::move(animatedRuntime),
+                                                         animatedRuntime,
                                                          errorHandler,
                                                          propObtainer,
                                                          platformDepMethodsHolder);
@@ -119,11 +159,14 @@ void NativeProxy::installJSIBindings()
     module->onEvent(eventName, eventAsString);
     module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
   });
+  module->runtime->description();
 
   runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(*runtime_, module));
+        *runtime_,
+        jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(*runtime_, module));
+
+  module->runtime->description();
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {

@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.JSIModule;
+import com.facebook.react.bridge.JavaScriptExecutor;
+import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -20,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
+import com.facebook.react.jscexecutor.JSCExecutorFactory;
 
 public class NativeProxy {
 
@@ -73,15 +78,33 @@ public class NativeProxy {
   private final HybridData mHybridData;
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
+  private JavaScriptExecutor mJavaScriptExecutor;
 
   public NativeProxy(ReactApplicationContext context) {
+    try {
+      mJavaScriptExecutor = new HermesExecutorFactory().create();
+      //mJavaScriptExecutor = new JSCExecutorFactory("Reanimated", "Reanimated").create();
+    } catch (Exception jscE) {
+      try {
+        mJavaScriptExecutor = new HermesExecutorFactory().create();
+      } catch (UnsatisfiedLinkError hermesE) {
+        hermesE.printStackTrace();
+      }
+    }
+
+    //try {
+      //mJavaScriptExecutor = new HermesExecutorFactory().create();
+      //JavaScriptExecutor tmp2 = new JSCExecutorFactory("Reanimated", "Reanimated").create();
+      //tmp2.getName();
+      //mJavaScriptExecutor.getName();
+    //} catch (Exception e) {}
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, new Scheduler(context));
+    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, new Scheduler(context), mJavaScriptExecutor);
     mContext = new WeakReference<>(context);
     prepare();
   }
 
-  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler);
+  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, JavaScriptExecutor mJavaScriptExecutor);
   private native void installJSIBindings();
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
@@ -124,6 +147,7 @@ public class NativeProxy {
 
   public void onCatalystInstanceDestroy() {
     mHybridData.resetNative();
+    mJavaScriptExecutor.close();
   }
 
   public void prepare() {

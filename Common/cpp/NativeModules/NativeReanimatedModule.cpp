@@ -58,7 +58,7 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
-                                               std::unique_ptr<jsi::Runtime> rt,
+                                               std::unique_ptr<jsi::Runtime>& rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
@@ -71,6 +71,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                   workletsCache(new WorkletsCache()),
                                                   scheduler(scheduler)
 {
+//auto tmp1 = rt->description();
+auto tmp2 = runtime->description();
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
