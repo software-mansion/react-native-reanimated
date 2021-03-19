@@ -71,8 +71,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                   workletsCache(new WorkletsCache()),
                                                   scheduler(scheduler)
 {
-//auto tmp1 = rt->description();
-auto tmp2 = runtime->description();
+
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();

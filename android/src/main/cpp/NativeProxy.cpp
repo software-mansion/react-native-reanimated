@@ -3,8 +3,6 @@
 
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <jsi/JSCRuntime.h>
-#include <hermes/hermes.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
@@ -94,31 +92,6 @@ void NativeProxy::installJSIBindings()
     scrollTo(viewTag, x, y, animated);
   };
 
-  /*#if __has_include(<hermes/hermes.h>)
-    std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
-  #else
-    std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-  #endif*/
-
-  //work
-  //std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
-  //std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
-
-  //v1
-  /*
-  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
-  std::shared_ptr<JSExecutorFactory> factory = _javaScriptExecutor->getExecutorFactory();
-  std::unique_ptr<JSExecutor> executor = factory.get()->createJSExecutor(delegate, jsQueue);
-  JSIExecutor* executorJSI = static_cast<JSIExecutor*>(executor.get());
-  struct JSIExecutorUnPrivate { std::shared_ptr<jsi::Runtime> runtime_; };
-  JSIExecutorUnPrivate* unPrivate = reinterpret_cast<JSIExecutorUnPrivate*>(&executorJSI);
-  std::shared_ptr<jsi::Runtime> animatedRuntimeSP = unPrivate->runtime_;
-  std::unique_ptr<jsi::Runtime> animatedRuntime = std::unique_ptr<jsi::Runtime>(animatedRuntimeSP.get());
-  auto tmp = animatedRuntime->global();
-  auto tmp2 = animatedRuntime->description();
-  */
-  //v2
   std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
   std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
   factory = _javaScriptExecutor->getExecutorFactory();
