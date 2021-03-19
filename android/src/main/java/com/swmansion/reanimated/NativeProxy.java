@@ -5,22 +5,15 @@ import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.JSIModule;
 import com.facebook.react.bridge.JavaScriptExecutor;
-import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
-import com.facebook.react.turbomodule.core.interfaces.TurboModule;
-import com.facebook.react.turbomodule.core.interfaces.TurboModuleRegistry;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
@@ -92,12 +85,6 @@ public class NativeProxy {
       }
     }
 
-    //try {
-      //mJavaScriptExecutor = new HermesExecutorFactory().create();
-      //JavaScriptExecutor tmp2 = new JSCExecutorFactory("Reanimated", "Reanimated").create();
-      //tmp2.getName();
-      //mJavaScriptExecutor.getName();
-    //} catch (Exception e) {}
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, new Scheduler(context), mJavaScriptExecutor);
     mContext = new WeakReference<>(context);

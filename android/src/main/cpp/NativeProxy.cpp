@@ -14,13 +14,6 @@
 #include "AndroidScheduler.h"
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
-#include <jsireact/JSIExecutor.h>
-
-/*#if __has_include(<hermes/hermes.h>)
-#import <hermes/hermes.h>
-#else
-#import <jsi/JSCRuntime.h>
-#endif*/
 
 namespace reanimated
 {
@@ -131,9 +124,6 @@ void NativeProxy::installJSIBindings()
   factory = _javaScriptExecutor->getExecutorFactory();
   executor = factory.get()->createJSExecutor(delegate, jsQueue);
   animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
-  auto tmp = animatedRuntime->global();
-  auto tmp1 = animatedRuntime.get()->global();
-  auto tmp2 = animatedRuntime->description();
 
   std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
 
