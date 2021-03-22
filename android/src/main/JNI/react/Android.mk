@@ -70,6 +70,7 @@ $(call import-module,jsi)
 $(call import-module,jsiexecutor)
 $(call import-module,callinvoker)
 $(call import-module,hermes)
+
 ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -ge 64; echo $$?),0)
   $(call import-module,reactperflogger)
   $(call import-module,runtimeexecutor)

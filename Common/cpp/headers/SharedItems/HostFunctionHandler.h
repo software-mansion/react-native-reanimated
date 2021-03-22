@@ -10,7 +10,7 @@ struct HostFunctionHandler {
     functionName = f->getProperty(rt, "name").asString(rt).utf8(rt);
   }
   
-  std::shared_ptr<jsi::Function> get() {
+  std::shared_ptr<jsi::Function> getPureFunction() {
     return pureFunction;
   }
 };

@@ -241,7 +241,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       auto hostFunctionWrapper = ValueWrapper::asHostFunctionWrapper(valueContainer);
       if (hostFunctionWrapper->hostRuntime == &rt) {
         // function is accessed from the same runtime it was crated, we just return same function obj
-        return jsi::Value(rt, *hostFunctionWrapper->value->get());
+        
+        return jsi::Value(rt, *hostFunctionWrapper->value->getPureFunction().get());
       } else {
         // function is accessed from a different runtime, we wrap function in host func that'd enqueue
         // call on an appropriate thread
@@ -294,7 +295,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               args[i] = params[i]->getValue(*hostRuntime);
             }
              
-            jsi::Value returnedValue = hostFunction->get()->call(*hostRuntime,
+            jsi::Value returnedValue = hostFunction->getPureFunction().get()->call(*hostRuntime,
                                                 static_cast<const jsi::Value*>(args),
                                                 (size_t)params.size());
              
