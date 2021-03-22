@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.JavaScriptExecutor;
+import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
 import com.facebook.react.jscexecutor.JSCExecutorFactory;
+import com.facebook.soloader.SoLoader;
 
 public class NativeProxy {
 
@@ -75,20 +77,55 @@ public class NativeProxy {
 
   public NativeProxy(ReactApplicationContext context) {
     try {
-      mJavaScriptExecutor = new HermesExecutorFactory().create();
+      mJavaScriptExecutor = getDefaultJSExecutorFactory(context).create();
       //mJavaScriptExecutor = new JSCExecutorFactory("Reanimated", "Reanimated").create();
     } catch (Exception jscE) {
-      try {
-        mJavaScriptExecutor = new HermesExecutorFactory().create();
-      } catch (UnsatisfiedLinkError hermesE) {
-        hermesE.printStackTrace();
-      }
+      jscE.printStackTrace();
     }
 
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, new Scheduler(context), mJavaScriptExecutor);
     mContext = new WeakReference<>(context);
     prepare();
+  }
+
+  // method from React native
+  private JavaScriptExecutorFactory getDefaultJSExecutorFactory(ReactApplicationContext context) {
+    try {
+      // If JSC is included, use it as normal
+      SoLoader.init(context, /* native exopackage */ false);
+      SoLoader.loadLibrary("jscexecutor");
+      return new JSCExecutorFactory("Reanimated", "Reanimated");
+    } catch (UnsatisfiedLinkError jscE) {
+      // https://github.com/facebook/hermes/issues/78 shows that
+      // people who aren't trying to use Hermes are having issues.
+      // https://github.com/facebook/react-native/issues/25923#issuecomment-554295179
+      // includes the actual JSC error in at least one case.
+      //
+      // So, if "__cxa_bad_typeid" shows up in the jscE exception
+      // message, then we will assume that's the failure and just
+      // throw now.
+
+      if (jscE.getMessage().contains("__cxa_bad_typeid")) {
+        throw jscE;
+      }
+
+      // Otherwise use Hermes
+      try {
+        return new HermesExecutorFactory();
+      } catch (UnsatisfiedLinkError hermesE) {
+        // If we get here, either this is a JSC build, and of course
+        // Hermes failed (since it's not in the APK), or it's a Hermes
+        // build, and Hermes had a problem.
+
+        // We suspect this is a JSC issue (it's the default), so we
+        // will throw that exception, but we will print hermesE first,
+        // since it could be a Hermes issue and we don't want to
+        // swallow that.
+        hermesE.printStackTrace();
+        throw jscE;
+      }
+    }
   }
 
   private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, JavaScriptExecutor mJavaScriptExecutor);
