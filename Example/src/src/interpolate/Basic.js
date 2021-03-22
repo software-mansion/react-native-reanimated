@@ -61,11 +61,23 @@ export default class Basic extends Component {
       inputRange: [-1, 1],
       outputRange: [-100, 100],
     });
+    this._rotateZ = interpolateNode(base, {
+      inputRange: [-1, 1],
+      outputRange: ['0rad', `${Math.PI}rad`],
+    });
   }
+
   render() {
     return (
       <Row>
-        <Box style={{ transform: [{ translateX: this._transX }] }} />
+        <Box
+          style={{
+            transform: [
+              { translateX: this._transX },
+              { rotateZ: this._rotateZ },
+            ],
+          }}
+        />
       </Row>
     );
   }

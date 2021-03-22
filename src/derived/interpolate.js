@@ -98,6 +98,8 @@ function convertToRadians(outputRange) {
   for (const [i, value] of outputRange.entries()) {
     if (typeof value === 'string' && value.endsWith('deg')) {
       outputRange[i] = parseFloat(value) * (Math.PI / 180);
+    } else if (typeof value === 'string' && value.endsWith('rad')) {
+      outputRange[i] = parseFloat(value);
     }
   }
 }
