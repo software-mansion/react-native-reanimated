@@ -73,10 +73,13 @@ public class NativeProxy {
   private final HybridData mHybridData;
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
+  private Scheduler mScheduler = null;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, new Scheduler(context));
+
+    mScheduler = new Scheduler(context);
+    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler);
     mContext = new WeakReference<>(context);
     prepare();
   }
@@ -123,6 +126,7 @@ public class NativeProxy {
   }
 
   public void onCatalystInstanceDestroy() {
+    mScheduler.deactivate();
     mHybridData.resetNative();
   }
 
