@@ -30,8 +30,8 @@ const App = () => {
     };
   }, dependencies);
   //...
-  return <></>
-}
+  return <></>;
+};
 ```
 
 `dependencies` here may be:
@@ -50,6 +50,10 @@ It is more efficient to only keep styles that are actually changed as a result o
 If the style worklet uses any shared values, it will be executed upon these values updates and the connected view will be updated.
 
 For the list of available properties you can refer to the React Native core documentation on [View Style Props](https://reactnative.dev/docs/view-style-props). You may also want to check React Native's [guide on styling views](https://reactnative.dev/docs/style).
+
+> **Note**: Animated styles cannot be shared between views.
+>
+> To work around this you can generate multiple useAnimatedStyle in top-level loop (number of iterations must be static, see React's [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html#only-call-hooks-at-the-top-level) for more information).
 
 ## Example
 
