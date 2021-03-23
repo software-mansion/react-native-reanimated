@@ -13,7 +13,7 @@ private:
   std::weak_ptr<jsi::Value> backing;
   std::unique_ptr<FrozenObject> initializer;
 public:
-  void maybeInitializeOnUIRuntime(jsi::Runtime &rt);
+  void maybeInitializeOnWorkletRuntime(jsi::Runtime &rt);
   RemoteObject(jsi::Runtime &rt, jsi::Object &object, RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s):
      StoreUser(s), initializer(new FrozenObject(rt, object, runtimeManager)) {}
   void set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);
