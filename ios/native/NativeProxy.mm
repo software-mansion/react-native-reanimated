@@ -143,13 +143,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     getCurrentTime,
   };
 
-module = std::make_shared<NativeReanimatedModule>(jsInvoker,
-                                                  scheduler,
-                                                  std::move(animatedRuntime),
-                                                  errorHandler,
-                                                  propObtainer,
-                                                  platformDepMethodsHolder
-                                                  );
+  module = std::make_shared<NativeReanimatedModule>(jsInvoker,
+                                                    scheduler,
+                                                    std::move(animatedRuntime),
+                                                    errorHandler,
+                                                    propObtainer,
+                                                    platformDepMethodsHolder
+                                                    );
 
   scheduler->setModule(module);
 
