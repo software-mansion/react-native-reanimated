@@ -73,7 +73,6 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
-
   RuntimeDecorator::decorateUIRuntime(*runtime,
                                       platformDepMethodsHolder.updaterFunction,
                                       requestAnimationFrame,
