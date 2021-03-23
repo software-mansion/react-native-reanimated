@@ -40,4 +40,10 @@ List other libraries if relevant.
 - React Native Reanimated:
 - NodeJS:
 - Xcode:
-- java & Gradle:
+- Java & Gradle:
+
+## Affected platforms
+
+- [ ] Android
+- [ ] iOS
+- [ ] Web
