@@ -86,6 +86,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
+  checkPluginState();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -229,14 +230,17 @@ function workletValueSetterJS(value) {
 }
 
 export function makeMutable(value) {
+  checkPluginState();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
+  checkPluginState();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
+  checkPluginState();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
