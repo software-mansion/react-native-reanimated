@@ -24,7 +24,7 @@ Tell us what's happening here.
 ## Snack or minimal code example
 
 <!--
-Please provide a minimal code example that reproduces the problem in [Snack](https://snack.expo.io/) or Github repository.
+Please provide a minimal code example that reproduces the issue in [Snack](https://snack.expo.io/) or link to the Github repository.
 Here are some tips for providing a minimal example: [https://stackoverflow.com/help/mcve](https://stackoverflow.com/help/mcve).
 -->
 
