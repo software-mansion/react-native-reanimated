@@ -40,7 +40,7 @@ void freeze(jsi::Runtime &rt, jsi::Object &obj) {
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
-  if (module->isUIRuntime(rt)) {
+  if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
       remoteValue = getWeakRef(rt);
     }
@@ -51,7 +51,7 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
-  bool isRNRuntime = !(module->isUIRuntime(rt));
+  bool isRNRuntime = RuntimeDecorator::isReactRuntime(rt);
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
     jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
@@ -177,7 +177,7 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
 
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
-  if (module->isUIRuntime(rt)) {
+  if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
       auto ref = getWeakRef(rt);
       remoteValue = ref;
@@ -239,8 +239,8 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::RemoteObjectType: {
       auto& remoteObject = ValueWrapper::asRemoteObject(valueContainer);
-      if (module->isUIRuntime(rt)) {
-        remoteObject->maybeInitializeOnUIRuntime(rt);
+      if (RuntimeDecorator::isWorkletRuntime(rt)) {
+        remoteObject->maybeInitializeOnWorkletRuntime(rt);
       }
       return createHost(rt, remoteObject);
     }
@@ -328,7 +328,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::WorkletFunctionType: {
       auto module = this->module;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
-      if (module->isUIRuntime(rt)) {
+      if (RuntimeDecorator::isWorkletRuntime(rt)) {
         // when running on UI thread we prep a function
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*module->runtime));

@@ -75,23 +75,13 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
-
-  RuntimeDecorator::addNativeObjects(*runtime,
-                                     platformDepMethodsHolder.updaterFunction,
-                                     requestAnimationFrame,
-                                     platformDepMethodsHolder.scrollToFunction,
-                                     platformDepMethodsHolder.measuringFunction,
-                                     platformDepMethodsHolder.getCurrentTime);
-}
-
-bool NativeReanimatedModule::isUIRuntime(jsi::Runtime &rt)
-{
-  return runtime.get() == &rt;
-}
-
-bool NativeReanimatedModule::isHostRuntime(jsi::Runtime &rt)
-{
-  return !isUIRuntime(rt);
+  
+  RuntimeDecorator::decorateUIRuntime(*runtime,
+                                      platformDepMethodsHolder.updaterFunction,
+                                      requestAnimationFrame,
+                                      platformDepMethodsHolder.scrollToFunction,
+                                      platformDepMethodsHolder.measuringFunction,
+                                      platformDepMethodsHolder.getCurrentTime);
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
