@@ -150,7 +150,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       // create frozen object based on a copy of a given object
       type = ValueType::FrozenObjectType;
       valueContainer = std::make_unique<FrozenObjectWrapper>(
-        std::make_shared<FrozenObject>(rt, object, module)
+        std::make_shared<FrozenObject>(rt, object, runtimeManager)
       );
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       containsHostFunction |= frozenObject->containsHostFunction;
