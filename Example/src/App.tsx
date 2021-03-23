@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
+import { AnimatedRoot } from 'react-native-reanimated';
 
 function Box({label}) {
   return (
@@ -13,9 +14,11 @@ export default function Screen() {
   const [state, setState] =  useState(true);
   return (
     <View style={{marginTop: 30}}>
-      { state && <Box key="a" label="A" /> }
-      <Box key="b" label="B" />
-      {!state && <Box key="a" label="A" />}
+      <AnimatedRoot>
+        {state && <Box key="a" label="A" />}
+        <Box key="b" label="B" />
+        {!state && <Box key="a" label="A" />}
+      </AnimatedRoot>
       <Button onPress={() => {setState(!state)}} title="toggle" />
     </View>
   );
