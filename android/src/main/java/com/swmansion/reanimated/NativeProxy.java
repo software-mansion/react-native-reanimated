@@ -78,7 +78,6 @@ public class NativeProxy {
   public NativeProxy(ReactApplicationContext context) {
     try {
       mJavaScriptExecutor = getDefaultJSExecutorFactory(context).create();
-      //mJavaScriptExecutor = new JSCExecutorFactory("Reanimated", "Reanimated").create();
     } catch (Exception jscE) {
       jscE.printStackTrace();
     }

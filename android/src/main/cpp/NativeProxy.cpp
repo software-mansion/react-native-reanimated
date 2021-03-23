@@ -122,14 +122,11 @@ void NativeProxy::installJSIBindings()
     module->onEvent(eventName, eventAsString);
     module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
   });
-  module->runtime->description();
 
   runtime_->global().setProperty(
         *runtime_,
         jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(*runtime_, module));
-
-  module->runtime->description();
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
