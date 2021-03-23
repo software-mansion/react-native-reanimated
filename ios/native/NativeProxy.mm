@@ -1,7 +1,6 @@
 #import "NativeProxy.h"
 #import "REAIOSScheduler.h"
 #import "REAIOSErrorHandler.h"
-#import "RuntimeDecorator.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "NativeMethods.h"

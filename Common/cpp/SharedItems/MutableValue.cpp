@@ -16,7 +16,6 @@ void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
       listener.second();
     }
   };
-
   if (RuntimeDecorator::isWorkletRuntime(rt)) {
     notifyListeners();
   } else {
