@@ -21,7 +21,6 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/Registries
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/SharedItems
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/SpecTools
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/Tools
-# LOCAL_C_INCLUDES += $(HERMES_ENGINE)/android/include
 
 LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
 
@@ -38,10 +37,10 @@ ifeq ($(NATIVE_DEBUG), true)
     cmd-strip :=
 endif
 
-# ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -lt 64; echo $$?),0)
-	# LOCAL_MODULE := turbomodulejsijni
-	# include $(BUILD_SHARED_LIBRARY)
-# endif
+ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -lt 64; echo $$?),0)
+	LOCAL_MODULE := turbomodulejsijni
+	include $(BUILD_SHARED_LIBRARY)
+endif
 # end
 
 include $(LOCAL_PATH)/react/Android.mk
