@@ -7,19 +7,12 @@
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
 
-#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
+#if RNVERSION >= 64
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
-#else
-#define RCTJSIExecutorRuntimeInstaller(x) x
 #endif
 
-#if __has_include(<ReactCommon/CallInvoker.h>)
-#import <ReactCommon/CallInvoker.h>
-#define NEW_CALL_INVOKER
-#elif __has_include(<ReactCommon/BridgeJSCallInvoker.h>)
+#if RNVERSION < 63
 #import <ReactCommon/BridgeJSCallInvoker.h>
-#else
-#error JS-CallInvoker import could not be found!
 #endif
 
 #if __has_include(<React/HermesExecutorFactory.h>)
@@ -45,29 +38,33 @@ typedef JSCExecutorFactory ExecutorFactory;
   RCTEventDispatcher *eventDispatcher = [REAEventDispatcher new];
   [eventDispatcher setBridge:bridge];
   [bridge updateModuleWithInstance:eventDispatcher];
-  _bridge_reanimated = bridge;
+   _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
-  
+
   const auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
     __typeof(self) strongSelf = weakSelf;
     if (strongSelf) {
-#ifdef NEW_CALL_INVOKER
-      auto callInvoker = bridge.jsCallInvoker;
+#if RNVERSION >= 63
+      auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
 #else
       auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
-#endif
       auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
+#endif
       runtime.global().setProperty(runtime,
                                    jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
                                    jsi::Object::createFromHostObject(runtime, reanimatedModule));
     }
   };
-  
+
+#if RNVERSION >= 64
   // installs globals such as console, nativePerformanceNow, etc.
   return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
+#else
+  return std::make_unique<ExecutorFactory>(executor);
+#endif
 }
 
 @end
