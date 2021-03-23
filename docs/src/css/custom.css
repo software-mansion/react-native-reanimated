@@ -1,14 +1,14 @@
 @font-face {
   font-family: "Aeonik Regular";
-  src: url("/react-native-reanimated/fonts/Aeonik-Regular.woff2") format("woff2"),
-    url("/react-native-reanimated/fonts/Aeonik-Regular.woff") format("woff");
+  src: url("/fonts/Aeonik-Regular.woff2") format("woff2"),
+    url("/fonts/Aeonik-Regular.woff") format("woff");
   font-display: swap;
 }
 
 @font-face {
   font-family: "Aeonik Bold";
-  src: url("/react-native-reanimated/fonts/Aeonik-Bold.woff2") format("woff2"),
-    url("/react-native-reanimated/fonts/Aeonik-Bold.woff") format("woff");
+  src: url("/fonts/Aeonik-Bold.woff2") format("woff2"),
+    url("/fonts/Aeonik-Bold.woff") format("woff");
   font-display: swap;
 }
 
@@ -147,7 +147,7 @@ h6 {
   width: 24px;
   min-height: 24px;
   height: 24px;
-  background: url("/react-native-reanimated/img/github_logo.svg");
+  background: url("/img/github_logo.svg");
   background-repeat: no-repeat;
 }
 

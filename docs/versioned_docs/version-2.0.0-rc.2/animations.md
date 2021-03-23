@@ -44,7 +44,7 @@ In the above example we make immediate updates to the `offset` Shared Value upon
 The `offset` value is then mapped to a view translation using `useAnimatedStyle`.
 As a result, when we tap on the "Move" button the animated box jumps to a new, random location as presented below:
 
-![](/react-native-reanimated/docs/shared-values/sv-immediate.gif)
+![](/docs/shared-values/sv-immediate.gif)
 
 With Reanimated 2, such Shared Value updates can be transformed to an animated updates by wrapping the target value using one of the animation helpers, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
 The only change that we can do now, is to wrap random offset value in `withSpring` call as shown below:
@@ -61,7 +61,7 @@ The only change that we can do now, is to wrap random offset value in `withSprin
 This way, instead of assigning a number to Shared Value, we make an animation object which is then used to run updates on the Shared Value until it reaches the target.
 As a result the `offset` Shared Value transitions smoothly between the current and the newly assigned random number, which results in a nice spring-based animation in between those states:
 
-![](/react-native-reanimated/docs/shared-values/sv-spring.gif)
+![](/docs/shared-values/sv-spring.gif)
 
 ## Animations in `useAnimatedStyle` hook
 
@@ -112,7 +112,7 @@ In case you'd like to wait with the next animation until the previous one is fin
 
 To illustrate how interruptions perform in practice, please take a look at the below video, where we run the example presented earlier, but make much more frequent taps on the button in order to trigger value changes before the animation settles:
 
-![](/react-native-reanimated/docs/shared-values/sv-interruption.gif)
+![](/docs/shared-values/sv-interruption.gif)
 
 ## Customizing Animations
 
@@ -151,7 +151,7 @@ Easing can be described using [bezier curve](https://javascript.info/bezier-curv
 But in most of the cases it is enough to use `Easing.in`, `Easing.out` or `Easing.inOut` to adjust the timing curve at the start, end or at the both ends respectively.
 The default duration for the timing animation is 300ms, and the default easing is an in-out quadratic curve (`Easing.inOut(Easing.quad)`):
 
-![](/react-native-reanimated/docs/animations/easeInOutQuad.png)
+![](/docs/animations/easeInOutQuad.png)
 
 Here is how to start a timing animation with a custom configuration:
 
@@ -213,7 +213,7 @@ function Box() {
 }
 ```
 
-![](/react-native-reanimated/docs/animations/twosprings.gif)
+![](/docs/animations/twosprings.gif)
 
 Unlike in the previous example, here we define animation in the `useAnimatedStyle` hook.
 This makes it possible to use a single Shared Value but map that to two View's styles.
@@ -272,7 +272,7 @@ Setting the reverse flag to `true` will result in the rotation doing three full 
 At the end of all six repetitions the rotation will go back to zero.
 Here is what will happen when we click on the "wobble" button:
 
-![](/react-native-reanimated/docs/animations/swing.gif)
+![](/docs/animations/swing.gif)
 
 The above code makes the rotation only go between `0` and `10` degrees.
 In order for the view to also swing to the left, we could start from `-10` and go to `10` degrees.
@@ -295,7 +295,7 @@ For the surrounding timing animation we pass a duration that is half of the dura
 It is because those animations make half the distance, thus this way we maintain the similar velocity for the initial, middle and finishing swings.
 Below we present the end result:
 
-![](/react-native-reanimated/docs/animations/wobble.gif)
+![](/docs/animations/wobble.gif)
 
 ## Animating Layout Properties
 
