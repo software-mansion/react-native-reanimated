@@ -1,5 +1,6 @@
 #include "RemoteObject.h"
 #include "SharedParent.h"
+#include "RuntimeDecorator.h"
 #include <jsi/jsi.h>
 
 using namespace facebook;
