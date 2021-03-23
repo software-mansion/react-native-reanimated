@@ -54,9 +54,6 @@ public:
   bool isAnyHandlerWaitingForEvent(std::string eventName);
   
   void maybeRequestRender();
-  
-  bool isUIRuntime(jsi::Runtime &rt);
-  bool isHostRuntime(jsi::Runtime &rt);
 public:
   std::unique_ptr<jsi::Runtime> runtime;
 private:
