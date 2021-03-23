@@ -9,6 +9,10 @@ PODS:
     - React-Core (= 0.64.0-rc.2)
     - React-jsi (= 0.64.0-rc.2)
     - ReactCommon/turbomodule/core (= 0.64.0-rc.2)
+  - Folly (2016.09.26.00):
+    - boost-for-react-native
+    - DoubleConversion
+    - glog
   - glog (0.3.5)
   - RCT-Folly (2020.01.13.00):
     - boost-for-react-native
@@ -283,12 +287,12 @@ PODS:
     - React
   - RNGestureHandler (1.10.1):
     - React-Core
-  - RNReanimated (2.0.0-rc.3):
+  - RNReanimated (2.0.0):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
+    - Folly
     - glog
-    - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
     - React
@@ -360,6 +364,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
+    - Folly
 
 EXTERNAL SOURCES:
   DoubleConversion:
@@ -435,7 +440,8 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: b21700af840f633338ac968a36da9aa3a8268887
-  FBReactNativeSpec: ac5ae8902727ea99deddd51bc998500c64a27275
+  FBReactNativeSpec: 042442754c4377344b9c14ef2186aa2c1e6f7208
+  Folly: 211775e49d8da0ca658aebc8eab89d642935755c
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: fa44b153ba69cb9dd6cec5084b86719e3be7c90b
@@ -463,7 +469,7 @@ SPEC CHECKSUMS:
   ReactCommon: c8ae344df0376e043f2899a5badb60709d24821e
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNGestureHandler: 5e58135436aacc1c5d29b75547d3d2b9430d052c
-  RNReanimated: 2111076cba59d4ea29d8a10b4310d20bab2d3b7f
+  RNReanimated: 9dce67e20b65f1813ab5eaae17e4fc1adf932e2f
   RNScreens: b6c9607e6fe47c1b6e2f1910d2acd46dd7ecea3a
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Yoga: 17d4f4db4e2efbaa7c3bc316ce4f762d02c4023d
