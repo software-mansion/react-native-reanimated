@@ -47,7 +47,7 @@ typedef JSCExecutorFactory ExecutorFactory;
   [bridge updateModuleWithInstance:eventDispatcher];
   _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
-  
+
   const auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
@@ -65,7 +65,7 @@ typedef JSCExecutorFactory ExecutorFactory;
                                    jsi::Object::createFromHostObject(runtime, reanimatedModule));
     }
   };
-  
+
   // installs globals such as console, nativePerformanceNow, etc.
   return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
 }

@@ -1,6 +1,7 @@
 #import "NativeProxy.h"
 #import "REAIOSScheduler.h"
 #import "REAIOSErrorHandler.h"
+#import "RuntimeDecorator.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "NativeMethods.h"
@@ -116,7 +117,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 #else
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
-  
+
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
@@ -150,7 +151,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
                                                     platformDepMethodsHolder
                                                     );
 
-  scheduler->setModule(module);
+  scheduler->setRuntimeManager(module);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);
