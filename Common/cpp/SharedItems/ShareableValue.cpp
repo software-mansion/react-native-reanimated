@@ -170,7 +170,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
 }
 
 std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, NativeReanimatedModule *module, ValueType valueType) {
-  auto sv = std::make_shared<ShareableValue>(module, module->scheduler);
+  auto sv = std::shared_ptr<ShareableValue>(new ShareableValue(module, module->scheduler));
   sv->adapt(rt, value, valueType);
   return sv;
 }
