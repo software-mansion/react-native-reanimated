@@ -63,12 +63,12 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
                                                   runtime(std::move(rt)),
-                                                  mapperRegistry(new MapperRegistry()),
-                                                  eventHandlerRegistry(new EventHandlerRegistry()),
+                                                  mapperRegistry(std::make_shared<MapperRegistry>()),
+                                                  eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
                                                   propObtainer(propObtainer),
                                                   errorHandler(errorHandler),
-                                                  workletsCache(new WorkletsCache()),
+                                                  workletsCache(std::make_shared<WorkletsCache>()),
                                                   scheduler(scheduler)
 {
   auto requestAnimationFrame = [=](FrameCallback callback) {
@@ -174,7 +174,7 @@ jsi::Value NativeReanimatedModule::getViewProp(jsi::Runtime &rt, const jsi::Valu
   const int viewTagInt = (int)viewTag.asNumber();
   std::string propNameStr = propName.asString(rt).utf8(rt);
   jsi::Function fun = callback.getObject(rt).asFunction(rt);
-  std::shared_ptr<jsi::Function> funPtr(new jsi::Function(std::move(fun)));
+  std::shared_ptr<jsi::Function> funPtr = std::make_shared<jsi::Function>(std::move(fun));
 
   scheduler->scheduleOnUI([&rt, viewTagInt, funPtr, this, propNameStr]() {
     const jsi::String propNameValue = jsi::String::createFromUtf8(rt, propNameStr);
