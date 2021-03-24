@@ -15,15 +15,30 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
-export const checkPluginState = () => {
-  if (
-    !(() => {
-      'worklet';
-    }).__workletHash &&
-    !process.env.JEST_WORKER_ID
-  ) {
+const testWorklet = () => {
+  'worklet';
+};
+
+export const checkPluginState = (throwError = true) => {
+  if (!testWorklet.__workletHash && !process.env.JEST_WORKER_ID) {
+    if (throwError) {
+      throw new Error(
+        "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+      );
+    }
+    return false;
+  }
+  return true;
+};
+
+export const isConfigured = (throwError = false) => {
+  return checkPluginState(throwError) && !NativeReanimated.useOnlyV1;
+};
+
+export const isConfiguredCheck = () => {
+  if (!isConfigured(true)) {
     throw new Error(
-      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation'
     );
   }
 };
@@ -87,7 +102,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -230,22 +245,18 @@ function workletValueSetterJS(value) {
   }
 }
 
-NativeReanimated.installCoreFunctions(
-  NativeReanimated.native ? workletValueSetter : workletValueSetterJS
-);
-
 export function makeMutable(value) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
@@ -277,15 +288,22 @@ export function createAnimatedPropAdapter(adapter, nativeProps) {
   return adapter;
 }
 
-const capturableConsole = console;
-runOnUI(() => {
-  'worklet';
-  const console = {
-    debug: runOnJS(capturableConsole.debug),
-    log: runOnJS(capturableConsole.log),
-    warn: runOnJS(capturableConsole.warn),
-    error: runOnJS(capturableConsole.error),
-    info: runOnJS(capturableConsole.info),
-  };
-  _setGlobalConsole(console);
-})();
+if (!NativeReanimated.useOnlyV1) {
+  NativeReanimated.installCoreFunctions(
+    NativeReanimated.native ? workletValueSetter : workletValueSetterJS
+  );
+
+  const capturableConsole = console;
+  isConfigured() &&
+    runOnUI(() => {
+      'worklet';
+      const console = {
+        debug: runOnJS(capturableConsole.debug),
+        log: runOnJS(capturableConsole.log),
+        warn: runOnJS(capturableConsole.warn),
+        error: runOnJS(capturableConsole.error),
+        info: runOnJS(capturableConsole.info),
+      };
+      _setGlobalConsole(console);
+    })();
+}
