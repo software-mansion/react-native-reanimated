@@ -57,11 +57,14 @@ runOnUI(
                 configs[tag].sv.value = 0;
                 delete configs[tag];
             },
-            startAnimationForTag(tag) { //TODO use previous animation values like velocity
+            startAnimationForTag(tag) { 
+                // TODO use previous animation values like velocity
+                // probably we need to store a vector as we don't know a direction
                 if (typeof configs[tag].animation != 'function') {
                     console.error(`Animation for a tag: ${tag} it not a function!`);
                 }
                 const animation = (configs[tag].animation)(); // it should be an animation factory as it has been created on RN side
+                const sv = configs[tag].sv;
                 animation.callback = (finished) => {
                     if (finished) {
                         sv.value = 0;
@@ -69,7 +72,7 @@ runOnUI(
                     }
                 }
                 _startObservingProgress(tag, sv);
-                sv.value = animation;
+                configs[tag].sv.value = animation;
                 
             },
         };  

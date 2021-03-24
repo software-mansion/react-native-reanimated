@@ -10,9 +10,9 @@
 namespace reanimated {
 
 class LayoutAnimationsObserver {
- /* LayoutAnimationsObserver(std::shared_ptr<> nativeProxy, jsi::Runtime &rt) {
+  LayoutAnimationsObserver(, jsi::Runtime &rt) {
      //TODO
-  }*/
+  }
 };
 
 }

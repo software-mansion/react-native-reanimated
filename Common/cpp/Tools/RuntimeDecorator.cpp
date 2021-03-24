@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <memory>
 #include "MutableValue.h"
-#include "LayoutAnimationObserver.h"
+#include "LayoutAnimationsObserver.h"
 
 namespace reanimated {
 
@@ -67,8 +67,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          RequestFrameFunction requestFrame,
                                          ScrollToFunction scrollTo,
                                          MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime,
-                                         LayoutAnimationsObserver layoutAnimationsObserver) {
+                                         TimeProviderFunction getCurrentTime) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   
   auto clb = [updater](
@@ -150,7 +149,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
     
   // layout animation
-  auto clb7 = [layoutAnimationsObserver](
+  /*auto clb7 = [layoutAnimationsObserver](
                                jsi::Runtime &rt,
                                const jsi::Value &thisValue,
                                const jsi::Value *args,
@@ -170,7 +169,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
     layoutAnimationsObserver.stopObserving(args[0].asNumber());
   };
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
-  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
+  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress); */
 }
 
 bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {

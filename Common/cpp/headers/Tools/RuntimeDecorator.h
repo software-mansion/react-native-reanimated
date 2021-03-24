@@ -3,6 +3,7 @@
 #include "PlatformDepMethodsHolder.h"
 #include <stdio.h>
 #include <jsi/jsi.h>
+#include "LayoutAnimationsObserver.h"
 
 using namespace facebook;
 

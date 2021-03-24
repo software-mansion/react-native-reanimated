@@ -12,9 +12,7 @@ RCTBridge *_bridge_reanimated = nil;
 @implementation REAModule
 {
   NSMutableArray<AnimatedOperation> *_operations;
-  REATransitionManager *_transitionManager;
-  REAReactBatchObserver *_reactBatchObserver;
-    
+  REATransitionManager *_transitionManager;    
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
