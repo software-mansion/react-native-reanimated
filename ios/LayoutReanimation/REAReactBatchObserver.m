@@ -9,6 +9,7 @@
 #import "RCTShadowView.h"
 #import "REAAnimationRootView.h"
 #import "REAViewTraverser.h"
+#import "REASnapshooter.h"
 
 @interface REAReactBatchObserver ()
 
@@ -64,7 +65,7 @@
           [REAViewTraverser traverse:view withBlock:^(UIView* view) {
             [snapshooter takeSnapshot: view];
           }];
-          _snapshotManager
+          [_snapshotManager startAnimationWithFirstSnapshot: snapshooter];
         };
         goThroughAffectedWithBlock(viewRegistry, block);
     }];
@@ -73,9 +74,11 @@
     [self.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
         void (^block)(REAAnimationRootView*, NSNumber *) = ^void(REAAnimationRootView* view, NSNumber *tag) {
           NSSet* capturableProps = view.capturablePropeties;
+          REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
           [REAViewTraverser traverse:view withBlock:^(UIView* view) {
             [snapshooter takeSnapshot: view];
           }];
+          [_snapshotManager addSecondSnapshot: snapshooter];
         };
         goThroughAffectedWithBlock(viewRegistry, block);
     }];
