@@ -60,6 +60,10 @@ runOnUI(
             startAnimationForTag(tag) { 
                 // TODO use previous animation values like velocity
                 // probably we need to store a vector as we don't know a direction
+                if (configs[tag] == null) {
+                    return; // :(
+                }
+
                 if (typeof configs[tag].animation != 'function') {
                     console.error(`Animation for a tag: ${tag} it not a function!`);
                 }

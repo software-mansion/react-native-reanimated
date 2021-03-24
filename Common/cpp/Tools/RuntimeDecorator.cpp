@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <memory>
 #include "MutableValue.h"
-#include "LayoutAnimationsObserver.h"
+#include "LayoutAnimationsProxy.h"
 
 namespace reanimated {
 

@@ -28,7 +28,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec
 public:
   NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                          std::shared_ptr<Scheduler> scheduler,
-                         std::unique_ptr<jsi::Runtime> rt,
+                         std::shared_ptr<jsi::Runtime> rt,
                          std::shared_ptr<ErrorHandler> errorHandler,
                          std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                          PlatformDepMethodsHolder platformDepMethodsHolder);
@@ -55,7 +55,7 @@ public:
 
   void maybeRequestRender();
 public:
-  std::unique_ptr<jsi::Runtime> runtime;
+  std::shared_ptr<jsi::Runtime> runtime;
 private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;

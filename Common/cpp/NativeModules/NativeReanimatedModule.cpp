@@ -58,11 +58,11 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
-                                               std::unique_ptr<jsi::Runtime> rt,
+                                               std::shared_ptr<jsi::Runtime> rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
-                                                  runtime(std::move(rt)),
+                                                  runtime(rt),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),

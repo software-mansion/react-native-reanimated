@@ -115,9 +115,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
 
 #if __has_include(<hermes/hermes.h>)
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
   
   std::shared_ptr<Scheduler> scheduler = std::make_shared<REAIOSScheduler>(jsInvoker);
@@ -144,17 +144,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     if (animationsManager) {
       [animationsManager notifyAboutProgress:[NSNumber numberWithInt: tag] tag:[NSNumber numberWithFloat: progress]];
     }
-  }
+  };
   
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::makeShared<LayoutAnimationsProxy>(notifyAboutProgress);
-  
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   [animationsManager setAnimationStartingBlock:^(NSNumber * _Nonnull tag) {
-    jsi::Value layoutAnimationRepositoryAsValue = animatedRuntime.global().getProperty(animatedRuntime, "LayoutAnimationRepository");
-    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(animatedRuntime).getPropertyAsFunction(animatedRuntime, "startAnimationForTag");
-      startAnimationForTag.call(animatedRuntime, jsi::Value([tag intValue]));
+    std::shared_ptr<jsi::Runtime> rt = wrt.lock();
+    if (wrt.expired()) {
+      return;
     }
-  }]
+    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getProperty(*rt, "LayoutAnimationRepository");
+    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+      jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
+      startAnimationForTag.call(*rt, jsi::Value([tag intValue]));
+    }
+  }];
   
   // Layout Animations end
   
@@ -168,7 +172,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   module = std::make_shared<NativeReanimatedModule>(jsInvoker,
                                                     scheduler,
-                                                    std::move(animatedRuntime),
+                                                    animatedRuntime,
                                                     errorHandler,
                                                     propObtainer,
                                                     platformDepMethodsHolder

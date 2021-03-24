@@ -9,10 +9,8 @@
 
 namespace reanimated {
 
-class LayoutAnimationsProxy {
-  LayoutAnimationsProxy(, jsi::Runtime &rt) {
-     //TODO
-  }
-};
+LayoutAnimationsProxy::LayoutAnimationsProxy(std::function<void(int, float)> _notifyAboutProgress): notifyAboutProgress(std::move(_notifyAboutProgress)) {
+  
+}
 
 }
