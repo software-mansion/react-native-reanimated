@@ -58,10 +58,10 @@ runOnUI(
                 delete configs[tag];
             },
             startAnimationForTag(tag) { //TODO use previous animation values like velocity
-                if (typeof configs[tag] != 'function') {
+                if (typeof configs[tag].animation != 'function') {
                     console.error(`Animation for a tag: ${tag} it not a function!`);
                 }
-                const animation = configs[tag](); // it should be an animation factory as it has been created on RN side
+                const animation = (configs[tag].animation)(); // it should be an animation factory as it has been created on RN side
                 animation.callback = (finished) => {
                     if (finished) {
                         sv.value = 0;

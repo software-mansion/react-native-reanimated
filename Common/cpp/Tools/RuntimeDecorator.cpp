@@ -2,6 +2,8 @@
 #include "ReanimatedHiddenHeaders.h"
 #include <unordered_map>
 #include <memory>
+#include "MutableValue.h"
+#include "LayoutAnimationObserver.h"
 
 namespace reanimated {
 
@@ -65,7 +67,8 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          RequestFrameFunction requestFrame,
                                          ScrollToFunction scrollTo,
                                          MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime) {
+                                         TimeProviderFunction getCurrentTime,
+                                         LayoutAnimationsObserver layoutAnimationsObserver) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   
   auto clb = [updater](
@@ -145,6 +148,29 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
+    
+  // layout animation
+  auto clb7 = [layoutAnimationsObserver](
+                               jsi::Runtime &rt,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *args,
+                               size_t count
+                               ) -> jsi::Value {
+    layoutAnimationsObserver.startObserving(args[0].asNumber(), args[1].asObject(rt).getHostObject<MutableValue>(rt));
+  };
+  jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
+  rt.global().setProperty(rt, "_startObservingProgress", _startObservingProgress);
+  
+  auto clb8 = [layoutAnimationsObserver](
+                               jsi::Runtime &rt,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *args,
+                               size_t count
+                               ) -> jsi::Value {
+    layoutAnimationsObserver.stopObserving(args[0].asNumber());
+  };
+  jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
+  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
 }
 
 bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
