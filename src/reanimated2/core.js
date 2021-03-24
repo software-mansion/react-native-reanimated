@@ -31,8 +31,16 @@ export const checkPluginState = (throwError = true) => {
   return true;
 };
 
-export const isConfigured = () => {
-  return checkPluginState(false) && !NativeReanimated.useOnlyV1;
+export const isConfigured = (throwError = false) => {
+  return checkPluginState(throwError) && !NativeReanimated.useOnlyV1;
+};
+
+export const isConfiguredCheck = () => {
+  if (!isConfigured(true)) {
+    throw new Error(
+      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation'
+    );
+  }
 };
 
 function _toArrayReanimated(object) {
@@ -94,7 +102,7 @@ export function runOnUI(worklet) {
 }
 
 export function makeShareable(value) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeShareable(value);
 }
 
@@ -238,17 +246,17 @@ function workletValueSetterJS(value) {
 }
 
 export function makeMutable(value) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeMutable(value);
 }
 
 export function makeRemote(object = {}) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.makeRemote(object);
 }
 
 export function startMapper(mapper, inputs = [], outputs = []) {
-  checkPluginState();
+  isConfiguredCheck();
   return NativeReanimated.startMapper(mapper, inputs, outputs);
 }
 
