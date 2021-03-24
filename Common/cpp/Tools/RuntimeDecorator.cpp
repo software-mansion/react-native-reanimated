@@ -155,7 +155,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                const jsi::Value *args,
                                size_t count
                                ) -> jsi::Value {
-    layoutAnimationsObserver.startObserving(args[0].asNumber(), args[1].asObject(rt).getHostObject<MutableValue>(rt));
+    layoutAnimationsProxy.startObserving(args[0].asNumber(), args[1].asObject(rt).getHostObject<MutableValue>(rt));
   };
   jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
   rt.global().setProperty(rt, "_startObservingProgress", _startObservingProgress);
@@ -166,7 +166,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                const jsi::Value *args,
                                size_t count
                                ) -> jsi::Value {
-    layoutAnimationsObserver.stopObserving(args[0].asNumber());
+    layoutAnimationsProxy.stopObserving(args[0].asNumber());
   };
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
   rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress); */

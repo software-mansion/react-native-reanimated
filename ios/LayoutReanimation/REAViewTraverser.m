@@ -33,7 +33,7 @@
     if (![view isKindOfClass:[REAAnimationRootView class]]) {
         NSException* myException = [NSException
                 exceptionWithName:@"NotAREAAnimationRootView"
-                reason:@"View is not an subclass of REAAnimationRootView"
+                reason:@"View is not a subclass of REAAnimationRootView"
                 userInfo:nil];
         @throw myException;
     }

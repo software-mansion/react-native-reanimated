@@ -7,6 +7,7 @@
 #import <folly/json.h>
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
+#import "LayoutAnimationsProxy.h"
 
 #if __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>

@@ -21,10 +21,11 @@
 
 @implementation REAReactBatchObserver
 
-- (void) invalidate
+- (void)invalidate
 {
     self.uiManager = nil;
     self.bridge = nil;
+    self.animationsManager = nil;
     [self.uiManager.observerCoordinator removeObserver:self];
 }
 
@@ -35,7 +36,7 @@
         self.uiManager = [bridge moduleForClass:[RCTUIManager class]];
         self.affectedAnimationRootsTags = [NSMutableSet new];
         [self.uiManager.observerCoordinator addObserver:self];
-        
+        _animationsManager = [[REAAnimationsManager alloc] init];
         return self;
     }
     return nil;
@@ -52,33 +53,35 @@
                                        void(^)(REAAnimationRootView* view, NSNumber *)) = ^void(NSDictionary<NSNumber *,UIView *> *viewRegistry, void(^block)(REAAnimationRootView* view, NSNumber *)) {
         for (NSNumber *tag in affectedAnimationRootsTags) {
             UIView* view = viewRegistry[tag];
-            RCTAssert([view isKindOfClass:[REAAnimationRootView class]], @"View is not an subclass of REAAnimationRootView");
+            RCTAssert([view isKindOfClass:[REAAnimationRootView class]], @"View is not a subclass of REAAnimationRootView");
             REAAnimationRootView* animtionRoot = (REAAnimationRootView*) view;
             block(animtionRoot, tag);
         }
     };
     
     [self.uiManager prependUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+      // TODO use weak self
         void (^block)(REAAnimationRootView*, NSNumber *) = ^void(REAAnimationRootView* view, NSNumber *tag) {
           NSSet* capturableProps = view.capturablePropeties;
           REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
           [REAViewTraverser traverse:view withBlock:^(UIView* view) {
             [snapshooter takeSnapshot: view];
           }];
-          [_snapshotManager startAnimationWithFirstSnapshot: snapshooter];
+          [_animationsManager startAnimationWithFirstSnapshot: snapshooter];
         };
         goThroughAffectedWithBlock(viewRegistry, block);
     }];
     
     //TODO remove reactTags if there are no longer valid
     [self.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+      // TODO use weak self
         void (^block)(REAAnimationRootView*, NSNumber *) = ^void(REAAnimationRootView* view, NSNumber *tag) {
           NSSet* capturableProps = view.capturablePropeties;
           REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
           [REAViewTraverser traverse:view withBlock:^(UIView* view) {
             [snapshooter takeSnapshot: view];
           }];
-          [_snapshotManager addSecondSnapshot: snapshooter];
+          [_animationsManager addSecondSnapshot: snapshooter];
         };
         goThroughAffectedWithBlock(viewRegistry, block);
     }];
@@ -107,3 +110,4 @@
 }
 
 @end
+

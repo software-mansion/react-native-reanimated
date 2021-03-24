@@ -6,10 +6,17 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "REASnapshooter.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface REAAnimationsManager : NSObject
+
+- (void)startAnimationWithFirstSnapshot:(REASnapshooter*)snapshooter;
+- (void)addSecondSnapshot:(REASnapshooter*)snapshooter;
+
+- (void)setAnimationStartingBlock:(void (^)(NSNumber *tag))startAnimation;
+- (void)notifyAboutProgress:(NSNumber*)progress tag:(NSNumber*)tag;
 
 @end
 
