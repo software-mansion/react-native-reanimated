@@ -1,6 +1,6 @@
 /* global _updateProps */
 import { processColor } from './Colors';
-import { makeShareable, checkPluginState } from './core';
+import { makeShareable, isConfigured } from './core';
 import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated';
 
@@ -22,9 +22,7 @@ const colorProps = [
   'overlayColor',
 ];
 
-const ColorProperties = !checkPluginState(false)
-  ? []
-  : makeShareable(colorProps);
+const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 export const updateProps = (
   viewDescriptor,

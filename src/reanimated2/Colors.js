@@ -9,7 +9,7 @@
 /* eslint no-bitwise: 0 */
 
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable, checkPluginState } from './core';
+import { makeRemote, makeShareable, isConfigured } from './core';
 import { interpolate } from './interpolation';
 import { Extrapolate } from '../reanimated1/derived';
 
@@ -26,7 +26,7 @@ function call(...args) {
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
 // objects, then pick the right cache in getMatchers() method.
 const jsCachedMatchers = {};
-const uiCachedMatchers = !checkPluginState(false) ? null : makeRemote({});
+const uiCachedMatchers = !isConfigured() ? null : makeRemote({});
 
 function getMatchers() {
   'worklet';
@@ -132,7 +132,7 @@ function parsePercentage(str) {
   return int / 100;
 }
 
-const names = !checkPluginState(false)
+const names = !isConfigured()
   ? null
   : makeShareable({
       transparent: 0x00000000,

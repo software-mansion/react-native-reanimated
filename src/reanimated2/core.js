@@ -31,6 +31,10 @@ export const checkPluginState = (throwError = true) => {
   return true;
 };
 
+export const isConfigured = () => {
+  return checkPluginState(false) && !NativeReanimated.useOnlyV1;
+};
+
 function _toArrayReanimated(object) {
   'worklet';
   if (Array.isArray(object)) {
@@ -282,7 +286,7 @@ if (!NativeReanimated.useOnlyV1) {
   );
 
   const capturableConsole = console;
-  checkPluginState(false) &&
+  isConfigured() &&
     runOnUI(() => {
       'worklet';
       const console = {
