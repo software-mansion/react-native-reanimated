@@ -493,13 +493,33 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   // check for invalid usage of shared values in returned object
   let wrongKey;
-  const isError = Object.keys(initial).some((key) => {
-    const element = initial[key];
+  const isObjectValid = (element, key) => {
     const result = typeof element === 'object' && element.value !== undefined;
     if (result) {
       wrongKey = key;
     }
-    return result;
+    return !result;
+  };
+  const isError = Object.keys(initial).some((key) => {
+    const element = initial[key];
+    let result = false;
+    // a case for transform that has a format of an array of objects
+    if (Array.isArray(element)) {
+      for (const elementArrayItem of element) {
+        // this means unhandled format and it doesn't match the transform format
+        if (typeof elementArrayItem !== 'object') {
+          break;
+        }
+        const objectValue = Object.values(elementArrayItem)[0];
+        result = isObjectValid(objectValue, key);
+        if (!result) {
+          break;
+        }
+      }
+    } else {
+      result = isObjectValid(element, key);
+    }
+    return !result;
   });
   if (isError && wrongKey !== undefined) {
     throw new Error(

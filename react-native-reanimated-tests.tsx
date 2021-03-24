@@ -699,6 +699,10 @@ function interpolateNodeTest() {
     inputRange: [0, 1],
     outputRange: ['0deg', '100deg'],
   });
+  interpolateNode(value, {
+    inputRange: [0, 1],
+    outputRange: ['0rad', `${Math.PI}rad`],
+  });
 }
 
 function colorTest() {

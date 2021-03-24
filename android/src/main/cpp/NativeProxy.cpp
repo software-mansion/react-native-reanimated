@@ -62,10 +62,10 @@ void NativeProxy::installJSIBindings()
   };
 
   auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    //doNoUse -> NodesManager passes here a timestamp from choreographer which is useless for us 
+    //doNoUse -> NodesManager passes here a timestamp from choreographer which is useless for us
     //as we use diffrent timer to better handle events. The lambda is translated to NodeManager.OnAnimationFrame
     //and treated just like reanimated 1 frame callbacks which make use of the timestamp.
-    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) { 
+    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
        double frameTimestamp = getCurrentTime();
        rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
        onRender(frameTimestamp);
@@ -98,7 +98,7 @@ void NativeProxy::installJSIBindings()
   executor = factory.get()->createJSExecutor(delegate, jsQueue);
   animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
 
-  std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
+  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
