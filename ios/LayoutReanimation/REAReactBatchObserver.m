@@ -7,6 +7,7 @@
 
 #import "REAReactBatchObserver.h"
 #import "RCTShadowView.h"
+#import "REAAnimationRootView.h"
 
 @interface REAReactBatchObserver ()
 
@@ -44,16 +45,30 @@
     NSMutableSet* affectedAnimationRootsTags = self.affectedAnimationRootsTags;
     self.affectedAnimationRootsTags = [NSMutableSet new];
     
-    [self.uiManager prependUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
-        for (NSNumber* tag in affectedAnimationRootsTags) {
-            //[REASnapshotManager addSnapshotForRootWithTag: tag];
+    void (^goThroughAffectedWithBlock)(NSDictionary<NSNumber *,UIView *> *viewRegistry,
+                                       void(^)(REAAnimationRootView* view)) = ^void(NSDictionary<NSNumber *,UIView *> *viewRegistry, void(^block)(REAAnimationRootView* view)) {
+        for (NSNumber *tag in affectedAnimationRootsTags) {
+            UIView* view = viewRegistry[tag];
+            RCTAssert([view isKindOfClass:[REAAnimationRootView class]], @"View is not an subclass of REAAnimationRootView");
+            REAAnimationRootView* aniamtionRoot = (REAAnimationRootView*) view;
+            NSSet* capturableProperties = aniamtionRoot.capturablePropeties;
+            //Todo
         }
+    };
+    
+    [self.uiManager prependUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+        void (^block)(REAAnimationRootView*) = ^void(REAAnimationRootView* view) {
+            //TODO
+        };
+        goThroughAffectedWithBlock(viewRegistry, block);
     }];
     
+    // TODO remove reactTags if there are no longer valid
     [self.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
-        for (NSNumber* tag in affectedAnimationRootsTags) {
-           // [REAAnimationRegistry updateAnimationsForRootWithTag: tag];
-        }
+        void (^block)(REAAnimationRootView*) = ^void(REAAnimationRootView* view) {
+            ///TODO
+        };
+        goThroughAffectedWithBlock(viewRegistry, block);
     }];
 }
 

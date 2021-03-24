@@ -67,6 +67,7 @@ const globals = new Set([
   '_eventTimestamp',
   '_frameTimestamp',
   'isNaN',
+  'LayoutAnimationRepository',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist

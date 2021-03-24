@@ -1,20 +1,26 @@
 import { requireNativeComponent, findNodeHandle } from 'react-native';
 import React from 'react';
+import { runOnUI } from '../core';
 
 const REALayoutView = requireNativeComponent('REALayoutView');
 
 export class AnimatedRoot extends React.Component {
-    constructor() {
-        super();
+    constructor(props, context) {
+        super(props, context);
+        this.sv = makeSherable(0);
     }
 
-    componentDidUpdate() {
+    componentDidMount() {
         const tag = findNodeHandle(this);
         const animation = this.props.animation;
         const config = {
-            animation: animation
+            animation: animation,
+            sv: this.sv,
         }
-        // NativeReanimated.registeConfig(tag, config);
+        runOnUI(() => {
+            'worklet'
+            LayoutAnimationRepository.registerConfig(tag, config);
+        })();
     }
 
     render() {
@@ -25,7 +31,11 @@ export class AnimatedRoot extends React.Component {
 
     componentWillUnmount() {
         const tag = findNodeHandle(this);
-        // NativeReanimated.removeConfig(tag);
+        this.sv = null;
+        runOnUI(() => {
+            'worklet'
+            LayoutAnimationRepository.removeConfig(tag);
+        })();
     }
 
 }
