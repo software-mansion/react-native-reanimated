@@ -1,8 +1,7 @@
 /* global _updateProps */
 import { processColor } from './Colors';
-import { makeShareable } from './core';
+import { makeShareable, checkPluginState } from './core';
 import { Platform } from 'react-native';
-import NativeReanimated from './NativeReanimated';
 import { _updatePropsJS } from './js-reanimated';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
@@ -23,7 +22,7 @@ const colorProps = [
   'overlayColor',
 ];
 
-const ColorProperties = NativeReanimated.useOnlyV1
+const ColorProperties = !checkPluginState(false)
   ? []
   : makeShareable(colorProps);
 

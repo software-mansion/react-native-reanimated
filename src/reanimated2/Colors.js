@@ -9,10 +9,9 @@
 /* eslint no-bitwise: 0 */
 
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable } from './core';
+import { makeRemote, makeShareable, checkPluginState } from './core';
 import { interpolate } from './interpolation';
 import { Extrapolate } from '../reanimated1/derived';
-import NativeReanimated from './NativeReanimated';
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
@@ -27,7 +26,7 @@ function call(...args) {
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
 // objects, then pick the right cache in getMatchers() method.
 const jsCachedMatchers = {};
-const uiCachedMatchers = NativeReanimated.useOnlyV1 ? null : makeRemote({});
+const uiCachedMatchers = !checkPluginState(false) ? null : makeRemote({});
 
 function getMatchers() {
   'worklet';
@@ -133,7 +132,7 @@ function parsePercentage(str) {
   return int / 100;
 }
 
-const names = NativeReanimated.useOnlyV1
+const names = !checkPluginState(false)
   ? null
   : makeShareable({
       transparent: 0x00000000,

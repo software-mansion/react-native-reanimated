@@ -19,12 +19,16 @@ const testWorklet = () => {
   'worklet';
 };
 
-export const checkPluginState = () => {
+export const checkPluginState = (throwError = true) => {
   if (!testWorklet.__workletHash && !process.env.JEST_WORKER_ID) {
-    console.warn(
-      "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
-    );
+    if (throwError) {
+      throw new Error(
+        "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
+      );
+    }
+    return false;
   }
+  return true;
 };
 
 function _toArrayReanimated(object) {
@@ -273,22 +277,21 @@ export function createAnimatedPropAdapter(adapter, nativeProps) {
 }
 
 if (!NativeReanimated.useOnlyV1) {
-  checkPluginState();
-
   NativeReanimated.installCoreFunctions(
     NativeReanimated.native ? workletValueSetter : workletValueSetterJS
   );
 
   const capturableConsole = console;
-  runOnUI(() => {
-    'worklet';
-    const console = {
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
-    };
-    _setGlobalConsole(console);
-  })();
+  checkPluginState(false) &&
+    runOnUI(() => {
+      'worklet';
+      const console = {
+        debug: runOnJS(capturableConsole.debug),
+        log: runOnJS(capturableConsole.log),
+        warn: runOnJS(capturableConsole.warn),
+        error: runOnJS(capturableConsole.error),
+        info: runOnJS(capturableConsole.info),
+      };
+      _setGlobalConsole(console);
+    })();
 }
