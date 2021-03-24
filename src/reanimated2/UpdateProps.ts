@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { processColor } from './Colors';
-import { makeShareable } from './core';
+import { makeShareable, isConfigured } from './core';
 import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated';
 
@@ -24,7 +24,7 @@ const colorProps = [
   'overlayColor',
 ];
 
-const ColorProperties = makeShareable(colorProps);
+const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 export const updateProps = (
   viewDescriptor,
