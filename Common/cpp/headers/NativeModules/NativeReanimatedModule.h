@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <memory>
 #include <vector>
+#include "LayoutAnimationsProxy.h"
 
 namespace reanimated
 {
@@ -31,6 +32,7 @@ public:
                          std::shared_ptr<jsi::Runtime> rt,
                          std::shared_ptr<ErrorHandler> errorHandler,
                          std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
+                         std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
                          PlatformDepMethodsHolder platformDepMethodsHolder);
 
   virtual ~NativeReanimatedModule();
@@ -64,6 +66,7 @@ private:
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
 public:
   std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;

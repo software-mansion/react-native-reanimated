@@ -61,6 +61,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::shared_ptr<jsi::Runtime> rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
+                                               std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
                                                   runtime(rt),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
@@ -76,12 +77,15 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     maybeRequestRender();
   };
   
+  this->layoutAnimationsProxy = layoutAnimationsProxy;
+  
   RuntimeDecorator::decorateUIRuntime(*runtime,
                                       platformDepMethodsHolder.updaterFunction,
                                       requestAnimationFrame,
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
-                                      platformDepMethodsHolder.getCurrentTime);
+                                      platformDepMethodsHolder.getCurrentTime,
+                                      layoutAnimationsProxy);
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)

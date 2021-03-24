@@ -19,7 +19,8 @@ public:
                                 RequestFrameFunction requestFrame,
                                 ScrollToFunction scrollTo,
                                 MeasuringFunction measure,
-                                TimeProviderFunction getCurrentTime);
+                                TimeProviderFunction getCurrentTime,
+                                std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
   
   static bool isWorkletRuntime(jsi::Runtime &rt);
   static bool isReactRuntime(jsi::Runtime &rt);

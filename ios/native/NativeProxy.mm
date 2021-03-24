@@ -175,6 +175,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
                                                     animatedRuntime,
                                                     errorHandler,
                                                     propObtainer,
+                                                    layoutAnimationsProxy,
                                                     platformDepMethodsHolder
                                                     );
 
