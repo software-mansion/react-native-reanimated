@@ -5,7 +5,7 @@
 //  Created by Szymon Kapala on 24/03/2021.
 //
 
-#ifndef LayoutAnimationProxy_h
+#ifndef LayoutAnimationsProxy_h
 #define LayoutAnimationProxy_h
 
 #include <stdio.h>
@@ -15,4 +15,4 @@ namespace reanimated {
 
 }
 
-#endif /* LayoutAnimationProxy_h */
+#endif /* LayoutAnimationsProxy_h */

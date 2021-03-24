@@ -8,6 +8,8 @@
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 #import "LayoutAnimationsProxy.h"
+#import "REAAnimationsManager.h"
+#import "REAReactBatchObserver.h"
 
 #if __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
@@ -134,7 +136,28 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   auto getCurrentTime = []() {
     return CACurrentMediaTime() * 1000;
   };
-
+  
+  // Layout Animations start
+  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
+  
+  auto notifyAboutProgress = [=](int tag, float progress) {
+    if (animationsManager) {
+      [animationsManager notifyAboutProgress:[NSNumber numberWithInt: tag] tag:[NSNumber numberWithFloat: progress]];
+    }
+  }
+  
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::makeShared<LayoutAnimationsProxy>(notifyAboutProgress);
+  
+  [animationsManager setAnimationStartingBlock:^(NSNumber * _Nonnull tag) {
+    jsi::Value layoutAnimationRepositoryAsValue = animatedRuntime.global().getProperty(animatedRuntime, "LayoutAnimationRepository");
+    if (!layoutAnimationRepositoryAsValue.isUndefined()) {
+      jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(animatedRuntime).getPropertyAsFunction(animatedRuntime, "startAnimationForTag");
+      startAnimationForTag.call(animatedRuntime, jsi::Value([tag intValue]));
+    }
+  }]
+  
+  // Layout Animations end
+  
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
