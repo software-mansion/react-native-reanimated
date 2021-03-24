@@ -8,6 +8,7 @@ struct HostFunctionHandler : jsi::HostObject {
   std::shared_ptr<jsi::Function> pureFunction;
   std::string functionName;
   jsi::Runtime *hostRuntime;
+    jsi::HostObject a;
     
   HostFunctionHandler(std::shared_ptr<jsi::Function> f, jsi::Runtime &rt) {
     pureFunction = f;
@@ -15,7 +16,7 @@ struct HostFunctionHandler : jsi::HostObject {
     hostRuntime = &rt;
   }
   
-  std::shared_ptr<jsi::Function> get() {
+  std::shared_ptr<jsi::Function> getPureFunction() {
     return pureFunction;
   }
 };
