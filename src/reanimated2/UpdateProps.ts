@@ -1,4 +1,6 @@
 /* global _updateProps */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { processColor } from './Colors';
 import { makeShareable, isConfigured } from './core';
 import { Platform } from 'react-native';

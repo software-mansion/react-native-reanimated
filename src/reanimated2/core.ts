@@ -1,5 +1,6 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
-
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
@@ -59,6 +60,8 @@ function _toArrayReanimated(object) {
 
 function _mergeObjectsReanimated() {
   'worklet';
+  // we can't use rest parameters in worklets at the moment
+  // eslint-disable-next-line prefer-rest-params
   return Object.assign.apply(null, arguments);
 }
 

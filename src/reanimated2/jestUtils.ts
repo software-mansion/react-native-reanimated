@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 const MockDate = require('mockdate');
 
 let config = {
@@ -148,10 +150,15 @@ export const setUpTests = (userConfig = {}) => {
 
   jest.mock('./js-reanimated', () => require('./js-reanimated/index.web'));
   jest.mock('../ReanimatedModule', () => require('../ReanimatedModuleCompat'));
-  jest.mock(
-    './NativeReanimated',
-    () => require('./NativeReanimated.js').default
-  );
+  jest.mock('./NativeReanimated', () => {
+    let module;
+    try {
+      module = require('./NativeReanimated.js');
+    } catch {
+      module = require('./NativeReanimated.ts');
+    }
+    return module.default;
+  });
 };
 
 export const getAnimatedStyle = (received) => {

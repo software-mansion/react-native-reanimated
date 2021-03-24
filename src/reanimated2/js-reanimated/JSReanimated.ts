@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import MapperRegistry from './MapperRegistry';
 import MutableValue from './MutableValue';
 import Mapper from './Mapper';

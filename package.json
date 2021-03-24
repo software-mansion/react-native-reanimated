@@ -9,10 +9,11 @@
     "format": "prettier --write --list-different './src/**/*.js'",
     "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "release": "npm login && release-it",
-    "type:check": "yarn tsc"
+    "type:check": "yarn tsc --noEmit",
+    "type:generate": "rm -rf lib/ && mkdir lib/ && cp -RL src/ lib/ && find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete && yarn tsc"
   },
-  "main": "src/Animated.js",
-  "module": "lib/module/Animated",
+  "main": "lib/Animated.js",
+  "module": "lib/Animated",
   "react-native": "src/Animated",
   "source": "src/Animated",
   "types": "react-native-reanimated.d.ts",
@@ -102,7 +103,7 @@
     "typescript": "^4.1.3"
   },
   "lint-staged": {
-    "*.js": [
+    "*.(js|ts|tsx)": [
       "eslint --ext '.js,.ts,.tsx' src/",
       "prettier --write"
     ]
