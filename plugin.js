@@ -25,6 +25,8 @@ const functionArgsToWorkletize = new Map([
   ['withRepeat', [3]],
   // for http://github.com/cuvent/react-native-vision-camera
   ['useFrameProcessor', [0]],
+  // for http://github.com/mrousavy/react-native-multithreading
+  ['spawnThread', [0]],
 ]);
 
 const objectHooks = new Set([
