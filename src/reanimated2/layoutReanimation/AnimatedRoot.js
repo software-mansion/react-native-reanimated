@@ -19,7 +19,7 @@ export class AnimatedRoot extends React.Component {
         }
         runOnUI(() => {
             'worklet'
-            LayoutAnimationRepository.registerConfig(tag, config);
+            global.LayoutAnimationRepository.registerConfig(tag, config);
         })();
     }
 
@@ -34,7 +34,7 @@ export class AnimatedRoot extends React.Component {
         this.sv = null;
         runOnUI(() => {
             'worklet'
-            LayoutAnimationRepository.removeConfig(tag);
+            global.LayoutAnimationRepository.removeConfig(tag);
         })();
     }
 
