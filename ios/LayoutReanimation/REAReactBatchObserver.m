@@ -37,7 +37,7 @@
         self.uiManager = [bridge moduleForClass:[RCTUIManager class]];
         self.affectedAnimationRootsTags = [NSMutableSet new];
         [self.uiManager.observerCoordinator addObserver:self];
-        _animationsManager = [[REAAnimationsManager alloc] init];
+        _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:self.uiManager];
         return self;
     }
     return nil;
