@@ -1,13 +1,13 @@
 import { requireNativeComponent, findNodeHandle } from 'react-native';
 import React from 'react';
-import { runOnUI } from '../core';
+import { runOnUI, makeShareable } from '../core';
 
 const REALayoutView = requireNativeComponent('REALayoutView');
 
 export class AnimatedRoot extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.sv = makeSherable(0);
+        this.sv = makeShareable(0);
     }
 
     componentDidMount() {
