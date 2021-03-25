@@ -23,6 +23,8 @@ const functionArgsToWorkletize = new Map([
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
+  // for http://github.com/cuvent/react-native-vision-camera
+  ['useFrameProcessor', [0]],
 ]);
 
 const objectHooks = new Set([
