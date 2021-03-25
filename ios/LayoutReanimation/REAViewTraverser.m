@@ -22,7 +22,7 @@
     
     block(view);
     
-    for (int i = 0; i < view.subviews.count; ++i) {
+    for (int i = 0; i < view.subviews.count; ++i) { // optimize and only go to dirty nodes
         UIView* subview = view.subviews[i];
         [REAViewTraverser traverse:subview withBlock:block shouldSkipAnimationRoots:true depth:(depth-1)];
     }

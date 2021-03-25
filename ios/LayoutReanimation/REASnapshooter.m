@@ -14,6 +14,7 @@
   if (self = [super init]) {
     _capturableProps = capturableProps;
     _tag = tag;
+    _capturedValues = [NSMutableDictionary new];
     return self;
   }
   return nil;
