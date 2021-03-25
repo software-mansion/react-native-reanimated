@@ -74,7 +74,6 @@
     NSDictionary<NSString*, NSNumber*>* targetValues = _secondSnapshots[view];
     
     // TODO let ViewManager handle animation progress based on view snapshots
-    // TODO calculate properly (right now we assume there is not active translation matrix)
     if (startValues != nil && targetValues != nil) { //interpolate
       // TODO make it more flexiable
       if (progress == 1.0) {

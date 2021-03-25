@@ -22,17 +22,20 @@
 -(void)takeSnapshot:(UIView*)view
 {
   NSMutableDictionary* values = [NSMutableDictionary new];
+  UIView *windowView = UIApplication.sharedApplication.keyWindow;
+  CGRect frame = [windowView.superview convertRect:view.frame toView:windowView];
   
   for (NSString* value in _capturableProps)
   {
+    
     if ([value isEqual:@"width"]) {
-        values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
+        values[@"width"] = [NSNumber numberWithDouble:(double)(frame.size.width)];
     } else if ([value isEqual:@"height"]) {
-      values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
+      values[@"height"] = [NSNumber numberWithDouble:(double)(frame.size.height)];
     } else if ([value isEqual:@"originX"]) {
-      values[@"originX"] = [NSNumber numberWithDouble:view.center.x];
+      values[@"originX"] = [NSNumber numberWithDouble:frame.origin.x];
     } else if ([value isEqual:@"originY"]) {
-      values[@"originY"] = [NSNumber numberWithDouble:view.center.y];
+      values[@"originY"] = [NSNumber numberWithDouble:frame.origin.y];
     }
   }
   
