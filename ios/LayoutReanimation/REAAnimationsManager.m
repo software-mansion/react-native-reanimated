@@ -55,6 +55,7 @@
 - (void)notifyAboutProgress:(NSNumber*)progressNumber tag:(NSNumber*)tag
 {
   double progress = [progressNumber doubleValue];
+  NSLog(@"%@: %.21Lg", @"progress", (long double) progress);
   REASnapshooter* first = _firstSnapshots[tag];
   REASnapshooter* second = _secondSnapshots[tag];
   if (first == nil || second == nil) { // animation is not ready
