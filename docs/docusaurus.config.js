@@ -1,5 +1,68 @@
-/* eslint-disable @typescript-eslint/indent */
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
+
+const prismConfig = {
+  plain: {
+    color: '#ffffff',
+    backgroundColor: '#001a72',
+  },
+  styles: [
+    {
+      types: ['comment'],
+      style: {
+        color: '#aaaaaa',
+        fontStyle: 'italic',
+      },
+    },
+    {
+      types: ['string'],
+      style: {
+        color: '#ffffff',
+      },
+    },
+    {
+      types: ['punctuation'],
+      style: {
+        color: '#ffee86',
+      },
+    },
+    {
+      types: ['variable', 'constant', 'builtin', 'attr-name'],
+      style: {
+        color: '#a3b8ff',
+      },
+    },
+    {
+      types: ['number', 'operator'],
+      style: {
+        color: '#ffaaa8',
+      },
+    },
+    {
+      types: ['keyword'],
+      style: {
+        color: '#8ed3ef',
+      },
+    },
+    {
+      types: ['char'],
+      style: {
+        color: '#a3b8ff',
+      },
+    },
+    {
+      types: ['tag'],
+      style: {
+        color: '#ffaaa8',
+      },
+    },
+    {
+      types: ['function'],
+      style: {
+        color: '#a3b8ff',
+      },
+    },
+  ],
+};
 
 module.exports = {
   title: 'React Native Reanimated',
@@ -64,69 +127,5 @@ module.exports = {
         },
       },
     ],
-  ],
-};
-
-const prismConfig = {
-  plain: {
-    color: '#ffffff',
-    backgroundColor: '#001a72',
-  },
-  styles: [
-    {
-      types: ['comment'],
-      style: {
-        color: '#aaaaaa',
-        fontStyle: 'italic',
-      },
-    },
-    {
-      types: ['string'],
-      style: {
-        color: '#ffffff',
-      },
-    },
-    {
-      types: ['punctuation'],
-      style: {
-        color: '#ffee86',
-      },
-    },
-    {
-      types: ['variable', 'constant', 'builtin', 'attr-name'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
-    {
-      types: ['number', 'operator'],
-      style: {
-        color: '#ffaaa8',
-      },
-    },
-    {
-      types: ['keyword'],
-      style: {
-        color: '#8ed3ef',
-      },
-    },
-    {
-      types: ['char'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
-    {
-      types: ['tag'],
-      style: {
-        color: '#ffaaa8',
-      },
-    },
-    {
-      types: ['function'],
-      style: {
-        color: '#a3b8ff',
-      },
-    },
   ],
 };
