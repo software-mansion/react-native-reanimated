@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/diffClamp",
+  "id": "version-1.x.x/nodes/diffClamp",
+  "isDocsHomePage": false,
+  "title": "diffClamp",
+  "description": "diffClamp",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/diffClamp.md",
+  "slug": "/nodes/diffClamp",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/diffClamp",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/diffClamp.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "diff",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/diff"
+  },
+  "next": {
+    "title": "event",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/event"
+  }
+}

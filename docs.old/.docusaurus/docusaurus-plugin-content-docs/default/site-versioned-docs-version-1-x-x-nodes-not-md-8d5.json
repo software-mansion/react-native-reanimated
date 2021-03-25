@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/not",
+  "id": "version-1.x.x/nodes/not",
+  "isDocsHomePage": false,
+  "title": "not",
+  "description": "not",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/not.md",
+  "slug": "/nodes/not",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/not",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/not.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "neq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/neq"
+  },
+  "next": {
+    "title": "or",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/or"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unversionedId": "view",
+  "id": "version-1.x.x/view",
+  "isDocsHomePage": false,
+  "title": "View, Props, etc",
+  "description": "Follow the original Animated library guides to learn how values can be connected to View attributes.",
+  "source": "@site/versioned_docs/version-1.x.x/view.md",
+  "slug": "/view",
+  "permalink": "/react-native-reanimated/docs/1.x.x/view",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/view.md",
+  "version": "1.x.x",
+  "sidebar_label": "View, Props, etc",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Event handling with reanimated nodes",
+    "permalink": "/react-native-reanimated/docs/1.x.x/event"
+  },
+  "next": {
+    "title": "Animated.Code",
+    "permalink": "/react-native-reanimated/docs/1.x.x/code"
+  }
+}

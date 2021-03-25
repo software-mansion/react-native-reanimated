@@ -1,0 +1,22 @@
+{
+  "unversionedId": "web-support",
+  "id": "web-support",
+  "isDocsHomePage": false,
+  "title": "Web Support",
+  "description": "Since",
+  "source": "@site/docs/web-support.md",
+  "slug": "/web-support",
+  "permalink": "/react-native-reanimated/docs/next/web-support",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/web-support.md",
+  "version": "current",
+  "sidebar_label": "Web Support",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Migrating from Reanimated 1.x",
+    "permalink": "/react-native-reanimated/docs/next/migration"
+  },
+  "next": {
+    "title": "Troubleshooting common problems",
+    "permalink": "/react-native-reanimated/docs/next/troubleshooting"
+  }
+}

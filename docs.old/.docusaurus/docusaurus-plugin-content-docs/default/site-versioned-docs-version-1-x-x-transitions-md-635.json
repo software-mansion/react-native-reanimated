@@ -1,0 +1,22 @@
+{
+  "unversionedId": "transitions",
+  "id": "version-1.x.x/transitions",
+  "isDocsHomePage": false,
+  "title": "Transitions",
+  "description": "Transitions is an experimental API distributed as a part of reanimated which serves the purpose of animating between two states of view hierarchy. It is conceptually similar to LayoutAnimation concept from react native but gives much better control of what and how is going to be animated.",
+  "source": "@site/versioned_docs/version-1.x.x/transitions.md",
+  "slug": "/transitions",
+  "permalink": "/react-native-reanimated/docs/1.x.x/transitions",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/transitions.md",
+  "version": "1.x.x",
+  "sidebar_label": "Transitions",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Examples",
+    "permalink": "/react-native-reanimated/docs/1.x.x/examples"
+  },
+  "next": {
+    "title": "Additional configuration",
+    "permalink": "/react-native-reanimated/docs/1.x.x/config"
+  }
+}

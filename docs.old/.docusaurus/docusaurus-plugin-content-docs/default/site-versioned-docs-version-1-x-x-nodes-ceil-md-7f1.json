@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/ceil",
+  "id": "version-1.x.x/nodes/ceil",
+  "isDocsHomePage": false,
+  "title": "ceil",
+  "description": "ceil",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/ceil.md",
+  "slug": "/nodes/ceil",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/ceil",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/ceil.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "add",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/add"
+  },
+  "next": {
+    "title": "divide",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/divide"
+  }
+}

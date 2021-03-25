@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/clockRunning",
+  "id": "version-1.x.x/nodes/clockRunning",
+  "isDocsHomePage": false,
+  "title": "clockRunning",
+  "description": "clockRunning",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/clockRunning.md",
+  "slug": "/nodes/clockRunning",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/clockRunning",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/clockRunning.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "or",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/or"
+  },
+  "next": {
+    "title": "startClock",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/startClock"
+  }
+}

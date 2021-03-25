@@ -1,0 +1,22 @@
+{
+  "unversionedId": "shared-values",
+  "id": "version-2.0.0/shared-values",
+  "isDocsHomePage": false,
+  "title": "Shared Values",
+  "description": "Shared Values are among fundamental concepts behind Reanimated 2.0.",
+  "source": "@site/versioned_docs/version-2.0.0/shared-values.md",
+  "slug": "/shared-values",
+  "permalink": "/react-native-reanimated/docs/shared-values",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/shared-values.md",
+  "version": "2.0.0",
+  "sidebar_label": "Shared Values",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "Worklets",
+    "permalink": "/react-native-reanimated/docs/worklets"
+  },
+  "next": {
+    "title": "Animations",
+    "permalink": "/react-native-reanimated/docs/animations"
+  }
+}

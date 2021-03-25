@@ -1,0 +1,22 @@
+{
+  "unversionedId": "config",
+  "id": "version-1.x.x/config",
+  "isDocsHomePage": false,
+  "title": "Additional configuration",
+  "description": "Reanimated exports two functions that control which properties can be animated natively:",
+  "source": "@site/versioned_docs/version-1.x.x/config.md",
+  "slug": "/config",
+  "permalink": "/react-native-reanimated/docs/1.x.x/config",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/config.md",
+  "version": "1.x.x",
+  "sidebar_label": "Additional configuration",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Transitions",
+    "permalink": "/react-native-reanimated/docs/1.x.x/transitions"
+  },
+  "next": {
+    "title": "Value",
+    "permalink": "/react-native-reanimated/docs/1.x.x/value"
+  }
+}

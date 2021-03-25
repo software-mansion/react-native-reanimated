@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/tan",
+  "id": "version-1.x.x/nodes/tan",
+  "isDocsHomePage": false,
+  "title": "tan",
+  "description": "tan",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/tan.md",
+  "slug": "/nodes/tan",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/tan",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/tan.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "sin",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sin"
+  },
+  "next": {
+    "title": "and",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/and"
+  }
+}

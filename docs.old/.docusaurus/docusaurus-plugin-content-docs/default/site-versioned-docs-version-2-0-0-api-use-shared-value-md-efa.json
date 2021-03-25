@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/useSharedValue",
+  "id": "version-2.0.0/api/useSharedValue",
+  "isDocsHomePage": false,
+  "title": "useSharedValue",
+  "description": "Use this hook to create a reference to a JavaScript value that can be shared with worklets.",
+  "source": "@site/versioned_docs/version-2.0.0/api/useSharedValue.md",
+  "slug": "/api/useSharedValue",
+  "permalink": "/react-native-reanimated/docs/api/useSharedValue",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/api/useSharedValue.md",
+  "version": "2.0.0",
+  "sidebar_label": "useSharedValue",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "Troubleshooting common problems",
+    "permalink": "/react-native-reanimated/docs/troubleshooting"
+  },
+  "next": {
+    "title": "useAnimatedStyle",
+    "permalink": "/react-native-reanimated/docs/api/useAnimatedStyle"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unversionedId": "events",
+  "id": "events",
+  "isDocsHomePage": false,
+  "title": "Events",
+  "description": "In the real world nothing changes instantly–there is always something between the states. When we touch a book we don't expect it to open instantly on a certain page. To make mobile apps feel more natural to the user, we use animations to smoothen out user interactions with the app user interface.",
+  "source": "@site/docs/events.md",
+  "slug": "/events",
+  "permalink": "/react-native-reanimated/docs/next/events",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/events.md",
+  "version": "current",
+  "sidebar_label": "Events",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Animations",
+    "permalink": "/react-native-reanimated/docs/next/animations"
+  },
+  "next": {
+    "title": "Reanimated 2.x architecture",
+    "permalink": "/react-native-reanimated/docs/next/architecture"
+  }
+}

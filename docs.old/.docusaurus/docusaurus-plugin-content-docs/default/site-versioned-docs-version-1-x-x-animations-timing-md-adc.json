@@ -1,0 +1,22 @@
+{
+  "unversionedId": "animations/timing",
+  "id": "version-1.x.x/animations/timing",
+  "isDocsHomePage": false,
+  "title": "Timing",
+  "description": "`js",
+  "source": "@site/versioned_docs/version-1.x.x/animations/timing.md",
+  "slug": "/animations/timing",
+  "permalink": "/react-native-reanimated/docs/1.x.x/animations/timing",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/animations/timing.md",
+  "version": "1.x.x",
+  "sidebar_label": "Timing",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Clock",
+    "permalink": "/react-native-reanimated/docs/1.x.x/clock"
+  },
+  "next": {
+    "title": "Decay",
+    "permalink": "/react-native-reanimated/docs/1.x.x/animations/decay"
+  }
+}

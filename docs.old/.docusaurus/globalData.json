@@ -1,0 +1,807 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/react-native-reanimated/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": false,
+          "path": "/react-native-reanimated/docs/next",
+          "mainDocId": "about",
+          "docs": [
+            {
+              "id": "about",
+              "path": "/react-native-reanimated/docs/next/",
+              "sidebar": "docs"
+            },
+            {
+              "id": "animations",
+              "path": "/react-native-reanimated/docs/next/animations",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/cancelAnimation",
+              "path": "/react-native-reanimated/docs/next/api/cancelAnimation",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/nativeMethods/measure",
+              "path": "/react-native-reanimated/docs/next/api/nativeMethods/measure",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/nativeMethods/scrollTo",
+              "path": "/react-native-reanimated/docs/next/api/nativeMethods/scrollTo",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/runOnJS",
+              "path": "/react-native-reanimated/docs/next/api/runOnJS",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedGestureHandler",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedGestureHandler",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedProps",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedProps",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedReaction",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedReaction",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedRef",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedRef",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedScrollHandler",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedScrollHandler",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useAnimatedStyle",
+              "path": "/react-native-reanimated/docs/next/api/useAnimatedStyle",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useDerivedValue",
+              "path": "/react-native-reanimated/docs/next/api/useDerivedValue",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/useSharedValue",
+              "path": "/react-native-reanimated/docs/next/api/useSharedValue",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withDecay",
+              "path": "/react-native-reanimated/docs/next/api/withDecay",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withDelay",
+              "path": "/react-native-reanimated/docs/next/api/withDelay",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withRepeat",
+              "path": "/react-native-reanimated/docs/next/api/withRepeat",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withSequence",
+              "path": "/react-native-reanimated/docs/next/api/withSequence",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withSpring",
+              "path": "/react-native-reanimated/docs/next/api/withSpring",
+              "sidebar": "docs"
+            },
+            {
+              "id": "api/withTiming",
+              "path": "/react-native-reanimated/docs/next/api/withTiming",
+              "sidebar": "docs"
+            },
+            {
+              "id": "architecture",
+              "path": "/react-native-reanimated/docs/next/architecture",
+              "sidebar": "docs"
+            },
+            {
+              "id": "events",
+              "path": "/react-native-reanimated/docs/next/events",
+              "sidebar": "docs"
+            },
+            {
+              "id": "guide/doc3",
+              "path": "/react-native-reanimated/docs/next/guide/doc3"
+            },
+            {
+              "id": "installation",
+              "path": "/react-native-reanimated/docs/next/installation",
+              "sidebar": "docs"
+            },
+            {
+              "id": "migration",
+              "path": "/react-native-reanimated/docs/next/migration",
+              "sidebar": "docs"
+            },
+            {
+              "id": "shared-values",
+              "path": "/react-native-reanimated/docs/next/shared-values",
+              "sidebar": "docs"
+            },
+            {
+              "id": "testing",
+              "path": "/react-native-reanimated/docs/next/testing",
+              "sidebar": "docs"
+            },
+            {
+              "id": "troubleshooting",
+              "path": "/react-native-reanimated/docs/next/troubleshooting",
+              "sidebar": "docs"
+            },
+            {
+              "id": "web-support",
+              "path": "/react-native-reanimated/docs/next/web-support",
+              "sidebar": "docs"
+            },
+            {
+              "id": "worklets",
+              "path": "/react-native-reanimated/docs/next/worklets",
+              "sidebar": "docs"
+            }
+          ]
+        },
+        {
+          "name": "2.0.0",
+          "label": "2.0.0",
+          "isLast": true,
+          "path": "/react-native-reanimated/docs",
+          "mainDocId": "about",
+          "docs": [
+            {
+              "id": "about",
+              "path": "/react-native-reanimated/docs/about",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "animations",
+              "path": "/react-native-reanimated/docs/animations",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/cancelAnimation",
+              "path": "/react-native-reanimated/docs/api/cancelAnimation",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/nativeMethods/measure",
+              "path": "/react-native-reanimated/docs/api/nativeMethods/measure",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/nativeMethods/scrollTo",
+              "path": "/react-native-reanimated/docs/api/nativeMethods/scrollTo",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/runOnJS",
+              "path": "/react-native-reanimated/docs/api/runOnJS",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedGestureHandler",
+              "path": "/react-native-reanimated/docs/api/useAnimatedGestureHandler",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedProps",
+              "path": "/react-native-reanimated/docs/api/useAnimatedProps",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedReaction",
+              "path": "/react-native-reanimated/docs/api/useAnimatedReaction",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedRef",
+              "path": "/react-native-reanimated/docs/api/useAnimatedRef",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedScrollHandler",
+              "path": "/react-native-reanimated/docs/api/useAnimatedScrollHandler",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useAnimatedStyle",
+              "path": "/react-native-reanimated/docs/api/useAnimatedStyle",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useDerivedValue",
+              "path": "/react-native-reanimated/docs/api/useDerivedValue",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/useSharedValue",
+              "path": "/react-native-reanimated/docs/api/useSharedValue",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withDecay",
+              "path": "/react-native-reanimated/docs/api/withDecay",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withDelay",
+              "path": "/react-native-reanimated/docs/api/withDelay",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withRepeat",
+              "path": "/react-native-reanimated/docs/api/withRepeat",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withSequence",
+              "path": "/react-native-reanimated/docs/api/withSequence",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withSpring",
+              "path": "/react-native-reanimated/docs/api/withSpring",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "api/withTiming",
+              "path": "/react-native-reanimated/docs/api/withTiming",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "architecture",
+              "path": "/react-native-reanimated/docs/architecture",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "events",
+              "path": "/react-native-reanimated/docs/events",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "guide/doc3",
+              "path": "/react-native-reanimated/docs/guide/doc3"
+            },
+            {
+              "id": "installation",
+              "path": "/react-native-reanimated/docs/installation",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "migration",
+              "path": "/react-native-reanimated/docs/migration",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "shared-values",
+              "path": "/react-native-reanimated/docs/shared-values",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "testing",
+              "path": "/react-native-reanimated/docs/testing",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "troubleshooting",
+              "path": "/react-native-reanimated/docs/troubleshooting",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "web-support",
+              "path": "/react-native-reanimated/docs/web-support",
+              "sidebar": "version-2.0.0/docs"
+            },
+            {
+              "id": "worklets",
+              "path": "/react-native-reanimated/docs/worklets",
+              "sidebar": "version-2.0.0/docs"
+            }
+          ]
+        },
+        {
+          "name": "2.0.0-rc.2",
+          "label": "2.0.0-rc.2",
+          "isLast": false,
+          "path": "/react-native-reanimated/docs/2.0.0-rc.2",
+          "mainDocId": "about",
+          "docs": [
+            {
+              "id": "about",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/about",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "animations",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/animations",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/cancelAnimation",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/cancelAnimation",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/nativeMethods/measure",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/nativeMethods/measure",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/nativeMethods/scrollTo",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/nativeMethods/scrollTo",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/runOnJS",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/runOnJS",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedGestureHandler",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedGestureHandler",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedProps",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedProps",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedReaction",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedReaction",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedRef",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedRef",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedScrollHandler",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedScrollHandler",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useAnimatedStyle",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useAnimatedStyle",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useDerivedValue",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useDerivedValue",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/useSharedValue",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/useSharedValue",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withDecay",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withDecay",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withDelay",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withDelay",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withRepeat",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withRepeat",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withSequence",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withSequence",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withSpring",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withSpring",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "api/withTiming",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/api/withTiming",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "architecture",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/architecture",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "events",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/events",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "guide/doc3",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/guide/doc3"
+            },
+            {
+              "id": "installation",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/installation",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "migration",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/migration",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "shared-values",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/shared-values",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "troubleshooting",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/troubleshooting",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "web-support",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/web-support",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            },
+            {
+              "id": "worklets",
+              "path": "/react-native-reanimated/docs/2.0.0-rc.2/worklets",
+              "sidebar": "version-2.0.0-rc.2/docs"
+            }
+          ]
+        },
+        {
+          "name": "1.x.x",
+          "label": "1.x.x",
+          "isLast": false,
+          "path": "/react-native-reanimated/docs/1.x.x",
+          "mainDocId": "about",
+          "docs": [
+            {
+              "id": "about",
+              "path": "/react-native-reanimated/docs/1.x.x/about",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "animations/decay",
+              "path": "/react-native-reanimated/docs/1.x.x/animations/decay",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "animations/spring",
+              "path": "/react-native-reanimated/docs/1.x.x/animations/spring",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "animations/spring_utils",
+              "path": "/react-native-reanimated/docs/1.x.x/animations/spring_utils",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "animations/timing",
+              "path": "/react-native-reanimated/docs/1.x.x/animations/timing",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "clock",
+              "path": "/react-native-reanimated/docs/1.x.x/clock",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "code",
+              "path": "/react-native-reanimated/docs/1.x.x/code",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "config",
+              "path": "/react-native-reanimated/docs/1.x.x/config",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "declarative",
+              "path": "/react-native-reanimated/docs/1.x.x/declarative",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "event",
+              "path": "/react-native-reanimated/docs/1.x.x/event",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "examples",
+              "path": "/react-native-reanimated/docs/1.x.x/examples",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "getting_started",
+              "path": "/react-native-reanimated/docs/1.x.x/getting_started",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/abs",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/abs",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/acc",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/acc",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/acos",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/acos",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/add",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/add",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/and",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/and",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/asin",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/asin",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/atan",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/atan",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/block",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/block",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/call",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/call",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/ceil",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/ceil",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/clockRunning",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/clockRunning",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/color",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/color",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/concat",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/concat",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/cond",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/cond",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/cos",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/cos",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/debug",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/debug",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/defined",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/defined",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/diff",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/diff",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/diffClamp",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/diffClamp",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/divide",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/divide",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/eq",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/eq",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/event",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/event",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/exp",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/exp",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/floor",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/floor",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/greaterOrEq",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/greaterOrEq",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/greaterThan",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/greaterThan",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/interpolate",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/interpolate",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/interpolateColors",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/interpolateColors",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/lessOrEq",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/lessOrEq",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/lessThan",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/lessThan",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/log",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/log",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/max",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/max",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/min",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/min",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/modulo",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/modulo",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/multiply",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/multiply",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/neq",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/neq",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/not",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/not",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/onChange",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/onChange",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/or",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/or",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/pow",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/pow",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/proc",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/proc",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/round",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/round",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/set",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/set",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/sin",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/sin",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/sqrt",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/sqrt",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/startClock",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/startClock",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/stopClock",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/stopClock",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/sub",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/sub",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "nodes/tan",
+              "path": "/react-native-reanimated/docs/1.x.x/nodes/tan",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "transitions",
+              "path": "/react-native-reanimated/docs/1.x.x/transitions",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "value",
+              "path": "/react-native-reanimated/docs/1.x.x/value",
+              "sidebar": "version-1.x.x/docs"
+            },
+            {
+              "id": "view",
+              "path": "/react-native-reanimated/docs/1.x.x/view",
+              "sidebar": "version-1.x.x/docs"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

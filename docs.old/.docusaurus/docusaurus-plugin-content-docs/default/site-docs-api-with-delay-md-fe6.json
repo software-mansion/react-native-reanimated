@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/withDelay",
+  "id": "api/withDelay",
+  "isDocsHomePage": false,
+  "title": "withDelay",
+  "description": "Allows for the provided animation to start with a specified delay.",
+  "source": "@site/docs/api/withDelay.md",
+  "slug": "/api/withDelay",
+  "permalink": "/react-native-reanimated/docs/next/api/withDelay",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/api/withDelay.md",
+  "version": "current",
+  "sidebar_label": "withDelay",
+  "sidebar": "docs",
+  "previous": {
+    "title": "cancelAnimation",
+    "permalink": "/react-native-reanimated/docs/next/api/cancelAnimation"
+  },
+  "next": {
+    "title": "withSequence",
+    "permalink": "/react-native-reanimated/docs/next/api/withSequence"
+  }
+}

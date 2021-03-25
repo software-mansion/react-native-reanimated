@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/modulo",
+  "id": "version-1.x.x/nodes/modulo",
+  "isDocsHomePage": false,
+  "title": "modulo",
+  "description": "modulo",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/modulo.md",
+  "slug": "/nodes/modulo",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/modulo",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/modulo.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "min",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/min"
+  },
+  "next": {
+    "title": "multiply",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/multiply"
+  }
+}

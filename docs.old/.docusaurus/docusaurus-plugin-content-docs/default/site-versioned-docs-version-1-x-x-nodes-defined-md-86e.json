@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/defined",
+  "id": "version-1.x.x/nodes/defined",
+  "isDocsHomePage": false,
+  "title": "defined",
+  "description": "defined",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/defined.md",
+  "slug": "/nodes/defined",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/defined",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/defined.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "debug",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/debug"
+  },
+  "next": {
+    "title": "diff",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/diff"
+  }
+}

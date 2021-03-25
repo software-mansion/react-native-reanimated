@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/and",
+  "id": "version-1.x.x/nodes/and",
+  "isDocsHomePage": false,
+  "title": "and",
+  "description": "and",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/and.md",
+  "slug": "/nodes/and",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/and",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/and.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "tan",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/tan"
+  },
+  "next": {
+    "title": "eq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/eq"
+  }
+}

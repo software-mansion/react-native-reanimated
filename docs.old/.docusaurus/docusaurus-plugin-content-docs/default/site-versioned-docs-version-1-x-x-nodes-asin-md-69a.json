@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/asin",
+  "id": "version-1.x.x/nodes/asin",
+  "isDocsHomePage": false,
+  "title": "asin",
+  "description": "asin",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/asin.md",
+  "slug": "/nodes/asin",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/asin",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/asin.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "acos",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/acos"
+  },
+  "next": {
+    "title": "atan",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/atan"
+  }
+}

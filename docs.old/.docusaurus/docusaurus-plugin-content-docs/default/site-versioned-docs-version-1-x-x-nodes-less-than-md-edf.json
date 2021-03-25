@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/lessThan",
+  "id": "version-1.x.x/nodes/lessThan",
+  "isDocsHomePage": false,
+  "title": "lessThan",
+  "description": "lessThan",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/lessThan.md",
+  "slug": "/nodes/lessThan",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/lessThan",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/lessThan.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "lessOrEq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/lessOrEq"
+  },
+  "next": {
+    "title": "neq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/neq"
+  }
+}

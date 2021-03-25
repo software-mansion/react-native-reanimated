@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/log",
+  "id": "version-1.x.x/nodes/log",
+  "isDocsHomePage": false,
+  "title": "log",
+  "description": "log",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/log.md",
+  "slug": "/nodes/log",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/log",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/log.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "floor",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/floor"
+  },
+  "next": {
+    "title": "max",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/max"
+  }
+}

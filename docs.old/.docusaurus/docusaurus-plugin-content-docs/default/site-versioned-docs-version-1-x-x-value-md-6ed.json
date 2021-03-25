@@ -1,0 +1,22 @@
+{
+  "unversionedId": "value",
+  "id": "version-1.x.x/value",
+  "isDocsHomePage": false,
+  "title": "Value",
+  "description": "Animated.Value is a container for storing values. It's is initialized with new Value(0) constructor. For backward compatibility there are provided API for setting value after it has been initialized:",
+  "source": "@site/versioned_docs/version-1.x.x/value.md",
+  "slug": "/value",
+  "permalink": "/react-native-reanimated/docs/1.x.x/value",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/value.md",
+  "version": "1.x.x",
+  "sidebar_label": "Value",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Additional configuration",
+    "permalink": "/react-native-reanimated/docs/1.x.x/config"
+  },
+  "next": {
+    "title": "Clock",
+    "permalink": "/react-native-reanimated/docs/1.x.x/clock"
+  }
+}

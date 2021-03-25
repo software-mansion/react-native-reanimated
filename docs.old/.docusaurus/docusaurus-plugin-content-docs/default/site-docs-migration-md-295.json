@@ -1,0 +1,22 @@
+{
+  "unversionedId": "migration",
+  "id": "migration",
+  "isDocsHomePage": false,
+  "title": "Migrating from Reanimated 1.x",
+  "description": "Before you consider migrating, note that Reanimated 2 is an alpha release, and that we cannot guarantee the new API will remain unchanged before the stable release of version 2.",
+  "source": "@site/docs/migration.md",
+  "slug": "/migration",
+  "permalink": "/react-native-reanimated/docs/next/migration",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/migration.md",
+  "version": "current",
+  "sidebar_label": "Migration from v1",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Reanimated 2.x architecture",
+    "permalink": "/react-native-reanimated/docs/next/architecture"
+  },
+  "next": {
+    "title": "Web Support",
+    "permalink": "/react-native-reanimated/docs/next/web-support"
+  }
+}

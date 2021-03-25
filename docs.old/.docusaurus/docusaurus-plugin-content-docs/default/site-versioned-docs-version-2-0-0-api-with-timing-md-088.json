@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/withTiming",
+  "id": "version-2.0.0/api/withTiming",
+  "isDocsHomePage": false,
+  "title": "withTiming",
+  "description": "Starts a time based animation.",
+  "source": "@site/versioned_docs/version-2.0.0/api/withTiming.md",
+  "slug": "/api/withTiming",
+  "permalink": "/react-native-reanimated/docs/api/withTiming",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/api/withTiming.md",
+  "version": "2.0.0",
+  "sidebar_label": "withTiming",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "useAnimatedProps",
+    "permalink": "/react-native-reanimated/docs/api/useAnimatedProps"
+  },
+  "next": {
+    "title": "withSpring",
+    "permalink": "/react-native-reanimated/docs/api/withSpring"
+  }
+}

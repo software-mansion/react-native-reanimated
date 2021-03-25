@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/withRepeat",
+  "id": "version-2.0.0-rc.2/api/withRepeat",
+  "isDocsHomePage": false,
+  "title": "withRepeat",
+  "description": "Repeats the provided animation several times.",
+  "source": "@site/versioned_docs/version-2.0.0-rc.2/api/withRepeat.md",
+  "slug": "/api/withRepeat",
+  "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withRepeat",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0-rc.2/api/withRepeat.md",
+  "version": "2.0.0-rc.2",
+  "sidebar_label": "withRepeat",
+  "sidebar": "version-2.0.0-rc.2/docs",
+  "previous": {
+    "title": "withSequence",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withSequence"
+  },
+  "next": {
+    "title": "measure",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/nativeMethods/measure"
+  }
+}

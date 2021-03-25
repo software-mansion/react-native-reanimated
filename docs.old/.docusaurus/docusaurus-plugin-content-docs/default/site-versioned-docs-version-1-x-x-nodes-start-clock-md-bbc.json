@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/startClock",
+  "id": "version-1.x.x/nodes/startClock",
+  "isDocsHomePage": false,
+  "title": "startClock",
+  "description": "startClock",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/startClock.md",
+  "slug": "/nodes/startClock",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/startClock",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/startClock.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "clockRunning",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/clockRunning"
+  },
+  "next": {
+    "title": "stopClock",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/stopClock"
+  }
+}

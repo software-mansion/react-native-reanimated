@@ -1,0 +1,22 @@
+{
+  "unversionedId": "troubleshooting",
+  "id": "troubleshooting",
+  "isDocsHomePage": false,
+  "title": "Troubleshooting common problems",
+  "description": "TypeError: Cannot convert undefined value to object on someVariable._closure",
+  "source": "@site/docs/troubleshooting.md",
+  "slug": "/troubleshooting",
+  "permalink": "/react-native-reanimated/docs/next/troubleshooting",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/troubleshooting.md",
+  "version": "current",
+  "sidebar_label": "Troubleshooting",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Web Support",
+    "permalink": "/react-native-reanimated/docs/next/web-support"
+  },
+  "next": {
+    "title": "useSharedValue",
+    "permalink": "/react-native-reanimated/docs/next/api/useSharedValue"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/withDecay",
+  "id": "api/withDecay",
+  "isDocsHomePage": false,
+  "title": "withDecay",
+  "description": "Starts a velocity based \"scroll\" animation.",
+  "source": "@site/docs/api/withDecay.md",
+  "slug": "/api/withDecay",
+  "permalink": "/react-native-reanimated/docs/next/api/withDecay",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/api/withDecay.md",
+  "version": "current",
+  "sidebar_label": "withDecay",
+  "sidebar": "docs",
+  "previous": {
+    "title": "withSpring",
+    "permalink": "/react-native-reanimated/docs/next/api/withSpring"
+  },
+  "next": {
+    "title": "cancelAnimation",
+    "permalink": "/react-native-reanimated/docs/next/api/cancelAnimation"
+  }
+}

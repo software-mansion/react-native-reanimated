@@ -1,0 +1,25 @@
+{
+  "permalink": "/react-native-reanimated/blog/2019/05/28/hola",
+  "editUrl": "https://github.com/facebook/docusaurus/edit/master/website/blog/blog/2019-05-28-hola.md",
+  "source": "@site/blog/2019-05-28-hola.md",
+  "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum dignissim ultricies. Fusce rhoncus ipsum tempor eros aliquam consequat. Lorem ipsum dolor sit amet",
+  "date": "2019-05-28T00:00:00.000Z",
+  "formattedDate": "May 28, 2019",
+  "tags": [
+    {
+      "label": "hola",
+      "permalink": "/react-native-reanimated/blog/tags/hola"
+    },
+    {
+      "label": "docusaurus",
+      "permalink": "/react-native-reanimated/blog/tags/docusaurus"
+    }
+  ],
+  "title": "Hola",
+  "readingTime": 0.12,
+  "truncated": false,
+  "prevItem": {
+    "title": "Hello",
+    "permalink": "/react-native-reanimated/blog/2019/05/29/hello-world"
+  }
+}

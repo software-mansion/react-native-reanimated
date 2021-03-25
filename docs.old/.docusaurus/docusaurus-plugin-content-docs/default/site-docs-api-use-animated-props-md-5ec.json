@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/useAnimatedProps",
+  "id": "api/useAnimatedProps",
+  "isDocsHomePage": false,
+  "title": "useAnimatedProps",
+  "description": "This hook is a counterpart of useAnimatedStyle hook, but works for a non-style view properties.",
+  "source": "@site/docs/api/useAnimatedProps.md",
+  "slug": "/api/useAnimatedProps",
+  "permalink": "/react-native-reanimated/docs/next/api/useAnimatedProps",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/docs/api/useAnimatedProps.md",
+  "version": "current",
+  "sidebar_label": "useAnimatedProps",
+  "sidebar": "docs",
+  "previous": {
+    "title": "useAnimatedReaction",
+    "permalink": "/react-native-reanimated/docs/next/api/useAnimatedReaction"
+  },
+  "next": {
+    "title": "withTiming",
+    "permalink": "/react-native-reanimated/docs/next/api/withTiming"
+  }
+}

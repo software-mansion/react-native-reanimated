@@ -1,0 +1,22 @@
+{
+  "unversionedId": "event",
+  "id": "version-1.x.x/event",
+  "isDocsHomePage": false,
+  "title": "Event handling with reanimated nodes",
+  "description": "react-native-reanimated's new syntax is possible to be used with Animated.event. Instead of providing only a mapping from event fields to animated nodes, it is allowed to write a function that takes reanimated values map as an input and return a block (or any other reanimated function) that will be then used to handle the event.",
+  "source": "@site/versioned_docs/version-1.x.x/event.md",
+  "slug": "/event",
+  "permalink": "/react-native-reanimated/docs/1.x.x/event",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/event.md",
+  "version": "1.x.x",
+  "sidebar_label": "Event handling",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "set",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/set"
+  },
+  "next": {
+    "title": "View, Props, etc",
+    "permalink": "/react-native-reanimated/docs/1.x.x/view"
+  }
+}

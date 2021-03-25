@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/useDerivedValue",
+  "id": "version-2.0.0/api/useDerivedValue",
+  "isDocsHomePage": false,
+  "title": "useDerivedValue",
+  "description": "This hook allows for creating shared value reference that can change in response to updating of one or more other shared values.",
+  "source": "@site/versioned_docs/version-2.0.0/api/useDerivedValue.md",
+  "slug": "/api/useDerivedValue",
+  "permalink": "/react-native-reanimated/docs/api/useDerivedValue",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/api/useDerivedValue.md",
+  "version": "2.0.0",
+  "sidebar_label": "useDerivedValue",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "useAnimatedStyle",
+    "permalink": "/react-native-reanimated/docs/api/useAnimatedStyle"
+  },
+  "next": {
+    "title": "useAnimatedScrollHandler",
+    "permalink": "/react-native-reanimated/docs/api/useAnimatedScrollHandler"
+  }
+}

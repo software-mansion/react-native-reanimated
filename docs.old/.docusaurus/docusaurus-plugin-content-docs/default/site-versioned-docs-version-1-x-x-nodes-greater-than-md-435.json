@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/greaterThan",
+  "id": "version-1.x.x/nodes/greaterThan",
+  "isDocsHomePage": false,
+  "title": "greaterThan",
+  "description": "greaterThan",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/greaterThan.md",
+  "slug": "/nodes/greaterThan",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/greaterThan",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/greaterThan.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "greaterOrEq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/greaterOrEq"
+  },
+  "next": {
+    "title": "lessOrEq",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/lessOrEq"
+  }
+}

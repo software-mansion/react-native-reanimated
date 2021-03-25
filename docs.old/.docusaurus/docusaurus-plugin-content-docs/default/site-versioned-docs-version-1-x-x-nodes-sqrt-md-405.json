@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/sqrt",
+  "id": "version-1.x.x/nodes/sqrt",
+  "isDocsHomePage": false,
+  "title": "sqrt",
+  "description": "sqrt",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/sqrt.md",
+  "slug": "/nodes/sqrt",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sqrt",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/sqrt.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "round",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/round"
+  },
+  "next": {
+    "title": "sub",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sub"
+  }
+}

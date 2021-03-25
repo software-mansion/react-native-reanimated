@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/cancelAnimation",
+  "id": "version-2.0.0/api/cancelAnimation",
+  "isDocsHomePage": false,
+  "title": "cancelAnimation",
+  "description": "Starts a time-based animation.",
+  "source": "@site/versioned_docs/version-2.0.0/api/cancelAnimation.md",
+  "slug": "/api/cancelAnimation",
+  "permalink": "/react-native-reanimated/docs/api/cancelAnimation",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/api/cancelAnimation.md",
+  "version": "2.0.0",
+  "sidebar_label": "cancelAnimation",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "withDecay",
+    "permalink": "/react-native-reanimated/docs/api/withDecay"
+  },
+  "next": {
+    "title": "withDelay",
+    "permalink": "/react-native-reanimated/docs/api/withDelay"
+  }
+}

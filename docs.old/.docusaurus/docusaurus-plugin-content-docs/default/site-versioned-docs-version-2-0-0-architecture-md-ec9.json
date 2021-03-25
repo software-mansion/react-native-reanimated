@@ -1,0 +1,22 @@
+{
+  "unversionedId": "architecture",
+  "id": "version-2.0.0/architecture",
+  "isDocsHomePage": false,
+  "title": "Reanimated 2.x architecture",
+  "description": "Due to time constraints we weren't able to finish this page.",
+  "source": "@site/versioned_docs/version-2.0.0/architecture.md",
+  "slug": "/architecture",
+  "permalink": "/react-native-reanimated/docs/architecture",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0/architecture.md",
+  "version": "2.0.0",
+  "sidebar_label": "Architecture",
+  "sidebar": "version-2.0.0/docs",
+  "previous": {
+    "title": "Events",
+    "permalink": "/react-native-reanimated/docs/events"
+  },
+  "next": {
+    "title": "Migrating from Reanimated 1.x",
+    "permalink": "/react-native-reanimated/docs/migration"
+  }
+}

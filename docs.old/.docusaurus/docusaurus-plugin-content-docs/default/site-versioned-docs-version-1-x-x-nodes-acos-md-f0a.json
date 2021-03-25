@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/acos",
+  "id": "version-1.x.x/nodes/acos",
+  "isDocsHomePage": false,
+  "title": "acos",
+  "description": "acos",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/acos.md",
+  "slug": "/nodes/acos",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/acos",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/acos.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "sub",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sub"
+  },
+  "next": {
+    "title": "asin",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/asin"
+  }
+}

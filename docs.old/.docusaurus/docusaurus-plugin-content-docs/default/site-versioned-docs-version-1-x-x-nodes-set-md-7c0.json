@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/set",
+  "id": "version-1.x.x/nodes/set",
+  "isDocsHomePage": false,
+  "title": "set",
+  "description": "set",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/set.md",
+  "slug": "/nodes/set",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/set",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/set.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "proc",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/proc"
+  },
+  "next": {
+    "title": "Event handling with reanimated nodes",
+    "permalink": "/react-native-reanimated/docs/1.x.x/event"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/nativeMethods/measure",
+  "id": "version-2.0.0-rc.2/api/nativeMethods/measure",
+  "isDocsHomePage": false,
+  "title": "measure",
+  "description": "Due to time constraints we weren't able to finish this page.",
+  "source": "@site/versioned_docs/version-2.0.0-rc.2/api/nativeMethods/measure.md",
+  "slug": "/api/nativeMethods/measure",
+  "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/nativeMethods/measure",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0-rc.2/api/nativeMethods/measure.md",
+  "version": "2.0.0-rc.2",
+  "sidebar_label": "measure",
+  "sidebar": "version-2.0.0-rc.2/docs",
+  "previous": {
+    "title": "withRepeat",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withRepeat"
+  },
+  "next": {
+    "title": "scrollTo",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/nativeMethods/scrollTo"
+  }
+}

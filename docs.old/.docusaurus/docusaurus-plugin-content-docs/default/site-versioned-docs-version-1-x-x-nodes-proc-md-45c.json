@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/proc",
+  "id": "version-1.x.x/nodes/proc",
+  "isDocsHomePage": false,
+  "title": "proc",
+  "description": "proc",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/proc.md",
+  "slug": "/nodes/proc",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/proc",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/proc.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "onChange",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/onChange"
+  },
+  "next": {
+    "title": "set",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/set"
+  }
+}

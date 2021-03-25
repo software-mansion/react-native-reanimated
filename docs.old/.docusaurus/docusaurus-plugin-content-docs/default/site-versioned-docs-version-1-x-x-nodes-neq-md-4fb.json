@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/neq",
+  "id": "version-1.x.x/nodes/neq",
+  "isDocsHomePage": false,
+  "title": "neq",
+  "description": "neq",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/neq.md",
+  "slug": "/nodes/neq",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/neq",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/neq.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "lessThan",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/lessThan"
+  },
+  "next": {
+    "title": "not",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/not"
+  }
+}

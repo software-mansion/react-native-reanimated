@@ -1,0 +1,17 @@
+{
+  "title": "Recent posts",
+  "items": [
+    {
+      "title": "Welcome",
+      "permalink": "/react-native-reanimated/blog/2019/05/30/welcome"
+    },
+    {
+      "title": "Hello",
+      "permalink": "/react-native-reanimated/blog/2019/05/29/hello-world"
+    },
+    {
+      "title": "Hola",
+      "permalink": "/react-native-reanimated/blog/2019/05/28/hola"
+    }
+  ]
+}

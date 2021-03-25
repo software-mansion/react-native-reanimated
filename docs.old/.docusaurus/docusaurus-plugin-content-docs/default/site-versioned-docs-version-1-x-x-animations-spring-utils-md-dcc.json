@@ -1,0 +1,22 @@
+{
+  "unversionedId": "animations/spring_utils",
+  "id": "version-1.x.x/animations/spring_utils",
+  "isDocsHomePage": false,
+  "title": "SpringUtils",
+  "description": "For developers' convenience, it's possible to use a different way of configuring spring animation which follows behavior known from React Native core.",
+  "source": "@site/versioned_docs/version-1.x.x/animations/springUtils.md",
+  "slug": "/animations/spring_utils",
+  "permalink": "/react-native-reanimated/docs/1.x.x/animations/spring_utils",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/animations/springUtils.md",
+  "version": "1.x.x",
+  "sidebar_label": "SpringUtils",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Spring",
+    "permalink": "/react-native-reanimated/docs/1.x.x/animations/spring"
+  },
+  "next": {
+    "title": "abs",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/abs"
+  }
+}

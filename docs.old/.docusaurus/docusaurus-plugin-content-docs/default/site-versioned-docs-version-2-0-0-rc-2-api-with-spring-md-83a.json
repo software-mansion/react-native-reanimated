@@ -1,0 +1,22 @@
+{
+  "unversionedId": "api/withSpring",
+  "id": "version-2.0.0-rc.2/api/withSpring",
+  "isDocsHomePage": false,
+  "title": "withSpring",
+  "description": "Starts a spring-based animation.",
+  "source": "@site/versioned_docs/version-2.0.0-rc.2/api/withSpring.md",
+  "slug": "/api/withSpring",
+  "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withSpring",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-2.0.0-rc.2/api/withSpring.md",
+  "version": "2.0.0-rc.2",
+  "sidebar_label": "withSpring",
+  "sidebar": "version-2.0.0-rc.2/docs",
+  "previous": {
+    "title": "withTiming",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withTiming"
+  },
+  "next": {
+    "title": "withDecay",
+    "permalink": "/react-native-reanimated/docs/2.0.0-rc.2/api/withDecay"
+  }
+}

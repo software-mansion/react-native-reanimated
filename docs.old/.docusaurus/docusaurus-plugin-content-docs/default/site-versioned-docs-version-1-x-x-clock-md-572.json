@@ -1,0 +1,22 @@
+{
+  "unversionedId": "clock",
+  "id": "version-1.x.x/clock",
+  "isDocsHomePage": false,
+  "title": "Clock",
+  "description": "Original Animated API makes an \"animation\" object a first class citizen.",
+  "source": "@site/versioned_docs/version-1.x.x/clock.md",
+  "slug": "/clock",
+  "permalink": "/react-native-reanimated/docs/1.x.x/clock",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/clock.md",
+  "version": "1.x.x",
+  "sidebar_label": "Clock",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Value",
+    "permalink": "/react-native-reanimated/docs/1.x.x/value"
+  },
+  "next": {
+    "title": "Timing",
+    "permalink": "/react-native-reanimated/docs/1.x.x/animations/timing"
+  }
+}

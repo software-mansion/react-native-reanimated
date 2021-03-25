@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/cos",
+  "id": "version-1.x.x/nodes/cos",
+  "isDocsHomePage": false,
+  "title": "cos",
+  "description": "cos",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/cos.md",
+  "slug": "/nodes/cos",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/cos",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/cos.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "atan",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/atan"
+  },
+  "next": {
+    "title": "sin",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sin"
+  }
+}

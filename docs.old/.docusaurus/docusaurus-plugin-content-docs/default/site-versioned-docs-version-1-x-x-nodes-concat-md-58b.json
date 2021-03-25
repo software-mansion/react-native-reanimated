@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/concat",
+  "id": "version-1.x.x/nodes/concat",
+  "isDocsHomePage": false,
+  "title": "concat",
+  "description": "concat",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/concat.md",
+  "slug": "/nodes/concat",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/concat",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/concat.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "color",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/color"
+  },
+  "next": {
+    "title": "cond",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/cond"
+  }
+}

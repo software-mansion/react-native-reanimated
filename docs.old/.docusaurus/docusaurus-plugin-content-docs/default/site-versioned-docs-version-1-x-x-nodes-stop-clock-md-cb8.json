@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/stopClock",
+  "id": "version-1.x.x/nodes/stopClock",
+  "isDocsHomePage": false,
+  "title": "stopClock",
+  "description": "stopClock",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/stopClock.md",
+  "slug": "/nodes/stopClock",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/stopClock",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/stopClock.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "startClock",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/startClock"
+  },
+  "next": {
+    "title": "acc",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/acc"
+  }
+}

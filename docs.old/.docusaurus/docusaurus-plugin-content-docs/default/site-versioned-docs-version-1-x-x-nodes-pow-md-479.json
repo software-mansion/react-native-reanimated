@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/pow",
+  "id": "version-1.x.x/nodes/pow",
+  "isDocsHomePage": false,
+  "title": "pow",
+  "description": "pow",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/pow.md",
+  "slug": "/nodes/pow",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/pow",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/pow.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "multiply",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/multiply"
+  },
+  "next": {
+    "title": "round",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/round"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/divide",
+  "id": "version-1.x.x/nodes/divide",
+  "isDocsHomePage": false,
+  "title": "divide",
+  "description": "divide",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/divide.md",
+  "slug": "/nodes/divide",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/divide",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/divide.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "ceil",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/ceil"
+  },
+  "next": {
+    "title": "exp",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/exp"
+  }
+}

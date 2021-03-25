@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/abs",
+  "id": "version-1.x.x/nodes/abs",
+  "isDocsHomePage": false,
+  "title": "abs",
+  "description": "abs",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/abs.md",
+  "slug": "/nodes/abs",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/abs",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/abs.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "SpringUtils",
+    "permalink": "/react-native-reanimated/docs/1.x.x/animations/spring_utils"
+  },
+  "next": {
+    "title": "add",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/add"
+  }
+}

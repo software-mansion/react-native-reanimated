@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/sin",
+  "id": "version-1.x.x/nodes/sin",
+  "isDocsHomePage": false,
+  "title": "sin",
+  "description": "sin",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/sin.md",
+  "slug": "/nodes/sin",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/sin",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/sin.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "cos",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/cos"
+  },
+  "next": {
+    "title": "tan",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/tan"
+  }
+}

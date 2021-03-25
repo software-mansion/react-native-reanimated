@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/block",
+  "id": "version-1.x.x/nodes/block",
+  "isDocsHomePage": false,
+  "title": "block",
+  "description": "block",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/block.md",
+  "slug": "/nodes/block",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/block",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/block.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "acc",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/acc"
+  },
+  "next": {
+    "title": "call",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/call"
+  }
+}

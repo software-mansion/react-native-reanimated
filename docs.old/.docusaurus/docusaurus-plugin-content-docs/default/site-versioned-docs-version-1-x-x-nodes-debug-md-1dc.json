@@ -1,0 +1,21 @@
+{
+  "unversionedId": "nodes/debug",
+  "id": "version-1.x.x/nodes/debug",
+  "isDocsHomePage": false,
+  "title": "debug",
+  "description": "debug",
+  "source": "@site/versioned_docs/version-1.x.x/nodes/debug.md",
+  "slug": "/nodes/debug",
+  "permalink": "/react-native-reanimated/docs/1.x.x/nodes/debug",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/nodes/debug.md",
+  "version": "1.x.x",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "cond",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/cond"
+  },
+  "next": {
+    "title": "defined",
+    "permalink": "/react-native-reanimated/docs/1.x.x/nodes/defined"
+  }
+}

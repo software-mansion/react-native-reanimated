@@ -1,0 +1,22 @@
+{
+  "unversionedId": "examples",
+  "id": "version-1.x.x/examples",
+  "isDocsHomePage": false,
+  "title": "Examples",
+  "description": "The source code for the example (showcase) app is under the Example/ directory.",
+  "source": "@site/versioned_docs/version-1.x.x/examples.md",
+  "slug": "/examples",
+  "permalink": "/react-native-reanimated/docs/1.x.x/examples",
+  "editUrl": "https://github.com/software-mansion/react-native-reanimated/tree/master/docs/versioned_docs/version-1.x.x/examples.md",
+  "version": "1.x.x",
+  "sidebar_label": "Examples",
+  "sidebar": "version-1.x.x/docs",
+  "previous": {
+    "title": "Declarative Animation API",
+    "permalink": "/react-native-reanimated/docs/1.x.x/declarative"
+  },
+  "next": {
+    "title": "Transitions",
+    "permalink": "/react-native-reanimated/docs/1.x.x/transitions"
+  }
+}
