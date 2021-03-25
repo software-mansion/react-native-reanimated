@@ -1,17 +1,18 @@
 import { requireNativeComponent, findNodeHandle } from 'react-native';
 import React from 'react';
-import { runOnUI, makeShareable } from '../core';
+import { runOnUI, makeMutable } from '../core';
 
 const REALayoutView = requireNativeComponent('REALayoutView');
 
 export class AnimatedRoot extends React.Component {
     constructor(props, context) {
         super(props, context);
-        this.sv = makeShareable(0);
+        this.sv = makeMutable(0);
     }
 
     componentDidMount() {
         const tag = findNodeHandle(this);
+        console.log("config For a tag", tag);
         const animation = this.props.animation;
         const config = {
             animation: animation,

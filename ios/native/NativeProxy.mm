@@ -142,7 +142,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   
   auto notifyAboutProgress = [=](int tag, float progress) {
     if (animationsManager) {
-      [animationsManager notifyAboutProgress:[NSNumber numberWithInt: tag] tag:[NSNumber numberWithFloat: progress]];
+      [animationsManager notifyAboutProgress:[NSNumber numberWithFloat: progress] tag:[NSNumber numberWithInt: tag]];
     }
   };
   
@@ -153,7 +153,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     if (wrt.expired()) {
       return;
     }
-    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getProperty(*rt, "LayoutAnimationRepository");
+    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
     if (!layoutAnimationRepositoryAsValue.isUndefined()) {
       jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
       startAnimationForTag.call(*rt, jsi::Value([tag intValue]));

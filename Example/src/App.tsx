@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { AnimatedRoot } from 'react-native-reanimated';
+import { AnimatedRoot, withTiming } from 'react-native-reanimated';
 
 function Box({label}) {
   return (
@@ -14,7 +14,7 @@ export default function Screen() {
   const [state, setState] =  useState(true);
   return (
     <View style={{marginTop: 30}}>
-      <AnimatedRoot>
+      <AnimatedRoot animation={withTiming(1)}>
         {state && <Box key="a" label="A" />}
         <Box key="b" label="B" />
         {!state && <Box key="a" label="A" />}
