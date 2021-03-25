@@ -21,7 +21,20 @@
 
 -(void)takeSnapshot:(UIView*)view
 {
-  //Todo
+  _capturedValues = [NSMutableDictionary new];
+  
+  for (NSString* value in _capturedValues)
+  {
+    if ([value isEqual:@"width"]) {
+        _capturedValues[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
+    } else if ([value isEqual:@"height"]) {
+      _capturedValues[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
+    } else if ([value isEqual:@"originX"]) {
+      _capturedValues[@"originX"] = [NSNumber numberWithDouble:view.center.x];
+    } else if ([value isEqual:@"originY"]) {
+      _capturedValues[@"originY"] = [NSNumber numberWithDouble:view.center.y];
+    }
+  }
 }
 
 @end

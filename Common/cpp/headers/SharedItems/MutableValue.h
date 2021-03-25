@@ -6,6 +6,7 @@
 #include <jsi/jsi.h>
 #include <map>
 #include "JSIStoreValueUser.h"
+#include "LayoutAnimationsProxy.h"
 
 using namespace facebook;
 
@@ -14,6 +15,7 @@ namespace reanimated {
 class MutableValue : public jsi::HostObject, public std::enable_shared_from_this<MutableValue>, public StoreUser {
   private:
   friend MutableValueSetterProxy;
+  friend LayoutAnimationsProxy;
   NativeReanimatedModule *module;
   std::mutex readWriteMutex;
   std::shared_ptr<ShareableValue> value;

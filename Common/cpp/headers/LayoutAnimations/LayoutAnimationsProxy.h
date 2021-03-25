@@ -11,9 +11,11 @@
 #include <stdio.h>
 #include <memory>
 #include <functional>
-#include "MutableValue.h"
+#include <map>
 
 namespace reanimated {
+
+class MutableValue;
 
 class LayoutAnimationsProxy {
   
@@ -25,6 +27,7 @@ public:
   
 private:
   std::function<void(int, float)> notifyAboutProgress;
+  std::map<int, std::shared_ptr<MutableValue>> observedValues;
 };
 
 }
