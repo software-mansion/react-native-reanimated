@@ -63,16 +63,16 @@
   }
   
   NSMutableSet<UIView *>* allViews = [NSMutableSet new];
-  for (UIView *view in first.capturedValues.allKeys) {
+  for (UIView *view in first.listView) {
     [allViews addObject:view];
   }
-  for (UIView *view in second.capturedValues.allKeys) {
+  for (UIView *view in second.listView) {
     [allViews addObject:view];
   }
   
   for (UIView *view in allViews) {
-    NSDictionary<NSString*, NSNumber*>* startValues = _firstSnapshots[view];
-    NSDictionary<NSString*, NSNumber*>* targetValues = _secondSnapshots[view];
+    NSDictionary<NSString*, NSNumber*>* startValues = first.capturedValues[[NSValue valueWithNonretainedObject:view]];
+    NSDictionary<NSString*, NSNumber*>* targetValues = second.capturedValues[[NSValue valueWithNonretainedObject:view]];
     
     // TODO let ViewManager handle animation progress based on view snapshots
     if (startValues != nil && targetValues != nil) { //interpolate

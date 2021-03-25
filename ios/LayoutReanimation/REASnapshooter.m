@@ -14,6 +14,7 @@
   if (self = [super init]) {
     _capturableProps = capturableProps;
     _tag = tag;
+    _listView = [NSMutableArray new];
     _capturedValues = [NSMutableDictionary new];
     return self;
   }
@@ -24,23 +25,24 @@
 {
   NSMutableDictionary* values = [NSMutableDictionary new];
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
-  CGRect frame = [windowView.superview convertRect:view.frame toView:windowView];
+  CGPoint origin = [[view superview] convertPoint:view.frame.origin toView:windowView];
   
   for (NSString* value in _capturableProps)
   {
     
     if ([value isEqual:@"width"]) {
-        values[@"width"] = [NSNumber numberWithDouble:(double)(frame.size.width)];
+      values[@"width"] = [NSNumber numberWithDouble:(double)(view.frame.size.width)];
     } else if ([value isEqual:@"height"]) {
-      values[@"height"] = [NSNumber numberWithDouble:(double)(frame.size.height)];
+      values[@"height"] = [NSNumber numberWithDouble:(double)(view.frame.size.height)];
     } else if ([value isEqual:@"originX"]) {
-      values[@"originX"] = [NSNumber numberWithDouble:frame.origin.x];
+      values[@"originX"] = [NSNumber numberWithDouble:origin.x];
     } else if ([value isEqual:@"originY"]) {
-      values[@"originY"] = [NSNumber numberWithDouble:frame.origin.y];
+      values[@"originY"] = [NSNumber numberWithDouble:origin.y];
     }
   }
   
-  self.capturedValues[view] = values;
+  [_listView addObject:view];
+  self.capturedValues[[NSValue valueWithNonretainedObject:view]] = values;
 }
 
 @end
