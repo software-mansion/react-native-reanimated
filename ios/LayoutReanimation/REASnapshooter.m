@@ -21,20 +21,22 @@
 
 -(void)takeSnapshot:(UIView*)view
 {
-  _capturedValues = [NSMutableDictionary new];
+  NSMutableDictionary* values = [NSMutableDictionary new];
   
-  for (NSString* value in _capturedValues)
+  for (NSString* value in _capturableProps)
   {
     if ([value isEqual:@"width"]) {
-        _capturedValues[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
+        values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
     } else if ([value isEqual:@"height"]) {
-      _capturedValues[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
+      values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
     } else if ([value isEqual:@"originX"]) {
-      _capturedValues[@"originX"] = [NSNumber numberWithDouble:view.center.x];
+      values[@"originX"] = [NSNumber numberWithDouble:view.center.x];
     } else if ([value isEqual:@"originY"]) {
-      _capturedValues[@"originY"] = [NSNumber numberWithDouble:view.center.y];
+      values[@"originY"] = [NSNumber numberWithDouble:view.center.y];
     }
   }
+  
+  self.capturedValues[view] = values;
 }
 
 @end

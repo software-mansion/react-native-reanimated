@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property NSNumber* tag;
 @property NSSet* capturableProps;
-@property NSMutableDictionary<NSString*, NSNumber*>* capturedValues;
+@property NSMutableDictionary<UIView*, NSMutableDictionary<NSString*, NSNumber*>*>* capturedValues;
 
 -(instancetype)initWithTag:(NSNumber*)tag capturableProps:(NSSet*)capturableProps;
 -(void)takeSnapshot:(UIView*)view;

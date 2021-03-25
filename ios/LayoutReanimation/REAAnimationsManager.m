@@ -13,7 +13,22 @@
 
 @end
 
-@implementation REAAnimationsManager
+@implementation REAAnimationsManager {
+  RCTUIManager* _uiManager;
+}
+
+- (instancetype)initWithUIManager:(RCTUIManager *)uiManager
+{
+  if (self = [super init]) {
+    _uiManager = uiManager;
+  }
+  return self;
+}
+
+- (void)invalidate
+{
+  _uiManager = nil;
+}
 
 - (void)startAnimationWithFirstSnapshot:(REASnapshooter*)snapshooter
 {

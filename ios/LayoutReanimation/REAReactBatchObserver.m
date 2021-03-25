@@ -25,6 +25,7 @@
 {
     self.uiManager = nil;
     self.bridge = nil;
+    [self.animationsManager invalidate];
     self.animationsManager = nil;
     [self.uiManager.observerCoordinator removeObserver:self];
 }
