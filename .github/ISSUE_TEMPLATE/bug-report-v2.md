@@ -19,9 +19,7 @@ Tell us what's happening here.
 
 ### Expected behavior
 
-### Actual behavior 
-
-## Steps to reproduce
+### Actual behavior & steps to reproduce 
 
 ## Snack or minimal code example
 
