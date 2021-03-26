@@ -83,6 +83,7 @@
             [snapshooter takeSnapshot: view];
           }];
           [_animationsManager addSecondSnapshot: snapshooter];
+          [_animationsManager notifyAboutProgress:0 tag:tag]; // prepare for the first frame
         };
         goThroughAffectedWithBlock(viewRegistry, block);
     }];
