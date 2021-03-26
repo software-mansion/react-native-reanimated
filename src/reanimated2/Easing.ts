@@ -3,9 +3,8 @@
 /* eslint-disable prefer-spread */
 
 /* global _WORKLET */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 
+// @ts-ignore reanimated1/Easing is JS file
 import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
 
@@ -55,13 +54,14 @@ import { Bezier } from './Bezier';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
+type EasingFn = (t: number) => number;
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
  * one.
  *
  * http://cubic-bezier.com/#0,0,1,1
  */
-function linear(t) {
+function linear(t: number): number {
   'worklet';
   return t;
 }
@@ -72,7 +72,7 @@ function linear(t) {
  *
  * http://cubic-bezier.com/#.42,0,1,1
  */
-function ease(t) {
+function ease(t: number): number {
   'worklet';
   return Bezier(0.42, 0, 1, 1)(t);
 }
@@ -83,7 +83,7 @@ function ease(t) {
  *
  * http://easings.net/#easeInQuad
  */
-function quad(t) {
+function quad(t: number): number {
   'worklet';
   return t * t;
 }
@@ -94,7 +94,7 @@ function quad(t) {
  *
  * http://easings.net/#easeInCubic
  */
-function cubic(t) {
+function cubic(t: number): number {
   'worklet';
   return t * t * t;
 }
@@ -105,7 +105,7 @@ function cubic(t) {
  * n = 4: http://easings.net/#easeInQuart
  * n = 5: http://easings.net/#easeInQuint
  */
-function poly(n) {
+function poly(n: number): EasingFn {
   'worklet';
   return (t) => Math.pow(t, n);
 }
@@ -115,7 +115,7 @@ function poly(n) {
  *
  * http://easings.net/#easeInSine
  */
-function sin(t) {
+function sin(t: number): number {
   'worklet';
   return 1 - Math.cos((t * Math.PI) / 2);
 }
@@ -125,7 +125,7 @@ function sin(t) {
  *
  * http://easings.net/#easeInCirc
  */
-function circle(t) {
+function circle(t: number): number {
   'worklet';
   return 1 - Math.sqrt(1 - t * t);
 }
@@ -135,7 +135,7 @@ function circle(t) {
  *
  * http://easings.net/#easeInExpo
  */
-function exp(t) {
+function exp(t: number): number {
   'worklet';
   return Math.pow(2, 10 * (t - 1));
 }
@@ -150,7 +150,7 @@ function exp(t) {
  *
  * http://easings.net/#easeInElastic
  */
-function elastic(bounciness = 1) {
+function elastic(bounciness = 1): EasingFn {
   'worklet';
   const p = bounciness * Math.PI;
   return (t) => {
@@ -167,7 +167,7 @@ function elastic(bounciness = 1) {
  *
  * - http://tiny.cc/back_default (s = 1.70158, default)
  */
-function back(s = 1.70158) {
+function back(s = 1.70158): (t: number) => number {
   'worklet';
   return (t) => t * t * ((s + 1) * t - s);
 }
@@ -177,7 +177,7 @@ function back(s = 1.70158) {
  *
  * http://easings.net/#easeInBounce
  */
-function bounce(t) {
+function bounce(t: number): number {
   'worklet';
   if (t < 1 / 2.75) {
     return 7.5625 * t * t;
@@ -204,7 +204,12 @@ function bounce(t) {
  * A useful tool to visualize cubic bezier curves can be found at
  * http://cubic-bezier.com/
  */
-function bezier(x1, y1, x2, y2) {
+function bezier(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): (x: number) => number {
   'worklet';
   return Bezier(x1, y1, x2, y2);
 }
@@ -212,7 +217,7 @@ function bezier(x1, y1, x2, y2) {
 /**
  * Runs an easing function forwards.
  */
-function in_(easing) {
+function in_(easing: EasingFn): EasingFn {
   'worklet';
   return easing;
 }
@@ -220,7 +225,7 @@ function in_(easing) {
 /**
  * Runs an easing function backwards.
  */
-function out(easing) {
+function out(easing: EasingFn): EasingFn {
   'worklet';
   return (t) => {
     'worklet';
@@ -233,7 +238,7 @@ function out(easing) {
  * forwards for half of the duration, then backwards for the rest of the
  * duration.
  */
-function inOut(easing) {
+function inOut(easing: EasingFn): EasingFn {
   'worklet';
   return (t) => {
     'worklet';
@@ -262,8 +267,14 @@ const EasingObject = {
   inOut,
 };
 
-function createChecker(worklet, workletName, prevArgs) {
-  function checkIfReaOne() {
+// TODO type worklets
+function createChecker(
+  worklet: any,
+  workletName: string,
+  prevArgs?: unknown
+): any {
+  /* should return Animated.Value or worklet */
+  function checkIfReaOne(): any {
     'worklet';
     if (arguments && !_WORKLET) {
       for (let i = 0; i < arguments.length; i++) {
@@ -281,6 +292,7 @@ function createChecker(worklet, workletName, prevArgs) {
         }
       }
     }
+    // @ts-ignore this is implicitly any - TODO
     const res = worklet.apply(this, arguments);
     if (!_WORKLET && res && typeof res === 'function' && res.__worklet) {
       return createChecker(res, workletName, arguments);
@@ -295,9 +307,9 @@ function createChecker(worklet, workletName, prevArgs) {
   return checkIfReaOne;
 }
 
-Object.keys(EasingObject).forEach((key) => {
+type EasingObjT = Array<keyof typeof EasingObject>;
+(Object.keys(EasingObject) as EasingObjT).forEach((key) => {
   EasingObject[key] = createChecker(EasingObject[key], key);
 });
 
 export const Easing = EasingObject;
-export default Easing;
