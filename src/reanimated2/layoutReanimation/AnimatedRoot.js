@@ -72,8 +72,8 @@ runOnUI(
                 const sv = configs[tag].sv;
                 animation.callback = (finished) => {
                     if (finished) {
-                        sv.value = 0;
                         _stopObservingProgress(tag);
+                        sv.value = 0;
                     }
                 }
                 _startObservingProgress(tag, sv);
