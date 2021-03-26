@@ -14,7 +14,7 @@ export default function Screen() {
   const [state, setState] =  useState(true);
   return (
     <View style={{marginTop: 30}}>
-      <AnimatedRoot animation={withSpring(1)} isShallow={true}>
+      <AnimatedRoot animation={withSpring(1)} isShallow={false}>
         {state && <Box key="a" label="A" />}
         <Box key="b" label="B" />
         {!state && <Box key="a" label="A" />}

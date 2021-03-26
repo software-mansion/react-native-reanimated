@@ -77,6 +77,7 @@ runOnUI(
                     }
                 }
                 _startObservingProgress(tag, sv);
+                sv.value = 0;
                 configs[tag].sv.value = animation;
                 
             },

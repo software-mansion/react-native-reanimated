@@ -25,7 +25,7 @@
 {
   NSMutableDictionary* values = [NSMutableDictionary new];
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
-  CGPoint origin = [[view superview] convertPoint:view.frame.origin toView:windowView];
+  CGPoint origin = view.frame.origin; [[view superview] convertPoint:view.frame.origin toView:windowView]; //TODO choose correct origin
   
   for (NSString* value in _capturableProps)
   {
