@@ -21,23 +21,24 @@
   return nil;
 }
 
+//TODO capture also transform matrix to make it more error proof
 -(void)takeSnapshot:(UIView*)view
 {
   NSMutableDictionary* values = [NSMutableDictionary new];
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
-  CGPoint origin = view.frame.origin; [[view superview] convertPoint:view.frame.origin toView:windowView]; //TODO choose correct origin
+  //CGPoint origin = view.frame.origin; [[view superview] convertPoint:view.frame.origin toView:windowView]; //TODO choose correct origin
   
   for (NSString* value in _capturableProps)
   {
     
     if ([value isEqual:@"width"]) {
-      values[@"width"] = [NSNumber numberWithDouble:(double)(view.frame.size.width)];
+      values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
     } else if ([value isEqual:@"height"]) {
-      values[@"height"] = [NSNumber numberWithDouble:(double)(view.frame.size.height)];
+      values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
     } else if ([value isEqual:@"originX"]) {
-      values[@"originX"] = [NSNumber numberWithDouble:origin.x];
+      values[@"originX"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width/2.0];
     } else if ([value isEqual:@"originY"]) {
-      values[@"originY"] = [NSNumber numberWithDouble:origin.y];
+      values[@"originY"] = [NSNumber numberWithDouble:view.center.y - view.bounds.size.height/2.0];
     }
   }
   

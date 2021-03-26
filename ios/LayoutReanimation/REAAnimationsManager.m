@@ -77,24 +77,16 @@
     // TODO let ViewManager handle animation progress based on view snapshots
     if (startValues != nil && targetValues != nil) { //interpolate
       // TODO make it more flexiable
-      if (progress == 1.0) {
-        view.transform = CGAffineTransformIdentity;
-        continue;
-      }
+      // TODO interpolate transform matrix
       
-      double currentX = [targetValues[@"originX"] doubleValue] * progress + [startValues[@"originX"] doubleValue] * (1.0 - progress);
-      double currentY = [targetValues[@"originY"] doubleValue] * progress + [startValues[@"originY"] doubleValue] * (1.0 - progress);
       double currentWidth = [targetValues[@"width"] doubleValue] * progress + [startValues[@"width"] doubleValue] * (1.0 - progress);
       double currentHeight = [targetValues[@"height"] doubleValue] * progress + [startValues[@"height"] doubleValue] * (1.0 - progress);
+
+      double currentX = [targetValues[@"originX"] doubleValue] * progress + [startValues[@"originX"] doubleValue] * (1.0 - progress);
+      double currentY = [targetValues[@"originY"] doubleValue] * progress + [startValues[@"originY"] doubleValue] * (1.0 - progress);
       
-      double scaleWidth = currentWidth/[targetValues[@"width"] doubleValue];
-      double scaleHeight = currentHeight/[targetValues[@"height"] doubleValue];
-      
-      double translateX = currentX - [targetValues[@"originX"] doubleValue];
-      double translateY = currentY - [targetValues[@"originY"] doubleValue];
-      
-      CGAffineTransform scaleMatrix = CGAffineTransformScale(CGAffineTransformIdentity, scaleWidth, scaleHeight);
-      view.transform = CGAffineTransformTranslate(scaleMatrix, translateX, translateY);
+      view.bounds = CGRectMake(0, 0, currentWidth, currentHeight);
+      view.center = CGPointMake(currentX + currentWidth/2.0, currentY + currentHeight/2.0);
     }
     
     //TODO appearing and disappearing
