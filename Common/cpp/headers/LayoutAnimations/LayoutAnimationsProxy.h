@@ -20,13 +20,14 @@ class MutableValue;
 class LayoutAnimationsProxy {
   
 public:
-  LayoutAnimationsProxy(std::function<void(int, float)> _notifyAboutProgress);
+  LayoutAnimationsProxy(std::function<void(int, float)> _notifyAboutProgress, std::function<void(int)> _notifyAboutEnd);
   
   void startObserving(int tag, std::shared_ptr<MutableValue> sv);
   void stopObserving(int tag);
   
 private:
   std::function<void(int, float)> notifyAboutProgress;
+  std::function<void(int)> notifyAboutEnd;
   std::map<int, std::shared_ptr<MutableValue>> observedValues;
 };
 

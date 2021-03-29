@@ -93,4 +93,10 @@
   }
 }
 
+- (void)notifyAboutEnd:(NSNumber*)tag
+{
+  [_firstSnapshots removeObjectForKey:tag];
+  [_secondSnapshots removeObjectForKey:tag];
+}
+
 @end

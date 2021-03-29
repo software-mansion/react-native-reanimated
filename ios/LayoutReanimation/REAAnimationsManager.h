@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setAnimationStartingBlock:(void (^)(NSNumber *tag))startAnimation;
 - (void)notifyAboutProgress:(NSNumber*)progress tag:(NSNumber*)tag;
+- (void)notifyAboutEnd:(NSNumber*)tag;
 
 - (void)invalidate;
 

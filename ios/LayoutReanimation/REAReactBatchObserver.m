@@ -92,12 +92,17 @@
 - (void)uiManagerWillPerformLayout: (RCTUIManager *)uiManager
 {
     // if it's not performant enough then we can also get dirty AnimationRoots by extending Yoga nodes
-    for (NSNumber *tag in [REAReactBatchObserver animationRootsTags])
+    for (NSNumber *tag in [[REAReactBatchObserver animationRootsTags] copy])
     {
         RCTShadowView* shadowView = [self.uiManager shadowViewForReactTag:tag];
-        if (YGNodeIsDirty(shadowView.yogaNode)) {
-            [self.affectedAnimationRootsTags addObject:tag];
-        }
+      if (shadowView == nil) {
+        [[REAReactBatchObserver animationRootsTags] removeObject:tag];
+       // [self.affectedAnimationRootsTags addObject:tag];
+        continue;
+      }
+      if (YGNodeIsDirty(shadowView.yogaNode)) {
+          [self.affectedAnimationRootsTags addObject:tag];
+      }
     }
 }
 

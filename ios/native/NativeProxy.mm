@@ -146,7 +146,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     }
   };
   
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress);
+  auto notifyAboutEnd = [=](int tag) {
+    if (animationsManager) {
+      [animationsManager notifyAboutEnd:[NSNumber numberWithInt: tag]];
+    }
+  };
+  
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
   [animationsManager setAnimationStartingBlock:^(NSNumber * _Nonnull tag) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
