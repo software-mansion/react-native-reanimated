@@ -96,6 +96,7 @@ void NativeProxy::installJSIBindings()
   std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
   factory = _javaScriptExecutor->getExecutorFactory();
   executor = factory.get()->createJSExecutor(delegate, jsQueue);
+  std::unique_ptr<jsi::Runtime> animatedRuntime;
   animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
@@ -110,7 +111,7 @@ void NativeProxy::installJSIBindings()
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
                                                          scheduler_,
-                                                         animatedRuntime,
+                                                         std::move(animatedRuntime),
                                                          errorHandler,
                                                          propObtainer,
                                                          platformDepMethodsHolder);

@@ -95,7 +95,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *runtime_;
   std::shared_ptr<JSExecutorFactory> factory;
   std::unique_ptr<JSExecutor> executor;
-  std::unique_ptr<jsi::Runtime> animatedRuntime;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
   std::shared_ptr<Scheduler> scheduler_;
