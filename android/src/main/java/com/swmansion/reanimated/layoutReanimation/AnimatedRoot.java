@@ -1,0 +1,11 @@
+package com.swmansion.reanimated.layoutReanimation;
+
+import android.content.Context;
+
+import com.facebook.react.views.view.ReactViewGroup;
+
+public class AnimatedRoot extends ReactViewGroup {
+    public AnimatedRoot(Context context) {
+        super(context);
+    }
+}
