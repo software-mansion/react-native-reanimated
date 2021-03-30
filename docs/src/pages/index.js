@@ -180,7 +180,7 @@ function Home() {
               <div className="col col--7 text--center col--bottom-section">
                 <h2>Try it out</h2>
                 <p>{tryItOutDecription}</p>
-                <div class="item screenshot-container">
+                <div className="item screenshot-container">
                   <img src={screenshotUrl} alt="Reanimated screenshot" />
                 </div>
                 <div>
