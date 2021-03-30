@@ -78,6 +78,11 @@ module.exports = {
   },
   projectName: 'react-native-reanimated',
   themeConfig: {
+    algolia: {
+      apiKey: 'ffb6d91f5f14c201543b7ab35ae13535',
+      indexName: 'react-native-reanimated',
+      contextualSearch: true,
+    },
     googleAnalytics: {
       trackingID: 'UA-41044622-6',
       anonymizeIP: true,
@@ -87,10 +92,6 @@ module.exports = {
     },
     navbar: {
       title: 'React Native Reanimated',
-      logo: {
-        alt: 'My Site Logo',
-        src: 'img/logo.svg',
-      },
       items: [
         {
           to: 'docs/',
