@@ -100,8 +100,13 @@ module.exports = {
           position: 'left',
         },
         {
-          href: 'https://github.com/facebook/docusaurus',
-          label: 'GitHub',
+          type: 'search',
+          position: 'right',
+        },
+        {
+          className: 'github-navbar-logo',
+          href: 'https://github.com/software-mansion/react-native-reanimated/',
+          label: 'Github',
           position: 'right',
         },
       ],

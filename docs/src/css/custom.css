@@ -204,6 +204,10 @@ h6 {
   margin-right: 0;
 }
 
+.github-navbar-logo {
+  margin-left: 20px;
+}
+
 .githubStarLink {
   display: flex;
   justify-content: center;
