@@ -13,17 +13,17 @@ import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
 
-type RBGObj = {
+interface RBG {
   r: number;
   g: number;
   b: number;
-};
+}
 
-type HSVObj = {
+interface HSV {
   h: number;
   s: number;
   v: number;
-};
+}
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
@@ -475,9 +475,9 @@ export const rgbaColor = (
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-function RGBtoHSV(rgb: RBGObj): HSVObj;
-function RGBtoHSV(r: number, g: number, b: number): HSVObj;
-function RGBtoHSV(r: any, g?: any, b?: any): HSVObj {
+function RGBtoHSV(rgb: RBG): HSV;
+function RGBtoHSV(r: number, g: number, b: number): HSV;
+function RGBtoHSV(r: any, g?: any, b?: any): HSV {
   'worklet';
   /* eslint-disable */
   if (arguments.length === 1) {
@@ -528,8 +528,8 @@ function RGBtoHSV(r: any, g?: any, b?: any): HSVObj {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(hsv: HSVObj): RBGObj;
-function HSVtoRGB(h: number, s: number, v: number): RBGObj;
+function HSVtoRGB(hsv: HSV): RBG;
+function HSVtoRGB(h: number, s: number, v: number): RBG;
 function HSVtoRGB(h: any, s?: any, v?: any) {
   'worklet';
   /* eslint-disable */
