@@ -327,7 +327,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::WorkletFunctionType: {
       auto module = this->module;
-      auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
+      auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       if (RuntimeDecorator::isWorkletRuntime(rt)) {
         // when running on UI thread we prep a function
 
@@ -341,8 +341,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                    const jsi::Value *args,
                    size_t count
                    ) mutable -> jsi::Value {
-           jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
-           rt.global().setProperty(rt, "jsThis", *jsThis); //set jsThis
+           const jsi::String jsThisName = jsi::String::createFromAscii(rt, "jsThis");
+           jsi::Object global = rt.global();
+           jsi::Value oldJSThis = global.getProperty(rt, jsThisName);
+           global.setProperty(rt, jsThisName, *jsThis); //set jsThis
 
            jsi::Value res = jsi::Value::undefined();
            try {
@@ -363,8 +365,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               module->errorHandler->setError(str);
               module->errorHandler->raise();
             }
-
-           rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+           global.setProperty(rt, jsThisName, oldJSThis); //clean jsThis
            return res;
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
@@ -396,9 +397,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             }
 
             jsi::Value returnedValue;
-
-            jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
-            rt.global().setProperty(rt, "jsThis", jsThis); //set jsThis
+            const jsi::String jsThisName = jsi::String::createFromAscii(rt, "jsThis");
+            jsi::Object global = rt.global();
+            jsi::Value oldJSThis = global.getProperty(rt, jsThisName);
+            global.setProperty(rt, jsThisName, jsThis); //set jsThis
             try {
               returnedValue = funPtr->call(rt,
                                              static_cast<const jsi::Value*>(args),
@@ -418,7 +420,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               module->errorHandler->setError(str);
               module->errorHandler->raise();
             }
-            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+            global.setProperty(rt, jsThisName, oldJSThis); //clean jsThis
 
             delete [] args;
             // ToDo use returned value to return promise

@@ -82,6 +82,10 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
                                       platformDepMethodsHolder.getCurrentTime);
+   onRenderCallback = [this](double timestampMs) {
+    this->renderRequested = false;
+    this->onRender(timestampMs);
+  };
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -212,10 +216,7 @@ void NativeReanimatedModule::maybeRequestRender()
   if (!renderRequested)
   {
     renderRequested = true;
-    requestRender([this](double timestampMs) {
-      this->renderRequested = false;
-      this->onRender(timestampMs);
-    }, *this->runtime);
+    requestRender(onRenderCallback, *this->runtime);
   }
 }
 
@@ -225,7 +226,7 @@ void NativeReanimatedModule::onRender(double timestampMs)
   {
     std::vector<FrameCallback> callbacks = frameCallbacks;
     frameCallbacks.clear();
-    for (auto callback : callbacks)
+    for (auto& callback : callbacks)
     {
       callback(timestampMs);
     }

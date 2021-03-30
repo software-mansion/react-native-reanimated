@@ -178,7 +178,6 @@ export function withTiming(toValue, userConfig, callback) {
 
     function timing(animation, now) {
       const { toValue, progress, startTime, current } = animation;
-
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
@@ -188,11 +187,9 @@ export function withTiming(toValue, userConfig, callback) {
         return true;
       }
 
-      const newProgress = config.easing(runtime / config.duration);
-
-      const dist =
+      const newProgress = animation.easing(runtime / config.duration);
+      animation.current +=
         ((toValue - current) * (newProgress - progress)) / (1 - progress);
-      animation.current += dist;
       animation.progress = newProgress;
       return false;
     }
@@ -214,6 +211,11 @@ export function withTiming(toValue, userConfig, callback) {
         animation.progress = 0;
       }
       animation.current = value;
+      if (typeof config.easing === 'object') {
+        animation.easing = config.easing.factory();
+      } else {
+        animation.easing = config.easing;
+      }
     }
 
     return {

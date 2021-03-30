@@ -199,7 +199,12 @@ function bounce(t) {
  */
 function bezier(x1, y1, x2, y2) {
   'worklet';
-  return Bezier(x1, y1, x2, y2);
+  return {
+    factory: () => {
+      'worklet';
+      return Bezier(x1, y1, x2, y2);
+    },
+  };
 }
 
 /**

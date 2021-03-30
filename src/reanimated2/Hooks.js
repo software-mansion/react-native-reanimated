@@ -162,48 +162,53 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
   return runAnimations(animation, timestamp, key, result, animationsActive);
 }
 
-// TODO: recirsive worklets aren't supported yet
 function isAnimated(prop) {
   'worklet';
-  function isAnimated(prop) {
-    if (Array.isArray(prop)) {
-      return prop.some(isAnimated);
-    }
-    if (typeof prop === 'object') {
-      if (prop.onFrame) {
-        return true;
-      }
-      return Object.keys(prop).some((key) => isAnimated(prop[key]));
-    }
-    return false;
+  if (Array.isArray(prop)) {
+    return prop.some(isAnimated);
   }
-  return isAnimated(prop);
+  if (typeof prop === 'object') {
+    if (prop.onFrame) {
+      return true;
+    }
+    return Object.keys(prop).some((key) => isAnimated(prop[key]));
+  }
+  return false;
 }
 
 function styleDiff(oldStyle, newStyle) {
   'worklet';
+  if (isAnimated(newStyle)) {
+    return;
+  }
+
   const diff = {};
-  Object.keys(oldStyle).forEach((key) => {
-    if (newStyle[key] === undefined) {
-      diff[key] = null;
-    }
-  });
-  Object.keys(newStyle).forEach((key) => {
+  for (const key in newStyle) {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
-    if (isAnimated(value)) {
-      // do nothing
-      return;
+    if (oldValue !== value) {
+      if (Array.isArray(value)) {
+        let i = 0;
+        let isBreak = false;
+        for (const item of value) {
+          for (const nestedKey in item) {
+            if (oldValue[i][nestedKey] !== item[nestedKey]) {
+              diff[key] = value;
+              isBreak = true;
+              break;
+            }
+            if (isBreak) {
+              break;
+            }
+          }
+          i++;
+        }
+      } else {
+        diff[key] = value;
+      }
     }
-    if (
-      oldValue !== value &&
-      JSON.stringify(oldValue) !== JSON.stringify(value)
-    ) {
-      // I'd use deep equal here but that'd take additional work and this was easier
-      diff[key] = value;
-    }
-  });
+  }
   return diff;
 }
 
@@ -232,61 +237,59 @@ function styleUpdater(
   const animations = state.animations || {};
   const newValues = updater() || {};
   const oldValues = state.last;
-
   // extract animated props
   let hasAnimations = false;
-  Object.keys(animations).forEach((key) => {
-    const value = newValues[key];
-    if (!isAnimated(value)) {
+  for (const key in newValues) {
+    if (!isAnimated(newValues[key])) {
       delete animations[key];
     }
-  });
-  Object.keys(newValues).forEach((key) => {
+  }
+  for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
       prepareAnimation(value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
     }
-  });
-
-  function frame(timestamp) {
-    const { animations, last, isAnimationCancelled } = state;
-    if (isAnimationCancelled) {
-      state.isAnimationRunning = false;
-      return;
-    }
-
-    const updates = {};
-    let allFinished = true;
-    Object.keys(animations).forEach((propName) => {
-      const finished = runAnimations(
-        animations[propName],
-        timestamp,
-        propName,
-        updates,
-        animationsActive
-      );
-      if (finished) {
-        last[propName] = updates[propName];
-        delete animations[propName];
-      } else {
-        allFinished = false;
-      }
-    });
-
-    if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
-    }
-
-    if (!allFinished) {
-      requestFrame(frame);
-    } else {
-      state.isAnimationRunning = false;
-    }
   }
 
   if (hasAnimations) {
+    const frame = (timestamp) => {
+      const { animations, last, isAnimationCancelled } = state;
+      if (isAnimationCancelled) {
+        state.isAnimationRunning = false;
+        return;
+      }
+
+      const updates = {};
+      let allFinished = true;
+      for (const propName in animations) {
+        const finished = runAnimations(
+          animations[propName],
+          timestamp,
+          propName,
+          updates,
+          animationsActive
+        );
+        if (finished) {
+          last[propName] = updates[propName];
+          delete animations[propName];
+        } else {
+          allFinished = false;
+        }
+      }
+
+      if (Object.keys(updates).length) {
+        updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+      }
+
+      if (!allFinished) {
+        requestFrame(frame);
+      } else {
+        state.isAnimationRunning = false;
+      }
+    };
+
     state.animations = animations;
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
@@ -306,7 +309,7 @@ function styleUpdater(
   const diff = styleDiff(oldValues, newValues);
   state.last = Object.assign({}, oldValues, newValues);
 
-  if (Object.keys(diff).length !== 0) {
+  if (diff) {
     updateProps(viewDescriptor, diff, maybeViewRef, adapters);
   }
 }

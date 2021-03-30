@@ -59,11 +59,12 @@ public:
 private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback, jsi::Runtime&)> requestRender;
+  std::function<void(FrameCallback&, jsi::Runtime&)> requestRender;
   std::shared_ptr<jsi::Value> dummyEvent;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
+  std::function<void(double)> onRenderCallback;
 public:
   std::shared_ptr<ErrorHandler> errorHandler;
   std::shared_ptr<WorkletsCache> workletsCache;
