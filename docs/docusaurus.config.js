@@ -107,7 +107,10 @@ module.exports = {
       ],
     },
     footer: {
-      style: 'dark',
+      logo: {
+        alt: 'Software Mansion',
+        src: 'img/swmLogo.svg',
+      },
     },
     prism: {
       theme: prismConfig,
@@ -120,8 +123,7 @@ module.exports = {
         docs: {
           path: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl:
-            'https://github.com/software-mansion/react-native-reanimated/tree/master/docs',
+          editUrl: undefined, // hide edit button
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
