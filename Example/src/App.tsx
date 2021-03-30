@@ -1,42 +1,35 @@
+import { NavigationContainer } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { AnimatedRoot, withTiming, withSpring } from 'react-native-reanimated';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Home, SpringLayoutAnimation, MountingUnmounting } from './LayoutReanimation';
 
-function Box({label, state}) {
-  let sz = 100;
-  if (state) {
-    sz = 50;
-  } 
-  return (
-    <View style={[styles.box,{width: sz, height: sz}]}>
-      <Text>{label}</Text>
-    </View>
-  );
-}
+import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 
-export default function Screen() {
-  const [state, setState] =  useState(true);
-  return (
-    <View style={{marginTop: 30}}>
-      <AnimatedRoot animation={withTiming(1, {duration: 500})} isShallow={false}>
-        {state && <Box key="a" label="A" state={state} />}
-        <Box key="b" label="B" />
-        {!state && <Box key="a" label="A" state={state}/>}
-      </AnimatedRoot>
-      <Button onPress={() => {setState(!state)}} title="toggle" />
-    </View>
-  );
-}
+const Stack = createStackNavigator();
 
-const styles = StyleSheet.create(
+const Screens = [
   {
-    box: {
-      margin: 20,
-      padding: 20,
-      borderWidth: 1,
-      borderColor: 'black',
-      width: 100,
-      height: 100,
-    }
+    name: 'Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  {
+    name: 'Mounting Unmounting',
+    screen: MountingUnmounting,
   }
-);
+];
+
+export default function App(): React.ReactElement {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" >
+          {props => <Home {...props} screens={Screens}/>}
+        </Stack.Screen>
+         { Screens.map(screen => (
+           <Stack.Screen name={screen.name} component={screen.screen}/>
+         )) }
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

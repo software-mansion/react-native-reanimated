@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.LayoutShadowNode;
-import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 
@@ -16,7 +15,7 @@ class ReaShadowNode extends LayoutShadowNode {
     @Override
     public void setReactTag(int reactTag) {
         super.setReactTag(reactTag);
-        // TODO add to registry
+        // TODO add to the registry
     }
 
 }
