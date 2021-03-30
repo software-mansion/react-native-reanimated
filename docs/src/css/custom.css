@@ -1,18 +1,18 @@
 @font-face {
-  font-family: "Aeonik Regular";
-  src: url("/fonts/Aeonik-Regular.woff2") format("woff2"),
-    url("/fonts/Aeonik-Regular.woff") format("woff");
+  font-family: 'Aeonik Regular';
+  src: url('/fonts/Aeonik-Regular.woff2') format('woff2'),
+    url('/fonts/Aeonik-Regular.woff') format('woff');
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Aeonik Bold";
-  src: url("/fonts/Aeonik-Bold.woff2") format("woff2"),
-    url("/fonts/Aeonik-Bold.woff") format("woff");
+  font-family: 'Aeonik Bold';
+  src: url('/fonts/Aeonik-Bold.woff2') format('woff2'),
+    url('/fonts/Aeonik-Bold.woff') format('woff');
   font-display: swap;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap');
 
 :root {
   --h1-font-size: 3rem;
@@ -78,7 +78,12 @@
   --ifm-menu-color: var(--ifm-color-primary);
   --ifm-menu-color-background-active: none;
   --ifm-menu-color-background-hover: none;
-  --ifm-menu-link-sublist-icon: url("data:image/svg+xml;utf8,<svg alt="Arrow" xmlns="http://www.w3.org/2000/svg" width="13px" height="13px" viewBox="0 0 24 24"><path fill="rgba(5,5,76,1)" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg>");
+  --ifm-menu-link-sublist-icon: url('data:image/svg+xml;utf8,<svg alt='Arrow' xmlns='http://www.w3.org/2000/svg' width='13px' height='13px' viewBox='002424'><path fill='rgba(
+      5,
+      5,
+      76,
+      1
+    )' d='M7.4115.41l1210.83l4.594.58l1814l-6-6-66z'></path></svg>');
   --ifm-menu-link-padding-horizontal: 14px;
   --ifm-hr-border-color: #dcdfeb;
   --ifm-container-width: 1900px;
@@ -135,19 +140,19 @@ h6 {
   display: hidden;
 }
 
-.navbar__item.navbar__link[href*="github"] {
+.navbar__item.navbar__link[href*='github'] {
   display: flex;
   font-size: 0;
   padding: 0;
 }
 
-.navbar__item.navbar__link[href*="github"]:before {
-  content: "";
+.navbar__item.navbar__link[href*='github']:before {
+  content: '';
   min-width: 24px;
   width: 24px;
   min-height: 24px;
   height: 24px;
-  background: url("/img/github_logo.svg");
+  background: url('/img/github_logo.svg');
   background-repeat: no-repeat;
 }
 
@@ -243,7 +248,7 @@ section > .container {
 }
 
 .hero-content {
-  padding: 3rem 0;
+  padding: 3rem 0 !important;
   flex-direction: column;
   justify-content: center;
 }
@@ -316,6 +321,7 @@ section > .contaner > .row {
 .info-box {
   display: flex;
   margin-bottom: 1rem;
+  flex-direction: column;
 }
 
 .row--box-section {
@@ -604,6 +610,6 @@ section > .contaner > .row {
     height: 450px;
   }
 }
-.spacer{
-  height:15px;
+.spacer {
+  height: 15px;
 }
