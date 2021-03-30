@@ -29,7 +29,7 @@ interface HSV {
 const NUMBER = '[-+]?\\d*\\.?\\d+';
 const PERCENTAGE = NUMBER + '%';
 
-function call(...args: unknown[]) {
+function call(...args: unknown[]): string {
   'worklet';
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
