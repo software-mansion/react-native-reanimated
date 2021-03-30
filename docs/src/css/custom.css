@@ -485,15 +485,6 @@ section > .contaner > .row {
     flex-direction: row-reverse;
   }
 
-  .container {
-    margin-left: 0;
-    margin-right: 0;
-    padding: 0 20px;
-    display: flex;
-    flex: 1;
-    max-width: 100%;
-  }
-
   .container--center {
     margin-top: 0;
     display: flex;
