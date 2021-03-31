@@ -13,9 +13,10 @@ export default class JSReanimated {
   timeProvider = null;
 
   constructor() {
-    this.timeProvider = process.env.JEST_WORKER_ID
-      ? { now: () => Date.now() }
-      : window.performance;
+    this.timeProvider = {
+      now: () =>
+        process.env.JEST_WORKER_ID ? Date.now() : window.performance.now(),
+    };
   }
 
   pushFrame(frame) {
