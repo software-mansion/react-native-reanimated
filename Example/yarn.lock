@@ -6242,10 +6242,10 @@ react-native-web@^0.14.7:
     prop-types "^15.6.0"
     react-timer-mixin "^0.13.4"
 
-react-native@0.64.0-rc.2:
-  version "0.64.0-rc.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.64.0-rc.2.tgz#fd9f273255ac61bd23abd4a1251a6d6fba5ee343"
-  integrity sha512-c9eZEHnAtoEIlfm1AmCjobCeGqxcb7046U6CaWNKScE+Plf+A8Kq62k7kTianQHrC5mba9SyoMx01gox0w6xbg==
+react-native@0.64.0:
+  version "0.64.0"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.64.0.tgz#c3bde5b638bf8bcf12bae6e094930d39cb942ab7"
+  integrity sha512-8dhSHBthgGwAjU+OjqUEA49229ThPMQH7URH0u8L0xoQFCnZO2sZ9Wc6KcbxI0x9KSmjCMFFZqRe3w3QsRv64g==
   dependencies:
     "@jest/create-cache-key-function" "^26.5.0"
     "@react-native-community/cli" "^5.0.1-alpha.0"
@@ -6270,6 +6270,7 @@ react-native@0.64.0-rc.2:
     promise "^8.0.3"
     prop-types "^15.7.2"
     react-devtools-core "^4.6.0"
+    react-native-codegen "^0.0.6"
     react-refresh "^0.4.0"
     regenerator-runtime "^0.13.2"
     scheduler "^0.20.1"
