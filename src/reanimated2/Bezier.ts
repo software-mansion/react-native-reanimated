@@ -3,11 +3,15 @@
  * BezierEasing - use bezier curve for transition easing function
  * by Gaëtan Renaudeau 2014 - 2015 – MIT License
  */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
 
-export function Bezier(mX1, mY1, mX2, mY2) {
+export function Bezier(
+  mX1: number,
+  mY1: number,
+  mX2: number,
+  mY2: number
+): (x: number) => number {
   'worklet';
 
   const NEWTON_ITERATIONS = 4;
@@ -18,32 +22,38 @@ export function Bezier(mX1, mY1, mX2, mY2) {
   const kSplineTableSize = 11;
   const kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
 
-  function A(aA1, aA2) {
+  function A(aA1: number, aA2: number): number {
     'worklet';
     return 1.0 - 3.0 * aA2 + 3.0 * aA1;
   }
-  function B(aA1, aA2) {
+  function B(aA1: number, aA2: number): number {
     'worklet';
     return 3.0 * aA2 - 6.0 * aA1;
   }
-  function C(aA1) {
+  function C(aA1: number) {
     'worklet';
     return 3.0 * aA1;
   }
 
   // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
-  function calcBezier(aT, aA1, aA2) {
+  function calcBezier(aT: number, aA1: number, aA2: number): number {
     'worklet';
     return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
   }
 
   // Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
-  function getSlope(aT, aA1, aA2) {
+  function getSlope(aT: number, aA1: number, aA2: number): number {
     'worklet';
     return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
   }
 
-  function binarySubdivide(aX, aA, aB, mX1, mX2) {
+  function binarySubdivide(
+    aX: number,
+    aA: number,
+    aB: number,
+    mX1: number,
+    mX2: number
+  ): number {
     'worklet';
     let currentX;
     let currentT;
@@ -63,7 +73,12 @@ export function Bezier(mX1, mY1, mX2, mY2) {
     return currentT;
   }
 
-  function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
+  function newtonRaphsonIterate(
+    aX: number,
+    aGuessT: number,
+    mX1: number,
+    mX2: number
+  ): number {
     'worklet';
     for (let i = 0; i < NEWTON_ITERATIONS; ++i) {
       const currentSlope = getSlope(aGuessT, mX1, mX2);
@@ -76,7 +91,7 @@ export function Bezier(mX1, mY1, mX2, mY2) {
     return aGuessT;
   }
 
-  function LinearEasing(x) {
+  function LinearEasing(x: number): number {
     'worklet';
     return x;
   }
@@ -103,7 +118,7 @@ export function Bezier(mX1, mY1, mX2, mY2) {
     sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
   }
 
-  function getTForX(aX) {
+  function getTForX(aX: number): number {
     'worklet';
     let intervalStart = 0.0;
     let currentSample = 1;
