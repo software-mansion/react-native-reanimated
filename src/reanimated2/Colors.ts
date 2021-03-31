@@ -7,17 +7,29 @@
  */
 
 /* eslint no-bitwise: 0 */
-
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable } from './core';
+import { makeRemote, makeShareable, isConfigured } from './core';
 import { interpolate } from './interpolation';
+// @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
+
+interface RBG {
+  r: number;
+  g: number;
+  b: number;
+}
+
+interface HSV {
+  h: number;
+  s: number;
+  v: number;
+}
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
 const PERCENTAGE = NUMBER + '%';
 
-function call(...args) {
+function call(...args: unknown[]): string {
   'worklet';
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
@@ -26,11 +38,23 @@ function call(...args) {
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
 // objects, then pick the right cache in getMatchers() method.
 const jsCachedMatchers = {};
-const uiCachedMatchers = makeRemote({});
-
-function getMatchers() {
+const uiCachedMatchers = !isConfigured() ? null : makeRemote({});
+type Matchers = {
+  rgb: RegExp;
+  rgba: RegExp;
+  hsl: RegExp;
+  hsla: RegExp;
+  hex3: RegExp;
+  hex4: RegExp;
+  hex5: RegExp;
+  hex6: RegExp;
+  hex8: RegExp;
+};
+function getMatchers(): Matchers {
   'worklet';
-  const cachedMatchers = _WORKLET ? uiCachedMatchers : jsCachedMatchers;
+  const cachedMatchers: Matchers = _WORKLET
+    ? uiCachedMatchers
+    : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
@@ -54,7 +78,7 @@ function getMatchers() {
 // has no assigned regexes
 getMatchers();
 
-function hue2rgb(p, q, t) {
+function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
   if (t < 0) {
     t += 1;
@@ -74,7 +98,7 @@ function hue2rgb(p, q, t) {
   return p;
 }
 
-function hslToRgb(h, s, l) {
+function hslToRgb(h: number, s: number, l: number): number {
   'worklet';
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -89,7 +113,7 @@ function hslToRgb(h, s, l) {
   );
 }
 
-function parse255(str) {
+function parse255(str: string): number {
   'worklet';
   const int = Number.parseInt(str, 10);
   if (int < 0) {
@@ -101,13 +125,13 @@ function parse255(str) {
   return int;
 }
 
-function parse360(str) {
+function parse360(str: string): number {
   'worklet';
   const int = Number.parseFloat(str);
   return (((int % 360) + 360) % 360) / 360;
 }
 
-function parse1(str) {
+function parse1(str: string): number {
   'worklet';
   const num = Number.parseFloat(str);
   if (num < 0) {
@@ -119,7 +143,7 @@ function parse1(str) {
   return Math.round(num * 255);
 }
 
-function parsePercentage(str) {
+function parsePercentage(str: string): number {
   'worklet';
   // parseFloat conveniently ignores the final %
   const int = Number.parseFloat(str);
@@ -132,162 +156,164 @@ function parsePercentage(str) {
   return int / 100;
 }
 
-const names = makeShareable({
-  transparent: 0x00000000,
+const names: any = !isConfigured()
+  ? null
+  : makeShareable({
+      transparent: 0x00000000,
 
-  // http://www.w3.org/TR/css3-color/#svg-color
-  aliceblue: 0xf0f8ffff,
-  antiquewhite: 0xfaebd7ff,
-  aqua: 0x00ffffff,
-  aquamarine: 0x7fffd4ff,
-  azure: 0xf0ffffff,
-  beige: 0xf5f5dcff,
-  bisque: 0xffe4c4ff,
-  black: 0x000000ff,
-  blanchedalmond: 0xffebcdff,
-  blue: 0x0000ffff,
-  blueviolet: 0x8a2be2ff,
-  brown: 0xa52a2aff,
-  burlywood: 0xdeb887ff,
-  burntsienna: 0xea7e5dff,
-  cadetblue: 0x5f9ea0ff,
-  chartreuse: 0x7fff00ff,
-  chocolate: 0xd2691eff,
-  coral: 0xff7f50ff,
-  cornflowerblue: 0x6495edff,
-  cornsilk: 0xfff8dcff,
-  crimson: 0xdc143cff,
-  cyan: 0x00ffffff,
-  darkblue: 0x00008bff,
-  darkcyan: 0x008b8bff,
-  darkgoldenrod: 0xb8860bff,
-  darkgray: 0xa9a9a9ff,
-  darkgreen: 0x006400ff,
-  darkgrey: 0xa9a9a9ff,
-  darkkhaki: 0xbdb76bff,
-  darkmagenta: 0x8b008bff,
-  darkolivegreen: 0x556b2fff,
-  darkorange: 0xff8c00ff,
-  darkorchid: 0x9932ccff,
-  darkred: 0x8b0000ff,
-  darksalmon: 0xe9967aff,
-  darkseagreen: 0x8fbc8fff,
-  darkslateblue: 0x483d8bff,
-  darkslategray: 0x2f4f4fff,
-  darkslategrey: 0x2f4f4fff,
-  darkturquoise: 0x00ced1ff,
-  darkviolet: 0x9400d3ff,
-  deeppink: 0xff1493ff,
-  deepskyblue: 0x00bfffff,
-  dimgray: 0x696969ff,
-  dimgrey: 0x696969ff,
-  dodgerblue: 0x1e90ffff,
-  firebrick: 0xb22222ff,
-  floralwhite: 0xfffaf0ff,
-  forestgreen: 0x228b22ff,
-  fuchsia: 0xff00ffff,
-  gainsboro: 0xdcdcdcff,
-  ghostwhite: 0xf8f8ffff,
-  gold: 0xffd700ff,
-  goldenrod: 0xdaa520ff,
-  gray: 0x808080ff,
-  green: 0x008000ff,
-  greenyellow: 0xadff2fff,
-  grey: 0x808080ff,
-  honeydew: 0xf0fff0ff,
-  hotpink: 0xff69b4ff,
-  indianred: 0xcd5c5cff,
-  indigo: 0x4b0082ff,
-  ivory: 0xfffff0ff,
-  khaki: 0xf0e68cff,
-  lavender: 0xe6e6faff,
-  lavenderblush: 0xfff0f5ff,
-  lawngreen: 0x7cfc00ff,
-  lemonchiffon: 0xfffacdff,
-  lightblue: 0xadd8e6ff,
-  lightcoral: 0xf08080ff,
-  lightcyan: 0xe0ffffff,
-  lightgoldenrodyellow: 0xfafad2ff,
-  lightgray: 0xd3d3d3ff,
-  lightgreen: 0x90ee90ff,
-  lightgrey: 0xd3d3d3ff,
-  lightpink: 0xffb6c1ff,
-  lightsalmon: 0xffa07aff,
-  lightseagreen: 0x20b2aaff,
-  lightskyblue: 0x87cefaff,
-  lightslategray: 0x778899ff,
-  lightslategrey: 0x778899ff,
-  lightsteelblue: 0xb0c4deff,
-  lightyellow: 0xffffe0ff,
-  lime: 0x00ff00ff,
-  limegreen: 0x32cd32ff,
-  linen: 0xfaf0e6ff,
-  magenta: 0xff00ffff,
-  maroon: 0x800000ff,
-  mediumaquamarine: 0x66cdaaff,
-  mediumblue: 0x0000cdff,
-  mediumorchid: 0xba55d3ff,
-  mediumpurple: 0x9370dbff,
-  mediumseagreen: 0x3cb371ff,
-  mediumslateblue: 0x7b68eeff,
-  mediumspringgreen: 0x00fa9aff,
-  mediumturquoise: 0x48d1ccff,
-  mediumvioletred: 0xc71585ff,
-  midnightblue: 0x191970ff,
-  mintcream: 0xf5fffaff,
-  mistyrose: 0xffe4e1ff,
-  moccasin: 0xffe4b5ff,
-  navajowhite: 0xffdeadff,
-  navy: 0x000080ff,
-  oldlace: 0xfdf5e6ff,
-  olive: 0x808000ff,
-  olivedrab: 0x6b8e23ff,
-  orange: 0xffa500ff,
-  orangered: 0xff4500ff,
-  orchid: 0xda70d6ff,
-  palegoldenrod: 0xeee8aaff,
-  palegreen: 0x98fb98ff,
-  paleturquoise: 0xafeeeeff,
-  palevioletred: 0xdb7093ff,
-  papayawhip: 0xffefd5ff,
-  peachpuff: 0xffdab9ff,
-  peru: 0xcd853fff,
-  pink: 0xffc0cbff,
-  plum: 0xdda0ddff,
-  powderblue: 0xb0e0e6ff,
-  purple: 0x800080ff,
-  rebeccapurple: 0x663399ff,
-  red: 0xff0000ff,
-  rosybrown: 0xbc8f8fff,
-  royalblue: 0x4169e1ff,
-  saddlebrown: 0x8b4513ff,
-  salmon: 0xfa8072ff,
-  sandybrown: 0xf4a460ff,
-  seagreen: 0x2e8b57ff,
-  seashell: 0xfff5eeff,
-  sienna: 0xa0522dff,
-  silver: 0xc0c0c0ff,
-  skyblue: 0x87ceebff,
-  slateblue: 0x6a5acdff,
-  slategray: 0x708090ff,
-  slategrey: 0x708090ff,
-  snow: 0xfffafaff,
-  springgreen: 0x00ff7fff,
-  steelblue: 0x4682b4ff,
-  tan: 0xd2b48cff,
-  teal: 0x008080ff,
-  thistle: 0xd8bfd8ff,
-  tomato: 0xff6347ff,
-  turquoise: 0x40e0d0ff,
-  violet: 0xee82eeff,
-  wheat: 0xf5deb3ff,
-  white: 0xffffffff,
-  whitesmoke: 0xf5f5f5ff,
-  yellow: 0xffff00ff,
-  yellowgreen: 0x9acd32ff,
-});
+      // http://www.w3.org/TR/css3-color/#svg-color
+      aliceblue: 0xf0f8ffff,
+      antiquewhite: 0xfaebd7ff,
+      aqua: 0x00ffffff,
+      aquamarine: 0x7fffd4ff,
+      azure: 0xf0ffffff,
+      beige: 0xf5f5dcff,
+      bisque: 0xffe4c4ff,
+      black: 0x000000ff,
+      blanchedalmond: 0xffebcdff,
+      blue: 0x0000ffff,
+      blueviolet: 0x8a2be2ff,
+      brown: 0xa52a2aff,
+      burlywood: 0xdeb887ff,
+      burntsienna: 0xea7e5dff,
+      cadetblue: 0x5f9ea0ff,
+      chartreuse: 0x7fff00ff,
+      chocolate: 0xd2691eff,
+      coral: 0xff7f50ff,
+      cornflowerblue: 0x6495edff,
+      cornsilk: 0xfff8dcff,
+      crimson: 0xdc143cff,
+      cyan: 0x00ffffff,
+      darkblue: 0x00008bff,
+      darkcyan: 0x008b8bff,
+      darkgoldenrod: 0xb8860bff,
+      darkgray: 0xa9a9a9ff,
+      darkgreen: 0x006400ff,
+      darkgrey: 0xa9a9a9ff,
+      darkkhaki: 0xbdb76bff,
+      darkmagenta: 0x8b008bff,
+      darkolivegreen: 0x556b2fff,
+      darkorange: 0xff8c00ff,
+      darkorchid: 0x9932ccff,
+      darkred: 0x8b0000ff,
+      darksalmon: 0xe9967aff,
+      darkseagreen: 0x8fbc8fff,
+      darkslateblue: 0x483d8bff,
+      darkslategray: 0x2f4f4fff,
+      darkslategrey: 0x2f4f4fff,
+      darkturquoise: 0x00ced1ff,
+      darkviolet: 0x9400d3ff,
+      deeppink: 0xff1493ff,
+      deepskyblue: 0x00bfffff,
+      dimgray: 0x696969ff,
+      dimgrey: 0x696969ff,
+      dodgerblue: 0x1e90ffff,
+      firebrick: 0xb22222ff,
+      floralwhite: 0xfffaf0ff,
+      forestgreen: 0x228b22ff,
+      fuchsia: 0xff00ffff,
+      gainsboro: 0xdcdcdcff,
+      ghostwhite: 0xf8f8ffff,
+      gold: 0xffd700ff,
+      goldenrod: 0xdaa520ff,
+      gray: 0x808080ff,
+      green: 0x008000ff,
+      greenyellow: 0xadff2fff,
+      grey: 0x808080ff,
+      honeydew: 0xf0fff0ff,
+      hotpink: 0xff69b4ff,
+      indianred: 0xcd5c5cff,
+      indigo: 0x4b0082ff,
+      ivory: 0xfffff0ff,
+      khaki: 0xf0e68cff,
+      lavender: 0xe6e6faff,
+      lavenderblush: 0xfff0f5ff,
+      lawngreen: 0x7cfc00ff,
+      lemonchiffon: 0xfffacdff,
+      lightblue: 0xadd8e6ff,
+      lightcoral: 0xf08080ff,
+      lightcyan: 0xe0ffffff,
+      lightgoldenrodyellow: 0xfafad2ff,
+      lightgray: 0xd3d3d3ff,
+      lightgreen: 0x90ee90ff,
+      lightgrey: 0xd3d3d3ff,
+      lightpink: 0xffb6c1ff,
+      lightsalmon: 0xffa07aff,
+      lightseagreen: 0x20b2aaff,
+      lightskyblue: 0x87cefaff,
+      lightslategray: 0x778899ff,
+      lightslategrey: 0x778899ff,
+      lightsteelblue: 0xb0c4deff,
+      lightyellow: 0xffffe0ff,
+      lime: 0x00ff00ff,
+      limegreen: 0x32cd32ff,
+      linen: 0xfaf0e6ff,
+      magenta: 0xff00ffff,
+      maroon: 0x800000ff,
+      mediumaquamarine: 0x66cdaaff,
+      mediumblue: 0x0000cdff,
+      mediumorchid: 0xba55d3ff,
+      mediumpurple: 0x9370dbff,
+      mediumseagreen: 0x3cb371ff,
+      mediumslateblue: 0x7b68eeff,
+      mediumspringgreen: 0x00fa9aff,
+      mediumturquoise: 0x48d1ccff,
+      mediumvioletred: 0xc71585ff,
+      midnightblue: 0x191970ff,
+      mintcream: 0xf5fffaff,
+      mistyrose: 0xffe4e1ff,
+      moccasin: 0xffe4b5ff,
+      navajowhite: 0xffdeadff,
+      navy: 0x000080ff,
+      oldlace: 0xfdf5e6ff,
+      olive: 0x808000ff,
+      olivedrab: 0x6b8e23ff,
+      orange: 0xffa500ff,
+      orangered: 0xff4500ff,
+      orchid: 0xda70d6ff,
+      palegoldenrod: 0xeee8aaff,
+      palegreen: 0x98fb98ff,
+      paleturquoise: 0xafeeeeff,
+      palevioletred: 0xdb7093ff,
+      papayawhip: 0xffefd5ff,
+      peachpuff: 0xffdab9ff,
+      peru: 0xcd853fff,
+      pink: 0xffc0cbff,
+      plum: 0xdda0ddff,
+      powderblue: 0xb0e0e6ff,
+      purple: 0x800080ff,
+      rebeccapurple: 0x663399ff,
+      red: 0xff0000ff,
+      rosybrown: 0xbc8f8fff,
+      royalblue: 0x4169e1ff,
+      saddlebrown: 0x8b4513ff,
+      salmon: 0xfa8072ff,
+      sandybrown: 0xf4a460ff,
+      seagreen: 0x2e8b57ff,
+      seashell: 0xfff5eeff,
+      sienna: 0xa0522dff,
+      silver: 0xc0c0c0ff,
+      skyblue: 0x87ceebff,
+      slateblue: 0x6a5acdff,
+      slategray: 0x708090ff,
+      slategrey: 0x708090ff,
+      snow: 0xfffafaff,
+      springgreen: 0x00ff7fff,
+      steelblue: 0x4682b4ff,
+      tan: 0xd2b48cff,
+      teal: 0x008080ff,
+      thistle: 0xd8bfd8ff,
+      tomato: 0xff6347ff,
+      turquoise: 0x40e0d0ff,
+      violet: 0xee82eeff,
+      wheat: 0xf5deb3ff,
+      white: 0xffffffff,
+      whitesmoke: 0xf5f5f5ff,
+      yellow: 0xffff00ff,
+      yellowgreen: 0x9acd32ff,
+    });
 
-function normalizeColor(color) {
+function normalizeColor(color: unknown): number | null {
   'worklet';
 
   if (typeof color === 'number') {
@@ -303,7 +329,7 @@ function normalizeColor(color) {
 
   const matchers = getMatchers();
 
-  let match;
+  let match: RegExpExecArray | null;
 
   // Ordered based on occurrences on Facebook codebase
   if ((match = matchers.hex6.exec(color))) {
@@ -399,27 +425,32 @@ function normalizeColor(color) {
   return null;
 }
 
-export const opacity = (c) => {
+export const opacity = (c: number): number => {
   'worklet';
   return ((c >> 24) & 255) / 255;
 };
 
-export const red = (c) => {
+export const red = (c: number): number => {
   'worklet';
   return (c >> 16) & 255;
 };
 
-export const green = (c) => {
+export const green = (c: number): number => {
   'worklet';
   return (c >> 8) & 255;
 };
 
-export const blue = (c) => {
+export const blue = (c: number): number => {
   'worklet';
   return c & 255;
 };
 
-export const rgbaColor = (r, g, b, alpha = 1) => {
+export const rgbaColor = (
+  r: number,
+  g: number,
+  b: number,
+  alpha = 1
+): number | string => {
   'worklet';
   if (Platform.OS === 'web' || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -444,20 +475,27 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-function RGBtoHSV(r, g, b) {
+function RGBtoHSV(rgb: RBG): HSV;
+function RGBtoHSV(r: number, g: number, b: number): HSV;
+function RGBtoHSV(r: any, g?: any, b?: any): HSV {
   'worklet';
   /* eslint-disable */
   if (arguments.length === 1) {
-    (g = r.g), (b = r.b), (r = r.r);
+    g = r.g;
+    b = r.b;
+    r = r.r;
   }
-  var max = Math.max(r, g, b),
-    min = Math.min(r, g, b),
-    d = max - min,
-    h,
-    s = max === 0 ? 0 : d / max,
-    v = max / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const s = max === 0 ? 0 : d / max;
+  const v = max / 255;
+
+  let h;
 
   switch (max) {
+    default:
+    /* fallthrough */
     case min:
       h = 0;
       break;
@@ -490,12 +528,16 @@ function RGBtoHSV(r, g, b) {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(h, s, v) {
+function HSVtoRGB(hsv: HSV): RBG;
+function HSVtoRGB(h: number, s: number, v: number): RBG;
+function HSVtoRGB(h: any, s?: any, v?: any) {
   'worklet';
   /* eslint-disable */
   var r, g, b, i, f, p, q, t;
   if (arguments.length === 1) {
-    (s = h.s), (v = h.v), (h = h.h);
+    s = h.s;
+    v = h.v;
+    h = h.h;
   }
   i = Math.floor(h * 6);
   f = h * 6 - i;
@@ -530,13 +572,19 @@ function HSVtoRGB(h, s, v) {
   /* eslint-enable */
 }
 
-export const hsvToColor = (h, s, v) => {
+export const hsvToColor = (
+  h: number,
+  s: number,
+  v: number
+): number | string => {
   'worklet';
   const { r, g, b } = HSVtoRGB(h, s, v);
   return rgbaColor(r, g, b);
 };
 
-export function processColorInitially(color) {
+export function processColorInitially(
+  color: unknown
+): number | null | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -556,7 +604,7 @@ export function processColorInitially(color) {
   return normalizedColor;
 }
 
-export function isColor(value) {
+export function isColor(value: unknown): boolean {
   'worklet';
   if (typeof value !== 'string') {
     return false;
@@ -564,7 +612,7 @@ export function isColor(value) {
   return processColorInitially(value) != null;
 }
 
-export function processColor(color) {
+export function processColor(color: unknown): number | null | undefined {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
@@ -586,9 +634,11 @@ export function processColor(color) {
   return normalizedColor;
 }
 
-export function convertToHSVA(color) {
+export function convertToHSVA(
+  color: unknown
+): [number, number, number, number] {
   'worklet';
-  const processedColor = processColorInitially(color); // argb;
+  const processedColor = processColorInitially(color)!; // argb;
   const a = (processedColor >>> 24) / 255;
   const r = (processedColor << 8) >>> 24;
   const g = (processedColor << 16) >>> 24;
@@ -597,15 +647,19 @@ export function convertToHSVA(color) {
   return [h, s, v, a];
 }
 
-export function toRGBA(HSVA) {
+export function toRGBA(HSVA: [number, number, number, number]): string {
   'worklet';
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
 
-const interpolateColorsHSV = (value, inputRange, colors) => {
+const interpolateColorsHSV = (
+  value: number,
+  inputRange: readonly number[],
+  colors: readonly number[]
+) => {
   'worklet';
-  const colorsAsHSV = colors.map((c) => RGBtoHSV(c));
+  const colorsAsHSV = colors.map((c) => RGBtoHSV(c as any));
   const h = interpolate(
     value,
     inputRange,
@@ -627,7 +681,11 @@ const interpolateColorsHSV = (value, inputRange, colors) => {
   return hsvToColor(h, s, v);
 };
 
-const interpolateColorsRGB = (value, inputRange, colors) => {
+const interpolateColorsRGB = (
+  value: number,
+  inputRange: readonly number[],
+  colors: readonly number[]
+) => {
   'worklet';
   const r = Math.round(
     interpolate(
@@ -663,18 +721,18 @@ const interpolateColorsRGB = (value, inputRange, colors) => {
 };
 
 export const interpolateColor = (
-  value,
-  inputRange,
-  outputRange,
-  colorSpace = 'RGB'
-) => {
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly (string | number)[],
+  colorSpace: 'RGB' | 'HSV' = 'RGB'
+): string | number => {
   'worklet';
-  outputRange = outputRange.map((c) => processColor(c));
+  const processedOutputRange = outputRange.map((c) => processColor(c)!);
   if (colorSpace === 'HSV') {
-    return interpolateColorsHSV(value, inputRange, outputRange);
+    return interpolateColorsHSV(value, inputRange, processedOutputRange);
   }
   if (colorSpace === 'RGB') {
-    return interpolateColorsRGB(value, inputRange, outputRange);
+    return interpolateColorsRGB(value, inputRange, processedOutputRange);
   }
   throw new Error(
     `invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`

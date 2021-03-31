@@ -1,11 +1,12 @@
-import { TurboModuleRegistry } from 'react-native';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { Platform } from 'react-native';
 
-const InnerNativeModule =
-  global.__reanimatedModuleProxy ||
-  TurboModuleRegistry.getEnforcing('NativeReanimated');
+const InnerNativeModule = global.__reanimatedModuleProxy;
 
 const NativeReanimated = {
   native: true,
+  useOnlyV1: InnerNativeModule == null,
 
   installCoreFunctions(valueSetter) {
     return InnerNativeModule.installCoreFunctions(valueSetter);
@@ -43,5 +44,11 @@ const NativeReanimated = {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   },
 };
+
+if (NativeReanimated.useOnlyV1 && Platform.OS === 'android') {
+  console.warn(
+    `If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation`
+  );
+}
 
 export default NativeReanimated;

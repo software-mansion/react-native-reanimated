@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { createAnimatedPropAdapter } from './core';
 
 export const SVGAdapter = createAnimatedPropAdapter((props) => {

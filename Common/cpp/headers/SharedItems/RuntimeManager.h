@@ -1,11 +1,3 @@
-//
-//  RuntimeManager.h
-//  RNReanimated
-//
-//  Created by Marc Rousavy on 05.03.21.
-//  Copyright © 2021 Facebook. All rights reserved.
-//
-
 #pragma once
 
 #include "ShareableValue.h"

@@ -1,4 +1,6 @@
 /* global _WORKLET _measure _scrollTo */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { findNodeHandle } from 'react-native';
 
 export function getTag(view) {
