@@ -78,6 +78,7 @@ jobs:
         - npm install -g react-native-cli
         - cd Example
         - yarn
+        - gem install cocoapods
         - cd ios && pod install && cd ..
 
       script:
