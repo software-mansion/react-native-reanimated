@@ -344,10 +344,23 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
            rt.global().setProperty(rt, "jsThis", *jsThis); //set jsThis
 
            jsi::Value res = jsi::Value::undefined();
-           if (thisValue.isObject()) {
-             res = funPtr->callWithThis(rt, thisValue.asObject(rt), args, count);
-           } else {
-             res = funPtr->call(rt, args, count);
+           try {
+             if (thisValue.isObject()) {
+               res = funPtr->callWithThis(rt, thisValue.asObject(rt), args, count);
+             } else {
+               res = funPtr->call(rt, args, count);
+             }
+           } catch(jsi::JSError &e) {
+             throw e;
+           } catch(...) {
+             // TODO find out a way to get the error's message on hermes
+             jsi::Value location = jsThis->getProperty(rt, "__location");
+             std::string str = "Javascript worklet error";
+             if (location.isString()) {
+               str += "\nIn file: " + location.asString(rt).utf8(rt);
+             }
+             runtimeManager->errorHandler->setError(str);
+             runtimeManager->errorHandler->raise();
            }
           
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
