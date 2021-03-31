@@ -1,6 +1,5 @@
 #include "RemoteObject.h"
 #include "SharedParent.h"
-#include "NativeReanimatedModule.h"
 #include "RuntimeDecorator.h"
 #include <jsi/jsi.h>
 

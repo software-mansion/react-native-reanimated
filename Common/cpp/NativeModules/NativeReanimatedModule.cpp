@@ -61,22 +61,19 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::unique_ptr<jsi::Runtime> rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
-                                               PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
-                                                  runtime(std::move(rt)),
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) :
+                                                  NativeReanimatedModuleSpec(jsInvoker),
+                                                  RuntimeManager(std::move(rt), errorHandler, scheduler),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
-                                                  propObtainer(propObtainer),
-                                                  errorHandler(errorHandler),
-                                                  workletsCache(std::make_shared<WorkletsCache>()),
-                                                  scheduler(scheduler)
+                                                  propObtainer(propObtainer)
 {
 
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
-  
   RuntimeDecorator::decorateUIRuntime(*runtime,
                                       platformDepMethodsHolder.updaterFunction,
                                       requestAnimationFrame,
