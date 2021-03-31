@@ -454,7 +454,7 @@ declare module 'react-native-reanimated' {
     // reanimated2 functions
     export function runOnUI<A extends any[], R>(
       fn: (...args: A) => R
-    ): (...args: Parameters<typeof fn>) => void;
+    ): (...args: Parameters<typeof fn>) => Promise<R>;
     export function runOnJS<A extends any[], R>(
       fn: (...args: A) => R
     ): (...args: Parameters<typeof fn>) => void;
