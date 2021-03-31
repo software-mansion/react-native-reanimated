@@ -326,6 +326,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::WorkletFunctionType: {
       auto runtimeManager = this->runtimeManager;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
+      
       if (RuntimeDecorator::isWorkletRuntime(rt)) {
         // when running on UI thread we prep a function
 
@@ -363,7 +364,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             }
 
            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
-           return res;
+           auto promise = rt.global().getPropertyAsObject(rt, "Promise");
+           auto resolver = promise.getPropertyAsFunction(rt, "resolve");
+           return resolver.call(rt, res);
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
       } else {
@@ -382,46 +385,65 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             params.push_back(ShareableValue::adapt(rt, args[i], runtimeManager));
           }
 
-          runtimeManager->scheduler->scheduleOnUI([=] {
-            jsi::Runtime &rt = *runtimeManager->runtime.get();
-            auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
-            auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
-            std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
+          auto dispatchToUICallback = jsi::Function::createFromHostFunction(rt,
+                                                                            jsi::PropNameID::forAscii(rt, "dispatchToUICallback"),
+                                                                            2,
+                                                                            [runtimeManager, frozenObject, params](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+            auto resolverValue = std::make_shared<jsi::Value>((arguments[0].asObject(runtime)));
+            auto rejecterValue = std::make_shared<jsi::Value>((arguments[1].asObject(runtime)));
+            
+            auto resolver = [runtimeManager, &runtime, resolverValue](std::shared_ptr<reanimated::ShareableValue> shareableValue) {
+              runtimeManager->scheduler->scheduleOnJS([&runtime, resolverValue, shareableValue] () {
+                resolverValue->asObject(runtime).asFunction(runtime).call(runtime, shareableValue->getValue(runtime));
+              });
+            };
+            auto rejecter = [runtimeManager, &runtime, rejecterValue](std::string message) {
+              runtimeManager->scheduler->scheduleOnJS([&runtime, rejecterValue, message] () {
+                rejecterValue->asObject(runtime).asFunction(runtime).call(runtime, jsi::JSError(runtime, message).value());
+              });
+            };
+            
+            runtimeManager->scheduler->scheduleOnUI([&runtime, runtimeManager, frozenObject, params, resolver, rejecter] {
+              jsi::Runtime &rt = *runtimeManager->runtime.get();
+              auto jsThis = createFrozenWrapper(rt, frozenObject).getObject(rt);
+              auto code = jsThis.getProperty(rt, "asString").asString(rt).utf8(rt);
+              std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
 
-            jsi::Value * args = new jsi::Value[params.size()];
-            for (int i = 0; i < params.size(); ++i) {
-              args[i] = params[i]->getValue(rt);
-            }
-
-            jsi::Value returnedValue;
-
-            jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
-            rt.global().setProperty(rt, "jsThis", jsThis); //set jsThis
-            try {
-              returnedValue = funPtr->call(rt,
-                                             static_cast<const jsi::Value*>(args),
-                                             (size_t)params.size());
-
-            } catch(std::exception &e) {
-              std::string str = e.what();
-              runtimeManager->errorHandler->setError(str);
-              runtimeManager->errorHandler->raise();
-            } catch(...) {
-              // TODO find out a way to get the error's message on hermes
-              jsi::Value location = jsThis.getProperty(rt, "__location");
-              std::string str = "Javascript worklet error";
-              if (location.isString()) {
-                str += "\nIn file: " + location.asString(rt).utf8(rt);
+              jsi::Value * args = new jsi::Value[params.size()];
+              for (int i = 0; i < params.size(); ++i) {
+                args[i] = params[i]->getValue(rt);
               }
-              runtimeManager->errorHandler->setError(str);
-              runtimeManager->errorHandler->raise();
-            }
-            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
 
-            delete [] args;
-            // ToDo use returned value to return promise
+              jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
+              rt.global().setProperty(rt, "jsThis", jsThis); //set jsThis
+              try {
+                auto result = funPtr->call(rt,
+                                          static_cast<const jsi::Value*>(args),
+                                          (size_t)params.size());
+                
+                auto shareableResult = reanimated::ShareableValue::adapt(runtime, result, runtimeManager);
+                resolver(shareableResult);
+              } catch(std::exception &e) {
+                rejecter(e.what());
+              } catch(...) {
+                // TODO find out a way to get the error's message on hermes
+                jsi::Value location = jsThis.getProperty(rt, "__location");
+                std::string str = "Javascript worklet error";
+                if (location.isString()) {
+                  str += "\nIn file: " + location.asString(rt).utf8(rt);
+                }
+                rejecter(str);
+              }
+              rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+
+              delete [] args;
+            });
+            return jsi::Value::undefined();
           });
-          return jsi::Value::undefined();
+          
+          auto promiseCtor = rt.global().getPropertyAsFunction(rt, "Promise");
+          auto promise = promiseCtor.callAsConstructor(rt, dispatchToUICallback);
+          return promise;
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_workletFunction"), 0, clb);
       }
