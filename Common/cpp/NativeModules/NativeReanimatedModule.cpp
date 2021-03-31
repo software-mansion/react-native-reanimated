@@ -64,11 +64,12 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                PlatformDepMethodsHolder platformDepMethodsHolder) :
                                                   NativeReanimatedModuleSpec(jsInvoker),
                                                   RuntimeManager(std::move(rt), errorHandler, scheduler),
-                                                  mapperRegistry(new MapperRegistry()),
-                                                  eventHandlerRegistry(new EventHandlerRegistry()),
+                                                  mapperRegistry(std::make_shared<MapperRegistry>()),
+                                                  eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
                                                   propObtainer(propObtainer)
 {
+
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();

@@ -223,7 +223,7 @@ declare module 'react-native-reanimated' {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
-    } & { animatedProps?: AnimateProps<P> };
+    } & { animatedProps?: Partial<AnimateProps<P>> };
 
     type CodeProps = {
       exec?: AnimatedNode<number>;
@@ -502,10 +502,10 @@ declare module 'react-native-reanimated' {
       T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
     >(updater: () => T, deps?: DependencyList | null): T;
     export function useAnimatedProps<T extends {}>(
-      updater: () => T,
+      updater: () => Partial<T>,
       deps?: DependencyList | null,
       adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
-    ): T;
+    ): Partial<T>;
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
       TContext extends Context = {}

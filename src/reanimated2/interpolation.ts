@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import interpolateNode, {
   Extrapolate,
 } from '../reanimated1/derived/interpolate';
@@ -117,6 +119,8 @@ export function interpolate(x, input, output, type) {
     console.warn(
       `interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`
     );
+    // we can't use rest parameters in worklets at the moment
+    // eslint-disable-next-line prefer-spread, prefer-rest-params
     return interpolateNode.apply(undefined, arguments);
   }
 
