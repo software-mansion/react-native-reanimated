@@ -16,7 +16,7 @@ void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
       listener.second();
     }
   };
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     notifyListeners();
   } else {
     runtimeManager->scheduler->scheduleOnUI([notifyListeners] {
@@ -77,7 +77,7 @@ jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return getValue(rt);
   }
 
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     // _value and _animation should be accessed from UI only
     if (propName == "_value") {
       return getValue(rt);
