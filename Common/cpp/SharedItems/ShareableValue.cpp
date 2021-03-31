@@ -324,9 +324,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       }
     }
     case ValueType::WorkletFunctionType: {
+      // runOnUI call
       auto runtimeManager = this->runtimeManager;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
-      if (RuntimeDecorator::isWorkletRuntime(rt)) {
+      if (RuntimeDecorator::isUIRuntime(rt)) {
         // when running on UI thread we prep a function
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*runtimeManager->runtime));
