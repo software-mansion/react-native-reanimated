@@ -7,18 +7,29 @@
  */
 
 /* eslint no-bitwise: 0 */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { Platform } from 'react-native';
 import { makeRemote, makeShareable, isConfigured } from './core';
 import { interpolate } from './interpolation';
+// @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
+
+interface RBG {
+  r: number;
+  g: number;
+  b: number;
+}
+
+interface HSV {
+  h: number;
+  s: number;
+  v: number;
+}
 
 // var INTEGER = '[-+]?\\d+';
 const NUMBER = '[-+]?\\d*\\.?\\d+';
 const PERCENTAGE = NUMBER + '%';
 
-function call(...args) {
+function call(...args: unknown[]): string {
   'worklet';
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
@@ -28,10 +39,22 @@ function call(...args) {
 // objects, then pick the right cache in getMatchers() method.
 const jsCachedMatchers = {};
 const uiCachedMatchers = !isConfigured() ? null : makeRemote({});
-
-function getMatchers() {
+type Matchers = {
+  rgb: RegExp;
+  rgba: RegExp;
+  hsl: RegExp;
+  hsla: RegExp;
+  hex3: RegExp;
+  hex4: RegExp;
+  hex5: RegExp;
+  hex6: RegExp;
+  hex8: RegExp;
+};
+function getMatchers(): Matchers {
   'worklet';
-  const cachedMatchers = _WORKLET ? uiCachedMatchers : jsCachedMatchers;
+  const cachedMatchers: Matchers = _WORKLET
+    ? uiCachedMatchers
+    : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
@@ -55,7 +78,7 @@ function getMatchers() {
 // has no assigned regexes
 getMatchers();
 
-function hue2rgb(p, q, t) {
+function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
   if (t < 0) {
     t += 1;
@@ -75,7 +98,7 @@ function hue2rgb(p, q, t) {
   return p;
 }
 
-function hslToRgb(h, s, l) {
+function hslToRgb(h: number, s: number, l: number): number {
   'worklet';
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -90,7 +113,7 @@ function hslToRgb(h, s, l) {
   );
 }
 
-function parse255(str) {
+function parse255(str: string): number {
   'worklet';
   const int = Number.parseInt(str, 10);
   if (int < 0) {
@@ -102,13 +125,13 @@ function parse255(str) {
   return int;
 }
 
-function parse360(str) {
+function parse360(str: string): number {
   'worklet';
   const int = Number.parseFloat(str);
   return (((int % 360) + 360) % 360) / 360;
 }
 
-function parse1(str) {
+function parse1(str: string): number {
   'worklet';
   const num = Number.parseFloat(str);
   if (num < 0) {
@@ -120,7 +143,7 @@ function parse1(str) {
   return Math.round(num * 255);
 }
 
-function parsePercentage(str) {
+function parsePercentage(str: string): number {
   'worklet';
   // parseFloat conveniently ignores the final %
   const int = Number.parseFloat(str);
@@ -133,7 +156,7 @@ function parsePercentage(str) {
   return int / 100;
 }
 
-const names = !isConfigured()
+const names: any = !isConfigured()
   ? null
   : makeShareable({
       transparent: 0x00000000,
@@ -290,7 +313,7 @@ const names = !isConfigured()
       yellowgreen: 0x9acd32ff,
     });
 
-function normalizeColor(color) {
+function normalizeColor(color: unknown): number | null {
   'worklet';
 
   if (typeof color === 'number') {
@@ -306,7 +329,7 @@ function normalizeColor(color) {
 
   const matchers = getMatchers();
 
-  let match;
+  let match: RegExpExecArray | null;
 
   // Ordered based on occurrences on Facebook codebase
   if ((match = matchers.hex6.exec(color))) {
@@ -402,27 +425,32 @@ function normalizeColor(color) {
   return null;
 }
 
-export const opacity = (c) => {
+export const opacity = (c: number): number => {
   'worklet';
   return ((c >> 24) & 255) / 255;
 };
 
-export const red = (c) => {
+export const red = (c: number): number => {
   'worklet';
   return (c >> 16) & 255;
 };
 
-export const green = (c) => {
+export const green = (c: number): number => {
   'worklet';
   return (c >> 8) & 255;
 };
 
-export const blue = (c) => {
+export const blue = (c: number): number => {
   'worklet';
   return c & 255;
 };
 
-export const rgbaColor = (r, g, b, alpha = 1) => {
+export const rgbaColor = (
+  r: number,
+  g: number,
+  b: number,
+  alpha = 1
+): number | string => {
   'worklet';
   if (Platform.OS === 'web' || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -447,20 +475,27 @@ export const rgbaColor = (r, g, b, alpha = 1) => {
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-function RGBtoHSV(r, g, b) {
+function RGBtoHSV(rgb: RBG): HSV;
+function RGBtoHSV(r: number, g: number, b: number): HSV;
+function RGBtoHSV(r: any, g?: any, b?: any): HSV {
   'worklet';
   /* eslint-disable */
   if (arguments.length === 1) {
-    (g = r.g), (b = r.b), (r = r.r);
+    g = r.g;
+    b = r.b;
+    r = r.r;
   }
-  var max = Math.max(r, g, b),
-    min = Math.min(r, g, b),
-    d = max - min,
-    h,
-    s = max === 0 ? 0 : d / max,
-    v = max / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const s = max === 0 ? 0 : d / max;
+  const v = max / 255;
+
+  let h;
 
   switch (max) {
+    default:
+    /* fallthrough */
     case min:
       h = 0;
       break;
@@ -493,12 +528,16 @@ function RGBtoHSV(r, g, b) {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(h, s, v) {
+function HSVtoRGB(hsv: HSV): RBG;
+function HSVtoRGB(h: number, s: number, v: number): RBG;
+function HSVtoRGB(h: any, s?: any, v?: any) {
   'worklet';
   /* eslint-disable */
   var r, g, b, i, f, p, q, t;
   if (arguments.length === 1) {
-    (s = h.s), (v = h.v), (h = h.h);
+    s = h.s;
+    v = h.v;
+    h = h.h;
   }
   i = Math.floor(h * 6);
   f = h * 6 - i;
@@ -533,13 +572,19 @@ function HSVtoRGB(h, s, v) {
   /* eslint-enable */
 }
 
-export const hsvToColor = (h, s, v) => {
+export const hsvToColor = (
+  h: number,
+  s: number,
+  v: number
+): number | string => {
   'worklet';
   const { r, g, b } = HSVtoRGB(h, s, v);
   return rgbaColor(r, g, b);
 };
 
-export function processColorInitially(color) {
+export function processColorInitially(
+  color: unknown
+): number | null | undefined {
   'worklet';
   if (color === null || color === undefined || typeof color === 'number') {
     return color;
@@ -559,7 +604,7 @@ export function processColorInitially(color) {
   return normalizedColor;
 }
 
-export function isColor(value) {
+export function isColor(value: unknown): boolean {
   'worklet';
   if (typeof value !== 'string') {
     return false;
@@ -567,7 +612,7 @@ export function isColor(value) {
   return processColorInitially(value) != null;
 }
 
-export function processColor(color) {
+export function processColor(color: unknown): number | null | undefined {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
@@ -589,9 +634,11 @@ export function processColor(color) {
   return normalizedColor;
 }
 
-export function convertToHSVA(color) {
+export function convertToHSVA(
+  color: unknown
+): [number, number, number, number] {
   'worklet';
-  const processedColor = processColorInitially(color); // argb;
+  const processedColor = processColorInitially(color)!; // argb;
   const a = (processedColor >>> 24) / 255;
   const r = (processedColor << 8) >>> 24;
   const g = (processedColor << 16) >>> 24;
@@ -600,15 +647,19 @@ export function convertToHSVA(color) {
   return [h, s, v, a];
 }
 
-export function toRGBA(HSVA) {
+export function toRGBA(HSVA: [number, number, number, number]): string {
   'worklet';
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
 }
 
-const interpolateColorsHSV = (value, inputRange, colors) => {
+const interpolateColorsHSV = (
+  value: number,
+  inputRange: readonly number[],
+  colors: readonly number[]
+) => {
   'worklet';
-  const colorsAsHSV = colors.map((c) => RGBtoHSV(c));
+  const colorsAsHSV = colors.map((c) => RGBtoHSV(c as any));
   const h = interpolate(
     value,
     inputRange,
@@ -630,7 +681,11 @@ const interpolateColorsHSV = (value, inputRange, colors) => {
   return hsvToColor(h, s, v);
 };
 
-const interpolateColorsRGB = (value, inputRange, colors) => {
+const interpolateColorsRGB = (
+  value: number,
+  inputRange: readonly number[],
+  colors: readonly number[]
+) => {
   'worklet';
   const r = Math.round(
     interpolate(
@@ -666,18 +721,18 @@ const interpolateColorsRGB = (value, inputRange, colors) => {
 };
 
 export const interpolateColor = (
-  value,
-  inputRange,
-  outputRange,
-  colorSpace = 'RGB'
-) => {
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly (string | number)[],
+  colorSpace: 'RGB' | 'HSV' = 'RGB'
+): string | number => {
   'worklet';
-  outputRange = outputRange.map((c) => processColor(c));
+  const processedOutputRange = outputRange.map((c) => processColor(c)!);
   if (colorSpace === 'HSV') {
-    return interpolateColorsHSV(value, inputRange, outputRange);
+    return interpolateColorsHSV(value, inputRange, processedOutputRange);
   }
   if (colorSpace === 'RGB') {
-    return interpolateColorsRGB(value, inputRange, outputRange);
+    return interpolateColorsRGB(value, inputRange, processedOutputRange);
   }
   throw new Error(
     `invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
