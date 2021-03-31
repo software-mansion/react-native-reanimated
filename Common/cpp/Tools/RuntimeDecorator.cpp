@@ -67,6 +67,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          MeasuringFunction measure,
                                          TimeProviderFunction getCurrentTime) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
+  rt.global().setProperty(rt, "_UI", jsi::Value(true));
   
   auto clb = [updater](
                        jsi::Runtime &rt,
@@ -145,6 +146,11 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
+}
+
+bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
+  auto isUi = rt.global().getProperty(rt, "_UI");
+  return isUi.isBool() && isUi.getBool();
 }
 
 bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
