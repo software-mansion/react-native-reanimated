@@ -457,7 +457,7 @@ declare module 'react-native-reanimated' {
     ): (...args: Parameters<typeof fn>) => Promise<R>;
     export function runOnJS<A extends any[], R>(
       fn: (...args: A) => R
-    ): (...args: Parameters<typeof fn>) => void;
+    ): (...args: Parameters<typeof fn>) => Promise<R>;
 
     type PropsAdapterFunction = (props: Record<string, unknown>) => void;
     export function createAnimatedPropAdapter(
