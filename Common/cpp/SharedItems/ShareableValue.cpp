@@ -51,7 +51,6 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
-  bool isRNRuntime = RuntimeDecorator::isReactRuntime(rt);
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
     jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
@@ -117,7 +116,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         valueContainer = std::make_unique<FrozenObjectWrapper>(std::make_shared<FrozenObject>(rt, object, module));
         auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
         containsHostFunction |= frozenObject->containsHostFunction;
-        if (isRNRuntime && !containsHostFunction) {
+        if (RuntimeDecorator::isReactRuntime(rt) && !containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
@@ -154,7 +153,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       );
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       containsHostFunction |= frozenObject->containsHostFunction;
-      if (isRNRuntime) {
+      if (RuntimeDecorator::isReactRuntime(rt)) {
         if (!containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
