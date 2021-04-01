@@ -91,13 +91,12 @@ module.exports = {
       disableSwitch: true,
     },
     navbar: {
+      hideOnScroll: true,
       title: 'React Native Reanimated',
       items: [
         {
-          to: 'docs/',
-          activeBasePath: 'docs',
-          label: 'Docs',
-          position: 'left',
+          type: 'docsVersionDropdown',
+          position: 'right',
         },
         {
           type: 'search',
@@ -115,6 +114,7 @@ module.exports = {
       logo: {
         alt: 'Software Mansion',
         src: 'img/swmLogo.svg',
+        href: 'https://swmansion.com/',
       },
     },
     prism: {
