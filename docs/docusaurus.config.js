@@ -94,7 +94,6 @@ module.exports = {
       disableSwitch: true,
     },
     navbar: {
-      hideOnScroll: true,
       title: 'React Native Reanimated',
       items: [
         {

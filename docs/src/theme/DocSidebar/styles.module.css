@@ -38,7 +38,9 @@
   }
 
   .sidebarLogo {
-    display: flex !important;
+    /* SWM - Remove logo from sidebar */
+    display: flex /*!important*/;
+
     align-items: center;
     margin: 0 var(--ifm-navbar-padding-horizontal);
     min-height: var(--ifm-navbar-height);
