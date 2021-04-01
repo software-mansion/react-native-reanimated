@@ -43,6 +43,10 @@
     Segoe UI Symbol;
   --ifm-font-family-monospace: DM Mono, monospace;
   --ifm-color-primary: var(--swm-color-base);
+  --swm-color-yellow: #ffe780;
+  --swm-color-sea-blue: #87cce8;
+  --swm-color-pink: #ffa3a1;
+  --swm-color-green: #b1dfd0;
   --ifm-color-primary-darkest: #001250;
   --ifm-color-primary-darker: #001661;
   --ifm-color-primary-dark: #001767;
@@ -88,11 +92,16 @@
   --ifm-hr-border-color: #dcdfeb;
   --ifm-container-width: 1900px;
 
+  /*sidebar*/
+  --doc-sidebar-width: 350px !important;
+
   /*Admonitions*/
-  --ifm-color-info: var(--swm-color-base);
-  --ifm-color-success: var(--swm-color-base);
-  --ifm-color-warning: var(--swm-color-base);
-  --ifm-color-danger: var(--swm-color-base);
+  --ifm-color-info: var(--swm-color-sea-blue);
+  --ifm-color-success: var(--swm-color-green);
+  --ifm-color-warning: var(--swm-color-yellow);
+  --ifm-color-danger: var(--swm-color-pink);
+  --ra-admonition-color: var(--ifm-color-primary);
+  --ifm-alert-color: var(--ifm-color-primary);
 }
 
 .docusaurus-highlight-code-line {
@@ -222,13 +231,13 @@ h6 {
   margin-right: 1rem;
 } */
 
-/* .navbar-sidebar > .navbar__link--active:hover {
-  color: var(--ifm-navbar-link-hover-color);
-} */
+.navbar-sidebar > .navbar__link--active:hover {
+  color: var(--ifm-navbar-link-hover-color) !important;
+}
 
-/* .navbar__link--active {
-  color: var(--ifm-navbar-link-hover-color);
-} */
+.navbar__link--active {
+  color: var(--ifm-navbar-link-hover-color) !important;
+}
 
 header > .container {
   margin-left: 0;
@@ -454,6 +463,9 @@ section > .contaner > .row {
 @media screen and (max-width: 996px) {
   :root {
     --ifm-navbar-padding-horizontal: 20px;
+    /* SWM - HACK to make mobile menu visible */
+    --ifm-menu-color: var(--ifm-color-white);
+    --ifm-menu-color-active: var(--ifm-color-white);
   }
 
   .navbar__link {
