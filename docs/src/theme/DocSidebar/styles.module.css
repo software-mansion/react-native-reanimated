@@ -9,6 +9,11 @@
   --collapse-button-bg-color-dark: #2e333a;
 }
 
+/* SWM - add shadow */
+.swm_btn_shadow {
+  box-shadow: 0 5px 40px rgba(0, 0, 0, 0.2);
+}
+
 @media (min-width: 997px) {
   .sidebar {
     /* SWM - Added background and some padding */

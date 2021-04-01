@@ -4,19 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import {useThemeConfig, isSamePath} from '@docusaurus/theme-common';
+import { useThemeConfig, isSamePath } from '@docusaurus/theme-common';
 import useUserPreferencesContext from '@theme/hooks/useUserPreferencesContext';
 import useLockBodyScroll from '@theme/hooks/useLockBodyScroll';
-import useWindowSize, {windowSizes} from '@theme/hooks/useWindowSize';
+import useWindowSize, { windowSizes } from '@theme/hooks/useWindowSize';
 import useScrollPosition from '@theme/hooks/useScrollPosition';
 import Link from '@docusaurus/Link';
 import isInternalUrl from '@docusaurus/isInternalUrl';
 import Logo from '@theme/Logo';
 import IconArrow from '@theme/IconArrow';
 import IconMenu from '@theme/IconMenu';
-import {translate} from '@docusaurus/Translate';
+import { translate } from '@docusaurus/Translate';
 import styles from './styles.module.css';
 const MOBILE_TOGGLE_SIZE = 24;
 
@@ -35,7 +35,7 @@ const isActiveSidebarItem = (item, activePath) => {
 
   if (item.type === 'category') {
     return item.items.some((subItem) =>
-      isActiveSidebarItem(subItem, activePath),
+      isActiveSidebarItem(subItem, activePath)
     );
   }
 
@@ -49,7 +49,7 @@ function DocSidebarItemCategory({
   activePath,
   ...props
 }) {
-  const {items, label} = item;
+  const { items, label } = item;
   const isActive = isActiveSidebarItem(item, activePath);
   const wasActive = usePrevious(isActive); // active categories are always initialized as expanded
   // the default (item.collapsed) is only used for non-active categories
@@ -66,7 +66,7 @@ function DocSidebarItemCategory({
 
   const handleMenuListHeight = (calc = true) => {
     setMenuListHeight(
-      calc ? `${menuListRef.current?.scrollHeight}px` : undefined,
+      calc ? `${menuListRef.current?.scrollHeight}px` : undefined
     );
   }; // If we navigate to a category, it should automatically expand itself
 
@@ -87,7 +87,7 @@ function DocSidebarItemCategory({
 
       setTimeout(() => setCollapsed((state) => !state), 100);
     },
-    [menuListHeight],
+    [menuListHeight]
   );
 
   if (items.length === 0) {
@@ -144,7 +144,7 @@ function DocSidebarItemLink({
   collapsible: _collapsible,
   ...props
 }) {
-  const {href, label} = item;
+  const { href, label } = item;
   const isActive = isActiveSidebarItem(item, activePath);
   return (
     <li className="menu__list-item" key={label}>
@@ -186,11 +186,11 @@ function DocSidebar({
 }) {
   const [showResponsiveSidebar, setShowResponsiveSidebar] = useState(false);
   const {
-    navbar: {hideOnScroll},
+    navbar: { hideOnScroll },
     hideableSidebar,
   } = useThemeConfig();
-  const {isAnnouncementBarClosed} = useUserPreferencesContext();
-  const {scrollY} = useScrollPosition();
+  const { isAnnouncementBarClosed } = useUserPreferencesContext();
+  const { scrollY } = useScrollPosition();
   useLockBodyScroll(showResponsiveSidebar);
   const windowSize = useWindowSize();
   useEffect(() => {
@@ -215,7 +215,7 @@ function DocSidebar({
             'menu--show': showResponsiveSidebar,
             [styles.menuWithAnnouncementBar]:
               !isAnnouncementBarClosed && scrollY === 0,
-          },
+          }
         )}>
         <button
           aria-label={
@@ -234,7 +234,11 @@ function DocSidebar({
                 })
           }
           aria-haspopup="true"
-          className="button button--secondary button--sm menu__button"
+          /* SWM - button--sm -> button--md, swm_btn_shadow*/
+          className={clsx(
+            'button button--secondary button--md menu__button',
+            styles.swm_btn_shadow
+          )}
           type="button"
           onClick={() => {
             setShowResponsiveSidebar(!showResponsiveSidebar);
@@ -243,7 +247,7 @@ function DocSidebar({
             <span
               className={clsx(
                 styles.sidebarMenuIcon,
-                styles.sidebarMenuCloseIcon,
+                styles.sidebarMenuCloseIcon
               )}>
               &times;
             </span>
@@ -287,7 +291,7 @@ function DocSidebar({
           })}
           className={clsx(
             'button button--secondary button--outline',
-            styles.collapseSidebarButton,
+            styles.collapseSidebarButton
           )}
           onClick={onCollapse}>
           <IconArrow className={styles.collapseSidebarButtonIcon} />
