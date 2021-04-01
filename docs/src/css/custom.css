@@ -173,7 +173,7 @@ h6 {
   text-decoration: none;
 }
 
-.badge--info {
+/* .badge--info {
   --ifm-badge-background-color: #8ed3ef;
   color: var(--ifm-color-primary);
   border-radius: 3px;
@@ -182,13 +182,13 @@ h6 {
   font-weight: 300;
   margin-left: 5px;
   vertical-align: middle;
-}
+} */
 
-.footer--dark {
+/* .footer--dark {
   background-color: var(--swm-color-base);
-}
+} */
 
-.footer-container {
+/* .footer-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -197,32 +197,32 @@ h6 {
   margin-right: 0;
   padding: 20px;
   align-items: center;
-}
+} */
 
-.footer-image-link {
+/* .footer-image-link {
   height: 62px;
   margin-right: 0;
-}
+} */
 
 .github-navbar-logo {
   margin-left: 20px;
 }
 
-.githubStarLink {
+/* .githubStarLink {
   display: flex;
   justify-content: center;
   align-items: center;
   padding-top: 8px;
   margin-right: 1rem;
-}
+} */
 
-.navbar-sidebar > .navbar__link--active:hover {
+/* .navbar-sidebar > .navbar__link--active:hover {
   color: var(--ifm-navbar-link-hover-color);
-}
+} */
 
-.navbar__link--active {
+/* .navbar__link--active {
   color: var(--ifm-navbar-link-hover-color);
-}
+} */
 
 header > .container {
   margin-left: 0;
@@ -252,7 +252,7 @@ section > .container {
 }
 
 .hero-content {
-  padding: 3rem 0 !important;
+  padding: 3rem 1rem !important;
   flex-direction: column;
   justify-content: center;
 }
