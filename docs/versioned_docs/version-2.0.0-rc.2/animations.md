@@ -165,7 +165,7 @@ offset.value = withTiming(0, {
 ```
 
 You may want to visit [easings.net](https://easings.net/) and check various easing visualizations.
-To learn how to apply these please refer to [Easing.js](https://github.com/software-mansion/react-native-reanimated/blob/master/src/reanimated2/Easing.js) file where all the easing related helper methods are defined.
+To learn how to apply these please refer to [Easing.ts](https://github.com/software-mansion/react-native-reanimated/blob/master/src/reanimated2/Easing.ts) file where all the easing related helper methods are defined.
 
 ### Spring
 
