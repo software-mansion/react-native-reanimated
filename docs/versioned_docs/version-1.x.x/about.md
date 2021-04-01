@@ -1,5 +1,5 @@
 ---
-id: about
+slug: /
 title: About React Native Reanimated
 sidebar_label: About
 ---
