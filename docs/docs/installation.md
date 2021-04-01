@@ -27,6 +27,12 @@ Continue with the instruction below if you'd like to install Reanimated v2 on an
 
 ## Installing the package
 
+:::caution
+
+Please note that Reanimated 2 doesn't support remote debugging, only Flipper can be used for debugging.
+
+:::
+
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
 ```bash
