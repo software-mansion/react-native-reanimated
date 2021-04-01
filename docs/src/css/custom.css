@@ -463,9 +463,10 @@ section > .contaner > .row {
 @media screen and (max-width: 996px) {
   :root {
     --ifm-navbar-padding-horizontal: 20px;
-    /* SWM - HACK to make mobile menu visible */
-    --ifm-menu-color: var(--ifm-color-white);
-    --ifm-menu-color-active: var(--ifm-color-white);
+  }
+
+  .navbar-sidebar .menu__link {
+    color: var(--ifm-color-white);
   }
 
   .navbar__link {
