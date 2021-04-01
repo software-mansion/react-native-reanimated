@@ -118,7 +118,9 @@
 }
 
 :global(.menu__list) :global(.menu__list) {
-  overflow-y: hidden;
+  /* SWM - Commented out overflow-y to show active links */
+  /* overflow-y: hidden; */
+
   will-change: height;
   transition: height var(--ifm-transition-fast) linear;
 }

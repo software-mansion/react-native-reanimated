@@ -63,6 +63,9 @@ const prismConfig = {
     },
   ],
 };
+/*
+In swizzled components look for "SWM -" string to see our modifications
+*/
 
 module.exports = {
   title: 'React Native Reanimated',
