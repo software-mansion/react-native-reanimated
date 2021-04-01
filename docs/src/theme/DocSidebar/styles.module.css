@@ -14,6 +14,7 @@
     /* SWM - Added background and some padding */
     background: var(--ifm-sidebar-background);
     padding-left: 40px;
+    border-right: 1px solid var(--ifm-toc-border-color);
 
     display: flex;
     flex-direction: column;
@@ -120,11 +121,13 @@
 }
 
 :global(.menu__list) :global(.menu__list) {
-  /* SWM - Commented out overflow-y to show active links */
+  /* SWM - Added oveflow-x to allow scrolling overflowing navigation, removed overflow-y to show active item indicator */
   /* overflow-y: hidden; */
+  overflow-x: visible;
 
   will-change: height;
-  transition: height var(--ifm-transition-fast) linear;
+  /* SWM - Removed transitions due to problems with overflow and active item */
+  /* transition: height 2s linear; */
 }
 
 :global(.menu__list-item--collapsed) :global(.menu__list) {
