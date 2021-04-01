@@ -81,7 +81,7 @@ module.exports = {
     algolia: {
       apiKey: 'ffb6d91f5f14c201543b7ab35ae13535',
       indexName: 'react-native-reanimated',
-      contextualSearch: true,
+      // contextualSearch: true, // doesn't work for some reason
     },
     googleAnalytics: {
       trackingID: 'UA-41044622-6',
