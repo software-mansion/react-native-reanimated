@@ -87,6 +87,12 @@
   --ifm-menu-link-padding-horizontal: 14px;
   --ifm-hr-border-color: #dcdfeb;
   --ifm-container-width: 1900px;
+
+  /*Admonitions*/
+  --ifm-color-info: var(--swm-color-base);
+  --ifm-color-success: var(--swm-color-base);
+  --ifm-color-warning: var(--swm-color-base);
+  --ifm-color-danger: var(--swm-color-base);
 }
 
 .docusaurus-highlight-code-line {
