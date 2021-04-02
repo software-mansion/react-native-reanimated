@@ -13,13 +13,13 @@ Starts a velocity based "scroll" animation.
 Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options      | Default | Description                                      |
+| Options      | Default | Description                                  |
 | ------------ | ------- | -------------------------------------------- |
 | velocity     | 0       | Initial velocity                             |
 | deceleration | 0.998   | Rate of decay                                |
 | clamp        | []      | Array of two animation boundaries (optional) |
 
-#### `callback` [function](optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
@@ -49,7 +49,7 @@ function App() {
     onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
-    onEnd: evt => {
+    onEnd: (evt) => {
       x.value = withDecay({
         velocity: evt.velocityX,
         clamp: [0, 200], // optionally define boundaries for the animation
