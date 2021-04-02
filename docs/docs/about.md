@@ -59,7 +59,6 @@ As a consequence we won't be able to support older versions of React Native and 
 
 Below we highlight some of the problems that we are aware of (in most of the cases we actively work on improving these):
 
-- We currently only support Hermes JS VM on Android.
 - As the library uses JSI for synchronous native methods access, remote debugging is no longer possible.
   You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.
 - Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
