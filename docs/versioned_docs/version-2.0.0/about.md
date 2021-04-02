@@ -1,11 +1,16 @@
 ---
-id: about
+slug: /
 title: About React Native Reanimated
 sidebar_label: About
 ---
 
-> This is a documentation website of Reanimated 2 stable release.
-> If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x.x/).
+:::info
+
+This is a documentation website of Reanimated 2 stable release.
+
+If you are looking for Reanimated 1 docs [please follow this link](https://docs.swmansion.com/react-native-reanimated/docs/1.x.x/).
+
+:::
 
 Reanimated is a React Native library that allows for creating smooth animations and interactions that runs on the UI thread.
 
@@ -59,18 +64,18 @@ Below we highlight some of the problems that we are aware of (in most of the cas
   You can use Flipper for debugging your JS code, however connecting debugger to JS context which runs on the UI thread is not currently supported.
 - Objects passed to worklets from React Native don't have the correct prototype set in JavaScript.
   As a result, such objects aren't enumerable, that is you can't use "for in" constructs, spread operator (three dots), or functions like Object.assign with them.
-- With Reanimated you can't animate virtual components of layout. For example, you can’t animate nested `<Text>` components because React Native changes  
-   ```
-   <Text>
-      string1
-      <Text>string2</Text>
-   </Text>
-   ```  
-   to  
-   ```
-   <RCTTextView>
-      string1
-      <RCTVirtualText>string2</RCTVirtualText>
-   </RCTTextView>
-   ```  
-   and the `RCTVirtualText` is a virtual component.
+- With Reanimated you can't animate virtual components of layout. For example, you can’t animate nested `<Text>` components because React Native changes
+  ```
+  <Text>
+     string1
+     <Text>string2</Text>
+  </Text>
+  ```
+  to
+  ```
+  <RCTTextView>
+     string1
+     <RCTVirtualText>string2</RCTVirtualText>
+  </RCTTextView>
+  ```
+  and the `RCTVirtualText` is a virtual component.

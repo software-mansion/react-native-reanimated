@@ -27,7 +27,11 @@ Continue with the instruction below if you'd like to install Reanimated v2 on an
 
 ## Installing the package
 
-> **Warning**: Please note that Reanimated 2 doesn't support remote debugging, only Flipper can be used for debugging.
+:::caution
+
+Please note that Reanimated 2 doesn't support remote debugging, only Flipper can be used for debugging.
+
+:::
 
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
@@ -63,7 +67,11 @@ Add Reanimated's babel plugin to your `babel.config.js`:
   };
 ```
 
-> **_NOTE:_** Reanimated plugin has to be listed last.
+:::caution
+
+Reanimated plugin has to be listed last.
+
+:::
 
 ## Android
 
@@ -97,16 +105,20 @@ project.ext.react = [
   ...
 ```
 
-> **_NOTE:_** In previous releases, we required an additional step which is turning on Turbo Modules.
-> If you are upgrading from alpha.{ <=3 } please remove the following lines:
->
-> ```Java
-> static {
->    ReactFeatureFlags.useTurboModules = true;
->  }
-> ```
->
-> from `MainActivity.java`.
+:::info
+
+In previous releases, we required an additional step which is turning on Turbo Modules.
+If you are upgrading from alpha.{ <=3 } please remove the following lines:
+
+```Java
+static {
+   ReactFeatureFlags.useTurboModules = true;
+ }
+```
+
+from `MainActivity.java`.
+
+:::
 
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
 
@@ -122,22 +134,30 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 On iOS installation is automatic.
 
-> **_NOTE:_** In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
-> use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
-> undo all installation steps from the [previous instruction](https://docs.swmansion.com/react-native-reanimated/docs/2.0.0-alpha.7/installation#ios).
+:::info
 
-> **_NOTE:_** If you want to turn off autoinstall on iOS please add the following compilation flag:
-> `DONT_AUTOINSTALL_REANIMATED`.
-> It can be done by pasting:
->
-> ```js
-> post_install do |installer|
->    installer.pods_project.targets.each do |target|
->        target.build_configurations.each do |config|
->            config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINSTALL_REANIMATED'
->        end
->    end
-> end
-> ```
->
-> to your `Podfile`. Don't forget to run `pod install` after doing that.
+In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
+use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
+undo all installation steps from the previous instruction.
+
+:::
+
+:::tip
+
+If you want to turn off autoinstall on iOS please add the following compilation flag:
+`DONT_AUTOINSTALL_REANIMATED`.
+It can be done by pasting:
+
+```js
+post_install do |installer|
+   installer.pods_project.targets.each do |target|
+       target.build_configurations.each do |config|
+           config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINSTALL_REANIMATED'
+       end
+   end
+end
+```
+
+to your `Podfile`. Don't forget to run `pod install` after doing that.
+
+:::
