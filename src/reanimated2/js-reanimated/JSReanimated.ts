@@ -13,10 +13,9 @@ export default class JSReanimated {
   timeProvider = {};
 
   constructor() {
-    if(process.env.JEST_WORKER_ID) {
+    if (process.env.JEST_WORKER_ID) {
       this.timeProvider.now = () => Date.now();
-    }
-    else {
+    } else {
       this.timeProvider.now = () => window.performance.now();
     }
   }
