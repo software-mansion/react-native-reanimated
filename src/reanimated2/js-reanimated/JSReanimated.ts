@@ -10,12 +10,15 @@ export default class JSReanimated {
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
   _frames = [];
-  timeProvider = null;
+  timeProvider = {};
 
   constructor() {
-    this.timeProvider = process.env.JEST_WORKER_ID
-      ? { now: () => Date.now() }
-      : window.performance;
+    if(process.env.JEST_WORKER_ID) {
+      this.timeProvider.now = () => Date.now();
+    }
+    else {
+      this.timeProvider.now = () => window.performance.now();
+    }
   }
 
   pushFrame(frame) {
