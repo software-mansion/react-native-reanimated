@@ -132,7 +132,7 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 ## iOS
 
-On iOS installation is automatic.
+Run `pod install` in the `ios/` directory.
 
 :::info
 
