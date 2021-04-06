@@ -6,7 +6,7 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.64.0-rc.2" "0.63.3" "0.62.2 --dev")
+versions=("0.64.0" "0.63.3" "0.62.2 --dev")
 version_name=("64" "63" "62")
 
 for index in {0..2}
@@ -29,6 +29,8 @@ yarn add react-native --dev
 
 mv android android-temp
 mv android-npm android
+
+yarn run type:generate
 
 npm pack
 

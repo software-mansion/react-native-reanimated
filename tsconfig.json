@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    // remove after Rea is rewritten to TS
-    "noEmit": true,
     // for react-native-reanimated-tests.tsx
     "paths": {
       "react-native-reanimated": ["./react-native-reanimated.d.ts"]
     },
+    // change to true after we transition to TS
+    "declaration": false,
+    "preserveSymlinks": true,
     "target": "es6",
     "module": "es6",
     "jsx": "react-native",
@@ -15,8 +16,12 @@
     "lib": ["es6"],
     "esModuleInterop": true,
     "strict": true,
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "lib/reanimated2/"
   },
-  "files": ["react-native-reanimated-tests.tsx", "react-native-reanimated.d.ts"]
+  "include": [
+    "src/reanimated2/**/*.ts",
+    "react-native-reanimated.d.ts",
+    "react-native-reanimated-tests.tsx"
+  ]
 }

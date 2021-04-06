@@ -4,8 +4,6 @@ title: Migrating from Reanimated 1.x
 sidebar_label: Migration from v1
 ---
 
-> Before you consider migrating, note that Reanimated 2 is an alpha release, and that we cannot guarantee the new API will remain unchanged before the stable release of version 2.
-
 We wanted to make it possible to migrate from Reanimated 1 to Reanimated 2 incrementally.
 When installing Reanimated 2, you will be able to use the old API as well as the new one.
 We made the latest stable Reanimated 1 available from the same package with a few exceptions, as we needed to address some naming collisions.

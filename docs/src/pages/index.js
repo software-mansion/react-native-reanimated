@@ -16,7 +16,7 @@ const boxes = [
     description: (
       <>
         Complexity reduced from tens to just a few methods. Try it out today:
-        Check out our <a href="docs/about">Documentation</a>.
+        Check out our <a href="/docs/">Documentation</a>.
       </>
     ),
   },
@@ -180,7 +180,7 @@ function Home() {
               <div className="col col--7 text--center col--bottom-section">
                 <h2>Try it out</h2>
                 <p>{tryItOutDecription}</p>
-                <div class="item screenshot-container">
+                <div className="item screenshot-container">
                   <img src={screenshotUrl} alt="Reanimated screenshot" />
                 </div>
                 <div>

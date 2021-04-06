@@ -63,7 +63,6 @@ include $(BUILD_SHARED_LIBRARY)
 $(call import-module,folly)
 $(call import-module,fb)
 $(call import-module,fbjni)
-#$(call import-module,jsc)
 $(call import-module,fbgloginit)
 $(call import-module,yogajni)
 $(call import-module,cxxreact)
@@ -71,6 +70,7 @@ $(call import-module,jsi)
 $(call import-module,jsiexecutor)
 $(call import-module,callinvoker)
 $(call import-module,hermes)
+
 ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -ge 64; echo $$?),0)
   $(call import-module,reactperflogger)
   $(call import-module,runtimeexecutor)
@@ -79,13 +79,6 @@ ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -ge 64; echo $$?),0)
 endif
 include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
 
-# TODO(ramanpreet):
-#   Why doesn't this import-module call generate a jscexecutor.so file?
-# $(call import-module,jscexecutor)
-
-#include $(REACT_SRC_DIR)/jscexecutor/Android.mk
-#include $(REACT_SRC_DIR)/../hermes/reactexecutor/Android.mk
-include $(REACT_SRC_DIR)/../hermes/instrumentation/Android.mk
 include $(REACT_SRC_DIR)/modules/blob/jni/Android.mk
 
 

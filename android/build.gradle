@@ -330,7 +330,6 @@ task prepareHermes() {
     }
 }
 
-// Create Android.mk library module based on jsc from npm
 task prepareJSC {
     doLast {
         def jscPackagePath = findNodeModulePath(projectDir, "jsc-android")
@@ -407,8 +406,6 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
             "FIRST_PARTY=$reactNativeThirdParty/../first-party",
             "REACT_NATIVE_JNI=$reactNative/ReactAndroid/src/main/jni/react/jni",
             "REACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react",
-            "HERMES_ENGINE=$projectDir/../node_modules/hermes-engine",
-            "VM=HERMES",
             "NATIVE_DEBUG=${debugNativeLibraries}",
             "-C", file("src/main/JNI").absolutePath,
             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors(),
