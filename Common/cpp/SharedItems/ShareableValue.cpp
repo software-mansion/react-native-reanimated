@@ -178,17 +178,16 @@ jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
-      auto ref = getWeakRef(rt);
-      remoteValue = ref;
+      remoteValue = getWeakRef(rt);
     }
 
     if (remoteValue.lock()->isUndefined()) {
-      (*remoteValue.lock()) = jsi::Value(rt, toJSValue(rt));
+      (*remoteValue.lock()) = toJSValue(rt);
     }
     return jsi::Value(rt, *remoteValue.lock());
   } else {
     if (hostValue.get() == nullptr) {
-      hostValue = std::make_unique<jsi::Value>(rt, toJSValue(rt));
+      hostValue = std::make_unique<jsi::Value>(toJSValue(rt));
     }
     return jsi::Value(rt, *hostValue);
   }

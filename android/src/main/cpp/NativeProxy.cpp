@@ -68,6 +68,7 @@ void NativeProxy::installJSIBindings()
     auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
       jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
+      double frameTimestamp = getCurrentTime();
       global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
       global.setProperty(rt, frameTimestampName, jsi::Value::undefined());

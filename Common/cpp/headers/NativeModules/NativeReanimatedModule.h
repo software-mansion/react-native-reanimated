@@ -62,6 +62,7 @@ private:
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
+  std::function<void(double)> onRenderCallback;
 };
 
 } // namespace reanimated

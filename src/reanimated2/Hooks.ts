@@ -227,15 +227,16 @@ const validateAnimatedStyles = (styles) => {
   }
 };
 
-function styleUpdater(
-  viewDescriptor,
-  updater,
-  state,
-  maybeViewRef,
-  adapters,
-  animationsActive
-) {
+function styleUpdater(dataWrapper) {
   'worklet';
+  const {
+    viewDescriptor,
+    updater,
+    state,
+    maybeViewRef,
+    adapters,
+    animationsActive,
+  } = dataWrapper;
   const animations = state.animations || {};
   const newValues = updater() || {};
   const oldValues = state.last;
@@ -281,7 +282,7 @@ function styleUpdater(
         }
       }
 
-      if (Object.keys(updates).length) {
+      if (updates) {
         updateProps(viewDescriptor, updates, maybeViewRef, adapters);
       }
 
@@ -469,16 +470,17 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         );
       };
     } else {
+      const dataWrapper = {
+        viewDescriptor: viewDescriptor,
+        updater: updater,
+        state: remoteState,
+        maybeViewRef: maybeViewRef,
+        adapters: adapters,
+        animationsActive: animationsActive,
+      };
       fun = () => {
         'worklet';
-        styleUpdater(
-          viewDescriptor,
-          updater,
-          remoteState,
-          maybeViewRef,
-          adapters,
-          animationsActive
-        );
+        styleUpdater(dataWrapper);
       };
     }
     const mapperId = startMapper(fun, inputs, []);
