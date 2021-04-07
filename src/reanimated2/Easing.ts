@@ -209,7 +209,7 @@ function bezier(
   y1: number,
   x2: number,
   y2: number
-): (x: number) => number {
+): { factory: () => (x: number) => number } {
   'worklet';
   return {
     factory: () => {
