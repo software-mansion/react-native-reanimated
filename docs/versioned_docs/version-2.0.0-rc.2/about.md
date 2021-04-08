@@ -9,7 +9,7 @@ sidebar_label: About
 
 :::caution
 
-Reanimated v2 supports `react-native` since version `0.62+`
+Reanimated v2 only supports `react-native` `0.62+`
 
 :::
 

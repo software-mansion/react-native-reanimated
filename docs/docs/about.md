@@ -14,7 +14,7 @@ If you are looking for Reanimated 1 docs [please follow this link](https://docs.
 
 :::caution
 
-Reanimated v2 supports `react-native` since version `0.62+`
+Reanimated v2 only supports `react-native` `0.62+`
 
 :::
 
