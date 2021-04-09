@@ -12,6 +12,12 @@ If you are looking for Reanimated 1 docs [please follow this link](https://docs.
 
 :::
 
+:::caution
+
+Reanimated v2 only supports `react-native` `0.62+`
+
+:::
+
 Reanimated is a React Native library that allows for creating smooth animations and interactions that runs on the UI thread.
 
 ### Motivation
