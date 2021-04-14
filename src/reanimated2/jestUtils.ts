@@ -51,8 +51,8 @@ const checkEqual = (currentStyle, expectStyle) => {
       }
     }
   } else if (typeof currentStyle === 'object') {
-    for (const propertyName in expectStyle) {
-      if (!checkEqual(currentStyle[propertyName], expectStyle[propertyName])) {
+    for (const property in expectStyle) {
+      if (!checkEqual(currentStyle[property], expectStyle[property])) {
         return false;
       }
     }
