@@ -112,7 +112,9 @@ const compareStyle = (received, expectedStyle, config) => {
   const differences = diffs
     .map(
       (diff) =>
-        `- '${diff.property}' should be ${diff.expect}, but is ${diff.current}`
+        `- '${diff.property}' should be ${JSON.stringify(
+          diff.expect
+        )}, but is ${JSON.stringify(diff.current)}`
     )
     .join('\n');
 
