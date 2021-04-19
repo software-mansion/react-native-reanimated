@@ -12,12 +12,35 @@
 #include "AndroidScheduler.h"
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
+#include <cxxreact/NativeToJsBridge.h>
+#include "Logger.h"
+#include "JMessageQueueThread.h"
 
 namespace reanimated
 {
 
 using namespace facebook;
 using namespace react;
+
+class ReanimatedMessageQueueThread : public MessageQueueThread {
+public:
+  ReanimatedMessageQueueThread() {
+    Logger::log("[mleko] constructor");
+  }
+  ~ReanimatedMessageQueueThread() {
+    Logger::log("[mleko] destructor");
+  }
+  void runOnQueue(std::function<void()> && runnable) {
+    Logger::log("[mleko] runOnQueue");
+
+  }
+  void runOnQueueSync(std::function<void()> && runnable) {
+    Logger::log("[mleko] runOnQueueSync");
+  }
+  void quitSynchronous() {
+    Logger::log("[mleko] quitSynchronous");
+  }
+};
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
@@ -31,18 +54,31 @@ NativeProxy::NativeProxy(
 }
 
 JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
+jni::alias_ref<JavaMessageQueueThread::javaobject> NativeProxy::_messageQueueThread;
+std::unique_ptr<JSExecutor> NativeProxy::_executor;
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    JavaScriptExecutorHolder* javaScriptExecutor)
+    JavaScriptExecutorHolder* javaScriptExecutor,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
   _javaScriptExecutor = javaScriptExecutor;
+  _messageQueueThread = messageQueueThread;
+
+  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
+  auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
+  // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
+  // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  auto factory = _javaScriptExecutor->getExecutorFactory();
+  _executor = factory.get()->createJSExecutor(delegate, jsQueue);
+
+
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
 
@@ -93,11 +129,26 @@ void NativeProxy::installJSIBindings()
   };
 
   std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
-  factory = _javaScriptExecutor->getExecutorFactory();
-  executor = factory.get()->createJSExecutor(delegate, jsQueue);
+
+  //
+  // std::shared_ptr<ModuleRegistry> registry = std::shared_ptr<ModuleRegistry>(); // std::make_shared<ModuleRegistry>();
+  // std::shared_ptr<InstanceCallback> callback = std::shared_ptr<InstanceCallback>(); // std::make_shared<InstanceCallback>(); 
+  // auto delegate = std::make_shared<JsToNativeBridge>(registry, callback);
+  //
+  auto mleko = _messageQueueThread;
+  if(_messageQueueThread) {
+    Logger::log("[mleko] ok");
+  } else {
+    Logger::log("[mleko] fail");
+  }
+  // jni::alias_ref<JavaMessageQueueThread::javaobject> jsMessageQueueThread;
+  // jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
+  // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
+  // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  // factory = _javaScriptExecutor->getExecutorFactory();
+  // executor = factory.get()->createJSExecutor(delegate, jsQueue);
   std::unique_ptr<jsi::Runtime> animatedRuntime;
-  animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
+  animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 

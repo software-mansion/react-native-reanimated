@@ -1,7 +1,7 @@
 ifdef $(CI)
 APP_ABI := x86
 else
-APP_ABI := all
+APP_ABI := x86
 endif
 
 APP_BUILD_SCRIPT := Android.mk
@@ -17,7 +17,7 @@ NDK_MODULE_PATH := $(THIRD_PARTY_NDK_DIR)$(HOST_DIRSEP)$(REACT_NATIVE_JNI)$(HOST
 
 APP_STL := c++_shared
 
-APP_CFLAGS := -Wall -Werror -fexceptions -frtti -DWITH_INSPECTOR=1
+APP_CFLAGS := -Wall -Werror -fexceptions -frtti -DWITH_INSPECTOR=1 -DHERMES_ENABLE_DEBUGGER=1
 APP_CPPFLAGS := -std=c++1y
 # Make sure every shared lib includes a .note.gnu.build-id header
 APP_LDFLAGS := -Wl,--build-id

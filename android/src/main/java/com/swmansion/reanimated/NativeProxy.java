@@ -10,6 +10,8 @@ import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.queue.MessageQueueThread;
+import com.facebook.react.bridge.queue.QueueThreadExceptionHandler;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -20,6 +22,10 @@ import java.util.Map;
 import com.facebook.hermes.reactexecutor.HermesExecutorFactory;
 import com.facebook.react.jscexecutor.JSCExecutorFactory;
 import com.facebook.soloader.SoLoader;
+
+import com.facebook.react.bridge.queue.MessageQueueThreadImpl;
+import com.facebook.react.bridge.queue.ReactQueueConfigurationImpl;
+import com.facebook.react.bridge.queue.ReactQueueConfigurationSpec;
 
 public class NativeProxy {
 
@@ -75,8 +81,20 @@ public class NativeProxy {
   private final WeakReference<ReactApplicationContext> mContext;
   private JavaScriptExecutor mJavaScriptExecutor;
   private Scheduler mScheduler = null;
+  private MessageQueueThread mMessageQueueThread;
+  private ReactQueueConfigurationImpl queueHolder;
 
   public NativeProxy(ReactApplicationContext context) {
+    queueHolder = ReactQueueConfigurationImpl.create(
+            ReactQueueConfigurationSpec.createDefault(),
+            new QueueThreadExceptionHandler() {
+              @Override
+              public void handleException(Exception e) {
+                throw new RuntimeException(e);
+              }
+            }
+    );
+    mMessageQueueThread = queueHolder.getUIQueueThread();
     try {
       mJavaScriptExecutor = getDefaultJSExecutorFactory(context).create();
     } catch (Exception jscE) {
@@ -85,7 +103,7 @@ public class NativeProxy {
 
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mScheduler = new Scheduler(context);
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, mJavaScriptExecutor);
+    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, mJavaScriptExecutor, mMessageQueueThread);
     mContext = new WeakReference<>(context);
     prepare();
   }
@@ -129,7 +147,7 @@ public class NativeProxy {
     }
   }
 
-  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, JavaScriptExecutor mJavaScriptExecutor);
+  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, JavaScriptExecutor mJavaScriptExecutor, MessageQueueThread mMessageQueueThread);
   private native void installJSIBindings();
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);

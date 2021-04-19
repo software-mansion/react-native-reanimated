@@ -22,7 +22,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/SharedItems
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/SpecTools
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/Tools
 
-LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
+LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti -DHERMES_ENABLE_DEBUGGER=1
 
 LOCAL_STATIC_LIBRARIES := libjsi callinvokerholder
 LOCAL_SHARED_LIBRARIES := libfolly_json libfbjni libreactnativejni

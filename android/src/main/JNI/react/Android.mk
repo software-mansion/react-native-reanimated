@@ -18,7 +18,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)
 #   ./../ == react
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../..
 
-LOCAL_CFLAGS += -fexceptions -frtti -Wno-unused-lambda-capture
+LOCAL_CFLAGS += -fexceptions -frtti -Wno-unused-lambda-capture -DHERMES_ENABLE_DEBUGGER=1
 
 LOCAL_LDLIBS += -landroid
 

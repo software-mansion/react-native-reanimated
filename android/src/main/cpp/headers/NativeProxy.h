@@ -84,9 +84,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
         jlong jsContext,
         jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
         jni::alias_ref<AndroidScheduler::javaobject> scheduler,
-        JavaScriptExecutorHolder* javaScriptExecutor);
+        JavaScriptExecutorHolder* javaScriptExecutor, 
+        jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
   static void registerNatives();
   static JavaScriptExecutorHolder* _javaScriptExecutor;
+  static jni::alias_ref<JavaMessageQueueThread::javaobject> _messageQueueThread;
+  static std::unique_ptr<JSExecutor> _executor;
 
 
  private:
@@ -98,6 +101,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
   std::shared_ptr<Scheduler> scheduler_;
+  std::shared_ptr<JMessageQueueThread> jsQueue;
+  // std::shared_ptr<MessageQueueThread> jsQueue;
 
   void installJSIBindings();
   bool isAnyHandlerWaitingForEvent(std::string);
