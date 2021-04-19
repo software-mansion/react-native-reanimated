@@ -283,10 +283,22 @@ def findNdkBuildFullPath() {
         return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
     }
 
-    def ndkDir = android.ndkDirectory ? android.ndkDirectory.absolutePath : null
+    if (hasProperty("ndkDirectory")) {
+        def ndkDir = android.ndkDirectory ? android.ndkDirectory.absolutePath : null
 
-    if (ndkDir) {
-        return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        if (ndkDir) {
+            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        }
+    }
+    
+    def Properties properties = new Properties()
+    if (rootProject.file("local.properties").exists()) {
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+        def ndkDir=properties.getProperty("ndk.dir", null);
+        if(ndkDir)
+        {
+            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        }
     }
     return null
 }
@@ -464,4 +476,3 @@ dependencies {
     extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")
     extractJNI("com.facebook.fbjni:fbjni:0.0.2")
 }
-
