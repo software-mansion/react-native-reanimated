@@ -230,15 +230,17 @@ const Reanimated = {
   addWhitelistedNativeProps: NOOP,
 };
 
+const mergedReanimated = {
+  ...Reanimated,
+  ...ReanimatedV2,
+}
+
 module.exports = {
   __esModule: true,
 
-  ...Reanimated,
+  ...mergedReanimated,
 
-  default: {
-    ...Reanimated,
-    ...ReanimatedV2,
-  },
+  default: mergedReanimated,
 
   Transitioning: {
     View: createTransitioningComponent(View),
