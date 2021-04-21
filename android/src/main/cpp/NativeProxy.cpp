@@ -17,19 +17,6 @@
 #include <cxxreact/NativeToJsBridge.h>
 #include "Logger.h"
 
-// #include <hermes/hermes.h>
-// #include <hermes/inspector/RuntimeAdapter.h>
-// #include <hermes/inspector/Inspector.h>
-// #include "hermes/Public/DebuggerTypes.h"
-// #include "hermes/executor/HermesExecutorFactory.cpp"
-
-// #include <hermes/inspector/chrome/Registration.h>
-// #include <hermes/executor/HermesExecutorFactory.h>
-// #include <hermes/inspector/chrome/Registration.h>
-// #include <hermes/inspector/chrome/ConnectionDemux.h>
-// #include <jsinspector/InspectorInterfaces.cpp>
-// #include "HermesExecutorRuntimeAdapter.h"
-
 #include <cxxreact/MessageQueueThread.h>
 #include <cxxreact/SystraceSection.h>
 #include <hermes/hermes.h>
@@ -38,31 +25,15 @@
 #include <hermes/inspector/RuntimeAdapter.h>
 #include <hermes/inspector/chrome/Registration.h>
 
+#include <jsi/JSCRuntime.h>
+
+#include "RuntimeProvider.h"
+
 namespace reanimated
 {
 
 using namespace facebook;
 using namespace react;
-
-class ReanimatedMessageQueueThread : public MessageQueueThread {
-public:
-  ReanimatedMessageQueueThread() {
-    Logger::log("[mleko] constructor");
-  }
-  ~ReanimatedMessageQueueThread() {
-    Logger::log("[mleko] destructor");
-  }
-  void runOnQueue(std::function<void()> && runnable) {
-    Logger::log("[mleko] runOnQueue");
-
-  }
-  void runOnQueueSync(std::function<void()> && runnable) {
-    Logger::log("[mleko] runOnQueueSync");
-  }
-  void quitSynchronous() {
-    Logger::log("[mleko] quitSynchronous");
-  }
-};
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
@@ -89,41 +60,30 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
     JavaScriptExecutorHolder* javaScriptExecutor,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    bool isDebug,
+    int runtimeType)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-  _javaScriptExecutor = javaScriptExecutor;
   _messageQueueThread = messageQueueThread;
 
-  // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
-  // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  _animatedRuntimeShared = RuntimeProvider::createRuntime(messageQueueThread, isDebug, runtimeType);
+  //Hremes
+  // auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
+  // // SystraceSection s("HermesExecutorFactory::makeHermesRuntimeSystraced");
+  // _animatedRuntime = facebook::hermes::makeHermesRuntime();
 
-  // std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-  auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
-  // auto factory = _javaScriptExecutor->getExecutorFactory();
-  // _executor = factory.get()->createJSExecutor(delegate, jsQueue);
-  // _animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
+  // _animatedRuntimeHermes = facebook::hermes::makeHermesRuntime();
+  // facebook::hermes::HermesRuntime &hermesRuntimeRef = *_animatedRuntimeHermes;
+  // auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(_animatedRuntimeHermes), hermesRuntimeRef, jsQueue);
+  // _animatedRuntimeShared = adapter->runtime_;
+  // facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "Reanimated Runtime");
 
-
-  //mleko
-  // SystraceSection s("HermesExecutorFactory::makeHermesRuntimeSystraced");
-  _animatedRuntime = facebook::hermes::makeHermesRuntime();
-
-  _animatedRuntimeHermes = facebook::hermes::makeHermesRuntime();
-  // std::shared_ptr<facebook::hermes::HermesRuntime> hermesRuntimeShared = std::move(_animatedRuntimeHermes);
-  facebook::hermes::HermesRuntime &hermesRuntimeRef = *_animatedRuntimeHermes;
-  
-  // HermesExecutorRuntimeAdapter pies(hermesRuntime2, hermesRuntimeRef, jsQueue);
-  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(_animatedRuntimeHermes), hermesRuntimeRef, jsQueue);
-  _animatedRuntimeShared = adapter->runtime_;
-  facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "mleko");
-  // _animatedRuntime.reset(static_cast<jsi::Runtime*>(hermesRuntimeShared.get()));
-  // _animatedRuntime = std::move(_animatedRuntimeHermes);
-  // _animatedRuntime = std::move(hermesRuntime2);
-  // _animatedRuntime = std::make_unique<facebook::react::HermesExecutor>(hermesRuntime);
-
+  //JSC
+  // std::shared_ptr<jsi::Runtime> jscRuntime = jsc::makeJSCRuntime();
+  // _animatedRuntimeShared = jscRuntime;
 
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }

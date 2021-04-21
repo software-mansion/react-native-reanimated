@@ -130,7 +130,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
         jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
         jni::alias_ref<AndroidScheduler::javaobject> scheduler,
         JavaScriptExecutorHolder* javaScriptExecutor, 
-        jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
+        jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+        bool isDebug,
+        int runtimeType);
   static void registerNatives();
   static JavaScriptExecutorHolder* _javaScriptExecutor;
   static jni::alias_ref<JavaMessageQueueThread::javaobject> _messageQueueThread;

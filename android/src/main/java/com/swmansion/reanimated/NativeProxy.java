@@ -27,6 +27,8 @@ import com.facebook.react.bridge.queue.MessageQueueThreadImpl;
 import com.facebook.react.bridge.queue.ReactQueueConfigurationImpl;
 import com.facebook.react.bridge.queue.ReactQueueConfigurationSpec;
 
+import com.facebook.react.common.build.ReactBuildConfig;
+
 public class NativeProxy {
 
   static {
@@ -103,7 +105,15 @@ public class NativeProxy {
 
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mScheduler = new Scheduler(context);
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, mJavaScriptExecutor, mMessageQueueThread);
+    mHybridData = initHybrid(
+            context.getJavaScriptContextHolder().get(),
+            holder,
+            mScheduler,
+            mJavaScriptExecutor,
+            mMessageQueueThread,
+            BuildConfig.DEBUG,
+            detectReactNativeRuntime(context).ordinal()
+    );
     mContext = new WeakReference<>(context);
     prepare();
   }
@@ -147,7 +157,33 @@ public class NativeProxy {
     }
   }
 
-  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, JavaScriptExecutor mJavaScriptExecutor, MessageQueueThread mMessageQueueThread);
+  private RuntimeType detectReactNativeRuntime(ReactApplicationContext context) {
+    try {
+      SoLoader.init(context,false);
+      SoLoader.loadLibrary("jscexecutor");
+      return RuntimeType.JSC;
+    } catch (UnsatisfiedLinkError jscE) {
+      if (jscE.getMessage().contains("__cxa_bad_typeid")) {
+        throw jscE;
+      }
+      try {
+        return RuntimeType.HERMES;
+      } catch (UnsatisfiedLinkError hermesE) {
+        hermesE.printStackTrace();
+        throw jscE;
+      }
+    }
+  }
+
+  private native HybridData initHybrid(
+          long jsContext,
+          CallInvokerHolderImpl jsCallInvokerHolder,
+          Scheduler scheduler,
+          JavaScriptExecutor mJavaScriptExecutor,
+          MessageQueueThread mMessageQueueThread,
+          boolean isDebug,
+          int runtimeType
+  );
   private native void installJSIBindings();
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
