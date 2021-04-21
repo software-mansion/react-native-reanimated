@@ -109,7 +109,6 @@ public class NativeProxy {
             context.getJavaScriptContextHolder().get(),
             holder,
             mScheduler,
-            mJavaScriptExecutor,
             mMessageQueueThread,
             BuildConfig.DEBUG,
             detectReactNativeRuntime(context).ordinal()
@@ -179,7 +178,6 @@ public class NativeProxy {
           long jsContext,
           CallInvokerHolderImpl jsCallInvokerHolder,
           Scheduler scheduler,
-          JavaScriptExecutor mJavaScriptExecutor,
           MessageQueueThread mMessageQueueThread,
           boolean isDebug,
           int runtimeType

@@ -46,20 +46,13 @@ NativeProxy::NativeProxy(
 {
 }
 
-JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
-jni::alias_ref<JavaMessageQueueThread::javaobject> NativeProxy::_messageQueueThread;
-std::unique_ptr<JSExecutor> NativeProxy::_executor;
-std::unique_ptr<jsi::Runtime> NativeProxy::_animatedRuntime;
-std::unique_ptr<facebook::hermes::HermesRuntime> NativeProxy::_animatedRuntimeHermes;
-std::shared_ptr<jsi::Runtime> NativeProxy::_animatedRuntimeShared;
-
+std::shared_ptr<jsi::Runtime> NativeProxy::_animatedRuntime;
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    JavaScriptExecutorHolder* javaScriptExecutor,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     bool isDebug,
     int runtimeType)
@@ -67,23 +60,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-  _messageQueueThread = messageQueueThread;
-
-  _animatedRuntimeShared = RuntimeProvider::createRuntime(messageQueueThread, isDebug, runtimeType);
-  //Hremes
-  // auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
-  // // SystraceSection s("HermesExecutorFactory::makeHermesRuntimeSystraced");
-  // _animatedRuntime = facebook::hermes::makeHermesRuntime();
-
-  // _animatedRuntimeHermes = facebook::hermes::makeHermesRuntime();
-  // facebook::hermes::HermesRuntime &hermesRuntimeRef = *_animatedRuntimeHermes;
-  // auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(_animatedRuntimeHermes), hermesRuntimeRef, jsQueue);
-  // _animatedRuntimeShared = adapter->runtime_;
-  // facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "Reanimated Runtime");
-
-  //JSC
-  // std::shared_ptr<jsi::Runtime> jscRuntime = jsc::makeJSCRuntime();
-  // _animatedRuntimeShared = jscRuntime;
+  _animatedRuntime = RuntimeProvider::createRuntime(messageQueueThread, isDebug, runtimeType);
 
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
@@ -133,25 +110,7 @@ void NativeProxy::installJSIBindings()
   auto scrollToFunction = [this](int viewTag, double x, double y, bool animated) -> void {
     scrollTo(viewTag, x, y, animated);
   };
-
-  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-
-  //
-  // std::shared_ptr<ModuleRegistry> registry = std::shared_ptr<ModuleRegistry>(); // std::make_shared<ModuleRegistry>();
-  // std::shared_ptr<InstanceCallback> callback = std::shared_ptr<InstanceCallback>(); // std::make_shared<InstanceCallback>(); 
-  // auto delegate = std::make_shared<JsToNativeBridge>(registry, callback);
-  //
-
-  // jni::alias_ref<JavaMessageQueueThread::javaobject> jsMessageQueueThread;
-  // jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
-  // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
-  // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
-  // factory = _javaScriptExecutor->getExecutorFactory();
-  // executor = factory.get()->createJSExecutor(delegate, jsQueue);
-  // std::unique_ptr<jsi::Runtime> animatedRuntime;
-  // animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
-
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
     propUpdater,
@@ -162,7 +121,7 @@ void NativeProxy::installJSIBindings()
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
                                                          scheduler_,
-                                                         _animatedRuntimeShared,
+                                                         _animatedRuntime,
                                                          errorHandler,
                                                          propObtainer,
                                                          platformDepMethodsHolder);

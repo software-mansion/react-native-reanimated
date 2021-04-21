@@ -1,5 +1,8 @@
 #include "RuntimeProvider.h"
 
+#include <hermes/hermes.h>
+#include <jsi/JSCRuntime.h>
+
 namespace reanimated
 {
 
