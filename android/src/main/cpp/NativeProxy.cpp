@@ -1,3 +1,5 @@
+// trzerba zamienić te runitme z unique na shared chyba
+
 #include <memory>
 #include <string>
 
@@ -14,7 +16,27 @@
 #include "PlatformDepMethodsHolder.h"
 #include <cxxreact/NativeToJsBridge.h>
 #include "Logger.h"
-#include "JMessageQueueThread.h"
+
+// #include <hermes/hermes.h>
+// #include <hermes/inspector/RuntimeAdapter.h>
+// #include <hermes/inspector/Inspector.h>
+// #include "hermes/Public/DebuggerTypes.h"
+// #include "hermes/executor/HermesExecutorFactory.cpp"
+
+// #include <hermes/inspector/chrome/Registration.h>
+// #include <hermes/executor/HermesExecutorFactory.h>
+// #include <hermes/inspector/chrome/Registration.h>
+// #include <hermes/inspector/chrome/ConnectionDemux.h>
+// #include <jsinspector/InspectorInterfaces.cpp>
+// #include "HermesExecutorRuntimeAdapter.h"
+
+#include <cxxreact/MessageQueueThread.h>
+#include <cxxreact/SystraceSection.h>
+#include <hermes/hermes.h>
+#include <jsi/decorator.h>
+
+#include <hermes/inspector/RuntimeAdapter.h>
+#include <hermes/inspector/chrome/Registration.h>
 
 namespace reanimated
 {
@@ -56,6 +78,10 @@ NativeProxy::NativeProxy(
 JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
 jni::alias_ref<JavaMessageQueueThread::javaobject> NativeProxy::_messageQueueThread;
 std::unique_ptr<JSExecutor> NativeProxy::_executor;
+std::unique_ptr<jsi::Runtime> NativeProxy::_animatedRuntime;
+std::unique_ptr<facebook::hermes::HermesRuntime> NativeProxy::_animatedRuntimeHermes;
+std::shared_ptr<jsi::Runtime> NativeProxy::_animatedRuntimeShared;
+
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
@@ -71,12 +97,32 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   _javaScriptExecutor = javaScriptExecutor;
   _messageQueueThread = messageQueueThread;
 
-  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-  auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
   // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
   // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
-  auto factory = _javaScriptExecutor->getExecutorFactory();
-  _executor = factory.get()->createJSExecutor(delegate, jsQueue);
+
+  // std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
+  auto jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
+  // auto factory = _javaScriptExecutor->getExecutorFactory();
+  // _executor = factory.get()->createJSExecutor(delegate, jsQueue);
+  // _animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
+
+
+  //mleko
+  // SystraceSection s("HermesExecutorFactory::makeHermesRuntimeSystraced");
+  _animatedRuntime = facebook::hermes::makeHermesRuntime();
+
+  _animatedRuntimeHermes = facebook::hermes::makeHermesRuntime();
+  // std::shared_ptr<facebook::hermes::HermesRuntime> hermesRuntimeShared = std::move(_animatedRuntimeHermes);
+  facebook::hermes::HermesRuntime &hermesRuntimeRef = *_animatedRuntimeHermes;
+  
+  // HermesExecutorRuntimeAdapter pies(hermesRuntime2, hermesRuntimeRef, jsQueue);
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(_animatedRuntimeHermes), hermesRuntimeRef, jsQueue);
+  _animatedRuntimeShared = adapter->runtime_;
+  facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "mleko");
+  // _animatedRuntime.reset(static_cast<jsi::Runtime*>(hermesRuntimeShared.get()));
+  // _animatedRuntime = std::move(_animatedRuntimeHermes);
+  // _animatedRuntime = std::move(hermesRuntime2);
+  // _animatedRuntime = std::make_unique<facebook::react::HermesExecutor>(hermesRuntime);
 
 
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
@@ -135,21 +181,15 @@ void NativeProxy::installJSIBindings()
   // std::shared_ptr<InstanceCallback> callback = std::shared_ptr<InstanceCallback>(); // std::make_shared<InstanceCallback>(); 
   // auto delegate = std::make_shared<JsToNativeBridge>(registry, callback);
   //
-  auto mleko = _messageQueueThread;
-  if(_messageQueueThread) {
-    Logger::log("[mleko] ok");
-  } else {
-    Logger::log("[mleko] fail");
-  }
+
   // jni::alias_ref<JavaMessageQueueThread::javaobject> jsMessageQueueThread;
   // jsQueue = std::make_shared<JMessageQueueThread>(_messageQueueThread);
   // std::shared_ptr<MessageQueueThread> jsQueue = std::make_shared<ReanimatedMessageQueueThread>();
   // std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
   // factory = _javaScriptExecutor->getExecutorFactory();
   // executor = factory.get()->createJSExecutor(delegate, jsQueue);
-  std::unique_ptr<jsi::Runtime> animatedRuntime;
-  animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
-
+  // std::unique_ptr<jsi::Runtime> animatedRuntime;
+  // animatedRuntime.reset(static_cast<jsi::Runtime*>(_executor.get()->getJavaScriptContext()));
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
@@ -162,7 +202,7 @@ void NativeProxy::installJSIBindings()
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
                                                          scheduler_,
-                                                         std::move(animatedRuntime),
+                                                         _animatedRuntimeShared,
                                                          errorHandler,
                                                          propObtainer,
                                                          platformDepMethodsHolder);
