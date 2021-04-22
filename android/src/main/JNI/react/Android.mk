@@ -18,7 +18,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)
 #   ./../ == react
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../..
 
-LOCAL_CFLAGS += -fexceptions -frtti -Wno-unused-lambda-capture -DHERMES_ENABLE_DEBUGGER=1
+LOCAL_CFLAGS += -fexceptions -frtti -Wno-unused-lambda-capture
 
 LOCAL_LDLIBS += -landroid
 
@@ -63,7 +63,6 @@ include $(BUILD_SHARED_LIBRARY)
 $(call import-module,folly)
 $(call import-module,fb)
 $(call import-module,fbjni)
-$(call import-module,jsc)
 $(call import-module,fbgloginit)
 $(call import-module,yogajni)
 $(call import-module,cxxreact)
@@ -79,7 +78,6 @@ ifeq ($(shell test $(REACT_NATIVE_TARGET_VERSION) -ge 64; echo $$?),0)
 endif
 include $(REACT_SRC_DIR)/turbomodule/core/jni/Android.mk
 
-include $(REACT_SRC_DIR)/../hermes/instrumentation/Android.mk
 include $(REACT_SRC_DIR)/modules/blob/jni/Android.mk
 
 

@@ -1,7 +1,7 @@
 ifdef $(CI)
 APP_ABI := x86
 else
-APP_ABI := x86
+APP_ABI := all
 endif
 
 APP_BUILD_SCRIPT := Android.mk

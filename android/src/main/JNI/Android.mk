@@ -23,7 +23,7 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/SpecTools
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../Common/cpp/headers/Tools
 LOCAL_C_INCLUDES += $(HERMES_ENGINE)/android/include
 
-LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti 
+LOCAL_CFLAGS += -DONANDROID -fexceptions -frtti
 
 LOCAL_STATIC_LIBRARIES := libjsi callinvokerholder libhermes-inspector
 LOCAL_SHARED_LIBRARIES := libhermes libfolly_json libfbjni libreactnativejni
