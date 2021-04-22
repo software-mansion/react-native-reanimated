@@ -10,20 +10,19 @@
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <memory>
 #include <unordered_map>
-
-
 #include "Scheduler.h"
 #include "AndroidScheduler.h"
-
 #include <cxxreact/MessageQueueThread.h>
 #include <cxxreact/SystraceSection.h>
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
-
 #include <hermes/inspector/RuntimeAdapter.h>
 #include <hermes/inspector/chrome/Registration.h>
+#include "RuntimeProvider.h"
 
 namespace reanimated {
+
+class RuntimeProvider;
 
 using namespace facebook;
 
@@ -129,19 +128,20 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
         jlong jsContext,
         jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
         jni::alias_ref<AndroidScheduler::javaobject> scheduler,
+        JavaScriptExecutorHolder* javaScriptExecutor,
         jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
         bool isDebug,
         int runtimeType);
   static void registerNatives();
+  static JavaScriptExecutorHolder* _javaScriptExecutor;
   static std::shared_ptr<jsi::Runtime> _animatedRuntime;
+  static RuntimeProvider runtimeProvider;
 
 
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *runtime_;
-  std::shared_ptr<JSExecutorFactory> factory;
-  std::unique_ptr<JSExecutor> executor;
   std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
   std::shared_ptr<NativeReanimatedModule> _nativeReanimatedModule;
   std::shared_ptr<Scheduler> scheduler_;

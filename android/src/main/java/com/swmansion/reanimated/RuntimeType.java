@@ -1,6 +1,6 @@
 package com.swmansion.reanimated;
 
 public enum RuntimeType {
-    HERMES,
-    JSC
+    HERMES, // Hermes runtime
+    OTHER // JSC runtime, V8 runtime
 }

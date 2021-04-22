@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -15,11 +17,19 @@ namespace reanimated
 
 class RuntimeProvider {
 public:
-  static std::shared_ptr<jsi::Runtime> createRuntime(
+  RuntimeProvider() {}
+  ~RuntimeProvider() {}
+
+  std::shared_ptr<JSExecutorFactory> factory;
+  std::unique_ptr<JSExecutor> executor;
+
+  std::shared_ptr<jsi::Runtime> createRuntime(
+    JavaScriptExecutorHolder* javaScriptExecutor,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread, 
     bool isDebug, 
     int runtimeType
   );
+  
 };
 
 }

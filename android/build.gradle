@@ -408,7 +408,6 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
             "REACT_NATIVE_JNI=$reactNative/ReactAndroid/src/main/jni/react/jni",
             "REACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react",
             "HERMES_ENGINE=$projectDir/../node_modules/hermes-engine",
-            "VM=HERMES",
             "NATIVE_DEBUG=${debugNativeLibraries}",
             "-C", file("src/main/JNI").absolutePath,
             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors(),
@@ -461,7 +460,7 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation "org.webkit:android-jsc:+"
+    // implementation "org.webkit:android-jsc:+"
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     api("com.facebook.fbjni:fbjni-java-only:0.0.3")

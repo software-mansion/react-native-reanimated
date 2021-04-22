@@ -1,10 +1,17 @@
 package com.swmansion.reanimated;
 
+import android.content.Context;
+import android.os.Debug;
 import android.os.SystemClock;
 import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.BuildConfig;
+import com.facebook.react.ReactInstanceManager;
+import com.facebook.react.ReactInstanceManagerBuilder;
+import com.facebook.react.bridge.JavaScriptExecutor;
+import com.facebook.react.bridge.JavaScriptExecutorFactory;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -18,6 +25,9 @@ import com.facebook.react.bridge.queue.ReactQueueConfigurationImpl;
 import com.facebook.react.bridge.queue.ReactQueueConfigurationSpec;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 public class NativeProxy {
@@ -73,10 +83,12 @@ public class NativeProxy {
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
+  private JavaScriptExecutor mJavaScriptExecutor;
   private MessageQueueThread mMessageQueueThread;
   private ReactQueueConfigurationImpl queueHolder;
 
   public NativeProxy(ReactApplicationContext context) {
+    RuntimeType runtimeType = detectRuntime(getExecutorFactory(context));
     queueHolder = ReactQueueConfigurationImpl.create(
             ReactQueueConfigurationSpec.createDefault(),
             new QueueThreadExceptionHandler() {
@@ -91,40 +103,62 @@ public class NativeProxy {
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mScheduler = new Scheduler(context);
     mHybridData = initHybrid(
-            context.getJavaScriptContextHolder().get(),
-            holder,
-            mScheduler,
-            mMessageQueueThread,
-            BuildConfig.DEBUG,
-            detectReactNativeRuntime(context).ordinal()
+      context.getJavaScriptContextHolder().get(),
+      holder,
+      mScheduler,
+      mJavaScriptExecutor,
+      mMessageQueueThread,
+      BuildConfig.DEBUG,
+      runtimeType.ordinal()
     );
     mContext = new WeakReference<>(context);
     prepare();
   }
 
-  // Method based on method from React Native
-  private RuntimeType detectReactNativeRuntime(ReactApplicationContext context) {
-    try {
-      SoLoader.init(context,false);
-      SoLoader.loadLibrary("jscexecutor");
-      return RuntimeType.JSC;
-    } catch (UnsatisfiedLinkError jscE) {
-      if (jscE.getMessage().contains("__cxa_bad_typeid")) {
-        throw jscE;
-      }
-      try {
-        return RuntimeType.HERMES;
-      } catch (UnsatisfiedLinkError hermesE) {
-        hermesE.printStackTrace();
-        throw jscE;
-      }
+  private RuntimeType detectRuntime(JavaScriptExecutorFactory executorFactory) {
+    String factoryName = executorFactory.toString();
+    if(factoryName.equals("JSIExecutor+HermesRuntime")) {
+      return RuntimeType.HERMES;
     }
+    return RuntimeType.OTHER;
+  }
+
+  private JavaScriptExecutorFactory getExecutorFactory(ReactApplicationContext context) {
+    JavaScriptExecutorFactory factory = null;
+      try {
+        Constructor<ReactInstanceManagerBuilder> constructor =
+          (Constructor<ReactInstanceManagerBuilder>)
+          ReactInstanceManagerBuilder.class.getDeclaredConstructors()[0];
+        constructor.setAccessible(true);
+        ReactInstanceManagerBuilder reactInstanceManagerBuilder = constructor.newInstance();
+        Method getDefaultJSExecutorFactory = reactInstanceManagerBuilder
+          .getClass()
+          .getDeclaredMethod(
+            "getDefaultJSExecutorFactory",
+            String.class,
+            String.class,
+            Context.class
+          );
+        getDefaultJSExecutorFactory.setAccessible(true);
+        factory = (JavaScriptExecutorFactory) getDefaultJSExecutorFactory.invoke(
+          reactInstanceManagerBuilder,
+          "Reaniamted",
+          "Reaniamted",
+          context
+        );
+        assert factory != null;
+        mJavaScriptExecutor = factory.create();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    return factory;
   }
 
   private native HybridData initHybrid(
           long jsContext,
           CallInvokerHolderImpl jsCallInvokerHolder,
           Scheduler scheduler,
+          JavaScriptExecutor mJavaScriptExecutor,
           MessageQueueThread mMessageQueueThread,
           boolean isDebug,
           int runtimeType

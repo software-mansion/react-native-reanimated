@@ -1,14 +1,10 @@
-// trzerba zamienić te runitme z unique na shared chyba
-
 #include <memory>
 #include <string>
-
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
-
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
 #include "AndroidScheduler.h"
@@ -16,18 +12,12 @@
 #include "PlatformDepMethodsHolder.h"
 #include <cxxreact/NativeToJsBridge.h>
 #include "Logger.h"
-
 #include <cxxreact/MessageQueueThread.h>
 #include <cxxreact/SystraceSection.h>
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
-
 #include <hermes/inspector/RuntimeAdapter.h>
 #include <hermes/inspector/chrome/Registration.h>
-
-#include <jsi/JSCRuntime.h>
-
-#include "RuntimeProvider.h"
 
 namespace reanimated
 {
@@ -46,13 +36,16 @@ NativeProxy::NativeProxy(
 {
 }
 
+JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
 std::shared_ptr<jsi::Runtime> NativeProxy::_animatedRuntime;
+RuntimeProvider NativeProxy::runtimeProvider;
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    JavaScriptExecutorHolder* javaScriptExecutor,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     bool isDebug,
     int runtimeType)
@@ -60,7 +53,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-  _animatedRuntime = RuntimeProvider::createRuntime(messageQueueThread, isDebug, runtimeType);
+  _javaScriptExecutor = javaScriptExecutor;
+  
+  _animatedRuntime = runtimeProvider.createRuntime(javaScriptExecutor, messageQueueThread, isDebug, runtimeType);
 
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
