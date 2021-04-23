@@ -20,13 +20,15 @@ const getCurrentStyle = (received) => {
   if (Array.isArray(styleObject)) {
     received.props.style.forEach((style) => {
       if (isAnimatedStyle(style)) {
-        currentStyle = Object.assign(
-          {},
-          currentStyle,
-          getAnimatedStyleFromObject(style)
-        );
+        currentStyle = {
+          ...currentStyle,
+          ...getAnimatedStyleFromObject(style),
+        };
       } else {
-        currentStyle = Object.assign({}, currentStyle, style);
+        currentStyle = {
+          ...currentStyle,
+          ...style,
+        };
       }
     });
   } else {
@@ -50,7 +52,7 @@ const checkEqual = (currentStyle, expectStyle) => {
         return false;
       }
     }
-  } else if (typeof currentStyle === 'object') {
+  } else if (typeof currentStyle === 'object' && currentStyle) {
     for (const property in expectStyle) {
       if (!checkEqual(currentStyle[property], expectStyle[property])) {
         return false;
