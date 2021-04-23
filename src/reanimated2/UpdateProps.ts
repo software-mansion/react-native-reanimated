@@ -26,40 +26,44 @@ const colorProps = [
 
 const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-export const updateProps = (
-  viewDescriptor,
-  updates,
-  maybeViewRef,
-  adapters
-) => {
-  'worklet';
+let updatePropsByPlatform;
+if (Platform.OS === 'web') {
+  updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef, adapters) => {
+    'worklet';
+    if (adapters) {
+      adapters.forEach((adapter) => {
+        adapter(updates);
+      });
+    }
 
-  const viewName = viewDescriptor.value.name || 'RCTView';
-
-  if (adapters) {
-    adapters.forEach((adapter) => {
-      adapter(updates);
-    });
-  }
-
-  if (Platform.OS !== 'web') {
     Object.keys(updates).forEach((key) => {
       if (ColorProperties.indexOf(key) !== -1) {
         updates[key] = processColor(updates[key]);
       }
     });
-  }
 
-  const updatePropsInternal =
-    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+    _updatePropsJS(viewDescriptor.value.tag, '', updates, maybeViewRef);
+  };
+} else {
+  updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef, adapters) => {
+    'worklet';
 
-  updatePropsInternal(
-    viewDescriptor.value.tag,
-    viewName,
-    updates,
-    maybeViewRef
-  );
-};
+    if (adapters) {
+      adapters.forEach((adapter) => {
+        adapter(updates);
+      });
+    }
+
+    _updateProps(
+      viewDescriptor.value.tag,
+      viewDescriptor.value.name || 'RCTView',
+      updates,
+      maybeViewRef
+    );
+  };
+}
+
+export const updateProps = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
   viewDescriptor,
