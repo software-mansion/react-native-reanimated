@@ -26,7 +26,7 @@ LOCAL_LDLIBS += -landroid
 LOCAL_SHARED_LIBRARIES := libfolly_json libfb libfbjni libglog_init libyoga
 
 # The static libraries (.a files) that this module depends on.
-LOCAL_STATIC_LIBRARIES := libreactnative libcallinvokerholder libhermes-inspector
+LOCAL_STATIC_LIBRARIES := libreactnative libcallinvokerholder
 
 # Name of this module.
 #
