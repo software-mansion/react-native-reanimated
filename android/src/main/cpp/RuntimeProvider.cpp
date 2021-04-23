@@ -30,7 +30,7 @@ std::shared_ptr<jsi::Runtime> RuntimeProvider::createRuntime(
     SystraceSection s("RuntimeProvider::createRuntime");
     facebook::hermes::HermesRuntime &hermesRuntimeRef = *runtime;
     auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(std::move(runtime), hermesRuntimeRef, jsQueue);
-    std::shared_ptr<jsi::Runtime> runtimeShared = adapter->runtime_;
+    runtimeShared = adapter->runtime_;
     facebook::hermes::inspector::chrome::enableDebugging(std::move(adapter), "Reanimated Runtime");
   }
   else {

@@ -1,12 +1,12 @@
 package com.swmansion.reanimated;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.os.SystemClock;
 import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.BuildConfig;
 import com.facebook.react.ReactInstanceManagerBuilder;
 import com.facebook.react.bridge.JavaScriptExecutor;
 import com.facebook.react.bridge.JavaScriptExecutorFactory;
@@ -98,13 +98,14 @@ public class NativeProxy {
 
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
     mScheduler = new Scheduler(context);
+    boolean isDebuggable =  ( 0 != ( context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE ) );
     mHybridData = initHybrid(
       context.getJavaScriptContextHolder().get(),
       holder,
       mScheduler,
       mJavaScriptExecutor,
       mMessageQueueThread,
-      BuildConfig.DEBUG,
+      isDebuggable,
       runtimeType.ordinal()
     );
     mContext = new WeakReference<>(context);
