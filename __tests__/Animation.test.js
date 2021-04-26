@@ -96,8 +96,8 @@ describe('Tests of animations', () => {
       expect(view).toHaveAnimatedStyle(style);
 
       fireEvent.press(button);
-      advanceAnimationByTime(260);
-      style.width = 56.5688; // value of component width after 260ms of animation
+      advanceAnimationByTime(150);
+      style.width = 18.7272; // value of component width after 150ms of animation
       expect(view).toHaveAnimatedStyle(style);
     });
   });
@@ -109,9 +109,9 @@ describe('Tests of animations', () => {
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      advanceAnimationByFrame(5);
-      // value of component width after 5 frames of animation
-      expect(view).toHaveAnimatedStyle({ width: 5.6448 });
+      advanceAnimationByFrame(13);
+      // value of component width after 13 frames of animation
+      expect(view).toHaveAnimatedStyle({ width: 39.0728 });
     });
   });
 
@@ -124,8 +124,8 @@ describe('Tests of animations', () => {
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      advanceAnimationByTime(260);
-      style.width = 56.5688; // value of component width after 260ms of animation
+      advanceAnimationByTime(150);
+      style.width = 18.7272; // value of component width after 150ms of animation
       expect(view).toHaveAnimatedStyle(style, true);
     });
   });
@@ -143,9 +143,9 @@ describe('Tests of animations', () => {
       const button = getByTestId('button');
 
       fireEvent.press(button);
-      advanceAnimationByTime(260);
-      // value of component width after 260ms of animation
-      expect(view).toHaveAnimatedStyle({ width: 56.5688 });
+      advanceAnimationByTime(150);
+      // value of component width after 150ms of animation
+      expect(view).toHaveAnimatedStyle({ width: 18.7272 });
     });
   });
 

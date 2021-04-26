@@ -147,9 +147,9 @@ const afterTest = () => {
   global.requestAnimationFrame = requestAnimationFrameCopy;
 };
 
-const tickTravel = (frameIndex) => {
-  MockDate.set(new Date(frameTime * (frameIndex + 1)));
-  jest.advanceTimersByTime(Math.ceil(frameTime));
+const tickTravel = () => {
+  MockDate.set(new Date(Date.now() + frameTime));
+  jest.advanceTimersByTime(frameTime);
 };
 
 export const withReanimatedTimer = (animatonTest) => {
@@ -160,19 +160,21 @@ export const withReanimatedTimer = (animatonTest) => {
 
 export const advanceAnimationByTime = (time = frameTime) => {
   for (let i = 0; i <= Math.ceil(time / frameTime); i++) {
-    tickTravel(i);
+    tickTravel();
   }
+  jest.advanceTimersByTime(frameTime);
 };
 
 export const advanceAnimationByFrame = (count) => {
   for (let i = 0; i <= count; i++) {
-    tickTravel(i);
+    tickTravel();
   }
+  jest.advanceTimersByTime(frameTime);
 };
 
 export const setUpTests = (userConfig = {}) => {
   const expect = require('expect');
-  frameTime = 1000 / config.fps;
+  frameTime = Math.round(1000 / config.fps);
 
   config = {
     ...config,
