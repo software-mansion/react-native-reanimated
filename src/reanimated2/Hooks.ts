@@ -52,116 +52,110 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   'worklet';
-  function prepareAnimation(animatedProp, lastAnimation, lastValue) {
-    if (Array.isArray(animatedProp)) {
-      animatedProp.forEach((prop, index) =>
-        prepareAnimation(
-          prop,
-          lastAnimation && lastAnimation[index],
-          lastValue && lastValue[index]
-        )
-      );
-      return animatedProp;
-    }
-    if (typeof animatedProp === 'object' && animatedProp.onFrame) {
-      const animation = animatedProp;
-
-      let value = animation.current;
-      if (lastValue !== undefined) {
-        if (typeof lastValue === 'object') {
-          if (lastValue.value !== undefined) {
-            // previously it was a shared value
-            value = lastValue.value;
-          } else if (lastValue.onFrame !== undefined) {
-            if (lastAnimation?.current !== undefined) {
-              // it was an animation before, copy its state
-              value = lastAnimation.current;
-            } else if (lastValue?.current !== undefined) {
-              // it was initialized
-              value = lastValue.current;
-            }
-          }
-        } else {
-          // previously it was a plain value, just set it as starting point
-          value = lastValue;
-        }
-      }
-
-      animation.callStart = (timestamp) => {
-        animation.onStart(animation, value, timestamp, lastAnimation);
-      };
-      animation.callStart(getTimestamp());
-      animation.callStart = null;
-    } else if (typeof animatedProp === 'object') {
-      // it is an object
-      Object.keys(animatedProp).forEach((key) =>
-        prepareAnimation(
-          animatedProp[key],
-          lastAnimation && lastAnimation[key],
-          lastValue && lastValue[key]
-        )
-      );
-    }
+  if (Array.isArray(animatedProp)) {
+    animatedProp.forEach((prop, index) =>
+      prepareAnimation(
+        prop,
+        lastAnimation && lastAnimation[index],
+        lastValue && lastValue[index]
+      )
+    );
+    return animatedProp;
   }
-  return prepareAnimation(animatedProp, lastAnimation, lastValue);
+  if (typeof animatedProp === 'object' && animatedProp.onFrame) {
+    const animation = animatedProp;
+
+    let value = animation.current;
+    if (lastValue !== undefined) {
+      if (typeof lastValue === 'object') {
+        if (lastValue.value !== undefined) {
+          // previously it was a shared value
+          value = lastValue.value;
+        } else if (lastValue.onFrame !== undefined) {
+          if (lastAnimation?.current !== undefined) {
+            // it was an animation before, copy its state
+            value = lastAnimation.current;
+          } else if (lastValue?.current !== undefined) {
+            // it was initialized
+            value = lastValue.current;
+          }
+        }
+      } else {
+        // previously it was a plain value, just set it as starting point
+        value = lastValue;
+      }
+    }
+
+    animation.callStart = (timestamp) => {
+      animation.onStart(animation, value, timestamp, lastAnimation);
+    };
+    animation.callStart(getTimestamp());
+    animation.callStart = null;
+  } else if (typeof animatedProp === 'object') {
+    // it is an object
+    Object.keys(animatedProp).forEach((key) =>
+      prepareAnimation(
+        animatedProp[key],
+        lastAnimation && lastAnimation[key],
+        lastValue && lastValue[key]
+      )
+    );
+  }
 }
 
 function runAnimations(animation, timestamp, key, result, animationsActive) {
   'worklet';
-  function runAnimations(animation, timestamp, key, result, animationsActive) {
-    if (!animationsActive.value) {
-      return true;
-    }
-    if (Array.isArray(animation)) {
-      result[key] = [];
-      let allFinished = true;
-      animation.forEach((entry, index) => {
-        if (
-          !runAnimations(entry, timestamp, index, result[key], animationsActive)
-        ) {
-          allFinished = false;
-        }
-      });
-      return allFinished;
-    } else if (typeof animation === 'object' && animation.onFrame) {
-      let finished = true;
-      if (!animation.finished) {
-        if (animation.callStart) {
-          animation.callStart(timestamp);
-          animation.callStart = null;
-        }
-        finished = animation.onFrame(animation, timestamp);
-        animation.timestamp = timestamp;
-        if (finished) {
-          animation.finished = true;
-          animation.callback && animation.callback(true /* finished */);
-        }
-      }
-      result[key] = animation.current;
-      return finished;
-    } else if (typeof animation === 'object') {
-      result[key] = {};
-      let allFinished = true;
-      Object.keys(animation).forEach((k) => {
-        if (
-          !runAnimations(
-            animation[k],
-            timestamp,
-            k,
-            result[key],
-            animationsActive
-          )
-        ) {
-          allFinished = false;
-        }
-      });
-      return allFinished;
-    } else {
-      result[key] = animation;
-      return true;
-    }
+  if (!animationsActive.value) {
+    return true;
   }
-  return runAnimations(animation, timestamp, key, result, animationsActive);
+  if (Array.isArray(animation)) {
+    result[key] = [];
+    let allFinished = true;
+    animation.forEach((entry, index) => {
+      if (
+        !runAnimations(entry, timestamp, index, result[key], animationsActive)
+      ) {
+        allFinished = false;
+      }
+    });
+    return allFinished;
+  } else if (typeof animation === 'object' && animation.onFrame) {
+    let finished = true;
+    if (!animation.finished) {
+      if (animation.callStart) {
+        animation.callStart(timestamp);
+        animation.callStart = null;
+      }
+      finished = animation.onFrame(animation, timestamp);
+      animation.timestamp = timestamp;
+      if (finished) {
+        animation.finished = true;
+        animation.callback && animation.callback(true /* finished */);
+      }
+    }
+    result[key] = animation.current;
+    return finished;
+  } else if (typeof animation === 'object') {
+    result[key] = {};
+    let allFinished = true;
+    Object.keys(animation).forEach((k) => {
+      if (
+        !runAnimations(
+          animation[k],
+          timestamp,
+          k,
+          result[key],
+          animationsActive
+        )
+      ) {
+        allFinished = false;
+      }
+    });
+    return allFinished;
+  } else {
+    result[key] = animation;
+    return true;
+  }
 }
 
 function isAnimated(prop) {

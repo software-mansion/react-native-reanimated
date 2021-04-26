@@ -1,11 +1,12 @@
 #pragma once
 
-#define CHECK_SPEED 0
+#define CHECK_SPEED 1
 
 #include "./Logger.h"
 #include <memory>
 #include <functional>
 #include <string>
+#include <chrono>
 
 namespace reanimated
 {
