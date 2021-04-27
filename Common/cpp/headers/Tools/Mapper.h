@@ -20,13 +20,22 @@ private:
   std::vector<std::shared_ptr<MutableValue>> inputs;
   std::vector<std::shared_ptr<MutableValue>> outputs;
   bool dirty = true;
+  std::shared_ptr<ShareableValue> updater;
+  std::shared_ptr<jsi::Function> updaterFn;
+  std::shared_ptr<ShareableValue> tag;
+  std::shared_ptr<ShareableValue> name;
+  int tagInt;
 
 public:
   Mapper(NativeReanimatedModule *module,
          unsigned long id,
          std::shared_ptr<jsi::Function> mapper,
          std::vector<std::shared_ptr<MutableValue>> inputs,
-         std::vector<std::shared_ptr<MutableValue>> outputs);
+         std::vector<std::shared_ptr<MutableValue>> outputs,
+         // mleko
+         std::shared_ptr<ShareableValue> updater,
+         std::shared_ptr<ShareableValue> tag,
+         std::shared_ptr<ShareableValue> name);
   void execute(jsi::Runtime &rt);
   virtual ~Mapper();
 };

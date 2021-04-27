@@ -47,7 +47,13 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_startMapper(
     const jsi::Value *args,
     size_t count) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->startMapper(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+      ->startMapper(rt,
+                    std::move(args[0]),
+                    std::move(args[1]),
+                    std::move(args[2]),
+                    std::move(args[3]),
+                    std::move(args[4]),
+                    std::move(args[5]));
 }
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_stopMapper(
@@ -104,7 +110,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
       
 
   methodMap_["startMapper"] = MethodMetadata{
-    3, __hostFunction_NativeReanimatedModuleSpec_startMapper};
+    6, __hostFunction_NativeReanimatedModuleSpec_startMapper};
   methodMap_["stopMapper"] = MethodMetadata{
     1, __hostFunction_NativeReanimatedModuleSpec_stopMapper};
 

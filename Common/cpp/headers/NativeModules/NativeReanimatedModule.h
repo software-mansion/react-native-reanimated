@@ -41,7 +41,14 @@ public:
   jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) override;
   jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) override;
 
-  jsi::Value startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs) override;
+  jsi::Value startMapper(jsi::Runtime &rt,
+                         const jsi::Value &worklet,
+                         const jsi::Value &inputs,
+                         const jsi::Value &outputs,
+                         //mleko
+                         const jsi::Value &updater,
+                         const jsi::Value &tag,
+                         const jsi::Value &name) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) override;
@@ -54,6 +61,7 @@ public:
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
+  UpdaterFunction updaterFunction;
 private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;

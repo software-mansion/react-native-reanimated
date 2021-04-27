@@ -10,6 +10,7 @@
 #include <thread>
 #include <memory>
 #include "JSIStoreValueUser.h"
+#include "ReanimatedHiddenHeaders.h"
 
 using namespace facebook;
 
@@ -84,6 +85,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     this->renderRequested = false;
     this->onRender(timestampMs);
   };
+  updaterFunction = platformDepMethodsHolder.updaterFunction;
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -106,7 +108,16 @@ jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value
   return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs)
+jsi::Value NativeReanimatedModule::startMapper(
+                                               jsi::Runtime &rt,
+                                               const jsi::Value &worklet,
+                                               const jsi::Value &inputs,
+                                               const jsi::Value &outputs,
+                                               //mleko
+                                               const jsi::Value &updater,
+                                               const jsi::Value &tag,
+                                               const jsi::Value &name
+                                               )
 {
   static unsigned long MAPPER_ID = 1;
 
@@ -114,11 +125,26 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
   auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
   auto inputMutables = extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
   auto outputMutables = extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
+    
+  auto updaterSV = ShareableValue::adapt(rt, updater, this);
+  auto tagSV = ShareableValue::adapt(rt, tag, this);
+  auto nameSV = ShareableValue::adapt(rt, name, this);
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
     std::shared_ptr<jsi::Function> mapperFunctionPointer = std::make_shared<jsi::Function>(std::move(mapperFunction));
-    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(this, newMapperId, mapperFunctionPointer, inputMutables, outputMutables);
+    
+    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(
+                                                                     this,
+                                                                     newMapperId,
+                                                                     mapperFunctionPointer,
+                                                                     inputMutables,
+                                                                     outputMutables,
+                                                                     //mleko
+                                                                     updaterSV,
+                                                                     tagSV,
+                                                                     nameSV
+                                                                     );
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
   });
@@ -222,13 +248,18 @@ void NativeReanimatedModule::onRender(double timestampMs)
 {
   try
   {
-    std::vector<FrameCallback> callbacks = frameCallbacks;
-    frameCallbacks.clear();
-    for (auto& callback : callbacks)
-    {
-      callback(timestampMs);
-    }
-    mapperRegistry->execute(*runtime);
+  SpeedChecker::checkSpeed("animations", [&]() {
+      std::vector<FrameCallback> callbacks = frameCallbacks;
+      frameCallbacks.clear();
+      for (auto& callback : callbacks)
+      {
+        callback(timestampMs);
+      }
+  });
+      
+  SpeedChecker::checkSpeed("mappers", [&]() {
+      mapperRegistry->execute(*runtime);
+  });
 
     if (mapperRegistry->needRunOnRender())
     {
