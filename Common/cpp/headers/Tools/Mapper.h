@@ -24,7 +24,10 @@ private:
   std::shared_ptr<jsi::Function> updaterFn;
   std::shared_ptr<ShareableValue> tag;
   std::shared_ptr<ShareableValue> name;
+  jsi::Value nameJs;
   int tagInt;
+  UpdaterFunction* updaterFunction;
+  int optimalizationLvl = 0;
 
 public:
   Mapper(NativeReanimatedModule *module,
@@ -35,7 +38,8 @@ public:
          // mleko
          std::shared_ptr<ShareableValue> updater,
          std::shared_ptr<ShareableValue> tag,
-         std::shared_ptr<ShareableValue> name);
+         std::shared_ptr<ShareableValue> name,
+         int optimalizationLvl);
   void execute(jsi::Runtime &rt);
   virtual ~Mapper();
 };

@@ -125,7 +125,12 @@ jsi::Value NativeReanimatedModule::startMapper(
   auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
   auto inputMutables = extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
   auto outputMutables = extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
-    
+  
+  int optimalizationLvl = 0;
+  auto optimalization = updater.asObject(rt).getProperty(rt, "__optimalization");
+  if(optimalization.isNumber()) {
+    optimalizationLvl = optimalization.asNumber();
+  }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
   auto tagSV = ShareableValue::adapt(rt, tag, this);
   auto nameSV = ShareableValue::adapt(rt, name, this);
@@ -143,7 +148,8 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                                      //mleko
                                                                      updaterSV,
                                                                      tagSV,
-                                                                     nameSV
+                                                                     nameSV,
+                                                                     optimalizationLvl
                                                                      );
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();

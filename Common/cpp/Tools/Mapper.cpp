@@ -12,7 +12,8 @@ Mapper::Mapper(NativeReanimatedModule *module,
                // mleko
                std::shared_ptr<ShareableValue> updater,
                std::shared_ptr<ShareableValue> tag,
-               std::shared_ptr<ShareableValue> name):
+               std::shared_ptr<ShareableValue> name,
+               int optimalizationLvl):
 id(id),
 module(module),
 mapper(mapper),
@@ -21,8 +22,11 @@ outputs(outputs)
 {
   this->updater = updater;
   this->tag = tag;
-  this->name = name;
+  
   jsi::Runtime* rt = module->runtime.get();
+  this->nameJs = name->getValue(*rt);
+  updaterFunction = &module->updaterFunction;
+  this->optimalizationLvl = optimalizationLvl;
   
   auto updaterTmp = updater->getValue(*rt).asObject(*rt).asFunction(*rt);
   updaterFn = std::make_shared<jsi::Function>(std::move(updaterTmp));
@@ -40,9 +44,12 @@ outputs(outputs)
 
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
-//  mapper->callWithThis(rt, *mapper);// call styleUpdater
-  auto result = updaterFn->call(rt).asObject(rt);
-  module->updaterFunction(rt, tagInt, name->getValue(rt), result);
+  if(optimalizationLvl == 0) {
+    mapper->callWithThis(rt, *mapper);// call styleUpdater
+  }
+  else {
+    (*updaterFunction)(rt, tagInt, nameJs, updaterFn->call(rt).asObject(rt));
+  }
 }
 
 Mapper::~Mapper() {

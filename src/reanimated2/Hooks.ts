@@ -235,6 +235,7 @@ function styleUpdater(dataWrapper) {
   const newValues = updater() || {};
   const oldValues = state.last;
   // extract animated props
+  // console.log(newValues.transform[0])
   let hasAnimations = false;
   for (const key in newValues) {
     if (!isAnimated(newValues[key])) {
@@ -251,52 +252,52 @@ function styleUpdater(dataWrapper) {
   }
 
   if (hasAnimations) {
-  //   const frame = (timestamp) => {
-  //     const { animations, last, isAnimationCancelled } = state;
-  //     if (isAnimationCancelled) {
-  //       state.isAnimationRunning = false;
-  //       return;
-  //     }
+    const frame = (timestamp) => {
+      const { animations, last, isAnimationCancelled } = state;
+      if (isAnimationCancelled) {
+        state.isAnimationRunning = false;
+        return;
+      }
 
-  //     const updates = {};
-  //     let allFinished = true;
-  //     for (const propName in animations) {
-  //       const finished = runAnimations(
-  //         animations[propName],
-  //         timestamp,
-  //         propName,
-  //         updates,
-  //         animationsActive
-  //       );
-  //       if (finished) {
-  //         last[propName] = updates[propName];
-  //         delete animations[propName];
-  //       } else {
-  //         allFinished = false;
-  //       }
-  //     }
+      const updates = {};
+      let allFinished = true;
+      for (const propName in animations) {
+        const finished = runAnimations(
+          animations[propName],
+          timestamp,
+          propName,
+          updates,
+          animationsActive
+        );
+        if (finished) {
+          last[propName] = updates[propName];
+          delete animations[propName];
+        } else {
+          allFinished = false;
+        }
+      }
 
-  //     if (updates) {
-  //       updateProps(viewDescriptor, updates, maybeViewRef, adapters);
-  //     }
+      if (updates) {
+        updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+      }
 
-  //     if (!allFinished) {
-  //       requestFrame(frame);
-  //     } else {
-  //       state.isAnimationRunning = false;
-  //     }
-  //   };
+      if (!allFinished) {
+        requestFrame(frame);
+      } else {
+        state.isAnimationRunning = false;
+      }
+    };
 
-  //   state.animations = animations;
-  //   if (!state.isAnimationRunning) {
-  //     state.isAnimationCancelled = false;
-  //     state.isAnimationRunning = true;
-  //     if (_frameTimestamp) {
-  //       frame(_frameTimestamp);
-  //     } else {
-  //       requestFrame(frame);
-  //     }
-  //   }
+    state.animations = animations;
+    if (!state.isAnimationRunning) {
+      state.isAnimationCancelled = false;
+      state.isAnimationRunning = true;
+      if (_frameTimestamp) {
+        frame(_frameTimestamp);
+      } else {
+        requestFrame(frame);
+      }
+    }
   } else {
     state.isAnimationCancelled = true;
     state.animations = {};
@@ -308,18 +309,7 @@ function styleUpdater(dataWrapper) {
   state.last = Object.assign({}, oldValues, newValues);
 
   if (diff) {
-    if (adapters) {
-      adapters.forEach((adapter) => {
-        adapter(diff);
-      });
-    }
-
-    _updateProps(
-      viewDescriptor.value.tag,
-      viewDescriptor.value.name || 'RCTView',
-      diff
-    );
-    // updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
   }
 }
 
@@ -486,7 +476,13 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       };
       fun = () => {
         'worklet';
-        // styleUpdater(dataWrapper);
+        // const diff = updater();
+        // _updateProps(
+        //   viewDescriptor.value.tag,
+        //   viewDescriptor.value.name || 'RCTView',
+        //   diff
+        // );
+        styleUpdater(dataWrapper);
       };
     }
     const mapperId = startMapper(fun, inputs, [], updater, viewDescriptor.value.tag, viewDescriptor.value.name || 'RCTView');

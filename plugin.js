@@ -1,11 +1,9 @@
 'use strict';
-
 const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
 const { visitors } = require('@babel/traverse');
 const traverse = require('@babel/traverse').default;
 const parse = require('@babel/parser').parse;
-
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -270,11 +268,10 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName) {
+function processWorkletFunction(t, fun, fileName, options = {}) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
-
   const functionName = fun.node.id ? fun.node.id.name : '_f';
 
   const closure = new Map();
@@ -343,10 +340,6 @@ function processWorkletFunction(t, fun, fileName) {
   const variables = Array.from(closure.values());
 
   const privateFunctionId = t.identifier('_f');
-
-  // if we don't clone other modules won't process parts of newFun defined below
-  // this is weird but couldn't find a better way to force transform helper to
-  // process the function
   const clone = t.cloneNode(fun.node);
   const funExpression = t.functionExpression(null, clone.params, clone.body);
 
@@ -361,69 +354,86 @@ function processWorkletFunction(t, fun, fileName) {
     }
   }
 
+  const steatmentas = [
+    t.variableDeclaration('const', [
+      t.variableDeclarator(privateFunctionId, funExpression),
+    ]),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('_closure'),
+          false
+        ),
+        closureGenerator.generate(t, variables, closure.keys())
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('asString'),
+          false
+        ),
+        t.stringLiteral(funString)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__workletHash'),
+          false
+        ),
+        t.numericLiteral(workletHash)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__location'),
+          false
+        ),
+        t.stringLiteral(fileName)
+      )
+    ),
+  ];
+
+  if(options && options.simpleObjectOpt) {
+    steatmentas.push(t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__optimalization'),
+          false
+        ),
+        t.numericLiteral(1)
+      )
+    ));
+  }
+
+  steatmentas.push(t.expressionStatement(
+    t.callExpression(
+      t.memberExpression(
+        t.identifier('global'),
+        t.identifier('__reanimatedWorkletInit'),
+        false
+      ),
+      [privateFunctionId]
+    )
+  ));
+  steatmentas.push(t.returnStatement(privateFunctionId));
+
   const newFun = t.functionExpression(
     fun.id,
     [],
-    t.blockStatement([
-      t.variableDeclaration('const', [
-        t.variableDeclarator(privateFunctionId, funExpression),
-      ]),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('_closure'),
-            false
-          ),
-          closureGenerator.generate(t, variables, closure.keys())
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('asString'),
-            false
-          ),
-          t.stringLiteral(funString)
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__workletHash'),
-            false
-          ),
-          t.numericLiteral(workletHash)
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__location'),
-            false
-          ),
-          t.stringLiteral(fileName)
-        )
-      ),
-      t.expressionStatement(
-        t.callExpression(
-          t.memberExpression(
-            t.identifier('global'),
-            t.identifier('__reanimatedWorkletInit'),
-            false
-          ),
-          [privateFunctionId]
-        )
-      ),
-      t.returnStatement(privateFunctionId),
-    ])
+    t.blockStatement(steatmentas)
   );
 
   const replacement = t.callExpression(newFun, []);
@@ -461,7 +471,12 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun, fileName);
+          if(isPossibleOptimization(fun)) {
+            processWorkletFunction(t, fun, fileName, { simpleObjectOpt: true });
+          }
+          else {
+            processWorkletFunction(t, fun, fileName);
+          }
         }
       }
     },
@@ -492,11 +507,29 @@ function processWorklets(t, path, fileName) {
   } else {
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
+      // isPossibleOptimization(t, fun, indexes, path);
       indexes.forEach((index) => {
         processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
       });
     }
   }
+}
+
+function isPossibleOptimization(fun) {
+  if(!fun.context.parentPath || !fun.context.parentPath.parent.init || !fun.context.parentPath.parent.init.callee) {
+    return false;
+  }
+  const name = fun.context.parentPath.parent.init.callee.name;
+  if(name !== 'useAnimatedStyle') {
+    return false;
+  }
+  let isFunctionCall = false;
+  fun.parentPath.traverse({
+    CallExpression() {
+      isFunctionCall = true;
+    }
+  });
+  return !isFunctionCall;
 }
 
 const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
