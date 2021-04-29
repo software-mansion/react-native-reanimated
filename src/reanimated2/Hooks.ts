@@ -240,8 +240,7 @@ function styleUpdater(
       prepareAnimation(value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
-    }
-    else {
+    } else {
       delete animations[key];
     }
   }
@@ -294,7 +293,7 @@ function styleUpdater(
       }
     }
     return;
-  } 
+  }
 
   state.isAnimationCancelled = true;
   state.animations = {};
@@ -394,12 +393,7 @@ function jestStyleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updatePropsJestWrapper(
-      viewDescriptor,
-      diff,
-      maybeViewRef,
-      animatedStyle
-    );
+    updatePropsJestWrapper(viewDescriptor, diff, maybeViewRef, animatedStyle);
   }
 }
 
@@ -439,13 +433,13 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   useEffect(() => {
     let fun;
     let upadterFn = updater;
-    if(adapters) {
+    if (adapters) {
       upadterFn = () => {
-        let newValues = updater();
+        const newValues = updater();
         adapters.forEach((adapter) => {
           adapter(newValues);
         });
-      }
+      };
     }
 
     if (process.env.JEST_WORKER_ID) {
@@ -463,10 +457,23 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     } else {
       fun = () => {
         'worklet';
-        styleUpdater(viewDescriptor, upadterFn, remoteState, maybeViewRef, animationsActive);
+        styleUpdater(
+          viewDescriptor,
+          upadterFn,
+          remoteState,
+          maybeViewRef,
+          animationsActive
+        );
       };
     }
-    const mapperId = startMapper(fun, inputs, [], upadterFn, viewDescriptor.value.tag, viewDescriptor.value.name || 'RCTView');
+    const mapperId = startMapper(
+      fun,
+      inputs,
+      [],
+      upadterFn,
+      viewDescriptor.value.tag,
+      viewDescriptor.value.name || 'RCTView'
+    );
     return () => {
       stopMapper(mapperId);
     };
