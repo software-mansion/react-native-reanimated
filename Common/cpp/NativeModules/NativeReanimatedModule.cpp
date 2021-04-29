@@ -132,8 +132,10 @@ jsi::Value NativeReanimatedModule::startMapper(
     optimalizationLvl = optimalization.asNumber();
   }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
-  auto tagSV = ShareableValue::adapt(rt, tag, this);
-  auto nameSV = ShareableValue::adapt(rt, name, this);
+//  auto nameSV = ShareableValue::adapt(rt, name, this);
+  
+  const int tagInt = tag.asNumber();
+  const std::string nameStr = name.asString(rt).utf8(rt);
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
@@ -145,10 +147,9 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                                      mapperFunctionPointer,
                                                                      inputMutables,
                                                                      outputMutables,
-                                                                     //mleko
                                                                      updaterSV,
-                                                                     tagSV,
-                                                                     nameSV,
+                                                                     tagInt,
+                                                                     nameStr,
                                                                      optimalizationLvl
                                                                      );
     mapperRegistry->startMapper(mapperPointer);

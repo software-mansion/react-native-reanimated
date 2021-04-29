@@ -13,11 +13,17 @@ import { loop } from "react-native-redash/src/v1";
 
 const dummy = new Array(100).fill(1);
 function AnimatedStyleUpdateExample() {
-  const val = useSharedValue(1);
+  // const val = useSharedValue(0);
+
+  // val.value = withRepeat(
+  //   withTiming(Math.PI, { duration: 5000 }),
+  //   -1, true
+  // );
   return (
     <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap" }}>
       {dummy.map((_, i) => {
 
+        const val = useSharedValue(0);
         const DEG = Math.PI;
         val.value = withRepeat(
           withTiming(DEG, { duration: 5000 }),

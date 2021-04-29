@@ -9,29 +9,23 @@ Mapper::Mapper(NativeReanimatedModule *module,
                std::shared_ptr<jsi::Function> mapper,
                std::vector<std::shared_ptr<MutableValue>> inputs,
                std::vector<std::shared_ptr<MutableValue>> outputs,
-               // mleko
                std::shared_ptr<ShareableValue> updater,
-               std::shared_ptr<ShareableValue> tag,
-               std::shared_ptr<ShareableValue> name,
-               int optimalizationLvl):
+               const int viewTag,
+               const std::string& viewName,
+               const int optimalizationLvl):
 id(id),
 module(module),
 mapper(mapper),
 inputs(inputs),
-outputs(outputs)
+outputs(outputs),
+viewTag(viewTag),
+optimalizationLvl(optimalizationLvl)
 {
-  this->updater = updater;
-  this->tag = tag;
-  
   jsi::Runtime* rt = module->runtime.get();
-  this->nameJs = name->getValue(*rt);
-  updaterFunction = &module->updaterFunction;
-  this->optimalizationLvl = optimalizationLvl;
+  this->viewName = jsi::Value(*rt, jsi::String::createFromUtf8(*rt, viewName));
+  updateProps = &module->updaterFunction;
+  userUpdater = std::make_shared<jsi::Function>(updater->getValue(*rt).asObject(*rt).asFunction(*rt));
   
-  auto updaterTmp = updater->getValue(*rt).asObject(*rt).asFunction(*rt);
-  updaterFn = std::make_shared<jsi::Function>(std::move(updaterTmp));
-  
-  tagInt = tag->getValue(*rt).asNumber();
   
   auto markDirty = [this, module]() {
     this->dirty = true;
@@ -48,7 +42,7 @@ void Mapper::execute(jsi::Runtime &rt) {
     mapper->callWithThis(rt, *mapper);// call styleUpdater
   }
   else {
-    (*updaterFunction)(rt, tagInt, nameJs, updaterFn->call(rt).asObject(rt));
+    (*updateProps)(rt, viewTag, viewName, userUpdater->call(rt).asObject(rt));
   }
 }
 

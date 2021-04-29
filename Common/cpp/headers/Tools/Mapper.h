@@ -20,13 +20,10 @@ private:
   std::vector<std::shared_ptr<MutableValue>> inputs;
   std::vector<std::shared_ptr<MutableValue>> outputs;
   bool dirty = true;
-  std::shared_ptr<ShareableValue> updater;
-  std::shared_ptr<jsi::Function> updaterFn;
-  std::shared_ptr<ShareableValue> tag;
-  std::shared_ptr<ShareableValue> name;
-  jsi::Value nameJs;
-  int tagInt;
-  UpdaterFunction* updaterFunction;
+  std::shared_ptr<jsi::Function> userUpdater;
+  UpdaterFunction* updateProps;
+  jsi::Value viewName;
+  int viewTag;
   int optimalizationLvl = 0;
 
 public:
@@ -35,11 +32,10 @@ public:
          std::shared_ptr<jsi::Function> mapper,
          std::vector<std::shared_ptr<MutableValue>> inputs,
          std::vector<std::shared_ptr<MutableValue>> outputs,
-         // mleko
          std::shared_ptr<ShareableValue> updater,
-         std::shared_ptr<ShareableValue> tag,
-         std::shared_ptr<ShareableValue> name,
-         int optimalizationLvl);
+         const int viewTag,
+         const std::string& viewName,
+         const int optimalizationLvl);
   void execute(jsi::Runtime &rt);
   virtual ~Mapper();
 };
