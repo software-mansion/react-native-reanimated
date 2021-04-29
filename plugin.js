@@ -121,6 +121,10 @@ const blacklistedFunctions = new Set([
   '__callAsync',
 ]);
 
+const possibleOptFunction = new Set([
+  'interpolate',
+]);
+
 class ClosureGenerator {
   constructor() {
     this.trie = [{}, false];
@@ -507,7 +511,6 @@ function processWorklets(t, path, fileName) {
   } else {
     const indexes = functionArgsToWorkletize.get(name);
     if (Array.isArray(indexes)) {
-      // isPossibleOptimization(t, fun, indexes, path);
       indexes.forEach((index) => {
         processWorkletFunction(t, path.get(`arguments.${index}`), fileName);
       });
@@ -516,17 +519,12 @@ function processWorklets(t, path, fileName) {
 }
 
 function isPossibleOptimization(fun) {
-  if(!fun.context.parentPath || !fun.context.parentPath.parent.init || !fun.context.parentPath.parent.init.callee) {
-    return false;
-  }
-  const name = fun.context.parentPath.parent.init.callee.name;
-  if(name !== 'useAnimatedStyle') {
-    return false;
-  }
   let isFunctionCall = false;
-  fun.parentPath.traverse({
-    CallExpression() {
-      isFunctionCall = true;
+  fun.scope.path.traverse({
+    CallExpression(path) {
+      if(!possibleOptFunction.has(path.node.callee.name)) {
+        isFunctionCall = true;
+      }
     }
   });
   return !isFunctionCall;

@@ -221,33 +221,28 @@ const validateAnimatedStyles = (styles) => {
   }
 };
 
-function styleUpdater(dataWrapper) {
+function styleUpdater(
+  viewDescriptor,
+  updater,
+  state,
+  maybeViewRef,
+  animationsActive
+) {
   'worklet';
-  const {
-    viewDescriptor,
-    updater,
-    state,
-    maybeViewRef,
-    adapters,
-    animationsActive,
-  } = dataWrapper;
   const animations = state.animations || {};
   const newValues = updater() || {};
   const oldValues = state.last;
-  // extract animated props
-  // console.log(newValues.transform[0])
+
   let hasAnimations = false;
-  for (const key in newValues) {
-    if (!isAnimated(newValues[key])) {
-      delete animations[key];
-    }
-  }
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
       prepareAnimation(value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
+    }
+    else {
+      delete animations[key];
     }
   }
 
@@ -278,7 +273,7 @@ function styleUpdater(dataWrapper) {
       }
 
       if (updates) {
-        updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+        updateProps(viewDescriptor, updates, maybeViewRef);
       }
 
       if (!allFinished) {
@@ -298,19 +293,13 @@ function styleUpdater(dataWrapper) {
         requestFrame(frame);
       }
     }
-  } else {
-    state.isAnimationCancelled = true;
-    state.animations = {};
-  }
+    return;
+  } 
 
-  // calculate diff
-  
-  const diff = styleDiff(oldValues, newValues);
+  state.isAnimationCancelled = true;
+  state.animations = {};
   state.last = Object.assign({}, oldValues, newValues);
-
-  if (diff) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
-  }
+  updateProps(viewDescriptor, newValues, maybeViewRef);
 }
 
 function jestStyleUpdater(
@@ -318,7 +307,6 @@ function jestStyleUpdater(
   updater,
   state,
   maybeViewRef,
-  adapters,
   animationsActive,
   animatedStyle
 ) {
@@ -374,7 +362,6 @@ function jestStyleUpdater(
         viewDescriptor,
         updates,
         maybeViewRef,
-        adapters,
         animatedStyle
       );
     }
@@ -411,7 +398,6 @@ function jestStyleUpdater(
       viewDescriptor,
       diff,
       maybeViewRef,
-      adapters,
       animatedStyle
     );
   }
@@ -452,40 +438,35 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   useEffect(() => {
     let fun;
+    let upadterFn = updater;
+    if(adapters) {
+      upadterFn = () => {
+        let newValues = updater();
+        adapters.forEach((adapter) => {
+          adapter(newValues);
+        });
+      }
+    }
+
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
           viewDescriptor,
-          updater,
+          upadterFn,
           remoteState,
           maybeViewRef,
-          adapters,
           animationsActive,
           animatedStyle
         );
       };
     } else {
-      const dataWrapper = {
-        viewDescriptor: viewDescriptor,
-        updater: updater,
-        state: remoteState,
-        maybeViewRef: maybeViewRef,
-        adapters: adapters,
-        animationsActive: animationsActive,
-      };
       fun = () => {
         'worklet';
-        // const diff = updater();
-        // _updateProps(
-        //   viewDescriptor.value.tag,
-        //   viewDescriptor.value.name || 'RCTView',
-        //   diff
-        // );
-        styleUpdater(dataWrapper);
+        styleUpdater(viewDescriptor, upadterFn, remoteState, maybeViewRef, animationsActive);
       };
     }
-    const mapperId = startMapper(fun, inputs, [], updater, viewDescriptor.value.tag, viewDescriptor.value.name || 'RCTView');
+    const mapperId = startMapper(fun, inputs, [], upadterFn, viewDescriptor.value.tag, viewDescriptor.value.name || 'RCTView');
     return () => {
       stopMapper(mapperId);
     };

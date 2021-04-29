@@ -13,11 +13,11 @@ import { loop } from "react-native-redash/src/v1";
 
 const dummy = new Array(100).fill(1);
 function AnimatedStyleUpdateExample() {
+  const val = useSharedValue(1);
   return (
     <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap" }}>
       {dummy.map((_, i) => {
 
-        const val = useSharedValue(0);
         const DEG = Math.PI;
         val.value = withRepeat(
           withTiming(DEG, { duration: 5000 }),
@@ -28,13 +28,14 @@ function AnimatedStyleUpdateExample() {
           'worklet';
           return {
             transform: [
-              //  { rotate: withTiming(val.value, { duration: 50 }) },
+              //  { rotate: withTiming(val.value, { duration: 5000 }) },
+              //  { rotate: withRepeat(
+              //   withTiming(val.value, { duration: 5000 }),
+              //   -1, true
+              // ) },
               //  { rotate: val.value + "deg" },
-              // { rotate: interpolate(val.value, {
-              //   inputRange: [0, 1],
-              //   outputRange: [0, Math.PI * 2],
-              // }) + "deg" }, 
-               { rotate: val.value },
+              { rotate: interpolate(val.value, [0, 1], [0, Math.PI * 5]) + "deg" }, 
+              //  { rotate: val.value },
             ],
           };
         });
@@ -64,7 +65,7 @@ function AnimatedStyleUpdateExample() {
               style,
             ]}
           />
-          {/* <Button title="mleko" onPress={() => {val.value = Math.random() * 5}}/> */}
+          <Button title="mleko" onPress={() => {val.value = Math.random() * 5}}/>
           </View>
         );
       })}
