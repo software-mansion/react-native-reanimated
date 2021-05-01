@@ -65,7 +65,6 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
           .callWithThis(rt, setterProxy, newValue);
       });
     }
-    return;
   }
 
 }
