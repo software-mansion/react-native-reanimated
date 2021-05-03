@@ -235,6 +235,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       if (options.setNativeProps) {
         options.setNativeProps(this._component, props);
       } else {
+        // eslint-disable-next-line no-unused-expressions
         this._component.setNativeProps?.(props);
       }
     }
