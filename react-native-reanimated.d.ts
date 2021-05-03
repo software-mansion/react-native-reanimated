@@ -251,11 +251,11 @@ declare module 'react-native-reanimated' {
     }
     export function createAnimatedComponent<P extends object>(
       component: ComponentClass<P>,
-      options: Options<P>
+      options?: Options<P>
     ): ComponentClass<AnimateProps<P>>;
     export function createAnimatedComponent<P extends object>(
       component: FunctionComponent<P>,
-      options: Options<P>
+      options?: Options<P>
     ): FunctionComponent<AnimateProps<P>>;
 
     // classes
