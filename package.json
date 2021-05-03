@@ -18,6 +18,7 @@
   "main": "lib/Animated.js",
   "module": "lib/Animated",
   "react-native": "src/Animated",
+  "sideEffects": false,
   "source": "src/Animated",
   "types": "react-native-reanimated.d.ts",
   "files": [
