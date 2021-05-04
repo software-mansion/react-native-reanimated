@@ -20,7 +20,17 @@ public:
                                 MeasuringFunction measure,
                                 TimeProviderFunction getCurrentTime);
   
+  /**
+   Returns true if the given Runtime is the Reanimated UI-Thread Runtime.
+   */
+  static bool isUIRuntime(jsi::Runtime &rt);
+  /**
+   Returns true if the given Runtime is a Runtime that supports Workletization. (REA, Vision, ...)
+   */
   static bool isWorkletRuntime(jsi::Runtime &rt);
+  /**
+   Returns true if the given Runtime is the default React-JS Runtime.
+   */
   static bool isReactRuntime(jsi::Runtime &rt);
 };
 

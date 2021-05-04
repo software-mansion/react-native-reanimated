@@ -16,7 +16,7 @@ void MutableValue::setValue(jsi::Runtime &rt, const jsi::Value &newValue) {
       listener.second();
     }
   };
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     notifyListeners();
   } else {
     runtimeManager->scheduler->scheduleOnUI([notifyListeners] {
@@ -32,8 +32,27 @@ jsi::Value MutableValue::getValue(jsi::Runtime &rt) {
 
 void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &newValue) {
   auto propName = name.utf8(rt);
+  if (!runtimeManager->valueSetter) {
+    throw jsi::JSError(rt, "Value-Setter is not yet configured! Make sure the core-functions are installed.");
+  }
 
-  if (RuntimeDecorator::isReactRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
+    // UI thread
+    if (propName == "value") {
+      auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
+      runtimeManager->valueSetter->getValue(rt)
+      .asObject(rt)
+      .asFunction(rt)
+      .callWithThis(rt, setterProxy, newValue);
+    } else if (propName == "_animation") {
+      // TODO: assert to allow animation to be set from UI only
+      if (animation.expired()) {
+        animation = getWeakRef(rt);
+      }
+      *animation.lock() = jsi::Value(rt, newValue);
+    }
+  } else {
+    // React-JS Thread or another threaded Runtime.
     if (propName == "value") {
       auto shareable = ShareableValue::adapt(rt, newValue, runtimeManager);
       runtimeManager->scheduler->scheduleOnUI([this, shareable] {
@@ -46,23 +65,8 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
           .callWithThis(rt, setterProxy, newValue);
       });
     }
-    return;
   }
 
-  // UI thread
-  if (propName == "value") {
-    auto setterProxy = jsi::Object::createFromHostObject(rt, std::make_shared<MutableValueSetterProxy>(shared_from_this()));
-    runtimeManager->valueSetter->getValue(rt)
-      .asObject(rt)
-      .asFunction(rt)
-      .callWithThis(rt, setterProxy, newValue);
-  } else if (propName == "_animation") {
-    // TODO: assert to allow animation to be set from UI only
-    if (animation.expired()) {
-      animation = getWeakRef(rt);
-    }
-    *animation.lock() = jsi::Value(rt, newValue);
-  }
 }
 
 jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
@@ -72,7 +76,7 @@ jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
     return getValue(rt);
   }
 
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
+  if (RuntimeDecorator::isUIRuntime(rt)) {
     // _value and _animation should be accessed from UI only
     if (propName == "_value") {
       return getValue(rt);
