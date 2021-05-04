@@ -11,5 +11,5 @@ module.exports = {
     '@babel/preset-typescript',
     'module:metro-react-native-babel-preset',
   ],
-  plugins: ['@babel/plugin-proposal-class-properties']
-}
+  plugins: ['@babel/plugin-proposal-class-properties', './plugin.js'],
+};

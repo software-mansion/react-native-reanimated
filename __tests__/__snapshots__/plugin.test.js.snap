@@ -1,0 +1,91 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`babel plugin captures worklets environment 1`] = `
+"var x = 5;
+var objX = {
+  x: x
+};
+
+var f = function () {
+  var _f = function _f() {
+    return {
+      res: x + objX.x
+    };
+  };
+
+  _f._closure = {
+    x: x,
+    objX: {
+      x: objX.x
+    }
+  };
+  _f.asString = \\"function f(){const{x,objX}=jsThis._closure;{return{res:x+objX.x};}}\\";
+  _f.__workletHash = 10184269015616;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (4:4)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}();"
+`;
+
+exports[`babel plugin doesn't capture globals 1`] = `
+"var f = function () {
+  var _f = function _f() {
+    console.log(\\"test\\");
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function f(){console.log(\\\\\\"test\\\\\\");}\\";
+  _f.__workletHash = 6265462104213;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}();"
+`;
+
+exports[`babel plugin doesn't transform functions without 'worklet' directive 1`] = `
+"function f(x) {
+  return x + 2;
+}"
+`;
+
+exports[`babel plugin transforms  1`] = `
+"var _interopRequireWildcard = require(\\"@babel/runtime/helpers/interopRequireWildcard\\");
+
+var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
+
+function Box() {
+  var offset = (0, _reactNativeReanimated.useSharedValue)(0);
+  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
+    const _f = function () {
+      return {
+        transform: [{
+          translateX: offset.value * 255
+        }]
+      };
+    };
+
+    _f._closure = {
+      offset
+    };
+    _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
+    _f.__workletHash = 7114514849439;
+    _f.__location = \\"${ process.cwd() }/jest tests fixture (7:48)\\";
+
+    global.__reanimatedWorkletInit(_f);
+
+    return _f;
+  }());
+  return React.createElement(React.Fragment, null, React.createElement(_reactNativeReanimated.default.View, {
+    style: [styles.box, animatedStyles]
+  }), React.createElement(Button, {
+    onPress: function onPress() {
+      return offset.value = Math.random();
+    },
+    title: \\"Move\\"
+  }));
+}"
+`;

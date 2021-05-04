@@ -1,4 +1,4 @@
-const blacklist = require('metro-config/src/defaults/blacklist');
+const blacklist = require('metro-config/src/defaults/exclusionList');
 const path = require('path');
 
 const glob = require('glob-to-regexp');
@@ -32,7 +32,7 @@ module.exports = {
     getTransformOptions: async () => ({
       transform: {
         experimentalImportSupport: false,
-        inlineRequires: false,
+        inlineRequires: true,
       },
     }),
   },

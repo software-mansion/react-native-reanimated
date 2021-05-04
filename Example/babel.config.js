@@ -1,32 +1,40 @@
-module.exports = api => {
+module.exports = (api) => {
   const isWeb = api.caller(isTargetWeb);
 
   return {
-    presets: ['babel-preset-expo'],
+    presets: [
+      '@babel/preset-typescript',
+      'module:metro-react-native-babel-preset',
+    ],
     plugins: [
+      '@babel/plugin-proposal-optional-chaining',
       '@babel/plugin-transform-modules-commonjs',
-      isWeb ? [
-        'module-resolver',
-        {
-          alias: {
-            'react-native-reanimated': './Animated/Animated.js',
-          },
-        },
-      ] : [
-        'module-resolver',
-        {
-          alias: {
-            'react-native-reanimated': '../src/Animated',
-            react: './node_modules/react',
-            'react-native': './node_modules/react-native',
-            '@babel': './node_modules/@babel',
-            fbjs: './node_modules/fbjs',
-            'hoist-non-react-statics': './node_modules/hoist-non-react-statics',
-            invariant: './node_modules/invariant',
-            'prop-types': './node_modules/prop-types',
-          },
-        },
-      ],
+      '../plugin',
+      isWeb
+        ? [
+            'module-resolver',
+            {
+              alias: {
+                'react-native-reanimated': './Animated/',
+              },
+            },
+          ]
+        : [
+            'module-resolver',
+            {
+              alias: {
+                'react-native-reanimated': '../src/Animated',
+                react: './node_modules/react',
+                'react-native': './node_modules/react-native',
+                '@babel': './node_modules/@babel',
+                fbjs: './node_modules/fbjs',
+                'hoist-non-react-statics':
+                  './node_modules/hoist-non-react-statics',
+                invariant: './node_modules/invariant',
+                'prop-types': './node_modules/prop-types',
+              },
+            },
+          ],
     ].filter(Boolean),
   };
 };

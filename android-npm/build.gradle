@@ -1,0 +1,9 @@
+import groovy.json.JsonSlurper;
+configurations.maybeCreate("default")
+
+def inputFile = new File(projectDir, '../../react-native/package.json')
+def json = new JsonSlurper().parseText(inputFile.text)
+def reactNativeVersion = json.version as String
+def (major, minor, patch) = reactNativeVersion.tokenize('.')
+
+artifacts.add("default", file("react-native-reanimated-${minor}.aar"))
