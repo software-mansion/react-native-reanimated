@@ -138,7 +138,7 @@ Run `pod install` in the `ios/` directory.
 
 In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
 use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
-undo all installation steps from the previous instruction.
+undo all installation steps from the [previous instruction](https://github.com/software-mansion/react-native-reanimated/blob/2.0.0-alpha.4/docs/docs/installation.md#ios).
 
 :::
 
