@@ -262,7 +262,9 @@ export function startMapper(
   mapper,
   inputs = [],
   outputs = [],
-  updater,
+  updater = () => {
+    // noop
+  },
   tag = 0,
   name = ''
 ) {

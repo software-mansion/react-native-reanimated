@@ -113,7 +113,6 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                const jsi::Value &worklet,
                                                const jsi::Value &inputs,
                                                const jsi::Value &outputs,
-                                               //mleko
                                                const jsi::Value &updater,
                                                const jsi::Value &tag,
                                                const jsi::Value &name
@@ -130,10 +129,9 @@ jsi::Value NativeReanimatedModule::startMapper(
   auto optimalization = updater.asObject(rt).getProperty(rt, "__optimalization");
   if(optimalization.isNumber()) {
     optimalizationLvl = optimalization.asNumber();
+    optimalizationLvl = optimalizationLvl % 2 == 0 ? 0 : optimalizationLvl; // check the first bit of optimalization mask
   }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
-//  auto nameSV = ShareableValue::adapt(rt, name, this);
-  
   const int tagInt = tag.asNumber();
   const std::string nameStr = name.asString(rt).utf8(rt);
 
@@ -255,18 +253,13 @@ void NativeReanimatedModule::onRender(double timestampMs)
 {
   try
   {
-  SpeedChecker::checkSpeed("animations", [&]() {
       std::vector<FrameCallback> callbacks = frameCallbacks;
       frameCallbacks.clear();
       for (auto& callback : callbacks)
       {
         callback(timestampMs);
       }
-  });
-      
-  SpeedChecker::checkSpeed("mappers", [&]() {
       mapperRegistry->execute(*runtime);
-  });
 
     if (mapperRegistry->needRunOnRender())
     {

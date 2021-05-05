@@ -121,9 +121,7 @@ const blacklistedFunctions = new Set([
   '__callAsync',
 ]);
 
-const possibleOptFunction = new Set([
-  'interpolate',
-]);
+const possibleOptFunction = new Set(['interpolate']);
 
 class ClosureGenerator {
   constructor() {
@@ -297,7 +295,8 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
       if (
         parentNode.type === 'MemberExpression' &&
-        (parentNode.property === path.node && !parentNode.computed)
+        parentNode.property === path.node &&
+        !parentNode.computed
       ) {
         return;
       }
@@ -365,22 +364,14 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
     t.expressionStatement(
       t.assignmentExpression(
         '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('_closure'),
-          false
-        ),
+        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
         closureGenerator.generate(t, variables, closure.keys())
       )
     ),
     t.expressionStatement(
       t.assignmentExpression(
         '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('asString'),
-          false
-        ),
+        t.memberExpression(privateFunctionId, t.identifier('asString'), false),
         t.stringLiteral(funString)
       )
     ),
@@ -408,30 +399,34 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
     ),
   ];
 
-  if(options && options.simpleObjectOpt) {
-    steatmentas.push(t.expressionStatement(
-      t.assignmentExpression(
-        '=',
-        t.memberExpression(
-          privateFunctionId,
-          t.identifier('__optimalization'),
-          false
-        ),
-        t.numericLiteral(1)
+  if (options && options.optFlags) {
+    steatmentas.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__optimalization'),
+            false
+          ),
+          t.numericLiteral(options.optFlags)
+        )
       )
-    ));
+    );
   }
 
-  steatmentas.push(t.expressionStatement(
-    t.callExpression(
-      t.memberExpression(
-        t.identifier('global'),
-        t.identifier('__reanimatedWorkletInit'),
-        false
-      ),
-      [privateFunctionId]
+  steatmentas.push(
+    t.expressionStatement(
+      t.callExpression(
+        t.memberExpression(
+          t.identifier('global'),
+          t.identifier('__reanimatedWorkletInit'),
+          false
+        ),
+        [privateFunctionId]
+      )
     )
-  ));
+  );
   steatmentas.push(t.returnStatement(privateFunctionId));
 
   const newFun = t.functionExpression(
@@ -475,10 +470,10 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          if(isPossibleOptimization(fun)) {
-            processWorkletFunction(t, fun, fileName, { simpleObjectOpt: true });
-          }
-          else {
+          const flags = isPossibleOptimization(fun);
+          if (flags) {
+            processWorkletFunction(t, fun, fileName, { optFlags: flags });
+          } else {
             processWorkletFunction(t, fun, fileName);
           }
         }
@@ -520,14 +515,26 @@ function processWorklets(t, path, fileName) {
 
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
+  let isSteatements = false;
   fun.scope.path.traverse({
     CallExpression(path) {
-      if(!possibleOptFunction.has(path.node.callee.name)) {
+      if (!possibleOptFunction.has(path.node.callee.name)) {
         isFunctionCall = true;
       }
-    }
+    },
+    IfStatement() {
+      isSteatements = true;
+    },
   });
-  return !isFunctionCall;
+  let flags = 0;
+  if (!isSteatements) {
+    flags = 1;
+    flags = flags << 1;
+  }
+  if (!isFunctionCall) {
+    flags += 1;
+  }
+  return flags;
 }
 
 const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
@@ -583,7 +590,7 @@ function removePluginsFromBlacklist(plugins) {
   });
 }
 
-module.exports = function({ types: t }) {
+module.exports = function ({ types: t }) {
   return {
     visitor: {
       CallExpression: {
@@ -599,7 +606,7 @@ module.exports = function({ types: t }) {
     },
     // In this way we can modify babel options
     // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
-    manipulateOptions(opts, parserOpts) {
+    manipulateOptions(opts, _) {
       const plugins = opts.plugins;
       removePluginsFromBlacklist(plugins);
     },

@@ -12,11 +12,12 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps, { updatePropsJestWrapper } from './UpdateProps';
+import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { processColor } from './Colors';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -161,49 +162,55 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 function isAnimated(prop) {
   'worklet';
   if (Array.isArray(prop)) {
-    return prop.some(isAnimated);
-  }
-  if (typeof prop === 'object') {
-    if (prop.onFrame) {
-      return true;
+    for (const item of prop) {
+      for (const key in item) {
+        if (item[key].onFrame !== undefined) {
+          return true;
+        }
+      }
     }
-    return Object.keys(prop).some((key) => isAnimated(prop[key]));
+    return false;
   }
-  return false;
+  return prop.onFrame !== undefined;
 }
 
 function styleDiff(oldStyle, newStyle) {
   'worklet';
-  if (isAnimated(newStyle)) {
-    return;
-  }
-
   const diff = {};
-  for (const key in newStyle) {
+  Object.keys(oldStyle).forEach((key) => {
+    if (newStyle[key] === undefined) {
+      diff[key] = null;
+    }
+  });
+  Object.keys(newStyle).forEach((key) => {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
-    if (oldValue !== value) {
-      if (Array.isArray(value)) {
-        let i = 0;
-        let isBreak = false;
-        for (const item of value) {
-          for (const nestedKey in item) {
-            if (oldValue[i][nestedKey] !== item[nestedKey]) {
-              diff[key] = value;
-              isBreak = true;
-              break;
-            }
-            if (isBreak) {
-              break;
-            }
-          }
-          i++;
-        }
-      } else {
-        diff[key] = value;
-      }
+    if (isAnimated(value)) {
+      // do nothing
+      return;
     }
+    if (
+      oldValue !== value &&
+      JSON.stringify(oldValue) !== JSON.stringify(value)
+    ) {
+      // I'd use deep equal here but that'd take additional work and this was easier
+      diff[key] = value;
+    }
+  });
+  return diff;
+}
+
+function getStyleWithoutAnimations(newStyle) {
+  'worklet';
+  const diff = {};
+
+  for (const key in newStyle) {
+    const value = newStyle[key];
+    if (isAnimated(value)) {
+      continue;
+    }
+    diff[key] = value;
   }
   return diff;
 }
@@ -292,13 +299,16 @@ function styleUpdater(
         requestFrame(frame);
       }
     }
-    return;
+    state.last = Object.assign({}, oldValues, newValues);
+    const style = getStyleWithoutAnimations(oldValues, newValues);
+    if (style) {
+      updateProps(viewDescriptor, style, maybeViewRef);
+    }
+  } else {
+    state.isAnimationCancelled = true;
+    state.animations = {};
+    updateProps(viewDescriptor, newValues, maybeViewRef);
   }
-
-  state.isAnimationCancelled = true;
-  state.animations = {};
-  state.last = Object.assign({}, oldValues, newValues);
-  updateProps(viewDescriptor, newValues, maybeViewRef);
 }
 
 function jestStyleUpdater(
@@ -396,6 +406,24 @@ function jestStyleUpdater(
     updatePropsJestWrapper(viewDescriptor, diff, maybeViewRef, animatedStyle);
   }
 }
+const colorPropsSet = new Set(colorProps);
+const hasColorProps = (updates) => {
+  for (const key in updates) {
+    if (colorPropsSet.has(key)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const parseColors = (updates) => {
+  'worklet';
+  for (const key in updates) {
+    if (colorProps.indexOf(key) !== -1) {
+      updates[key] = processColor(updates[key]);
+    }
+  }
+};
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
@@ -433,14 +461,36 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   useEffect(() => {
     let fun;
     let upadterFn = updater;
+    const optimalization = updater.__optimalization;
     if (adapters) {
       upadterFn = () => {
+        'worklet';
         const newValues = updater();
         adapters.forEach((adapter) => {
           adapter(newValues);
         });
+        return newValues;
       };
     }
+
+    if (upadterFn.__optimalization === 3) {
+      if (hasColorProps(upadterFn())) {
+        upadterFn = () => {
+          'worklet';
+          const style = upadterFn();
+          parseColors(style);
+          return style;
+        };
+      }
+    } else {
+      upadterFn = () => {
+        'worklet';
+        const style = upadterFn();
+        parseColors(style);
+        return style;
+      };
+    }
+    upadterFn.__optimalization = optimalization;
 
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
