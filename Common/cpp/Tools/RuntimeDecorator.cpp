@@ -6,6 +6,7 @@
 namespace reanimated {
 
 jsi::Runtime* RuntimeDecorator::runtimeUI = nullptr;
+bool RuntimeDecorator::comparePointers = false;
 
 void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &label) {
   // This property will be used to find out if a runtime is a custom worklet runtime (e.g. UI, VisionCamera frame processor, ...)
@@ -67,8 +68,12 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime& rt,
                                          const RequestFrameFunction& requestFrame,
                                          const ScrollToFunction& scrollTo,
                                          const MeasuringFunction& measure,
-                                         const TimeProviderFunction& getCurrentTime) {
-  runtimeUI = &rt;
+                                         const TimeProviderFunction& getCurrentTime,
+                                         const bool comparePointers) {
+  if(comparePointers) {
+    runtimeUI = &rt;
+    RuntimeDecorator::comparePointers = comparePointers;
+  }
   RuntimeDecorator::decorateRuntime(rt, "UI");
   
   auto clb = [updater](

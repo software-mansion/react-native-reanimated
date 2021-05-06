@@ -18,20 +18,33 @@ public:
                                 const RequestFrameFunction& requestFrame,
                                 const ScrollToFunction& scrollTo,
                                 const MeasuringFunction& measure,
-                                const TimeProviderFunction& getCurrentTime);
+                                const TimeProviderFunction& getCurrentTime,
+                                const bool comparePointers = false); // to make compatibility with multithreading library.
   
-  inline static bool isWorkletRuntime(const jsi::Runtime& rt);
-  inline static bool isReactRuntime(const jsi::Runtime& rt);
+  inline static bool isWorkletRuntime(jsi::Runtime& rt);
+  inline static bool isReactRuntime(jsi::Runtime& rt);
 private:
   static jsi::Runtime* runtimeUI;
+  static bool comparePointers;
 };
 
-inline bool RuntimeDecorator::isWorkletRuntime(const jsi::Runtime& rt) {
-  return runtimeUI == &rt;
+inline bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
+  if(comparePointers) {
+    return runtimeUI == &rt;
+  }
+  else {
+    auto isUi = rt.global().getProperty(rt, "_WORKLET");
+    return isUi.isBool() && isUi.getBool();
+  }
 }
 
-inline bool RuntimeDecorator::isReactRuntime(const jsi::Runtime& rt) {
-  return runtimeUI != &rt;
+inline bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
+  if(comparePointers) {
+    return runtimeUI != &rt;
+  }
+  else {
+    return !isWorkletRuntime(rt);
+  }
 }
 
 }

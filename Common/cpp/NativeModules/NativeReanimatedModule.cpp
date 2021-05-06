@@ -80,7 +80,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       requestAnimationFrame,
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
-                                      platformDepMethodsHolder.getCurrentTime);
+                                      platformDepMethodsHolder.getCurrentTime,
+                                      true);
    onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
