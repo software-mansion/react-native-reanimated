@@ -5,7 +5,9 @@
 
 namespace reanimated {
 
-void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
+jsi::Runtime* RuntimeDecorator::runtimeUI = nullptr;
+
+void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &label) {
   // This property will be used to find out if a runtime is a custom worklet runtime (e.g. UI, VisionCamera frame processor, ...)
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   // This property will be used for debugging
@@ -60,19 +62,20 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
   rt.global().setProperty(rt, "_setGlobalConsole", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_setGlobalConsole"), 1, setGlobalConsole));
 }
 
-void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
-                                         UpdaterFunction updater,
-                                         RequestFrameFunction requestFrame,
-                                         ScrollToFunction scrollTo,
-                                         MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime) {
+void RuntimeDecorator::decorateUIRuntime(jsi::Runtime& rt,
+                                         const UpdaterFunction& updater,
+                                         const RequestFrameFunction& requestFrame,
+                                         const ScrollToFunction& scrollTo,
+                                         const MeasuringFunction& measure,
+                                         const TimeProviderFunction& getCurrentTime) {
+  runtimeUI = &rt;
   RuntimeDecorator::decorateRuntime(rt, "UI");
   
   auto clb = [updater](
                        jsi::Runtime &rt,
                        const jsi::Value &thisValue,
                        const jsi::Value *args,
-                       size_t count
+                       const size_t count
                        ) -> jsi::Value {
     const auto viewTag = args[0].asNumber();
     const jsi::Value* viewName = &args[1];
@@ -88,7 +91,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                              jsi::Runtime &rt,
                              const jsi::Value &thisValue,
                              const jsi::Value *args,
-                             size_t count
+                             const size_t count
                              ) -> jsi::Value {
     auto fun = std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
     requestFrame([&rt, fun](double timestampMs) {
@@ -103,7 +106,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                          jsi::Runtime &rt,
                          const jsi::Value &thisValue,
                          const jsi::Value *args,
-                         size_t count
+                         const size_t count
                          ) -> jsi::Value {
     int viewTag = (int)args[0].asNumber();
     double x = args[1].asNumber();
@@ -119,7 +122,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                         jsi::Runtime &rt,
                         const jsi::Value &thisValue,
                         const jsi::Value *args,
-                        size_t count
+                        const size_t count
                         ) -> jsi::Value {
     int viewTag = (int)args[0].asNumber();
     auto result = measure(viewTag);
@@ -136,7 +139,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                jsi::Runtime &rt,
                                const jsi::Value &thisValue,
                                const jsi::Value *args,
-                               size_t count
+                               const size_t count
                                ) -> jsi::Value {
     return getCurrentTime();
   };
@@ -145,15 +148,6 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
-}
-
-bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
-  auto isUi = rt.global().getProperty(rt, "_WORKLET");
-  return isUi.isBool() && isUi.getBool();
-}
-
-bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
-  return !isWorkletRuntime(rt);
 }
 
 }
