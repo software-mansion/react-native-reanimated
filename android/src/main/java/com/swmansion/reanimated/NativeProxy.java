@@ -139,8 +139,8 @@ public class NativeProxy {
         getDefaultJSExecutorFactory.setAccessible(true);
         factory = (JavaScriptExecutorFactory) getDefaultJSExecutorFactory.invoke(
           reactInstanceManagerBuilder,
-          "Reaniamted",
-          "Reaniamted",
+          "Reanimated",
+          "Reanimated",
           context
         );
         assert factory != null;
