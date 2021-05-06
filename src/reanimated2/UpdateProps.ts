@@ -27,7 +27,7 @@ export const colorProps = [
 const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 let updatePropsByPlatform;
-if (Platform.OS === 'web') {
+if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
   updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef) => {
     'worklet';
     _updatePropsJS(viewDescriptor.value.tag, null, updates, maybeViewRef);
@@ -56,8 +56,12 @@ export const updatePropsJestWrapper = (
   viewDescriptor,
   updates,
   maybeViewRef,
-  animatedStyle
+  animatedStyle,
+  adapters
 ) => {
+  adapters.forEach((adapter) => {
+    adapter(updates);
+  });
   animatedStyle.current.value = {
     ...animatedStyle.current.value,
     ...updates,

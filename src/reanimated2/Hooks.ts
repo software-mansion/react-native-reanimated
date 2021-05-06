@@ -317,7 +317,8 @@ function jestStyleUpdater(
   state,
   maybeViewRef,
   animationsActive,
-  animatedStyle
+  animatedStyle,
+  adapters = []
 ) {
   'worklet';
   const animations = state.animations || {};
@@ -371,7 +372,8 @@ function jestStyleUpdater(
         viewDescriptor,
         updates,
         maybeViewRef,
-        animatedStyle
+        animatedStyle,
+        adapters
       );
     }
 
@@ -403,7 +405,13 @@ function jestStyleUpdater(
   state.last = Object.assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
-    updatePropsJestWrapper(viewDescriptor, diff, maybeViewRef, animatedStyle);
+    updatePropsJestWrapper(
+      viewDescriptor,
+      diff,
+      maybeViewRef,
+      animatedStyle,
+      adapters
+    );
   }
 }
 const colorPropsSet = new Set(colorProps);
@@ -497,11 +505,12 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         'worklet';
         jestStyleUpdater(
           viewDescriptor,
-          upadterFn,
+          updater,
           remoteState,
           maybeViewRef,
           animationsActive,
-          animatedStyle
+          animatedStyle,
+          adapters
         );
       };
     } else {
