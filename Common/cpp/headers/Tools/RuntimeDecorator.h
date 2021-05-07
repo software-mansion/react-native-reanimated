@@ -2,6 +2,7 @@
 
 #include "PlatformDepMethodsHolder.h"
 #include <stdio.h>
+#include <unordered_map>
 #include <jsi/jsi.h>
 
 using namespace facebook;
@@ -10,50 +11,17 @@ namespace reanimated {
 
 using RequestFrameFunction = std::function<void(std::function<void(double)>)>;
 
-class RuntimeDetectorStrategy {
-public:
-  virtual ~RuntimeDetectorStrategy() {}
-  virtual inline bool isUIRuntime(jsi::Runtime& rt) = 0;
-  virtual inline bool isWorkletRuntime(jsi::Runtime& rt) = 0;
-  virtual inline bool isReactRuntime(jsi::Runtime& rt) = 0;
+enum RuntimeType {
+  /**
+   Represents any runtime that supports the concept of workletization
+   */
+  Worklet,
+  /**
+   Represents the Reanimated UI worklet runtime specifically
+   */
+  UI
 };
-
-class DefaultRuntimeDetectorStrategy : public RuntimeDetectorStrategy {
-public:
-
-  inline bool isUIRuntime(jsi::Runtime& rt) override {
-    auto isUi = rt.global().getProperty(rt, "_UI");
-    return isUi.isBool() && isUi.getBool();
-  }
-
-  inline bool isWorkletRuntime(jsi::Runtime& rt) override {
-    auto isWorklet = rt.global().getProperty(rt, "_WORKLET");
-    return isWorklet.isBool() && isWorklet.getBool();
-  }
-
-  inline bool isReactRuntime(jsi::Runtime& rt) override {
-    return !isWorkletRuntime(rt);
-  }
-};
-
-class UIRuntimeDetectorStrategy : public RuntimeDetectorStrategy {
-private:
-  jsi::Runtime* runtimeUI;
-public:
-  UIRuntimeDetectorStrategy(jsi::Runtime& runtimeUI) : runtimeUI(&runtimeUI) {}
-  
-  inline bool isUIRuntime(jsi::Runtime& rt) override {
-    return runtimeUI == &rt;
-  }
-
-  inline bool isWorkletRuntime(jsi::Runtime& rt) override {
-    return runtimeUI == &rt;
-  }
-
-  inline bool isReactRuntime(jsi::Runtime& rt) override {
-    return runtimeUI != &rt;
-  }
-};
+typedef jsi::Runtime* RuntimePointer;
 
 class RuntimeDecorator {
 public:
@@ -63,15 +31,14 @@ public:
                                 const RequestFrameFunction& requestFrame,
                                 const ScrollToFunction& scrollTo,
                                 const MeasuringFunction& measure,
-                                const TimeProviderFunction& getCurrentTime,
-                                const bool comparePointers = false); // to make compatibility with multithreading library.
+                                const TimeProviderFunction& getCurrentTime);
 
   /**
    Returns true if the given Runtime is the Reanimated UI-Thread Runtime.
    */
   inline static bool isUIRuntime(jsi::Runtime &rt);
   /**
-   Returns true if the given Runtime is a Runtime that supports Workletization. (REA, Vision, ...)
+   Returns true if the given Runtime is a Runtime that supports the concept of Workletization. (REA, Vision, ...)
    */
   inline static bool isWorkletRuntime(jsi::Runtime &rt);
   /**
@@ -80,19 +47,26 @@ public:
   inline static bool isReactRuntime(jsi::Runtime &rt);
 
 private:
-  static std::unique_ptr<RuntimeDetectorStrategy> runtimeDetectorStrategy;
+  static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;
 };
 
 inline bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
-  return runtimeDetectorStrategy->isUIRuntime(rt);
+  auto iterator = runtimeRegistry.find(&rt);
+  if (iterator == runtimeRegistry.end()) return false;
+  return iterator->second == RuntimeType::UI;
 }
 
 inline bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
-  return runtimeDetectorStrategy->isWorkletRuntime(rt);
+  auto iterator = runtimeRegistry.find(&rt);
+  if (iterator == runtimeRegistry.end()) return false;
+  auto type = iterator->second;
+  return type == RuntimeType::UI || type == RuntimeType::Worklet;
 }
 
 inline bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
-  return runtimeDetectorStrategy->isReactRuntime(rt);
+  auto iterator = runtimeRegistry.find(&rt);
+  if (iterator == runtimeRegistry.end()) return true;
+  return false;
 }
 
 }
