@@ -45,6 +45,11 @@ public:
    Returns true if the given Runtime is the default React-JS Runtime.
    */
   inline static bool isReactRuntime(jsi::Runtime &rt);
+  
+  /**
+   Register the given Runtime. This function is required for every RuntimeManager, otherwise future runtime checks will fail.
+   */
+  static void registerRuntime(jsi::Runtime* runtime, RuntimeType runtimeType);
 
 private:
   static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;

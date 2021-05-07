@@ -5,6 +5,10 @@
 
 namespace reanimated {
 
+void RuntimeDecorator::registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType) {
+  runtimeRegistry.insert({ runtime, runtimeType });
+}
+
 void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &label) {
   // This property will be used to find out if a runtime is a custom worklet runtime (e.g. UI, VisionCamera frame processor, ...)
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
@@ -58,8 +62,6 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &labe
     return jsi::Value::undefined();
   };
   rt.global().setProperty(rt, "_setGlobalConsole", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_setGlobalConsole"), 1, setGlobalConsole));
-  
-  runtimeRegistry.insert({ &rt, RuntimeType::Worklet });
 }
 
 void RuntimeDecorator::decorateUIRuntime(jsi::Runtime& rt,
@@ -148,8 +150,6 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime& rt,
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
-  
-  runtimeRegistry.insert({ &rt, RuntimeType::UI });
 }
 
 }

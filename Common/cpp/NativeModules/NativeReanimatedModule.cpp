@@ -64,7 +64,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) :
                                                   NativeReanimatedModuleSpec(jsInvoker),
-                                                  RuntimeManager(std::move(rt), errorHandler, scheduler),
+                                                  RuntimeManager(std::move(rt), errorHandler, scheduler, RuntimeType::UI),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
@@ -80,8 +80,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       requestAnimationFrame,
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
-                                      platformDepMethodsHolder.getCurrentTime,
-                                      true);
+                                      platformDepMethodsHolder.getCurrentTime);
    onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);
