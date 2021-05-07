@@ -5,7 +5,9 @@
 
 namespace reanimated {
 
-std::unique_ptr<RuntimeDetectorStrategy> RuntimeDecorator::runtimeDetectorStrategy = std::make_unique<DefaultRuntimeDetectorStrategy>();
+void RuntimeDecorator::registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType) {
+  runtimeRegistry.insert({ runtime, runtimeType });
+}
 
 void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &label) {
   // This property will be used to find out if a runtime is a custom worklet runtime (e.g. UI, VisionCamera frame processor, ...)
@@ -67,11 +69,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime& rt,
                                          const RequestFrameFunction& requestFrame,
                                          const ScrollToFunction& scrollTo,
                                          const MeasuringFunction& measure,
-                                         const TimeProviderFunction& getCurrentTime,
-                                         const bool comparePointers) {
-  if(comparePointers) {
-    runtimeDetectorStrategy = std::make_unique<UIRuntimeDetectorStrategy>(rt);
-  }
+                                         const TimeProviderFunction& getCurrentTime) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
