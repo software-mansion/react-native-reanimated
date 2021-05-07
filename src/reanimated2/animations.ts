@@ -57,7 +57,7 @@ export function decorateAnimation(animation) {
   }
   const baseOnStart = animation.onStart;
   const baseOnFrame = animation.onFrame;
-  const animationCopy = Object.assign({}, animation);
+  const animationCopy = { ...animation };
   delete animationCopy.callback;
 
   const prefNumberSuffOnStart = (
@@ -98,7 +98,7 @@ export function decorateAnimation(animation) {
       }
     }
     tab.forEach((i, index) => {
-      animation[i] = Object.assign({}, animationCopy);
+      animation[i] = { ...animationCopy };
       animation[i].current = HSVACurrent[index];
       animation[i].toValue = HSVAToValue ? HSVAToValue[index] : undefined;
       animation[i].onStart(
