@@ -5,6 +5,7 @@
 
 namespace reanimated {
 
+std::unordered_map<RuntimePointer, RuntimeType> RuntimeDecorator::runtimeRegistry;
 void RuntimeDecorator::registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType) {
   runtimeRegistry.insert({ runtime, runtimeType });
 }
