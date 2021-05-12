@@ -1,0 +1,155 @@
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"supportedProtocolVersions":[{"isExperimental":true,"major":1,"minor":1}],"type":"hello"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {
+  "type": "handshake",
+  "cookie": "gradle-cmake-cookie",
+  "protocolVersion": {
+    "isExperimental": true,
+    "major": 1,
+    "minor": 1
+  },
+  "sourceDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android",
+  "buildDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86",
+  "generator": "Ninja"
+}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"gradle-cmake-cookie","inReplyTo":"handshake","type":"reply"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {
+  "type": "configure",
+  "cacheArguments": [
+    "",
+    "-DCMAKE_FIND_ROOT_PATH\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/prefab/x86/prefab",
+    "-DCMAKE_BUILD_TYPE\u003dDebug",
+    "-DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
+    "-DANDROID_ABI\u003dx86",
+    "-DANDROID_NDK\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944",
+    "-DANDROID_PLATFORM\u003dandroid-21",
+    "-DCMAKE_ANDROID_ARCH_ABI\u003dx86",
+    "-DCMAKE_ANDROID_NDK\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON",
+    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/x86",
+    "-DCMAKE_MAKE_PROGRAM\u003d/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-DCMAKE_SYSTEM_NAME\u003dAndroid",
+    "-DCMAKE_SYSTEM_VERSION\u003d21",
+    "-DANDROID_STL\u003dc++_shared -DNDK_OUT\u003d/var/folders/yr/tgtmb2fj6z528_3sqk3364hh0000gn/T/groovy-generated-848288518898666170-tmpdir \n                         -DNDK_LIBS_OUT\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/reanimated-ndk/all \n                         -DTHIRD_PARTY_NDK_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk\n                         -DJSI_PATH\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi \n                         -DREACT_COMMON_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon\n                         -DREACT_SRC_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react \n                         -DFIRST_PARTY\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/third-party/../first-party\n                         -DREACT_NATIVE_JNI\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react/jni \n                         -DREACT_NATIVE_REACT\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react \n                         -DNATIVE_DEBUG\u003dfalse\n                         -DREACT_NATIVE_TARGET_VERSION\u003d 64\n                         -DANDROID_TOOLCHAIN\u003dclang\n                         -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake"
+  ]
+}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","inReplyTo":"configure","message":"CMake Error at /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake:363 (message):\n  Invalid Android STL: c++_shared\n  -DNDK_OUT=/var/folders/yr/tgtmb2fj6z528_3sqk3364hh0000gn/T/groovy-generated-848288518898666170-tmpdir\n\n\n                           -DNDK_LIBS_OUT=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/reanimated-ndk/all \n                           -DTHIRD_PARTY_NDK_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk\n                           -DJSI_PATH=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi \n                           -DREACT_COMMON_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon\n                           -DREACT_SRC_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react \n                           -DFIRST_PARTY=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/third-party/../first-party\n                           -DREACT_NATIVE_JNI=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react/jni \n                           -DREACT_NATIVE_REACT=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react \n                           -DNATIVE_DEBUG=false\n                           -DREACT_NATIVE_TARGET_VERSION= 64\n                           -DANDROID_TOOLCHAIN=clang\n                           -DCMAKE_TOOLCHAIN_FILE=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake.\nCall Stack (most recent call first):\n  /Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeDetermineSystem.cmake:94 (include)\n  CMakeLists.txt\n\n","title":"Error","type":"message"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: CMake Error at /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake:363 (message):
+  Invalid Android STL: c++_shared
+  -DNDK_OUT=/var/folders/yr/tgtmb2fj6z528_3sqk3364hh0000gn/T/groovy-generated-848288518898666170-tmpdir
+
+
+                           -DNDK_LIBS_OUT=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/reanimated-ndk/all 
+                           -DTHIRD_PARTY_NDK_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk
+                           -DJSI_PATH=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi 
+                           -DREACT_COMMON_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon
+                           -DREACT_SRC_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react 
+                           -DFIRST_PARTY=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/third-party/../first-party
+                           -DREACT_NATIVE_JNI=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react/jni 
+                           -DREACT_NATIVE_REACT=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react 
+                           -DNATIVE_DEBUG=false
+                           -DREACT_NATIVE_TARGET_VERSION= 64
+                           -DANDROID_TOOLCHAIN=clang
+                           -DCMAKE_TOOLCHAIN_FILE=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake.
+Call Stack (most recent call first):
+  /Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeDetermineSystem.cmake:94 (include)
+  CMakeLists.txt
+
+CMAKE SERVER: CMake Error at /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake:363 (message):
+  Invalid Android STL: c++_shared
+  -DNDK_OUT=/var/folders/yr/tgtmb2fj6z528_3sqk3364hh0000gn/T/groovy-generated-848288518898666170-tmpdir
+
+
+                           -DNDK_LIBS_OUT=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/reanimated-ndk/all 
+                           -DTHIRD_PARTY_NDK_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk
+                           -DJSI_PATH=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi 
+                           -DREACT_COMMON_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon
+                           -DREACT_SRC_DIR=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react 
+                           -DFIRST_PARTY=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/third-party/../first-party
+                           -DREACT_NATIVE_JNI=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react/jni 
+                           -DREACT_NATIVE_REACT=/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react 
+                           -DNATIVE_DEBUG=false
+                           -DREACT_NATIVE_TARGET_VERSION= 64
+                           -DANDROID_TOOLCHAIN=clang
+                           -DCMAKE_TOOLCHAIN_FILE=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake.
+Call Stack (most recent call first):
+  /Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeDetermineSystem.cmake:94 (include)
+  CMakeLists.txt
+
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","inReplyTo":"configure","message":"CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage","title":"Error","type":"message"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage
+CMAKE SERVER: CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","inReplyTo":"configure","message":"CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage","title":"Error","type":"message"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
+CMAKE SERVER: CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","inReplyTo":"configure","progressCurrent":1000,"progressMaximum":1000,"progressMessage":"Configuring","progressMinimum":0,"type":"progress"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","inReplyTo":"configure","message":"Configuring incomplete, errors occurred!","type":"message"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: Configuring incomplete, errors occurred!
+CMAKE SERVER: Configuring incomplete, errors occurred!
+CMAKE SERVER: 
+
+CMAKE SERVER: [== "CMake Server" ==[
+
+CMAKE SERVER: {"cookie":"","errorMessage":"Configuration failed.","inReplyTo":"configure","type":"error"}
+
+CMAKE SERVER: ]== "CMake Server" ==]
+
+CMAKE SERVER: Configuration failed.

@@ -5,64 +5,6 @@ if (localPropertiesFile.exists()) {
 }
 def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
 
-buildscript {
-    repositories {
-        jcenter()
-        google()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
-        classpath("de.undercouch:gradle-download-task:4.0.4")
-    }
-}
-
-
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
-
-apply plugin: 'com.android.library'
-apply plugin: 'maven'
-apply plugin: 'de.undercouch.download'
-
-android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
-    defaultConfig {
-
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 29)
-        versionCode 1
-        versionName "1.0"
-        ndk {
-            moduleName("reanimated")
-        }
-        buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
-        buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-    }
-    lintOptions {
-        abortOnError false
-    }
-
-    packagingOptions {
-        println "Native libs debug enabled: ${debugNativeLibraries}"
-        doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-    }
-
-    tasks.withType(JavaCompile) {
-        compileTask ->
-            compileTask.dependsOn(packageNdkLibs)
-    }
-
-    configurations {
-        extractHeaders
-        extractJNI
-    }
-}
-
 import java.nio.file.Paths
 
 import de.undercouch.gradle.tasks.download.Download
@@ -88,6 +30,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNative = new File("$projectDir/../node_modules/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
+def HOME = System.getProperty("user.home")
+
 // You need to have following folders in this directory:
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
@@ -107,6 +51,94 @@ def follyReplaceContent = '''
   } while (r == -1 && errno == EINTR);
   return r;
 '''
+
+buildscript {
+    repositories {
+        jcenter()
+        google()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath('com.android.tools.build:gradle:4.1.2')
+        classpath("de.undercouch:gradle-download-task:4.0.4")
+    }
+}
+
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'de.undercouch.download'
+
+def tmpDir = File.createTempDir()
+
+android {
+    compileSdkVersion safeExtGet('compileSdkVersion', 29)
+    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+    defaultConfig {
+
+        minSdkVersion safeExtGet('minSdkVersion', 16)
+        targetSdkVersion safeExtGet('targetSdkVersion', 29)
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                arguments """-DANDROID_STL=c++_shared -DNDK_OUT=$tmpDir 
+                         -DNDK_LIBS_OUT=$buildDir/reanimated-ndk/all 
+                         -DTHIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk
+                         -DJSI_PATH=$projectDir/../node_modules/react-native/ReactCommon/jsi 
+                         -DREACT_COMMON_DIR=$reactNative/ReactCommon
+                         -DREACT_SRC_DIR=$reactNative/ReactAndroid/src/main/java/com/facebook/react 
+                         -DFIRST_PARTY=$reactNativeThirdParty/../first-party
+                         -DREACT_NATIVE_JNI=$reactNative/ReactAndroid/src/main/jni/react/jni 
+                         -DREACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react 
+                         -DNATIVE_DEBUG=${debugNativeLibraries}
+                         -DREACT_NATIVE_TARGET_VERSION= $REACT_VERSION
+                         -DANDROID_TOOLCHAIN=clang
+                         -DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
+                        """
+                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            }
+        }
+
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+
+        buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
+        buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    packagingOptions {
+        println "Native libs debug enabled: ${debugNativeLibraries}"
+        doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask ->
+            compileTask.dependsOn(packageNdkLibs)
+    }
+
+    configurations {
+        extractHeaders
+        extractJNI
+    }
+}
 
 task Log {
     print("building Reanimated2")
@@ -388,7 +420,7 @@ task extractJNIFiles {
     }
 }
 
-task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, prepareHermes, extractAARHeaders, extractJNIFiles], type: Exec) {
+/*task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog, prepareHermes, extractAARHeaders, extractJNIFiles], type: Exec) {
     inputs.dir("src/main/JNI")
     inputs.dir("src/main/cpp")
     inputs.dir("src/main/Common")
@@ -411,7 +443,7 @@ task buildReanimated(dependsOn: [prepareJSC, prepareBoost, prepareDoubleConversi
             "--jobs", project.findProperty("jobs") ?: Runtime.runtime.availableProcessors(),
             "REACT_NATIVE_TARGET_VERSION=" + REACT_VERSION
     )
-}
+}*/
 
 
 task cleanNdkLibs(type: Exec) {
@@ -428,7 +460,7 @@ task cleanNdkLibs(type: Exec) {
     }
 }
 
-task packageNdkLibs(dependsOn: buildReanimated, type: Copy) {
+task packageNdkLibs(/*dependsOn: buildReanimated,*/ type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
     if(REACT_VERSION < 64) {
@@ -438,8 +470,8 @@ task packageNdkLibs(dependsOn: buildReanimated, type: Copy) {
 }
 
 afterEvaluate {
-    clean.dependsOn(cleanNdkLibs)
-    preBuild.dependsOn(packageNdkLibs)
+   // clean.dependsOn(cleanNdkLibs)
+   // preBuild.dependsOn(packageNdkLibs)
 }
 
 repositories {
@@ -461,7 +493,8 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     api("com.facebook.fbjni:fbjni-java-only:0.0.3")
-    extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")
-    extractJNI("com.facebook.fbjni:fbjni:0.0.2")
+    implementation 'com.facebook.fbjni:fbjni:0.1.0'
+    //extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")
+    //extractJNI("com.facebook.fbjni:fbjni:0.0.2")
 }
 
