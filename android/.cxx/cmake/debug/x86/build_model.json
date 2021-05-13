@@ -84,7 +84,7 @@
   "originalCxxBuildFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86",
   "variant": {
     "buildSystemArgumentList": [
-      "\n                             -DANDROID_STL\u003dc++_shared \n                             -DNDK_OUT\u003d/var/folders/yr/tgtmb2fj6z528_3sqk3364hh0000gn/T/groovy-generated-2861514055368390083-tmpdir \n                             -DNDK_LIBS_OUT\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/reanimated-ndk/all \n                             -DTHIRD_PARTY_NDK_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk\n                             -DJSI_PATH\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi \n                             -DREACT_COMMON_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon\n                             -DREACT_SRC_DIR\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react \n                             -DFIRST_PARTY\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/third-party/../first-party\n                             -DREACT_NATIVE_JNI\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react/jni \n                             -DREACT_NATIVE_REACT\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/react \n                             -DNATIVE_DEBUG\u003dfalse\n                             -DREACT_NATIVE_TARGET_VERSION\u003d 64\n                             -DANDROID_TOOLCHAIN\u003dclang\n                             -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\n                            "
+      "\n                             -DANDROID_STL\u003dc++_shared \n                             -DNATIVE_DEBUG\u003dfalse\n                             -DREACT_NATIVE_TARGET_VERSION\u003d64\n                             -DANDROID_TOOLCHAIN\u003dclang\n                             -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\n                             -DBOOST_VERSION\u003d1_63_0\n                            "
     ],
     "buildTargetSet": [],
     "implicitBuildTargetSet": [],
@@ -195,7 +195,9 @@
     "variantName": "debug",
     "validAbiList": [
       "ARMEABI_V7A",
-      "X86"
+      "ARM64_V8A",
+      "X86",
+      "X86_64"
     ],
     "prefabDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/prefab",
     "prefabPackageDirectoryList": []

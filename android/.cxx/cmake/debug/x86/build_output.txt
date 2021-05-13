@@ -1,0 +1,8 @@
+CMake Warning at /Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt:38 (message):
+  
+  /Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/boost/boost_/boost
+
+
+{LIBRN_DIR}: 
+/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86
+Configuring done

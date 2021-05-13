@@ -31,31 +31,19 @@
   },
   {
     "level": "INFO",
-    "message": "- expected json /Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a/android_gradle_build.json file is not present, will remove stale json folder",
+    "message": "- a dependent build file changed",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
   {
     "level": "INFO",
-    "message": "- missing previous command file /Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a/build_command.txt, will remove stale json folder",
+    "message": "  - /Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
   {
     "level": "INFO",
-    "message": "- command changed from previous, will remove stale json folder",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "removing stale contents from \u0027/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a\u0027",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "created folder \u0027/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a\u0027",
+    "message": "keeping json folder \u0027/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a\u0027 but regenerating project",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
@@ -109,211 +97,13 @@
   },
   {
     "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Check for working C compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang\",\"type\":\"message\"}\n",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"CMake Warning at CMakeLists.txt:38 (message):\\n  \\n  /Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/boost/boost_/boost\\n\\n\",\"title\":\"Warning\",\"type\":\"message\"}\n",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
   {
-    "level": "INFO",
-    "message": "Check for working C compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":33,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Check for working C compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang -- works\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Check for working C compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang -- works",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting C compiler ABI info\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting C compiler ABI info",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":65,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting C compiler ABI info - done\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting C compiler ABI info - done",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting C compile features\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting C compile features",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":96,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":126,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":155,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting C compile features - done\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting C compile features - done",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Check for working CXX compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Check for working CXX compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":184,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Check for working CXX compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ -- works\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Check for working CXX compiler: /Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ -- works",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting CXX compiler ABI info\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting CXX compiler ABI info",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":211,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting CXX compiler ABI info - done\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting CXX compiler ABI info - done",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting CXX compile features\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting CXX compile features",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":237,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":262,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":287,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":311,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Detecting CXX compile features - done\",\"type\":\"message\"}\n",
-    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
-    "tag": "debug|armeabi-v7a"
-  },
-  {
-    "level": "INFO",
-    "message": "Detecting CXX compile features - done",
+    "level": "WARN",
+    "message": "CMake Warning at /Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt:38 (message):\n  \n  /Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/boost/boost_/boost\n",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
@@ -331,13 +121,115 @@
   },
   {
     "level": "INFO",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/armeabi-v7a\",\"type\":\"message\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/armeabi-v7a",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
     "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"progressCurrent\":1000,\"progressMaximum\":1000,\"progressMessage\":\"Configuring\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   },
   {
     "level": "INFO",
-    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"CMake Error: The following variables are used in this project, but they are set to NOTFOUND.\\nPlease set them or make sure they are set and tested correctly in the CMake files:\\nFBJNI_LIB\\n    linked by target \\\"reanimated\\\" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android\\nJSEXECUTOR_LIB\\n    linked by target \\\"reanimated\\\" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android\\n\",\"title\":\"Error\",\"type\":\"message\"}\n",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"message\":\"Configuring done\",\"type\":\"message\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "Configuring done",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"type\":\"reply\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"type\":\"compute\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"compute\",\"progressCurrent\":1000,\"progressMaximum\":1000,\"progressMessage\":\"Generating\",\"progressMinimum\":0,\"type\":\"progress\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"compute\",\"message\":\"Generating done\",\"type\":\"message\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "Generating done",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"cookie\":\"\",\"inReplyTo\":\"compute\",\"type\":\"reply\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"type\":\"cmakeInputs\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"buildFiles\":[{\"isCMake\":true,\"isTemporary\":false,\"sources\":[\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeSystemSpecificInitialize.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android-Initialize.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeSystemSpecificInformation.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeGenericSystem.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Linux.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/UnixPaths.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeCInformation.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeLanguageInformation.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/Clang-C.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/Clang.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/CMakeCommonCompilerMacros.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/GNU.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/CMakeCommonCompilerMacros.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android-Clang-C.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android-Clang.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeCommonLanguageInclude.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeCXXInformation.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeLanguageInformation.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/Clang-CXX.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Compiler/Clang.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android-Clang-CXX.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/Platform/Android-Clang.cmake\",\"../../../../Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10/Modules/CMakeCommonLanguageInclude.cmake\"]},{\"isCMake\":false,\"isTemporary\":false,\"sources\":[\"CMakeLists.txt\",\"../../../../Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\",\"../../../../Library/Android/sdk/ndk/20.1.5948944/build/cmake/platforms.cmake\"]},{\"isCMake\":false,\"isTemporary\":true,\"sources\":[\".cxx/cmake/debug/armeabi-v7a/CMakeFiles/3.10.2/CMakeSystem.cmake\",\".cxx/cmake/debug/armeabi-v7a/CMakeFiles/3.10.2/CMakeCCompiler.cmake\",\".cxx/cmake/debug/armeabi-v7a/CMakeFiles/3.10.2/CMakeCXXCompiler.cmake\"]}],\"cmakeRootDirectory\":\"/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/share/cmake-3.10\",\"cookie\":\"\",\"inReplyTo\":\"cmakeInputs\",\"sourceDirectory\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android\",\"type\":\"reply\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"type\":\"codemodel\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "{\"configurations\":[{\"name\":\"Debug\",\"projects\":[{\"buildDirectory\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a\",\"name\":\"Project\",\"sourceDirectory\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android\",\"targets\":[{\"artifacts\":[\"/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/armeabi-v7a/libreanimated.so\"],\"buildDirectory\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a\",\"fileGroups\":[{\"compileFlags\":\"-DFOLLY_NO_CONFIG\u003d1 -DFOLLY_HAVE_CLOCK_GETTIME\u003d1 -DFOLLY_HAVE_MEMRCHR\u003d1 -DFOLLY_USE_LIBCPP\u003d1 -DFOLLY_MOBILE\u003d1 -DON_ANDROID -DONANDROID -O0 -fno-limit-debug-info  -fPIC   -std\u003dgnu++14\",\"defines\":[\"reanimated_EXPORTS\"],\"includePath\":[{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/../../fbjni/headers\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/boost/boost_/boost\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/double-conversion\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/folly\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/build/third-party-ndk/glog\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/React\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/React/Base\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/jni\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/callinvoker\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/jsi\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/turbomodule/core\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/../node_modules/react-native/ReactCommon/turbomodule\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/headers/Tools\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/headers/SpecTools\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/headers/NativeModules\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/headers/SharedItems\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/headers/Registries\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/Common/cpp/hidden_headers\"},{\"path\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android/./src/main/cpp/headers\"}],\"isGenerated\":false,\"language\":\"CXX\",\"sources\":[\"src/main/Common/cpp/NativeModules/NativeReanimatedModule.cpp\",\"src/main/Common/cpp/NativeModules/NativeReanimatedModuleSpec.cpp\",\"src/main/Common/cpp/SharedItems/FrozenObject.cpp\",\"src/main/Common/cpp/SharedItems/MutableValue.cpp\",\"src/main/Common/cpp/SharedItems/MutableValueSetterProxy.cpp\",\"src/main/Common/cpp/SharedItems/RemoteObject.cpp\",\"src/main/Common/cpp/SharedItems/ShareableValue.cpp\",\"src/main/Common/cpp/Registries/EventHandlerRegistry.cpp\",\"src/main/Common/cpp/Registries/MapperRegistry.cpp\",\"src/main/Common/cpp/Registries/WorkletsCache.cpp\",\"src/main/cpp/AndroidErrorHandler.cpp\",\"src/main/cpp/AndroidLogger.cpp\",\"src/main/cpp/AndroidScheduler.cpp\",\"src/main/cpp/NativeProxy.cpp\",\"src/main/cpp/OnLoad.cpp\",\"src/main/cpp/TurboModule.cpp\"]}],\"fullName\":\"libreanimated.so\",\"linkFlags\":\"-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -static-libstdc++ -Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--exclude-libs,libunwind.a -Wl,--no-undefined -Qunused-arguments -Wl,-z,noexecstack\",\"linkLibraries\":\"-llog -ljscexecutor -lfbjni -landroid -latomic -lm\",\"linkPath\":\"-L/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/armeabi-v7a\",\"linkerLanguage\":\"CXX\",\"name\":\"reanimated\",\"sourceDirectory\":\"/Users/szymonkapala/work/rea/react-native-reanimated/android\",\"sysroot\":\"/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/sysroot\",\"type\":\"SHARED_LIBRARY\"}]}]}],\"cookie\":\"\",\"inReplyTo\":\"codemodel\",\"type\":\"reply\"}\n",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "done executing cmake",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "write build output /Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a/build_output.txt",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "write command file /Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a/build_command.txt",
+    "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "JSON generation completed without problems",
     "file": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
     "tag": "debug|armeabi-v7a"
   }

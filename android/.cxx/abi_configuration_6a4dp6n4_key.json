@@ -11,7 +11,12 @@
     "X86",
     "X86_64"
   ],
-  "externalNativeBuildAbiFilters": [],
+  "externalNativeBuildAbiFilters": [
+    "x86_64",
+    "x86",
+    "armeabi-v7a",
+    "arm64-v8a"
+  ],
   "ndkConfigAbiFilters": [],
   "splitsFilterAbis": [],
   "ideBuildOnlyTargetAbi": true

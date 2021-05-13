@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
+    "/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
+    "/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/platforms.cmake"
+  ],
+  "cleanCommands": [
+    "/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja -C \"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86\" clean"
+  ],
+  "buildTargetsCommand": "/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja  -C \"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "reanimated-Debug-x86": {
+      "artifactName": "reanimated",
+      "buildCommand": "/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja -C \"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86\" reanimated",
+      "abi": "x86",
+      "output": "/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/x86/libreanimated.so",
+      "runtimeFiles": []
+    }
+  }
+}

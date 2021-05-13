@@ -97,26 +97,14 @@ android {
             cmake {
                 arguments """
                              -DANDROID_STL=c++_shared 
-                             -DNDK_OUT=$tmpDir 
-                             -DNDK_LIBS_OUT=$buildDir/reanimated-ndk/all 
-                             -DTHIRD_PARTY_NDK_DIR=$buildDir/third-party-ndk
-                             -DJSI_PATH=$projectDir/../node_modules/react-native/ReactCommon/jsi 
-                             -DREACT_COMMON_DIR=$reactNative/ReactCommon
-                             -DREACT_SRC_DIR=$reactNative/ReactAndroid/src/main/java/com/facebook/react 
-                             -DFIRST_PARTY=$reactNativeThirdParty/../first-party
-                             -DREACT_NATIVE_JNI=$reactNative/ReactAndroid/src/main/jni/react/jni 
-                             -DREACT_NATIVE_REACT=$reactNative/ReactAndroid/src/main/jni/react 
                              -DNATIVE_DEBUG=${debugNativeLibraries}
-                             -DREACT_NATIVE_TARGET_VERSION= $REACT_VERSION
+                             -DREACT_NATIVE_TARGET_VERSION=$REACT_VERSION
                              -DANDROID_TOOLCHAIN=clang
                              -DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
+                             -DBOOST_VERSION=${BOOST_VERSION}
                             """
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
             }
-        }
-
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
         }
 
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
@@ -478,9 +466,5 @@ tasks.whenTaskAdded { task ->
         extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
         task.dependsOn(extractAARHeaders)
         task.dependsOn(extractSOFiles)
-    }
-
-    if (task.name.contains('prepareKotlinBuildScriptModel')) {
-        task.dependsOn('externalNativeBuild')
     }
 }

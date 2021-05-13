@@ -1,0 +1,21 @@
+                Executable : /Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/cmake
+arguments : 
+-H/Users/szymonkapala/work/rea/react-native-reanimated/android
+-DCMAKE_FIND_ROOT_PATH=/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/prefab/armeabi-v7a/prefab
+-DCMAKE_BUILD_TYPE=Debug
+-DCMAKE_TOOLCHAIN_FILE=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
+-DANDROID_ABI=armeabi-v7a
+-DANDROID_NDK=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944
+-DANDROID_PLATFORM=android-21
+-DCMAKE_ANDROID_ARCH_ABI=armeabi-v7a
+-DCMAKE_ANDROID_NDK=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/armeabi-v7a
+-DCMAKE_MAKE_PROGRAM=/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_SYSTEM_VERSION=21
+-B/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a
+-GNinja
+jvmArgs : 
+
+Build command args:
