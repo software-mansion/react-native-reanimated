@@ -1,79 +1,98 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
-
-# Sets the minimum version of CMake required to build the native library.
-
 cmake_minimum_required(VERSION 3.4.1)
 
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds them for you.
-# Gradle automatically packages shared libraries with your APK.
+set (CMAKE_VERBOSE_MAKEFILE ON)
+set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID")
 
-set(build_DIR ${CMAKE_SOURCE_DIR}/build)
-set(PACKAGE_NAME "reanimated")
+set (PACKAGE_NAME "reanimated")
+set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+set (NODE_MODULES_DIR "../node_modules")
+set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
+set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
-    #THIS RESULTS IN AN ERROR:
-    #Could not find a package configuration file provided by "fbjni" with any of
-    #the following names:
-    #
-    #fbjniConfig.cmake
-    #fbjni-config.cmake
-    #
-    #Add the installation prefix of "fbjni" to CMAKE_PREFIX_PATH or set
-    #"fbjni_DIR" to a directory containing one of the above files.  If "fbjni"
-    #provides a separate development package or SDK, be sure it has been
-    #installed.
-
-message("REA cmake oooooo!")
-
-find_package(folly REQUIRED CONFIG)
-find_package(fb REQUIRED CONFIG)
-find_package(fbjni REQUIRED CONFIG)
-find_package(fbgloginit REQUIRED CONFIG)
-find_package(yogajni REQUIRED CONFIG)
-find_package(cxxreact REQUIRED CONFIG)
-find_package(jsi REQUIRED CONFIG)
-find_package(jsiexecutor REQUIRED CONFIG)
-find_package(callinvoker REQUIRED CONFIG)
-find_package(hermes REQUIRED CONFIG)
-
-include_directories(
-        ../../node_modules/react-native/React
-        ../../node_modules/react-native/React/Base
-        ../../node_modules/react-native/ReactCommon
-        ../../node_modules/react-native/ReactCommon/jsi
-        ../../node_modules/react-native/ReactCommon/callinvoker
-        ../../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni/ReactCommon
-        ../../node_modules/react-native/ReactCommon/turbomodule/core
-        ../../node_modules/react-native/ReactCommon/turbomodule
-        ./src/cpp/
-)
-
-add_library( # Sets the name of the library.
-        ${PACKAGE_NAME}
-        # Sets the library as a shared library.
-        SHARED
-        # Provides a relative path to your source file(s).
-        ../../node_modules/react-native/ReactCommon/jsi/jsi/jsi.cpp
-        ../../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni/ReactCommon/CallInvokerHolder.cpp
-        ../../node_modules/react-native/ReactCommon/turbomodule/core/TurboModule.cpp
-        ./src/cpp/NativeModules.cpp
-        ./src/cpp/TrimNativeModule.cpp
-        ./src/cpp/jsiInstaller.cpp
-        )
-
-target_link_libraries(${PACKAGE_NAME}
-        fbjni::fbjni
-        android
-        log
-)
-
+# reanimated shared
 
 add_library(
-        turbomodulejsijni
-        # Sets the library as a shared library.
+        ${PACKAGE_NAME}
         SHARED
-        # Provides a relative path to your source file(s).
-        ./src/cpp/empty.cpp
+        "./src/main/Common/cpp/Tools"
+        "./src/main/Common/cpp/SpecTools"
+        "./src/main/Common/cpp/SharedItems"
+        "./src/main/Common/cpp/Registries"
+        "./src/main/cpp"
+)
+
+# includes
+
+file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
+
+target_include_directories(
+        ${PACKAGE_NAME}
+        PRIVATE
+        ${LIBFBJNI_INCLUDE_DIR}
+        ${BUILD_DIR}/third-party-ndk/boost
+        ${BUILD_DIR}/third-party-ndk/double-conversion
+        ${BUILD_DIR}/third-party-ndk/folly
+        ${BUILD_DIR}/third-party-ndk/glog
+        "${NODE_MODULES_DIR}/react-native/React"
+        "${NODE_MODULES_DIR}/react-native/React/Base"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "./src/main/Common/cpp/Tools/headers"
+        "./src/main/Common/cpp/SpecTools/headers"
+        "./src/main/Common/cpp/SharedItems/headers"
+        "./src/main/Common/cpp/Registries/headers"
+        "./src/main/cpp/headers"
+)
+
+# find libraries
+
+file (GLOB LIBRN_DIR " ${RN_SO_DIR}/${ANDROID_ABI}")
+file (GLOB LIBJSC_DIR " ${RN_SO_DIR}/${ANDROID_ABI}")
+
+message(STATUS "{LIBRN_DIR}: ")
+message(STATUS ${LIBRN_DIR})
+
+find_library(
+        LOG_LIB
+        log
+)
+find_library(
+        FBJNI_LIB
+        fbjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        JSEXECUTOR_LIB
+        jscexecutor
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        JSC_LIB
+        jsc
+        PATHS ${LIBJSC_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+# linking
+
+find_library(
+        FBJNI_LIBRARY fbjni
+        PATHS ${libfbjni_link_DIRS}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+# build shared lib
+
+target_link_libraries(
+        ${PACKAGE_NAME}
+        ${LOG_LIB}
+        ${JSEXECUTOR_LIB}
+        ${FBJNI_LIB}
+        android
 )

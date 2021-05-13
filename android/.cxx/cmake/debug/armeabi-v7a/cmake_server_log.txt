@@ -17,7 +17,7 @@ CMAKE SERVER: {
     "minor": 1
   },
   "sourceDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android",
-  "buildDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86",
+  "buildDirectory": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a",
   "generator": "Ninja"
 }
 
@@ -37,16 +37,16 @@ CMAKE SERVER: {
   "type": "configure",
   "cacheArguments": [
     "",
-    "-DCMAKE_FIND_ROOT_PATH\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/prefab/x86/prefab",
+    "-DCMAKE_FIND_ROOT_PATH\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/prefab/armeabi-v7a/prefab",
     "-DCMAKE_BUILD_TYPE\u003dDebug",
     "-DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
-    "-DANDROID_ABI\u003dx86",
+    "-DANDROID_ABI\u003darmeabi-v7a",
     "-DANDROID_NDK\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944",
     "-DANDROID_PLATFORM\u003dandroid-21",
-    "-DCMAKE_ANDROID_ARCH_ABI\u003dx86",
+    "-DCMAKE_ANDROID_ARCH_ABI\u003darmeabi-v7a",
     "-DCMAKE_ANDROID_NDK\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944",
     "-DCMAKE_EXPORT_COMPILE_COMMANDS\u003dON",
-    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/x86",
+    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY\u003d/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/armeabi-v7a",
     "-DCMAKE_MAKE_PROGRAM\u003d/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
     "-DCMAKE_SYSTEM_NAME\u003dAndroid",
     "-DCMAKE_SYSTEM_VERSION\u003d21"
@@ -295,30 +295,3 @@ FBJNI_LIB
     linked by target "reanimated" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android
 JSEXECUTOR_LIB
     linked by target "reanimated" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android
-CMAKE SERVER: CMake Error: The following variables are used in this project, but they are set to NOTFOUND.
-Please set them or make sure they are set and tested correctly in the CMake files:
-FBJNI_LIB
-    linked by target "reanimated" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android
-JSEXECUTOR_LIB
-    linked by target "reanimated" in directory /Users/szymonkapala/work/rea/react-native-reanimated/android
-CMAKE SERVER: 
-
-CMAKE SERVER: [== "CMake Server" ==[
-
-CMAKE SERVER: {"cookie":"","inReplyTo":"configure","message":"Configuring incomplete, errors occurred!\nSee also \"/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86/CMakeFiles/CMakeOutput.log\".","type":"message"}
-
-CMAKE SERVER: ]== "CMake Server" ==]
-
-CMAKE SERVER: Configuring incomplete, errors occurred!
-See also "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86/CMakeFiles/CMakeOutput.log".
-CMAKE SERVER: Configuring incomplete, errors occurred!
-See also "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86/CMakeFiles/CMakeOutput.log".
-CMAKE SERVER: 
-
-CMAKE SERVER: [== "CMake Server" ==[
-
-CMAKE SERVER: {"cookie":"","errorMessage":"Configuration failed.","inReplyTo":"configure","type":"error"}
-
-CMAKE SERVER: ]== "CMake Server" ==]
-
-CMAKE SERVER: Configuration failed.
