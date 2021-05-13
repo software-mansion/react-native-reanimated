@@ -84,7 +84,7 @@
   "originalCxxBuildFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/arm64-v8a",
   "variant": {
     "buildSystemArgumentList": [
-      "\n                             -DANDROID_STL\u003dc++_shared \n                             -DNATIVE_DEBUG\u003dfalse\n                             -DREACT_NATIVE_TARGET_VERSION\u003d 64\n                             -DANDROID_TOOLCHAIN\u003dclang\n                             -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\n                             -DCMAKE_EXPORT_COMPILE_COMMANDS\n                             -DBOOST_VERSION\u003d1_63_0\n                            "
+      "\n                             -DANDROID_STL\u003dc++_shared \n                             -DNATIVE_DEBUG\u003dfalse\n                             -DREACT_NATIVE_TARGET_VERSION\u003d64\n                             -DANDROID_TOOLCHAIN\u003dclang\n                             -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\n                             -DBOOST_VERSION\u003d1_63_0\n                            "
     ],
     "buildTargetSet": [],
     "implicitBuildTargetSet": [],

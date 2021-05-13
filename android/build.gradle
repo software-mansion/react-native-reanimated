@@ -95,14 +95,12 @@ android {
         versionName "1.0"
         externalNativeBuild {
             cmake {
-                arguments """
-                             -DANDROID_STL=c++_shared 
-                             -DNATIVE_DEBUG=${debugNativeLibraries}
-                             -DREACT_NATIVE_TARGET_VERSION=$REACT_VERSION
-                             -DANDROID_TOOLCHAIN=clang
-                             -DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
-                             -DBOOST_VERSION=${BOOST_VERSION}
-                            """
+                arguments "-DANDROID_STL=c++_shared",
+                             "-DNATIVE_DEBUG=${debugNativeLibraries}",
+                             "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
+                             "-DANDROID_TOOLCHAIN=clang",
+                             "-DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
+                             "-DBOOST_VERSION=${BOOST_VERSION}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
             }
         }
