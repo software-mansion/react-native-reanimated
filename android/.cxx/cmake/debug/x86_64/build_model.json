@@ -28,10 +28,6 @@
           "value": "Debug"
         },
         {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake"
-        },
-        {
           "name": "ANDROID_ABI",
           "value": "x86_64"
         },
@@ -70,6 +66,30 @@
         {
           "name": "CMAKE_SYSTEM_VERSION",
           "value": "21"
+        },
+        {
+          "name": "ANDROID_STL",
+          "value": "c++_shared"
+        },
+        {
+          "name": "NATIVE_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "REACT_NATIVE_TARGET_VERSION",
+          "value": "64"
+        },
+        {
+          "name": "ANDROID_TOOLCHAIN",
+          "value": "clang"
+        },
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake"
+        },
+        {
+          "name": "BOOST_VERSION",
+          "value": "1_63_0"
         }
       ]
     }
@@ -84,7 +104,12 @@
   "originalCxxBuildFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86_64",
   "variant": {
     "buildSystemArgumentList": [
-      "\n                             -DANDROID_STL\u003dc++_shared \n                             -DNATIVE_DEBUG\u003dfalse\n                             -DREACT_NATIVE_TARGET_VERSION\u003d64\n                             -DANDROID_TOOLCHAIN\u003dclang\n                             -DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake\n                             -DBOOST_VERSION\u003d1_63_0\n                            "
+      "-DANDROID_STL\u003dc++_shared",
+      "-DNATIVE_DEBUG\u003dfalse",
+      "-DREACT_NATIVE_TARGET_VERSION\u003d64",
+      "-DANDROID_TOOLCHAIN\u003dclang",
+      "-DCMAKE_TOOLCHAIN_FILE\u003d/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
+      "-DBOOST_VERSION\u003d1_63_0"
     ],
     "buildTargetSet": [],
     "implicitBuildTargetSet": [],

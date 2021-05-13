@@ -24,6 +24,15 @@ ANDROID_NDK:UNINITIALIZED=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.59489
 ANDROID_PLATFORM:UNINITIALIZED=android-21
 
 //No help, variable specified on the command line.
+ANDROID_STL:UNINITIALIZED=c++_shared
+
+//No help, variable specified on the command line.
+ANDROID_TOOLCHAIN:UNINITIALIZED=clang
+
+//No help, variable specified on the command line.
+BOOST_VERSION:UNINITIALIZED=1_63_0
+
+//No help, variable specified on the command line.
 CMAKE_ANDROID_ARCH_ABI:UNINITIALIZED=armeabi-v7a
 
 //No help, variable specified on the command line.
@@ -201,8 +210,8 @@ CMAKE_SYSTEM_NAME:UNINITIALIZED=Android
 //No help, variable specified on the command line.
 CMAKE_SYSTEM_VERSION:UNINITIALIZED=21
 
-//No help, variable specified on the command line.
-CMAKE_TOOLCHAIN_FILE:UNINITIALIZED=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
+//The CMake toolchain file
+CMAKE_TOOLCHAIN_FILE:FILEPATH=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
 
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
@@ -225,11 +234,17 @@ JSEXECUTOR_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/nod
 //Path to a library.
 LOG_LIB:FILEPATH=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/21/liblog.so
 
+//No help, variable specified on the command line.
+NATIVE_DEBUG:UNINITIALIZED=false
+
 //Value Computed by CMake
 Project_BINARY_DIR:STATIC=/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/armeabi-v7a
 
 //Value Computed by CMake
 Project_SOURCE_DIR:STATIC=/Users/szymonkapala/work/rea/react-native-reanimated/android
+
+//No help, variable specified on the command line.
+REACT_NATIVE_TARGET_VERSION:UNINITIALIZED=64
 
 //Dependencies for the target
 reanimated_LIB_DEPENDS:STATIC=general;/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/21/liblog.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/armeabi-v7a/libjscexecutor.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/armeabi-v7a/libfbjni.so;general;android;
