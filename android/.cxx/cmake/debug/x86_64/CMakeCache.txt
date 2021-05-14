@@ -21,7 +21,7 @@ ANDROID_ABI:UNINITIALIZED=x86_64
 ANDROID_NDK:UNINITIALIZED=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944
 
 //No help, variable specified on the command line.
-ANDROID_PLATFORM:UNINITIALIZED=android-21
+ANDROID_PLATFORM:UNINITIALIZED=android-16
 
 //No help, variable specified on the command line.
 ANDROID_STL:UNINITIALIZED=c++_shared
@@ -208,7 +208,7 @@ CMAKE_STRIP:FILEPATH=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/to
 CMAKE_SYSTEM_NAME:UNINITIALIZED=Android
 
 //No help, variable specified on the command line.
-CMAKE_SYSTEM_VERSION:UNINITIALIZED=21
+CMAKE_SYSTEM_VERSION:UNINITIALIZED=16
 
 //The CMake toolchain file
 CMAKE_TOOLCHAIN_FILE:FILEPATH=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake
@@ -226,7 +226,10 @@ FBJNI_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_mod
 FBJNI_LIBRARY:FILEPATH=FBJNI_LIBRARY-NOTFOUND
 
 //Path to a library.
-JSC_LIB:FILEPATH=JSC_LIB-NOTFOUND
+FB_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfb.so
+
+//Path to a library.
+FOLLY_JSON_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfolly_json.so
 
 //Path to a library.
 JSEXECUTOR_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libjscexecutor.so
@@ -243,11 +246,20 @@ Project_BINARY_DIR:STATIC=/Users/szymonkapala/work/rea/react-native-reanimated/a
 //Value Computed by CMake
 Project_SOURCE_DIR:STATIC=/Users/szymonkapala/work/rea/react-native-reanimated/android
 
+//Path to a library.
+REACT_NATIVE_JNI_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativejni.so
+
 //No help, variable specified on the command line.
 REACT_NATIVE_TARGET_VERSION:UNINITIALIZED=64
 
+//Path to a library.
+REACT_NATIVE_UTILS_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativeutilsjni.so
+
+//Path to a library.
+RN_BLOB_LIB:FILEPATH=/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativeblob.so
+
 //Dependencies for the target
-reanimated_LIB_DEPENDS:STATIC=general;/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libjscexecutor.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfbjni.so;general;android;
+reanimated_LIB_DEPENDS:STATIC=general;/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/21/liblog.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libjscexecutor.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfbjni.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfolly_json.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativejni.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativeutilsjni.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libfb.so;general;/Users/szymonkapala/work/rea/react-native-reanimated/node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni/x86_64/libreactnativeblob.so;general;android;
 
 
 ########################

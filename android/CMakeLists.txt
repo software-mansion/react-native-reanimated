@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID")
+set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
@@ -24,11 +24,16 @@ file(GLOB sources_android  "./src/main/cpp/*.cpp")
 add_library(
         ${PACKAGE_NAME}
         SHARED
-        ${source_tools}
         ${sources_native_modules}
         ${sources_shared_items}
         ${sources_registries}
         ${sources_android}
+        ${source_tools}
+        "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
+        "./src/main/Common/cpp/Tools/Mapper.cpp"
+        "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
+        "./src/main/Common/cpp/Tools/Scheduler.cpp"
+        "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
 )
 
 # includes
@@ -40,18 +45,17 @@ message(WARNING "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}/boost
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
-        ${LIBFBJNI_INCLUDE_DIR}
-        ${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}/boost
-        ${BUILD_DIR}/third-party-ndk/double-conversion
-        ${BUILD_DIR}/third-party-ndk/folly
-        ${BUILD_DIR}/third-party-ndk/glog
+        "${LIBFBJNI_INCLUDE_DIR}"
+        "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
+        "${BUILD_DIR}/third-party-ndk/double-conversion"
+        "${BUILD_DIR}/third-party-ndk/folly"
+        "${BUILD_DIR}/third-party-ndk/glog"
         "${NODE_MODULES_DIR}/react-native/React"
         "${NODE_MODULES_DIR}/react-native/React/Base"
         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
         "${NODE_MODULES_DIR}/react-native/ReactCommon"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
@@ -67,7 +71,6 @@ target_include_directories(
 # find libraries
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
-file (GLOB LIBJSC_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 
 message(STATUS "{LIBRN_DIR}: ")
 message(STATUS ${LIBRN_DIR})
@@ -89,12 +92,18 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        JSC_LIB
-        jsc
-        PATHS ${LIBJSC_DIR}
+        FOLLY_JSON_LIB
+        folly_json
+        PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-# linking
+
+find_library(
+        REACT_NATIVE_JNI_LIB
+        reactnativejni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 
 find_library(
         FBJNI_LIBRARY fbjni
@@ -102,6 +111,26 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
+find_library(
+        REACT_NATIVE_UTILS_LIB
+        reactnativeutilsjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+find_library(
+        FB_LIB
+        fb
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+find_library(
+        RN_BLOB_LIB
+        reactnativeblob
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -111,5 +140,10 @@ target_link_libraries(
         ${LOG_LIB}
         ${JSEXECUTOR_LIB}
         ${FBJNI_LIB}
+        ${FOLLY_JSON_LIB}
+        ${REACT_NATIVE_JNI_LIB}
+        ${REACT_NATIVE_UTILS_LIB}
+        ${FB_LIB}
+        ${RN_BLOB_LIB}
         android
 )

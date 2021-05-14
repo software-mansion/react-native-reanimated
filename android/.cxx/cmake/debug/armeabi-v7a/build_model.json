@@ -1,6 +1,6 @@
 {
   "abi": "ARMEABI_V7A",
-  "abiPlatformVersion": 21,
+  "abiPlatformVersion": 16,
   "buildSettings": {
     "environmentVariables": []
   },
@@ -37,7 +37,7 @@
         },
         {
           "name": "ANDROID_PLATFORM",
-          "value": "android-21"
+          "value": "android-16"
         },
         {
           "name": "CMAKE_ANDROID_ARCH_ABI",
@@ -65,7 +65,7 @@
         },
         {
           "name": "CMAKE_SYSTEM_VERSION",
-          "value": "21"
+          "value": "16"
         },
         {
           "name": "ANDROID_STL",
@@ -126,7 +126,7 @@
       },
       "cmakeToolchainFile": "/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
       "cxxFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx",
-      "gradleModulePathName": ":react-native-reanimated",
+      "gradleModulePathName": ":",
       "intermediatesFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates",
       "makeFile": "/Users/szymonkapala/work/rea/react-native-reanimated/android/CMakeLists.txt",
       "moduleBuildFile": "/Users/szymonkapala/work/rea/react-native-reanimated/android/build.gradle",
@@ -194,12 +194,12 @@
       "ndkDefaultStl": "LIBCXX_STATIC",
       "ndkVersion": "20.1.5948944",
       "project": {
-        "compilerSettingsCacheFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/Example/android/.cxx",
-        "cxxFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/Example/android/.cxx",
+        "compilerSettingsCacheFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx",
+        "cxxFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx",
         "isBuildOnlyTargetAbiEnabled": true,
         "isCmakeBuildCohabitationEnabled": false,
         "isNativeCompilerSettingsCacheEnabled": false,
-        "rootBuildGradleFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/Example/android",
+        "rootBuildGradleFolder": "/Users/szymonkapala/work/rea/react-native-reanimated/android",
         "sdkFolder": "/Users/szymonkapala/Library/Android/sdk",
         "isPrefabEnabled": false
       },

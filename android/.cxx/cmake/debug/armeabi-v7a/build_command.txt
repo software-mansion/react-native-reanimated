@@ -5,14 +5,14 @@ arguments :
 -DCMAKE_BUILD_TYPE=Debug
 -DANDROID_ABI=armeabi-v7a
 -DANDROID_NDK=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944
--DANDROID_PLATFORM=android-21
+-DANDROID_PLATFORM=android-16
 -DCMAKE_ANDROID_ARCH_ABI=armeabi-v7a
 -DCMAKE_ANDROID_NDK=/Users/szymonkapala/Library/Android/sdk/ndk/20.1.5948944
 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/szymonkapala/work/rea/react-native-reanimated/android/build/intermediates/cmake/debug/obj/armeabi-v7a
 -DCMAKE_MAKE_PROGRAM=/Users/szymonkapala/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja
 -DCMAKE_SYSTEM_NAME=Android
--DCMAKE_SYSTEM_VERSION=21
+-DCMAKE_SYSTEM_VERSION=16
 -DANDROID_STL=c++_shared
 -DNATIVE_DEBUG=false
 -DREACT_NATIVE_TARGET_VERSION=64
