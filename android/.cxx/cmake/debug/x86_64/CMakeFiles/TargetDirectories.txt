@@ -1,3 +1,0 @@
-/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86_64/CMakeFiles/rebuild_cache.dir
-/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86_64/CMakeFiles/edit_cache.dir
-/Users/szymonkapala/work/rea/react-native-reanimated/android/.cxx/cmake/debug/x86_64/CMakeFiles/reanimated.dir

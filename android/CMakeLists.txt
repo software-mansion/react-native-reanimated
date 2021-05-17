@@ -85,12 +85,12 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-find_library(
-        JSEXECUTOR_LIB
-        jscexecutor
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
+#find_library(
+#        JSEXECUTOR_LIB
+#        jscexecutor
+#        PATHS ${LIBRN_DIR}
+#        NO_CMAKE_FIND_ROOT_PATH
+#)
 find_library(
         FOLLY_JSON_LIB
         folly_json
@@ -138,7 +138,7 @@ set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(
         ${PACKAGE_NAME}
         ${LOG_LIB}
-        ${JSEXECUTOR_LIB}
+#        ${JSEXECUTOR_LIB}
         ${FBJNI_LIB}
         ${FOLLY_JSON_LIB}
         ${REACT_NATIVE_JNI_LIB}
