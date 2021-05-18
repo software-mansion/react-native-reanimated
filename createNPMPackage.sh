@@ -12,18 +12,19 @@ version_name=("64" "63" "62")
 for index in {0..2}
 do
   yarn add react-native@"${versions[$index]}"
-  for for_hermes in ["True", "False"]
+  for for_hermes in "True" "False"
   do
+    engine="jsc"
+    if [ "$for_hermes" == "True" ]; then
+      engine="hermes"
+    fi
+    echo "engine=${engine}"
+
     cd android 
     gradle clean
 
     FOR_HERMES=${for_hermes} gradle :assembleDebug
     cd $ROOT
-
-    engine="jsc"
-    if [[for_hermes == "True"]]; then
-      engine="hermes"
-    fi
 
     rm -rf android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
     cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar

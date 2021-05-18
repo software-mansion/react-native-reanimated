@@ -40,8 +40,6 @@ add_library(
 
 file (GLOB LIBFBJNI_INCLUDE_DIR ${FBJNI_HEADERS_DIR})
 
-message(WARNING "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}/boost")
-
 target_include_directories(
         ${PACKAGE_NAME}
         PRIVATE
@@ -120,6 +118,8 @@ find_library(
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
     target_link_libraries(
