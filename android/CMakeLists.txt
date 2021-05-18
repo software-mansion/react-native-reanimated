@@ -71,6 +71,7 @@ target_include_directories(
 # find libraries
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
+file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
 message(STATUS "{LIBRN_DIR}: ")
 message(STATUS ${LIBRN_DIR})
@@ -83,6 +84,12 @@ find_library(
         FBJNI_LIB
         fbjni
         PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        HERMES_LIB
+        hermes
+        PATHS ${HERMES_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
 #find_library(
@@ -141,9 +148,10 @@ target_link_libraries(
 #        ${JSEXECUTOR_LIB}
         ${FBJNI_LIB}
         ${FOLLY_JSON_LIB}
+        ${HERMES_LIB}
         ${REACT_NATIVE_JNI_LIB}
-        ${REACT_NATIVE_UTILS_LIB}
-        ${FB_LIB}
-        ${RN_BLOB_LIB}
+       # ${REACT_NATIVE_UTILS_LIB}
+       # ${FB_LIB}
+       # ${RN_BLOB_LIB}
         android
 )
