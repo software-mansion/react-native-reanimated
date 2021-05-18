@@ -31,6 +31,7 @@ def reactNative = new File("$projectDir/../node_modules/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def HOME = System.getProperty("user.home")
+def FOR_HERMES = System.getenv("FOR_HERMES") ? System.getenv("FOR_HERMES") : "True";
 
 // You need to have following folders in this directory:
 //   - boost_1_63_0
@@ -77,7 +78,6 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'de.undercouch.download'
@@ -100,7 +100,8 @@ android {
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
                              "-DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
-                             "-DBOOST_VERSION=${BOOST_VERSION}"
+                             "-DBOOST_VERSION=${BOOST_VERSION}",
+                             "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
             }
         }

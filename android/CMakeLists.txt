@@ -92,12 +92,12 @@ find_library(
         PATHS ${HERMES_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-#find_library(
-#        JSEXECUTOR_LIB
-#        jscexecutor
-#        PATHS ${LIBRN_DIR}
-#        NO_CMAKE_FIND_ROOT_PATH
-#)
+find_library(
+        JSEXECUTOR_LIB
+        jscexecutor
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 find_library(
         FOLLY_JSON_LIB
         folly_json
@@ -117,41 +117,39 @@ find_library(
         PATHS ${libfbjni_link_DIRS}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
-find_library(
-        REACT_NATIVE_UTILS_LIB
-        reactnativeutilsjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-find_library(
-        FB_LIB
-        fb
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-
-find_library(
-        RN_BLOB_LIB
-        reactnativeblob
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(
-        ${PACKAGE_NAME}
-        ${LOG_LIB}
-#        ${JSEXECUTOR_LIB}
-        ${FBJNI_LIB}
-        ${FOLLY_JSON_LIB}
-        ${HERMES_LIB}
-        ${REACT_NATIVE_JNI_LIB}
-       # ${REACT_NATIVE_UTILS_LIB}
-       # ${FB_LIB}
-       # ${RN_BLOB_LIB}
-        android
-)
+if(${FOR_HERMES})
+    target_link_libraries(
+            ${PACKAGE_NAME}
+            ${LOG_LIB}
+
+            ${FBJNI_LIB}
+            ${FOLLY_JSON_LIB}
+            ${HERMES_LIB}
+            ${REACT_NATIVE_JNI_LIB}
+            android
+    )
+else()
+    target_link_libraries(
+            ${PACKAGE_NAME}
+            ${LOG_LIB}
+            ${JSEXECUTOR_LIB}
+            ${FBJNI_LIB}
+            ${FOLLY_JSON_LIB}
+            ${REACT_NATIVE_JNI_LIB}
+            android
+    )
+endif()
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+    add_library(
+            turbomodulejsijni
+            # Sets the library as a shared library.
+            SHARED
+            # Provides a relative path to your source file(s).
+            ./empty.cpp
+    )
+endif()
