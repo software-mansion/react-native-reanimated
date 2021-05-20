@@ -21,6 +21,10 @@ file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
 file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
 file(GLOB sources_android  "./src/main/cpp/*.cpp")
 
+if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+    set (JSI_PATH_FOR_RN_LESS_64 ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp)
+endif()
+
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -29,6 +33,8 @@ add_library(
         ${sources_registries}
         ${sources_android}
         ${source_tools}
+        ${JSI_PATH_FOR_RN_LESS_64}
+        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp
         "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
         "./src/main/Common/cpp/Tools/Mapper.cpp"
         "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
@@ -91,12 +97,6 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        HERMES_EXECUTOR_LIB
-        hermes-executor-debug
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
         JSEXECUTOR_LIB
         jscexecutor
         PATHS ${LIBRN_DIR}
@@ -108,17 +108,21 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
 find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-
 find_library(
         FBJNI_LIBRARY fbjni
         PATHS ${libfbjni_link_DIRS}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        GLOG_LIB 
+        glog
+        PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
 # build shared lib
@@ -132,7 +136,7 @@ if(${FOR_HERMES})
             ${PACKAGE_NAME}
             ${LOG_LIB}
             ${HERMES_LIB}
-            ${HERMES_EXECUTOR_LIB}
+            ${GLOG_LIB}
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}

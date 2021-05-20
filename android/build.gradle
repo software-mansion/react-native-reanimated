@@ -31,7 +31,14 @@ def reactNative = new File("$projectDir/../node_modules/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def HOME = System.getProperty("user.home")
-def FOR_HERMES = System.getenv("FOR_HERMES") ? "True" : "False";
+
+def FOR_HERMES = "";
+if(findProject(':app')) {
+    FOR_HERMES = project(':app').ext.react.enableHermes;
+}
+else {
+    FOR_HERMES = System.getenv("FOR_HERMES") ? "True" : "False";
+}
 // You need to have following folders in this directory:
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
