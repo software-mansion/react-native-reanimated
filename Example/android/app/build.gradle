@@ -146,6 +146,7 @@ android {
     }
 
     packagingOptions {
+        pickFirst 'lib/**/libturbomodulejsijni.so'
         pickFirst 'lib/**/libc++_shared.so'
         pickFirst 'lib/**/libreanimated.so'
         pickFirst 'lib/arm64-v8a/libjsc.so'

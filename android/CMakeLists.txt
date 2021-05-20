@@ -47,7 +47,7 @@ target_include_directories(
         "${BUILD_DIR}/third-party-ndk/boost/boost_${BOOST_VERSION}"
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/folly"
-        "${BUILD_DIR}/third-party-ndk/glog"
+        "${BUILD_DIR}/third-party-ndk/glog/exported"
         "${NODE_MODULES_DIR}/react-native/React"
         "${NODE_MODULES_DIR}/react-native/React/Base"
         "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
@@ -91,6 +91,12 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
+        HERMES_EXECUTOR_LIB
+        hermes-executor-debug
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
         JSEXECUTOR_LIB
         jscexecutor
         PATHS ${LIBRN_DIR}
@@ -125,10 +131,10 @@ if(${FOR_HERMES})
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
-
+            ${HERMES_LIB}
+            ${HERMES_EXECUTOR_LIB}
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
-            ${HERMES_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
     )

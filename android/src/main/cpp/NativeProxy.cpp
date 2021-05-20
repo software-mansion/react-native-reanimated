@@ -14,7 +14,7 @@
 #include "PlatformDepMethodsHolder.h"
 
 #include <jsi/jsi.h>
-#include "ReanimatedJSIDynamic.h"
+#include <jsi/JSIDynamic.h>
 
 namespace reanimated
 {
@@ -210,11 +210,11 @@ static jni::local_ref<PropsMap> ConvertToPropsMap(jsi::Runtime &rt, const jsi::O
     {
       if (value.asObject(rt).isArray(rt))
       {
-        map->put(key, ReadableNativeArray::newObjectCxxArgs(reanimatedFolly::dynamicFromValue(rt, value)));
+        map->put(key, ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
       }
       else
       {
-        map->put(key, ReadableNativeMap::newObjectCxxArgs(reanimatedFolly::dynamicFromValue(rt, value)));
+        map->put(key, ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
       }
     }
   }

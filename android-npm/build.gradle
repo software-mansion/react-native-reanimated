@@ -6,7 +6,6 @@ def json = new JsonSlurper().parseText(inputFile.text)
 def reactNativeVersion = json.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
-def inputFile = new File(projectDir, '../../react-native/')
 def engine = "jsc"
 if (project(':app').ext.react.enableHermes) {
     engine = "hermes"
