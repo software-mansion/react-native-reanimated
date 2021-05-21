@@ -149,11 +149,11 @@ android {
         pickFirst 'lib/**/libturbomodulejsijni.so'
         pickFirst 'lib/**/libc++_shared.so'
         pickFirst 'lib/**/libreanimated.so'
-        pickFirst 'lib/arm64-v8a/libjsc.so'
-        pickFirst 'lib/x86_64/libjsc.so'
+        pickFirst 'lib/**/libjsc.so'
         pickFirst 'lib/**/libfbjni.so'
         pickFirst 'lib/**/libreactnativejni.so'
         pickFirst 'lib/**/libglog.so'
+        pickFirst 'lib/**/libhermes.so'
     }
 }
 
