@@ -88,6 +88,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'de.undercouch.download'
 
+def CMAKE_TOOLCHAIN_FILE = ""
+if(!System.getenv('IS_TRAVIS')) {
+    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake"
+}
+
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 29)
     buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
@@ -103,7 +108,7 @@ android {
                              "-DNATIVE_DEBUG=${debugNativeLibraries}",
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
-                             "-DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake",
+                             "${CMAKE_TOOLCHAIN_FILE}",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
