@@ -88,8 +88,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'de.undercouch.download'
 
-def tmpDir = File.createTempDir()
-
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 29)
     buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
