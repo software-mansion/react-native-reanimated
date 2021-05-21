@@ -1,4 +1,1 @@
-//
-// Created by Szymon Kapala on 5/18/21.
-//
-
+// required for compilation purpose

@@ -416,7 +416,7 @@ task extractSOFiles {
 }
 
 
-task packageNdkLibs(/*dependsOn: buildReanimated,*/ type: Copy) {
+task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
     if(REACT_VERSION < 64) {

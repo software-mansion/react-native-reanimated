@@ -6,7 +6,7 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.64.0" "0.63.3" "0.62.2 --dev")
+versions=("0.64.1" "0.63.3" "0.62.2 --dev")
 version_name=("64" "63" "62")
 
 for index in {0..2}
@@ -31,7 +31,7 @@ do
   done
 done
 
-yarn add react-native --dev
+yarn add react-native@0.64.1 --dev
 
 mv android android-temp
 mv android-npm android

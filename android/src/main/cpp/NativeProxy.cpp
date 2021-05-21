@@ -13,9 +13,6 @@
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
 
-#include <jsi/jsi.h>
-#include <jsi/JSIDynamic.h>
-
 namespace reanimated
 {
 
