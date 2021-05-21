@@ -147,6 +147,7 @@ else()
             ${PACKAGE_NAME}
             ${LOG_LIB}
             ${JSEXECUTOR_LIB}
+            ${GLOG_LIB}
             ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
