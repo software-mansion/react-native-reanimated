@@ -152,6 +152,7 @@ android {
         pickFirst 'lib/arm64-v8a/libjsc.so'
         pickFirst 'lib/x86_64/libjsc.so'
         pickFirst 'lib/**/libfbjni.so'
+        pickFirst 'lib/**/libreactnativejni.so'
     }
 }
 
