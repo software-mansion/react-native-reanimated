@@ -153,6 +153,7 @@ android {
         pickFirst 'lib/x86_64/libjsc.so'
         pickFirst 'lib/**/libfbjni.so'
         pickFirst 'lib/**/libreactnativejni.so'
+        pickFirst 'lib/**/libglog.so'
     }
 }
 
