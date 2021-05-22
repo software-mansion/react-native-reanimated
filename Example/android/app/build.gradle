@@ -154,6 +154,8 @@ android {
         pickFirst 'lib/**/libreactnativejni.so'
         pickFirst 'lib/**/libglog.so'
         pickFirst 'lib/**/libhermes.so'
+        pickFirst 'lib/**/libfolly_json.so'
+        pickFirst 'lib/**/jscexecutor.so'
     }
 }
 
