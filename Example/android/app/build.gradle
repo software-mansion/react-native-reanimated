@@ -156,6 +156,7 @@ android {
         pickFirst 'lib/**/libhermes.so'
         pickFirst 'lib/**/libfolly_json.so'
         pickFirst 'lib/**/jscexecutor.so'
+        pickFirst 'lib/**/libhermes-inspector.so'
     }
 }
 
