@@ -3,7 +3,6 @@
 
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <hermes/hermes.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
@@ -31,21 +30,24 @@ NativeProxy::NativeProxy(
 {
 }
 
+JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
+
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler)
+    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    JavaScriptExecutorHolder* javaScriptExecutor)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
+  _javaScriptExecutor = javaScriptExecutor;
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
 
 void NativeProxy::installJSIBindings()
 {
-
   auto propUpdater = [this](jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
@@ -60,10 +62,10 @@ void NativeProxy::installJSIBindings()
   };
 
   auto requestRender = [this, getCurrentTime](std::function<void(double)> onRender, jsi::Runtime &rt) {
-    //doNoUse -> NodesManager passes here a timestamp from choreographer which is useless for us 
+    //doNoUse -> NodesManager passes here a timestamp from choreographer which is useless for us
     //as we use diffrent timer to better handle events. The lambda is translated to NodeManager.OnAnimationFrame
     //and treated just like reanimated 1 frame callbacks which make use of the timestamp.
-    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) { 
+    auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
        double frameTimestamp = getCurrentTime();
        rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
        onRender(frameTimestamp);
@@ -90,9 +92,14 @@ void NativeProxy::installJSIBindings()
     scrollTo(viewTag, x, y, animated);
   };
 
-  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
+  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
+  factory = _javaScriptExecutor->getExecutorFactory();
+  executor = factory.get()->createJSExecutor(delegate, jsQueue);
+  std::unique_ptr<jsi::Runtime> animatedRuntime;
+  animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
 
-  std::shared_ptr<ErrorHandler> errorHandler = std::shared_ptr<AndroidErrorHandler>(new AndroidErrorHandler(scheduler_));
+  std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
@@ -118,9 +125,9 @@ void NativeProxy::installJSIBindings()
   });
 
   runtime_->global().setProperty(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(*runtime_, module));
+        *runtime_,
+        jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
+        jsi::Object::createFromHostObject(*runtime_, module));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {

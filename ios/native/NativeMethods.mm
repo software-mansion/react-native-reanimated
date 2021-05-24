@@ -10,7 +10,7 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
   UIView *rootView = view;
 
   if (view == nil) {
-    return std::vector<std::pair<std::string, double>>(0, std::make_pair("x", -1234567.0));
+    return std::vector<std::pair<std::string, double>>(std::make_pair("x", -1234567.0));
   }
 
   while (rootView.superview && ![rootView isReactRootView]) {
@@ -18,7 +18,7 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
   }
 
   if (rootView == nil || (![rootView isReactRootView])) {
-    return std::vector<std::pair<std::string, double>>(0, std::make_pair("x", -1234567.0));
+    return std::vector<std::pair<std::string, double>>(std::make_pair("x", -1234567.0));
   }
 
   CGRect frame = view.frame;
@@ -37,14 +37,10 @@ std::vector<std::pair<std::string,double>> measure(int viewTag, RCTUIManager *ui
 }
 
 
-NSString *eventDispatcherKey = @"eventDispatcher";
 void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bool animated) {
   UIView *view = [uiManager viewForReactTag:@(scrollViewTag)];
   RCTScrollView *scrollView = (RCTScrollView *) view;
-  RCTEventDispatcher* oldEventDispatcher = [scrollView valueForKey:eventDispatcherKey];
-  [scrollView setValue:nil forKey:eventDispatcherKey];
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
-  [scrollView setValue:oldEventDispatcher forKey:eventDispatcherKey];
 }
 
 }

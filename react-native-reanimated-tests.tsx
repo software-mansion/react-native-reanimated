@@ -1,11 +1,22 @@
-/* eslint-disable */
-import React, { useState } from 'react';
-import { StyleSheet, Button, View } from 'react-native';
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState, useCallback, forwardRef } from 'react';
+import {
+  StyleSheet,
+  Button,
+  View,
+  Image,
+  FlatListProps,
+  ViewProps,
+  ImageProps,
+} from 'react-native';
 import {
   PanGestureHandler,
   PinchGestureHandlerGestureEvent,
   PinchGestureHandler,
   PanGestureHandlerGestureEvent,
+  FlatList,
 } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -33,7 +44,110 @@ import Animated, {
   interpolateColors,
   createAnimatedPropAdapter,
   useAnimatedProps,
+  useAnimatedRef,
 } from 'react-native-reanimated';
+
+class Path extends React.Component<{ fill?: string }> {
+  render() {
+    return null;
+  }
+}
+
+type Item = {
+  id: number;
+};
+
+const SomeFC = (props: ViewProps) => {
+  return <View {...props} />;
+};
+
+const SomeFCWithRef = forwardRef((props: ViewProps) => {
+  return <View {...props} />;
+});
+
+// Class Component -> Animated Class Component
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedTypedFlatList = Animated.createAnimatedComponent<
+  FlatListProps<Item[]>
+>(FlatList);
+
+// Function Component -> Animated Function Component
+const AnimatedFC = Animated.createAnimatedComponent(SomeFC);
+const AnimatedFCWithRef = Animated.createAnimatedComponent(SomeFCWithRef);
+
+function CreateAnimatedComponentTest1() {
+  const animatedProps = useAnimatedProps(() => ({ fill: 'blue' }));
+  return <AnimatedPath animatedProps={animatedProps} />;
+}
+
+function CreateAnimatedComponentTest2() {
+  const animatedProps = useAnimatedProps(() => ({ fill2: 'blue' }));
+  return (
+    // @ts-expect-error
+    <AnimatedPath animatedProps={animatedProps} />
+  );
+}
+
+function CreateAnimatedComponentTest3() {
+  const animatedProps = useAnimatedProps(
+    () => ({ pointerEvents: 'none' } as const)
+  );
+  return (
+    <Animated.View animatedProps={animatedProps}>
+      <AnimatedPath />
+    </Animated.View>
+  );
+}
+
+function CreateAnimatedFlatList() {
+  const renderItem = useCallback(
+    ({ item, index }: { item: Item[]; index: number }) => {
+      if (Math.random()) {
+        return null;
+      }
+      return <View style={{ width: 100 }}></View>;
+    },
+    []
+  );
+  return (
+    <>
+      <AnimatedTypedFlatList
+        style={{ flex: 1 }}
+        data={[]}
+        renderItem={renderItem}
+      />
+      <AnimatedFlatList
+        // @ts-expect-error
+        style={{ flex: 1, red: false }}
+        data={[]}
+        renderItem={() => null}
+      />
+      <AnimatedImage style={{ flex: 1 }} source={{ uri: '' }} />
+    </>
+  );
+}
+
+function TestClassComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+  return <AnimatedImage ref={animatedRef} source={{}} />;
+}
+
+function TestFunctionComponentRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return (
+    <AnimatedFC
+      // @ts-expect-error ref is not available on plain function-components
+      ref={animatedRef}
+    />
+  );
+}
+
+function TestFunctionComponentForwardRef() {
+  const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+  return <AnimatedFCWithRef ref={animatedRef} />;
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -139,11 +253,32 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
+      color: "red",
+      backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
         },
+        {
+          rotate: `${Math.PI}rad`
+        }
       ],
+    };
+  });
+  // @ts-expect-error
+  const style2 = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: Math.PI
+        }
+      ],
+    };
+  });
+  // @ts-expect-error
+  const style3 = useAnimatedStyle(() => {
+    return {
+      color: {}
     };
   });
   return (
@@ -472,12 +607,12 @@ function WithDecayTest() {
 
 // useWorkletCallback
 function UseWorkletCallbackTest() {
-  const callback = useWorkletCallback((a: number, b: number) => {
+  const workletCallback = useWorkletCallback((a: number, b: number) => {
     return a + b;
   }, []);
 
   runOnUI(() => {
-    const res = callback(1, 1);
+    const res = workletCallback(1, 1);
 
     console.log(res);
   })();
@@ -487,12 +622,12 @@ function UseWorkletCallbackTest() {
 
 // createWorklet
 function CreateWorkletTest() {
-  const callback = createWorklet((a: number, b: number) => {
+  const workletCallback = createWorklet((a: number, b: number) => {
     return a + b;
   });
 
   runOnUI(() => {
-    const res = callback(1, 1);
+    const res = workletCallback(1, 1);
 
     console.log(res);
   })();
@@ -564,6 +699,10 @@ function interpolateNodeTest() {
     inputRange: [0, 1],
     outputRange: ['0deg', '100deg'],
   });
+  interpolateNode(value, {
+    inputRange: [0, 1],
+    outputRange: ['0rad', `${Math.PI}rad`],
+  });
 }
 
 function colorTest() {
@@ -592,15 +731,30 @@ function updatePropsTest() {
   // @ts-expect-error works only for useAnimatedProps
   useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
 
-  useAnimatedProps(
-    () => ({}),
-    null,
-    adapter1
-  );
+  useAnimatedProps(() => ({}), null, adapter1);
 
-  useAnimatedProps(
-    () => ({}),
-    null,
-    [adapter2, adapter3]
-  );
+  useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
+}
+
+// test partial animated props
+function testPartialAnimatedProps() {
+  const ap = useAnimatedProps<ImageProps>(() => ({
+    height: 100
+  }));
+  const aps = useAnimatedProps<ImageProps>(() => ({
+    source: { uri: 'whatever' }
+  }));
+
+  // @ts-expect-error it should fail because `source` is a required prop
+  const test1 = <AnimatedImage />;
+  // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
+  // @ts-expect-error it should fail because `source` is a required prop, even though animatedProps sets it
+  const test2 = <AnimatedImage animatedProps={aps} />
+  // should pass because source is set
+  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />
+  // should pass because source is set and `animatedProps` doesn't change that
+  const test4 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  // TODO: Should this test fail? Setting it twice might not be intentional...
+  // should pass because source is set normally and in `animatedProps`
+  const test5 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
 }

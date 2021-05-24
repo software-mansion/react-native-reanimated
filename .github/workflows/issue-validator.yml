@@ -13,4 +13,4 @@ jobs:
       uses: karol-bisztyga/issue-validator@v1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        required-sections: 🐞 Bug,Description,Steps To Reproduce,Expected behavior,Actual behavior,Package versions;💡 Feature request,Description,Motivation;❓Question,Description
+        required-sections: 🐞 Bug,Description,Expected behavior,Actual behavior & steps to reproduce,Package versions;💡 Feature request,Description,Motivation;❓Question,Description

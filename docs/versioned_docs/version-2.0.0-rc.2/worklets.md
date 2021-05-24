@@ -62,7 +62,7 @@ function callback(text) {
 function someWorklet() {
   'worklet';
   console.log("I'm on UI but can call methods from the RN thread");
-  callback('can pass arguments too');
+  runOnJS(callback)('can pass arguments too');
 }
 ```
 

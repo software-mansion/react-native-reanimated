@@ -554,6 +554,14 @@ function removePluginsFromBlacklist(plugins) {
 
 module.exports = function({ types: t }) {
   return {
+    pre() {
+      // allows adding custom globals such as host-functions
+      if (this.opts != null && Array.isArray(this.opts.globals)) {
+        this.opts.globals.forEach((name) => {
+          globals.add(name)
+        })
+      }
+    },
     visitor: {
       CallExpression: {
         exit(path, state) {

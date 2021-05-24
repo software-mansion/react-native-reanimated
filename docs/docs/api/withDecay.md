@@ -23,7 +23,7 @@ Allowed parameters are listed below:
 ##### `velocityFactor`
 The default unit of velocity in decay is pixel per second but it can be problematic when you want to animate value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to more matched for the required domain.
 
-#### `callback` [function](optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.
@@ -53,7 +53,7 @@ function App() {
     onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
-    onEnd: evt => {
+    onEnd: (evt) => {
       x.value = withDecay({
         velocity: evt.velocityX,
         clamp: [0, 200], // optionally define boundaries for the animation
