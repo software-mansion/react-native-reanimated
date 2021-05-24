@@ -10,6 +10,7 @@ jobs:
         - NODE_VERSION=14.14.0
         - ANDROID_API=29
         - ANDROID_BUILD_TOOLS=29.0.2
+        - IS_TRAVIS=true
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -rf $HOME/.gradle/caches/*/plugin-resolution/

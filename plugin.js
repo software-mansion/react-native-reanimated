@@ -554,6 +554,14 @@ function removePluginsFromBlacklist(plugins) {
 
 module.exports = function({ types: t }) {
   return {
+    pre() {
+      // allows adding custom globals such as host-functions
+      if (this.opts != null && Array.isArray(this.opts.globals)) {
+        this.opts.globals.forEach((name) => {
+          globals.add(name)
+        })
+      }
+    },
     visitor: {
       CallExpression: {
         exit(path, state) {
@@ -568,7 +576,7 @@ module.exports = function({ types: t }) {
     },
     // In this way we can modify babel options
     // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
-    manipulateOptions(opts, parserOpts) {
+    manipulateOptions(opts, _) {
       const plugins = opts.plugins;
       removePluginsFromBlacklist(plugins);
     },

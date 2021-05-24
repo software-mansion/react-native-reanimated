@@ -10,7 +10,7 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   // This property will be used for debugging
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, label));
-  
+
   jsi::Object dummyGlobal(rt);
   auto dummyFunction = [](
                           jsi::Runtime &rt,
@@ -21,12 +21,12 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
     return jsi::Value::undefined();
   };
   jsi::Function __reanimatedWorkletInit = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction);
-  
+
   dummyGlobal.setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
   rt.global().setProperty(rt, "global", dummyGlobal);
-  
+
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
-  
+
   auto callback = [](
                      jsi::Runtime &rt,
                      const jsi::Value &thisValue,
@@ -47,7 +47,7 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
   };
   jsi::Value log = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_log"), 1, callback);
   rt.global().setProperty(rt, "_log", log);
-  
+
   auto setGlobalConsole = [](
                              jsi::Runtime &rt,
                              const jsi::Value &thisValue,
@@ -67,7 +67,8 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          MeasuringFunction measure,
                                          TimeProviderFunction getCurrentTime) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
-  
+  rt.global().setProperty(rt, "_UI", jsi::Value(true));
+
   auto clb = [updater](
                        jsi::Runtime &rt,
                        const jsi::Value &thisValue,
@@ -82,8 +83,8 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value updateProps = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
   rt.global().setProperty(rt, "_updateProps", updateProps);
-  
-  
+
+
   auto clb2 = [requestFrame](
                              jsi::Runtime &rt,
                              const jsi::Value &thisValue,
@@ -98,7 +99,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value requestAnimationFrame = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "requestAnimationFrame"), 1, clb2);
   rt.global().setProperty(rt, "requestAnimationFrame", requestAnimationFrame);
-  
+
   auto clb3 = [scrollTo](
                          jsi::Runtime &rt,
                          const jsi::Value &thisValue,
@@ -114,7 +115,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value scrollToFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_scrollTo"), 4, clb3);
   rt.global().setProperty(rt, "_scrollTo", scrollToFunction);
-  
+
   auto clb4 = [measure](
                         jsi::Runtime &rt,
                         const jsi::Value &thisValue,
@@ -131,7 +132,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value measureFunction = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_measure"), 1, clb4);
   rt.global().setProperty(rt, "_measure", measureFunction);
-  
+
   auto clb6 = [getCurrentTime](
                                jsi::Runtime &rt,
                                const jsi::Value &thisValue,
@@ -142,14 +143,19 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value timeFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
   rt.global().setProperty(rt, "_getCurrentTime", timeFun);
-  
+
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
 }
 
-bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
-  auto isUi = rt.global().getProperty(rt, "_WORKLET");
+bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
+  auto isUi = rt.global().getProperty(rt, "_UI");
   return isUi.isBool() && isUi.getBool();
+}
+
+bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
+  auto isWorklet = rt.global().getProperty(rt, "_WORKLET");
+  return isWorklet.isBool() && isWorklet.getBool();
 }
 
 bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {

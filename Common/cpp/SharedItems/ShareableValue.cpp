@@ -327,7 +327,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
       auto runtimeManager = this->runtimeManager;
       auto& frozenObject = ValueWrapper::asFrozenObject(this->valueContainer);
       if (RuntimeDecorator::isWorkletRuntime(rt)) {
-        // when running on UI thread we prep a function
+        // when running on worklet thread we prep a function
 
         auto jsThis = std::make_shared<jsi::Object>(frozenObject->shallowClone(*runtimeManager->runtime));
         std::shared_ptr<jsi::Function> funPtr(runtimeManager->workletsCache->getFunction(rt, frozenObject));
