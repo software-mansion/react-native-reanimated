@@ -4,6 +4,7 @@
 import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 let IN_STYLE_UPDATER = false;
 
@@ -356,13 +357,13 @@ export function withDecay(userConfig, callback) {
     'worklet';
     const config = {
       deceleration: 0.998,
-      velocityFactor: 1,
+      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    const VELOCITY_EPS = 1;
+    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
     function decay(animation, now) {
