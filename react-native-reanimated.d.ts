@@ -119,6 +119,7 @@ declare module 'react-native-reanimated' {
       deceleration?: number;
       velocity?: number;
       clamp?: [number, number];
+      velocityFactor?: number;
     }
     export interface BackwardCompatibleWrapper {
       start: (callback?: (data: { finished: boolean }) => any) => void;
