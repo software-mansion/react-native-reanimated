@@ -37,7 +37,7 @@ if(findProject(':app')) {
     FOR_HERMES = project(':app').ext.react.enableHermes;
 }
 else {
-    FOR_HERMES = System.getenv("FOR_HERMES") ? "True" : "False";
+    FOR_HERMES = System.getenv("FOR_HERMES") ? true : false;
 }
 // You need to have following folders in this directory:
 //   - boost_1_63_0
@@ -90,7 +90,7 @@ apply plugin: 'de.undercouch.download'
 
 def CMAKE_TOOLCHAIN_FILE = ""
 if(!System.getenv('IS_TRAVIS')) {
-    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${HOME}/Library/Android/sdk/ndk/20.1.5948944/build/cmake/android.toolchain.cmake"
+    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
 }
 
 android {
