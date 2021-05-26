@@ -167,7 +167,7 @@ const procSpring = proc(
     )
 );
 
-export default (
+export default function springAnimation(
   clock,
   { finished, velocity, position, time, prevPosition },
   {
@@ -179,8 +179,8 @@ export default (
     restDisplacementThreshold,
     restSpeedThreshold,
   }
-) =>
-  procSpring(
+) {
+  return procSpring(
     finished,
     velocity,
     position,
@@ -195,3 +195,4 @@ export default (
     restDisplacementThreshold,
     clock
   );
+}

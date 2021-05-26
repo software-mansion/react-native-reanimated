@@ -234,10 +234,10 @@ module.exports = {
   __esModule: true,
 
   ...Reanimated,
+  ...ReanimatedV2,
 
   default: {
     ...Reanimated,
-    ...ReanimatedV2,
   },
 
   Transitioning: {

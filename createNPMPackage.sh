@@ -6,26 +6,32 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.64.0" "0.63.3" "0.62.2 --dev")
+versions=("0.64.1" "0.63.3" "0.62.2 --dev")
 version_name=("64" "63" "62")
 
 for index in {0..2}
 do
-  rm -rf ./android/src/main/jniLibs
   yarn add react-native@"${versions[$index]}"
+  for for_hermes in "True" "False"
+  do
+    engine="jsc"
+    if [ "$for_hermes" == "True" ]; then
+      engine="hermes"
+    fi
+    echo "engine=${engine}"
 
-  rm -rf android/build/outputs/aar/*.aar
-  cd android 
-  gradle clean
+    cd android 
+    gradle clean
 
-  gradle :assembleDebug
-  cd $ROOT
+    FOR_HERMES=${for_hermes} gradle :assembleDebug
+    cd $ROOT
 
-  rm -rf android-npm/react-native-reanimated-"${version_name[$index]}".aar
-  cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-"${version_name[$index]}".aar
+    rm -rf android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+    cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+  done
 done
 
-yarn add react-native --dev
+yarn add react-native@0.64.1 --dev
 
 mv android android-temp
 mv android-npm android

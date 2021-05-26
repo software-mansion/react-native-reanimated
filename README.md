@@ -1,7 +1,6 @@
-<p align="center">
-  <h1 align="center">React Native Reanimated</h1>
-  <h3 align="center">React Native's Animated library reimplemented</h3>
-</p>
+<img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
+
+### React Native's Animated library reimplemented
 
 > Reanimated 2 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 

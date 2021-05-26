@@ -16,7 +16,7 @@ const boxes = [
     description: (
       <>
         Complexity reduced from tens to just a few methods. Try it out today:
-        Check out our <a href="/docs/">Documentation</a>.
+        Check out our <a href="docs/">Documentation</a>.
       </>
     ),
   },

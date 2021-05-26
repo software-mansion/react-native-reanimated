@@ -6,4 +6,9 @@ def json = new JsonSlurper().parseText(inputFile.text)
 def reactNativeVersion = json.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
-artifacts.add("default", file("react-native-reanimated-${minor}.aar"))
+def engine = "jsc"
+if (project(':app').ext.react.enableHermes) {
+    engine = "hermes"
+}
+
+artifacts.add("default", file("react-native-reanimated-${minor}-${engine}.aar"))

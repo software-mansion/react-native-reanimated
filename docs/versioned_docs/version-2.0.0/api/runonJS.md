@@ -29,7 +29,7 @@ useDerivedValue(() => {
 });
 ```
 
-This is because internally `runOnJS` uses `Object.defineProperty`. Therefore if we want to call a method of some object we may not have an access to `this` nside a called function.
+This is because internally `runOnJS` uses `Object.defineProperty`. Therefore if we want to call a method of some object we may not have an access to `this` inside a called function.
 
 This code shows how it works:
 
