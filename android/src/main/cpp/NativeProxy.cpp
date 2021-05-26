@@ -6,8 +6,12 @@
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
+
+#if FOR_HERMES
 #import <hermes/hermes.h>
+#else
 #import <jsi/JSCRuntime.h>
+#endif
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
