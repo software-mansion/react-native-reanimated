@@ -6,6 +6,8 @@
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 #include <jsi/JSIDynamic.h>
+#import <hermes/hermes.h>
+#import <jsi/JSCRuntime.h>
 
 #include "NativeProxy.h"
 #include "AndroidErrorHandler.h"
@@ -30,19 +32,15 @@ NativeProxy::NativeProxy(
 {
 }
 
-JavaScriptExecutorHolder* NativeProxy::_javaScriptExecutor = NULL;
-
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
-    JavaScriptExecutorHolder* javaScriptExecutor)
+    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-  _javaScriptExecutor = javaScriptExecutor;
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
 }
 
@@ -92,12 +90,11 @@ void NativeProxy::installJSIBindings()
     scrollTo(viewTag, x, y, animated);
   };
 
-  std::shared_ptr<ExecutorDelegate> delegate = std::shared_ptr<ExecutorDelegate>();
-  std::shared_ptr<MessageQueueThread> jsQueue = std::shared_ptr<MessageQueueThread>();
-  factory = _javaScriptExecutor->getExecutorFactory();
-  executor = factory.get()->createJSExecutor(delegate, jsQueue);
-  std::unique_ptr<jsi::Runtime> animatedRuntime;
-  animatedRuntime.reset(static_cast<jsi::Runtime*>(executor.get()->getJavaScriptContext()));
+#if FOR_HERMES
+  auto animatedRuntime = facebook::hermes::makeHermesRuntime();
+#else
+  auto animatedRuntime = facebook::jsc::makeJSCRuntime();
+#endif
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 
