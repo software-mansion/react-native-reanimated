@@ -313,10 +313,22 @@ def findNdkBuildFullPath() {
         return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
     }
 
-    def ndkDir = android.ndkDirectory ? android.ndkDirectory.absolutePath : null
+    if (hasProperty("ndkDirectory")) {
+        def ndkDir = android.ndkDirectory ? android.ndkDirectory.absolutePath : null
 
-    if (ndkDir) {
-        return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        if (ndkDir) {
+            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        }
+    }
+    
+    def Properties properties = new Properties()
+    if (rootProject.file("local.properties").exists()) {
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+        def ndkDir=properties.getProperty("ndk.dir", null);
+        if(ndkDir)
+        {
+            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
+        }
     }
     return null
 }
@@ -466,8 +478,6 @@ task downloadNdkBuildDependencies {
 task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog]) {
 }
 
-// pre-native build pipeline
-
 tasks.whenTaskAdded { task ->
     if (task.name.contains('externalNativeBuild')) {
         task.dependsOn(prepareThirdPartyNdkHeaders)
@@ -477,3 +487,4 @@ tasks.whenTaskAdded { task ->
         task.dependsOn(extractSOFiles)
     }
 }
+
