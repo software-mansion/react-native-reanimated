@@ -68,7 +68,6 @@ public class NativeProxy {
   private final HybridData mHybridData;
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
-  private JavaScriptExecutor mJavaScriptExecutor;
   private Scheduler mScheduler = null;
 
   public NativeProxy(ReactApplicationContext context) {
@@ -123,7 +122,6 @@ public class NativeProxy {
   public void onCatalystInstanceDestroy() {
     mScheduler.deactivate();
     mHybridData.resetNative();
-    mJavaScriptExecutor.close();
   }
 
   public void prepare() {
