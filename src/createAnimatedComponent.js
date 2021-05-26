@@ -57,7 +57,7 @@ function flattenArray(array) {
   return resultArr;
 }
 
-export default function createAnimatedComponent(Component) {
+export default function createAnimatedComponent(Component, options = {}) {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -104,7 +104,7 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(node);
+      const viewTag = findNodeHandle(options.setNativeProps ? this : node);
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -232,8 +232,12 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      // eslint-disable-next-line no-unused-expressions
-      this._component.setNativeProps?.(props);
+      if (options.setNativeProps) {
+        options.setNativeProps(this._component, props);
+      } else {
+        // eslint-disable-next-line no-unused-expressions
+        this._component.setNativeProps?.(props);
+      }
     }
 
     _attachPropUpdater() {

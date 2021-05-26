@@ -247,11 +247,16 @@ declare module 'react-native-reanimated' {
     }
     export class Code extends Component<CodeProps> {}
 
+    type Options<P> = {
+      setNativeProps: (ref: any, props: P) => void;
+    }
     export function createAnimatedComponent<P extends object>(
-      component: ComponentClass<P>
+      component: ComponentClass<P>,
+      options?: Options<P>
     ): ComponentClass<AnimateProps<P>>;
     export function createAnimatedComponent<P extends object>(
-      component: FunctionComponent<P>
+      component: FunctionComponent<P>,
+      options?: Options<P>
     ): FunctionComponent<AnimateProps<P>>;
 
     // classes
