@@ -37,7 +37,7 @@ if(findProject(':app')) {
     FOR_HERMES = project(':app').ext.react.enableHermes;
 }
 else {
-    FOR_HERMES = System.getenv("FOR_HERMES") ? true : false;
+    FOR_HERMES = System.getenv("FOR_HERMES") == "True";
 }
 // You need to have following folders in this directory:
 //   - boost_1_63_0
