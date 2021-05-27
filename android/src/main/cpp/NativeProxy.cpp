@@ -98,9 +98,9 @@ void NativeProxy::installJSIBindings()
   };
 
 #if FOR_HERMES
-  auto animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
-  auto animatedRuntime = facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
