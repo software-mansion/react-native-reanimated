@@ -63,7 +63,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
                                                PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
-                                                  RuntimeManager(std::move(rt), errorHandler, scheduler),
+                                                  RuntimeManager(rt, errorHandler, scheduler),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
