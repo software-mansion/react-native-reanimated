@@ -18,7 +18,22 @@ export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
       [{}, {}]
     );
 
-    viewRef.current._component.setNativeProps({ style: rawStyles });
+    if (typeof viewRef.current._component.setNativeProps === 'function') {
+      viewRef.current._component.setNativeProps({ style: rawStyles });
+    } else if (Object.keys(viewRef.current._component.props).length > 0) {
+      Object.keys(viewRef.current._component.props).forEach((key) => {
+        if (!rawStyles[key]) {
+          return;
+        }
+        const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+        viewRef.current._component._touchableNode.setAttribute(
+          dashedKey,
+          rawStyles[key]
+        );
+      });
+    } else {
+      console.warn('It is not possible to manipulate component');
+    }
   }
 };
 
