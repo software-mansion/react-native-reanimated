@@ -8,9 +8,9 @@
 #include <jsi/JSIDynamic.h>
 
 #if FOR_HERMES
-#import <hermes/hermes.h>
+#include <hermes/hermes.h>
 #else
-#import <jsi/JSCRuntime.h>
+#include <jsi/JSCRuntime.h>
 #endif
 
 #include "NativeProxy.h"
