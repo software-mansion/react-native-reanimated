@@ -1,7 +1,6 @@
 #import "REAAnimationsManager.h"
 #import <React/RCTComponentData.h>
 #import "REAAnimationRootView.h"
-#import "REAHeroView.h"
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
 #import "REAViewTraverser.h"

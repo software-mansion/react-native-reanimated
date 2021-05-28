@@ -20,7 +20,7 @@ void JNIHelper::PropsMap::put(const std::string &key, jni::local_ref<JObject> ob
 
 jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(jsi::Runtime &rt, const jsi::Object &props)
 {
-  auto map = PropsMap::create();
+  auto map = PropsMap::create(); 
 
   auto propNames = props.getPropertyNames(rt);
   for (size_t i = 0, size = propNames.size(rt); i < size; i++)
