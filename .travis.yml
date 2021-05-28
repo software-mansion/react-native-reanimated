@@ -85,12 +85,6 @@ jobs:
       script:
         - xcodebuild -workspace ./ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath ./ios/build -quiet | xcpretty
 
-    - language: cpp
-      install:
-        - pip install cpplint
-      script:
-        - scripts/cpplint.sh
-
     - language: node_js
       node_js:
         - 14
