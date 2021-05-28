@@ -79,7 +79,7 @@ function Box({label, state}: {label: string, state: boolean}) {
         style={[styles.box,
           { 
             flexDirection: (state)? 'row': 'row-reverse', 
-            height: (state)? 30: 60,
+            height: (state)? 30 : 60,
           }]} 
     >
       <Text> {label} </Text>

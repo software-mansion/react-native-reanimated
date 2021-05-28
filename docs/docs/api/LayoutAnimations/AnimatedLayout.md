@@ -20,9 +20,18 @@ The component is responsible for observing changes in its subtree. There is no n
 ```
 
 ```js
-    import { AnimatedLayout } from 'react-native-reanimated';
+    import { 
+        AnimatedLayout,
+        SlideInRight,
+        SlideOutLeft,
+        SlideInDown,
+        SlideOutUp,
+        SlideInLeft,
+        SlideOutRight,
+        OpacityIn,
+        OpacityOut,
+    } from 'react-native-reanimated';
     
-    ​
     const AnimatedText = Animated.createAnimatedComponent(Text);
     ​
     function SWMLogo() {
