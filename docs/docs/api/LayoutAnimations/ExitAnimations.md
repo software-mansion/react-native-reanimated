@@ -1,5 +1,5 @@
 ---
-id: layout_animations_exit_animations
+id: exitAnimations
 title: Exiting Animations
 sidebar_label: Exiting Animations
 ---

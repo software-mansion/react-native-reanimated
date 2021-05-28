@@ -1,5 +1,5 @@
 ---
-id: layout_animations_entry_animations
+id: entryAnimations
 title: Entering Animations
 sidebar_label: Entering Animations
 ---

@@ -1,5 +1,5 @@
 ---
-id: layout_animations_animated_layout
+id: animatedLayout
 title: <AnimatedLayout>
 sidebar_label: <AnimatedLayout>
 ---

@@ -1,5 +1,5 @@
 ---
-id: layout_animations_layout_transitions
+id: layoutTransitions
 title: Layout Transitions
 sidebar_label: Layout Transitions
 ---

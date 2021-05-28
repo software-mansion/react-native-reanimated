@@ -1,5 +1,5 @@
 ---
-id: layout_animations_custom_animations
+id: customAnimations
 title: Custom Animations
 sidebar_label: Custom Animations
 ---
