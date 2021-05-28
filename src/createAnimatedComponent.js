@@ -12,6 +12,12 @@ import setAndForwardRef from './setAndForwardRef';
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import {
+  DefaultEntering,
+  DefaultExiting,
+  DefaultLayout,
+} from './reanimated2/layoutReanimation/defaultAnimations';
+import { makeMutable, runOnUI } from './reanimated2/core';
 
 const NODE_MAPPING = new Map();
 
@@ -74,12 +80,14 @@ export default function createAnimatedComponent(Component, options = {}) {
       if (process.env.JEST_WORKER_ID) {
         this.animatedStyle = { value: {} };
       }
+      this.sv = makeMutable({});
     }
 
     componentWillUnmount() {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      this.sv = null;
     }
 
     componentDidMount() {
@@ -342,6 +350,44 @@ export default function createAnimatedComponent(Component, options = {}) {
     _setComponentRef = setAndForwardRef({
       getForwardedRef: () => this.props.forwardedRef,
       setLocalRef: (ref) => {
+        // TODO update config
+        const tag = findNodeHandle(ref);
+        if (
+          (this.props.layout || this.props.entering || this.props.exiting) &&
+          tag != null
+        ) {
+          let layout = this.props.layout ? this.props.layout : DefaultLayout;
+          let entering = this.props.entering
+            ? this.props.entering
+            : DefaultEntering;
+          let exiting = this.props.exiting
+            ? this.props.exiting
+            : DefaultExiting;
+
+          if (layout.build) {
+            layout = layout.build();
+          }
+
+          if (entering.build) {
+            entering = entering.build();
+          }
+
+          if (exiting.build) {
+            exiting = exiting.build();
+          }
+
+          const config = {
+            layout,
+            entering,
+            exiting,
+            sv: this.sv,
+          };
+          runOnUI(() => {
+            'worklet';
+            global.LayoutAnimationRepository.registerConfig(tag, config);
+          })();
+        }
+
         if (ref !== this._component) {
           this._component = ref;
         }

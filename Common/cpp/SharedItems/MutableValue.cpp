@@ -50,6 +50,9 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
         animation = getWeakRef(rt);
       }
       *animation.lock() = jsi::Value(rt, newValue);
+    } else if (propName == "_value") {
+      auto setter = std::make_shared<MutableValueSetterProxy>(shared_from_this());
+      setter->set(rt, jsi::PropNameID::forAscii(rt, "_value"), newValue);
     }
   } else {
     // React-JS Thread or another threaded Runtime.
@@ -66,7 +69,6 @@ void MutableValue::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi:
       });
     }
   }
-
 }
 
 jsi::Value MutableValue::get(jsi::Runtime &rt, const jsi::PropNameID &name) {

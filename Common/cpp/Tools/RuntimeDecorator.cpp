@@ -2,6 +2,8 @@
 #include "ReanimatedHiddenHeaders.h"
 #include <unordered_map>
 #include <memory>
+#include "MutableValue.h"
+#include "LayoutAnimationsProxy.h"
 
 namespace reanimated {
 
@@ -65,7 +67,8 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          RequestFrameFunction requestFrame,
                                          ScrollToFunction scrollTo,
                                          MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime) {
+                                         TimeProviderFunction getCurrentTime,
+                                         std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
@@ -146,6 +149,40 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
+    
+  // layout animation
+  std::weak_ptr<LayoutAnimationsProxy> layoutProxy = layoutAnimationsProxy;
+  auto clb7 = [layoutProxy](
+                               jsi::Runtime &rt,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *args,
+                               size_t count
+                               ) -> jsi::Value {
+    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
+    if (layoutProxy.expired()) {
+      return jsi::Value::undefined();
+    }
+    proxy->startObserving(args[0].asNumber(), args[1].asObject(rt).getHostObject<MutableValue>(rt), rt);
+    return jsi::Value::undefined();
+  };
+  jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
+  rt.global().setProperty(rt, "_startObservingProgress", _startObservingProgress);
+  
+  auto clb8 = [layoutProxy](
+                               jsi::Runtime &rt,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *args,
+                               size_t count
+                               ) -> jsi::Value {
+    std::shared_ptr<LayoutAnimationsProxy> proxy = layoutProxy.lock();
+    if (layoutProxy.expired()) {
+      return jsi::Value::undefined();
+    }
+    proxy->stopObserving(args[0].asNumber(), args[1].getBool());
+    return jsi::Value::undefined();
+  };
+  jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
+  rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
 }
 
 bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {

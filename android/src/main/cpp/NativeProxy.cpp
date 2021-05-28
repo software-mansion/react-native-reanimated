@@ -8,9 +8,9 @@
 #include <jsi/JSIDynamic.h>
 
 #if FOR_HERMES
-#import <hermes/hermes.h>
+#include <hermes/hermes.h>
 #else
-#import <jsi/JSCRuntime.h>
+#include <jsi/JSCRuntime.h>
 #endif
 
 #include "NativeProxy.h"
@@ -18,6 +18,7 @@
 #include "AndroidScheduler.h"
 #include <android/log.h>
 #include "PlatformDepMethodsHolder.h"
+#include "LayoutAnimationsProxy.h"
 
 namespace reanimated
 {
@@ -29,23 +30,25 @@ NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     jsi::Runtime *rt,
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
-    std::shared_ptr<Scheduler> scheduler) : javaPart_(jni::make_global(jThis)),
+    std::shared_ptr<Scheduler> scheduler,
+    jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations) : javaPart_(jni::make_global(jThis)),
                                             runtime_(rt),
                                             jsCallInvoker_(jsCallInvoker),
-                                            scheduler_(scheduler)
-{
-}
+                                            scheduler_(scheduler),
+                                            layoutAnimations(std::move(_layoutAnimations))
+{}
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler)
+    jni::alias_ref<AndroidScheduler::javaobject> androidScheduler,
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations)
 {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto scheduler = androidScheduler->cthis()->getScheduler();
   scheduler->setJSCallInvoker(jsCallInvoker);
-  return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler);
+  return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, jsCallInvoker, scheduler, make_global(layoutAnimations));
 }
 
 void NativeProxy::installJSIBindings()
@@ -95,12 +98,28 @@ void NativeProxy::installJSIBindings()
   };
 
 #if FOR_HERMES
-  auto animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
-  auto animatedRuntime = facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
+
+    // Layout Animations Start
+
+  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
+    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
+  };
+
+  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled)? 1 : 0);
+  };
+
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+
+    // Layout Animations End
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
     requestRender,
@@ -112,9 +131,10 @@ void NativeProxy::installJSIBindings()
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
                                                          scheduler_,
-                                                         std::move(animatedRuntime),
+                                                         animatedRuntime,
                                                          errorHandler,
                                                          propObtainer,
+                                                         layoutAnimationsProxy,
                                                          platformDepMethodsHolder);
 
   _nativeReanimatedModule = module;
@@ -160,72 +180,12 @@ void NativeProxy::registerEventHandler(std::function<void(std::string, std::stri
   method(javaPart_.get(), EventHandler::newObjectCxxArgs(std::move(handler)).get());
 }
 
-struct PropsMap : jni::JavaClass<PropsMap, JMap<JString, JObject>>
-{
-  static constexpr auto kJavaDescriptor =
-      "Ljava/util/HashMap;";
-
-  static local_ref<PropsMap> create()
-  {
-    return newInstance();
-  }
-
-  void put(const std::string &key, jni::local_ref<JObject> object)
-  {
-    static auto method = getClass()
-                             ->getMethod<jobject(jni::local_ref<JObject>, jni::local_ref<JObject>)>("put");
-    method(self(), jni::make_jstring(key), object);
-  }
-};
-
-static jni::local_ref<PropsMap> ConvertToPropsMap(jsi::Runtime &rt, const jsi::Object &props)
-{
-  auto map = PropsMap::create();
-
-  auto propNames = props.getPropertyNames(rt);
-  for (size_t i = 0, size = propNames.size(rt); i < size; i++)
-  {
-    auto jsiKey = propNames.getValueAtIndex(rt, i).asString(rt);
-    auto value = props.getProperty(rt, jsiKey);
-    auto key = jsiKey.utf8(rt);
-    if (value.isUndefined() || value.isNull())
-    {
-      map->put(key, nullptr);
-    }
-    else if (value.isBool())
-    {
-      map->put(key, JBoolean::valueOf(value.getBool()));
-    }
-    else if (value.isNumber())
-    {
-      map->put(key, jni::autobox(value.asNumber()));
-    }
-    else if (value.isString())
-    {
-      map->put(key, jni::make_jstring(value.asString(rt).utf8(rt)));
-    }
-    else if (value.isObject())
-    {
-      if (value.asObject(rt).isArray(rt))
-      {
-        map->put(key, ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
-      }
-      else
-      {
-        map->put(key, ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
-      }
-    }
-  }
-
-  return map;
-}
-
 void NativeProxy::updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props)
 {
   auto method = javaPart_
                     ->getClass()
                     ->getMethod<void(int, JMap<JString, JObject>::javaobject)>("updateProps");
-  method(javaPart_.get(), viewTag, ConvertToPropsMap(rt, props).get());
+  method(javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
 }
 
 void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated)

@@ -177,6 +177,7 @@ function workletValueSetter(value) {
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
+      animation.finished = true;
       animation.timestamp = timestamp;
       this._value = animation.current;
       if (finished) {

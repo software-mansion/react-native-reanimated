@@ -6,3 +6,4 @@ export * from './Easing';
 export * from './NativeMethods';
 export * from './Colors';
 export * from './PropAdapters';
+export * from './layoutReanimation';

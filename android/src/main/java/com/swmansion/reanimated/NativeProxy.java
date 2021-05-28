@@ -12,9 +12,14 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
+import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
+import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class NativeProxy {
 
@@ -72,13 +77,14 @@ public class NativeProxy {
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
+    LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     mScheduler = new Scheduler(context);
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler);
+    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
-    prepare();
+    prepare(LayoutAnimations);
   }
 
-  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler);
+  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, LayoutAnimations LayoutAnimations);
   private native void installJSIBindings();
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
@@ -124,8 +130,36 @@ public class NativeProxy {
     mHybridData.resetNative();
   }
 
-  public void prepare() {
+  public void prepare(LayoutAnimations LayoutAnimations) {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     installJSIBindings();
+    AnimationsManager animationsManager = mContext.get()
+            .getNativeModule(ReanimatedModule.class)
+            .getNodesManager()
+            .getReactBatchObserver()
+            .getAnimationsManager();
+
+    WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
+    animationsManager.setNativeMethods(new NativeMethodsHolder() {
+      @Override
+      public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
+        LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
+        if (LayoutAnimations != null) {
+          HashMap<String, String> preparedValues = new HashMap<>();
+          for (String key : values.keySet()) {
+            preparedValues.put(key, values.get(key).toString());
+          }
+          LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
+        }
+      }
+
+      @Override
+      public void removeConfigForTag(int tag) {
+        LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
+        if (LayoutAnimations != null) {
+          LayoutAnimations.removeConfigForTag(tag);
+        }
+      }
+    });
   }
 }
