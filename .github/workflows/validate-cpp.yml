@@ -1,0 +1,35 @@
+name: Validate C++
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/validate-cpp.yml'
+      - 'Common/cpp/**'
+      - 'ios/native/**'
+      - 'android/src/main/cpp/**'
+  pull_request:
+    paths:
+      - '.github/workflows/validate-cpp.yml'
+      - 'Common/cpp/**'
+      - 'ios/native/**'
+      - 'android/src/main/cpp/**'
+
+jobs:
+  lint:
+    name: cpplint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: reviewdog/action-cpplint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          flags: --linelength=230
+          targets: --recursive Common/cpp ios/native android/src/main/cpp
+          filter: "-legal/copyright\
+            ,-readability/todo\
+            ,-build/namespaces\
+            ,-whitespace/comments\
+            "
