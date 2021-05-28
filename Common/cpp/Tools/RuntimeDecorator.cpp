@@ -5,6 +5,8 @@
 #include "MutableValue.h"
 #include "LayoutAnimationsProxy.h"
 
+// dummy comment
+
 namespace reanimated {
 
 void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
