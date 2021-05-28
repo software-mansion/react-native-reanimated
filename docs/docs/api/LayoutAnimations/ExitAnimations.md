@@ -38,7 +38,7 @@ here then, plase open an issue or even better pull-request.
 #### Modificators
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
-* `easing` same easing worklet as with `withTiming`
+* `easing` same easing worklet as in `withTiming` animation
 
 ### ZoomOut 
 [gif]
