@@ -3,7 +3,7 @@ id: animatedLayout
 title: <AnimatedLayout>
 sidebar_label: <AnimatedLayout>
 ---
-The component is responsible for observing changes in its subtree. It manages all its decendents' animations. Even if it has been removed. There is no need to nest one `AnimatedLayout` in another one because the higher one would already watch the subtree of the lower one. You can treat it as a `View` component.
+The component is responsible for observing changes in its subtree. There is no need to nest one `AnimatedLayout` in another one because the higher one would already watch the subtree of the lower one. You can treat it as a `View` component. `AnimatedLayout` manages all its descendants' animations while it's mounting and unmounting as well. 
 
 ## Example
 ```js
@@ -57,6 +57,5 @@ The component is responsible for observing changes in its subtree. It manages al
 ```
 
 [gif]
-
 
 
