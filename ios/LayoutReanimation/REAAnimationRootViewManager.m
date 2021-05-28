@@ -1,10 +1,3 @@
-//
-//  REAAnimationRootViewManager.m
-//  DoubleConversion
-//
-//  Created by Szymon Kapala on 22/03/2021.
-//
-
 #import "REAAnimationRootViewManager.h"
 #import "REAAnimationRootView.h"
 #import <React/RCTViewManager.h>

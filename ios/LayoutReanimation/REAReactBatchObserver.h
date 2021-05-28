@@ -1,10 +1,3 @@
-//
-//  REAReactBatchObserver.h
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 22/03/2021.
-//
-
 #import <Foundation/Foundation.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTUIManagerObserverCoordinator.h>

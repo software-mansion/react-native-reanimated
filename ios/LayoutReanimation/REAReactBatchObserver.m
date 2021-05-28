@@ -1,10 +1,3 @@
-//
-//  REAReactBatchObserver.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 22/03/2021.
-//
-
 #import "REAReactBatchObserver.h"
 #import "RCTShadowView.h"
 #import "REAAnimationRootView.h"

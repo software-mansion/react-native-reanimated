@@ -1,10 +1,3 @@
-//
-//  REAViewTraverser.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 23/03/2021.
-//
-
 #import "REAViewTraverser.h"
 #import "REAAnimationRootView.h"
 

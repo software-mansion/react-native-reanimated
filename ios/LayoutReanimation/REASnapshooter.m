@@ -1,10 +1,3 @@
-//
-//  REASnapshooter.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 24/03/2021.
-//
-
 #import "REASnapshooter.h"
 #import "REAHeroView.h"
 #import "REAAnimationRootView.h"

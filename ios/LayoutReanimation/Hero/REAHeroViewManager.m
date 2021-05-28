@@ -1,10 +1,3 @@
-//
-//  REAHeroViewManager.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 02/04/2021.
-//
-
 #import "REAHeroViewManager.h"
 #import "REAHeroView.h"
 #import <React/RCTViewManager.h>

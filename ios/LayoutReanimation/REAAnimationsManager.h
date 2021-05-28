@@ -1,10 +1,3 @@
-//
-//  SnapshotsManager.h
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 24/03/2021.
-//
-
 #import <Foundation/Foundation.h>
 #import "REASnapshooter.h"
 #import <React/RCTUIManager.h>
