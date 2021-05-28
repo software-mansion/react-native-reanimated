@@ -95,7 +95,6 @@ if(!System.getenv('IS_TRAVIS')) {
 
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
     defaultConfig {
 
         minSdkVersion safeExtGet('minSdkVersion', 16)
