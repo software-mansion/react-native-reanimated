@@ -1,7 +1,3 @@
-//
-// Created by Szymon Kapala on 4/15/21.
-//
-
 #ifndef REANIMATEDEXAMPLE_LayoutAnimations_H
 #define REANIMATEDEXAMPLE_LayoutAnimations_H
 #include <fbjni/fbjni.h>

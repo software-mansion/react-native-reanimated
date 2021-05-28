@@ -1,7 +1,3 @@
-//
-// Created by Szymon Kapala on 4/19/21.
-//
-
 #include "JNIHelper.h"
 
 namespace reanimated {

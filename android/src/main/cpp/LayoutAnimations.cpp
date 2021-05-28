@@ -1,6 +1,3 @@
-//
-// Created by Szymon Kapala on 4/16/21.
-//
 #include "LayoutAnimations.h"
 #include "Logger.h"
 

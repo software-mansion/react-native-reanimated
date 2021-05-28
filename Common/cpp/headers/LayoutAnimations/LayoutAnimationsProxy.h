@@ -1,10 +1,3 @@
-//
-//  LayoutAnimationObserver.hpp
-//  DoubleConversion
-//
-//  Created by Szymon Kapala on 24/03/2021.
-//
-
 #ifndef LayoutAnimationsProxy_h
 #define LayoutAnimationsProxy_h
 

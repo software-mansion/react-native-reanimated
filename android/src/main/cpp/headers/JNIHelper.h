@@ -1,7 +1,3 @@
-//
-// Created by Szymon Kapala on 4/16/21.
-//
-
 #ifndef REANIMATEDEXAMPLE_JNIHELPER_H
 #define REANIMATEDEXAMPLE_JNIHELPER_H
 
