@@ -25,7 +25,7 @@ jobs:
       - uses: reviewdog/action-cpplint@master
         with:
           github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
+          reporter: github-pr-check
           flags: --linelength=230
           targets: --recursive Common/cpp ios/native android/src/main/cpp
           filter: "-legal/copyright\
