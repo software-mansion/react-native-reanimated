@@ -7,6 +7,7 @@
 #include <map>
 #include "JSIStoreValueUser.h"
 #include "RuntimeManager.h"
+#include "LayoutAnimationsProxy.h"
 
 using namespace facebook;
 
@@ -16,6 +17,7 @@ class MutableValue : public jsi::HostObject, public std::enable_shared_from_this
 private:
   friend MutableValueSetterProxy;
   RuntimeManager *runtimeManager;
+  friend LayoutAnimationsProxy;
   std::mutex readWriteMutex;
   std::shared_ptr<ShareableValue> value;
   std::weak_ptr<jsi::Value> animation;

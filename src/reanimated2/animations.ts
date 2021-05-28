@@ -4,6 +4,7 @@
 import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
 import NativeReanimated from './NativeReanimated';
+import { Platform } from 'react-native';
 
 let IN_STYLE_UPDATER = false;
 
@@ -163,6 +164,180 @@ export function cancelAnimation(sharedValue) {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+}
+
+export function withStyleAnimation(styleAnimations) {
+  'worklet';
+  return defineAnimation({}, () => {
+    'worklet';
+
+    const onFrame = (animation, now) => {
+      let stillGoing = false;
+      Object.keys(styleAnimations).forEach((key) => {
+        const currentAnimation = animation.styleAnimations[key];
+        if (key === 'transform') {
+          const transform = animation.styleAnimations.transform;
+          for (let i = 0; i < transform.length; i++) {
+            const type = Object.keys(transform[i])[0];
+            const currentAnimation = transform[i][type];
+            if (currentAnimation.finished) {
+              continue;
+            }
+            const finished = currentAnimation.onFrame(currentAnimation, now);
+            if (finished) {
+              currentAnimation.finished = true;
+              if (currentAnimation.callback) {
+                currentAnimation.callback(true);
+              }
+            } else {
+              stillGoing = true;
+            }
+            animation.current.transform[i][type] = currentAnimation.current;
+          }
+        } else {
+          if (!currentAnimation.finished) {
+            const finished = currentAnimation.onFrame(currentAnimation, now);
+            if (finished) {
+              currentAnimation.finished = true;
+              if (currentAnimation.callback) {
+                currentAnimation.callback(true);
+              }
+            } else {
+              stillGoing = true;
+            }
+            animation.current[key] = currentAnimation.current;
+          }
+        }
+      });
+      return !stillGoing;
+    };
+
+    const onStart = (animation, value, now, previousAnimation) => {
+      Object.keys(styleAnimations).forEach((key) => {
+        if (key === 'transform') {
+          animation.current.transform = [];
+          const transform = styleAnimations.transform;
+          const prevTransform = null;
+          const valueTransform = value.transform;
+          if (
+            previousAnimation &&
+            previousAnimation.styleAnimations &&
+            previousAnimation.styleAnimations.transform
+          ) {
+            prevAnimation = previousAnimation.styleAnimations.transform;
+          }
+
+          for (let i = 0; i < transform.length; i++) {
+            // duplication of code to avoid function calls
+            let prevAnimation = null;
+            const type = Object.keys(transform[i])[0];
+            if (prevTransform && prevTransform.length > i) {
+              const prevTransformStep = prevTransform[i];
+              const prevType = Object.keys(prevTransformStep)[0];
+              if (prevType === type) {
+                prevAnimation = prevTransformStep[prevType];
+              }
+            }
+
+            let prevVal = 0;
+            if (prevAnimation != null) {
+              prevVal = prevAnimation.current;
+            }
+            if (
+              valueTransform != null &&
+              valueTransform.length > i &&
+              valueTransform[i][type]
+            ) {
+              prevVal = valueTransform[i][type];
+            }
+            const obj = {};
+            obj[type] = prevVal;
+            animation.current.transform[i] = obj;
+            const currentAnimation = transform[i][type];
+            currentAnimation.onStart(
+              currentAnimation,
+              prevVal,
+              now,
+              prevAnimation
+            );
+          }
+        } else {
+          let prevAnimation = null;
+          if (
+            previousAnimation &&
+            previousAnimation.styleAnimations &&
+            previousAnimation.styleAnimations[key]
+          ) {
+            prevAnimation = previousAnimation.styleAnimations[key];
+          }
+          let prevVal = 0;
+          if (prevAnimation != null) {
+            prevVal = prevAnimation.current;
+          }
+          if (value[key]) {
+            prevVal = value[key];
+          }
+          animation.current[key] = prevVal;
+          const currentAnimation = animation.styleAnimations[key];
+          currentAnimation.onStart(
+            currentAnimation,
+            prevVal,
+            now,
+            prevAnimation
+          );
+        }
+      });
+    };
+
+    const callback = (finished) => {
+      if (!finished) {
+        Object.keys(styleAnimations).forEach((key) => {
+          const currentAnimation = styleAnimations[key];
+          if (key === 'transform') {
+            const transform = styleAnimations.transform;
+            for (let i = 0; i < transform.length; i++) {
+              const type = Object.keys(transform[i])[0];
+              const currentAnimation = transform[i][type];
+              if (currentAnimation.finished) {
+                continue;
+              }
+              if (currentAnimation.callback) {
+                currentAnimation.callback(false);
+              }
+            }
+          } else {
+            if (!currentAnimation.finished) {
+              if (currentAnimation.callback) {
+                currentAnimation.callback(false);
+              }
+            }
+          }
+        });
+      }
+    };
+
+    return {
+      isHigherOrder: true,
+      onFrame,
+      onStart,
+      current: {},
+      styleAnimations,
+      callback,
+    };
+  });
+}
+
+// TODO it should work only if there was no animation before.
+export function withStartValue(startValue, animation) {
+  'worklet';
+  return defineAnimation(startValue, () => {
+    'worklet';
+    if (!_WORKLET && typeof animation === 'function') {
+      animation = animation();
+    }
+    animation.current = startValue;
+    return animation;
+  });
 }
 
 export function withTiming(toValue, userConfig, callback) {
@@ -358,55 +533,80 @@ export function withDecay(userConfig, callback) {
     'worklet';
     const config = {
       deceleration: 0.998,
+      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    const VELOCITY_EPS = 5;
+    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
+    const SLOPE_FACTOR = 0.1;
 
     function decay(animation, now) {
-      const { lastTimestamp, initialVelocity, current, velocity } = animation;
+      const {
+        lastTimestamp,
+        startTimestamp,
+        initialVelocity,
+        current,
+        velocity,
+      } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
+      const v =
+        velocity *
+        Math.exp(
+          -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
+        );
+      animation.current =
+        current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
+      animation.velocity = v;
       animation.lastTimestamp = now;
 
-      const kv = Math.pow(config.deceleration, deltaTime);
-      const kx = (config.deceleration * (1 - kv)) / (1 - config.deceleration);
-
-      const v0 = velocity / 1000;
-      const v = v0 * kv * 1000;
-      const x = current + v0 * kx;
-
-      animation.current = x;
-      animation.velocity = v;
-
-      let toValueIsReached = null;
-
-      if (Array.isArray(config.clamp)) {
+      if (config.clamp) {
         if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
-          toValueIsReached = config.clamp[0];
+          animation.current = config.clamp[0];
+          return true;
         } else if (
           initialVelocity > 0 &&
           animation.current >= config.clamp[1]
         ) {
-          toValueIsReached = config.clamp[1];
+          animation.current = config.clamp[1];
+          return true;
         }
       }
 
-      if (Math.abs(v) < VELOCITY_EPS || toValueIsReached !== null) {
-        if (toValueIsReached !== null) {
-          animation.current = toValueIsReached;
-        }
-
+      if (Math.abs(v) < VELOCITY_EPS) {
         return true;
+      }
+    }
+
+    function validateConfig() {
+      if (config.clamp) {
+        if (Array.isArray(config.clamp)) {
+          if (config.clamp.length !== 2) {
+            console.error(
+              `clamp array must contain 2 items but is given ${config.clamp.length}`
+            );
+          }
+        } else {
+          console.error(
+            `config.clamp must be an array but is ${typeof config.clamp}`
+          );
+        }
+      }
+      if (config.velocityFactor <= 0) {
+        console.error(
+          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
+        );
       }
     }
 
     function onStart(animation, value, now) {
       animation.current = value;
       animation.lastTimestamp = now;
+      animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
+      validateConfig();
     }
 
     return {

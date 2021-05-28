@@ -59,12 +59,13 @@ std::vector<std::shared_ptr<MutableValue>> extractMutablesFromArray(jsi::Runtime
 
 NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                                                std::shared_ptr<Scheduler> scheduler,
-                                               std::unique_ptr<jsi::Runtime> rt,
+                                               std::shared_ptr<jsi::Runtime> rt,
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
-                                               PlatformDepMethodsHolder platformDepMethodsHolder) :
+                                               std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) : 
                                                   NativeReanimatedModuleSpec(jsInvoker),
-                                                  RuntimeManager(std::move(rt), errorHandler, scheduler, RuntimeType::UI),
+                                                  RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
@@ -75,12 +76,16 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
+  
+  this->layoutAnimationsProxy = layoutAnimationsProxy;
+  
   RuntimeDecorator::decorateUIRuntime(*runtime,
                                       platformDepMethodsHolder.updaterFunction,
                                       requestAnimationFrame,
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
-                                      platformDepMethodsHolder.getCurrentTime);
+                                      platformDepMethodsHolder.getCurrentTime,
+                                      layoutAnimationsProxy);
    onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;
     this->onRender(timestampMs);

@@ -17,10 +17,17 @@ using namespace facebook;
  */
 class RuntimeManager {
 public:
-  RuntimeManager(std::unique_ptr<jsi::Runtime>&& runtime,
-                 std::shared_ptr<ErrorHandler> errorHandler,
-                 std::shared_ptr<Scheduler> scheduler,
-                 RuntimeType runtimeType = RuntimeType::Worklet): runtime(std::move(runtime)), errorHandler(errorHandler), scheduler(scheduler), workletsCache(std::make_unique<WorkletsCache>()) {
+  RuntimeManager(
+    std::shared_ptr<jsi::Runtime> runtime,
+    std::shared_ptr<ErrorHandler> errorHandler,
+    std::shared_ptr<Scheduler> scheduler,
+    RuntimeType runtimeType = RuntimeType::Worklet
+  ) : 
+    runtime(runtime), 
+    errorHandler(errorHandler), 
+    scheduler(scheduler), 
+    workletsCache(std::make_unique<WorkletsCache>()) 
+  { 
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 public:
@@ -32,7 +39,7 @@ public:
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
-  std::unique_ptr<jsi::Runtime> runtime;
+  std::shared_ptr<jsi::Runtime> runtime;
   /**
    Holds the error handler that will be invoked when any kind of error occurs.
    */
