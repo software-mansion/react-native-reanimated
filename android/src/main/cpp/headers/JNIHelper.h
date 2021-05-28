@@ -1,5 +1,4 @@
-#ifndef REANIMATEDEXAMPLE_JNIHELPER_H
-#define REANIMATEDEXAMPLE_JNIHELPER_H
+#pragma once
 
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -29,4 +28,3 @@ struct JNIHelper {
 
 };
 
-#endif //REANIMATEDEXAMPLE_JNIHELPER_H

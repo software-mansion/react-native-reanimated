@@ -1,5 +1,4 @@
-#ifndef REANIMATEDEXAMPLE_LayoutAnimations_H
-#define REANIMATEDEXAMPLE_LayoutAnimations_H
+#pragma once
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include "JNIHelper.h"
@@ -35,4 +34,3 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 };
 
 };
-#endif //REANIMATEDEXAMPLE_LayoutAnimations_H

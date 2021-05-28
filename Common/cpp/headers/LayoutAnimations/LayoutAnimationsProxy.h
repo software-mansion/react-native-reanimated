@@ -1,5 +1,4 @@
-#ifndef LayoutAnimationsProxy_h
-#define LayoutAnimationsProxy_h
+#pragma once
 
 #include <stdio.h>
 #include <memory>
@@ -30,4 +29,3 @@ private:
 
 }
 
-#endif /* LayoutAnimationsProxy_h */
