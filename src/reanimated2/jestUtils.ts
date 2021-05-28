@@ -6,34 +6,69 @@ let config = {
   fps: 60,
 };
 
-const checkValidation = (received) => {
-  let message = [];
-  let isValid = true;
-  if (!received.props.style) {
-    isValid = false;
-    message.push("Component not contains 'style' property");
-  }
-  if (!received.props.animatedStyle?.value) {
-    isValid = false;
-    message.push("Component not contains 'animatedStyle' property");
-  }
-  message = message.join('\n');
+const isAnimatedStyle = (style) => {
+  return !!style.animatedStyle;
+};
 
-  return { isValid, message };
+const getAnimatedStyleFromObject = (style) => {
+  return style.animatedStyle.current.value;
 };
 
 const getCurrentStyle = (received) => {
-  return {
-    ...received.props.style,
-    ...received.props.animatedStyle.value,
-  };
+  const styleObject = received.props.style;
+  let currentStyle = {};
+  if (Array.isArray(styleObject)) {
+    received.props.style.forEach((style) => {
+      if (isAnimatedStyle(style)) {
+        currentStyle = {
+          ...currentStyle,
+          ...getAnimatedStyleFromObject(style),
+        };
+      } else {
+        currentStyle = {
+          ...currentStyle,
+          ...style,
+        };
+      }
+    });
+  } else {
+    if (isAnimatedStyle(styleObject)) {
+      currentStyle = getAnimatedStyleFromObject(styleObject);
+    } else {
+      currentStyle = {
+        ...styleObject,
+        ...received.props.animatedStyle.value,
+      };
+    }
+  }
+  return currentStyle;
+};
+
+const checkEqual = (currentStyle, expectStyle) => {
+  if (Array.isArray(expectStyle)) {
+    if (expectStyle.length !== currentStyle.length) return false;
+    for (let i = 0; i < currentStyle.length; i++) {
+      if (!checkEqual(currentStyle[i], expectStyle[i])) {
+        return false;
+      }
+    }
+  } else if (typeof currentStyle === 'object' && currentStyle) {
+    for (const property in expectStyle) {
+      if (!checkEqual(currentStyle[property], expectStyle[property])) {
+        return false;
+      }
+    }
+  } else {
+    return currentStyle === expectStyle;
+  }
+  return true;
 };
 
 const findStyleDiff = (current, expect, requireAllMatch) => {
   const diffs = [];
   let isEqual = true;
   for (const property in expect) {
-    if (current[property] !== expect[property]) {
+    if (!checkEqual(current[property], expect[property])) {
       isEqual = false;
       diffs.push({
         property: property,
@@ -42,6 +77,7 @@ const findStyleDiff = (current, expect, requireAllMatch) => {
       });
     }
   }
+
   if (
     requireAllMatch &&
     Object.keys(current).length !== Object.keys(expect).length
@@ -62,8 +98,7 @@ const findStyleDiff = (current, expect, requireAllMatch) => {
 };
 
 const compareStyle = (received, expectedStyle, config) => {
-  const { isValid, message } = checkValidation(received);
-  if (!isValid) {
+  if (!received.props.style) {
     return { message: () => message, pass: false };
   }
   const { exact } = config;
@@ -79,7 +114,9 @@ const compareStyle = (received, expectedStyle, config) => {
   const differences = diffs
     .map(
       (diff) =>
-        `- '${diff.property}' should be ${diff.expect}, but is ${diff.current}`
+        `- '${diff.property}' should be ${JSON.stringify(
+          diff.expect
+        )}, but is ${JSON.stringify(diff.current)}`
     )
     .join('\n');
 
@@ -122,20 +159,22 @@ export const withReanimatedTimer = (animatonTest) => {
 };
 
 export const advanceAnimationByTime = (time = frameTime) => {
-  for (let i = 0; i < Math.ceil(time / frameTime); i++) {
+  for (let i = 0; i <= Math.ceil(time / frameTime); i++) {
     tickTravel();
   }
+  jest.advanceTimersByTime(frameTime);
 };
 
 export const advanceAnimationByFrame = (count) => {
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i <= count; i++) {
     tickTravel();
   }
+  jest.advanceTimersByTime(frameTime);
 };
 
 export const setUpTests = (userConfig = {}) => {
   const expect = require('expect');
-  frameTime = 1000 / config.fps;
+  frameTime = Math.round(1000 / config.fps);
 
   config = {
     ...config,

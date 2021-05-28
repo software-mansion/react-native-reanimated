@@ -11,6 +11,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <jsi/jsi.h>
+#include "LayoutAnimationsProxy.h"
 
 using namespace facebook;
 
@@ -19,6 +20,7 @@ namespace reanimated {
 class ShareableValue: public std::enable_shared_from_this<ShareableValue>, public StoreUser {
 friend WorkletsCache;
 friend FrozenObject;
+friend LayoutAnimationsProxy;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);

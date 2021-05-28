@@ -16,9 +16,9 @@ using namespace facebook;
  */
 class RuntimeManager {
 public:
-  RuntimeManager(std::unique_ptr<jsi::Runtime>&& runtime,
+  RuntimeManager(std::shared_ptr<jsi::Runtime> runtime,
                  std::shared_ptr<ErrorHandler> errorHandler,
-                 std::shared_ptr<Scheduler> scheduler): runtime(std::move(runtime)), errorHandler(errorHandler), scheduler(scheduler), workletsCache(std::make_unique<WorkletsCache>()) { }
+                 std::shared_ptr<Scheduler> scheduler): runtime(runtime), errorHandler(errorHandler), scheduler(scheduler), workletsCache(std::make_unique<WorkletsCache>()) { }
 public:
   /**
    Holds the jsi::Function worklet that is responsible for updating values in JS.
@@ -28,7 +28,7 @@ public:
   /**
    Holds the jsi::Runtime this RuntimeManager is managing.
    */
-  std::unique_ptr<jsi::Runtime> runtime;
+  std::shared_ptr<jsi::Runtime> runtime;
   /**
    Holds the error handler that will be invoked when any kind of error occurs.
    */
