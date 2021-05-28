@@ -5,7 +5,6 @@ import { Easing } from './Easing';
 import { isColor, convertToHSVA, toRGBA } from './Colors';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
-import { objectTypeAnnotation } from 'babel-types';
 
 let IN_STYLE_UPDATER = false;
 
@@ -168,13 +167,13 @@ export function cancelAnimation(sharedValue) {
 }
 
 export function withStyleAnimation(styleAnimations) {
-  'worklet'
+  'worklet';
   return defineAnimation({}, () => {
-    'worklet'
-    console.log("styleAnimations ", styleAnimations);
+    'worklet';
+    console.log('styleAnimations ', styleAnimations);
 
     const onFrame = (animation, now) => {
-      console.log("onFrame");
+      console.log('onFrame');
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
@@ -216,21 +215,26 @@ export function withStyleAnimation(styleAnimations) {
     };
 
     const onStart = (animation, value, now, previousAnimation) => {
-      console.log("start");
+      console.log('start');
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {
           animation.current.transform = [];
           const transform = styleAnimations.transform;
-          let prevTransform = null;
-          let valueTransform = value.transform;
-          if (previousAnimation && previousAnimation.styleAnimations && previousAnimation.styleAnimations.transform) {
+          const prevTransform = null;
+          const valueTransform = value.transform;
+          if (
+            previousAnimation &&
+            previousAnimation.styleAnimations &&
+            previousAnimation.styleAnimations.transform
+          ) {
             prevAnimation = previousAnimation.styleAnimations.transform;
           }
 
-          for (let i = 0; i < transform.length; i++) { // duplication of code to avoid function calls
+          for (let i = 0; i < transform.length; i++) {
+            // duplication of code to avoid function calls
             let prevAnimation = null;
             const type = Object.keys(transform[i])[0];
-            console.log("type", type);
+            console.log('type', type);
             if (prevTransform && prevTransform.length > i) {
               const prevTransformStep = prevTransform[i];
               const prevType = Object.keys(prevTransformStep)[0];
@@ -243,20 +247,33 @@ export function withStyleAnimation(styleAnimations) {
             if (prevAnimation != null) {
               prevVal = prevAnimation.current;
             }
-            if (valueTransform != null && valueTransform.length > i && valueTransform[i][type]) {
+            if (
+              valueTransform != null &&
+              valueTransform.length > i &&
+              valueTransform[i][type]
+            ) {
               prevVal = valueTransform[i][type];
             }
             const obj = {};
             obj[type] = prevVal;
             animation.current.transform[i] = obj;
             const currentAnimation = transform[i][type];
-            console.log("onStart key end", key);
-            currentAnimation.onStart(currentAnimation, prevVal, now, prevAnimation);
+            console.log('onStart key end', key);
+            currentAnimation.onStart(
+              currentAnimation,
+              prevVal,
+              now,
+              prevAnimation
+            );
           }
         } else {
-          console.log("onStart key", key);
+          console.log('onStart key', key);
           let prevAnimation = null;
-          if (previousAnimation && previousAnimation.styleAnimations && previousAnimation.styleAnimations[key]) {
+          if (
+            previousAnimation &&
+            previousAnimation.styleAnimations &&
+            previousAnimation.styleAnimations[key]
+          ) {
             prevAnimation = previousAnimation.styleAnimations[key];
           }
           let prevVal = 0;
@@ -268,11 +285,16 @@ export function withStyleAnimation(styleAnimations) {
           }
           animation.current[key] = prevVal;
           const currentAnimation = animation.styleAnimations[key];
-          console.log("onStart key end", key);
-          currentAnimation.onStart(currentAnimation, prevVal, now, prevAnimation);
+          console.log('onStart key end', key);
+          currentAnimation.onStart(
+            currentAnimation,
+            prevVal,
+            now,
+            prevAnimation
+          );
         }
       });
-    }
+    };
 
     const callback = (finished) => {
       if (!finished) {
@@ -299,7 +321,7 @@ export function withStyleAnimation(styleAnimations) {
           }
         });
       }
-    }
+    };
 
     return {
       isHigherOrder: true,
@@ -313,10 +335,10 @@ export function withStyleAnimation(styleAnimations) {
 }
 
 // TODO it should work only if there was no animation before.
-export function withStartValue(startValue, animation) { 
-  'worklet'
+export function withStartValue(startValue, animation) {
+  'worklet';
   return defineAnimation(startValue, () => {
-    'worklet'
+    'worklet';
     if (!_WORKLET && typeof animation === 'function') {
       animation = animation();
     }
