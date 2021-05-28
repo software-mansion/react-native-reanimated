@@ -356,7 +356,6 @@ export default function createAnimatedComponent(Component, options = {}) {
           (this.props.layout || this.props.entering || this.props.exiting) &&
           tag != null
         ) {
-          console.log('trying to register config for', tag);
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering

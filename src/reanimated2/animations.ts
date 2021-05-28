@@ -170,10 +170,8 @@ export function withStyleAnimation(styleAnimations) {
   'worklet';
   return defineAnimation({}, () => {
     'worklet';
-    console.log('styleAnimations ', styleAnimations);
 
     const onFrame = (animation, now) => {
-      console.log('onFrame');
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
@@ -215,7 +213,6 @@ export function withStyleAnimation(styleAnimations) {
     };
 
     const onStart = (animation, value, now, previousAnimation) => {
-      console.log('start');
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {
           animation.current.transform = [];
@@ -234,7 +231,6 @@ export function withStyleAnimation(styleAnimations) {
             // duplication of code to avoid function calls
             let prevAnimation = null;
             const type = Object.keys(transform[i])[0];
-            console.log('type', type);
             if (prevTransform && prevTransform.length > i) {
               const prevTransformStep = prevTransform[i];
               const prevType = Object.keys(prevTransformStep)[0];
@@ -258,7 +254,6 @@ export function withStyleAnimation(styleAnimations) {
             obj[type] = prevVal;
             animation.current.transform[i] = obj;
             const currentAnimation = transform[i][type];
-            console.log('onStart key end', key);
             currentAnimation.onStart(
               currentAnimation,
               prevVal,
@@ -267,7 +262,6 @@ export function withStyleAnimation(styleAnimations) {
             );
           }
         } else {
-          console.log('onStart key', key);
           let prevAnimation = null;
           if (
             previousAnimation &&
@@ -285,7 +279,6 @@ export function withStyleAnimation(styleAnimations) {
           }
           animation.current[key] = prevVal;
           const currentAnimation = animation.styleAnimations[key];
-          console.log('onStart key end', key);
           currentAnimation.onStart(
             currentAnimation,
             prevVal,

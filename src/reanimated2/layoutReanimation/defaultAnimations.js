@@ -557,8 +557,6 @@ export class OpacityIn extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    console.log('duration: 000 ', config.duration);
-
     return (_) => {
       'worklet';
       return {

@@ -28,7 +28,6 @@ runOnUI(() => {
     configs,
     registerConfig(tag, config) {
       configs[tag] = config;
-      console.log('registered config for', tag);
     },
     removeConfig(tag) {
       delete configs[tag];
@@ -38,14 +37,11 @@ runOnUI(() => {
         return; // :(
       }
 
-      console.log('animation will be started', tag, JSON.stringify(yogaValues));
-
       if (typeof configs[tag][type] !== 'function') {
         console.error(`${type} animation for a tag: ${tag} it not a function!`);
       }
 
       const style = configs[tag][type](yogaValues);
-      console.log('animationObjectKeys', Object.keys(style));
       const sv = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
@@ -58,11 +54,6 @@ runOnUI(() => {
           _stopObservingProgress(tag, finished);
         }
       };
-      console.log(
-        'animation has been started',
-        tag,
-        JSON.stringify(yogaValues)
-      );
       configs[tag].sv.value = animation;
       _startObservingProgress(tag, sv);
     },
