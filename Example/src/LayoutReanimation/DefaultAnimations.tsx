@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Animated, { 
   AnimatedLayout, 
   SlideInRight, 
@@ -22,18 +22,22 @@ import Animated, {
   StretchOutY,
   FlipInXUp,
   FlipInYLeft,
+  FlipInXDown,
+  FlipInYRight,
   FlipInEasyX,
   FlipInEasyY,
+  FlipOutXUp,
+  FlipOutYLeft,
+  FlipOutXDown,
+  FlipOutYRight,
+  FlipOutEasyX,
+  FlipOutEasyY,
   ZoomInRight,
   ZoomInLeft,
   ZoomInUp,
   ZoomInDown,
   ZoomInEasyUp,
   ZoomInEasyDown,
-  useAnimatedStyle,
-  withDelay,
-  withTiming,
-  useSharedValue
 } from 'react-native-reanimated';
 
 const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
@@ -43,17 +47,17 @@ const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow
     <AnimatedLayout>
       <View style={styles.animatedBox}>
         {show && 
-          <TouchableOpacity onPress={() => setShow(!show)}>
+          <TouchableWithoutFeedback onPress={() => setShow(!show)}>
             <Animated.View
               style={styles.animatedBlock}
               {...animatedStyle}
             >
               <Text style={styles.animatedText}>{name}</Text>
             </Animated.View>
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         }
         {!show && 
-          <Animated.View entering={OpacityIn.delay(350)}>
+          <Animated.View entering={'entering' in animatedStyle ? null : OpacityIn.delay(350)}>
             <TouchableOpacity 
               style={styles.animatedBlockPlaceholder} 
               onPress={() => setShow(!show)}
@@ -77,13 +81,19 @@ export function DefaultAnimations(): React.ReactElement {
 
       <Text style={styles.groupText}>Flip in</Text>
       <AnimatedBlock name="FlipInXUp" animatedStyle={{entering: FlipInXUp}} />
+      <AnimatedBlock name="FlipInXDown" animatedStyle={{entering: FlipInXDown}} />
       <AnimatedBlock name="FlipInYLeft" animatedStyle={{entering: FlipInYLeft}} />
+      <AnimatedBlock name="FlipInYRight" animatedStyle={{entering: FlipInYRight}} />
       <AnimatedBlock name="FlipInEasyX" animatedStyle={{entering: FlipInEasyX}} />
       <AnimatedBlock name="FlipInEasyY" animatedStyle={{entering: FlipInEasyY}} />
 
       <Text style={styles.groupText}>Flip out</Text>
-      {/* <AnimatedBlock name="StretchOutX" animatedStyle={{exiting: StretchOutX}} defaultShow={true} /> */}
-      {/* <AnimatedBlock name="StretchOutY" animatedStyle={{exiting: StretchOutY}} defaultShow={true} /> */}
+      <AnimatedBlock name="FlipOutXUp" animatedStyle={{exiting: FlipOutXUp}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutXDown" animatedStyle={{exiting: FlipOutXDown}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutYLeft" animatedStyle={{exiting: FlipOutYLeft}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutYRight" animatedStyle={{exiting: FlipOutYRight}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutEasyX" animatedStyle={{exiting: FlipOutEasyX}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutEasyY" animatedStyle={{exiting: FlipOutEasyY}} defaultShow={true} />
 
       <Text style={styles.groupText}>Stretch in</Text>
       <AnimatedBlock name="StretchInX" animatedStyle={{entering: StretchInX}} />
@@ -147,7 +157,7 @@ const styles = StyleSheet.create({
   },
   animatedTextPlaceholder: {
     color: '#001a72',
-    fontSize: 23
+    fontSize: 20
   },
   animatedBlockPlaceholder: {
     height: 60,
@@ -160,7 +170,7 @@ const styles = StyleSheet.create({
   },
   animatedText: {
     color: '#ffffff',
-    fontSize: 23
+    fontSize: 20
   },
   animatedBox: {
     padding: 5,
