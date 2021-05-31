@@ -490,6 +490,108 @@ export class ZoomInRight extends BaseAnimationBuilder {
   }
 }
 
+export class ZoomInUp extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originY: delayFunction(delay, animation(0, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originY: values.originY - height,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomInDown extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInDown();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originY: delayFunction(delay, animation(0, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originY: values.originY + height,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomInEasyUp extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInEasyUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originY: delayFunction(delay, animation(0, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originY: values.height,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomInEasyDown extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInEasyDown();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originY: delayFunction(delay, animation(0, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originY: -values.height,
+        },
+      };
+    };
+  }
+}
+
 export class ZoomOut extends BaseAnimationBuilder {
   static createInstance() {
     return new ZoomOut();
@@ -882,9 +984,73 @@ export class StretchOutY extends BaseAnimationBuilder {
   }
 }
 
-export class FlipInX extends BaseAnimationBuilder {
+export class FlipInXUp extends BaseAnimationBuilder {
   static createInstance() {
-    return new FlipInX();
+    return new FlipInXUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (targetValues) => {
+      'worklet';
+      return {
+        initialValues:{
+          transform: [
+            { perspective: 500 },
+            { rotateX: `90deg`},
+            { translateY: -targetValues.height },
+          ],
+        },
+        animations: {
+          transform: [
+            { perspective: delayFunction(delay, animation(500, config)) },
+            { rotateX: delayFunction(delay, animation(`0deg`, config)) },
+            { translateY: delayFunction(delay, animation(0, config)) },
+          ],
+        }
+      }
+    };
+  }
+}
+
+export class FlipInYLeft extends BaseAnimationBuilder {
+  static createInstance() {
+    return new FlipInYLeft();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (targetValues) => {
+      'worklet';
+      return {
+        initialValues:{
+          transform: [
+            { perspective: 500 },
+            { rotateY: `90deg`},
+            { translateX: -targetValues.width },
+          ],
+        },
+        animations: {
+          transform: [
+            { perspective: delayFunction(delay, animation(500, config)) },
+            { rotateY: delayFunction(delay, animation(`0deg`, config)) },
+            { translateX: delayFunction(delay, animation(0, config)) },
+          ],
+        }
+      }
+    };
+  }
+}
+
+export class FlipInEasyX extends BaseAnimationBuilder {
+  static createInstance() {
+    return new FlipInEasyX();
   }
 
   build() {
@@ -895,21 +1061,49 @@ export class FlipInX extends BaseAnimationBuilder {
     return () => {
       'worklet';
       return {
+        initialValues:{
+          transform: [
+            { perspective: 500 },
+            { rotateX: `90deg`},
+          ],
+        },
         animations: {
-          transform: [{ rotateX: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            { perspective: delayFunction(delay, animation(500, config)) },
+            { rotateX: delayFunction(delay, animation(`0deg`, config)) },
+          ],
+        }
+      }
+    };
+  }
+}
+
+export class FlipInEasyY extends BaseAnimationBuilder {
+  static createInstance() {
+    return new FlipInEasyY();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return () => {
+      'worklet';
+      return {
+        initialValues:{
+          transform: [
+            { perspective: 500 },
+            { rotateY: `90deg`},
+          ],
         },
-        initialValues: {
-          perspective: 1000,
-          // transformStyle: 'perspective-3d',
-          transform: [{ rotateX: 5 }],
-          // transform: [
-          //   { perspective: 850 },
-          //   { translateX: - Dimensions.get('window').width * 0.24 },
-          //   { rotateY: '60deg'},
-      
-          // ],
-        },
-      };
+        animations: {
+          transform: [
+            { perspective: delayFunction(delay, animation(500, config)) },
+            { rotateY: delayFunction(delay, animation(`0deg`, config)) },
+          ],
+        }
+      }
     };
   }
 }

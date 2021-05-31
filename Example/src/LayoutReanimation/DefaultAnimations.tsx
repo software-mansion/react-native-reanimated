@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Animated, { 
   AnimatedLayout, 
   SlideInRight, 
@@ -20,9 +20,20 @@ import Animated, {
   StretchInY,
   StretchOutX,
   StretchOutY,
-  FlipInX,
+  FlipInXUp,
+  FlipInYLeft,
+  FlipInEasyX,
+  FlipInEasyY,
   ZoomInRight,
   ZoomInLeft,
+  ZoomInUp,
+  ZoomInDown,
+  ZoomInEasyUp,
+  ZoomInEasyDown,
+  useAnimatedStyle,
+  withDelay,
+  withTiming,
+  useSharedValue
 } from 'react-native-reanimated';
 
 const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
@@ -32,14 +43,25 @@ const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow
     <AnimatedLayout>
       <View style={styles.animatedBox}>
         {show && 
-          <Animated.View
-            style={styles.animatedBlock}
-            {...animatedStyle}
-          >
-            <Text style={styles.animatedText}>{name}</Text>
+          <TouchableOpacity onPress={() => setShow(!show)}>
+            <Animated.View
+              style={styles.animatedBlock}
+              {...animatedStyle}
+            >
+              <Text style={styles.animatedText}>{name}</Text>
+            </Animated.View>
+          </TouchableOpacity>
+        }
+        {!show && 
+          <Animated.View entering={OpacityIn.delay(350)}>
+            <TouchableOpacity 
+              style={styles.animatedBlockPlaceholder} 
+              onPress={() => setShow(!show)}
+            >
+              <Text style={styles.animatedTextPlaceholder}>{name}</Text>
+            </TouchableOpacity>
           </Animated.View>
         }
-        <Button title={name} onPress={() => setShow(!show)}/>
       </View>
     </AnimatedLayout>
   );
@@ -50,9 +72,14 @@ export function DefaultAnimations(): React.ReactElement {
   return (
     <ScrollView style={{flexDirection: 'column'}}>
 
+      <Text style={styles.groupText}>Fade</Text>
+      <Text style={styles.groupText}>Bounce</Text>
+
       <Text style={styles.groupText}>Flip in</Text>
-      <AnimatedBlock name="FlipInX" animatedStyle={{entering: FlipInX}} />
-      {/* <AnimatedBlock name="StretchInY" animatedStyle={{entering: StretchInY}} /> */}
+      <AnimatedBlock name="FlipInXUp" animatedStyle={{entering: FlipInXUp}} />
+      <AnimatedBlock name="FlipInYLeft" animatedStyle={{entering: FlipInYLeft}} />
+      <AnimatedBlock name="FlipInEasyX" animatedStyle={{entering: FlipInEasyX}} />
+      <AnimatedBlock name="FlipInEasyY" animatedStyle={{entering: FlipInEasyY}} />
 
       <Text style={styles.groupText}>Flip out</Text>
       {/* <AnimatedBlock name="StretchOutX" animatedStyle={{exiting: StretchOutX}} defaultShow={true} /> */}
@@ -71,6 +98,10 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="ZoomInRotate" animatedStyle={{entering: ZoomInRotate}} />
       <AnimatedBlock name="ZoomInRight" animatedStyle={{entering: ZoomInRight}} />
       <AnimatedBlock name="ZoomInLeft" animatedStyle={{entering: ZoomInLeft}} />
+      <AnimatedBlock name="ZoomInUp" animatedStyle={{entering: ZoomInUp}} />
+      <AnimatedBlock name="ZoomInDown" animatedStyle={{entering: ZoomInDown}} />
+      <AnimatedBlock name="ZoomInEasyUp" animatedStyle={{entering: ZoomInEasyUp}} />
+      <AnimatedBlock name="ZoomInEasyDown" animatedStyle={{entering: ZoomInEasyDown}} />
 
       <Text style={styles.groupText}>Zoom out</Text>
       <AnimatedBlock name="ZoomOut" animatedStyle={{exiting: ZoomOut}} defaultShow={true} />
@@ -114,14 +145,25 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'center',
   },
+  animatedTextPlaceholder: {
+    color: '#001a72',
+    fontSize: 23
+  },
+  animatedBlockPlaceholder: {
+    height: 60,
+    width: 300,
+    borderWidth: 3,
+    borderColor: '#001a72',
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderStyle: 'dashed'
+  },
   animatedText: {
     color: '#ffffff',
-    fontSize: 25
+    fontSize: 23
   },
   animatedBox: {
-    height: 105,
-    alignItems: 'center', 
-    justifyContent: 'flex-end',
-    transform: [{perspective: 10000}]
+    padding: 5,
+    alignItems: 'center',
   },
 });
