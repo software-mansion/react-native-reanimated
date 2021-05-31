@@ -1,7 +1,7 @@
 import { isCompletionStatement } from 'babel-types';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import Animated, { AnimatedLayout, SlideInRight, SlideOutRight, SlideInDown, SlideOutUp, OpacityIn, OpacityOut, SlideOutLeft, SlideInLeft } from 'react-native-reanimated';
+import Animated, { AnimatedLayout, SlideInRight, SlideOutRight, SlideInDown, SlideOutUp, FadeIn, FadeOut, SlideOutLeft, SlideInLeft } from 'react-native-reanimated';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
@@ -25,8 +25,8 @@ function SWMLogo() {
                 style={styles.animatedView} 
             >
                 <AnimatedText 
-                    entering={OpacityIn.delay(600).duration(3000)} 
-                    exiting={OpacityOut.duration(3000)}
+                    entering={FadeIn.delay(600).duration(3000)} 
+                    exiting={FadeOut.duration(3000)}
                 > 
                     SWM 
                 </AnimatedText>

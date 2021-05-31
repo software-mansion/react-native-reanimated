@@ -8,8 +8,8 @@ import Animated, {
   SlideInDown, 
   SlideOutUp, 
   SlideOutDown,
-  OpacityIn, 
-  OpacityOut, 
+  FadeIn, 
+  FadeOut, 
   SlideOutLeft, 
   SlideInLeft,
   ZoomIn,
@@ -57,7 +57,7 @@ const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow
           </TouchableWithoutFeedback>
         }
         {!show && 
-          <Animated.View entering={'entering' in animatedStyle ? null : OpacityIn.delay(350)}>
+          <Animated.View entering={'entering' in animatedStyle ? null : FadeIn.delay(350)}>
             <TouchableOpacity 
               style={styles.animatedBlockPlaceholder} 
               onPress={() => setShow(!show)}
@@ -76,7 +76,6 @@ export function DefaultAnimations(): React.ReactElement {
   return (
     <ScrollView style={{flexDirection: 'column'}}>
 
-      <Text style={styles.groupText}>Fade</Text>
       <Text style={styles.groupText}>Bounce</Text>
 
       <Text style={styles.groupText}>Flip in</Text>
@@ -117,11 +116,11 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="ZoomOut" animatedStyle={{exiting: ZoomOut}} defaultShow={true} />
       <AnimatedBlock name="ZoomOutRotate" animatedStyle={{exiting: ZoomOutRotate}} defaultShow={true} />
 
-      <Text style={styles.groupText}>Opacity in</Text>
-      <AnimatedBlock name="OpacityIn" animatedStyle={{entering: OpacityIn}} />
+      <Text style={styles.groupText}>Fade in</Text>
+      <AnimatedBlock name="FadeIn" animatedStyle={{entering: FadeIn}} />
 
-      <Text style={styles.groupText}>Opacity out</Text>
-      <AnimatedBlock name="OpacityOut" animatedStyle={{exiting: OpacityOut}} defaultShow={true} />
+      <Text style={styles.groupText}>Fade out</Text>
+      <AnimatedBlock name="FadeOut" animatedStyle={{exiting: FadeOut}} defaultShow={true} />
 
       <Text style={styles.groupText}>Slide in</Text>
       <AnimatedBlock name="SlideInUp" animatedStyle={{entering: SlideInUp}} />

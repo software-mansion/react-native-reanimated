@@ -16,7 +16,7 @@ import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimations';
+} from './reanimated2/layoutReanimation/defaultAnimationsBuilder';
 import { makeMutable, runOnUI } from './reanimated2/core';
 
 const NODE_MAPPING = new Map();
