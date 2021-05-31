@@ -193,4 +193,4 @@ function CardView() {
 
 ## Other Facts
 
-Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you wouldn't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. 
+Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you wouldn't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. The only exception is Entering animation because we have no way to get the previous animation values.
