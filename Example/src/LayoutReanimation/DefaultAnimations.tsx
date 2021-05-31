@@ -38,6 +38,10 @@ import Animated, {
   ZoomInDown,
   ZoomInEasyUp,
   ZoomInEasyDown,
+  BounceIn,
+  BounceOut,
+  BounceInDown,
+  BounceInUp
 } from 'react-native-reanimated';
 
 const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
@@ -76,7 +80,13 @@ export function DefaultAnimations(): React.ReactElement {
   return (
     <ScrollView style={{flexDirection: 'column'}}>
 
-      <Text style={styles.groupText}>Bounce</Text>
+      <Text style={styles.groupText}>Bounce in</Text>
+      <AnimatedBlock name="BounceIn" animatedStyle={{entering: BounceIn}} />
+      <AnimatedBlock name="BounceInDown" animatedStyle={{entering: BounceInDown}} />
+      <AnimatedBlock name="BounceInUp" animatedStyle={{entering: BounceInUp}} />
+
+      <Text style={styles.groupText}>Bounce out</Text>
+      <AnimatedBlock name="BounceOut" animatedStyle={{exiting: BounceOut}} defaultShow={true} />
 
       <Text style={styles.groupText}>Flip in</Text>
       <AnimatedBlock name="FlipInXUp" animatedStyle={{entering: FlipInXUp}} />

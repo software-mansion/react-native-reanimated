@@ -28,7 +28,7 @@ type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
-    title: 'Default animations',
+    title: '🆕 Default layout animations',
   },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
