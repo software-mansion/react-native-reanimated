@@ -438,6 +438,58 @@ export class ZoomInRotate extends BaseAnimationBuilder {
   }
 }
 
+export class ZoomInLeft extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInLeft();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originX: delayFunction(delay, animation(values.originX, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originX: values.originX - width,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomInRight extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInRight();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+          originX: delayFunction(delay, animation(values.originX, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+          originX: values.originX + width,
+        },
+      };
+    };
+  }
+}
+
 export class ZoomOut extends BaseAnimationBuilder {
   static createInstance() {
     return new ZoomOut();
@@ -824,6 +876,38 @@ export class StretchOutY extends BaseAnimationBuilder {
         },
         initialValues: {
           transform: [{ scaleY: 1 }],
+        },
+      };
+    };
+  }
+}
+
+export class FlipInX extends BaseAnimationBuilder {
+  static createInstance() {
+    return new FlipInX();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return () => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ rotateX: delayFunction(delay, animation(0, config)) }],
+        },
+        initialValues: {
+          perspective: 1000,
+          // transformStyle: 'perspective-3d',
+          transform: [{ rotateX: 5 }],
+          // transform: [
+          //   { perspective: 850 },
+          //   { translateX: - Dimensions.get('window').width * 0.24 },
+          //   { rotateY: '60deg'},
+      
+          // ],
         },
       };
     };

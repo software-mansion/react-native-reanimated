@@ -19,10 +19,13 @@ import Animated, {
   StretchInX,
   StretchInY,
   StretchOutX,
-  StretchOutY
+  StretchOutY,
+  FlipInX,
+  ZoomInRight,
+  ZoomInLeft,
 } from 'react-native-reanimated';
 
-const AnimatedBlock = (props) => {
+const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
   const { name, animatedStyle, defaultShow } = props;
   const [show, setShow] = useState(defaultShow);
   return (
@@ -47,6 +50,14 @@ export function DefaultAnimations(): React.ReactElement {
   return (
     <ScrollView style={{flexDirection: 'column'}}>
 
+      <Text style={styles.groupText}>Flip in</Text>
+      <AnimatedBlock name="FlipInX" animatedStyle={{entering: FlipInX}} />
+      {/* <AnimatedBlock name="StretchInY" animatedStyle={{entering: StretchInY}} /> */}
+
+      <Text style={styles.groupText}>Flip out</Text>
+      {/* <AnimatedBlock name="StretchOutX" animatedStyle={{exiting: StretchOutX}} defaultShow={true} /> */}
+      {/* <AnimatedBlock name="StretchOutY" animatedStyle={{exiting: StretchOutY}} defaultShow={true} /> */}
+
       <Text style={styles.groupText}>Stretch in</Text>
       <AnimatedBlock name="StretchInX" animatedStyle={{entering: StretchInX}} />
       <AnimatedBlock name="StretchInY" animatedStyle={{entering: StretchInY}} />
@@ -58,6 +69,8 @@ export function DefaultAnimations(): React.ReactElement {
       <Text style={styles.groupText}>Zoom in</Text>
       <AnimatedBlock name="ZoomIn" animatedStyle={{entering: ZoomIn}} />
       <AnimatedBlock name="ZoomInRotate" animatedStyle={{entering: ZoomInRotate}} />
+      <AnimatedBlock name="ZoomInRight" animatedStyle={{entering: ZoomInRight}} />
+      <AnimatedBlock name="ZoomInLeft" animatedStyle={{entering: ZoomInLeft}} />
 
       <Text style={styles.groupText}>Zoom out</Text>
       <AnimatedBlock name="ZoomOut" animatedStyle={{exiting: ZoomOut}} defaultShow={true} />
@@ -108,6 +121,7 @@ const styles = StyleSheet.create({
   animatedBox: {
     height: 105,
     alignItems: 'center', 
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
+    transform: [{perspective: 10000}]
   },
 });
