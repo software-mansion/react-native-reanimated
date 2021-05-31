@@ -68,6 +68,11 @@ export class Layout {
     return this;
   }
 
+  rotate(v) {
+    this.rotateV = v;
+    return this;
+  }
+
   static springify() {
     const instance = new Layout();
     return instance.springify();
@@ -147,6 +152,7 @@ export class Layout {
     const duration = this.durationV;
     const easing = this.easingV;
     const delay = this.delayV;
+    const rotate = this.rotateV;
     const type = this.type ? this.type : withTiming;
     const damping = this.dampingV;
     const mass = this.massV;
@@ -242,6 +248,11 @@ class BaseAnimationBuilder {
 
   delay(d) {
     this.delayV = d;
+    return this;
+  }
+
+  rotate(v) {
+    this.rotateV = v;
     return this;
   }
 
@@ -376,6 +387,58 @@ class BaseAnimationBuilder {
   }
 }
 
+export class ZoomIn extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomIn();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return () => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
+        },
+        initialValues: {
+          transform: [{ scale: 0 }],
+        },
+      };
+    };
+  }
+}
+
+export class ZoomInRotate extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomInRotate();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    const rotate = this.rotateV ? this.rotateV : 0.3;
+
+    return (a) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [
+            { scale: delayFunction(delay, animation(1, config)) },
+            { rotate: delayFunction(delay, animation(0, config)) }
+          ],
+        },
+        initialValues: {
+          transform: [{ scale: 0 }, { rotate: rotate }],
+        },
+      };
+    };
+  }
+}
+
 export class ZoomOut extends BaseAnimationBuilder {
   static createInstance() {
     return new ZoomOut();
@@ -394,6 +457,34 @@ export class ZoomOut extends BaseAnimationBuilder {
         },
         initialValues: {
           transform: [{ scale: 1 }],
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutRotate extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutRotate();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    const rotate = this.rotateV ? this.rotateV : 0.3;
+
+    return (a) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [
+            { scale: delayFunction(delay, animation(0, config)) },
+            { rotate: delayFunction(delay, animation(rotate, config)) }
+          ],
+        },
+        initialValues: {
+          transform: [{ scale: 1 }, { rotate: 0 }],
         },
       };
     };
@@ -498,6 +589,30 @@ export class SlideOutLeft extends BaseAnimationBuilder {
   }
 }
 
+export class SlideInUp extends BaseAnimationBuilder {
+  static createInstance() {
+    return new SlideInUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          originY: delayFunction(delay, animation(0, config)),
+        },
+        initialValues: {
+          originY: values.originY + height,
+        },
+      };
+    };
+  }
+}
+
 export class SlideInDown extends BaseAnimationBuilder {
   static createInstance() {
     return new SlideInDown();
@@ -525,6 +640,31 @@ export class SlideInDown extends BaseAnimationBuilder {
 export class SlideOutUp extends BaseAnimationBuilder {
   static createInstance() {
     return new SlideOutUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          originY: delayFunction(
+            delay,
+            animation(values.originY - height, config)
+          ),
+        },
+        initialValues: {},
+      };
+    };
+  }
+}
+
+export class SlideOutDown extends BaseAnimationBuilder {
+  static createInstance() {
+    return new SlideOutDown();
   }
 
   build() {
@@ -587,7 +727,9 @@ export class OpacityOut extends BaseAnimationBuilder {
         animations: {
           opacity: delayFunction(delay, animation(0, config)),
         },
-        initialValues: {},
+        initialValues: {
+          opacity: 1,
+        },
       };
     };
   }
