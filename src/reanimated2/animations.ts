@@ -166,6 +166,84 @@ export function cancelAnimation(sharedValue) {
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
+// TODO it should work only if there was no animation before.
+export function withStartValue(startValue, animation) {
+  'worklet';
+  return defineAnimation(startValue, () => {
+    'worklet';
+    if (!_WORKLET && typeof animation === 'function') {
+      animation = animation();
+    }
+    animation.current = startValue;
+    return animation;
+  });
+}
+
+export function withTiming(toValue, userConfig, callback) {
+  'worklet';
+
+  return defineAnimation(toValue, () => {
+    'worklet';
+    const config = {
+      duration: 300,
+      easing: Easing.inOut(Easing.quad),
+    };
+    if (userConfig) {
+      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+    }
+
+    function timing(animation, now) {
+      const { toValue, progress, startTime, current } = animation;
+
+      const runtime = now - startTime;
+
+      if (runtime >= config.duration) {
+        // reset startTime to avoid reusing finished animation config in `start` method
+        animation.startTime = 0;
+        animation.current = toValue;
+        return true;
+      }
+
+      const newProgress = config.easing(runtime / config.duration);
+
+      const dist =
+        ((toValue - current) * (newProgress - progress)) / (1 - progress);
+      animation.current += dist;
+      animation.progress = newProgress;
+      return false;
+    }
+
+    function onStart(animation, value, now, previousAnimation) {
+      if (
+        previousAnimation &&
+        previousAnimation.type === 'timing' &&
+        previousAnimation.toValue === toValue &&
+        previousAnimation.startTime
+      ) {
+        // to maintain continuity of timing animations we check if we are starting
+        // new timing over the old one with the same parameters. If so, we want
+        // to copy animation timeline properties
+        animation.startTime = previousAnimation.startTime;
+        animation.progress = previousAnimation.progress;
+      } else {
+        animation.startTime = now;
+        animation.progress = 0;
+      }
+      animation.current = value;
+    }
+
+    return {
+      type: 'timing',
+      onFrame: timing,
+      onStart,
+      progress: 0,
+      toValue,
+      current: toValue,
+      callback,
+    };
+  });
+}
+
 export function withStyleAnimation(styleAnimations) {
   'worklet';
   return defineAnimation({}, () => {
@@ -253,7 +331,11 @@ export function withStyleAnimation(styleAnimations) {
             const obj = {};
             obj[type] = prevVal;
             animation.current.transform[i] = obj;
-            const currentAnimation = transform[i][type];
+            let currentAnimation = transform[i][type];
+            if (typeof currentAnimation != 'object' && !Array.isArray(currentAnimation)) {
+              currentAnimation = withTiming(currentAnimation, { duration: 0 });
+              transform[i][type] = currentAnimation
+            }
             currentAnimation.onStart(
               currentAnimation,
               prevVal,
@@ -278,7 +360,11 @@ export function withStyleAnimation(styleAnimations) {
             prevVal = value[key];
           }
           animation.current[key] = prevVal;
-          const currentAnimation = animation.styleAnimations[key];
+          let currentAnimation = animation.styleAnimations[key];
+          if (typeof currentAnimation != 'object' && !Array.isArray(currentAnimation)) {
+            currentAnimation = withTiming(currentAnimation, { duration: 0 });
+            animation.styleAnimations[key] = currentAnimation;
+          }
           currentAnimation.onStart(
             currentAnimation,
             prevVal,
@@ -327,83 +413,6 @@ export function withStyleAnimation(styleAnimations) {
   });
 }
 
-// TODO it should work only if there was no animation before.
-export function withStartValue(startValue, animation) {
-  'worklet';
-  return defineAnimation(startValue, () => {
-    'worklet';
-    if (!_WORKLET && typeof animation === 'function') {
-      animation = animation();
-    }
-    animation.current = startValue;
-    return animation;
-  });
-}
-
-export function withTiming(toValue, userConfig, callback) {
-  'worklet';
-
-  return defineAnimation(toValue, () => {
-    'worklet';
-    const config = {
-      duration: 300,
-      easing: Easing.inOut(Easing.quad),
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
-    }
-
-    function timing(animation, now) {
-      const { toValue, progress, startTime, current } = animation;
-
-      const runtime = now - startTime;
-
-      if (runtime >= config.duration) {
-        // reset startTime to avoid reusing finished animation config in `start` method
-        animation.startTime = 0;
-        animation.current = toValue;
-        return true;
-      }
-
-      const newProgress = config.easing(runtime / config.duration);
-
-      const dist =
-        ((toValue - current) * (newProgress - progress)) / (1 - progress);
-      animation.current += dist;
-      animation.progress = newProgress;
-      return false;
-    }
-
-    function onStart(animation, value, now, previousAnimation) {
-      if (
-        previousAnimation &&
-        previousAnimation.type === 'timing' &&
-        previousAnimation.toValue === toValue &&
-        previousAnimation.startTime
-      ) {
-        // to maintain continuity of timing animations we check if we are starting
-        // new timing over the old one with the same parameters. If so, we want
-        // to copy animation timeline properties
-        animation.startTime = previousAnimation.startTime;
-        animation.progress = previousAnimation.progress;
-      } else {
-        animation.startTime = now;
-        animation.progress = 0;
-      }
-      animation.current = value;
-    }
-
-    return {
-      type: 'timing',
-      onFrame: timing,
-      onStart,
-      progress: 0,
-      toValue,
-      current: toValue,
-      callback,
-    };
-  });
-}
 
 export function withSpring(toValue, userConfig, callback) {
   'worklet';
