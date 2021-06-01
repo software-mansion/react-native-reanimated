@@ -12,19 +12,19 @@ sidebar_label: Exiting Animations
 ```
 ### 2. Choose Animated Component which exiting you want to animate
 ```js
-    <AnimatedComponent exiting={animation} >
+    <AnimatedComponent exiting={Animation} >
 ```
 ### 3. Customize the animation
     If you don't know what modificators the animation provides then find your animation down below.
 ```js
-    <AnimatedComponent exiting={animation.duration(3000).otherModificator()} >
+    <AnimatedComponent exiting={Animation.duration(3000).otherModificator()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
     <AnimatedLayout> // +
         <View> sth </View>
         <View> 
-            <AnimatedComponent exiting={animation}>
+            <AnimatedComponent exiting={Animation}>
         </View>
     </AnimatedLayout> // +
 ```
