@@ -685,6 +685,9 @@ interface InterpolateCacheRGBA {
   a: number[];
 }
 
+const BUFFER_SIZE = 200;
+const hashOrderRGBA: any = new ArrayBuffer(BUFFER_SIZE);
+let curentHashIndexRGBA = 0;
 const interpolateCacheRGBA: { [name: string]: InterpolateCacheRGBA } = {};
 
 const getInterpolateCacheRGBA = (
@@ -711,7 +714,13 @@ const getInterpolateCacheRGBA = (
     }
   }
   const newCache = { r, g, b, a };
+  const overrideHash = hashOrderRGBA[curentHashIndexRGBA];
+  if (overrideHash) {
+    delete interpolateCacheRGBA[overrideHash];
+  }
   interpolateCacheRGBA[hash] = newCache;
+  hashOrderRGBA[curentHashIndexRGBA] = hash;
+  curentHashIndexRGBA = (curentHashIndexRGBA + 1) % BUFFER_SIZE;
   return newCache;
 };
 
@@ -721,6 +730,8 @@ interface InterpolateCacheHSV {
   v: number[];
 }
 
+const hashOrderHSV: any = new ArrayBuffer(BUFFER_SIZE);
+let curentHashIndexHSV = 0;
 const interpolateCacheHSV: { [name: string]: InterpolateCacheHSV } = {};
 
 const getInterpolateCacheHSV = (
@@ -745,7 +756,13 @@ const getInterpolateCacheHSV = (
     }
   }
   const newCache = { h, s, v };
+  const overrideHash = hashOrderHSV[curentHashIndexHSV];
+  if (overrideHash) {
+    delete interpolateCacheHSV[overrideHash];
+  }
   interpolateCacheHSV[hash] = newCache;
+  hashOrderHSV[curentHashIndexHSV] = hash;
+  curentHashIndexHSV = (curentHashIndexHSV + 1) % BUFFER_SIZE;
   return newCache;
 };
 
