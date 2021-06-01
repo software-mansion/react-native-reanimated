@@ -12,19 +12,19 @@ sidebar_label: Entering Animations
 ```
 ### 2. Choose Animated Component which entering you want to animate
 ```js
-    <AnimatedComponent entering={animation} >
+    <AnimatedComponent entering={Animation} >
 ```
 ### 3. Customize the animation
     If you don't know what modificators the animation provides then find your animation down below.
 ```js
-    <AnimatedComponent entering={animation.duration(3000).otherModificator()} >
+    <AnimatedComponent entering={Animation.duration(3000).otherModificator()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
     <AnimatedLayout> // +
         <View> sth </View>
         <View> 
-            <AnimatedComponent entering={animation}>
+            <AnimatedComponent entering={Animation}>
         </View>
     </AnimatedLayout> // +
 ```
