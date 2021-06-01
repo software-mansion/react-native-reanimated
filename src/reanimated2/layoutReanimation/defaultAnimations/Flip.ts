@@ -22,7 +22,7 @@ export class FlipInXUp extends BaseAnimationBuilder {
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
+            { perspective: 500 },
             { rotateX: delayFunction(delay, animation('0deg', config)) },
             { translateY: delayFunction(delay, animation(0, config)) },
           ],

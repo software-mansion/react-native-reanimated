@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
 import Animated, { 
     Layout,
-    SlideInRight,
+    SlideInLeft,
     SlideOutRight,
     AnimatedLayout,
 } from 'react-native-reanimated';
@@ -33,9 +33,9 @@ const DATA = [
 function AnimatedView({pokemon}) {
 
     return (
-        <Animated.View entering={SlideInRight} exiting={SlideOutRight} style={[styles.animatedView]} >
-            <AnimatedImage entering={SlideInRight.delay(300).springify()} source={pokemon.img} />
-            <Animated.View entering={SlideInRight.delay(500).springify()} exiting={SlideOutRight}>
+        <Animated.View entering={SlideInLeft} exiting={SlideOutRight} style={[styles.animatedView]} >
+            <AnimatedImage entering={SlideInLeft.delay(300).springify()} source={pokemon.img} />
+            <Animated.View entering={SlideInLeft.delay(500).springify()} exiting={SlideOutRight}>
                 <Text> { pokemon.firstType } </Text>
                 <Text> { pokemon.secondType }</Text>
             </Animated.View>
