@@ -33,6 +33,9 @@ sidebar_label: Entering Animations
 If you cannot find animation that suit you then, please create your custom animation. If you think that the animation should be 
 here then, plase open an issue or even better pull-request. 
 
+### Fade
+<video src="https://user-images.githubusercontent.com/36106620/120315698-ed9cc500-c2dc-11eb-8d23-150c41aaa733.mov" controls="controls" muted="muted"></video>
+
 ### OpacityIn
 [gif]
 #### Modificators
