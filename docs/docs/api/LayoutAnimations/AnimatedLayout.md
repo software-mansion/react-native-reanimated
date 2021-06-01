@@ -19,6 +19,8 @@ The component is responsible for observing changes in its subtree. There is no n
     }
 ```
 
+![Beautiful gif](/img/swm-logo.gif)
+
 ```js
     import { 
         AnimatedLayout,
@@ -65,6 +67,5 @@ The component is responsible for observing changes in its subtree. There is no n
     }
 ```
 
-[gif]
 
 

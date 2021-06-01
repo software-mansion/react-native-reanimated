@@ -67,7 +67,7 @@ Allows to start with a specified delay.
 
 ## Example
 
-[TODO add gif here ]
+![Beautiful gif](/img/spring-layout.gif)
 
 ```js
 function Box({label, state}: {label: string, state: boolean}) {
