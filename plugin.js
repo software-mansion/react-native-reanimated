@@ -516,6 +516,9 @@ function processWorklets(t, path, fileName) {
   }
 }
 
+const FUNCTIONLESS_FLAG =   0b00000001;
+const STATEMENTLESS_FLAG =  0b00000010;
+
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
   let isSteatements = false;
@@ -530,12 +533,11 @@ function isPossibleOptimization(fun) {
     },
   });
   let flags = 0;
-  if (!isSteatements) {
-    flags = 1;
-    flags = flags << 1;
-  }
   if (!isFunctionCall) {
-    flags += 1;
+    flags = flags | FUNCTIONLESS_FLAG;
+  }
+  if (!isSteatements) {
+    flags = flags | STATEMENTLESS_FLAG;
   }
   return flags;
 }

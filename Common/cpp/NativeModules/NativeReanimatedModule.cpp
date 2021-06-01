@@ -134,7 +134,6 @@ jsi::Value NativeReanimatedModule::startMapper(
   auto optimalization = updater.asObject(rt).getProperty(rt, "__optimalization");
   if(optimalization.isNumber()) {
     optimalizationLvl = optimalization.asNumber();
-    optimalizationLvl = optimalizationLvl % 2 == 0 ? 0 : optimalizationLvl; // check the first bit of optimalization mask
   }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
   const int tagInt = tag.asNumber();

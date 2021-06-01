@@ -433,6 +433,13 @@ const parseColors = (updates) => {
   }
 };
 
+const canApplyOptimalisation = (upadterFn) => {
+  const FUNCTIONLESS_FLAG =   0b00000001;
+  const STATEMENTLESS_FLAG =  0b00000010;
+  const optimalization = upadterFn.__optimalization;
+  return (optimalization & FUNCTIONLESS_FLAG) && (optimalization & STATEMENTLESS_FLAG);
+};
+
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
@@ -469,7 +476,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   useEffect(() => {
     let fun;
     let upadterFn = updater;
-    const optimalization = updater.__optimalization;
+    let optimalization = updater.__optimalization;
     if (adapters) {
       upadterFn = () => {
         'worklet';
@@ -481,7 +488,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       };
     }
 
-    if (upadterFn.__optimalization === 3) {
+    if (canApplyOptimalisation(upadterFn)) {
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
@@ -491,6 +498,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         };
       }
     } else {
+      optimalization = 0;
       upadterFn = () => {
         'worklet';
         const style = upadterFn();
