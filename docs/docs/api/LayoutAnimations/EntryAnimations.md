@@ -34,7 +34,22 @@ If you cannot find animation that suit you then, please create your custom anima
 here then, plase open an issue or even better pull-request. 
 
 ### Fade
-<video src="https://user-images.githubusercontent.com/36106620/120315698-ed9cc500-c2dc-11eb-8d23-150c41aaa733.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/36106620/120317260-b3ccbe00-c2de-11eb-8434-8998b12dfa3c.mov" controls="controls" muted="muted"></video>
+
+### Bounce
+<video src="https://user-images.githubusercontent.com/36106620/120317341-cc3cd880-c2de-11eb-9d72-4065c740667e.mov" controls="controls" muted="muted"></video>
+
+### Flip
+<video src="https://user-images.githubusercontent.com/36106620/120317406-deb71200-c2de-11eb-8dee-c658a4e1e47a.mov" controls="controls" muted="muted"></video>
+
+### Stretch
+<video src="https://user-images.githubusercontent.com/36106620/120317473-f42c3c00-c2de-11eb-8772-b366c2ddde7f.mov" controls="controls" muted="muted"></video>
+
+### Zoom
+<video src="https://user-images.githubusercontent.com/36106620/120317529-04441b80-c2df-11eb-9627-c56e986e44c1.mov" controls="controls" muted="muted"></video>
+
+### Slide
+<video src="https://user-images.githubusercontent.com/36106620/120317587-1a51dc00-c2df-11eb-937a-c53a237afca2.mov" controls="controls" muted="muted"></video>
 
 ### OpacityIn
 [gif]
