@@ -34,68 +34,137 @@ If you cannot find animation that suit you then, please create your custom anima
 here then, plase open an issue or even better pull-request. 
 
 ### Fade
+
+#### Animations
+- FadeIn
+- FadeInRight
+- FadeInLeft
+- FadeInUp
+- FadeInDown
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317260-b3ccbe00-c2de-11eb-8434-8998b12dfa3c.mov" controls="controls" muted="muted"></video>
 
 ### Bounce
+
+#### Animations
+- BounceIn
+- BounceInRight
+- BounceInLeft
+- BounceInUp
+- BounceInDown
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317341-cc3cd880-c2de-11eb-9d72-4065c740667e.mov" controls="controls" muted="muted"></video>
 
 ### Flip
+
+#### Animations
+- FlipInYRight
+- FlipInYLeft
+- FlipInXUp
+- FlipInXDown
+- FlipInEasyX
+- FlipInEasyY
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317406-deb71200-c2de-11eb-8dee-c658a4e1e47a.mov" controls="controls" muted="muted"></video>
 
 ### Stretch
+
+#### Animations
+- StretchInX
+- StretchInY
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317473-f42c3c00-c2de-11eb-8772-b366c2ddde7f.mov" controls="controls" muted="muted"></video>
 
 ### Zoom
+
+#### Animations
+- ZoomIn
+- ZoomInRotate
+- ZoomInRight
+- ZoomInLeft
+- ZoomInUp
+- ZoomInDown
+- ZoomInEasyUp
+- ZoomInEadyDown
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317529-04441b80-c2df-11eb-9627-c56e986e44c1.mov" controls="controls" muted="muted"></video>
 
 ### Slide
+
+#### Animations
+- SlideInRight
+- SlideInLeft
+- SlideInUp
+- SlideInDown
+
+#### Modificators
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317587-1a51dc00-c2df-11eb-937a-c53a237afca2.mov" controls="controls" muted="muted"></video>
-
-### OpacityIn
-[gif]
-#### Modificators
-* `duration` (in ms) default: 300
-* `delay` (in ms) default: 0
-* `easing` same easing worklet as with `withTiming`
-
-### SlideInDown 
-[gif]
-#### Modificators
-* `duration` (in ms) default: 300
-* `delay` (in ms) default: 0
-* `easing` same easing worklet as with `withTiming`
-* `springify` change animation to spring
-* `damping ` default: 10
-* `mass` default: 1
-* `stiffness` default: 100
-* `overshootClamping` default: false
-* `restDisplacementThreshold` default: 0.001
-* `restSpeedThreshold` default: 0.001
-
-### SlideInLeft
-[gif]
-#### Modificators
-* `duration` (in ms) default: 300
-* `delay` (in ms) default: 0
-* `easing` same easing worklet as with `withTiming`
-* `springify` change animation to spring
-* `damping ` default: 10
-* `mass` default: 1
-* `stiffness` default: 100
-* `overshootClamping` default: false
-* `restDisplacementThreshold` default: 0.001
-* `restSpeedThreshold` default: 0.001
-
-### SlideInRight
-[gif]
-#### Modificators
-* `duration` (in ms) default: 300
-* `delay` (in ms) default: 0
-* `easing` same easing worklet as with `withTiming`
-* `springify` change animation to spring
-* `damping ` default: 10
-* `mass` default: 1
-* `stiffness` default: 100
-* `overshootClamping` default: false
-* `restDisplacementThreshold` default: 0.001
-* `restSpeedThreshold` default: 0.001
