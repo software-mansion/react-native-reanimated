@@ -67,7 +67,7 @@ here then, plase open an issue or even better pull-request.
 - BounceOutDown
 
 #### Modificators
-* `duration` (in ms) default: 300
+* `duration` (in ms) default: 250
 * `delay` (in ms) default: 0
 
 #### Example
