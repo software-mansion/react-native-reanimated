@@ -12,6 +12,7 @@ export class BounceIn extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return () => {
       'worklet';
@@ -21,10 +22,10 @@ export class BounceIn extends BaseAnimationBuilder {
             { scale: 
               delayFunction(delay, 
                 withSequence(
-                  withTiming(1.2, {duration: 250}),
-                  withTiming(0.9, {duration: 100}),
-                  withTiming(1.1, {duration: 100}),
-                  withTiming(1, {duration: 100}),
+                  withTiming(1.2, {duration: duration}),
+                  withTiming(0.9, {duration: duration * 100/250}),
+                  withTiming(1.1, {duration: duration * 100/250}),
+                  withTiming(1, {duration: duration * 100/250}),
                 )
               ) 
             }
@@ -46,6 +47,7 @@ export class BounceInDown extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -53,10 +55,10 @@ export class BounceInDown extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateY: delayFunction(delay, withSequence(
-              withTiming(-20, {duration: 250}),
-              withTiming(10, {duration: 100}),
-              withTiming(-10, {duration: 100}),
-              withTiming(5, {duration: 100}),
+              withTiming(-20, {duration: duration}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(5, {duration: duration * 100/250}),
             ))
           }]
         },
@@ -78,6 +80,7 @@ export class BounceInUp extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -85,10 +88,10 @@ export class BounceInUp extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateY: delayFunction(delay, withSequence(
-              withTiming(20, {duration: 250}),
-              withTiming(-10, {duration: 100}),
-              withTiming(10, {duration: 100}),
-              withTiming(0, {duration: 100}),
+              withTiming(20, {duration: duration}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(0, {duration: duration * 100/250}),
             ))
           }]
         },
@@ -108,6 +111,7 @@ export class BounceInLeft extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -115,10 +119,10 @@ export class BounceInLeft extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateX: delayFunction(delay, withSequence(
-              withTiming(20, {duration: 250}),
-              withTiming(-10, {duration: 100}),
-              withTiming(10, {duration: 100}),
-              withTiming(0, {duration: 100}),
+              withTiming(20, {duration: duration}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(0, {duration: duration * 100/250}),
             ))
           }],
         },
@@ -138,6 +142,7 @@ export class BounceInRight extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -145,10 +150,10 @@ export class BounceInRight extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateX: delayFunction(delay, withSequence(
-              withTiming(-20, {duration: 250}),
-              withTiming(10, {duration: 100}),
-              withTiming(-10, {duration: 100}),
-              withTiming(0, {duration: 100}),
+              withTiming(-20, {duration: duration}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(0, {duration: duration * 100/250}),
             ))
           }],
         },
@@ -168,6 +173,7 @@ export class BounceOut extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return () => {
       'worklet';
@@ -176,10 +182,10 @@ export class BounceOut extends BaseAnimationBuilder {
           transform: [
             { scale: delayFunction(delay, 
                 withSequence(
-                  withTiming(1.1, {duration: 100}),
-                  withTiming(0.9, {duration: 100}),
-                  withTiming(1.2, {duration: 100}),
-                  withTiming(0, {duration: 250}),
+                  withTiming(1.1, {duration: duration * 100/250}),
+                  withTiming(0.9, {duration: duration * 100/250}),
+                  withTiming(1.2, {duration: duration * 100/250}),
+                  withTiming(0, {duration: duration}),
                 )
               ) 
             }
@@ -201,6 +207,7 @@ export class BounceOutDown extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -208,10 +215,10 @@ export class BounceOutDown extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateY: delayFunction(delay, withSequence(
-              withTiming(-10, {duration: 100}),
-              withTiming(10, {duration: 100}),
-              withTiming(-20, {duration: 100}),
-              withTiming(targetValues.originY + height, {duration: 250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-20, {duration: duration * 100/250}),
+              withTiming(targetValues.originY + height, {duration: duration}),
             ))
           }]
         },
@@ -231,6 +238,7 @@ export class BounceOutUp extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -238,10 +246,10 @@ export class BounceOutUp extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateY: delayFunction(delay, withSequence(
-              withTiming(10, {duration: 100}),
-              withTiming(-10, {duration: 100}),
-              withTiming(20, {duration: 100}),
-              withTiming(targetValues.originY - height, {duration: 250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(20, {duration: duration * 100/250}),
+              withTiming(targetValues.originY - height, {duration: duration}),
             ))
           }]
         },
@@ -261,6 +269,7 @@ export class BounceOutLeft extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -268,10 +277,10 @@ export class BounceOutLeft extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateX: delayFunction(delay, withSequence(
-              withTiming(10, {duration: 100}),
-              withTiming(-10, {duration: 100}),
-              withTiming(20, {duration: 100}),
-              withTiming(targetValues.originX - width, {duration: 250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(20, {duration: duration * 100/250}),
+              withTiming(targetValues.originX - width, {duration: duration}),
             ))
           }],
         },
@@ -291,6 +300,7 @@ export class BounceOutRight extends BaseAnimationBuilder {
   build() {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
+    const duration = this.durationV? this.durationV : 250;
 
     return (targetValues) => {
       'worklet';
@@ -298,10 +308,10 @@ export class BounceOutRight extends BaseAnimationBuilder {
         animations: {
           transform: [{ 
             translateX: delayFunction(delay, withSequence(
-              withTiming(-10, {duration: 100}),
-              withTiming(10, {duration: 100}),
-              withTiming(-20, {duration: 100}),
-              withTiming(targetValues.originX + width, {duration: 250}),
+              withTiming(-10, {duration: duration * 100/250}),
+              withTiming(10, {duration: duration * 100/250}),
+              withTiming(-20, {duration: duration * 100/250}),
+              withTiming(targetValues.originX + width, {duration: duration}),
             ))
           }],
         },
