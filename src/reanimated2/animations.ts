@@ -340,7 +340,7 @@ export function withStartValue(startValue, animation) {
   });
 }
 
-export function withTiming(toValue, userConfig?, callback?) {
+export function withTiming(toValue, userConfig, callback) {
   'worklet';
 
   return defineAnimation(toValue, () => {

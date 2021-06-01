@@ -38,7 +38,7 @@ export class ZoomInRotate extends BaseAnimationBuilder {
     const delay = this.delayV;
     const rotate = this.rotateV ? this.rotateV : 0.3;
 
-    return (a) => {
+    return () => {
       'worklet';
       return {
         animations: {

@@ -16,14 +16,14 @@ export class FlipInXUp extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `90deg`},
+            { rotateX: '90deg'},
             { translateY: -targetValues.height },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateX: delayFunction(delay, animation('0deg', config)) },
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         }
@@ -48,14 +48,14 @@ export class FlipInYLeft extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `-90deg`},
+            { rotateY: '-90deg'},
             { translateX: -targetValues.width },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateY: delayFunction(delay, animation('0deg', config)) },
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         }
@@ -80,14 +80,14 @@ export class FlipInXDown extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `-90deg`},
+            { rotateX: '-90deg'},
             { translateY: targetValues.height },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateX: delayFunction(delay, animation('0deg', config)) },
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         }
@@ -112,14 +112,14 @@ export class FlipInYRight extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `90deg`},
+            { rotateY: '90deg'},
             { translateX: targetValues.width },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateY: delayFunction(delay, animation('0deg', config)) },
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         }
@@ -144,13 +144,13 @@ export class FlipInEasyX extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `90deg`},
+            { rotateX: '90deg'},
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateX: delayFunction(delay, animation('0deg', config)) },
           ],
         }
       }
@@ -174,13 +174,13 @@ export class FlipInEasyY extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `90deg`},
+            { rotateY: '90deg'},
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`0deg`, config)) },
+            { rotateY: delayFunction(delay, animation('0deg', config)) },
           ],
         }
       }
@@ -204,14 +204,14 @@ export class FlipOutXUp extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `0deg`},
+            { rotateX: '0deg'},
             { translateY: 0 },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`90deg`, config)) },
+            { rotateX: delayFunction(delay, animation('90deg', config)) },
             { translateY: delayFunction(delay, animation(-targetValues.height, config)) },
           ],
         }
@@ -236,14 +236,14 @@ export class FlipOutYLeft extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `0deg`},
+            { rotateY: '0deg'},
             { translateX: 0 },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`-90deg`, config)) },
+            { rotateY: delayFunction(delay, animation('-90deg', config)) },
             { translateX: delayFunction(delay, animation(-targetValues.width, config)) },
           ],
         }
@@ -268,14 +268,14 @@ export class FlipOutXDown extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `0deg`},
+            { rotateX: '0deg'},
             { translateY: 0 },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`-90deg`, config)) },
+            { rotateX: delayFunction(delay, animation('-90deg', config)) },
             { translateY: delayFunction(delay, animation(targetValues.height, config)) },
           ],
         }
@@ -300,14 +300,14 @@ export class FlipOutYRight extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `0deg`},
+            { rotateY: '0deg'},
             { translateX: 0 },
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`90deg`, config)) },
+            { rotateY: delayFunction(delay, animation('90deg', config)) },
             { translateX: delayFunction(delay, animation(targetValues.width, config)) },
           ],
         }
@@ -332,13 +332,13 @@ export class FlipOutEasyX extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateX: `0deg`},
+            { rotateX: '0deg'},
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation(`90deg`, config)) },
+            { rotateX: delayFunction(delay, animation('90deg', config)) },
           ],
         }
       }
@@ -362,13 +362,13 @@ export class FlipOutEasyY extends BaseAnimationBuilder {
         initialValues:{
           transform: [
             { perspective: 500 },
-            { rotateY: `0deg`},
+            { rotateY: '0deg'},
           ],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation(`90deg`, config)) },
+            { rotateY: delayFunction(delay, animation('90deg', config)) },
           ],
         }
       }

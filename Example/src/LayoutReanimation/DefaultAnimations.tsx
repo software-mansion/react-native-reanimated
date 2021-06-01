@@ -1,76 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { 
+  View, Text, StyleSheet, ScrollView, 
+  TouchableOpacity, TouchableWithoutFeedback 
+} from 'react-native';
 import Animated, { 
-  AnimatedLayout, 
-  SlideInRight, 
-  SlideOutRight,
-  SlideInUp, 
-  SlideInDown, 
-  SlideOutUp, 
-  SlideOutDown,
-  FadeIn, 
-  FadeInRight, 
-  FadeInLeft,
-  FadeInUp,
-  FadeInDown,
-  FadeOut, 
-  FadeOutRight, 
-  FadeOutLeft,
-  FadeOutUp,
-  FadeOutDown,
-  SlideOutLeft, 
-  SlideInLeft,
-  ZoomIn,
-  ZoomInRotate,
-  ZoomInRight,
-  ZoomInLeft,
-  ZoomInUp,
-  ZoomInDown,
-  ZoomInEasyUp,
-  ZoomInEasyDown,
-  ZoomOut,
-  ZoomOutRotate,
-  ZoomOutRight,
-  ZoomOutLeft,
-  ZoomOutUp,
-  ZoomOutDown,
-  ZoomOutEasyUp,
-  ZoomOutEasyDown,
-  StretchInX,
-  StretchInY,
-  StretchOutX,
-  StretchOutY,
-  FlipInXUp,
-  FlipInYLeft,
-  FlipInXDown,
-  FlipInYRight,
-  FlipInEasyX,
-  FlipInEasyY,
-  FlipOutXUp,
-  FlipOutYLeft,
-  FlipOutXDown,
-  FlipOutYRight,
-  FlipOutEasyX,
-  FlipOutEasyY,
-  BounceIn,
-  BounceInDown,
-  BounceInUp,
-  BounceInLeft,
-  BounceInRight,
-  BounceOut,
-  BounceOutDown,
-  BounceOutUp,
-  BounceOutLeft,
-  BounceOutRight,
+  AnimatedLayout, SlideInRight, SlideOutRight, SlideInUp, SlideInDown, 
+  SlideOutUp, SlideOutDown, FadeIn, FadeInRight, FadeInLeft, FadeInUp, 
+  FadeInDown, FadeOut, FadeOutRight, FadeOutLeft, FadeOutUp, FadeOutDown,
+  SlideOutLeft, SlideInLeft, ZoomIn, ZoomInRotate, ZoomInRight, ZoomInLeft,
+  ZoomInUp, ZoomInDown, ZoomInEasyUp, ZoomInEasyDown, ZoomOut,
+  ZoomOutRotate, ZoomOutRight, ZoomOutLeft, ZoomOutUp, ZoomOutDown,
+  ZoomOutEasyUp, ZoomOutEasyDown, StretchInX, StretchInY, StretchOutX,
+  StretchOutY, FlipInXUp, FlipInYLeft, FlipInXDown, FlipInYRight,
+  FlipInEasyX, FlipInEasyY, FlipOutXUp, FlipOutYLeft, FlipOutXDown,
+  FlipOutYRight, FlipOutEasyX, FlipOutEasyY, BounceIn, BounceInDown,
+  BounceInUp, BounceInLeft, BounceInRight, BounceOut, BounceOutDown,
+  BounceOutUp, BounceOutLeft, BounceOutRight
 } from 'react-native-reanimated';
 
-const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
-  const { name, animatedStyle, defaultShow } = props;
+interface AnimatedBlockProps {
+  name: string, animatedStyle: object, defaultShow?: boolean
+ }
+
+const AnimatedBlock = ({ name, animatedStyle, defaultShow }: AnimatedBlockProps) => {
   const [show, setShow] = useState(defaultShow);
   return (
     <AnimatedLayout>
       <View style={styles.animatedBox}>
-        {show && 
+        {show ? 
           <TouchableWithoutFeedback onPress={() => setShow(!show)}>
             <Animated.View
               style={styles.animatedBlock}
@@ -79,8 +36,8 @@ const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow
               <Text style={styles.animatedText}>{name}</Text>
             </Animated.View>
           </TouchableWithoutFeedback>
-        }
-        {!show && 
+        : null}
+        {!show ? 
           <Animated.View entering={'entering' in animatedStyle ? null : FadeIn.delay(350)}>
             <TouchableOpacity 
               style={styles.animatedBlockPlaceholder} 
@@ -89,7 +46,7 @@ const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow
               <Text style={styles.animatedTextPlaceholder}>{name}</Text>
             </TouchableOpacity>
           </Animated.View>
-        }
+        : null}
       </View>
     </AnimatedLayout>
   );
