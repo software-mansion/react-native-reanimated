@@ -19,7 +19,7 @@ The component is responsible for observing changes in its subtree. There is no n
     }
 ```
 
-![Beautiful gif](/img/swm-logo.gif)
+<video src="https://user-images.githubusercontent.com/36106620/120326638-39ee0200-c2e9-11eb-8dca-3f3b999c5017.mov" controls="controls" muted="muted"></video>
 
 ```js
     import { 
