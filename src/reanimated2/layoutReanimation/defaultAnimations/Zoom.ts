@@ -244,7 +244,7 @@ export class ZoomOutRotate extends BaseAnimationBuilder {
     const delay = this.delayV;
     const rotate = this.rotateV ? this.rotateV : 0.3;
 
-    return (a) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -255,6 +255,160 @@ export class ZoomOutRotate extends BaseAnimationBuilder {
         },
         initialValues: {
           transform: [{ scale: 1 }, { rotate: 0 }],
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutLeft extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutLeft();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originX: delayFunction(delay, animation(values.originX - width, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originX: values.originX,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutRight extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutRight();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originX: delayFunction(delay, animation(values.originX + width, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originX: values.originX,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutUp extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originY: delayFunction(delay, animation(values.originY - height, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originY: 0,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutDown extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutDown();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originY: delayFunction(delay, animation(values.originY + height, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originY: 0,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutEasyUp extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutEasyUp();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originY: delayFunction(delay, animation(-values.height, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originY: 0,
+        },
+      };
+    };
+  }
+}
+
+export class ZoomOutEasyDown extends BaseAnimationBuilder {
+  static createInstance() {
+    return new ZoomOutEasyDown();
+  }
+
+  build() {
+    const delayFunction = this.getDelayFunction();
+    const [animation, config] = this.getAnimationAndConfig();
+    const delay = this.delayV;
+    return (values) => {
+      'worklet';
+      return {
+        animations: {
+          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          originY: delayFunction(delay, animation(values.height, config)),
+        },
+        initialValues: {
+          transform: [{ scale: 1 }],
+          originY: 0,
         },
       };
     };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import Animated, { 
   AnimatedLayout, 
   SlideInRight, 
@@ -22,8 +22,20 @@ import Animated, {
   SlideInLeft,
   ZoomIn,
   ZoomInRotate,
+  ZoomInRight,
+  ZoomInLeft,
+  ZoomInUp,
+  ZoomInDown,
+  ZoomInEasyUp,
+  ZoomInEasyDown,
   ZoomOut,
   ZoomOutRotate,
+  ZoomOutRight,
+  ZoomOutLeft,
+  ZoomOutUp,
+  ZoomOutDown,
+  ZoomOutEasyUp,
+  ZoomOutEasyDown,
   StretchInX,
   StretchInY,
   StretchOutX,
@@ -40,12 +52,6 @@ import Animated, {
   FlipOutYRight,
   FlipOutEasyX,
   FlipOutEasyY,
-  ZoomInRight,
-  ZoomInLeft,
-  ZoomInUp,
-  ZoomInDown,
-  ZoomInEasyUp,
-  ZoomInEasyDown,
   BounceIn,
   BounceInDown,
   BounceInUp,
@@ -159,6 +165,12 @@ export function DefaultAnimations(): React.ReactElement {
       <Text style={styles.groupText}>Zoom out</Text>
       <AnimatedBlock name="ZoomOut" animatedStyle={{exiting: ZoomOut}} defaultShow={true} />
       <AnimatedBlock name="ZoomOutRotate" animatedStyle={{exiting: ZoomOutRotate}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutRight" animatedStyle={{exiting: ZoomOutRight}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutLeft" animatedStyle={{exiting: ZoomOutLeft}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutUp" animatedStyle={{exiting: ZoomOutUp}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutDown" animatedStyle={{exiting: ZoomOutDown}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutEasyUp" animatedStyle={{exiting: ZoomOutEasyUp}} defaultShow={true} />
+      <AnimatedBlock name="ZoomOutEasyDown" animatedStyle={{exiting: ZoomOutEasyDown}} defaultShow={true} />
 
       <Text style={styles.groupText}>Slide in</Text>
       <AnimatedBlock name="SlideInRight" animatedStyle={{entering: SlideInRight}} />
