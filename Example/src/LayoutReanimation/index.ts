@@ -5,3 +5,4 @@ export * from './Menu';
 export * from './Modal';
 export * from './Carousel';
 export * from './ModalNewAPI';
+export * from './DefaultAnimations';

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Menu, Modal, Carousel, ModalNewAPI } from './LayoutReanimation';
+import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Menu, Modal, Carousel, ModalNewAPI, DefaultAnimations } from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -26,6 +26,10 @@ LogBox.ignoreLogs(['Calling `getNode()`']);
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
