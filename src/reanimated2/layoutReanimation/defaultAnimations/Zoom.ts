@@ -177,7 +177,7 @@ export class ZoomInEasyUp extends BaseAnimationBuilder {
         },
         initialValues: {
           transform: [{ scale: 0 }],
-          originY: values.height,
+          originY: -values.height,
         },
       };
     };
@@ -202,7 +202,7 @@ export class ZoomInEasyDown extends BaseAnimationBuilder {
         },
         initialValues: {
           transform: [{ scale: 0 }],
-          originY: -values.height,
+          originY: values.height,
         },
       };
     };

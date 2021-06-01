@@ -39,9 +39,15 @@ import Animated, {
   ZoomInEasyUp,
   ZoomInEasyDown,
   BounceIn,
-  BounceOut,
   BounceInDown,
-  BounceInUp
+  BounceInUp,
+  BounceInLeft,
+  BounceInRight,
+  BounceOut,
+  BounceOutDown,
+  BounceOutUp,
+  BounceOutLeft,
+  BounceOutRight,
 } from 'react-native-reanimated';
 
 const AnimatedBlock = (props: { name: string, animatedStyle: object, defaultShow?: boolean }) => {
@@ -84,9 +90,15 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="BounceIn" animatedStyle={{entering: BounceIn}} />
       <AnimatedBlock name="BounceInDown" animatedStyle={{entering: BounceInDown}} />
       <AnimatedBlock name="BounceInUp" animatedStyle={{entering: BounceInUp}} />
+      <AnimatedBlock name="BounceInLeft" animatedStyle={{entering: BounceInLeft}} />
+      <AnimatedBlock name="BounceInRight" animatedStyle={{entering: BounceInRight}} />
 
       <Text style={styles.groupText}>Bounce out</Text>
       <AnimatedBlock name="BounceOut" animatedStyle={{exiting: BounceOut}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutDown" animatedStyle={{exiting: BounceOutDown}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutUp" animatedStyle={{exiting: BounceOutUp}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutLeft" animatedStyle={{exiting: BounceOutLeft}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutRight" animatedStyle={{exiting: BounceOutRight}} defaultShow={true} />
 
       <Text style={styles.groupText}>Flip in</Text>
       <AnimatedBlock name="FlipInXUp" animatedStyle={{entering: FlipInXUp}} />

@@ -20,7 +20,7 @@ export class SlideInRight extends BaseAnimationBuilder {
           originX: delayFunction(delay, animation(values.originX, config)),
         },
         initialValues: {
-          originX: values.originX - width,
+          originX: values.originX + width,
         },
       };
     };
@@ -44,7 +44,7 @@ export class SlideInLeft extends BaseAnimationBuilder {
           originX: delayFunction(delay, animation(values.originX, config)),
         },
         initialValues: {
-          originX: values.originX + width,
+          originX: values.originX - width,
         },
       };
     };
@@ -70,7 +70,9 @@ export class SlideOutRight extends BaseAnimationBuilder {
             animation(values.originX + width, config)
           ),
         },
-        initialValues: {},
+        initialValues: {
+          originX: values.originX
+        },
       };
     };
   }
@@ -95,7 +97,9 @@ export class SlideOutLeft extends BaseAnimationBuilder {
             animation(values.originX - width, config)
           ),
         },
-        initialValues: {},
+        initialValues: {
+          originX: values.originX
+        },
       };
     };
   }
