@@ -9,7 +9,15 @@ import Animated, {
   SlideOutUp, 
   SlideOutDown,
   FadeIn, 
+  FadeInRight, 
+  FadeInLeft,
+  FadeInUp,
+  FadeInDown,
   FadeOut, 
+  FadeOutRight, 
+  FadeOutLeft,
+  FadeOutUp,
+  FadeOutDown,
   SlideOutLeft, 
   SlideInLeft,
   ZoomIn,
@@ -86,33 +94,47 @@ export function DefaultAnimations(): React.ReactElement {
   return (
     <ScrollView style={{flexDirection: 'column'}}>
 
+      <Text style={styles.groupText}>Fade in</Text>
+      <AnimatedBlock name="FadeIn" animatedStyle={{entering: FadeIn}} />
+      <AnimatedBlock name="FadeInRight" animatedStyle={{entering: FadeInRight}} />
+      <AnimatedBlock name="FadeInLeft" animatedStyle={{entering: FadeInLeft}} />
+      <AnimatedBlock name="FadeInUp" animatedStyle={{entering: FadeInUp}} />
+      <AnimatedBlock name="FadeInDown" animatedStyle={{entering: FadeInDown}} />
+
+      <Text style={styles.groupText}>Fade out</Text>
+      <AnimatedBlock name="FadeOut" animatedStyle={{exiting: FadeOut}} defaultShow={true} />
+      <AnimatedBlock name="FadeOutRight" animatedStyle={{exiting: FadeOutRight}} defaultShow={true} />
+      <AnimatedBlock name="FadeOutLeft" animatedStyle={{exiting: FadeOutLeft}} defaultShow={true} />
+      <AnimatedBlock name="FadeOutUp" animatedStyle={{exiting: FadeOutUp}} defaultShow={true} />
+      <AnimatedBlock name="FadeOutDown" animatedStyle={{exiting: FadeOutDown}} defaultShow={true} />
+
       <Text style={styles.groupText}>Bounce in</Text>
       <AnimatedBlock name="BounceIn" animatedStyle={{entering: BounceIn}} />
-      <AnimatedBlock name="BounceInDown" animatedStyle={{entering: BounceInDown}} />
-      <AnimatedBlock name="BounceInUp" animatedStyle={{entering: BounceInUp}} />
-      <AnimatedBlock name="BounceInLeft" animatedStyle={{entering: BounceInLeft}} />
       <AnimatedBlock name="BounceInRight" animatedStyle={{entering: BounceInRight}} />
+      <AnimatedBlock name="BounceInLeft" animatedStyle={{entering: BounceInLeft}} />
+      <AnimatedBlock name="BounceInUp" animatedStyle={{entering: BounceInUp}} />
+      <AnimatedBlock name="BounceInDown" animatedStyle={{entering: BounceInDown}} />
 
       <Text style={styles.groupText}>Bounce out</Text>
       <AnimatedBlock name="BounceOut" animatedStyle={{exiting: BounceOut}} defaultShow={true} />
-      <AnimatedBlock name="BounceOutDown" animatedStyle={{exiting: BounceOutDown}} defaultShow={true} />
-      <AnimatedBlock name="BounceOutUp" animatedStyle={{exiting: BounceOutUp}} defaultShow={true} />
-      <AnimatedBlock name="BounceOutLeft" animatedStyle={{exiting: BounceOutLeft}} defaultShow={true} />
       <AnimatedBlock name="BounceOutRight" animatedStyle={{exiting: BounceOutRight}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutLeft" animatedStyle={{exiting: BounceOutLeft}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutUp" animatedStyle={{exiting: BounceOutUp}} defaultShow={true} />
+      <AnimatedBlock name="BounceOutDown" animatedStyle={{exiting: BounceOutDown}} defaultShow={true} />
 
       <Text style={styles.groupText}>Flip in</Text>
+      <AnimatedBlock name="FlipInYRight" animatedStyle={{entering: FlipInYRight}} />
+      <AnimatedBlock name="FlipInYLeft" animatedStyle={{entering: FlipInYLeft}} />
       <AnimatedBlock name="FlipInXUp" animatedStyle={{entering: FlipInXUp}} />
       <AnimatedBlock name="FlipInXDown" animatedStyle={{entering: FlipInXDown}} />
-      <AnimatedBlock name="FlipInYLeft" animatedStyle={{entering: FlipInYLeft}} />
-      <AnimatedBlock name="FlipInYRight" animatedStyle={{entering: FlipInYRight}} />
       <AnimatedBlock name="FlipInEasyX" animatedStyle={{entering: FlipInEasyX}} />
       <AnimatedBlock name="FlipInEasyY" animatedStyle={{entering: FlipInEasyY}} />
 
       <Text style={styles.groupText}>Flip out</Text>
+      <AnimatedBlock name="FlipOutYRight" animatedStyle={{exiting: FlipOutYRight}} defaultShow={true} />
+      <AnimatedBlock name="FlipOutYLeft" animatedStyle={{exiting: FlipOutYLeft}} defaultShow={true} />
       <AnimatedBlock name="FlipOutXUp" animatedStyle={{exiting: FlipOutXUp}} defaultShow={true} />
       <AnimatedBlock name="FlipOutXDown" animatedStyle={{exiting: FlipOutXDown}} defaultShow={true} />
-      <AnimatedBlock name="FlipOutYLeft" animatedStyle={{exiting: FlipOutYLeft}} defaultShow={true} />
-      <AnimatedBlock name="FlipOutYRight" animatedStyle={{exiting: FlipOutYRight}} defaultShow={true} />
       <AnimatedBlock name="FlipOutEasyX" animatedStyle={{exiting: FlipOutEasyX}} defaultShow={true} />
       <AnimatedBlock name="FlipOutEasyY" animatedStyle={{exiting: FlipOutEasyY}} defaultShow={true} />
 
@@ -138,23 +160,17 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="ZoomOut" animatedStyle={{exiting: ZoomOut}} defaultShow={true} />
       <AnimatedBlock name="ZoomOutRotate" animatedStyle={{exiting: ZoomOutRotate}} defaultShow={true} />
 
-      <Text style={styles.groupText}>Fade in</Text>
-      <AnimatedBlock name="FadeIn" animatedStyle={{entering: FadeIn}} />
-
-      <Text style={styles.groupText}>Fade out</Text>
-      <AnimatedBlock name="FadeOut" animatedStyle={{exiting: FadeOut}} defaultShow={true} />
-
       <Text style={styles.groupText}>Slide in</Text>
-      <AnimatedBlock name="SlideInUp" animatedStyle={{entering: SlideInUp}} />
-      <AnimatedBlock name="SlideInDown" animatedStyle={{entering: SlideInDown}} />
       <AnimatedBlock name="SlideInRight" animatedStyle={{entering: SlideInRight}} />
       <AnimatedBlock name="SlideInLeft" animatedStyle={{entering: SlideInLeft}} />
+      <AnimatedBlock name="SlideInUp" animatedStyle={{entering: SlideInUp}} />
+      <AnimatedBlock name="SlideInDown" animatedStyle={{entering: SlideInDown}} />
 
       <Text style={styles.groupText}>Slide out</Text>
-      <AnimatedBlock name="SlideOutUp" animatedStyle={{exiting: SlideOutUp}} defaultShow={true} />
-      <AnimatedBlock name="SlideOutDown" animatedStyle={{exiting: SlideOutDown}} defaultShow={true} />
       <AnimatedBlock name="SlideOutRight" animatedStyle={{exiting: SlideOutRight}} defaultShow={true} />
       <AnimatedBlock name="SlideOutLeft" animatedStyle={{exiting: SlideOutLeft}} defaultShow={true} />
+      <AnimatedBlock name="SlideOutUp" animatedStyle={{exiting: SlideOutUp}} defaultShow={true} />
+      <AnimatedBlock name="SlideOutDown" animatedStyle={{exiting: SlideOutDown}} defaultShow={true} />
 
     </ScrollView>
   );
