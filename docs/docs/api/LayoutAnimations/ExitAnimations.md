@@ -15,9 +15,9 @@ sidebar_label: Exiting Animations
     <AnimatedComponent exiting={Animation} >
 ```
 ### 3. Customize the animation
-    If you don't know what modificators the animation provides then find your animation down below.
+    If you don't know what Modifiers the animation provides then find your animation down below.
 ```js
-    <AnimatedComponent exiting={Animation.duration(3000).otherModificator()} >
+    <AnimatedComponent exiting={Animation.duration(3000).otherModifier()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
@@ -41,7 +41,7 @@ If you cannot find an animation that suits you then please create your custom an
 - FadeOutUp
 - FadeOutDown
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
 * `easing` same easing worklet as with `withTiming`
@@ -65,7 +65,7 @@ If you cannot find an animation that suits you then please create your custom an
 - BounceOutUp
 - BounceOutDown
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 250
 * `delay` (in ms) default: 0
 
@@ -82,7 +82,7 @@ If you cannot find an animation that suits you then please create your custom an
 - FlipOutEasyX
 - FlipOutEasyY
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
 * `easing` same easing worklet as with `withTiming`
@@ -103,7 +103,7 @@ If you cannot find an animation that suits you then please create your custom an
 - StretchOutX
 - StretchOutY
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
 * `easing` same easing worklet as with `withTiming`
@@ -130,7 +130,7 @@ If you cannot find an animation that suits you then please create your custom an
 - ZoomOutEasyUp
 - ZoomOutEadyDown
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
 * `easing` same easing worklet as with `withTiming`
@@ -153,7 +153,7 @@ If you cannot find an animation that suits you then please create your custom an
 - SlideOutUp
 - SlideOutDown
 
-#### Modificators
+#### Modifiers
 * `duration` (in ms) default: 300
 * `delay` (in ms) default: 0
 * `easing` same easing worklet as with `withTiming`

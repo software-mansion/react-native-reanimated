@@ -16,7 +16,7 @@ sidebar_label: Layout Transitions
 ```
 ### 3. Customize the animation
 ```js
-    <AnimatedComponent layout={Layout.duration(3000).otherModificator()} >
+    <AnimatedComponent layout={Layout.duration(3000).otherModifier()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
@@ -29,7 +29,7 @@ sidebar_label: Layout Transitions
 ```
 
 ## Available modifiers
-The order of modificators doesn't matter.
+The order of Modifiers doesn't matter.
 ### springify 
 The default animation used for layout transitions is `timing`. Use this modifier to change animation to `spring`.
 ```js
