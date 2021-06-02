@@ -18,21 +18,21 @@ Reanimated listen on changes in tree of views and if detect that some of compone
 ### 2. Choose Animated Component which exiting you want to animate
 ```js
     // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
-    <Animated.View exiting={AnimationName} >
+    <AnimatedComponent exiting={AnimationName} >
 ```
 ### 3. Customize the animation
     Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
 ```js
-    <Animated.View exiting={AnimationName.duration(3000).otherModifier()} >
+    <AnimatedComponent exiting={AnimationName.duration(3000).otherModifier()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
-    <Animated.View> // +
+    <AnimatedLayout> // +
         <View> sth </View>
         <View> 
             <AnimatedComponent exiting={AnimationName}>
         </View>
-    </Animated.View> // +
+    </AnimatedLayout> // +
 ```
 
 ## Predefined Animations 
