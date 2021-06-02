@@ -3,6 +3,8 @@ id: layoutTransitions
 title: Layout Transitions
 sidebar_label: Layout Transitions
 ---
+The document explains how can you animate all layout changes for a specific view just by adding a single property to the view.
+To be precise how to animate positions and dimensions of components. What's important it will all happen entirely on UI thread without any communication through the bridge. There are plenty of ways in which you can animated layout changes however in contrast to entering and exiting animations they are not so regular and because of that, we decided to provide just one most popular animation that animated both position and dimensions in the same way. However, there is also a way to create a custom layout transition. To find an exact instruction explaining how to create a custom layout transition, please go to the Layout Transition document.
 
 ## How to use layout transition?
 
@@ -12,6 +14,7 @@ sidebar_label: Layout Transitions
 ```
 ### 2. Choose Animated Component which layout you want to animate
 ```js
+    // AnimatedComponent
     <AnimatedComponent layout={Layout} >
 ```
 ### 3. Customize the animation
