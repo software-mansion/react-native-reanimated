@@ -21,7 +21,7 @@ Reanimated listen on changes in tree of views and if detect that some of compone
     <AnimatedComponent exiting={AnimationName} >
 ```
 ### 3. Customize the animation
-    Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
+Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
 ```js
     <AnimatedComponent exiting={AnimationName.duration(3000).otherModifier()} >
 ```
