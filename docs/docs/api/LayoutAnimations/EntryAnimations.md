@@ -3,34 +3,38 @@ id: entryAnimations
 title: Entering Animations
 sidebar_label: Entering Animations
 ---
-
-## How to use predefined entering animation?
+In React Native every component appears instantly whenever you add it to the component hierarchy. It's not something we are used to in the real world. Layout Animations are here to address the problem and help you animate an appearance of any view.
+We provide an easy API that allows you to code almost any animation you want. Because some of the animations are more frequently used than the others we coded them for you and provided them affordably. Below you can find an instruction step by step explaining how to use them. A little further down you will find a detailed description of all the predefined entering animations.## How to use predefined entering animation?
 
 ### 1. Import chosen animation
 ```js
-    import { Animation } from 'react-native-reanimated';
+// AnimationName is just an example and should be replaced by real animation. For Instance FadeIn
+import { AnimationName } from 'react-native-reanimated'; 
 ```
 ### 2. Choose Animated Component which entering you want to animate
 ```js
-    <AnimatedComponent entering={Animation} >
+// AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
+<AnimatedComponent entering={AnimationName} > 
 ```
 ### 3. Customize the animation
-    If you don't know what modifiers the animation provides then find your animation down below.
+Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
 ```js
-    <AnimatedComponent entering={Animation.duration(3000).otherModifier()} >
+<AnimatedComponent entering={AnimationName.duration(3000).otherModifier()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
-    <AnimatedLayout> // +
-        <View> sth </View>
-        <View> 
-            <AnimatedComponent entering={Animation}>
-        </View>
-    </AnimatedLayout> // +
+<AnimatedLayout> // +
+    <View> sth </View>
+    <View> 
+        <AnimatedComponent entering={AnimationName}>
+    </View>
+</AnimatedLayout> // +
 ```
 
 ## Predefined Animations 
-If you cannot find an animation that suits you then please create your custom animation. If you think that the animation should be here, please open an issue or create a pull request. 
+Below we listed all of the currently available predefined entering animations grouped by their type. Each group contains all of its modifiers and a video presenting what it looks like when applied to a simple button.
+
+If you cannot find an animation that suits you then you can create a custom one. If you think that the animation should be here, please open an issue or create a pull request. 
 
 ### Fade
 
