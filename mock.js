@@ -19,7 +19,9 @@ const {
 } = require('react-native');
 const ReanimatedV2 = require('./src/reanimated2/mock');
 
-function NOOP() {}
+function NOOP() {
+  // noop
+}
 
 function simulateCallbackFactory(...params) {
   return (callback) => {
@@ -75,9 +77,13 @@ function createTransitioningComponent(Component) {
       Component.name ||
       'Component'}`;
 
-    setNativeProps() {}
+    setNativeProps() {
+      // noop
+    }
 
-    animateNextTransition() {}
+    animateNextTransition() {
+      // noop
+    }
 
     render() {
       return <Component {...this.props} />;

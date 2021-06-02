@@ -12,11 +12,12 @@ import {
   requestFrame,
   getTimestamp,
 } from './core';
-import updateProps, { updatePropsJestWrapper } from './UpdateProps';
+import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { processColor } from './Colors';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
@@ -52,134 +53,125 @@ export function useEvent(handler, eventNames = [], rebuild = false) {
 
 function prepareAnimation(animatedProp, lastAnimation, lastValue) {
   'worklet';
-  function prepareAnimation(animatedProp, lastAnimation, lastValue) {
-    if (Array.isArray(animatedProp)) {
-      animatedProp.forEach((prop, index) =>
-        prepareAnimation(
-          prop,
-          lastAnimation && lastAnimation[index],
-          lastValue && lastValue[index]
-        )
-      );
-      return animatedProp;
-    }
-    if (typeof animatedProp === 'object' && animatedProp.onFrame) {
-      const animation = animatedProp;
-
-      let value = animation.current;
-      if (lastValue !== undefined) {
-        if (typeof lastValue === 'object') {
-          if (lastValue.value !== undefined) {
-            // previously it was a shared value
-            value = lastValue.value;
-          } else if (lastValue.onFrame !== undefined) {
-            if (lastAnimation?.current !== undefined) {
-              // it was an animation before, copy its state
-              value = lastAnimation.current;
-            } else if (lastValue?.current !== undefined) {
-              // it was initialized
-              value = lastValue.current;
-            }
-          }
-        } else {
-          // previously it was a plain value, just set it as starting point
-          value = lastValue;
-        }
-      }
-
-      animation.callStart = (timestamp) => {
-        animation.onStart(animation, value, timestamp, lastAnimation);
-      };
-      animation.callStart(getTimestamp());
-      animation.callStart = null;
-    } else if (typeof animatedProp === 'object') {
-      // it is an object
-      Object.keys(animatedProp).forEach((key) =>
-        prepareAnimation(
-          animatedProp[key],
-          lastAnimation && lastAnimation[key],
-          lastValue && lastValue[key]
-        )
-      );
-    }
+  if (Array.isArray(animatedProp)) {
+    animatedProp.forEach((prop, index) =>
+      prepareAnimation(
+        prop,
+        lastAnimation && lastAnimation[index],
+        lastValue && lastValue[index]
+      )
+    );
+    return animatedProp;
   }
-  return prepareAnimation(animatedProp, lastAnimation, lastValue);
+  if (typeof animatedProp === 'object' && animatedProp.onFrame) {
+    const animation = animatedProp;
+
+    let value = animation.current;
+    if (lastValue !== undefined) {
+      if (typeof lastValue === 'object') {
+        if (lastValue.value !== undefined) {
+          // previously it was a shared value
+          value = lastValue.value;
+        } else if (lastValue.onFrame !== undefined) {
+          if (lastAnimation?.current !== undefined) {
+            // it was an animation before, copy its state
+            value = lastAnimation.current;
+          } else if (lastValue?.current !== undefined) {
+            // it was initialized
+            value = lastValue.current;
+          }
+        }
+      } else {
+        // previously it was a plain value, just set it as starting point
+        value = lastValue;
+      }
+    }
+
+    animation.callStart = (timestamp) => {
+      animation.onStart(animation, value, timestamp, lastAnimation);
+    };
+    animation.callStart(getTimestamp());
+    animation.callStart = null;
+  } else if (typeof animatedProp === 'object') {
+    // it is an object
+    Object.keys(animatedProp).forEach((key) =>
+      prepareAnimation(
+        animatedProp[key],
+        lastAnimation && lastAnimation[key],
+        lastValue && lastValue[key]
+      )
+    );
+  }
 }
 
 function runAnimations(animation, timestamp, key, result, animationsActive) {
   'worklet';
-  function runAnimations(animation, timestamp, key, result, animationsActive) {
-    if (!animationsActive.value) {
-      return true;
-    }
-    if (Array.isArray(animation)) {
-      result[key] = [];
-      let allFinished = true;
-      animation.forEach((entry, index) => {
-        if (
-          !runAnimations(entry, timestamp, index, result[key], animationsActive)
-        ) {
-          allFinished = false;
-        }
-      });
-      return allFinished;
-    } else if (typeof animation === 'object' && animation.onFrame) {
-      let finished = true;
-      if (!animation.finished) {
-        if (animation.callStart) {
-          animation.callStart(timestamp);
-          animation.callStart = null;
-        }
-        finished = animation.onFrame(animation, timestamp);
-        animation.timestamp = timestamp;
-        if (finished) {
-          animation.finished = true;
-          animation.callback && animation.callback(true /* finished */);
-        }
-      }
-      result[key] = animation.current;
-      return finished;
-    } else if (typeof animation === 'object') {
-      result[key] = {};
-      let allFinished = true;
-      Object.keys(animation).forEach((k) => {
-        if (
-          !runAnimations(
-            animation[k],
-            timestamp,
-            k,
-            result[key],
-            animationsActive
-          )
-        ) {
-          allFinished = false;
-        }
-      });
-      return allFinished;
-    } else {
-      result[key] = animation;
-      return true;
-    }
+  if (!animationsActive.value) {
+    return true;
   }
-  return runAnimations(animation, timestamp, key, result, animationsActive);
+  if (Array.isArray(animation)) {
+    result[key] = [];
+    let allFinished = true;
+    animation.forEach((entry, index) => {
+      if (
+        !runAnimations(entry, timestamp, index, result[key], animationsActive)
+      ) {
+        allFinished = false;
+      }
+    });
+    return allFinished;
+  } else if (typeof animation === 'object' && animation.onFrame) {
+    let finished = true;
+    if (!animation.finished) {
+      if (animation.callStart) {
+        animation.callStart(timestamp);
+        animation.callStart = null;
+      }
+      finished = animation.onFrame(animation, timestamp);
+      animation.timestamp = timestamp;
+      if (finished) {
+        animation.finished = true;
+        animation.callback && animation.callback(true /* finished */);
+      }
+    }
+    result[key] = animation.current;
+    return finished;
+  } else if (typeof animation === 'object') {
+    result[key] = {};
+    let allFinished = true;
+    Object.keys(animation).forEach((k) => {
+      if (
+        !runAnimations(
+          animation[k],
+          timestamp,
+          k,
+          result[key],
+          animationsActive
+        )
+      ) {
+        allFinished = false;
+      }
+    });
+    return allFinished;
+  } else {
+    result[key] = animation;
+    return true;
+  }
 }
 
-// TODO: recirsive worklets aren't supported yet
 function isAnimated(prop) {
   'worklet';
-  function isAnimated(prop) {
-    if (Array.isArray(prop)) {
-      return prop.some(isAnimated);
-    }
-    if (typeof prop === 'object') {
-      if (prop.onFrame) {
-        return true;
+  if (Array.isArray(prop)) {
+    for (const item of prop) {
+      for (const key in item) {
+        if (item[key].onFrame !== undefined) {
+          return true;
+        }
       }
-      return Object.keys(prop).some((key) => isAnimated(prop[key]));
     }
     return false;
   }
-  return isAnimated(prop);
+  return prop.onFrame !== undefined;
 }
 
 function styleDiff(oldStyle, newStyle) {
@@ -209,6 +201,20 @@ function styleDiff(oldStyle, newStyle) {
   return diff;
 }
 
+function getStyleWithoutAnimations(newStyle) {
+  'worklet';
+  const diff = {};
+
+  for (const key in newStyle) {
+    const value = newStyle[key];
+    if (isAnimated(value)) {
+      continue;
+    }
+    diff[key] = value;
+  }
+  return diff;
+}
+
 const validateAnimatedStyles = (styles) => {
   'worklet';
   if (typeof styles !== 'object') {
@@ -227,7 +233,6 @@ function styleUpdater(
   updater,
   state,
   maybeViewRef,
-  adapters,
   animationsActive
 ) {
   'worklet';
@@ -235,60 +240,55 @@ function styleUpdater(
   const newValues = updater() || {};
   const oldValues = state.last;
 
-  // extract animated props
   let hasAnimations = false;
-  Object.keys(animations).forEach((key) => {
-    const value = newValues[key];
-    if (!isAnimated(value)) {
-      delete animations[key];
-    }
-  });
-  Object.keys(newValues).forEach((key) => {
+  for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
       prepareAnimation(value, animations[key], oldValues[key]);
       animations[key] = value;
       hasAnimations = true;
-    }
-  });
-
-  function frame(timestamp) {
-    const { animations, last, isAnimationCancelled } = state;
-    if (isAnimationCancelled) {
-      state.isAnimationRunning = false;
-      return;
-    }
-
-    const updates = {};
-    let allFinished = true;
-    Object.keys(animations).forEach((propName) => {
-      const finished = runAnimations(
-        animations[propName],
-        timestamp,
-        propName,
-        updates,
-        animationsActive
-      );
-      if (finished) {
-        last[propName] = updates[propName];
-        delete animations[propName];
-      } else {
-        allFinished = false;
-      }
-    });
-
-    if (Object.keys(updates).length) {
-      updateProps(viewDescriptor, updates, maybeViewRef, adapters);
-    }
-
-    if (!allFinished) {
-      requestFrame(frame);
     } else {
-      state.isAnimationRunning = false;
+      delete animations[key];
     }
   }
 
   if (hasAnimations) {
+    const frame = (timestamp) => {
+      const { animations, last, isAnimationCancelled } = state;
+      if (isAnimationCancelled) {
+        state.isAnimationRunning = false;
+        return;
+      }
+
+      const updates = {};
+      let allFinished = true;
+      for (const propName in animations) {
+        const finished = runAnimations(
+          animations[propName],
+          timestamp,
+          propName,
+          updates,
+          animationsActive
+        );
+        if (finished) {
+          last[propName] = updates[propName];
+          delete animations[propName];
+        } else {
+          allFinished = false;
+        }
+      }
+
+      if (updates) {
+        updateProps(viewDescriptor, updates, maybeViewRef);
+      }
+
+      if (!allFinished) {
+        requestFrame(frame);
+      } else {
+        state.isAnimationRunning = false;
+      }
+    };
+
     state.animations = animations;
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
@@ -299,17 +299,15 @@ function styleUpdater(
         requestFrame(frame);
       }
     }
+    state.last = Object.assign({}, oldValues, newValues);
+    const style = getStyleWithoutAnimations(oldValues, newValues);
+    if (style) {
+      updateProps(viewDescriptor, style, maybeViewRef);
+    }
   } else {
     state.isAnimationCancelled = true;
     state.animations = {};
-  }
-
-  // calculate diff
-  const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
-
-  if (Object.keys(diff).length !== 0) {
-    updateProps(viewDescriptor, diff, maybeViewRef, adapters);
+    updateProps(viewDescriptor, newValues, maybeViewRef);
   }
 }
 
@@ -318,9 +316,9 @@ function jestStyleUpdater(
   updater,
   state,
   maybeViewRef,
-  adapters,
   animationsActive,
-  animatedStyle
+  animatedStyle,
+  adapters = []
 ) {
   'worklet';
   const animations = state.animations || {};
@@ -374,8 +372,8 @@ function jestStyleUpdater(
         viewDescriptor,
         updates,
         maybeViewRef,
-        adapters,
-        animatedStyle
+        animatedStyle,
+        adapters
       );
     }
 
@@ -411,11 +409,36 @@ function jestStyleUpdater(
       viewDescriptor,
       diff,
       maybeViewRef,
-      adapters,
-      animatedStyle
+      animatedStyle,
+      adapters
     );
   }
 }
+const colorPropsSet = new Set(colorProps);
+const hasColorProps = (updates) => {
+  for (const key in updates) {
+    if (colorPropsSet.has(key)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const parseColors = (updates) => {
+  'worklet';
+  for (const key in updates) {
+    if (colorProps.indexOf(key) !== -1) {
+      updates[key] = processColor(updates[key]);
+    }
+  }
+};
+
+const canApplyOptimalisation = (upadterFn) => {
+  const FUNCTIONLESS_FLAG =   0b00000001;
+  const STATEMENTLESS_FLAG =  0b00000010;
+  const optimalization = upadterFn.__optimalization;
+  return (optimalization & FUNCTIONLESS_FLAG) && (optimalization & STATEMENTLESS_FLAG);
+};
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
@@ -452,6 +475,39 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
 
   useEffect(() => {
     let fun;
+    let upadterFn = updater;
+    let optimalization = updater.__optimalization;
+    if (adapters) {
+      upadterFn = () => {
+        'worklet';
+        const newValues = updater();
+        adapters.forEach((adapter) => {
+          adapter(newValues);
+        });
+        return newValues;
+      };
+    }
+
+    if (canApplyOptimalisation(upadterFn)) {
+      if (hasColorProps(upadterFn())) {
+        upadterFn = () => {
+          'worklet';
+          const style = upadterFn();
+          parseColors(style);
+          return style;
+        };
+      }
+    } else {
+      optimalization = 0;
+      upadterFn = () => {
+        'worklet';
+        const style = upadterFn();
+        parseColors(style);
+        return style;
+      };
+    }
+    upadterFn.__optimalization = optimalization;
+
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
         'worklet';
@@ -460,9 +516,9 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
           updater,
           remoteState,
           maybeViewRef,
-          adapters,
           animationsActive,
-          animatedStyle
+          animatedStyle,
+          adapters
         );
       };
     } else {
@@ -470,15 +526,21 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         'worklet';
         styleUpdater(
           viewDescriptor,
-          updater,
+          upadterFn,
           remoteState,
           maybeViewRef,
-          adapters,
           animationsActive
         );
       };
     }
-    const mapperId = startMapper(fun, inputs, []);
+    const mapperId = startMapper(
+      fun,
+      inputs,
+      [],
+      upadterFn,
+      viewDescriptor.value.tag,
+      viewDescriptor.value.name || 'RCTView'
+    );
     return () => {
       stopMapper(mapperId);
     };

@@ -209,9 +209,14 @@ function bezier(
   y1: number,
   x2: number,
   y2: number
-): (x: number) => number {
+): { factory: () => (x: number) => number } {
   'worklet';
-  return Bezier(x1, y1, x2, y2);
+  return {
+    factory: () => {
+      'worklet';
+      return Bezier(x1, y1, x2, y2);
+    },
+  };
 }
 
 /**

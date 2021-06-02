@@ -52,7 +52,6 @@ void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
 }
 
 void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType) {
-  bool isRNRuntime = RuntimeDecorator::isReactRuntime(rt);
   if (value.isObject()) {
     jsi::Object object = value.asObject(rt);
     jsi::Value hiddenValue = object.getProperty(rt, HIDDEN_HOST_OBJECT_PROP);
@@ -117,7 +116,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
         valueContainer = std::make_unique<FrozenObjectWrapper>(std::make_shared<FrozenObject>(rt, object, runtimeManager));
         auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
         containsHostFunction |= frozenObject->containsHostFunction;
-        if (isRNRuntime && !containsHostFunction) {
+        if (RuntimeDecorator::isReactRuntime(rt) && !containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
       }
@@ -154,7 +153,7 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       );
       auto& frozenObject = ValueWrapper::asFrozenObject(valueContainer);
       containsHostFunction |= frozenObject->containsHostFunction;
-      if (isRNRuntime) {
+      if (RuntimeDecorator::isReactRuntime(rt)) {
         if (!containsHostFunction) {
           addHiddenProperty(rt, createHost(rt, frozenObject), object, HIDDEN_HOST_OBJECT_PROP);
         }
@@ -179,17 +178,16 @@ jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
   if (RuntimeDecorator::isWorkletRuntime(rt)) {
     if (remoteValue.expired()) {
-      auto ref = getWeakRef(rt);
-      remoteValue = ref;
+      remoteValue = getWeakRef(rt);
     }
 
     if (remoteValue.lock()->isUndefined()) {
-      (*remoteValue.lock()) = jsi::Value(rt, toJSValue(rt));
+      (*remoteValue.lock()) = toJSValue(rt);
     }
     return jsi::Value(rt, *remoteValue.lock());
   } else {
     if (hostValue.get() == nullptr) {
-      hostValue = std::make_unique<jsi::Value>(rt, toJSValue(rt));
+      hostValue = std::make_unique<jsi::Value>(toJSValue(rt));
     }
     return jsi::Value(rt, *hostValue);
   }
@@ -339,8 +337,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                    const jsi::Value *args,
                    size_t count
                    ) mutable -> jsi::Value {
-           jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
-           rt.global().setProperty(rt, "jsThis", *jsThis); //set jsThis
+           const jsi::String jsThisName = jsi::String::createFromAscii(rt, "jsThis");
+           jsi::Object global = rt.global();
+           jsi::Value oldJSThis = global.getProperty(rt, jsThisName);
+           global.setProperty(rt, jsThisName, *jsThis); //set jsThis
 
            jsi::Value res = jsi::Value::undefined();
            try {
@@ -361,8 +361,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               runtimeManager->errorHandler->setError(str);
               runtimeManager->errorHandler->raise();
             }
-
-           rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+           global.setProperty(rt, jsThisName, oldJSThis); //clean jsThis
            return res;
         };
         return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.c_str()), 0, clb);
@@ -394,9 +393,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
             }
 
             jsi::Value returnedValue;
-
-            jsi::Value oldJSThis = rt.global().getProperty(rt, "jsThis");
-            rt.global().setProperty(rt, "jsThis", jsThis); //set jsThis
+            const jsi::String jsThisName = jsi::String::createFromAscii(rt, "jsThis");
+            jsi::Object global = rt.global();
+            jsi::Value oldJSThis = global.getProperty(rt, jsThisName);
+            global.setProperty(rt, jsThisName, jsThis); //set jsThis
             try {
               returnedValue = funPtr->call(rt,
                                              static_cast<const jsi::Value*>(args),
@@ -416,7 +416,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               runtimeManager->errorHandler->setError(str);
               runtimeManager->errorHandler->raise();
             }
-            rt.global().setProperty(rt, "jsThis", oldJSThis); //clean jsThis
+            global.setProperty(rt, jsThisName, oldJSThis); //clean jsThis
 
             delete [] args;
             // ToDo use returned value to return promise
