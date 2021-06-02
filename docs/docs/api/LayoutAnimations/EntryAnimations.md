@@ -15,7 +15,7 @@ sidebar_label: Entering Animations
     <AnimatedComponent entering={Animation} >
 ```
 ### 3. Customize the animation
-    If you don't know what Modifiers the animation provides then find your animation down below.
+    If you don't know what modifiers the animation provides then find your animation down below.
 ```js
     <AnimatedComponent entering={Animation.duration(3000).otherModifier()} >
 ```
