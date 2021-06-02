@@ -165,7 +165,7 @@ function CustomLayoutTransition(values) {
     * `values.bglobalOriginY` - Y coordinate of top left corder in global coordinate system (before)
 
 ### Example
-<video src="https://user-images.githubusercontent.com/12784455/120450759-09fa3980-c391-11eb-9b64-65ec8e6c2509.mp4" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/12784455/120450759-09fa3980-c391-11eb-9b64-65ec8e6c2509.mp4" controls="controls" muted="muted" width="45%"></video>
 
 ```js
 
