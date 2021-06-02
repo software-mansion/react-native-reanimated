@@ -3,7 +3,10 @@ id: animatedLayout
 title: <AnimatedLayout>
 sidebar_label: <AnimatedLayout>
 ---
-The component is responsible for observing changes in its subtree. There is no need to nest one `AnimatedLayout` in another one because the higher one would already watch the subtree of the lower one. You can treat it as a `View` component. `AnimatedLayout` manages all its descendants' animations while it's mounting and unmounting as well. 
+The `AnimatedLayout` component is responsible for observing changes in its subtree `AnimatedLayout`. You can treat it as a `View` component because it takes the same set of properties. The component is essential for entering and exiting animations as well as layout transitions and each animated component that wants to make use of any layout animation has to be placed under an `AnimatedLayout` component. There are two important notes about this component that you should keep in mind: 
+ - It will manage all its descendants' animations even if it's mounting and unmounting by itself.
+ - There is no need to nest one `AnimatedLayout` in another one because the higher one would already watch the subtree of the lower one. 
+
 
 ## Example
 ```js
