@@ -3,7 +3,17 @@ import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Menu, Modal, Carousel, ModalNewAPI, DefaultAnimations } from './LayoutReanimation';
+import { 
+  SpringLayoutAnimation, 
+  MountingUnmounting, 
+  SwipeableList, 
+  Menu, 
+  Modal, 
+  Carousel, 
+  ModalNewAPI, 
+  DefaultAnimations,
+  CustomLayoutTransitionExample,
+} from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -114,6 +124,10 @@ const SCREENS: Screens = {
   Carousel: {
     title: '🆕 Carousel',
     screen: Carousel,
+  },
+  CustomLayoutTransitionExample: {
+    title: '🆕 Custom Layout Transition',
+    screen: CustomLayoutTransitionExample,
   }
 };
 
