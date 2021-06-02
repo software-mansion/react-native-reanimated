@@ -34,6 +34,8 @@ If you cannot find an animation that suits you then please create your custom an
 
 ### Fade
 
+Simple animation based on changing of opacity.
+
 #### Animations
 - FadeIn
 - FadeInRight
@@ -58,6 +60,8 @@ If you cannot find an animation that suits you then please create your custom an
 
 ### Bounce
 
+Animation based on smoothly shaking of component.
+
 #### Animations
 - BounceIn
 - BounceInRight
@@ -73,6 +77,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317341-cc3cd880-c2de-11eb-9d72-4065c740667e.mov" controls="controls" muted="muted"></video>
 
 ### Flip
+
+3D animation based on flipping object over specific axis.
 
 #### Animations
 - FlipInYRight
@@ -99,6 +105,8 @@ If you cannot find an animation that suits you then please create your custom an
 
 ### Stretch
 
+Animation based on changing width or height of object.
+
 #### Animations
 - StretchInX
 - StretchInY
@@ -119,6 +127,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317473-f42c3c00-c2de-11eb-8772-b366c2ddde7f.mov" controls="controls" muted="muted"></video>
 
 ### Zoom
+
+Animation based on changing scale of object.
 
 #### Animations
 - ZoomIn
@@ -146,6 +156,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317529-04441b80-c2df-11eb-9627-c56e986e44c1.mov" controls="controls" muted="muted"></video>
 
 ### Slide
+
+Animation based on horizontal or vertical moving of object.
 
 #### Animations
 - SlideInRight

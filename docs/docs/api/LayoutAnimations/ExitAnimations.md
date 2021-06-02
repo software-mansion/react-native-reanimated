@@ -4,35 +4,45 @@ title: Exiting Animations
 sidebar_label: Exiting Animations
 ---
 
+In React Native during unmounting of components from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using `Exiting Animations`. Reanimated make an pretty animation of disappearing of component for you.
+#### How it is possible? 
+Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation.
+
 ## How to use predefined exiting animation?
 
 ### 1. Import chosen animation
 ```js
-    import { Animation } from 'react-native-reanimated';
+    // AnimationName is just an example and should be replaced by real animation. For Instance FadeOut
+    import { AnimationName } from 'react-native-reanimated';
 ```
 ### 2. Choose Animated Component which exiting you want to animate
 ```js
-    <AnimatedComponent exiting={Animation} >
+    // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
+    <Animated.View exiting={AnimationName} >
 ```
 ### 3. Customize the animation
-    If you don't know what modifiers the animation provides then find your animation down below.
+    Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
 ```js
-    <AnimatedComponent exiting={Animation.duration(3000).otherModifier()} >
+    <Animated.View exiting={AnimationName.duration(3000).otherModifier()} >
 ```
 ### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
-    <AnimatedLayout> // +
+    <Animated.View> // +
         <View> sth </View>
         <View> 
-            <AnimatedComponent exiting={Animation}>
+            <AnimatedComponent exiting={AnimationName}>
         </View>
-    </AnimatedLayout> // +
+    </Animated.View> // +
 ```
 
 ## Predefined Animations 
-If you cannot find an animation that suits you then please create your custom animation. If you think that the animation should be here, please open an issue or create a pull request. 
+Below we listed all of the currently available predefined entering animations grouped by their type. Each group contains all of its modifiers and a video presenting what it looks like when applied to a simple button.
+
+If you cannot find an animation that suits you then you can create a custom one. If you think that the animation should be here, please open an issue or create a pull request.  
 
 ### Fade
+
+Simple animation based on changing of opacity.
 
 #### Animations
 - FadeOut
@@ -58,6 +68,8 @@ If you cannot find an animation that suits you then please create your custom an
 
 ### Bounce
 
+Animation based on smoothly shaking of component.
+
 #### Animations
 - BounceOut
 - BounceOutRight
@@ -73,6 +85,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317374-d52daa00-c2de-11eb-9fc5-320dfaf50440.mov" controls="controls" muted="muted"></video>
 
 ### Flip
+
+3D animation based on flipping object over specific axis.
 
 #### Animations
 - FlipOutYRight
@@ -99,6 +113,8 @@ If you cannot find an animation that suits you then please create your custom an
 
 ### Stretch
 
+Animation based on changing width or height of object.
+
 #### Animations
 - StretchOutX
 - StretchOutY
@@ -119,6 +135,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317500-fbebe080-c2de-11eb-9901-693aa4ad0ba0.mov" controls="controls" muted="muted"></video>
 
 ### Zoom
+
+Animation based on changing scale of object.
 
 #### Animations
 - ZoomOut
@@ -146,6 +164,8 @@ If you cannot find an animation that suits you then please create your custom an
 <video src="https://user-images.githubusercontent.com/36106620/120317554-0efeb080-c2df-11eb-88cf-6ec47778dccb.mov" controls="controls" muted="muted"></video>
 
 ### Slide
+
+Animation based on horizontal or vertical moving of object.
 
 #### Animations
 - SlideOutRight
