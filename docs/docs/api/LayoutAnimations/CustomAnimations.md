@@ -28,12 +28,12 @@ function CustomExitingAnimation(startingValues) {
 ```
 
 * `startingValues` - contains information about where view was displayed and what were its dimentions
-    * `startingValues.originX` - X coordinate of top left corder in parent's coordinate system
-    * `startingValues.originY` - Y coordinate of top left corder in parent's coordinate system
+    * `startingValues.originX` - X coordinate of top left corner in parent's coordinate system
+    * `startingValues.originY` - Y coordinate of top left corner in parent's coordinate system
     * `startingValues.width` - view's width
-    * `startingValues.height` -view's height
-    * `startingValues.globalOriginX` - X coordinate of top left corder in global coordinate system
-    * `startingValues.globalOriginY` - Y coordinate of top left corder in global coordinate system
+    * `startingValues.height` - view's height
+    * `startingValues.globalOriginX` - X coordinate of top left corner in global coordinate system
+    * `startingValues.globalOriginY` - Y coordinate of top left corner in global coordinate system
 
 ### Example
 ```js
@@ -84,12 +84,12 @@ function CustomEnteringAnimation(targetValues) {
 ```
 
 * `targetValues` - contains information about where view wants to be displayed and what are its dimentions
-    * `targetValues.originX` - X coordinate of top left corder in parent's coordinate system
-    * `targetValues.originY` - Y coordinate of top left corder in parent's coordinate system
+    * `targetValues.originX` - X coordinate of top left corner in parent's coordinate system
+    * `targetValues.originY` - Y coordinate of top left corner in parent's coordinate system
     * `targetValues.width` - view's width
-    * `targetValues.height` -view's height
-    * `targetValues.globalOriginX` - X coordinate of top left corder in global coordinate system
-    * `targetValues.globalOriginY` - Y coordinate of top left corder in global coordinate system
+    * `targetValues.height` - view's height
+    * `targetValues.globalOriginX` - X coordinate of top left corner in global coordinate system
+    * `targetValues.globalOriginY` - Y coordinate of top left corner in global coordinate system
 
 ### Example
 ```js
@@ -151,18 +151,18 @@ function CustomLayoutTransition(values) {
 ```
 
 * `values` - contains before and after information about the view's origin and dimations
-    * `values.originX` - X coordinate of top left corder in parent's coordinate system (after)
-    * `values.originY` - Y coordinate of top left corder in parent's coordinate system (after)
+    * `values.originX` - X coordinate of top left corner in parent's coordinate system (after)
+    * `values.originY` - Y coordinate of top left corner in parent's coordinate system (after)
     * `values.width` - view's width (after)
-    * `values.height` -view's height (after)
+    * `values.height` - view's height (after)
     * `values.globalOriginX` - X coordinate of top left corder in global coordinate system (after)
     * `values.globalOriginY` - Y coordinate of top left corder in global coordinate system (after)
-    * `values.boriginX` - X coordinate of top left corder in parent's coordinate system (before)
-    * `values.boriginY` - Y coordinate of top left corder in parent's coordinate system (before)
+    * `values.boriginX` - X coordinate of top left corner in parent's coordinate system (before)
+    * `values.boriginY` - Y coordinate of top left corner in parent's coordinate system (before)
     * `values.bwidth` - view's width (before)
-    * `values.bheight` -view's height (before)
-    * `values.bglobalOriginX` - X coordinate of top left corder in global coordinate system (before)
-    * `values.bglobalOriginY` - Y coordinate of top left corder in global coordinate system (before)
+    * `values.bheight` - view's height (before)
+    * `values.bglobalOriginX` - X coordinate of top left corner in global coordinate system (before)
+    * `values.bglobalOriginY` - Y coordinate of top left corner in global coordinate system (before)
 
 ### Example
 <video src="https://user-images.githubusercontent.com/12784455/120450759-09fa3980-c391-11eb-9b64-65ec8e6c2509.mp4" controls="controls" muted="muted" width="45%"></video>
@@ -227,4 +227,4 @@ export function CustomLayoutTransitionExample(): React.ReactElement {
 
 ## Other Facts
 
-Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you wouldn't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. The only exception is Entering animation because we have no way to get the previous animation values.
+Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you don't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. The only exception is Entering animation because we have no way to get the previous animation values.

@@ -30,8 +30,7 @@ sidebar_label: Exiting Animations
 ```
 
 ## Predefined Animations 
-If you cannot find animation that suit you then, please create your custom animation. If you think that the animation should be 
-here then, plase open an issue or even better pull-request. 
+If you cannot find an animation that suits you then please create your custom animation. If you think that the animation should be here, please open an issue or create a pull request. 
 
 ### Fade
 

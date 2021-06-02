@@ -28,12 +28,12 @@ sidebar_label: Layout Transitions
     </AnimatedLayout> // +
 ```
 
-## Available modificators
+## Available modifiers
 The order of modificators doesn't matter.
 ### springify 
-The default animation used for layout transitions is `timing`. Use this modifiator to change animation to `spring`.
+The default animation used for layout transitions is `timing`. Use this modifier to change animation to `spring`.
 ```js
-    Layout.otherModificator().(...).springify().(...).otherModificator();
+    Layout.otherModifier().(...).springify().(...).otherModifier();
 ```
 
 ### damping (spring only)
