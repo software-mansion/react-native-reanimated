@@ -14,7 +14,7 @@ To be precise how to animate positions and dimensions of components. What's impo
 ```
 ### 2. Choose Animated Component which layout you want to animate
 ```js
-    // AnimatedComponent
+    // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
     <AnimatedComponent layout={Layout} >
 ```
 ### 3. Customize the animation
