@@ -9,6 +9,8 @@ The `AnimatedLayout` component is responsible for observing changes in its subtr
 
 
 ## Example
+You can use `AnimatedLayout` as regural React component and his hildren can use by transitions and mounting/unmpunting animations.
+
 ```js
     import { AnimatedLayout } from 'react-native-reanimated';
     
@@ -22,7 +24,7 @@ The `AnimatedLayout` component is responsible for observing changes in its subtr
     }
 ```
 
-<video src="https://user-images.githubusercontent.com/36106620/120326638-39ee0200-c2e9-11eb-8dca-3f3b999c5017.mov" controls="controls" muted="muted"></video>
+More advanced example with SWM's logo
 
 ```js
     import { 
@@ -70,5 +72,8 @@ The `AnimatedLayout` component is responsible for observing changes in its subtr
     }
 ```
 
+See results:
+
+<video src="https://user-images.githubusercontent.com/36106620/120326638-39ee0200-c2e9-11eb-8dca-3f3b999c5017.mov" controls="controls" muted="muted"></video>
 
 
