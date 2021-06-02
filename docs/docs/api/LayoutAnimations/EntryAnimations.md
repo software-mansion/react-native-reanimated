@@ -4,7 +4,10 @@ title: Entering Animations
 sidebar_label: Entering Animations
 ---
 In React Native every component appears instantly whenever you add it to the component hierarchy. It's not something we are used to in the real world. Layout Animations are here to address the problem and help you animate an appearance of any view.
-We provide an easy API that allows you to code almost any animation you want. Because some of the animations are more frequently used than the others we coded them for you and provided them affordably. Below you can find an instruction step by step explaining how to use them. A little further down you will find a detailed description of all the predefined entering animations.## How to use predefined entering animation?
+
+We provide an easy API that allows you to code almost any animation you want. Because some of the animations are more frequently used than the others we coded them for you and provided them affordably. Below you can find an instruction step by step explaining how to use them. A little further down you will find a detailed description of all the predefined entering animations.
+
+## How to use predefined entering animation?
 
 ### 1. Import chosen animation
 ```js
