@@ -432,4 +432,9 @@ export class BaseBounceAnimationBuilder {
 
     return [animation, config];
   }
+
+  static build() {
+    const instance = this.createInstance();
+    return instance.build();
+  }
 }
