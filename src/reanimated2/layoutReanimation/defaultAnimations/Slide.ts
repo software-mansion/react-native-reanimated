@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
 import { Dimensions } from 'react-native';
 
@@ -71,7 +73,7 @@ export class SlideOutRight extends BaseAnimationBuilder {
           ),
         },
         initialValues: {
-          originX: values.originX
+          originX: values.originX,
         },
       };
     };
@@ -98,7 +100,7 @@ export class SlideOutLeft extends BaseAnimationBuilder {
           ),
         },
         initialValues: {
-          originX: values.originX
+          originX: values.originX,
         },
       };
     };

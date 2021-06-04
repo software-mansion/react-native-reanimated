@@ -1,18 +1,20 @@
 /* global _stopObservingProgress, _startObservingProgress */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { requireNativeComponent } from 'react-native';
 import React from 'react';
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animations';
 
-const REALayoutView = (requireNativeComponent('REALayoutView') as any) as React.Component;
-export class AnimatedLayout extends React.Component<{},{}> {
+const REALayoutView = (requireNativeComponent(
+  'REALayoutView'
+) as any) as React.Component;
+export class AnimatedLayout extends React.Component<
+  Record<string, unknown>,
+  Record<string, unknown>
+> {
   render() {
-    return (
-      <REALayoutView
-        collapsable={false}
-        {...this.props}
-      />
-    );
+    return <REALayoutView collapsable={false} {...this.props} />;
   }
 }
 

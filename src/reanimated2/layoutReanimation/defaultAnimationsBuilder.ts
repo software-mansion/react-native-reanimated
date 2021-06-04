@@ -1,4 +1,6 @@
-import { withDelay , withSpring , withTiming } from '../animations';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { withDelay, withSpring, withTiming } from '../animations';
 
 export const DefaultEntering = (targetValues) => {
   'worklet';
@@ -242,7 +244,7 @@ export class BaseAnimationBuilder {
     return this;
   }
 
-  static delay(r) {
+  static rotate(r) {
     const instance = this.createInstance();
     return instance.rotate(r);
   }
@@ -427,8 +429,7 @@ export class BaseBounceAnimationBuilder {
     if (duration) {
       config.duration = duration;
     }
-    
+
     return [animation, config];
   }
 }
-

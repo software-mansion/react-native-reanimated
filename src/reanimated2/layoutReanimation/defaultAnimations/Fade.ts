@@ -1,7 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
-import { Dimensions } from 'react-native';
-
-const { width, height } = Dimensions.get('window');
 
 export class FadeIn extends BaseAnimationBuilder {
   static createInstance() {
@@ -42,11 +41,13 @@ export class FadeInRight extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(1, config)),
-          transform: [{ translateX: delayFunction(delay, animation(0, config)) }]
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
           opacity: 0,
-          transform: [{ translateX: 25 }]
+          transform: [{ translateX: 25 }],
         },
       };
     };
@@ -68,11 +69,13 @@ export class FadeInLeft extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(1, config)),
-          transform: [{ translateX: delayFunction(delay, animation(0, config)) }]
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
           opacity: 0,
-          transform: [{ translateX: -25 }]
+          transform: [{ translateX: -25 }],
         },
       };
     };
@@ -94,11 +97,13 @@ export class FadeInUp extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(1, config)),
-          transform: [{ translateY: delayFunction(delay, animation(0, config)) }]
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
           opacity: 0,
-          transform: [{ translateY: -25 }]
+          transform: [{ translateY: -25 }],
         },
       };
     };
@@ -120,11 +125,13 @@ export class FadeInDown extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(1, config)),
-          transform: [{ translateY: delayFunction(delay, animation(0, config)) }]
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
           opacity: 0,
-          transform: [{ translateY: 25 }]
+          transform: [{ translateY: 25 }],
         },
       };
     };
@@ -170,11 +177,13 @@ export class FadeOutRight extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(0, config)),
-          transform: [{ translateX: delayFunction(delay, animation(25, config)) }]
+          transform: [
+            { translateX: delayFunction(delay, animation(25, config)) },
+          ],
         },
         initialValues: {
           opacity: 1,
-          transform: [{ translateX: 0 }]
+          transform: [{ translateX: 0 }],
         },
       };
     };
@@ -196,11 +205,13 @@ export class FadeOutLeft extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(0, config)),
-          transform: [{ translateX: delayFunction(delay, animation(-25, config)) }]
+          transform: [
+            { translateX: delayFunction(delay, animation(-25, config)) },
+          ],
         },
         initialValues: {
           opacity: 1,
-          transform: [{ translateX: 0 }]
+          transform: [{ translateX: 0 }],
         },
       };
     };
@@ -222,11 +233,13 @@ export class FadeOutUp extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(0, config)),
-          transform: [{ translateY: delayFunction(delay, animation(-25, config)) }]
+          transform: [
+            { translateY: delayFunction(delay, animation(-25, config)) },
+          ],
         },
         initialValues: {
           opacity: 1,
-          transform: [{ translateY: 0 }]
+          transform: [{ translateY: 0 }],
         },
       };
     };
@@ -248,11 +261,13 @@ export class FadeOutDown extends BaseAnimationBuilder {
       return {
         animations: {
           opacity: delayFunction(delay, animation(0, config)),
-          transform: [{ translateY: delayFunction(delay, animation(25, config)) }]
+          transform: [
+            { translateY: delayFunction(delay, animation(25, config)) },
+          ],
         },
         initialValues: {
           opacity: 1,
-          transform: [{ translateY: 0 }]
+          transform: [{ translateY: 0 }],
         },
       };
     };

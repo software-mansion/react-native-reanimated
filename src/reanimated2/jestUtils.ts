@@ -198,6 +198,7 @@ export const setUpTests = (userConfig = {}) => {
     }
     return module.default;
   });
+  require('./core');
 };
 
 export const getAnimatedStyle = (received) => {

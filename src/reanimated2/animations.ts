@@ -334,9 +334,12 @@ export function withStyleAnimation(styleAnimations) {
             obj[type] = prevVal;
             animation.current.transform[i] = obj;
             let currentAnimation = transform[i][type];
-            if (typeof currentAnimation != 'object' && !Array.isArray(currentAnimation)) {
+            if (
+              typeof currentAnimation !== 'object' &&
+              !Array.isArray(currentAnimation)
+            ) {
               currentAnimation = withTiming(currentAnimation, { duration: 0 });
-              transform[i][type] = currentAnimation
+              transform[i][type] = currentAnimation;
             }
             currentAnimation.onStart(
               currentAnimation,
@@ -363,7 +366,10 @@ export function withStyleAnimation(styleAnimations) {
           }
           animation.current[key] = prevVal;
           let currentAnimation = animation.styleAnimations[key];
-          if (typeof currentAnimation != 'object' && !Array.isArray(currentAnimation)) {
+          if (
+            typeof currentAnimation !== 'object' &&
+            !Array.isArray(currentAnimation)
+          ) {
             currentAnimation = withTiming(currentAnimation, { duration: 0 });
             animation.styleAnimations[key] = currentAnimation;
           }
