@@ -65,11 +65,6 @@ export class Layout {
     return this;
   }
 
-  rotate(v) {
-    this.rotateV = v;
-    return this;
-  }
-
   static springify() {
     const instance = new Layout();
     return instance.springify();

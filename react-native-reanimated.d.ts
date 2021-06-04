@@ -221,17 +221,36 @@ declare module 'react-native-reanimated' {
               >;
     };
 
-    type LayoutAnimationsTargetValues = {
+    export type LayoutAnimation = {
+      initialValues: StyleProp
+      animations: AnimateStyle
+    };
+
+    export type EntryExitAnimationsValues = {
       originX: number;
       originY: number;
       width: number;
       height: number;
+      globalOriginX: number;
+      globalOriginY: number;
     };
-    type LayoutAnimation = {
-      initialValues: StyleProp
-      animations: AnimateStyle
+    export type EntryExitAnimationFunction = (targetValues: EntryExitAnimationsValues) => any;
+
+    export type LayoutAnimationsValues = {
+      originX: number;
+      originY: number;
+      width: number;
+      height: number;
+      globalOriginX: number;
+      globalOriginY: number;
+      boriginX: number;
+      boriginY: number;
+      bwidth: number;
+      bheight: number;
+      bglobalOriginX: number;
+      bglobalOriginY: number;
     };
-    type LayoutAnimationFunction = (targetValues: LayoutAnimationsTargetValues) => any;
+    export type LayoutAnimationFunction = (targetValues: LayoutAnimationsTargetValues) => any;
 
     export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
@@ -240,8 +259,8 @@ declare module 'react-native-reanimated' {
     } & { 
       animatedProps?: Partial<AnimateProps<P>>;
       layout?: Layout | LayoutAnimationFunction;
-      entering?: BaseAnimationBuilder | LayoutAnimationFunction; // TODO
-      exiting?: BaseAnimationBuilder | LayoutAnimationFunction; // TODO
+      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
+      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
     };
 
     type CodeProps = {
@@ -617,29 +636,6 @@ declare module 'react-native-reanimated' {
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
-    export class Layout {
-      static duration(duration: number): Layout;
-      duration(duration: number): Layout;
-      static easing(easing: EasingFunction): Layout;
-      easing(easing: EasingFunction): Layout;
-      static delay(delay: number): Layout;
-      delay(delay: number): Layout;
-      static springify(): Layout;
-      springify(): Layout;
-      static damping(dumping: number): Layout;
-      damping(dumping: number): Layout;
-      static mass(mass: number): Layout;
-      mass(mass: number): Layout;
-      static stiffness(stiffness: number): Layout;
-      stiffness(stiffness: number): Layout;
-      static overshootClamping(overshootClampingFactor: number): Layout;
-      overshootClamping(overshootClampingFactor: number): Layout;
-      static restDisplacementThreshold(restDisplacementThresholdFactor: number): Layout;
-      restDisplacementThreshold(restDisplacementThresholdFactor: number): Layout;
-      static restSpeedThreshold(restSpeedThresholdFactor: number): Layout;
-      restSpeedThreshold(restSpeedThresholdFactor: number): Layout;
-    };
-
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
       duration(durationMs: number): BaseAnimationBuilder;
@@ -647,8 +643,6 @@ declare module 'react-native-reanimated' {
       easing(easingFunction: EasingFunction): BaseAnimationBuilder;
       static delay(durationMs: number): BaseAnimationBuilder;
       delay(durationMs: number): BaseAnimationBuilder;
-      static rotate(degree: number | string): BaseAnimationBuilder;
-      rotate(degree: number | string): BaseAnimationBuilder;
       static springify(): BaseAnimationBuilder;
       springify(): BaseAnimationBuilder;
       static damping(dampingFactor: number): BaseAnimationBuilder;
@@ -664,6 +658,20 @@ declare module 'react-native-reanimated' {
       static restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
       restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
     }
+
+    export class Layout extends BaseAnimationBuilder {};
+
+    export class ZoomRotateAnimationBuilder extends BaseAnimationBuilder {
+      static rotate(degree: number | string): BaseAnimationBuilder;
+      rotate(degree: number | string): BaseAnimationBuilder;
+    };
+
+    export class BounceAnimationBuilder {
+      static duration(durationMs: number): BounceAnimationBuilder;
+      duration(durationMs: number): BounceAnimationBuilder;
+      static delay(durationMs: number): BounceAnimationBuilder;
+      delay(durationMs: number): BounceAnimationBuilder;
+    };
     
     export interface AnimatedLayout extends React.Component {};
 
@@ -687,7 +695,7 @@ declare module 'react-native-reanimated' {
     export class SlideOutLeft extends BaseAnimationBuilder {};
     export class SlideInLeft extends BaseAnimationBuilder {};
     export class ZoomIn extends BaseAnimationBuilder {};
-    export class ZoomInRotate extends BaseAnimationBuilder {}; 
+    export class ZoomInRotate extends ZoomRotateAnimationBuilder {}; 
     export class ZoomInRight extends BaseAnimationBuilder {};
     export class ZoomInLeft extends BaseAnimationBuilder {};
     export class ZoomInUp extends BaseAnimationBuilder {};
@@ -695,7 +703,7 @@ declare module 'react-native-reanimated' {
     export class ZoomInEasyUp extends BaseAnimationBuilder {};
     export class ZoomInEasyDown extends BaseAnimationBuilder {};
     export class ZoomOut extends BaseAnimationBuilder {};
-    export class ZoomOutRotate extends BaseAnimationBuilder {}; 
+    export class ZoomOutRotate extends ZoomRotateAnimationBuilder {}; 
     export class ZoomOutRight extends BaseAnimationBuilder {};
     export class ZoomOutLeft extends BaseAnimationBuilder {};
     export class ZoomOutUp extends BaseAnimationBuilder {};
@@ -718,16 +726,16 @@ declare module 'react-native-reanimated' {
     export class FlipOutYRight extends BaseAnimationBuilder {};
     export class FlipOutEasyX extends BaseAnimationBuilder {};
     export class FlipOutEasyY extends BaseAnimationBuilder {};
-    export class BounceIn extends BaseAnimationBuilder {};
-    export class BounceInDown extends BaseAnimationBuilder {};
-    export class BounceInUp extends BaseAnimationBuilder {};
-    export class BounceInLeft extends BaseAnimationBuilder {};
-    export class BounceInRight extends BaseAnimationBuilder {};
-    export class BounceOut extends BaseAnimationBuilder {};
-    export class BounceOutDown extends BaseAnimationBuilder {};
-    export class BounceOutUp extends BaseAnimationBuilder {};
-    export class BounceOutLeft extends BaseAnimationBuilder {};
-    export class BounceOutRight extends BaseAnimationBuilder {};
+    export class BounceIn extends BounceAnimationBuilder {};
+    export class BounceInDown extends BounceAnimationBuilder {};
+    export class BounceInUp extends BounceAnimationBuilder {};
+    export class BounceInLeft extends BounceAnimationBuilder {};
+    export class BounceInRight extends BounceAnimationBuilder {};
+    export class BounceOut extends BounceAnimationBuilder {};
+    export class BounceOutDown extends BounceAnimationBuilder {};
+    export class BounceOutUp extends BounceAnimationBuilder {};
+    export class BounceOutLeft extends BounceAnimationBuilder {};
+    export class BounceOutRight extends BounceAnimationBuilder {};
   }
 
   export default Animated;
