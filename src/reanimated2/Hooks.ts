@@ -434,10 +434,12 @@ const parseColors = (updates) => {
 };
 
 const canApplyOptimalisation = (upadterFn) => {
-  const FUNCTIONLESS_FLAG =   0b00000001;
-  const STATEMENTLESS_FLAG =  0b00000010;
+  const FUNCTIONLESS_FLAG = 0b00000001;
+  const STATEMENTLESS_FLAG = 0b00000010;
   const optimalization = upadterFn.__optimalization;
-  return (optimalization & FUNCTIONLESS_FLAG) && (optimalization & STATEMENTLESS_FLAG);
+  return (
+    optimalization & FUNCTIONLESS_FLAG && optimalization & STATEMENTLESS_FLAG
+  );
 };
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
