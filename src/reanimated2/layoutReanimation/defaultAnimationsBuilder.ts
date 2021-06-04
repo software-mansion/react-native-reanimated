@@ -1,4 +1,4 @@
-import { withDelay, withSpring, withTiming } from '../animations';
+import { withDelay , withSpring , withTiming } from '../animations';
 
 export const DefaultEntering = (targetValues) => {
   'worklet';

@@ -30,6 +30,7 @@ declare module 'react-native-reanimated' {
     NativeSyntheticEvent,
     ColorValue,
     OpaqueColorValue,
+    EasingFunction,
   } from 'react-native';
   import {
     GestureHandlerGestureEvent,
@@ -224,7 +225,12 @@ declare module 'react-native-reanimated' {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
-    } & { animatedProps?: Partial<AnimateProps<P>> };
+    } & { 
+      animatedProps?: Partial<AnimateProps<P>>,
+      layout: Layout | fun,
+      entering: BaseAnimationBuilder | BaseBoundeAnimationBuilder | fun | BaseZoomAnimationBuilder,
+      exiting:,
+    };
 
     type CodeProps = {
       exec?: AnimatedNode<number>;
@@ -779,4 +785,34 @@ declare module 'react-native-reanimated' {
   export const withRepeat: typeof Animated.withRepeat;
   export const withSequence: typeof Animated.withSequence;
   export const interpolate: typeof Animated.interpolate;
+
+  export interface Layout {
+    static duration(duration: number);
+  
+    duration(duration: number);
+  
+    static easing(easing: EasingFunction);
+  
+    easing(easing: EasingFunction);
+  
+    static delay(delay: number);
+  
+    delay(delay: number);
+  
+    static springify();
+  
+    springify();
+  
+    static damping(dumping: number);
+  
+    damping(dumping: number);
+  
+    static mass(mass: number);
+  
+    mass(mass: number);
+  
+    static stiffness(stiffness: number);
+  
+    stiffness(stiffness: number);
+  };
 }
