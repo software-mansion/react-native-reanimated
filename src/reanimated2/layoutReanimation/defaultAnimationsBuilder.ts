@@ -247,6 +247,11 @@ export class BaseAnimationBuilder {
     return this;
   }
 
+  static delay(r) {
+    const instance = this.createInstance();
+    return instance.rotate(r);
+  }
+
   rotate(v) {
     this.rotateV = v;
     return this;
