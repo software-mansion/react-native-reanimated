@@ -1,4 +1,4 @@
-import { withDelay, withSpring, withTiming } from '../animations';
+import { withDelay , withSpring , withTiming } from '../animations';
 
 export const DefaultEntering = (targetValues) => {
   'worklet';
@@ -62,11 +62,6 @@ export class Layout {
 
   delay(d) {
     this.delayV = d;
-    return this;
-  }
-
-  rotate(v) {
-    this.rotateV = v;
     return this;
   }
 
@@ -247,6 +242,11 @@ export class BaseAnimationBuilder {
     return this;
   }
 
+  static delay(r) {
+    const instance = this.createInstance();
+    return instance.rotate(r);
+  }
+
   rotate(v) {
     this.rotateV = v;
     return this;
@@ -382,3 +382,53 @@ export class BaseAnimationBuilder {
     return [animation, config];
   }
 }
+
+export class BaseBounceAnimationBuilder {
+  static duration(r) {
+    const instance = this.createInstance();
+    return instance.duration(r);
+  }
+
+  duration(t) {
+    this.durationV = t;
+    return this;
+  }
+
+  static delay(r) {
+    const instance = this.createInstance();
+    return instance.delay(r);
+  }
+
+  delay(d) {
+    this.delayV = d;
+    return this;
+  }
+
+  getDelayFunction() {
+    const delay = this.delayV;
+    return delay
+      ? withDelay
+      : (_, animation) => {
+          'worklet';
+          return animation;
+        };
+  }
+
+  getAnimationAndConfig() {
+    const duration = this.durationV;
+    const type = withTiming;
+    const animation = type;
+
+    const config = {};
+
+    if (easing) {
+      config.easing = easing;
+    }
+    if (duration) {
+      config.duration = duration;
+    }
+    
+    return [animation, config];
+  }
+}
+

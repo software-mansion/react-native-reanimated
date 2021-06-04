@@ -4,14 +4,13 @@ import React from 'react';
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animations';
 
-const REALayoutView = requireNativeComponent('REALayoutView');
-export class AnimatedLayout extends React.Component {
+const REALayoutView = (requireNativeComponent('REALayoutView') as any) as React.Component;
+export class AnimatedLayout extends React.Component<{},{}> {
   render() {
     return (
       <REALayoutView
         collapsable={false}
         {...this.props}
-        animated={true && !(this.props.animated === 'false')}
       />
     );
   }

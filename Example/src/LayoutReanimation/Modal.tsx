@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, AnimatedLayout, withTiming, withSpring, ReverseAnimation } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, AnimatedLayout, withTiming } from 'react-native-reanimated';
 
 function AnimatedView() {
 

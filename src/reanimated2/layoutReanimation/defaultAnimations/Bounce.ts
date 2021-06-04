@@ -1,10 +1,10 @@
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import { BaseBounceAnimationBuilder } from '../defaultAnimationsBuilder';
 import { withSequence, withTiming } from '../../animations';
 import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export class BounceIn extends BaseAnimationBuilder {
+export class BounceIn extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceIn();
   }
@@ -39,7 +39,7 @@ export class BounceIn extends BaseAnimationBuilder {
   }
 }
 
-export class BounceInDown extends BaseAnimationBuilder {
+export class BounceInDown extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceInDown();
   }
@@ -72,7 +72,7 @@ export class BounceInDown extends BaseAnimationBuilder {
   }
 }
 
-export class BounceInUp extends BaseAnimationBuilder {
+export class BounceInUp extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceInUp();
   }
@@ -103,7 +103,7 @@ export class BounceInUp extends BaseAnimationBuilder {
   }
 }
 
-export class BounceInLeft extends BaseAnimationBuilder {
+export class BounceInLeft extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceInLeft();
   }
@@ -134,7 +134,7 @@ export class BounceInLeft extends BaseAnimationBuilder {
   }
 }
 
-export class BounceInRight extends BaseAnimationBuilder {
+export class BounceInRight extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceInRight();
   }
@@ -165,7 +165,7 @@ export class BounceInRight extends BaseAnimationBuilder {
   }
 }
 
-export class BounceOut extends BaseAnimationBuilder {
+export class BounceOut extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceOut();
   }
@@ -199,7 +199,7 @@ export class BounceOut extends BaseAnimationBuilder {
   }
 }
 
-export class BounceOutDown extends BaseAnimationBuilder {
+export class BounceOutDown extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceOutDown();
   }
@@ -230,7 +230,7 @@ export class BounceOutDown extends BaseAnimationBuilder {
   }
 }
 
-export class BounceOutUp extends BaseAnimationBuilder {
+export class BounceOutUp extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceOutUp();
   }
@@ -261,7 +261,7 @@ export class BounceOutUp extends BaseAnimationBuilder {
   }
 }
 
-export class BounceOutLeft extends BaseAnimationBuilder {
+export class BounceOutLeft extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceOutLeft();
   }
@@ -292,7 +292,7 @@ export class BounceOutLeft extends BaseAnimationBuilder {
   }
 }
 
-export class BounceOutRight extends BaseAnimationBuilder {
+export class BounceOutRight extends BaseBounceAnimationBuilder {
   static createInstance() {
     return new BounceOutRight();
   }

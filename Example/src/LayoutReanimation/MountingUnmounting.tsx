@@ -1,4 +1,3 @@
-import { isCompletionStatement } from 'babel-types';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, { AnimatedLayout, SlideInRight, SlideOutRight, SlideInDown, SlideOutUp, FadeIn, FadeOut, SlideOutLeft, SlideInLeft } from 'react-native-reanimated';
