@@ -1,9 +1,20 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Modal, Carousel, ModalNewAPI, DefaultAnimations } from './LayoutReanimation';
+import {
+  SpringLayoutAnimation,
+  MountingUnmounting,
+  SwipeableList,
+  Modal,
+  Carousel,
+  ModalNewAPI,
+  DefaultAnimations,
+} from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -33,7 +44,7 @@ const SCREENS: Screens = {
   ModalNewAPI: {
     title: '🆕 ModalNewAPI',
     screen: ModalNewAPI,
-  }, 
+  },
   SpringLayoutAnimation: {
     title: '🆕 Spring Layout Animation',
     screen: SpringLayoutAnimation,
@@ -53,7 +64,7 @@ const SCREENS: Screens = {
   Carousel: {
     title: '🆕 Carousel',
     screen: Carousel,
-  }
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
