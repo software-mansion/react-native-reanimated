@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
 import { Dimensions } from 'react-native';
 
@@ -44,7 +46,7 @@ export class ZoomInRotate extends BaseAnimationBuilder {
         animations: {
           transform: [
             { scale: delayFunction(delay, animation(1, config)) },
-            { rotate: delayFunction(delay, animation(0, config)) }
+            { rotate: delayFunction(delay, animation(0, config)) },
           ],
         },
         initialValues: {
@@ -250,7 +252,7 @@ export class ZoomOutRotate extends BaseAnimationBuilder {
         animations: {
           transform: [
             { scale: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation(rotate, config)) }
+            { rotate: delayFunction(delay, animation(rotate, config)) },
           ],
         },
         initialValues: {
@@ -276,7 +278,10 @@ export class ZoomOutLeft extends BaseAnimationBuilder {
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(delay, animation(values.originX - width, config)),
+          originX: delayFunction(
+            delay,
+            animation(values.originX - width, config)
+          ),
         },
         initialValues: {
           transform: [{ scale: 1 }],
@@ -302,7 +307,10 @@ export class ZoomOutRight extends BaseAnimationBuilder {
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(delay, animation(values.originX + width, config)),
+          originX: delayFunction(
+            delay,
+            animation(values.originX + width, config)
+          ),
         },
         initialValues: {
           transform: [{ scale: 1 }],
@@ -328,7 +336,10 @@ export class ZoomOutUp extends BaseAnimationBuilder {
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(values.originY - height, config)),
+          originY: delayFunction(
+            delay,
+            animation(values.originY - height, config)
+          ),
         },
         initialValues: {
           transform: [{ scale: 1 }],
@@ -354,7 +365,10 @@ export class ZoomOutDown extends BaseAnimationBuilder {
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(values.originY + height, config)),
+          originY: delayFunction(
+            delay,
+            animation(values.originY + height, config)
+          ),
         },
         initialValues: {
           transform: [{ scale: 1 }],

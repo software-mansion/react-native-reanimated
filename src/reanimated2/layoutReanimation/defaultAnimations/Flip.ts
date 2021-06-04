@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
 
 export class FlipInXUp extends BaseAnimationBuilder {
@@ -13,10 +15,10 @@ export class FlipInXUp extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateX: '90deg'},
+            { rotateX: '90deg' },
             { translateY: -targetValues.height },
           ],
         },
@@ -26,8 +28,8 @@ export class FlipInXUp extends BaseAnimationBuilder {
             { rotateX: delayFunction(delay, animation('0deg', config)) },
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -45,10 +47,10 @@ export class FlipInYLeft extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateY: '-90deg'},
+            { rotateY: '-90deg' },
             { translateX: -targetValues.width },
           ],
         },
@@ -58,8 +60,8 @@ export class FlipInYLeft extends BaseAnimationBuilder {
             { rotateY: delayFunction(delay, animation('0deg', config)) },
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -77,10 +79,10 @@ export class FlipInXDown extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateX: '-90deg'},
+            { rotateX: '-90deg' },
             { translateY: targetValues.height },
           ],
         },
@@ -90,8 +92,8 @@ export class FlipInXDown extends BaseAnimationBuilder {
             { rotateX: delayFunction(delay, animation('0deg', config)) },
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -109,10 +111,10 @@ export class FlipInYRight extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateY: '90deg'},
+            { rotateY: '90deg' },
             { translateX: targetValues.width },
           ],
         },
@@ -122,8 +124,8 @@ export class FlipInYRight extends BaseAnimationBuilder {
             { rotateY: delayFunction(delay, animation('0deg', config)) },
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -141,19 +143,16 @@ export class FlipInEasyX extends BaseAnimationBuilder {
     return () => {
       'worklet';
       return {
-        initialValues:{
-          transform: [
-            { perspective: 500 },
-            { rotateX: '90deg'},
-          ],
+        initialValues: {
+          transform: [{ perspective: 500 }, { rotateX: '90deg' }],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateX: delayFunction(delay, animation('0deg', config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -171,19 +170,16 @@ export class FlipInEasyY extends BaseAnimationBuilder {
     return () => {
       'worklet';
       return {
-        initialValues:{
-          transform: [
-            { perspective: 500 },
-            { rotateY: '90deg'},
-          ],
+        initialValues: {
+          transform: [{ perspective: 500 }, { rotateY: '90deg' }],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateY: delayFunction(delay, animation('0deg', config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -201,10 +197,10 @@ export class FlipOutXUp extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateX: '0deg'},
+            { rotateX: '0deg' },
             { translateY: 0 },
           ],
         },
@@ -212,10 +208,15 @@ export class FlipOutXUp extends BaseAnimationBuilder {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateX: delayFunction(delay, animation('90deg', config)) },
-            { translateY: delayFunction(delay, animation(-targetValues.height, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(-targetValues.height, config)
+              ),
+            },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -233,10 +234,10 @@ export class FlipOutYLeft extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateY: '0deg'},
+            { rotateY: '0deg' },
             { translateX: 0 },
           ],
         },
@@ -244,10 +245,15 @@ export class FlipOutYLeft extends BaseAnimationBuilder {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateY: delayFunction(delay, animation('-90deg', config)) },
-            { translateX: delayFunction(delay, animation(-targetValues.width, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(-targetValues.width, config)
+              ),
+            },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -265,10 +271,10 @@ export class FlipOutXDown extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateX: '0deg'},
+            { rotateX: '0deg' },
             { translateY: 0 },
           ],
         },
@@ -276,10 +282,15 @@ export class FlipOutXDown extends BaseAnimationBuilder {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateX: delayFunction(delay, animation('-90deg', config)) },
-            { translateY: delayFunction(delay, animation(targetValues.height, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(targetValues.height, config)
+              ),
+            },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -297,10 +308,10 @@ export class FlipOutYRight extends BaseAnimationBuilder {
     return (targetValues) => {
       'worklet';
       return {
-        initialValues:{
+        initialValues: {
           transform: [
             { perspective: 500 },
-            { rotateY: '0deg'},
+            { rotateY: '0deg' },
             { translateX: 0 },
           ],
         },
@@ -308,10 +319,15 @@ export class FlipOutYRight extends BaseAnimationBuilder {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateY: delayFunction(delay, animation('90deg', config)) },
-            { translateX: delayFunction(delay, animation(targetValues.width, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues.width, config)
+              ),
+            },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -329,19 +345,16 @@ export class FlipOutEasyX extends BaseAnimationBuilder {
     return () => {
       'worklet';
       return {
-        initialValues:{
-          transform: [
-            { perspective: 500 },
-            { rotateX: '0deg'},
-          ],
+        initialValues: {
+          transform: [{ perspective: 500 }, { rotateX: '0deg' }],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateX: delayFunction(delay, animation('90deg', config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
@@ -359,19 +372,16 @@ export class FlipOutEasyY extends BaseAnimationBuilder {
     return () => {
       'worklet';
       return {
-        initialValues:{
-          transform: [
-            { perspective: 500 },
-            { rotateY: '0deg'},
-          ],
+        initialValues: {
+          transform: [{ perspective: 500 }, { rotateY: '0deg' }],
         },
         animations: {
           transform: [
             { perspective: delayFunction(delay, animation(500, config)) },
             { rotateY: delayFunction(delay, animation('90deg', config)) },
           ],
-        }
-      }
+        },
+      };
     };
   }
 }
