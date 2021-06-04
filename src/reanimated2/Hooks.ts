@@ -171,7 +171,7 @@ function isAnimated(prop) {
     }
     return false;
   }
-  return prop.onFrame !== undefined;
+  return prop?.onFrame !== undefined;
 }
 
 function styleDiff(oldStyle, newStyle) {
