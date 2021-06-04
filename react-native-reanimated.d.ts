@@ -234,7 +234,7 @@ declare module 'react-native-reanimated' {
       globalOriginX: number;
       globalOriginY: number;
     };
-    export type EntryExitAnimationFunction = (targetValues: EntryExitAnimationsValues) => any;
+    export type EntryExitAnimationFunction = (targetValues: EntryExitAnimationsValues) => LayoutAnimation;
 
     export type LayoutAnimationsValues = {
       originX: number;
@@ -250,7 +250,7 @@ declare module 'react-native-reanimated' {
       bglobalOriginX: number;
       bglobalOriginY: number;
     };
-    export type LayoutAnimationFunction = (targetValues: LayoutAnimationsTargetValues) => any;
+    export type LayoutAnimationFunction = (targetValues: LayoutAnimationsTargetValues) => LayoutAnimation;
 
     export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
