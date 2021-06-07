@@ -15,16 +15,14 @@ export class SlideInRight extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          originX: delayFunction(delay, animation(values.originX, config)),
         },
         initialValues: {
-          transform: [{ translateX: width }],
+          originX: values.originX + width,
         },
       };
     };
@@ -41,16 +39,14 @@ export class SlideInLeft extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-          ],
+          originX: delayFunction(delay, animation(values.originX, config)),
         },
         initialValues: {
-          transform: [{ translateX: -width }],
+          originX: values.originX - width,
         },
       };
     };
@@ -67,16 +63,17 @@ export class SlideOutRight extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(width, config)) },
-          ],
+          originX: delayFunction(
+            delay,
+            animation(values.originX + width, config)
+          ),
         },
         initialValues: {
-          transform: [{ translateX: 0 }],
+          originX: values.originX,
         },
       };
     };
@@ -93,16 +90,17 @@ export class SlideOutLeft extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateX: delayFunction(delay, animation(-width, config)) },
-          ],
+          originX: delayFunction(
+            delay,
+            animation(values.originX - width, config)
+          ),
         },
         initialValues: {
-          transform: [{ translateX: 0 }],
+          originX: values.originX,
         },
       };
     };
@@ -119,16 +117,14 @@ export class SlideInUp extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
-          transform: [{ translateY: -height }],
+          originY: height,
         },
       };
     };
@@ -145,16 +141,14 @@ export class SlideInDown extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
-          ],
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
-          transform: [{ translateY: height }],
+          originY: values.originY - height,
         },
       };
     };
@@ -171,17 +165,16 @@ export class SlideOutUp extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(-height, config)) },
-          ],
+          originY: delayFunction(
+            delay,
+            animation(values.originY - height, config)
+          ),
         },
-        initialValues: {
-          transform: [{ translateY: 0 }],
-        },
+        initialValues: {},
       };
     };
   }
@@ -197,17 +190,16 @@ export class SlideOutDown extends BaseAnimationBuilder {
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
 
-    return () => {
+    return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [
-            { translateY: delayFunction(delay, animation(height, config)) },
-          ],
+          originY: delayFunction(
+            delay,
+            animation(values.originY + height, config)
+          ),
         },
-        initialValues: {
-          transform: [{ translateY: 0 }],
-        },
+        initialValues: {},
       };
     };
   }
