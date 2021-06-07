@@ -490,7 +490,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       };
     }
 
-    if (canApplyOptimalisation(upadterFn)) {
+    if (canApplyOptimalisation(upadterFn) && Platform.OS !== 'web') {
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
@@ -499,17 +499,18 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
           return style;
         };
       }
-    } else {
+    } else if (Platform.OS !== 'web') {
       optimalization = 0;
-      const decoratedUpadterFn = upadterFn;
       upadterFn = () => {
         'worklet';
-        const style = decoratedUpadterFn();
+        const style = upadterFn();
         parseColors(style);
         return style;
       };
     }
-    upadterFn.__optimalization = optimalization;
+    if (typeof updater.__optimalization !== undefined) {
+      upadterFn.__optimalization = optimalization;
+    }
 
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
