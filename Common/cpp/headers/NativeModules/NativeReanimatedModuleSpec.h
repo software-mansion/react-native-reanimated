@@ -31,7 +31,13 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
   // mappers
-  virtual jsi::Value startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs) = 0;
+  virtual jsi::Value startMapper(jsi::Runtime &rt,
+                                 const jsi::Value &worklet,
+                                 const jsi::Value &inputs,
+                                 const jsi::Value &outputs,
+                                 const jsi::Value &updater,
+                                 const jsi::Value &tag,
+                                 const jsi::Value &name) = 0;
   virtual void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) = 0;
 
   // events

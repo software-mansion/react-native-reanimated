@@ -96,7 +96,7 @@ function internalInterpolate(x, l, r, ll, rr, type) {
 
   const config = { type, coef, val, ll, rr, x };
 
-  validateType(type);
+  if (__DEV__) validateType(type);
 
   if (typeof type === 'object') {
     if (coef * val < coef * ll) {

@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-const colorProps = [
+export const colorProps = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -26,54 +26,48 @@ const colorProps = [
 
 const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
-export const updateProps = (
-  viewDescriptor,
-  updates,
-  maybeViewRef,
-  adapters
-) => {
-  'worklet';
+let updatePropsByPlatform;
+if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
+  updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef) => {
+    'worklet';
+    _updatePropsJS(viewDescriptor.value.tag, null, updates, maybeViewRef);
+  };
+} else {
+  updatePropsByPlatform = (viewDescriptor, updates, _) => {
+    'worklet';
 
-  const viewName = viewDescriptor.value.name || 'RCTView';
-
-  if (adapters) {
-    adapters.forEach((adapter) => {
-      adapter(updates);
-    });
-  }
-
-  if (Platform.OS !== 'web') {
-    Object.keys(updates).forEach((key) => {
+    for (const key in updates) {
       if (ColorProperties.indexOf(key) !== -1) {
         updates[key] = processColor(updates[key]);
       }
-    });
-  }
+    }
 
-  const updatePropsInternal =
-    typeof _updateProps === 'undefined' ? _updatePropsJS : _updateProps;
+    _updateProps(
+      viewDescriptor.value.tag,
+      viewDescriptor.value.name || 'RCTView',
+      updates
+    );
+  };
+}
 
-  updatePropsInternal(
-    viewDescriptor.value.tag,
-    viewName,
-    updates,
-    maybeViewRef
-  );
-};
+export const updateProps = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
   viewDescriptor,
   updates,
   maybeViewRef,
-  adapters,
-  animatedStyle
+  animatedStyle,
+  adapters
 ) => {
+  adapters.forEach((adapter) => {
+    adapter(updates);
+  });
   animatedStyle.current.value = {
     ...animatedStyle.current.value,
     ...updates,
   };
 
-  updateProps(viewDescriptor, updates, maybeViewRef, adapters);
+  updateProps(viewDescriptor, updates, maybeViewRef);
 };
 
 export default updateProps;

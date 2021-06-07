@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Menu, Modal, Carousel, ModalNewAPI } from './LayoutReanimation';
+import {
+  SpringLayoutAnimation,
+  MountingUnmounting,
+  SwipeableList,
+  Modal,
+  Carousel,
+  ModalNewAPI,
+  DefaultAnimations,
+} from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -26,6 +37,34 @@ LogBox.ignoreLogs(['Calling `getNode()`']);
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  Carousel: {
+    title: '🆕 Carousel',
+    screen: Carousel,
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
@@ -82,35 +121,6 @@ const SCREENS: Screens = {
     screen: ScrollExample,
     title: 'Scroll Example',
   },
-
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  }, 
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Menu: {
-    title: '🆕 Menu',
-    screen: Menu,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  Carousel: {
-    title: '🆕 Carousel',
-    screen: Carousel,
-  }
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };

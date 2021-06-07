@@ -1,7 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { withDelay, withSpring, withTiming } from '../animations';
-import { Dimensions } from 'react-native';
-
-const { width, height } = Dimensions.get('window');
 
 export const DefaultEntering = (targetValues) => {
   'worklet';
@@ -214,7 +213,7 @@ export class Layout {
   }
 }
 
-class BaseAnimationBuilder {
+export class BaseAnimationBuilder {
   static duration(r) {
     const instance = this.createInstance();
     return instance.duration(r);
@@ -242,6 +241,16 @@ class BaseAnimationBuilder {
 
   delay(d) {
     this.delayV = d;
+    return this;
+  }
+
+  static rotate(r) {
+    const instance = this.createInstance();
+    return instance.rotate(r);
+  }
+
+  rotate(v) {
+    this.rotateV = v;
     return this;
   }
 
@@ -376,232 +385,56 @@ class BaseAnimationBuilder {
   }
 }
 
-export class ZoomOut extends BaseAnimationBuilder {
-  static createInstance() {
-    return new ZoomOut();
+export class BaseBounceAnimationBuilder {
+  static duration(r) {
+    const instance = this.createInstance();
+    return instance.duration(r);
   }
 
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+  duration(t) {
+    this.durationV = t;
+    return this;
+  }
 
-    return () => {
-      'worklet';
-      return {
-        animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-        },
-        initialValues: {
-          transform: [{ scale: 1 }],
-        },
-      };
-    };
+  static delay(r) {
+    const instance = this.createInstance();
+    return instance.delay(r);
+  }
+
+  delay(d) {
+    this.delayV = d;
+    return this;
+  }
+
+  getDelayFunction() {
+    const delay = this.delayV;
+    return delay
+      ? withDelay
+      : (_, animation) => {
+          'worklet';
+          return animation;
+        };
+  }
+
+  getAnimationAndConfig() {
+    const duration = this.durationV;
+    const type = withTiming;
+    const animation = type;
+
+    const config = {};
+
+    if (easing) {
+      config.easing = easing;
+    }
+    if (duration) {
+      config.duration = duration;
+    }
+
+    return [animation, config];
+  }
+
+  static build() {
+    const instance = this.createInstance();
+    return instance.build();
   }
 }
-
-export class SlideInRight extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideInRight();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
-        },
-        initialValues: {
-          originX: values.originX - width,
-        },
-      };
-    };
-  }
-}
-
-export class SlideInLeft extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideInLeft();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
-        },
-        initialValues: {
-          originX: values.originX + width,
-        },
-      };
-    };
-  }
-}
-
-export class SlideOutRight extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideOutRight();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX + width, config)
-          ),
-        },
-        initialValues: {},
-      };
-    };
-  }
-}
-
-export class SlideOutLeft extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideOutLeft();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX - width, config)
-          ),
-        },
-        initialValues: {},
-      };
-    };
-  }
-}
-
-export class SlideInDown extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideInDown();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originY: delayFunction(delay, animation(values.originY, config)),
-        },
-        initialValues: {
-          originY: values.originY - height,
-        },
-      };
-    };
-  }
-}
-
-export class SlideOutUp extends BaseAnimationBuilder {
-  static createInstance() {
-    return new SlideOutUp();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (values) => {
-      'worklet';
-      return {
-        animations: {
-          originY: delayFunction(
-            delay,
-            animation(values.originY + height, config)
-          ),
-        },
-        initialValues: {},
-      };
-    };
-  }
-}
-
-export class OpacityIn extends BaseAnimationBuilder {
-  static createInstance() {
-    return new OpacityIn();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (_) => {
-      'worklet';
-      return {
-        animations: {
-          opacity: delayFunction(delay, animation(1, config)),
-        },
-        initialValues: {
-          opacity: 0,
-        },
-      };
-    };
-  }
-}
-
-export class OpacityOut extends BaseAnimationBuilder {
-  static createInstance() {
-    return new OpacityOut();
-  }
-
-  build() {
-    const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
-
-    return (_) => {
-      'worklet';
-      return {
-        animations: {
-          opacity: delayFunction(delay, animation(0, config)),
-        },
-        initialValues: {},
-      };
-    };
-  }
-}
-
-/* entering={StyleIn.add({}).add({})}
-entering={StyleIn.frames({
-    0: {
-
-    },
-    40: {
-
-    },
-    100: {
-
-    },
-})} */

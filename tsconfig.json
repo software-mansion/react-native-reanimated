@@ -17,10 +17,9 @@
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "lib/reanimated2/"
   },
   "include": [
-    "src/reanimated2/**/*.ts",
+    "lib/reanimated2/**/*.ts",
     "react-native-reanimated.d.ts",
     "react-native-reanimated-tests.tsx"
   ]

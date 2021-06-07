@@ -10,6 +10,7 @@
 #include <thread>
 #include <memory>
 #include "JSIStoreValueUser.h"
+#include "ReanimatedHiddenHeaders.h"
 
 using namespace facebook;
 
@@ -62,8 +63,9 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-                                               PlatformDepMethodsHolder platformDepMethodsHolder) : NativeReanimatedModuleSpec(jsInvoker),
-                                                  RuntimeManager(rt, errorHandler, scheduler),
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) : 
+                                                  NativeReanimatedModuleSpec(jsInvoker),
+                                                  RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
                                                   eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
                                                   requestRender(platformDepMethodsHolder.requestRender),
@@ -84,6 +86,11 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       platformDepMethodsHolder.measuringFunction,
                                       platformDepMethodsHolder.getCurrentTime,
                                       layoutAnimationsProxy);
+   onRenderCallback = [this](double timestampMs) {
+    this->renderRequested = false;
+    this->onRender(timestampMs);
+  };
+  updaterFunction = platformDepMethodsHolder.updaterFunction;
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -106,7 +113,15 @@ jsi::Value NativeReanimatedModule::makeRemote(jsi::Runtime &rt, const jsi::Value
   return ShareableValue::adapt(rt, value, this, ValueType::RemoteObjectType)->getValue(rt);
 }
 
-jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs)
+jsi::Value NativeReanimatedModule::startMapper(
+                                               jsi::Runtime &rt,
+                                               const jsi::Value &worklet,
+                                               const jsi::Value &inputs,
+                                               const jsi::Value &outputs,
+                                               const jsi::Value &updater,
+                                               const jsi::Value &tag,
+                                               const jsi::Value &name
+                                               )
 {
   static unsigned long MAPPER_ID = 1;
 
@@ -114,11 +129,31 @@ jsi::Value NativeReanimatedModule::startMapper(jsi::Runtime &rt, const jsi::Valu
   auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
   auto inputMutables = extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
   auto outputMutables = extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
+  
+  int optimalizationLvl = 0;
+  auto optimalization = updater.asObject(rt).getProperty(rt, "__optimalization");
+  if(optimalization.isNumber()) {
+    optimalizationLvl = optimalization.asNumber();
+  }
+  auto updaterSV = ShareableValue::adapt(rt, updater, this);
+  const int tagInt = tag.asNumber();
+  const std::string nameStr = name.asString(rt).utf8(rt);
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
     std::shared_ptr<jsi::Function> mapperFunctionPointer = std::make_shared<jsi::Function>(std::move(mapperFunction));
-    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(this, newMapperId, mapperFunctionPointer, inputMutables, outputMutables);
+    
+    std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(
+                                                                     this,
+                                                                     newMapperId,
+                                                                     mapperFunctionPointer,
+                                                                     inputMutables,
+                                                                     outputMutables,
+                                                                     updaterSV,
+                                                                     tagInt,
+                                                                     nameStr,
+                                                                     optimalizationLvl
+                                                                     );
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
   });
@@ -214,10 +249,7 @@ void NativeReanimatedModule::maybeRequestRender()
   if (!renderRequested)
   {
     renderRequested = true;
-    requestRender([this](double timestampMs) {
-      this->renderRequested = false;
-      this->onRender(timestampMs);
-    }, *this->runtime);
+    requestRender(onRenderCallback, *this->runtime);
   }
 }
 
@@ -225,13 +257,13 @@ void NativeReanimatedModule::onRender(double timestampMs)
 {
   try
   {
-    std::vector<FrameCallback> callbacks = frameCallbacks;
-    frameCallbacks.clear();
-    for (auto callback : callbacks)
-    {
-      callback(timestampMs);
-    }
-    mapperRegistry->execute(*runtime);
+      std::vector<FrameCallback> callbacks = frameCallbacks;
+      frameCallbacks.clear();
+      for (auto& callback : callbacks)
+      {
+        callback(timestampMs);
+      }
+      mapperRegistry->execute(*runtime);
 
     if (mapperRegistry->needRunOnRender())
     {

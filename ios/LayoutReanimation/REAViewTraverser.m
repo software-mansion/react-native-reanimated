@@ -23,6 +23,7 @@
 
 + (void)traverse:(UIView*)view withBlock:(void (^)(UIView*))block
 {
+    if (view.superview == nil) return;
     if (![view isKindOfClass:[REAAnimationRootView class]]) {
         NSException* myException = [NSException
                 exceptionWithName:@"NotAREAAnimationRootView"
@@ -31,10 +32,6 @@
         @throw myException;
     }
     REAAnimationRootView* animatedRoot = (REAAnimationRootView*)view;
-    
-    if (!animatedRoot.shouldBeAnimated) {
-        return;
-    }
     
     int depth = 1e9;
     [REAViewTraverser traverse:view withBlock:block shouldSkipAnimationRoots:false depth:depth];

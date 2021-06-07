@@ -22,6 +22,7 @@ var f = function () {
   _f.asString = \\"function f(){const{x,objX}=jsThis._closure;{return{res:x+objX.x};}}\\";
   _f.__workletHash = 10184269015616;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (4:4)\\";
+  _f.__optimalization = 3;
 
   global.__reanimatedWorkletInit(_f);
 
@@ -39,6 +40,7 @@ exports[`babel plugin doesn't capture globals 1`] = `
   _f.asString = \\"function f(){console.log(\\\\\\"test\\\\\\");}\\";
   _f.__workletHash = 6265462104213;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
+  _f.__optimalization = 2;
 
   global.__reanimatedWorkletInit(_f);
 

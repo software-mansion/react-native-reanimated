@@ -71,10 +71,12 @@ void NativeProxy::installJSIBindings()
     //as we use diffrent timer to better handle events. The lambda is translated to NodeManager.OnAnimationFrame
     //and treated just like reanimated 1 frame callbacks which make use of the timestamp.
     auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
-       double frameTimestamp = getCurrentTime();
-       rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
-       onRender(frameTimestamp);
-       rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
+      jsi::Object global = rt.global();
+      jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
+      double frameTimestamp = getCurrentTime();
+      global.setProperty(rt, frameTimestampName, frameTimestamp);
+      onRender(frameTimestamp);
+      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
     };
     this->requestRender(std::move(wrappedOnRender));
   };
@@ -140,9 +142,11 @@ void NativeProxy::installJSIBindings()
   _nativeReanimatedModule = module;
 
   this->registerEventHandler([module, getCurrentTime](std::string eventName, std::string eventAsString) {
-    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", getCurrentTime());
+    jsi::Object global = module->runtime->global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
     module->onEvent(eventName, eventAsString);
-    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
+    global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
   });
 
   runtime_->global().setProperty(
