@@ -121,10 +121,10 @@ export class SlideInUp extends BaseAnimationBuilder {
       'worklet';
       return {
         animations: {
-          originY: delayFunction(delay, animation(0, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
-          originY: values.originY + height,
+          originY: height,
         },
       };
     };
