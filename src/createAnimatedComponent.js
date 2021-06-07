@@ -12,12 +12,12 @@ import setAndForwardRef from './setAndForwardRef';
 import invariant from 'fbjs/lib/invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { makeMutable, runOnUI } from './reanimated2/core';
 import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimationsBuilder';
-import { makeMutable, runOnUI } from './reanimated2/core';
 
 const NODE_MAPPING = new Map();
 
