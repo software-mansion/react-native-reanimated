@@ -501,9 +501,10 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       }
     } else {
       optimalization = 0;
+      const decoratedUpadterFn = upadterFn;
       upadterFn = () => {
         'worklet';
-        const style = upadterFn();
+        const style = decoratedUpadterFn();
         parseColors(style);
         return style;
       };
