@@ -7,7 +7,6 @@ import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
-import com.facebook.react.bridge.UIManagerListener;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;

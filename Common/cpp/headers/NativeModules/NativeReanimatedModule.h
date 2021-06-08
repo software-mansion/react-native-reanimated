@@ -43,7 +43,13 @@ public:
   jsi::Value makeMutable(jsi::Runtime &rt, const jsi::Value &value) override;
   jsi::Value makeRemote(jsi::Runtime &rt, const jsi::Value &value) override;
 
-  jsi::Value startMapper(jsi::Runtime &rt, const jsi::Value &worklet, const jsi::Value &inputs, const jsi::Value &outputs) override;
+  jsi::Value startMapper(jsi::Runtime &rt,
+                         const jsi::Value &worklet,
+                         const jsi::Value &inputs,
+                         const jsi::Value &outputs,
+                         const jsi::Value &updater,
+                         const jsi::Value &tag,
+                         const jsi::Value &name) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) override;
@@ -56,14 +62,16 @@ public:
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
+  UpdaterFunction updaterFunction;
 private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
-  std::function<void(FrameCallback, jsi::Runtime&)> requestRender;
+  std::function<void(FrameCallback&, jsi::Runtime&)> requestRender;
   std::shared_ptr<jsi::Value> dummyEvent;
   std::vector<FrameCallback> frameCallbacks;
   bool renderRequested = false;
   std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer;
+  std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
 };
 

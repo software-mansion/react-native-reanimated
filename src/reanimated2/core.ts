@@ -259,9 +259,25 @@ export function makeRemote(object = {}) {
   return NativeReanimated.makeRemote(object);
 }
 
-export function startMapper(mapper, inputs = [], outputs = []) {
+export function startMapper(
+  mapper,
+  inputs = [],
+  outputs = [],
+  updater = () => {
+    // noop
+  },
+  tag = 0,
+  name = ''
+) {
   isConfiguredCheck();
-  return NativeReanimated.startMapper(mapper, inputs, outputs);
+  return NativeReanimated.startMapper(
+    mapper,
+    inputs,
+    outputs,
+    updater,
+    tag,
+    name
+  );
 }
 
 export function stopMapper(mapperId) {

@@ -24,8 +24,15 @@ const NativeReanimated = {
     return InnerNativeModule.makeRemote(object);
   },
 
-  startMapper(mapper, inputs = [], outputs = []) {
-    return InnerNativeModule.startMapper(mapper, inputs, outputs);
+  startMapper(mapper, inputs = [], outputs = [], updater, tag, name) {
+    return InnerNativeModule.startMapper(
+      mapper,
+      inputs,
+      outputs,
+      updater,
+      tag,
+      name
+    );
   },
 
   stopMapper(mapperId) {

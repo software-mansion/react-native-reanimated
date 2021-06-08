@@ -10,6 +10,7 @@ module.exports = {
         'shared-values',
         'animations',
         'events',
+        'layout_animations',
         'architecture',
         'migration',
         'web-support',
@@ -43,6 +44,13 @@ module.exports = {
           'Native methods': [
             'api/nativeMethods/measure',
             'api/nativeMethods/scrollTo',
+          ],
+          'Layout Animations': [
+            'api/LayoutAnimations/animatedLayout',
+            'api/LayoutAnimations/customAnimations',
+            'api/LayoutAnimations/entryAnimations',
+            'api/LayoutAnimations/exitAnimations',
+            'api/LayoutAnimations/layoutTransitions',
           ],
           Miscellaneous: ['api/runOnJS'],
         },

@@ -7,7 +7,12 @@
 
 namespace reanimated {
 
-void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
+std::unordered_map<RuntimePointer, RuntimeType> RuntimeDecorator::runtimeRegistry;
+void RuntimeDecorator::registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType) {
+  runtimeRegistry.insert({ runtime, runtimeType });
+}
+
+void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &label) {
   // This property will be used to find out if a runtime is a custom worklet runtime (e.g. UI, VisionCamera frame processor, ...)
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   // This property will be used for debugging
@@ -63,11 +68,11 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, std::string label) {
 }
 
 void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
-                                         UpdaterFunction updater,
-                                         RequestFrameFunction requestFrame,
-                                         ScrollToFunction scrollTo,
-                                         MeasuringFunction measure,
-                                         TimeProviderFunction getCurrentTime,
+                                         const UpdaterFunction updater,
+                                         const RequestFrameFunction requestFrame,
+                                         const ScrollToFunction scrollTo,
+                                         const MeasuringFunction measure,
+                                         const TimeProviderFunction getCurrentTime,
                                          std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
@@ -76,7 +81,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                        jsi::Runtime &rt,
                        const jsi::Value &thisValue,
                        const jsi::Value *args,
-                       size_t count
+                       const size_t count
                        ) -> jsi::Value {
     const auto viewTag = args[0].asNumber();
     const jsi::Value* viewName = &args[1];
@@ -92,7 +97,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                              jsi::Runtime &rt,
                              const jsi::Value &thisValue,
                              const jsi::Value *args,
-                             size_t count
+                             const size_t count
                              ) -> jsi::Value {
     auto fun = std::make_shared<jsi::Function>(args[0].asObject(rt).asFunction(rt));
     requestFrame([&rt, fun](double timestampMs) {
@@ -107,7 +112,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                          jsi::Runtime &rt,
                          const jsi::Value &thisValue,
                          const jsi::Value *args,
-                         size_t count
+                         const size_t count
                          ) -> jsi::Value {
     int viewTag = (int)args[0].asNumber();
     double x = args[1].asNumber();
@@ -123,7 +128,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                         jsi::Runtime &rt,
                         const jsi::Value &thisValue,
                         const jsi::Value *args,
-                        size_t count
+                        const size_t count
                         ) -> jsi::Value {
     int viewTag = (int)args[0].asNumber();
     auto result = measure(viewTag);
@@ -140,7 +145,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                jsi::Runtime &rt,
                                const jsi::Value &thisValue,
                                const jsi::Value *args,
-                               size_t count
+                               const size_t count
                                ) -> jsi::Value {
     return getCurrentTime();
   };
@@ -183,20 +188,6 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
   rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
-}
-
-bool RuntimeDecorator::isUIRuntime(jsi::Runtime& rt) {
-  auto isUi = rt.global().getProperty(rt, "_UI");
-  return isUi.isBool() && isUi.getBool();
-}
-
-bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime& rt) {
-  auto isWorklet = rt.global().getProperty(rt, "_WORKLET");
-  return isWorklet.isBool() && isWorklet.getBool();
-}
-
-bool RuntimeDecorator::isReactRuntime(jsi::Runtime& rt) {
-  return !isWorkletRuntime(rt);
 }
 
 }

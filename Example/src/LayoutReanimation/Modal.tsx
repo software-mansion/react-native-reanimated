@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, AnimatedLayout, withTiming, withSpring, ReverseAnimation } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, AnimatedLayout, withTiming } from 'react-native-reanimated';
 
 function AnimatedView() {
 
@@ -16,7 +16,7 @@ function AnimatedView() {
                 transform: [
                     { translateY: targetValues.height/2 },
                     { perspective: 500 },
-                    { rotateX: `90deg`},
+                    { rotateX: '90deg'},
                     { translateY: -targetValues.height/2 },
                     { translateY: 300 },
                 ],
@@ -25,7 +25,7 @@ function AnimatedView() {
                 transform: [
                     { translateY: withTiming(targetValues.height/2) },
                     { perspective: withTiming(500) },
-                    { rotateX: withTiming(`0deg`)},
+                    { rotateX: withTiming('0deg')},
                     { translateY: withTiming(-targetValues.height/2) },
                     { translateY: withTiming(0) },
                 ],
@@ -42,7 +42,7 @@ function AnimatedView() {
                 transform: [
                     { translateY: withTiming(targetValues.height/2) },
                     { perspective: withTiming(500) },
-                    { rotateX: withTiming(`90deg`)},
+                    { rotateX: withTiming('90deg')},
                     { translateY: withTiming(-targetValues.height/2) },
                     { translateY: withTiming(300) },
                 ],
