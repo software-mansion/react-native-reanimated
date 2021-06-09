@@ -704,7 +704,7 @@ const getInterpolateCacheRGBA = (
   const g = [];
   const b = [];
   const a = [];
-  for (let i = 0; i < colors.length; i += 1) {
+  for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const proocessedColor = processColor(color);
     if (proocessedColor) {
@@ -748,7 +748,7 @@ const getInterpolateCacheHSV = (
   const h = [];
   const s = [];
   const v = [];
-  for (let i = 0; i < colors.length; i += 1) {
+  for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const proocessedColor = RGBtoHSV(processColor(color) as any);
     if (proocessedColor) {

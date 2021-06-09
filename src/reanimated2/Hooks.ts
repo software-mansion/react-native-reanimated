@@ -162,7 +162,7 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 function isAnimated(prop) {
   'worklet';
   if (Array.isArray(prop)) {
-    for (let i = 0; i < prop.length; i += 1) {
+    for (let i = 0; i < prop.length; ++i) {
       const item = prop[i];
       for (const key in item) {
         if (item[key].onFrame !== undefined) {
