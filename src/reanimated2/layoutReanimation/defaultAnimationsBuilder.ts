@@ -1,8 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { withDelay, withSpring, withTiming } from '../animations';
+import { EasingFn } from '../Easing';
 
 export const DefaultEntering = (targetValues) => {
+  // TODO: types
   'worklet';
   return {
     initialValues: {
@@ -16,6 +16,7 @@ export const DefaultEntering = (targetValues) => {
 };
 
 export const DefaultLayout = (_) => {
+  // TODO: types
   'worklet';
   return {
     initialValues: {},
@@ -24,6 +25,7 @@ export const DefaultLayout = (_) => {
 };
 
 export const DefaultExiting = (startValues) => {
+  // TODO: types
   'worklet';
   return {
     initialValues: {
@@ -36,113 +38,141 @@ export const DefaultExiting = (startValues) => {
   };
 };
 
+interface LayoutConfig {
+  duration?: number;
+  easing?: EasingFn;
+  delay?: number;
+  type?: any; // TODO: anmation type
+  damping?: number;
+  mass?: number;
+  stiffness?: number;
+  overshootClamping?: number;
+  restDisplacementThreshold?: number;
+  restSpeedThreshold?: number;
+}
+
+// TODO: layout config for spring and timing
+
 export class Layout {
-  static duration(r) {
+  durationV?: number;
+  easingV?: EasingFn;
+  delayV?: number;
+  type?: any; // TODO: animation type
+  dampingV?: number;
+  massV?: number;
+  stiffnessV?: number;
+  overshootClampingV?: number;
+  restDisplacementThresholdV?: number;
+  restSpeedThresholdV: number;
+
+  static duration(durationMs: number): Layout {
     const instance = new Layout();
-    return instance.duration(r);
+    return instance.duration(durationMs);
   }
 
-  duration(t) {
-    this.durationV = t;
+  duration(durationMs: number): Layout {
+    this.durationV = durationMs;
     return this;
   }
 
-  static easing(r) {
+  static easing(easingFunction: EasingFn): Layout {
     const instance = new Layout();
-    return instance.easing(r);
+    return instance.easing(easingFunction);
   }
 
-  easing(e) {
+  easing(e: any): Layout {
     this.easingV = e;
     return this;
   }
 
-  static delay(r) {
+  static delay(durationMs: number): Layout {
     const instance = new Layout();
-    return instance.delay(r);
+    return instance.delay(durationMs);
   }
 
-  delay(d) {
-    this.delayV = d;
+  delay(durationMs: number): Layout {
+    this.delayV = durationMs;
     return this;
   }
 
-  static springify() {
+  static springify(): Layout {
     const instance = new Layout();
     return instance.springify();
   }
 
-  springify() {
+  springify(): Layout {
     this.type = withSpring;
     return this;
   }
 
-  static damping(r) {
+  static damping(damping: number): Layout {
     const instance = new Layout();
-    return instance.damping(r);
+    return instance.damping(damping);
   }
 
-  damping(d) {
-    this.dampingV = d;
+  damping(damping: number): Layout {
+    this.dampingV = damping;
     return this;
   }
 
-  static mass(r) {
+  static mass(mass: number): Layout {
     const instance = new Layout();
-    return instance.mass(r);
+    return instance.mass(mass);
   }
 
-  mass(m) {
-    this.massV = m;
+  mass(mass: number): Layout {
+    this.massV = mass;
     return this;
   }
 
-  static stiffness(r) {
+  static stiffness(stiffness: number): Layout {
     const instance = new Layout();
-    return instance.stiffness(r);
+    return instance.stiffness(stiffness);
   }
 
-  stiffness(s) {
-    this.stiffnessV = s;
+  stiffness(stiffness: number): Layout {
+    this.stiffnessV = stiffness;
     return this;
   }
 
-  static overshootClamping(r) {
+  static overshootClamping(overshootClamping: number): Layout {
     const instance = new Layout();
-    return instance.overshootClamping(r);
+    return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(o) {
-    this.overshootClampingV = o;
+  overshootClamping(overshootClamping: number): Layout {
+    this.overshootClampingV = overshootClamping;
     return this;
   }
 
-  static restDisplacementThreshold(r) {
+  static restDisplacementThreshold(restDisplacementThreshold: number): Layout {
     const instance = new Layout();
-    return instance.restDisplacementThreshold(r);
+    return instance.restDisplacementThreshold(restDisplacementThreshold);
   }
 
-  restDisplacementThreshold(r) {
-    this.restDisplacementThresholdV = r;
+  restDisplacementThreshold(restDisplacementThreshold: number): Layout {
+    this.restDisplacementThresholdV = restDisplacementThreshold;
     return this;
   }
 
-  static restSpeedThreshold(r) {
+  static restSpeedThreshold(r: number): Layout {
     const instance = new Layout();
     return instance.restSpeedThreshold(r);
   }
 
-  restSpeedThreshold(r) {
-    this.restSpeedThresholdV = r;
+  restSpeedThreshold(restSpeedThreshold: number): Layout {
+    this.restSpeedThresholdV = restSpeedThreshold;
     return this;
   }
 
   static build() {
+    // TODO: returned type
     const instance = new Layout();
     return instance.build();
   }
 
   build() {
+    // TODO: returned type
     const duration = this.durationV;
     const easing = this.easingV;
     const delay = this.delayV;
@@ -163,7 +193,7 @@ export class Layout {
 
     const animation = type;
 
-    const config = {};
+    const config: LayoutConfig = {};
 
     if (type === withTiming) {
       if (easing) {
@@ -194,6 +224,7 @@ export class Layout {
     }
 
     return (values) => {
+      // TODO: add type for this worklet
       'worklet';
       return {
         initialValues: {
@@ -214,117 +245,134 @@ export class Layout {
 }
 
 export class BaseAnimationBuilder {
-  static duration(r) {
-    const instance = this.createInstance();
-    return instance.duration(r);
+  durationV?: number;
+  easingV?: EasingFn;
+  delayV?: number;
+  rotateV?: number | string; // TODO: rotate is not applaying for every type of aninmation
+  type?: any; // TODO: animation type
+  dampingV?: number;
+  massV?: number;
+  stiffnessV?: number;
+  overshootClampingV?: number;
+  restDisplacementThresholdV?: number;
+  restSpeedThresholdV: number;
+
+  static duration(durationMs: number): BaseAnimationBuilder {
+    const instance = this.createInstance(); // TODO: instnace
+    return instance.duration(durationMs);
   }
 
-  duration(t) {
-    this.durationV = t;
+  duration(durationMs: number): BaseAnimationBuilder {
+    this.durationV = durationMs;
     return this;
   }
 
-  static easing(r) {
+  static easing(easingFunction: EasingFn): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.easing(r);
+    return instance.easing(easingFunction);
   }
 
-  easing(e) {
-    this.easingV = e;
+  easing(easingFunction: EasingFn): BaseAnimationBuilder {
+    this.easingV = easingFunction;
     return this;
   }
 
-  static delay(r) {
+  static delay(delayMs: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.delay(r);
+    return instance.delay(delayMs);
   }
 
-  delay(d) {
-    this.delayV = d;
+  delay(delayMs: number): BaseAnimationBuilder {
+    this.delayV = delayMs;
     return this;
   }
 
-  static rotate(r) {
+  static rotate(degree: number | string): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.rotate(r);
+    return instance.rotate(degree);
   }
 
-  rotate(v) {
-    this.rotateV = v;
+  rotate(degree: number | string): BaseAnimationBuilder {
+    this.rotateV = degree;
     return this;
   }
 
-  static springify() {
+  static springify(): BaseAnimationBuilder {
     const instance = this.createInstance();
     return instance.springify();
   }
 
-  springify() {
+  springify(): BaseAnimationBuilder {
     this.type = withSpring;
     return this;
   }
 
-  static damping(r) {
+  static damping(damping: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.damping(r);
+    return instance.damping(damping);
   }
 
-  damping(d) {
-    this.dampingV = d;
+  damping(damping: number): BaseAnimationBuilder {
+    this.dampingV = damping;
     return this;
   }
 
-  static mass(r) {
+  static mass(mass: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.mass(r);
+    return instance.mass(mass);
   }
 
-  mass(m) {
-    this.massV = m;
+  mass(mass: number): BaseAnimationBuilder {
+    this.massV = mass;
     return this;
   }
 
-  static stiffness(r) {
+  static stiffness(stiffness: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.stiffness(r);
+    return instance.stiffness(stiffness);
   }
 
-  stiffness(s) {
-    this.stiffnessV = s;
+  stiffness(stiffness: number): BaseAnimationBuilder {
+    this.stiffnessV = stiffness;
     return this;
   }
 
-  static overshootClamping(r) {
+  static overshootClamping(overshootClamping: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.overshootClamping(r);
+    return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(o) {
-    this.overshootClampingV = o;
+  overshootClamping(overshootClamping: number): BaseAnimationBuilder {
+    this.overshootClampingV = overshootClamping;
     return this;
   }
 
-  static restDisplacementThreshold(r) {
+  static restDisplacementThreshold(
+    restDisplacementThreshold: number
+  ): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.restDisplacementThreshold(r);
+    return instance.restDisplacementThreshold(restDisplacementThreshold);
   }
 
-  restDisplacementThreshold(r) {
-    this.restDisplacementThresholdV = r;
+  restDisplacementThreshold(
+    restDisplacementThreshold: number
+  ): BaseAnimationBuilder {
+    this.restDisplacementThresholdV = restDisplacementThreshold;
     return this;
   }
 
-  static restSpeedThreshold(r) {
+  static restSpeedThreshold(restSpeedThreshold: number): BaseAnimationBuilder {
     const instance = this.createInstance();
-    return instance.restSpeedThreshold(r);
+    return instance.restSpeedThreshold(restSpeedThreshold);
   }
 
-  restSpeedThreshold(r) {
-    this.restSpeedThresholdV = r;
+  restSpeedThreshold(restSpeedThreshold: number): BaseAnimationBuilder {
+    this.restSpeedThresholdV = restSpeedThreshold;
     return this;
   }
 
   static build() {
+    // TODO: returned type
     const instance = this.createInstance();
     return instance.build();
   }
@@ -342,6 +390,7 @@ export class BaseAnimationBuilder {
   getAnimationAndConfig() {
     const duration = this.durationV;
     const easing = this.easingV;
+    const rotate = this.rotateV;
     const type = this.type ? this.type : withTiming;
     const damping = this.dampingV;
     const mass = this.massV;
@@ -360,6 +409,9 @@ export class BaseAnimationBuilder {
       }
       if (duration) {
         config.duration = duration;
+      }
+      if (rotate) {
+        config.rotate = rotate;
       }
     } else {
       if (damping) {
