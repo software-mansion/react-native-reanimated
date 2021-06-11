@@ -1,8 +1,42 @@
 import { withDelay, withSpring, withTiming } from '../animations';
 import { EasingFn } from '../Easing';
 
-export const DefaultEntering = (targetValues) => {
-  // TODO: types
+export type LayoutAnimation = {
+  initialValues: any; // TODO: change this
+  animations: any;
+};
+
+export type EntryExitAnimationsValues = {
+  originX: number;
+  originY: number;
+  width: number;
+  height: number;
+  globalOriginX: number;
+  globalOriginY: number;
+};
+export type EntryExitAnimationFunction = (
+  targetValues: EntryExitAnimationsValues
+) => LayoutAnimation;
+
+export type LayoutAnimationsValues = {
+  originX: number;
+  originY: number;
+  width: number;
+  height: number;
+  globalOriginX: number;
+  globalOriginY: number;
+  boriginX: number;
+  boriginY: number;
+  bwidth: number;
+  bheight: number;
+  bglobalOriginX: number;
+  bglobalOriginY: number;
+};
+export type LayoutAnimationFunction = (
+  targetValues: LayoutAnimationsValues
+) => LayoutAnimation;
+
+export const DefaultEntering: EntryExitAnimationFunction = (targetValues) => {
   'worklet';
   return {
     initialValues: {
@@ -15,8 +49,7 @@ export const DefaultEntering = (targetValues) => {
   };
 };
 
-export const DefaultLayout = (_) => {
-  // TODO: types
+export const DefaultLayout: LayoutAnimationFunction = (_) => {
   'worklet';
   return {
     initialValues: {},
@@ -24,8 +57,7 @@ export const DefaultLayout = (_) => {
   };
 };
 
-export const DefaultExiting = (startValues) => {
-  // TODO: types
+export const DefaultExiting: EntryExitAnimationFunction = (startValues) => {
   'worklet';
   return {
     initialValues: {
@@ -38,10 +70,9 @@ export const DefaultExiting = (startValues) => {
   };
 };
 
-interface LayoutConfig {
+interface BaseLayoutAnimationConfig {
   duration?: number;
   easing?: EasingFn;
-  delay?: number;
   type?: any; // TODO: anmation type
   damping?: number;
   mass?: number;
@@ -51,7 +82,13 @@ interface LayoutConfig {
   restSpeedThreshold?: number;
 }
 
-// TODO: layout config for spring and timing
+interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
+  rotate?: number | string;
+}
+
+interface BounceBuilderAnimationConfig {
+  duration?: number;
+}
 
 export class Layout {
   durationV?: number;
@@ -80,8 +117,8 @@ export class Layout {
     return instance.easing(easingFunction);
   }
 
-  easing(e: any): Layout {
-    this.easingV = e;
+  easing(easingFunction: EasingFn): Layout {
+    this.easingV = easingFunction;
     return this;
   }
 
@@ -193,7 +230,7 @@ export class Layout {
 
     const animation = type;
 
-    const config: LayoutConfig = {};
+    const config: BaseLayoutAnimationConfig = {};
 
     if (type === withTiming) {
       if (easing) {
@@ -256,6 +293,9 @@ export class BaseAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV: number;
+
+  static createInstance: () => BaseAnimationBuilder;
+  build: any; // TODO: type
 
   static duration(durationMs: number): BaseAnimationBuilder {
     const instance = this.createInstance(); // TODO: instnace
@@ -378,6 +418,7 @@ export class BaseAnimationBuilder {
   }
 
   getDelayFunction() {
+    // TODO returned type
     const delay = this.delayV;
     return delay
       ? withDelay
@@ -388,6 +429,7 @@ export class BaseAnimationBuilder {
   }
 
   getAnimationAndConfig() {
+    // TODO returned type
     const duration = this.durationV;
     const easing = this.easingV;
     const rotate = this.rotateV;
@@ -401,7 +443,7 @@ export class BaseAnimationBuilder {
 
     const animation = type;
 
-    const config = {};
+    const config: BaseBuilderAnimationConfig = {};
 
     if (type === withTiming) {
       if (easing) {
@@ -432,33 +474,43 @@ export class BaseAnimationBuilder {
       if (restSpeedThreshold) {
         config.restSpeedThreshold = restSpeedThreshold;
       }
+      if (rotate) {
+        config.rotate = rotate;
+      }
     }
     return [animation, config];
   }
 }
 
 export class BaseBounceAnimationBuilder {
-  static duration(r) {
+  durationV: number;
+  delayV: number;
+
+  static createInstance: () => BaseBounceAnimationBuilder;
+  build: any; // TODO: type
+
+  static duration(durationMs: number) {
     const instance = this.createInstance();
-    return instance.duration(r);
+    return instance.duration(durationMs);
   }
 
-  duration(t) {
-    this.durationV = t;
+  duration(durationMs: number) {
+    this.durationV = durationMs;
     return this;
   }
 
-  static delay(r) {
+  static delay(delayMs: number) {
     const instance = this.createInstance();
-    return instance.delay(r);
+    return instance.delay(delayMs);
   }
 
-  delay(d) {
-    this.delayV = d;
+  delay(delayMs: number) {
+    this.delayV = delayMs;
     return this;
   }
 
   getDelayFunction() {
+    // TODO returned type
     const delay = this.delayV;
     return delay
       ? withDelay
@@ -469,15 +521,13 @@ export class BaseBounceAnimationBuilder {
   }
 
   getAnimationAndConfig() {
+    // TODO returned type
     const duration = this.durationV;
     const type = withTiming;
     const animation = type;
 
-    const config = {};
+    const config: BounceBuilderAnimationConfig = {};
 
-    if (easing) {
-      config.easing = easing;
-    }
     if (duration) {
       config.duration = duration;
     }
