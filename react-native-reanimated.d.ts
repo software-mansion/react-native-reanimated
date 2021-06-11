@@ -416,8 +416,8 @@ declare module 'react-native-reanimated' {
     // reanimated2 derived operations
     export function interpolate(
       x: number,
-      input: Array<number>,
-      output: Array<number>,
+      inputRange: Array<number>,
+      outputRange: Array<number>,
       type?: ExtrapolateParameter
     ): number;
 
