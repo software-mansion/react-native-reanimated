@@ -1,3 +1,4 @@
+import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
@@ -44,7 +45,6 @@ function Box({ label, state }: { label: string; state: boolean }) {
   return (
     <Animated.View
       layout={CustomLayoutTransiton()}
-      entering={SlideInDown.delay(delay).springify()}
       style={[styles.box, { height: state ? 30 : 60 }]}>
       <Text> {label} </Text>
     </Animated.View>
@@ -84,3 +84,6 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
+
+
+
