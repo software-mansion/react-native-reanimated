@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
 export class StretchInX extends BaseAnimationBuilder {
   static createInstance() {

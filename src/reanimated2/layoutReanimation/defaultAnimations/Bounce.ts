@@ -1,8 +1,8 @@
 import {
-  BaseBounceAnimationBuilder,
   EntryExitAnimationBuilderI,
   EntryExitAnimationFunction,
-} from '../defaultAnimationsBuilder';
+} from '../animationBuilder/commonTypes';
+import { BaseBounceAnimationBuilder } from '../animationBuilder/BaseBounceAnimationBuilder';
 import { withSequence, withTiming } from '../../animations';
 import { Dimensions } from 'react-native';
 

@@ -1,3 +1,3 @@
 export * from './AnimatedRoot';
-export * from './defaultAnimationsBuilder';
+export * from './animationBuilder';
 export * from './defaultAnimations';

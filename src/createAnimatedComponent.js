@@ -17,7 +17,7 @@ import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimationsBuilder';
+} from './reanimated2/layoutReanimation/defaultAnimations/Default';
 
 const NODE_MAPPING = new Map();
 

@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
