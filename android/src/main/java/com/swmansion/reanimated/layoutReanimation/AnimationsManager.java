@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 public class AnimationsManager {
@@ -318,7 +319,7 @@ public class AnimationsManager {
             HashMap<String, Object> targetValues = after.capturedValues.get(view.getId());
             ViewState state = mStates.get(view.getId());
 
-            if (state == ViewState.Appearing || state == ViewState.Disappearing || state == ViewState.ToRemove) {
+            if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
                 if (state == ViewState.Appearing && startValues != null && targetValues == null) {
                     mStates.put(tag, ViewState.Disappearing);
                     type = "exiting";
@@ -326,6 +327,33 @@ public class AnimationsManager {
                     mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
                 }
                 continue;
+            }
+            if (state == ViewState.Appearing && startValues != null && targetValues == null) {
+                mStates.put(tag, ViewState.Disappearing);
+                type = "exiting";
+                HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
+                mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+                continue;
+            }
+
+            // If startValues are equal to targetValues it means that there was no UI Operation changing
+            // layout of the View. So dirtiness of that View is false positive
+            if (state == ViewState.Appearing) {
+                boolean doNotStartLayout = true;
+                List<String> keys = Arrays.asList(Snapshooter.originX,
+                        Snapshooter.originY,
+                        Snapshooter.height,
+                        Snapshooter.width);
+                for (String key : keys) {
+                    double startV = ((Number) startValues.get(key)).doubleValue();
+                    double targetV = ((Number) targetValues.get(key)).doubleValue();
+                    if (startV != targetV) {
+                        doNotStartLayout = false;
+                    }
+                }
+                if (doNotStartLayout) {
+                    continue;
+                }
             }
 
             if (state == ViewState.Inactive) { // it can be a fresh view
