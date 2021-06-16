@@ -7,8 +7,12 @@ def reactNativeVersion = json.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
 def engine = "jsc"
-if (project(':app').ext.react.enableHermes) {
-    engine = "hermes"
-}
+rootProject.getSubprojects().forEach({project ->
+    if (project.plugins.hasPlugin("com.android.application")) {
+        if(project.ext.react.enableHermes) {
+            engine = "hermes"
+        }
+    }
+})
 
 artifacts.add("default", file("react-native-reanimated-${minor}-${engine}.aar"))
