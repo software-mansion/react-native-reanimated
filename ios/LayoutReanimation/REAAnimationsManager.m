@@ -101,14 +101,28 @@ typedef NS_ENUM(NSInteger, ViewState) {
     NSMutableDictionary * targetValues = after.capturedValues[[REASnapshooter idFor:view]];
     
     ViewState viewState = [_states[view.reactTag] intValue];
-    if (viewState == Appearing || viewState == Disappearing || viewState == ToRemove) {
-      if (viewState == Appearing && startValues != nil && targetValues == nil) {
+    if (viewState == Disappearing || viewState == ToRemove) {
+      continue; // Maybe we should update an animation instead of skipping
+    }
+    if (viewState == Appearing && startValues != nil && targetValues == nil) {
         _states[view.reactTag] = [NSNumber numberWithInt: Disappearing];
         type = @"exiting";
         NSDictionary* preparedValues = [self prepareDataForAnimatingWorklet:startValues];
         _startAnimationForTag(view.reactTag, type, preparedValues, @(0));
-      }
-      continue; // Maybe we should update an animation instead of skipping
+        continue;
+    }
+    if (viewState == Appearing) {
+        // If component is dirty but all layout properties are the same then do not start a new animation
+        bool doNotStartLayoutAnimation = true;
+        NSArray<NSString *>* keys = @[@"originX", @"originY", @"width", @"height"];
+        for (NSString * key in keys) {
+            if ([((NSNumber *)startValues[key]) doubleValue] !=  [((NSNumber *)targetValues[key]) doubleValue]) {
+                doNotStartLayoutAnimation = false;
+            }
+        }
+        if (doNotStartLayoutAnimation) {
+            continue;
+        }
     }
   
     if (viewState == Inactive) { // it can be a fresh view
