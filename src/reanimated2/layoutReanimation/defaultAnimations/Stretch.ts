@@ -1,13 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+import {
+  EntryExitAnimationBuilderI,
+  EntryExitAnimationFunction,
+} from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
-export class StretchInX extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchInX
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): StretchInX {
     return new StretchInX();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -23,15 +27,17 @@ export class StretchInX extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class StretchInY extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchInY
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): StretchInY {
     return new StretchInY();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -47,15 +53,17 @@ export class StretchInY extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class StretchOutX extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchOutX
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): StretchOutX {
     return new StretchOutX();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -71,15 +79,17 @@ export class StretchOutX extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class StretchOutY extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchOutY
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): StretchOutY {
     return new StretchOutY();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -95,5 +105,5 @@ export class StretchOutY extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }

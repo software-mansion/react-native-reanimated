@@ -1,13 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+import {
+  EntryExitAnimationBuilderI,
+  EntryExitAnimationFunction,
+} from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
-export class FadeIn extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeIn
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeIn {
     return new FadeIn();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -23,15 +27,17 @@ export class FadeIn extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeInRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeInRight
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeInRight {
     return new FadeInRight();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -51,15 +57,17 @@ export class FadeInRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeInLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeInLeft
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeInLeft {
     return new FadeInLeft();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -79,15 +87,17 @@ export class FadeInLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeInUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeInUp
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeInUp {
     return new FadeInUp();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -107,15 +117,17 @@ export class FadeInUp extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeInDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeInDown
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeInDown {
     return new FadeInDown();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -135,15 +147,17 @@ export class FadeInDown extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeOut extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeOut
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeOut {
     return new FadeOut();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -159,15 +173,17 @@ export class FadeOut extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeOutRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeOutRight
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeOutRight {
     return new FadeOutRight();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -187,15 +203,17 @@ export class FadeOutRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeOutLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeOutLeft
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeOutLeft {
     return new FadeOutLeft();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -215,15 +233,17 @@ export class FadeOutLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeOutUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeOutUp
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeOutUp {
     return new FadeOutUp();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -243,15 +263,17 @@ export class FadeOutUp extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FadeOutDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class FadeOutDown
+  extends BaseAnimationBuilder
+  implements EntryExitAnimationBuilderI {
+  static createInstance(): FadeOutDown {
     return new FadeOutDown();
   }
 
-  build() {
+  build: () => EntryExitAnimationFunction = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -271,5 +293,5 @@ export class FadeOutDown extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }

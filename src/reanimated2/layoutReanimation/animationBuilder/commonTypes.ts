@@ -4,7 +4,7 @@ import { EasingFn } from '../../Easing';
 export type StyleProps =
   | ViewStyle
   | TextStyle
-  | { originX?: number; originY: number };
+  | { originX?: number; originY?: number };
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
