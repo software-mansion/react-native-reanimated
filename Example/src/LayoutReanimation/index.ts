@@ -6,3 +6,5 @@ export * from './Carousel';
 export * from './ModalNewAPI';
 export * from './DefaultAnimations';
 export * from './CustomLayout';
+export * from './CustomLayout2';
+export * from './CustomLayout3';
