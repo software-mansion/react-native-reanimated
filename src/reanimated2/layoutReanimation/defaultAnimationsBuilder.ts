@@ -1,9 +1,15 @@
+import { ViewStyle, TextStyle } from 'react-native';
 import { withDelay, withSpring, withTiming } from '../animations';
 import { EasingFn } from '../Easing';
 
+export type StyleProps =
+  | ViewStyle
+  | TextStyle
+  | { originX?: number; originY: number };
+
 export type LayoutAnimation = {
-  initialValues: any; // TODO: change this
-  animations: any;
+  initialValues: StyleProps;
+  animations: StyleProps;
 };
 
 type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
@@ -97,7 +103,15 @@ export type LayoutAnimationAndConfig = [
   BaseBuilderAnimationConfig
 ];
 
-export class Layout {
+export interface EntryExitAnimationBuilderI {
+  build: () => EntryExitAnimationFunction;
+}
+
+export interface LayoutAnimationBuilderI {
+  build: () => LayoutAnimationFunction;
+}
+
+export class Layout implements LayoutAnimationBuilderI {
   durationV?: number;
   easingV?: EasingFn;
   delayV?: number;
@@ -214,7 +228,7 @@ export class Layout {
     return instance.build();
   }
 
-  build(): LayoutAnimationFunction {
+  build: () => LayoutAnimationFunction = () => {
     const duration = this.durationV;
     const easing = this.easingV;
     const delay = this.delayV;
@@ -282,7 +296,7 @@ export class Layout {
         },
       };
     };
-  }
+  };
 }
 
 export class BaseAnimationBuilder {
