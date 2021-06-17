@@ -44,7 +44,7 @@ export class ZoomInRotate
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
-    const rotate = this.rotateV ? this.rotateV : 0.3;
+    const rotate = this.rotateV ? this.rotateV : '0.3';
 
     return () => {
       'worklet';
@@ -266,7 +266,7 @@ export class ZoomOutRotate
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
-    const rotate = this.rotateV ? this.rotateV : 0.3;
+    const rotate = this.rotateV ? this.rotateV : '0.3';
 
     return () => {
       'worklet';
@@ -278,7 +278,7 @@ export class ZoomOutRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 1 }, { rotate: 0 }],
+          transform: [{ scale: 1 }, { rotate: '0' }],
         },
       };
     };

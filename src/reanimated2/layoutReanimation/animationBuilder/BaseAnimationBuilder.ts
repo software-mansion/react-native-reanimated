@@ -11,7 +11,7 @@ export class BaseAnimationBuilder {
   durationV?: number;
   easingV?: EasingFn;
   delayV?: number;
-  rotateV?: number | string;
+  rotateV?: string;
   type?: AnimationFunction;
   dampingV?: number;
   massV?: number;
@@ -53,12 +53,12 @@ export class BaseAnimationBuilder {
     return this;
   }
 
-  static rotate(degree: number | string): BaseAnimationBuilder {
+  static rotate(degree: string): BaseAnimationBuilder {
     const instance = this.createInstance();
     return instance.rotate(degree);
   }
 
-  rotate(degree: number | string): BaseAnimationBuilder {
+  rotate(degree: string): BaseAnimationBuilder {
     this.rotateV = degree;
     return this;
   }
