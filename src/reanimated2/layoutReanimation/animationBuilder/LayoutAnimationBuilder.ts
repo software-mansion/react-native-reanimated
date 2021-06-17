@@ -7,7 +7,7 @@ import {
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 
-export class Layout implements LayoutAnimationBuilderI {
+export class LayoutAnimationBuilder implements LayoutAnimationBuilderI {
   durationV?: number;
   easingV?: EasingFn;
   delayV?: number;
@@ -19,108 +19,112 @@ export class Layout implements LayoutAnimationBuilderI {
   restDisplacementThresholdV?: number;
   restSpeedThresholdV: number;
 
-  static duration(durationMs: number): Layout {
-    const instance = new Layout();
+  static duration(durationMs: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.duration(durationMs);
   }
 
-  duration(durationMs: number): Layout {
+  duration(durationMs: number): LayoutAnimationBuilder {
     this.durationV = durationMs;
     return this;
   }
 
-  static easing(easingFunction: EasingFn): Layout {
-    const instance = new Layout();
+  static easing(easingFunction: EasingFn): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFn): Layout {
+  easing(easingFunction: EasingFn): LayoutAnimationBuilder {
     this.easingV = easingFunction;
     return this;
   }
 
-  static delay(durationMs: number): Layout {
-    const instance = new Layout();
+  static delay(durationMs: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.delay(durationMs);
   }
 
-  delay(durationMs: number): Layout {
+  delay(durationMs: number): LayoutAnimationBuilder {
     this.delayV = durationMs;
     return this;
   }
 
-  static springify(): Layout {
-    const instance = new Layout();
+  static springify(): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.springify();
   }
 
-  springify(): Layout {
+  springify(): LayoutAnimationBuilder {
     this.type = withSpring as AnimationFunction;
     return this;
   }
 
-  static damping(damping: number): Layout {
-    const instance = new Layout();
+  static damping(damping: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.damping(damping);
   }
 
-  damping(damping: number): Layout {
+  damping(damping: number): LayoutAnimationBuilder {
     this.dampingV = damping;
     return this;
   }
 
-  static mass(mass: number): Layout {
-    const instance = new Layout();
+  static mass(mass: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.mass(mass);
   }
 
-  mass(mass: number): Layout {
+  mass(mass: number): LayoutAnimationBuilder {
     this.massV = mass;
     return this;
   }
 
-  static stiffness(stiffness: number): Layout {
-    const instance = new Layout();
+  static stiffness(stiffness: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.stiffness(stiffness);
   }
 
-  stiffness(stiffness: number): Layout {
+  stiffness(stiffness: number): LayoutAnimationBuilder {
     this.stiffnessV = stiffness;
     return this;
   }
 
-  static overshootClamping(overshootClamping: number): Layout {
-    const instance = new Layout();
+  static overshootClamping(overshootClamping: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): Layout {
+  overshootClamping(overshootClamping: number): LayoutAnimationBuilder {
     this.overshootClampingV = overshootClamping;
     return this;
   }
 
-  static restDisplacementThreshold(restDisplacementThreshold: number): Layout {
-    const instance = new Layout();
+  static restDisplacementThreshold(
+    restDisplacementThreshold: number
+  ): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.restDisplacementThreshold(restDisplacementThreshold);
   }
 
-  restDisplacementThreshold(restDisplacementThreshold: number): Layout {
+  restDisplacementThreshold(
+    restDisplacementThreshold: number
+  ): LayoutAnimationBuilder {
     this.restDisplacementThresholdV = restDisplacementThreshold;
     return this;
   }
 
-  static restSpeedThreshold(r: number): Layout {
-    const instance = new Layout();
+  static restSpeedThreshold(r: number): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
     return instance.restSpeedThreshold(r);
   }
 
-  restSpeedThreshold(restSpeedThreshold: number): Layout {
+  restSpeedThreshold(restSpeedThreshold: number): LayoutAnimationBuilder {
     this.restSpeedThresholdV = restSpeedThreshold;
     return this;
   }
 
   static build(): LayoutAnimationFunction {
-    const instance = new Layout();
+    const instance = new LayoutAnimationBuilder();
     return instance.build();
   }
 
