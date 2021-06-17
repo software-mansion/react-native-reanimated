@@ -12,17 +12,9 @@ if (Platform.OS === 'web' && !requireNativeComponent) {
     'REALayoutView'
   ) as unknown) as React.Component;
 }
-export interface REALayoutViewComponent {
-  props: {
-    collapsable?: boolean;
-  };
-}
 
-export class AnimatedLayout extends React.Component<
-  Record<string, unknown>,
-  Record<string, unknown>
-> {
-  render(): REALayoutViewComponent {
+export class AnimatedLayout extends React.Component {
+  render(): React.ReactElement {
     return <REALayoutView collapsable={false} {...this.props} />;
   }
 }
