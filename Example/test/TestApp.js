@@ -16,6 +16,8 @@ import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
 import UpdatePropsTest from './UpdatePropsTest';
 import AdaptersTest from './AdaptersTest';
+import CustomLayout2 from './CustomLayout2';
+import CustomLayout3 from './CustomLayout3';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -51,6 +53,14 @@ const SCREENS = {
   AdaptersTest: {
     screen: AdaptersTest,
     title: '🆕 Adapters',
+  },
+  CustomLayout2: {
+    screen: CustomLayout2,
+    title: '🆕 Custom Layout - switch to layout animation',
+  },
+  CustomLayout3: {
+    screen: CustomLayout3,
+    title: '🆕 Custom Layout - stay with entering animation ',
   },
 };
 

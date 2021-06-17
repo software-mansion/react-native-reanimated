@@ -15,8 +15,6 @@ import {
   ModalNewAPI,
   DefaultAnimations,
   CustomLayoutAnimationScreen,
-  CustomLayoutAnimationScreen2,
-  CustomLayoutAnimationScreen3,
 } from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
@@ -47,14 +45,6 @@ const SCREENS: Screens = {
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
     title: '🆕 Custom layout animation',
-  },
-  CustomLayoutAnimation2: {
-    screen: CustomLayoutAnimationScreen2,
-    title: '🆕 Custom layout animation - should switch to layout animation',
-  },
-  CustomLayoutAnimation3: {
-    screen: CustomLayoutAnimationScreen3,
-    title: '🆕 Custom layout animation - should continue entering',
   },
   ModalNewAPI: {
     title: '🆕 ModalNewAPI',
