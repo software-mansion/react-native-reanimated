@@ -14,6 +14,7 @@ import {
   Carousel,
   ModalNewAPI,
   DefaultAnimations,
+  CustomLayoutAnimationScreen,
 } from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
@@ -40,6 +41,10 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
   },
   ModalNewAPI: {
     title: '🆕 ModalNewAPI',
