@@ -32,6 +32,16 @@ typedef NS_ENUM(NSInteger, ViewState) {
   NSMutableDictionary<NSNumber*, UIView *>* _animatedLayoutHangingPoint;
 }
 
++ (NSArray *)layoutKeys
+{
+    static NSArray *_array;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _array = @[@"originX", @"originY", @"width", @"height"];
+    });
+    return _array;
+}
+
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager
 {
   if (self = [super init]) {
@@ -114,8 +124,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
     if (viewState == Appearing) {
         // If component is dirty but all layout properties are the same then do not start a new animation
         bool doNotStartLayoutAnimation = true;
-        NSArray<NSString *>* keys = @[@"originX", @"originY", @"width", @"height"];
-        for (NSString * key in keys) {
+        for (NSString * key in [[self class] layoutKeys]) {
             if ([((NSNumber *)startValues[key]) doubleValue] !=  [((NSNumber *)targetValues[key]) doubleValue]) {
                 doNotStartLayoutAnimation = false;
             }

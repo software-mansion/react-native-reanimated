@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AnimationsManager {
-
+    private final static String[] LAYOUT_KEYS = { Snapshooter.originX, Snapshooter.originY, Snapshooter.width, Snapshooter.height };
     private ReactContext mContext;
     private UIImplementation mUIImplementation;
     private UIManagerModule mUIManager;
@@ -320,12 +320,6 @@ public class AnimationsManager {
             ViewState state = mStates.get(view.getId());
 
             if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
-                if (state == ViewState.Appearing && startValues != null && targetValues == null) {
-                    mStates.put(tag, ViewState.Disappearing);
-                    type = "exiting";
-                    HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-                    mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-                }
                 continue;
             }
             if (state == ViewState.Appearing && startValues != null && targetValues == null) {
@@ -340,11 +334,7 @@ public class AnimationsManager {
             // layout of the View. So dirtiness of that View is false positive
             if (state == ViewState.Appearing) {
                 boolean doNotStartLayout = true;
-                List<String> keys = Arrays.asList(Snapshooter.originX,
-                        Snapshooter.originY,
-                        Snapshooter.height,
-                        Snapshooter.width);
-                for (String key : keys) {
+                for (String key : LAYOUT_KEYS) {
                     double startV = ((Number) startValues.get(key)).doubleValue();
                     double targetV = ((Number) targetValues.get(key)).doubleValue();
                     if (startV != targetV) {
