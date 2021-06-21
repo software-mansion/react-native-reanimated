@@ -4,6 +4,7 @@ import {
   AnimationFunction,
   LayoutAnimationAndConfig,
   BounceBuilderAnimationConfig,
+  EntryExitAnimationBuild,
 } from './commonTypes';
 
 export class BaseBounceAnimationBuilder {
@@ -11,7 +12,7 @@ export class BaseBounceAnimationBuilder {
   delayV: number;
 
   static createInstance: () => BaseBounceAnimationBuilder;
-  build: () => EntryExitAnimationFunction;
+  build: EntryExitAnimationBuild;
 
   static duration(durationMs: number): BaseBounceAnimationBuilder {
     const instance = this.createInstance();

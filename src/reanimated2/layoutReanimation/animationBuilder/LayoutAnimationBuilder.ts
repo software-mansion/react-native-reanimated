@@ -1,13 +1,14 @@
 import { withDelay, withTiming, withSpring } from '../../animations';
 import {
   AnimationFunction,
-  LayoutAnimationBuilderI,
+  ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   BaseLayoutAnimationConfig,
+  LayoutAnimationBuild,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 
-export class LayoutAnimationBuilder implements LayoutAnimationBuilderI {
+export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
   durationV?: number;
   easingV?: EasingFn;
   delayV?: number;
@@ -17,7 +18,7 @@ export class LayoutAnimationBuilder implements LayoutAnimationBuilderI {
   stiffnessV?: number;
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
-  restSpeedThresholdV: number;
+  restSpeedThresholdV?: number;
 
   static duration(durationMs: number): LayoutAnimationBuilder {
     const instance = new LayoutAnimationBuilder();
@@ -128,7 +129,7 @@ export class LayoutAnimationBuilder implements LayoutAnimationBuilderI {
     return instance.build();
   }
 
-  build: () => LayoutAnimationFunction = () => {
+  build: LayoutAnimationBuild = () => {
     const duration = this.durationV;
     const easing = this.easingV;
     const delay = this.delayV;

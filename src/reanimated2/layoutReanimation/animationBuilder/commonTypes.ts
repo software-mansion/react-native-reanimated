@@ -13,20 +13,22 @@ export type LayoutAnimation = {
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
-export type EntryExitAnimationsValues = {
+export interface EntryExitAnimationsValues {
   originX: number;
   originY: number;
   width: number;
   height: number;
   globalOriginX: number;
   globalOriginY: number;
-};
+}
 
 export type EntryExitAnimationFunction = (
   targetValues: EntryExitAnimationsValues
 ) => LayoutAnimation;
 
-export type LayoutAnimationsValues = {
+export type EntryExitAnimationBuild = () => EntryExitAnimationFunction;
+
+export interface LayoutAnimationsValues {
   originX: number;
   originY: number;
   width: number;
@@ -39,13 +41,15 @@ export type LayoutAnimationsValues = {
   bheight: number;
   bglobalOriginX: number;
   bglobalOriginY: number;
-};
+}
 
 export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
 
-export interface LayoutAnimationBuilderI {
+export type LayoutAnimationBuild = () => LayoutAnimationFunction;
+
+export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;
 }
 
@@ -74,6 +78,6 @@ export interface BounceBuilderAnimationConfig {
   duration?: number;
 }
 
-export interface EntryExitAnimationBuilderI {
-  build: () => EntryExitAnimationFunction;
+export interface IEntryExitAnimationBuilder {
+  build: EntryExitAnimationBuild;
 }

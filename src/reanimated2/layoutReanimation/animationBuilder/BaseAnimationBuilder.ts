@@ -4,6 +4,7 @@ import {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
+  EntryExitAnimationBuild,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 
@@ -18,10 +19,10 @@ export class BaseAnimationBuilder {
   stiffnessV?: number;
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
-  restSpeedThresholdV: number;
+  restSpeedThresholdV?: number;
 
   static createInstance: () => BaseAnimationBuilder;
-  build: () => EntryExitAnimationFunction;
+  build: EntryExitAnimationBuild;
 
   static duration(durationMs: number): BaseAnimationBuilder {
     const instance = this.createInstance();

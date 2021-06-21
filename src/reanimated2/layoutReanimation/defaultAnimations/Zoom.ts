@@ -1,6 +1,6 @@
 import {
-  EntryExitAnimationBuilderI,
-  EntryExitAnimationFunction,
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
@@ -9,12 +9,12 @@ const { width, height } = Dimensions.get('window');
 
 export class ZoomIn
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomIn {
     return new ZoomIn();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -35,12 +35,12 @@ export class ZoomIn
 
 export class ZoomInRotate
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInRotate {
     return new ZoomInRotate();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -65,12 +65,12 @@ export class ZoomInRotate
 
 export class ZoomInLeft
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInLeft {
     return new ZoomInLeft();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -93,12 +93,12 @@ export class ZoomInLeft
 
 export class ZoomInRight
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInRight {
     return new ZoomInRight();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -121,12 +121,12 @@ export class ZoomInRight
 
 export class ZoomInUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInUp {
     return new ZoomInUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -149,12 +149,12 @@ export class ZoomInUp
 
 export class ZoomInDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInDown {
     return new ZoomInDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -177,12 +177,12 @@ export class ZoomInDown
 
 export class ZoomInEasyUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInEasyUp {
     return new ZoomInEasyUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -204,12 +204,12 @@ export class ZoomInEasyUp
 
 export class ZoomInEasyDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance() {
     return new ZoomInEasyDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -231,12 +231,12 @@ export class ZoomInEasyDown
 
 export class ZoomOut
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOut {
     return new ZoomOut();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -257,12 +257,12 @@ export class ZoomOut
 
 export class ZoomOutRotate
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutRotate {
     return new ZoomOutRotate();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -287,12 +287,12 @@ export class ZoomOutRotate
 
 export class ZoomOutLeft
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutLeft {
     return new ZoomOutLeft();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -318,12 +318,12 @@ export class ZoomOutLeft
 
 export class ZoomOutRight
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutRight {
     return new ZoomOutRight();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -349,12 +349,12 @@ export class ZoomOutRight
 
 export class ZoomOutUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutUp {
     return new ZoomOutUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -380,12 +380,12 @@ export class ZoomOutUp
 
 export class ZoomOutDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutDown {
     return new ZoomOutDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -411,12 +411,12 @@ export class ZoomOutDown
 
 export class ZoomOutEasyUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutEasyUp {
     return new ZoomOutEasyUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -438,12 +438,12 @@ export class ZoomOutEasyUp
 
 export class ZoomOutEasyDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutEasyDown {
     return new ZoomOutEasyDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;

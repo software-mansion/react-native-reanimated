@@ -1,17 +1,17 @@
 import {
-  EntryExitAnimationBuilderI,
-  EntryExitAnimationFunction,
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
 export class FadeIn
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeIn {
     return new FadeIn();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -32,12 +32,12 @@ export class FadeIn
 
 export class FadeInRight
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInRight {
     return new FadeInRight();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -62,12 +62,12 @@ export class FadeInRight
 
 export class FadeInLeft
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInLeft {
     return new FadeInLeft();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -92,12 +92,12 @@ export class FadeInLeft
 
 export class FadeInUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInUp {
     return new FadeInUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -122,12 +122,12 @@ export class FadeInUp
 
 export class FadeInDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInDown {
     return new FadeInDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -152,12 +152,12 @@ export class FadeInDown
 
 export class FadeOut
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOut {
     return new FadeOut();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -178,12 +178,12 @@ export class FadeOut
 
 export class FadeOutRight
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutRight {
     return new FadeOutRight();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -208,12 +208,12 @@ export class FadeOutRight
 
 export class FadeOutLeft
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutLeft {
     return new FadeOutLeft();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -238,12 +238,12 @@ export class FadeOutLeft
 
 export class FadeOutUp
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutUp {
     return new FadeOutUp();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -268,12 +268,12 @@ export class FadeOutUp
 
 export class FadeOutDown
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutDown {
     return new FadeOutDown();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;

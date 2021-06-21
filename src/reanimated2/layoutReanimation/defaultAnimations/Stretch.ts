@@ -1,17 +1,17 @@
 import {
-  EntryExitAnimationBuilderI,
-  EntryExitAnimationFunction,
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
 export class StretchInX
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): StretchInX {
     return new StretchInX();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -32,12 +32,12 @@ export class StretchInX
 
 export class StretchInY
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): StretchInY {
     return new StretchInY();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -58,12 +58,12 @@ export class StretchInY
 
 export class StretchOutX
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): StretchOutX {
     return new StretchOutX();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -84,12 +84,12 @@ export class StretchOutX
 
 export class StretchOutY
   extends BaseAnimationBuilder
-  implements EntryExitAnimationBuilderI {
+  implements IEntryExitAnimationBuilder {
   static createInstance(): StretchOutY {
     return new StretchOutY();
   }
 
-  build: () => EntryExitAnimationFunction = () => {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
