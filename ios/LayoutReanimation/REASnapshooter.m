@@ -29,10 +29,10 @@ int Id = 1e9;
   if ([view isKindOfClass:[REAAnimationRootView class]]) {
     NSMutableArray * pathToWindow = [NSMutableArray new];
     UIView *current = view;
-    do {
+    while (current) {
       [pathToWindow addObject:current];
       current = current.superview;
-    } while (current != windowView);
+    }
     values[@"pathToWindow"] = pathToWindow;
   }
   

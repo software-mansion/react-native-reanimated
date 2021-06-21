@@ -1,46 +1,28 @@
-import Animated, {
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-  Easing,
-} from 'react-native-reanimated';
-import { View, Button } from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
+import {NavigationContainer, NavigationProp} from '@react-navigation/native';
+import {enableScreens} from 'react-native-screens';
+import {createNativeStackNavigator} from 'react-native-screens/native-stack';
+import {AnimatedLayout} from 'react-native-reanimated';
 
-function AnimatedStyleUpdateExample(): React.ReactElement {
-  const randomWidth = useSharedValue(10);
+enableScreens(true);
+const Stack = createNativeStackNavigator();
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezier(0.5, 0.01, 0, 1),
-  };
+const Screen1 = ({navigation}: {navigation: NavigationProp<any>}) => {
+  useEffect(() => navigation.navigate('Screen2'), [navigation]);
+  return null;
+};
 
-  const style = useAnimatedStyle(() => {
-    return {
-      width: withTiming(randomWidth.value, config),
-    };
-  });
+const Screen2 = () => {
+  return <AnimatedLayout />;
+};
 
+const App = () => {
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}>
-      <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
-          style,
-        ]}
-      />
-      <Button
-        title="toggle"
-        onPress={() => {
-          randomWidth.value = Math.random() * 350;
-        }}
-      />
-    </View>
+      <Stack.Navigator initialRouteName="Screen1">
+        <Stack.Screen name="Screen1" component={Screen1} />
+        <Stack.Screen name="Screen2" component={Screen2} />
+      </Stack.Navigator>
   );
-}
+};
 
-export default AnimatedStyleUpdateExample;
+export default App;
