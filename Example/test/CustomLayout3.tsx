@@ -52,7 +52,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export function CustomLayoutAnimationScreen3(): React.ReactElement {
+export default function CustomLayoutAnimationScreen3(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>

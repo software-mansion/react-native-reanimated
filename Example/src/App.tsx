@@ -195,7 +195,7 @@ function LaunchReanimated1({
 const Stack = createStackNavigator();
 
 const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
-  <Stack.Navigator detachInactiveScreens={false}>
+  <Stack.Navigator detachInactiveScreens={true}>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}
