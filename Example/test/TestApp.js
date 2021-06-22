@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, LogBox } from 'react-native';
+import { FlatList, LogBox, View } from 'react-native';
 
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -18,6 +18,8 @@ import UpdatePropsTest from './UpdatePropsTest';
 import AdaptersTest from './AdaptersTest';
 import CustomLayout2 from './CustomLayout2';
 import CustomLayout3 from './CustomLayout3';
+import ModalInNavigation from './ModalInNavigation';
+import WithNavigation from './WithNavigation';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -62,6 +64,14 @@ const SCREENS = {
     screen: CustomLayout3,
     title: '🆕 Custom Layout - stay with entering animation ',
   },
+  ModalInNavigation: {
+    screen: ModalInNavigation,
+    title: '🆕 Modal In Navigation',
+  },
+  WithNavigation: {
+    screen: WithNavigation,
+    title: '🆕 Layout Animations - with navigation ',
+  },
 };
 
 function MainScreen({ navigation }) {
@@ -88,21 +98,23 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          options={{ title: '🎬 Reanimated 2.x Examples' }}
-          component={MainScreen}
-        />
-        {Object.keys(SCREENS).map((name) => (
+      <View collapsable={false} style={{flex:1}}>
+        <Stack.Navigator detachInactiveScreens={true}>
           <Stack.Screen
-            key={name}
-            name={name}
-            getComponent={() => SCREENS[name].screen}
-            options={{ title: SCREENS[name].title || name }}
+            name="Home"
+            options={{ title: '🎬 Reanimated 2.x Examples' }}
+            component={MainScreen}
           />
-        ))}
-      </Stack.Navigator>
+          {Object.keys(SCREENS).map((name) => (
+            <Stack.Screen
+              key={name}
+              name={name}
+              getComponent={() => SCREENS[name].screen}
+              options={{ title: SCREENS[name].title || name }}
+            />
+          ))}
+        </Stack.Navigator>
+      </View>
     </NavigationContainer>
   );
 }
