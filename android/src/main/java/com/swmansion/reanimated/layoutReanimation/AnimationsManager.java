@@ -292,6 +292,12 @@ public class AnimationsManager {
 
         // attach all orphan views
         for (View view : allViews) {
+            ViewState state = mStates.get(view.getId());
+            HashMap<String, Object> startValues = before.capturedValues.get(view.getId());
+            if (startValues == null && state == ViewState.Inactive) {
+                //If view is inactive and not present before do nothing
+                continue;
+            }
             if (view.getParent() != null && !(view instanceof AnimatedRoot)) {
                 continue;
             }
@@ -318,6 +324,10 @@ public class AnimationsManager {
             HashMap<String, Object> startValues = before.capturedValues.get(view.getId());
             HashMap<String, Object> targetValues = after.capturedValues.get(view.getId());
             ViewState state = mStates.get(view.getId());
+            if (startValues == null && targetValues == null && state == ViewState.Inactive) {
+                //If view is inactive and not present before and after then do nothing
+                continue;
+            }
 
             if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
                 continue;

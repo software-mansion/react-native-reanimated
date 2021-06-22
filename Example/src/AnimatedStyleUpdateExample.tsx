@@ -35,7 +35,7 @@ const Screen2 = () => {
 const App = () => {
   return (
       <Stack.Navigator
-        detachInactiveScreens={true}
+        detachInactiveScreens={false}
         mode="modal"
         screenOptions={{
           animationEnabled: false,

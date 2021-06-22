@@ -6,6 +6,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.ReactApplication;
+import com.swmansion.rnscreens.RNScreensPackage;
 import com.th3rdwave.safeareacontext.SafeAreaContextPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
@@ -41,7 +42,8 @@ public class MainApplication extends Application implements ReactApplication {
           new SvgPackage(),
           new ReanimatedPackage(),
           new RNGestureHandlerPackage(),
-          new SafeAreaContextPackage()
+          new SafeAreaContextPackage(),
+          new RNScreensPackage()
       );
     }
 

@@ -36,9 +36,13 @@ public class Snapshooter {
         if (view instanceof AnimatedRoot) {
             ArrayList<View> pathToRootView = new ArrayList<>();
             View current = view;
-            while (current != null)
+            while (current != null) {
                 pathToRootView.add(current);
-                current = (View)current.getParent();
+                try {
+                    current = (View) current.getParent();
+                } catch (ClassCastException e) {
+                    current = null;
+                }
             }
             values.put(pathToTheRootView, pathToRootView);
         }
