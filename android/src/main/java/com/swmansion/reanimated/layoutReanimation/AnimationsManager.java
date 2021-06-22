@@ -292,7 +292,7 @@ public class AnimationsManager {
 
         // attach all orphan views
         for (View view : allViews) {
-            if (view.getParent() != null) {
+            if (view.getParent() != null && !(view instanceof AnimatedRoot)) {
                 continue;
             }
 

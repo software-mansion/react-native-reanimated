@@ -85,7 +85,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
   
   // attach all orphan views
   for (UIView * view in allViews) {
-    if (view.superview != nil) {
+    if (view.superview != nil && ![view isKindOfClass:[REAAnimationRootView class]]) {
       continue;
     }
     if ([view isKindOfClass:[REAAnimationRootView class]]) {
@@ -193,7 +193,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
   });
 }
 
-- (BOOL) dfs:(UIView *)view disapperingAbove:(BOOL)disappearingAbove
+- (BOOL)dfs:(UIView *)view disapperingAbove:(BOOL)disappearingAbove
 {
   BOOL active = false;
   ViewState state = [_states[view.reactTag] intValue];
