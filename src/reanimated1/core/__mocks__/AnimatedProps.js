@@ -2,7 +2,7 @@ import AnimatedNode from '../AnimatedNode';
 import AnimatedEvent from '../AnimatedEvent';
 import AnimatedStyle, { createOrReuseStyleNode } from '../AnimatedStyle';
 
-import deepEqual from 'fbjs/lib/areEqual';
+import deepEqual from 'lodash.isequal';
 
 // This file has been mocked as react-native's `findNodeHandle` is returning undefined value;
 // and I became easier to mock whole this file instead of mocking RN

@@ -8,7 +8,7 @@ import {
   lessOrEq,
   eq,
 } from '../operators';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 
 import AnimatedNode from '../core/AnimatedNode';
 import { createAnimatedCond as cond } from '../core/AnimatedCond';

@@ -1,6 +1,6 @@
 import AnimatedNode from './AnimatedNode';
 
-import deepEqual from 'fbjs/lib/areEqual';
+import deepEqual from 'lodash.isequal';
 
 function sanitizeTransform(inputTransform) {
   const outputTransform = [];
