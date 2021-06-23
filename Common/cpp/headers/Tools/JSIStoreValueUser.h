@@ -13,11 +13,15 @@ using namespace facebook;
 
 namespace reanimated {
 
+struct StaticStoreUser {
+    std::atomic<int> ctr;
+    std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> store;
+    std::recursive_mutex storeMutex;
+};
+
 class StoreUser {
   int identifier = 0;
-  static std::atomic<int> ctr;
-  static std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> store;
-  static std::recursive_mutex storeMutex;
+  std::shared_ptr<StaticStoreUser> staticStoreUserData;
   std::weak_ptr<Scheduler> scheduler;
   
 public:
