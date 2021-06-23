@@ -21,7 +21,8 @@ struct StaticStoreUser {
 
 class StoreUser {
   int identifier = 0;
-  std::shared_ptr<StaticStoreUser> staticStoreUserData;
+  static std::shared_ptr<StaticStoreUser> staticStoreUserData;
+  std::shared_ptr<StaticStoreUser> storeUserData;
   std::weak_ptr<Scheduler> scheduler;
   
 public:
