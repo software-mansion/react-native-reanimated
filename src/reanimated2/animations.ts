@@ -193,7 +193,7 @@ export function withTiming(toValue, userConfig, callback) {
     }
 
     function timing(animation, now) {
-      const { toValue, progress, startTime, current } = animation;
+      const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
       if (runtime >= config.duration) {
@@ -202,11 +202,8 @@ export function withTiming(toValue, userConfig, callback) {
         animation.current = toValue;
         return true;
       }
-
-      const newProgress = animation.easing(runtime / config.duration);
-      animation.current +=
-        ((toValue - current) * (newProgress - progress)) / (1 - progress);
-      animation.progress = newProgress;
+      const progress = animation.easing(runtime / config.duration);
+      animation.current = startValue + (toValue - startValue) * progress;
       return false;
     }
 
@@ -221,10 +218,10 @@ export function withTiming(toValue, userConfig, callback) {
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
         animation.startTime = previousAnimation.startTime;
-        animation.progress = previousAnimation.progress;
+        animation.startValue = previousAnimation.startValue;
       } else {
         animation.startTime = now;
-        animation.progress = 0;
+        animation.startValue = value;
       }
       animation.current = value;
       if (typeof config.easing === 'object') {
