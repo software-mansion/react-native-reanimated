@@ -1,13 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import {
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
+} from '../animationBuilder/commonTypes';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
-export class FlipInXUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInXUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInXUp {
     return new FlipInXUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -31,15 +35,17 @@ export class FlipInXUp extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipInYLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInYLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInYLeft {
     return new FlipInYLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -63,15 +69,17 @@ export class FlipInYLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipInXDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInXDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInXDown {
     return new FlipInXDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -95,15 +103,17 @@ export class FlipInXDown extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipInYRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInYRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInYRight {
     return new FlipInYRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -127,15 +137,17 @@ export class FlipInYRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipInEasyX extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInEasyX
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInEasyX {
     return new FlipInEasyX();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -154,15 +166,17 @@ export class FlipInEasyX extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipInEasyY extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipInEasyY
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipInEasyY {
     return new FlipInEasyY();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -181,15 +195,17 @@ export class FlipInEasyY extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutXUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutXUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutXUp {
     return new FlipOutXUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -218,15 +234,17 @@ export class FlipOutXUp extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutYLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutYLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutYLeft {
     return new FlipOutYLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -255,15 +273,17 @@ export class FlipOutYLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutXDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutXDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutXDown {
     return new FlipOutXDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -292,15 +312,17 @@ export class FlipOutXDown extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutYRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutYRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutYRight {
     return new FlipOutYRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -329,15 +351,17 @@ export class FlipOutYRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutEasyX extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutEasyX
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutEasyX {
     return new FlipOutEasyX();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -356,15 +380,17 @@ export class FlipOutEasyX extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class FlipOutEasyY extends BaseAnimationBuilder {
-  static createInstance() {
+export class FlipOutEasyY
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): FlipOutEasyY {
     return new FlipOutEasyY();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -383,5 +409,5 @@ export class FlipOutEasyY extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }

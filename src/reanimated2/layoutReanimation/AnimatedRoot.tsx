@@ -1,6 +1,4 @@
 /* global _stopObservingProgress, _startObservingProgress */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { Platform, requireNativeComponent } from 'react-native';
 import React from 'react';
 import { runOnUI } from '../core';
@@ -12,14 +10,11 @@ if (Platform.OS === 'web' && !requireNativeComponent) {
 } else {
   REALayoutView = (requireNativeComponent(
     'REALayoutView'
-  ) as any) as React.Component;
+  ) as unknown) as React.Component;
 }
 
-export class AnimatedLayout extends React.Component<
-  Record<string, unknown>,
-  Record<string, unknown>
-> {
-  render() {
+export class AnimatedLayout extends React.Component {
+  render(): React.ReactElement {
     return <REALayoutView collapsable={false} {...this.props} />;
   }
 }

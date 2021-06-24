@@ -1,16 +1,20 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import {
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
+} from '../animationBuilder/commonTypes';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export class SlideInRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInRight {
     return new SlideInRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -26,15 +30,17 @@ export class SlideInRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideInLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInLeft {
     return new SlideInLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -50,15 +56,17 @@ export class SlideInLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideOutRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutRight {
     return new SlideOutRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -77,15 +85,17 @@ export class SlideOutRight extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideOutLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutLeft {
     return new SlideOutLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -104,15 +114,17 @@ export class SlideOutLeft extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideInUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInUp {
     return new SlideInUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -128,15 +140,17 @@ export class SlideInUp extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideInDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInDown {
     return new SlideInDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -152,15 +166,17 @@ export class SlideInDown extends BaseAnimationBuilder {
         },
       };
     };
-  }
+  };
 }
 
-export class SlideOutUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutUp {
     return new SlideOutUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -177,15 +193,17 @@ export class SlideOutUp extends BaseAnimationBuilder {
         initialValues: {},
       };
     };
-  }
+  };
 }
 
-export class SlideOutDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutDown {
     return new SlideOutDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -202,5 +220,5 @@ export class SlideOutDown extends BaseAnimationBuilder {
         initialValues: {},
       };
     };
-  }
+  };
 }
