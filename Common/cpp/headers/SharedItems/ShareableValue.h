@@ -38,6 +38,7 @@ private:
   jsi::Object createHost(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> host);
   void adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType objectType);
   void adaptCache(jsi::Runtime &rt, const jsi::Value &value);
+  std::string demangleExceptionName(std::string toDemangle);
 
 public:
   ValueType type = ValueType::UndefinedType;
