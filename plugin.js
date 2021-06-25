@@ -4,6 +4,7 @@ const hash = require('string-hash-64');
 const { visitors } = require('@babel/traverse');
 const traverse = require('@babel/traverse').default;
 const parse = require('@babel/parser').parse;
+const { transformSync } = require("@babel/core");
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -285,7 +286,11 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
+  const code = '\n(' + fun.toString() + '\n)';
+  const codeWithoutTypescript = code /*transformSync(code, {
+    "plugins": ["@babel/plugin-transform-typescript"],
+  }).code; */
+  const astWorkletCopy = parse(codeWithoutTypescript);
 
   traverse(astWorkletCopy, {
     ReferencedIdentifier(path) {
@@ -542,59 +547,6 @@ function isPossibleOptimization(fun) {
   return flags;
 }
 
-const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
-
-const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
-  try {
-    const blacklistedPluginObject = require(pluginName);
-    // All Babel polyfills use the declare method that's why we can create them like that.
-    // https://github.com/babel/babel/blob/32279147e6a69411035dd6c43dc819d668c74466/packages/babel-helper-plugin-utils/src/index.js#L1
-    const blacklistedPlugin = blacklistedPluginObject.default({
-      assertVersion: (_x) => true,
-    });
-
-    visitors.explode(blacklistedPlugin.visitor);
-    return blacklistedPlugin;
-  } catch (e) {
-    console.warn(`Plugin ${pluginName} couldn't be removed!`);
-  }
-});
-
-// plugin objects are created by babel internals and they don't carry any identifier
-function removePluginsFromBlacklist(plugins) {
-  PLUGIN_BLACKLIST.forEach((blacklistedPlugin) => {
-    if (!blacklistedPlugin) {
-      return;
-    }
-
-    const toRemove = [];
-    for (let i = 0; i < plugins.length; i++) {
-      if (
-        JSON.stringify(Object.keys(plugins[i].visitor)) !==
-        JSON.stringify(Object.keys(blacklistedPlugin.visitor))
-      ) {
-        continue;
-      }
-      let areEqual = true;
-      for (const key of Object.keys(blacklistedPlugin.visitor)) {
-        if (
-          blacklistedPlugin.visitor[key].toString() !==
-          plugins[i].visitor[key].toString()
-        ) {
-          areEqual = false;
-          break;
-        }
-      }
-
-      if (areEqual) {
-        toRemove.push(i);
-      }
-    }
-
-    toRemove.forEach((x) => plugins.splice(x, 1));
-  });
-}
-
 module.exports = function ({ types: t }) {
   return {
     pre() {
@@ -607,21 +559,15 @@ module.exports = function ({ types: t }) {
     },
     visitor: {
       CallExpression: {
-        exit(path, state) {
+        enter(path, state) {
           processWorklets(t, path, state.file.opts.filename);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        exit(path, state) {
+        enter(path, state) {
           processIfWorkletNode(t, path, state.file.opts.filename);
         },
       },
-    },
-    // In this way we can modify babel options
-    // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
-    manipulateOptions(opts, _) {
-      const plugins = opts.plugins;
-      removePluginsFromBlacklist(plugins);
     },
   };
 };
