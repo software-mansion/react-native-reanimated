@@ -287,9 +287,10 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   const code = '\n(' + fun.toString() + '\n)';
-  const codeWithoutTypescript = code /*transformSync(code, {
+  const codeWithoutTypescript = transformSync(code, {
+
     "plugins": ["@babel/plugin-transform-typescript"],
-  }).code; */
+  }).code;
   const astWorkletCopy = parse(codeWithoutTypescript);
 
   traverse(astWorkletCopy, {
