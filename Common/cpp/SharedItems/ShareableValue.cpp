@@ -6,6 +6,7 @@
 #include "RemoteObject.h"
 #include "FrozenObject.h"
 #include "RuntimeDecorator.h"
+#include <cxxabi.h>
 
 namespace reanimated {
 
@@ -352,6 +353,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
            } catch(jsi::JSError &e) {
               throw e;
            } catch(...) {
+              if(demangleExceptionName(abi::__cxa_current_exception_type()->name()) == "facebook::jsi::JSError") {
+                throw jsi::JSError(rt, "Javascript worklet error");
+              }
               // TODO find out a way to get the error's message on hermes
               jsi::Value location = jsThis->getProperty(rt, "__location");
               std::string str = "Javascript worklet error";
@@ -407,6 +411,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               runtimeManager->errorHandler->setError(str);
               runtimeManager->errorHandler->raise();
             } catch(...) {
+              if(demangleExceptionName(abi::__cxa_current_exception_type()->name()) == "facebook::jsi::JSError") {
+                  throw jsi::JSError(rt, "Javascript worklet error");
+              }
               // TODO find out a way to get the error's message on hermes
               jsi::Value location = jsThis.getProperty(rt, "__location");
               std::string str = "Javascript worklet error";
@@ -431,6 +438,17 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
   }
   throw "convert error";
+}
+
+std::string ShareableValue::demangleExceptionName(std::string toDemangle) {
+  int status = 0;
+  char * buff = __cxxabiv1::__cxa_demangle(toDemangle.c_str(), nullptr, nullptr, &status);
+  if (!buff) {
+    return toDemangle;
+  }
+  std::string demangled = buff;
+  std::free(buff);
+  return demangled;
 }
 
 }
