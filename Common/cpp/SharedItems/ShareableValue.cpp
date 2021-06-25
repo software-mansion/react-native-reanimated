@@ -443,8 +443,9 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
 std::string ShareableValue::demangleExceptionName(std::string toDemangle) {
   int status = 0;
   char * buff = __cxxabiv1::__cxa_demangle(toDemangle.c_str(), nullptr, nullptr, &status);
-  if (!buff)
+  if (!buff) {
     return toDemangle;
+  }
   std::string demangled = buff;
   std::free(buff);
   return demangled;
