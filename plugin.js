@@ -288,8 +288,13 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   // some even break them
   const code = '\n(' + fun.toString() + '\n)';
   const codeWithoutTypescript = transformSync(code, {
-
-    "plugins": ["@babel/plugin-transform-typescript"],
+    filename: "",
+    presets: ["@babel/preset-typescript", '@babel/preset-env', 'module:metro-react-native-babel-preset',],
+    plugins: [
+      "@babel/plugin-transform-typescript",
+      "@babel/plugin-transform-modules-commonjs",
+      "@babel/plugin-transform-arrow-functions",
+    ],
   }).code;
   const astWorkletCopy = parse(codeWithoutTypescript);
 
