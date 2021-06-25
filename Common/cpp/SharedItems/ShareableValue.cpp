@@ -39,12 +39,6 @@ void freeze(jsi::Runtime &rt, jsi::Object &obj) {
   freeze.call(rt, obj);
 }
 
-void on_sigabrt (int signum)
-{
-//    signal (signum, SIG_DFL);
-//    longjmp (env, 1);
-}
-
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
   // when adapting from host object we can assign cached value immediately such that we avoid
   // running `toJSValue` in the future when given object is accessed
