@@ -259,7 +259,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
     ]);
   }
 
-  fun.traverse({
+  traverse(fun, {
     enter(path) {
       t.removeComments(path.node);
     },
@@ -288,9 +288,10 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   // some even break them
   const code = '\n(' + fun.toString() + '\n)';
   const codeWithoutTypescript = transformSync(code, {
-
-    "plugins": ["@babel/plugin-transform-typescript"],
-  }).code;
+    filename: "",
+    "presets": ["@babel/preset-typescript"],
+    "plugins": ["@babel/plugin-transform-arrow-functions"],
+  }).code; 
   const astWorkletCopy = parse(codeWithoutTypescript);
 
   traverse(astWorkletCopy, {
@@ -353,9 +354,17 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
-  const funExpression = t.functionExpression(null, clone.params, clone.body);
+  let funExpression = null;
+  try {
+    funExpression = t.functionExpression(null, clone.params, clone.body);
+  } catch (e) {
+    console.log(fun.toString());
+    console.log("_____");
+    console.log(codeWithoutTypescript);
+    throw e;
+  }
 
-  const funString = buildWorkletString(t, fun, variables, functionName);
+  const funString = buildWorkletString(t, astWorkletCopy, variables, functionName);
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
@@ -368,7 +377,7 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   const steatmentas = [
     t.variableDeclaration('const', [
-      t.variableDeclarator(privateFunctionId, funExpression),
+      t.variableDeclarator(privateFunctionId, clone.node),
     ]),
     t.expressionStatement(
       t.assignmentExpression(
