@@ -233,7 +233,7 @@ class ClosureGenerator {
   }
 }
 
-function buildWorkletString(t, fun, closureVariables, name, params) {
+function buildWorkletString(t, fun, closureVariables, name) {
   function prependClosureVariablesIfNecessary(closureVariables, body) {
     if (closureVariables.length === 0) {
       return body;
@@ -267,7 +267,7 @@ function buildWorkletString(t, fun, closureVariables, name, params) {
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    params,
+    fun.program.body[0].expression.params,
     prependClosureVariablesIfNecessary(closureVariables, fun.program.body[0].expression.body)
   );
 
@@ -291,9 +291,11 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
     filename: fileName,
     "presets": ["@babel/preset-typescript"],
     "plugins": [
+      "@babel/plugin-transform-shorthand-properties",
       "@babel/plugin-transform-arrow-functions", 
       "@babel/plugin-proposal-optional-chaining",
-      "@babel/plugin-proposal-nullish-coalescing-operator"
+      "@babel/plugin-proposal-nullish-coalescing-operator",
+      ["@babel/plugin-transform-template-literals", { "loose": true }],
     ],
     ast: true,
     babelrc: false,
@@ -361,7 +363,7 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
   const funExpression = t.functionExpression(null, clone.params, clone.body);
-  const funString = buildWorkletString(t, transformed.ast, variables, functionName, clone.params).replace("'worklet';", '');
+  const funString = buildWorkletString(t, transformed.ast, variables, functionName).replace("'worklet';", '');
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
