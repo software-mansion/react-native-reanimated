@@ -233,7 +233,7 @@ class ClosureGenerator {
   }
 }
 
-function buildWorkletString(t, fun, closureVariables, name) {
+function buildWorkletString(t, fun, closureVariables, name, params) {
   function prependClosureVariablesIfNecessary(closureVariables, body) {
     if (closureVariables.length === 0) {
       return body;
@@ -267,8 +267,8 @@ function buildWorkletString(t, fun, closureVariables, name) {
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    fun.node.params,
-    prependClosureVariablesIfNecessary(closureVariables, fun.get('body').node)
+    params,
+    prependClosureVariablesIfNecessary(closureVariables, fun.program.body[0].expression.body)
   );
 
   return generate(workletFunction, { compact: true }).code;
@@ -287,14 +287,20 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   const code = '\n(' + fun.toString() + '\n)';
-  const codeWithoutTypescript = transformSync(code, {
-    filename: "",
+  const transformed = transformSync(code, {
+    filename: fileName,
     "presets": ["@babel/preset-typescript"],
-    "plugins": ["@babel/plugin-transform-arrow-functions"],
-  }).code; 
-  const astWorkletCopy = parse(codeWithoutTypescript);
+    "plugins": [
+      "@babel/plugin-transform-arrow-functions", 
+      "@babel/plugin-proposal-optional-chaining",
+      "@babel/plugin-proposal-nullish-coalescing-operator"
+    ],
+    ast: true,
+    babelrc: false,
+    configFile: false,
+  });
 
-  traverse(astWorkletCopy, {
+  traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
       if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
@@ -354,17 +360,8 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
-  let funExpression = null;
-  try {
-    funExpression = t.functionExpression(null, clone.params, clone.body);
-  } catch (e) {
-    console.log(fun.toString());
-    console.log("_____");
-    console.log(codeWithoutTypescript);
-    throw e;
-  }
-
-  const funString = buildWorkletString(t, astWorkletCopy, variables, functionName);
+  const funExpression = t.functionExpression(null, clone.params, clone.body);
+  const funString = buildWorkletString(t, transformed.ast, variables, functionName, clone.params).replace("'worklet';", '');
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
@@ -377,7 +374,7 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   const steatmentas = [
     t.variableDeclaration('const', [
-      t.variableDeclarator(privateFunctionId, clone.node),
+      t.variableDeclarator(privateFunctionId, funExpression),
     ]),
     t.expressionStatement(
       t.assignmentExpression(
