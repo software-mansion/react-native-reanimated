@@ -3,11 +3,33 @@ package com.swmansion.reanimated.layoutReanimation;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.react.uimanager.ViewGroupManager;
+import com.facebook.react.uimanager.ViewManager;
+import com.swmansion.rnscreens.Screen;
+
 interface TraversingLambda {
     public void exec(View view);
 }
 
 public class ViewTraverser {
+    static View getParent(View view) {
+        if (view instanceof Screen) {
+            if (view.isActivated()) {
+
+            } else {
+
+            }
+        }
+        return (View) view.getParent();
+    }
+
+    static int getChildCount(ViewGroup view, ViewGroupManager vm) {
+        return vm.getChildCount(view);
+    }
+
+    static View getChildAt(ViewGroup view, int i,  ViewGroupManager vm) {
+        return vm.getChildAt(view, i);
+    }
 
     static void traverse(View view, TraversingLambda lambda) {
         if (!(view instanceof AnimatedRoot)) {

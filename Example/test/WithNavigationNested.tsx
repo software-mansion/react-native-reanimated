@@ -56,6 +56,34 @@ const Screen5 = ({ navigation }: { navigation: NavigationProp<any> }) => {
     );
 };
 
+const Home = ({navigation}: any) => {
+    return (
+        <View>
+            <Button title="open nested navigation" onPress={() => {navigation.navigate("navigation")}}/>
+        </View>
+    );
+}
+
+const SimpleContainer = ({navigation, route}: any) => {
+    return (
+        <Stack.Navigator
+        detachInactiveScreens={true}
+        mode="modal"
+        screenOptions={{
+            animationEnabled: false,
+            headerStyle: { backgroundColor: 'red' },
+            gestureEnabled: true,
+            // cardOverlayEnabled: true,
+        }}>
+            <Stack.Screen component={Screen1} name="Screen1"/>
+            <Stack.Screen component={Screen2} name="Screen2"/>
+            <Stack.Screen component={Screen3} name="Screen3"/>
+            <Stack.Screen component={Screen4} name="Screen4"/>
+            <Stack.Screen component={Screen5} name="Screen5"/>
+        </Stack.Navigator>
+    )
+}
+
 const App = () => {
     return (
         <Stack.Navigator
@@ -66,12 +94,9 @@ const App = () => {
                 headerStyle: { backgroundColor: 'red' },
                 gestureEnabled: true,
                 // cardOverlayEnabled: true,
-            }}>
-            <Stack.Screen component={Screen1} name="Screen1"/>
-            <Stack.Screen component={Screen2} name="Screen2"/>
-            <Stack.Screen component={Screen3} name="Screen3"/>
-            <Stack.Screen component={Screen4} name="Screen4"/>
-            <Stack.Screen component={Screen5} name="Screen5"/>
+        }}>
+            <Stack.Screen name="home" component={Home} />
+            <Stack.Screen name="navigation" component={SimpleContainer} />
         </Stack.Navigator>
     );
 };

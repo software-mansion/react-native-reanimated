@@ -20,6 +20,7 @@ import CustomLayout2 from './CustomLayout2';
 import CustomLayout3 from './CustomLayout3';
 import ModalInNavigation from './ModalInNavigation';
 import WithNavigation from './WithNavigation';
+import WithNavigationNested from './WithNavigationNested';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -71,6 +72,10 @@ const SCREENS = {
   WithNavigation: {
     screen: WithNavigation,
     title: '🆕 Layout Animations - with navigation ',
+  },
+  WithNavigationNested: {
+    screen: WithNavigationNested,
+    title: '🆕 Layout Animations - with navigation  Nested',
   },
 };
 
