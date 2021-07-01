@@ -4,7 +4,7 @@ import React from 'react';
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animations';
 
-let REALayoutView;
+let REALayoutView: any;
 if (Platform.OS === 'web' && !requireNativeComponent) {
   REALayoutView = React.Component;
 } else {
@@ -24,7 +24,7 @@ export class AnimatedLayout extends React.Component {
 runOnUI(() => {
   'worklet';
 
-  const configs = {};
+  const configs: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
     configs,
@@ -44,14 +44,14 @@ runOnUI(() => {
       }
 
       const style = configs[tag][type](yogaValues);
-      const sv = configs[tag].sv;
+      const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
       sv._value = Object.assign({}, sv._value, style.initialValues);
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(style.animations);
 
-      animation.callback = (finished) => {
+      animation.callback = (finished: boolean) => {
         if (finished) {
           _stopObservingProgress(tag, finished);
         }

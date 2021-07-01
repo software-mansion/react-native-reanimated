@@ -8,11 +8,13 @@ import {
 } from './commonTypes';
 
 export class BaseBounceAnimationBuilder {
-  durationV: number;
-  delayV: number;
+  durationV?: number;
+  delayV?: number;
 
   static createInstance: () => BaseBounceAnimationBuilder;
-  build: EntryExitAnimationBuild;
+  build: EntryExitAnimationBuild = () => {
+    throw Error('Unimplemented method in child class.');
+  };
 
   static duration(durationMs: number): BaseBounceAnimationBuilder {
     const instance = this.createInstance();

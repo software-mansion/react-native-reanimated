@@ -1,6 +1,9 @@
 declare const _WORKLET: boolean;
 declare const _stopObservingProgress: (tag: number, flag: boolean) => void;
-declare const _startObservingProgress: (tag: number, flag: boolean) => void;
+declare const _startObservingProgress: (
+  tag: number,
+  flag: { value: boolean; _value: boolean }
+) => void;
 declare namespace NodeJS {
   interface Global {
     LayoutAnimationRepository: {
@@ -9,7 +12,7 @@ declare namespace NodeJS {
       removeConfig(tag: number): void;
       startAnimationForTag(
         tag: number,
-        type: unknown,
+        type: string,
         yogaValues: unknown
       ): void;
     };
