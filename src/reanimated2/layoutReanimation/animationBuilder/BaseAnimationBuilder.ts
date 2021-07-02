@@ -22,7 +22,9 @@ export class BaseAnimationBuilder {
   restSpeedThresholdV?: number;
 
   static createInstance: () => BaseAnimationBuilder;
-  build: EntryExitAnimationBuild;
+  build: EntryExitAnimationBuild = () => {
+    throw Error('Unimplemented method in child class.');
+  };
 
   static duration(durationMs: number): BaseAnimationBuilder {
     const instance = this.createInstance();
