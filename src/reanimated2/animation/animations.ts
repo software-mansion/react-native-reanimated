@@ -1,14 +1,13 @@
 /* global _WORKLET */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { Easing } from '../Easing';
 import { isColor, convertToHSVA, toRGBA } from '../Colors';
 import NativeReanimated from '../NativeReanimated';
-import { Platform } from 'react-native';
+
+export type AnimationStyle = Record<string, unknown>; // temporary, change to style object
+export type Updater = () => AnimationStyle;
 
 let IN_STYLE_UPDATER = false;
 
-export function initialUpdaterRun(updater) {
+export function initialUpdaterRun(updater: Updater): AnimationStyle {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;
@@ -179,455 +178,180 @@ export function withStartValue(startValue, animation) {
   });
 }
 
-export function withTiming(toValue: any, userConfig: any, callback?: any) {
-  'worklet';
+// export function withStyleAnimation(styleAnimations) {
+//   'worklet';
+//   return defineAnimation({}, () => {
+//     'worklet';
 
-  return defineAnimation(toValue, () => {
-    'worklet';
-    const config = {
-      duration: 300,
-      easing: Easing.inOut(Easing.quad),
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
-    }
+//     const onFrame = (animation, now) => {
+//       let stillGoing = false;
+//       Object.keys(styleAnimations).forEach((key) => {
+//         const currentAnimation = animation.styleAnimations[key];
+//         if (key === 'transform') {
+//           const transform = animation.styleAnimations.transform;
+//           for (let i = 0; i < transform.length; i++) {
+//             const type = Object.keys(transform[i])[0];
+//             const currentAnimation = transform[i][type];
+//             if (currentAnimation.finished) {
+//               continue;
+//             }
+//             const finished = currentAnimation.onFrame(currentAnimation, now);
+//             if (finished) {
+//               currentAnimation.finished = true;
+//               if (currentAnimation.callback) {
+//                 currentAnimation.callback(true);
+//               }
+//             } else {
+//               stillGoing = true;
+//             }
+//             animation.current.transform[i][type] = currentAnimation.current;
+//           }
+//         } else {
+//           if (!currentAnimation.finished) {
+//             const finished = currentAnimation.onFrame(currentAnimation, now);
+//             if (finished) {
+//               currentAnimation.finished = true;
+//               if (currentAnimation.callback) {
+//                 currentAnimation.callback(true);
+//               }
+//             } else {
+//               stillGoing = true;
+//             }
+//             animation.current[key] = currentAnimation.current;
+//           }
+//         }
+//       });
+//       return !stillGoing;
+//     };
 
-    function timing(animation, now) {
-      const { toValue, startTime, startValue } = animation;
-      const runtime = now - startTime;
+//     const onStart = (animation, value, now, previousAnimation) => {
+//       Object.keys(styleAnimations).forEach((key) => {
+//         if (key === 'transform') {
+//           animation.current.transform = [];
+//           const transform = styleAnimations.transform;
+//           const prevTransform = null;
+//           const valueTransform = value.transform;
+//           if (
+//             previousAnimation &&
+//             previousAnimation.styleAnimations &&
+//             previousAnimation.styleAnimations.transform
+//           ) {
+//             prevAnimation = previousAnimation.styleAnimations.transform;
+//           }
 
-      if (runtime >= config.duration) {
-        // reset startTime to avoid reusing finished animation config in `start` method
-        animation.startTime = 0;
-        animation.current = toValue;
-        return true;
-      }
-      const progress = animation.easing(runtime / config.duration);
-      animation.current = startValue + (toValue - startValue) * progress;
-      return false;
-    }
+//           for (let i = 0; i < transform.length; i++) {
+//             // duplication of code to avoid function calls
+//             let prevAnimation = null;
+//             const type = Object.keys(transform[i])[0];
+//             if (prevTransform && prevTransform.length > i) {
+//               const prevTransformStep = prevTransform[i];
+//               const prevType = Object.keys(prevTransformStep)[0];
+//               if (prevType === type) {
+//                 prevAnimation = prevTransformStep[prevType];
+//               }
+//             }
 
-    function onStart(animation, value, now, previousAnimation) {
-      if (
-        previousAnimation &&
-        previousAnimation.type === 'timing' &&
-        previousAnimation.toValue === toValue &&
-        previousAnimation.startTime
-      ) {
-        // to maintain continuity of timing animations we check if we are starting
-        // new timing over the old one with the same parameters. If so, we want
-        // to copy animation timeline properties
-        animation.startTime = previousAnimation.startTime;
-        animation.startValue = previousAnimation.startValue;
-      } else {
-        animation.startTime = now;
-        animation.startValue = value;
-      }
-      animation.current = value;
-      if (typeof config.easing === 'object') {
-        animation.easing = config.easing.factory();
-      } else {
-        animation.easing = config.easing;
-      }
-    }
+//             let prevVal = 0;
+//             if (prevAnimation != null) {
+//               prevVal = prevAnimation.current;
+//             }
+//             if (
+//               valueTransform != null &&
+//               valueTransform.length > i &&
+//               valueTransform[i][type]
+//             ) {
+//               prevVal = valueTransform[i][type];
+//             }
+//             const obj = {};
+//             obj[type] = prevVal;
+//             animation.current.transform[i] = obj;
+//             let currentAnimation = transform[i][type];
+//             if (
+//               typeof currentAnimation !== 'object' &&
+//               !Array.isArray(currentAnimation)
+//             ) {
+//               currentAnimation = withTiming(currentAnimation, { duration: 0 });
+//               transform[i][type] = currentAnimation;
+//             }
+//             currentAnimation.onStart(
+//               currentAnimation,
+//               prevVal,
+//               now,
+//               prevAnimation
+//             );
+//           }
+//         } else {
+//           let prevAnimation = null;
+//           if (
+//             previousAnimation &&
+//             previousAnimation.styleAnimations &&
+//             previousAnimation.styleAnimations[key]
+//           ) {
+//             prevAnimation = previousAnimation.styleAnimations[key];
+//           }
+//           let prevVal = 0;
+//           if (prevAnimation != null) {
+//             prevVal = prevAnimation.current;
+//           }
+//           if (value[key]) {
+//             prevVal = value[key];
+//           }
+//           animation.current[key] = prevVal;
+//           let currentAnimation = animation.styleAnimations[key];
+//           if (
+//             typeof currentAnimation !== 'object' &&
+//             !Array.isArray(currentAnimation)
+//           ) {
+//             currentAnimation = withTiming(currentAnimation, { duration: 0 });
+//             animation.styleAnimations[key] = currentAnimation;
+//           }
+//           currentAnimation.onStart(
+//             currentAnimation,
+//             prevVal,
+//             now,
+//             prevAnimation
+//           );
+//         }
+//       });
+//     };
 
-    return {
-      type: 'timing',
-      onFrame: timing,
-      onStart,
-      progress: 0,
-      toValue,
-      current: toValue,
-      callback,
-    };
-  });
-}
+//     const callback = (finished) => {
+//       if (!finished) {
+//         Object.keys(styleAnimations).forEach((key) => {
+//           const currentAnimation = styleAnimations[key];
+//           if (key === 'transform') {
+//             const transform = styleAnimations.transform;
+//             for (let i = 0; i < transform.length; i++) {
+//               const type = Object.keys(transform[i])[0];
+//               const currentAnimation = transform[i][type];
+//               if (currentAnimation.finished) {
+//                 continue;
+//               }
+//               if (currentAnimation.callback) {
+//                 currentAnimation.callback(false);
+//               }
+//             }
+//           } else {
+//             if (!currentAnimation.finished) {
+//               if (currentAnimation.callback) {
+//                 currentAnimation.callback(false);
+//               }
+//             }
+//           }
+//         });
+//       }
+//     };
 
-export function withStyleAnimation(styleAnimations) {
-  'worklet';
-  return defineAnimation({}, () => {
-    'worklet';
-
-    const onFrame = (animation, now) => {
-      let stillGoing = false;
-      Object.keys(styleAnimations).forEach((key) => {
-        const currentAnimation = animation.styleAnimations[key];
-        if (key === 'transform') {
-          const transform = animation.styleAnimations.transform;
-          for (let i = 0; i < transform.length; i++) {
-            const type = Object.keys(transform[i])[0];
-            const currentAnimation = transform[i][type];
-            if (currentAnimation.finished) {
-              continue;
-            }
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
-            }
-            animation.current.transform[i][type] = currentAnimation.current;
-          }
-        } else {
-          if (!currentAnimation.finished) {
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
-            }
-            animation.current[key] = currentAnimation.current;
-          }
-        }
-      });
-      return !stillGoing;
-    };
-
-    const onStart = (animation, value, now, previousAnimation) => {
-      Object.keys(styleAnimations).forEach((key) => {
-        if (key === 'transform') {
-          animation.current.transform = [];
-          const transform = styleAnimations.transform;
-          const prevTransform = null;
-          const valueTransform = value.transform;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations.transform
-          ) {
-            prevAnimation = previousAnimation.styleAnimations.transform;
-          }
-
-          for (let i = 0; i < transform.length; i++) {
-            // duplication of code to avoid function calls
-            let prevAnimation = null;
-            const type = Object.keys(transform[i])[0];
-            if (prevTransform && prevTransform.length > i) {
-              const prevTransformStep = prevTransform[i];
-              const prevType = Object.keys(prevTransformStep)[0];
-              if (prevType === type) {
-                prevAnimation = prevTransformStep[prevType];
-              }
-            }
-
-            let prevVal = 0;
-            if (prevAnimation != null) {
-              prevVal = prevAnimation.current;
-            }
-            if (
-              valueTransform != null &&
-              valueTransform.length > i &&
-              valueTransform[i][type]
-            ) {
-              prevVal = valueTransform[i][type];
-            }
-            const obj = {};
-            obj[type] = prevVal;
-            animation.current.transform[i] = obj;
-            let currentAnimation = transform[i][type];
-            if (
-              typeof currentAnimation !== 'object' &&
-              !Array.isArray(currentAnimation)
-            ) {
-              currentAnimation = withTiming(currentAnimation, { duration: 0 });
-              transform[i][type] = currentAnimation;
-            }
-            currentAnimation.onStart(
-              currentAnimation,
-              prevVal,
-              now,
-              prevAnimation
-            );
-          }
-        } else {
-          let prevAnimation = null;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations[key]
-          ) {
-            prevAnimation = previousAnimation.styleAnimations[key];
-          }
-          let prevVal = 0;
-          if (prevAnimation != null) {
-            prevVal = prevAnimation.current;
-          }
-          if (value[key]) {
-            prevVal = value[key];
-          }
-          animation.current[key] = prevVal;
-          let currentAnimation = animation.styleAnimations[key];
-          if (
-            typeof currentAnimation !== 'object' &&
-            !Array.isArray(currentAnimation)
-          ) {
-            currentAnimation = withTiming(currentAnimation, { duration: 0 });
-            animation.styleAnimations[key] = currentAnimation;
-          }
-          currentAnimation.onStart(
-            currentAnimation,
-            prevVal,
-            now,
-            prevAnimation
-          );
-        }
-      });
-    };
-
-    const callback = (finished) => {
-      if (!finished) {
-        Object.keys(styleAnimations).forEach((key) => {
-          const currentAnimation = styleAnimations[key];
-          if (key === 'transform') {
-            const transform = styleAnimations.transform;
-            for (let i = 0; i < transform.length; i++) {
-              const type = Object.keys(transform[i])[0];
-              const currentAnimation = transform[i][type];
-              if (currentAnimation.finished) {
-                continue;
-              }
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
-            }
-          } else {
-            if (!currentAnimation.finished) {
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
-            }
-          }
-        });
-      }
-    };
-
-    return {
-      isHigherOrder: true,
-      onFrame,
-      onStart,
-      current: {},
-      styleAnimations,
-      callback,
-    };
-  });
-}
-
-export function withSpring(toValue, userConfig, callback) {
-  'worklet';
-
-  return defineAnimation(toValue, () => {
-    'worklet';
-
-    // TODO: figure out why we can't use spread or Object.assign here
-    // when user config is "frozen object" we can't enumerate it (perhaps
-    // something is wrong with the object prototype).
-    const config = {
-      damping: 10,
-      mass: 1,
-      stiffness: 100,
-      overshootClamping: false,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 2,
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
-    }
-
-    function spring(animation, now) {
-      const { toValue, lastTimestamp, current, velocity } = animation;
-
-      const deltaTime = Math.min(now - lastTimestamp, 64);
-      animation.lastTimestamp = now;
-
-      const c = config.damping;
-      const m = config.mass;
-      const k = config.stiffness;
-
-      const v0 = -velocity;
-      const x0 = toValue - current;
-
-      const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
-      const omega0 = Math.sqrt(k / m); // undamped angular frequency of the oscillator (rad/ms)
-      const omega1 = omega0 * Math.sqrt(1 - zeta ** 2); // exponential decay
-
-      const t = deltaTime / 1000;
-
-      const sin1 = Math.sin(omega1 * t);
-      const cos1 = Math.cos(omega1 * t);
-
-      // under damped
-      const underDampedEnvelope = Math.exp(-zeta * omega0 * t);
-      const underDampedFrag1 =
-        underDampedEnvelope *
-        (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
-
-      const underDampedPosition = toValue - underDampedFrag1;
-      // This looks crazy -- it's actually just the derivative of the oscillation function
-      const underDampedVelocity =
-        zeta * omega0 * underDampedFrag1 -
-        underDampedEnvelope *
-          (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
-
-      // critically damped
-      const criticallyDampedEnvelope = Math.exp(-omega0 * t);
-      const criticallyDampedPosition =
-        toValue - criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
-
-      const criticallyDampedVelocity =
-        criticallyDampedEnvelope *
-        (v0 * (t * omega0 - 1) + t * x0 * omega0 * omega0);
-
-      const isOvershooting = () => {
-        if (config.overshootClamping && config.stiffness !== 0) {
-          return current < toValue
-            ? animation.current > toValue
-            : animation.current < toValue;
-        } else {
-          return false;
-        }
-      };
-
-      const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
-      const isDisplacement =
-        config.stiffness === 0 ||
-        Math.abs(toValue - current) < config.restDisplacementThreshold;
-
-      if (zeta < 1) {
-        animation.current = underDampedPosition;
-        animation.velocity = underDampedVelocity;
-      } else {
-        animation.current = criticallyDampedPosition;
-        animation.velocity = criticallyDampedVelocity;
-      }
-
-      if (isOvershooting() || (isVelocity && isDisplacement)) {
-        if (config.stiffness !== 0) {
-          animation.velocity = 0;
-          animation.current = toValue;
-        }
-        return true;
-      }
-    }
-
-    function onStart(animation, value, now, previousAnimation) {
-      animation.current = value;
-      if (previousAnimation) {
-        animation.velocity =
-          previousAnimation.velocity || animation.velocity || 0;
-        animation.lastTimestamp = previousAnimation.lastTimestamp || now;
-      } else {
-        animation.lastTimestamp = now;
-      }
-    }
-
-    return {
-      onFrame: spring,
-      onStart,
-      toValue,
-      velocity: config.velocity || 0,
-      current: toValue,
-      callback,
-    };
-  });
-}
-
-export function withDecay(userConfig, callback) {
-  'worklet';
-
-  return defineAnimation(0, () => {
-    'worklet';
-    const config = {
-      deceleration: 0.998,
-      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
-    };
-    if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
-    }
-
-    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
-    const SLOPE_FACTOR = 0.1;
-
-    function decay(animation, now) {
-      const {
-        lastTimestamp,
-        startTimestamp,
-        initialVelocity,
-        current,
-        velocity,
-      } = animation;
-
-      const deltaTime = Math.min(now - lastTimestamp, 64);
-      const v =
-        velocity *
-        Math.exp(
-          -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
-        );
-      animation.current =
-        current + (v * config.velocityFactor * deltaTime) / 1000; // /1000 because time is in ms not in s
-      animation.velocity = v;
-      animation.lastTimestamp = now;
-
-      if (config.clamp) {
-        if (initialVelocity < 0 && animation.current <= config.clamp[0]) {
-          animation.current = config.clamp[0];
-          return true;
-        } else if (
-          initialVelocity > 0 &&
-          animation.current >= config.clamp[1]
-        ) {
-          animation.current = config.clamp[1];
-          return true;
-        }
-      }
-
-      if (Math.abs(v) < VELOCITY_EPS) {
-        return true;
-      }
-    }
-
-    function validateConfig() {
-      if (config.clamp) {
-        if (Array.isArray(config.clamp)) {
-          if (config.clamp.length !== 2) {
-            console.error(
-              `clamp array must contain 2 items but is given ${config.clamp.length}`
-            );
-          }
-        } else {
-          console.error(
-            `config.clamp must be an array but is ${typeof config.clamp}`
-          );
-        }
-      }
-      if (config.velocityFactor <= 0) {
-        console.error(
-          `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
-        );
-      }
-    }
-
-    function onStart(animation, value, now) {
-      animation.current = value;
-      animation.lastTimestamp = now;
-      animation.startTimestamp = now;
-      animation.initialVelocity = config.velocity;
-      validateConfig();
-    }
-
-    return {
-      onFrame: decay,
-      onStart,
-      velocity: config.velocity || 0,
-      callback,
-    };
-  });
-}
+//     return {
+//       isHigherOrder: true,
+//       onFrame,
+//       onStart,
+//       current: {},
+//       styleAnimations,
+//       callback,
+//     };
+//   });
+// }
 
 export function withDelay(delayMs, _nextAnimation) {
   'worklet';

@@ -55,6 +55,8 @@ import { Bezier } from './Bezier';
  */
 
 export type EasingFn = (t: number) => number;
+
+export type EasingFactoryFn = { factory: () => EasingFn };
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
  * one.
