@@ -1,9 +1,9 @@
 /* global _WORKLET */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { Easing } from './Easing';
-import { isColor, convertToHSVA, toRGBA } from './Colors';
-import NativeReanimated from './NativeReanimated';
+import { Easing } from '../Easing';
+import { isColor, convertToHSVA, toRGBA } from '../Colors';
+import NativeReanimated from '../NativeReanimated';
 import { Platform } from 'react-native';
 
 let IN_STYLE_UPDATER = false;

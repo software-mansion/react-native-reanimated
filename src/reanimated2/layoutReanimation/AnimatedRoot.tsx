@@ -2,7 +2,7 @@
 import { Platform, requireNativeComponent } from 'react-native';
 import React from 'react';
 import { runOnUI } from '../core';
-import { withStyleAnimation } from '../animations';
+import { withStyleAnimation } from '../animation';
 
 let REALayoutView: any;
 if (Platform.OS === 'web' && !requireNativeComponent) {

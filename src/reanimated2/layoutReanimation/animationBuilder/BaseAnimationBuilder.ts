@@ -1,4 +1,4 @@
-import { withDelay, withTiming, withSpring } from '../../animations';
+import { withDelay, withTiming, withSpring } from '../../animation';
 import {
   EntryExitAnimationFunction,
   AnimationFunction,
