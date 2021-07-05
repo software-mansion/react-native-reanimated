@@ -1,7 +1,10 @@
-import { defineAnimation } from "./animations";
-import { Animation } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation, NextAnimation } from './commonTypes';
 
-export function withDelay(delayMs: number, _nextAnimation): Animation {
+export function withDelay(
+  delayMs: number,
+  _nextAnimation: NextAnimation
+): Animation {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -59,7 +62,10 @@ export function withDelay(delayMs: number, _nextAnimation): Animation {
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function delay(delayMs, _nextAnimation) {
+export function delay(
+  delayMs: number,
+  _nextAnimation: Animation | (() => Animation)
+): Animation {
   'worklet';
   console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
   return withDelay(delayMs, _nextAnimation);

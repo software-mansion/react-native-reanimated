@@ -1,9 +1,11 @@
 /* global _WORKLET */
 import { isColor, convertToHSVA, toRGBA } from '../Colors';
 import NativeReanimated from '../NativeReanimated';
+import { Animation } from './commonTypes';
 
 export type AnimationStyle = Record<string, unknown>; // temporary, change to style object
 export type Updater = () => AnimationStyle;
+type PrimitiveValue = number | string;
 
 let IN_STYLE_UPDATER = false;
 
@@ -14,7 +16,7 @@ export function initialUpdaterRun(updater: Updater): AnimationStyle {
   return result;
 }
 
-export function transform(value, handler) {
+export function transform(value: PrimitiveValue, handler): number {
   'worklet';
   if (value === undefined) {
     return undefined;
@@ -50,7 +52,7 @@ export function transformAnimation(animation) {
   animation.startValue = transform(animation.startValue, animation);
 }
 
-export function decorateAnimation(animation) {
+export function decorateAnimation(animation: Animation) {
   'worklet';
   if (animation.isHigherOrder) {
     return;
@@ -61,10 +63,10 @@ export function decorateAnimation(animation) {
   delete animationCopy.callback;
 
   const prefNumberSuffOnStart = (
-    animation,
-    value,
-    timestamp,
-    previousAnimation
+    animation: Animation,
+    value: PrimitiveValue,
+    timestamp: number,
+    previousAnimation: Animation
   ) => {
     const val = transform(value, animation);
     transformAnimation(animation);

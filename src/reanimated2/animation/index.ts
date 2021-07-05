@@ -1,6 +1,5 @@
-export * from './animations';
 export * from './commonTypes';
-// export * from './utils';
+export * from './util';
 export * from './timing';
 export * from './spring';
 export * from './decay';

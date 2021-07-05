@@ -1,13 +1,17 @@
 import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
-import { defineAnimation } from "./animations";
+import { defineAnimation } from './util';
 import { Animation, AnimationCallback } from './commonTypes';
 
-interface TimingConfig  {
-  duration?: number,
-  easing?: EasingFn | EasingFactoryFn,
+interface TimingConfig {
+  duration?: number;
+  easing?: EasingFn | EasingFactoryFn;
 }
 
-export function withTiming(toValue: number | string, userConfig?: TimingConfig, callback?: AnimationCallback): Animation {
+export function withTiming(
+  toValue: number | string,
+  userConfig?: TimingConfig,
+  callback?: AnimationCallback
+): Animation {
   'worklet';
 
   return defineAnimation(toValue, () => {

@@ -1,5 +1,6 @@
-import { defineAnimation } from "./animations";
-import { Animation } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation } from './commonTypes';
+import { withTiming } from './timing';
 
 export function withStyleAnimation(styleAnimations): Animation {
   'worklet';

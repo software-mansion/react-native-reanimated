@@ -1,18 +1,18 @@
-import { defineAnimation } from "./animations";
-import { Animation } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation, AnimationCallback, NextAnimation } from './commonTypes';
 
 export function withRepeat(
-  _nextAnimation,
+  _nextAnimation: NextAnimation,
   numberOfReps = 2,
   reverse = false,
-  callback
+  callback: AnimationCallback
 ): Animation {
   'worklet';
 
   return defineAnimation(_nextAnimation, () => {
     'worklet';
 
-    const nextAnimation =
+    const nextAnimation: Animation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
     function repeat(animation, now) {
@@ -47,7 +47,7 @@ export function withRepeat(
       return false;
     }
 
-    const repCallback = (finished) => {
+    const repCallback = (finished: boolean) => {
       if (callback) {
         callback(finished);
       }
@@ -76,11 +76,11 @@ export function withRepeat(
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function repeat(
-  _nextAnimation,
+  _nextAnimation: NextAnimation,
   numberOfReps = 2,
   reverse = false,
-  callback?
-) {
+  callback?: AnimationCallback
+): Animation {
   'worklet';
   console.warn(
     'Method `repeat` is deprecated. Please use `withRepeat` instead'
@@ -88,7 +88,10 @@ export function repeat(
   return withRepeat(_nextAnimation, numberOfReps, reverse, callback);
 }
 
-export function loop(nextAnimation, numberOfLoops = 1) {
+export function loop(
+  nextAnimation: NextAnimation,
+  numberOfLoops = 1
+): Animation {
   'worklet';
   console.warn('Method `loop` is deprecated. Please use `withRepeat` instead');
   return repeat(nextAnimation, Math.round(numberOfLoops * 2), true);

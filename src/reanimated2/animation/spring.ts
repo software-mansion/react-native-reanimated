@@ -1,19 +1,23 @@
-import { defineAnimation } from "./animations";
-import { Animation, AnimationCallback } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation, AnimationCallback } from './commonTypes';
 
-interface SpringConfig  {
-  damping?: number,
-  mass?: number,
-  stiffness?: number,
-  overshootClamping?: boolean,
-  restDisplacementThreshold?: number,
-  restSpeedThreshold?: number,
-  velocity?: number
+interface SpringConfig {
+  damping?: number;
+  mass?: number;
+  stiffness?: number;
+  overshootClamping?: boolean;
+  restDisplacementThreshold?: number;
+  restSpeedThreshold?: number;
+  velocity?: number;
 }
 
-export function withSpring(toValue: number | string, userConfig?: SpringConfig, callback?: AnimationCallback): Animation {
+export function withSpring(
+  toValue: number | string,
+  userConfig?: SpringConfig,
+  callback?: AnimationCallback
+): Animation {
   'worklet';
-  
+
   return defineAnimation(toValue, () => {
     'worklet';
 
@@ -27,7 +31,7 @@ export function withSpring(toValue: number | string, userConfig?: SpringConfig, 
       overshootClamping: false,
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
-      velocity: 0
+      velocity: 0,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));

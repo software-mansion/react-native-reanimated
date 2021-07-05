@@ -1,7 +1,7 @@
-import { defineAnimation } from "./animations";
-import { Animation } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation } from './commonTypes';
 
-export function withSequence(..._animations): Animation {
+export function withSequence(..._animations: Animation[]): Animation {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -72,7 +72,7 @@ export function withSequence(..._animations): Animation {
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function sequence(..._animations) {
+export function sequence(..._animations: Animation[]): Animation {
   'worklet';
   console.warn(
     'Method `sequence` is deprecated. Please use `withSequence` instead'

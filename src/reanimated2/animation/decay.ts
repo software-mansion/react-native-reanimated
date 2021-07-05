@@ -1,15 +1,18 @@
-import { defineAnimation } from "./animations";
-import { Animation, AnimationCallback } from "./commonTypes";
+import { defineAnimation } from './util';
+import { Animation, AnimationCallback } from './commonTypes';
 import { Platform } from 'react-native';
 
-interface DecayConfig  {
-  deceleration?: number,
-  velocityFactor?: number,
-  clamp?: number[],
-  velocity?: number
+interface DecayConfig {
+  deceleration?: number;
+  velocityFactor?: number;
+  clamp?: number[];
+  velocity?: number;
 }
 
-export function withDecay(userConfig: DecayConfig, callback?: AnimationCallback): Animation {
+export function withDecay(
+  userConfig: DecayConfig,
+  callback?: AnimationCallback
+): Animation {
   'worklet';
 
   return defineAnimation(0, () => {
@@ -100,5 +103,3 @@ export function withDecay(userConfig: DecayConfig, callback?: AnimationCallback)
     };
   });
 }
-
-/* Deprecated section, kept for backward compatibility. Will be removed soon */
