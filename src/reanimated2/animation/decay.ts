@@ -1,5 +1,5 @@
 import { defineAnimation } from "./animations";
-import { AnimationCallback } from "./commonTypes";
+import { Animation, AnimationCallback } from "./commonTypes";
 import { Platform } from 'react-native';
 
 interface DecayConfig  {
@@ -100,3 +100,5 @@ export function withDecay(userConfig: DecayConfig, callback?: AnimationCallback)
     };
   });
 }
+
+/* Deprecated section, kept for backward compatibility. Will be removed soon */

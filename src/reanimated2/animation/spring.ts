@@ -1,5 +1,5 @@
 import { defineAnimation } from "./animations";
-import { AnimationCallback } from "./commonTypes";
+import { Animation, AnimationCallback } from "./commonTypes";
 
 interface SpringConfig  {
   damping?: number,
@@ -130,4 +130,3 @@ export function withSpring(toValue: number | string, userConfig?: SpringConfig, 
     };
   });
 }
-
