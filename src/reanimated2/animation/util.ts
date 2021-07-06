@@ -6,6 +6,7 @@ import {
   PrimitiveValue,
   SharedValue,
   NextAnimation,
+  Timestamp,
 } from './commonTypes';
 
 let IN_STYLE_UPDATER = false;
@@ -116,7 +117,8 @@ export function decorateAnimation(animation: Animation) {
     animation.current = toRGBA(res);
   };
 
-  const colorOnFrame = (animation, timestamp) => {
+  const colorOnFrame = (animation: Animation, timestamp: Timestamp) => {
+    // TODO
     const HSVACurrent = convertToHSVA(animation.current);
     const res = [];
     let finished = true;
@@ -130,7 +132,12 @@ export function decorateAnimation(animation: Animation) {
     return finished;
   };
 
-  animation.onStart = (animation, value, timestamp, previousAnimation) => {
+  animation.onStart = (
+    animation: Animation,
+    value: number,
+    timestamp: Timestamp,
+    previousAnimation: Animation
+  ) => {
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
@@ -145,7 +152,7 @@ export function decorateAnimation(animation: Animation) {
 }
 
 export function defineAnimation(
-  starting: number | NextAnimation,
+  starting: number | NextAnimation | Record<string, unknown>, // TODO Record<string, unknown> to remove
   factory: () => Animation
 ): Animation {
   'worklet';

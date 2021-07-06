@@ -1,13 +1,15 @@
 import { defineAnimation } from './util';
-import { Animation } from './commonTypes';
+import { Animation, Timestamp } from './commonTypes';
+import { AnimatedStyle } from '../commonTypes';
 import { withTiming } from './timing';
 
-export function withStyleAnimation(styleAnimations): Animation {
+export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
   'worklet';
   return defineAnimation({}, () => {
     'worklet';
 
-    const onFrame = (animation, now) => {
+    const onFrame = (animation: Animation, now: Timestamp): boolean => {
+      // console.log(animation.current)
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
@@ -48,7 +50,12 @@ export function withStyleAnimation(styleAnimations): Animation {
       return !stillGoing;
     };
 
-    const onStart = (animation, value, now, previousAnimation) => {
+    const onStart = (
+      animation: Animation,
+      value: number,
+      now: Timestamp,
+      previousAnimation: Animation
+    ): void => {
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {
           animation.current.transform = [];
@@ -139,7 +146,7 @@ export function withStyleAnimation(styleAnimations): Animation {
       });
     };
 
-    const callback = (finished) => {
+    const callback = (finished: boolean): void => {
       if (!finished) {
         Object.keys(styleAnimations).forEach((key) => {
           const currentAnimation = styleAnimations[key];

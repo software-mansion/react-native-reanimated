@@ -1,4 +1,5 @@
 import { EasingFn } from '../Easing';
+import { AnimatedStyle, StyleProps } from '../commonTypes';
 
 export type PrimitiveValue = number | string;
 
@@ -14,7 +15,7 @@ export interface Animation {
   ) => void; // TODO
   startValue?: number; // TODO number | string (?)
   toValue?: number; // TODO number | string (?)
-  current?: number; // TODO
+  current?: number | StyleProps; // TODO
   callback?: AnimationCallback;
   isHigherOrder?: boolean; // TODO
   startTime?: number; // TODO
@@ -28,6 +29,7 @@ export interface Animation {
   reps?: number; // TODO
   finished?: boolean; // TODO
   animationIndex?: number; // TODO
+  styleAnimations?: AnimatedStyle; // TODO
 }
 
 export interface AnimationConfig {

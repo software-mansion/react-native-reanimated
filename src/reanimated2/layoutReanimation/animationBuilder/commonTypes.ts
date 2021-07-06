@@ -1,10 +1,5 @@
-import { ViewStyle, TextStyle } from 'react-native';
 import { EasingFn } from '../../Easing';
-
-export type StyleProps =
-  | ViewStyle
-  | TextStyle
-  | { originX?: number; originY?: number };
+import { StyleProps } from '../../commonTypes';
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
