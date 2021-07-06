@@ -37,7 +37,7 @@ export function withSpring(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function spring(animation, now) {
+    function spring(animation: Animation, now: number) {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);

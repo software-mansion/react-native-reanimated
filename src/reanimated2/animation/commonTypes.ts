@@ -1,14 +1,24 @@
+import { EasingFn } from '../Easing';
+
+export type PrimitiveValue = number | string;
+
 export interface Animation {
-  onFrame: (animation?: unknown, timestamp?: number) => unknown; // TODO
+  type: string;
+  onFrame: (animation?: Animation, timestamp?: number) => boolean; // TODO
   onStart: (
     nextAnimation: Animation,
-    current: unknown,
+    current: number,
     timestamp: number,
     previousAnimation: Animation
-  ) => unknown; // TODO
-  current: number | string; // TODO
+  ) => void; // TODO
+  startValue?: number; // TODO number | string (?)
+  toValue: number; // TODO number | string (?)
+  current: number; // TODO
   callback?: AnimationCallback;
-  isHigherOrder?: boolean;
+  isHigherOrder?: boolean; // TODO
+  startTime?: number; // TODO
+  easing?: EasingFn; // TODO
+  lastTimestamp?: number; // TODO
 }
 
 export interface AnimationConfig {
@@ -23,3 +33,5 @@ export type SharedValue = {
   // TODO: just temporary mock
   value: unknown;
 };
+
+export type AnimationOnFrame = (animation: Animation, now: number) => boolean;

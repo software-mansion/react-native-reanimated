@@ -2,15 +2,26 @@
 import { Platform, requireNativeComponent } from 'react-native';
 import React from 'react';
 import { runOnUI } from '../core';
-import { withStyleAnimation } from '../animation';
+import { withStyleAnimation } from '../animation/styleAnimation';
 
 let REALayoutView: any;
+let meabyREALayoutView: any;
 if (Platform.OS === 'web' && !requireNativeComponent) {
-  REALayoutView = React.Component;
+  meabyREALayoutView = React.Component;
 } else {
-  REALayoutView = (requireNativeComponent(
-    'REALayoutView'
-  ) as unknown) as React.Component;
+  try {
+    meabyREALayoutView = (requireNativeComponent(
+      'REALayoutView'
+    ) as unknown) as React.Component;
+  } catch (e) {
+    // in dev mode after liver reload, it is tried to register the object again and it crash app
+    if (!__DEV__) {
+      throw e;
+    }
+  }
+  if (meabyREALayoutView) {
+    REALayoutView = meabyREALayoutView;
+  } // else use last component
 }
 
 export class AnimatedLayout extends React.Component {

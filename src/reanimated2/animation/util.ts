@@ -1,15 +1,11 @@
 /* global _WORKLET */
 import { isColor, convertToHSVA, toRGBA } from '../Colors';
 import NativeReanimated from '../NativeReanimated';
-import { Animation } from './commonTypes';
-
-export type AnimationStyle = Record<string, unknown>; // temporary, change to style object
-export type Updater = () => AnimationStyle;
-type PrimitiveValue = number | string;
+import { Animation, PrimitiveValue, SharedValue } from './commonTypes';
 
 let IN_STYLE_UPDATER = false;
 
-export function initialUpdaterRun(updater: Updater): AnimationStyle {
+export function initialUpdaterRun(updater) {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;
@@ -42,7 +38,7 @@ export function transform(value: PrimitiveValue, handler): number {
   return handler.__prefix + value + handler.__suffix;
 }
 
-export function transformAnimation(animation) {
+export function transformAnimation(animation: Animation) {
   'worklet';
   if (!animation) {
     return;
@@ -77,7 +73,7 @@ export function decorateAnimation(animation: Animation) {
     transformAnimation(animation);
     if (previousAnimation !== animation) transformAnimation(previousAnimation);
   };
-  const prefNumberSuffOnFrame = (animation, timestamp) => {
+  const prefNumberSuffOnFrame = (animation: Animation, timestamp: number) => {
     transformAnimation(animation);
 
     const res = baseOnFrame(animation, timestamp);
@@ -143,7 +139,10 @@ export function decorateAnimation(animation: Animation) {
   };
 }
 
-export function defineAnimation(starting, factory) {
+export function defineAnimation(
+  starting: number,
+  factory: () => Animation
+): Animation {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting;
@@ -161,7 +160,7 @@ export function defineAnimation(starting, factory) {
   return create;
 }
 
-export function cancelAnimation(sharedValue) {
+export function cancelAnimation(sharedValue: SharedValue) {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign

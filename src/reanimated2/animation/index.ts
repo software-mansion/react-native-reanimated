@@ -6,3 +6,5 @@ export * from './decay';
 export * from './delay';
 export * from './repeat';
 export * from './sequence';
+// export * from './styleAnimation';
+export { withStyleAnimation } from './styleAnimation';

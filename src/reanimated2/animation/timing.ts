@@ -8,7 +8,7 @@ interface TimingConfig {
 }
 
 export function withTiming(
-  toValue: number | string,
+  toValue: number,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
 ): Animation {
@@ -16,7 +16,7 @@ export function withTiming(
 
   return defineAnimation(toValue, () => {
     'worklet';
-    const config = {
+    const config: Required<TimingConfig> = {
       duration: 300,
       easing: Easing.inOut(Easing.quad),
     };
@@ -24,7 +24,7 @@ export function withTiming(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function timing(animation, now) {
+    function timing(animation: Animation, now: number): boolean {
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -39,7 +39,12 @@ export function withTiming(
       return false;
     }
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: number,
+      previousAnimation: Animation
+    ): void {
       if (
         previousAnimation &&
         previousAnimation.type === 'timing' &&
