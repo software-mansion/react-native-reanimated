@@ -2,8 +2,9 @@ import { EasingFn } from '../Easing';
 
 export type PrimitiveValue = number | string;
 
+// TODO: maybe each type of animation should have own type of animation inherited from interface, and animated utils should use just these interface
 export interface Animation {
-  type: string;
+  type?: string;
   onFrame: (animation?: Animation, timestamp?: number) => boolean; // TODO
   onStart: (
     nextAnimation: Animation,
@@ -19,6 +20,7 @@ export interface Animation {
   startTime?: number; // TODO
   easing?: EasingFn; // TODO
   lastTimestamp?: number; // TODO
+  velocity?: number; // TODO
 }
 
 export interface AnimationConfig {

@@ -12,7 +12,7 @@ interface SpringConfig {
 }
 
 export function withSpring(
-  toValue: number | string,
+  toValue: number,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
 ): Animation {
@@ -24,7 +24,7 @@ export function withSpring(
     // TODO: figure out why we can't use spread or Object.assign here
     // when user config is "frozen object" we can't enumerate it (perhaps
     // something is wrong with the object prototype).
-    const config = {
+    const config: Required<SpringConfig> = {
       damping: 10,
       mass: 1,
       stiffness: 100,
@@ -113,7 +113,12 @@ export function withSpring(
       }
     }
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: number,
+      previousAnimation: Animation
+    ): void {
       animation.current = value;
       if (previousAnimation) {
         animation.velocity =
