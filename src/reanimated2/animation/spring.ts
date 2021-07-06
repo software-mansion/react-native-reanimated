@@ -1,5 +1,5 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback } from './commonTypes';
+import { Animation, AnimationCallback, Timestamp } from './commonTypes';
 
 interface SpringConfig {
   damping?: number;
@@ -37,7 +37,7 @@ export function withSpring(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function spring(animation: Animation, now: number) {
+    function spring(animation: Animation, now: Timestamp): boolean {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -116,7 +116,7 @@ export function withSpring(
     function onStart(
       animation: Animation,
       value: number,
-      now: number,
+      now: Timestamp,
       previousAnimation: Animation
     ): void {
       animation.current = value;

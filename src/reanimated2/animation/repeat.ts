@@ -1,5 +1,10 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, NextAnimation } from './commonTypes';
+import {
+  Animation,
+  AnimationCallback,
+  NextAnimation,
+  Timestamp,
+} from './commonTypes';
 
 export function withRepeat(
   _nextAnimation: NextAnimation,
@@ -15,7 +20,7 @@ export function withRepeat(
     const nextAnimation: Animation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
-    function repeat(animation, now) {
+    function repeat(animation: Animation, now: Timestamp): boolean {
       const finished = nextAnimation.onFrame(nextAnimation, now);
       animation.current = nextAnimation.current;
       if (finished) {
@@ -47,7 +52,7 @@ export function withRepeat(
       return false;
     }
 
-    const repCallback = (finished: boolean) => {
+    const repCallback = (finished: boolean): void => {
       if (callback) {
         callback(finished);
       }
@@ -57,7 +62,12 @@ export function withRepeat(
       }
     };
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: Timestamp,
+      previousAnimation: Animation
+    ): void {
       animation.startValue = value;
       animation.reps = 0;
       nextAnimation.onStart(nextAnimation, value, now, previousAnimation);

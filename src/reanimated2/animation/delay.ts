@@ -1,5 +1,5 @@
 import { defineAnimation } from './util';
-import { Animation, NextAnimation } from './commonTypes';
+import { Animation, NextAnimation, Timestamp } from './commonTypes';
 
 export function withDelay(
   delayMs: number,
@@ -11,7 +11,7 @@ export function withDelay(
     const nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
-    function delay(animation, now) {
+    function delay(animation: Animation, now: Timestamp): boolean {
       const { startTime, started, previousAnimation } = animation;
 
       if (now - startTime > delayMs) {
@@ -38,14 +38,19 @@ export function withDelay(
       return false;
     }
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: Timestamp,
+      previousAnimation: Animation
+    ): void {
       animation.startTime = now;
       animation.started = false;
       animation.current = value;
       animation.previousAnimation = previousAnimation;
     }
 
-    const callback = (finished) => {
+    const callback = (finished: boolean): void => {
       if (nextAnimation.callback) {
         nextAnimation.callback(finished);
       }

@@ -1,5 +1,5 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback } from './commonTypes';
+import { Animation, AnimationCallback, Timestamp } from './commonTypes';
 import { Platform } from 'react-native';
 
 interface DecayConfig {
@@ -28,7 +28,7 @@ export function withDecay(
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
-    function decay(animation, now) {
+    function decay(animation: Animation, now: number): boolean {
       const {
         lastTimestamp,
         startTimestamp,
@@ -66,7 +66,7 @@ export function withDecay(
       }
     }
 
-    function validateConfig() {
+    function validateConfig(): void {
       if (config.clamp) {
         if (Array.isArray(config.clamp)) {
           if (config.clamp.length !== 2) {
@@ -87,7 +87,11 @@ export function withDecay(
       }
     }
 
-    function onStart(animation, value, now) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: Timestamp
+    ): void {
       animation.current = value;
       animation.lastTimestamp = now;
       animation.startTimestamp = now;

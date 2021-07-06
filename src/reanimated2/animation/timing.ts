@@ -1,6 +1,6 @@
 import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback } from './commonTypes';
+import { Animation, AnimationCallback, Timestamp } from './commonTypes';
 
 interface TimingConfig {
   duration?: number;
@@ -24,7 +24,7 @@ export function withTiming(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function timing(animation: Animation, now: number): boolean {
+    function timing(animation: Animation, now: Timestamp): boolean {
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -42,7 +42,7 @@ export function withTiming(
     function onStart(
       animation: Animation,
       value: number,
-      now: number,
+      now: Timestamp,
       previousAnimation: Animation
     ): void {
       if (

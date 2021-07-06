@@ -1,7 +1,7 @@
 import { defineAnimation } from './util';
-import { Animation } from './commonTypes';
+import { Animation, Timestamp, NextAnimation } from './commonTypes';
 
-export function withSequence(..._animations: Animation[]): Animation {
+export function withSequence(..._animations: NextAnimation[]): Animation {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -12,7 +12,7 @@ export function withSequence(..._animations: Animation[]): Animation {
     });
     const firstAnimation = animations[0];
 
-    const callback = (finished) => {
+    const callback = (finished: boolean): void => {
       if (finished) {
         // we want to call the callback after every single animation
         // not after all of them
@@ -26,7 +26,7 @@ export function withSequence(..._animations: Animation[]): Animation {
       });
     };
 
-    function sequence(animation, now) {
+    function sequence(animation: Animation, now: Timestamp): boolean {
       const currentAnim = animations[animation.animationIndex];
       const finished = currentAnim.onFrame(currentAnim, now);
       animation.current = currentAnim.current;
@@ -47,7 +47,12 @@ export function withSequence(..._animations: Animation[]): Animation {
       return false;
     }
 
-    function onStart(animation, value, now, previousAnimation) {
+    function onStart(
+      animation: Animation,
+      value: number,
+      now: Timestamp,
+      previousAnimation: Animation
+    ): void {
       if (animations.length === 1) {
         throw Error(
           'withSequence() animation require more than one animation as argument'
@@ -72,7 +77,7 @@ export function withSequence(..._animations: Animation[]): Animation {
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function sequence(..._animations: Animation[]): Animation {
+export function sequence(..._animations: NextAnimation[]): Animation {
   'worklet';
   console.warn(
     'Method `sequence` is deprecated. Please use `withSequence` instead'

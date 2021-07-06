@@ -1,7 +1,12 @@
 /* global _WORKLET */
 import { isColor, convertToHSVA, toRGBA } from '../Colors';
 import NativeReanimated from '../NativeReanimated';
-import { Animation, PrimitiveValue, SharedValue } from './commonTypes';
+import {
+  Animation,
+  PrimitiveValue,
+  SharedValue,
+  NextAnimation,
+} from './commonTypes';
 
 let IN_STYLE_UPDATER = false;
 
@@ -140,7 +145,7 @@ export function decorateAnimation(animation: Animation) {
 }
 
 export function defineAnimation(
-  starting: number,
+  starting: number | NextAnimation,
   factory: () => Animation
 ): Animation {
   'worklet';
