@@ -5,7 +5,7 @@ import AnimatedNode from './AnimatedNode';
 import InternalAnimatedValue from './AnimatedValue';
 import { createAnimatedAlways } from './AnimatedAlways';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import createEventObjectProxyPolyfill from './createEventObjectProxyPolyfill';
 
 function sanitizeArgMapping(argMapping) {
