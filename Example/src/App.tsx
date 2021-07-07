@@ -118,10 +118,10 @@ const SCREENS: Screens = {
     screen: LiquidSwipe,
     title: 'Liquid Swipe Example',
   },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: 'Extrapolation Example',
-  },
+  // ExtrapolationExample: {
+  //   screen: ExtrapolationExample,
+  //   title: 'Extrapolation Example',
+  // },
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',

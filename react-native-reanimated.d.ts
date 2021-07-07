@@ -676,7 +676,6 @@ declare module 'react-native-reanimated' {
     export interface AnimatedLayout extends React.Component {};
 
     export class SlideInRight extends BaseAnimationBuilder {};
-    export class SlideInRight extends BaseAnimationBuilder {};
     export class SlideOutRight extends BaseAnimationBuilder {}; 
     export class SlideInUp extends BaseAnimationBuilder {};
     export class SlideInDown extends BaseAnimationBuilder {};
@@ -736,6 +735,8 @@ declare module 'react-native-reanimated' {
     export class BounceOutUp extends BounceAnimationBuilder {};
     export class BounceOutLeft extends BounceAnimationBuilder {};
     export class BounceOutRight extends BounceAnimationBuilder {};
+    export class LightSpeedInRight extends BaseAnimationBuilder {};
+    export class LightSpeedInLeft extends BaseAnimationBuilder {};
   }
 
   export default Animated;
@@ -981,4 +982,6 @@ declare module 'react-native-reanimated' {
   export const BounceOutUp: typeof Animated.BounceOutUp;
   export const BounceOutLeft: typeof Animated.BounceOutLeft;
   export const BounceOutRight: typeof Animated.BounceOutRight;
+  export const LightSpeedInRight: typeof Animated.LightSpeedInRight;
+  export const LightSpeedInLeft: typeof Animated.LightSpeedInLeft;
 }
