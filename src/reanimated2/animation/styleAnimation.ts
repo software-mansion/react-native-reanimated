@@ -9,12 +9,14 @@ export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
     'worklet';
 
     const onFrame = (animation: Animation, now: Timestamp): boolean => {
-      // console.log(animation.current)
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
-          const transform = animation.styleAnimations.transform;
+          const transform = animation.styleAnimations.transform as Record<
+            string,
+            Animation
+          >[]; // TODO
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
             const currentAnimation = transform[i][type];
@@ -52,23 +54,16 @@ export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
 
     const onStart = (
       animation: Animation,
-      value: number,
+      value: AnimatedStyle,
       now: Timestamp,
       previousAnimation: Animation
     ): void => {
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {
           animation.current.transform = [];
-          const transform = styleAnimations.transform;
+          const transform = styleAnimations.transform as Array<AnimatedStyle>; // TODO
           const prevTransform = null;
-          const valueTransform = value.transform;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations.transform
-          ) {
-            prevAnimation = previousAnimation.styleAnimations.transform;
-          }
+          const valueTransform = value.transform as Array<AnimatedStyle>; // TODO
 
           for (let i = 0; i < transform.length; i++) {
             // duplication of code to avoid function calls
@@ -151,7 +146,7 @@ export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
         Object.keys(styleAnimations).forEach((key) => {
           const currentAnimation = styleAnimations[key];
           if (key === 'transform') {
-            const transform = styleAnimations.transform;
+            const transform = styleAnimations.transform as Array<AnimatedStyle>; // TODO
             for (let i = 0; i < transform.length; i++) {
               const type = Object.keys(transform[i])[0];
               const currentAnimation = transform[i][type];

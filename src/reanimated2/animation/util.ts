@@ -1,5 +1,5 @@
 /* global _WORKLET */
-import { isColor, convertToHSVA, toRGBA } from '../Colors';
+import { isColor, convertToHSVA, toRGBA, ParsedColorArray } from '../Colors';
 import NativeReanimated from '../NativeReanimated';
 import {
   Animation,
@@ -18,7 +18,10 @@ export function initialUpdaterRun(updater) {
   return result;
 }
 
-export function transform(value: PrimitiveValue, handler): number {
+export function transform(
+  value: PrimitiveValue,
+  handler: Animation
+): string | number {
   'worklet';
   if (value === undefined) {
     return undefined;
@@ -44,7 +47,7 @@ export function transform(value: PrimitiveValue, handler): number {
   return handler.__prefix + value + handler.__suffix;
 }
 
-export function transformAnimation(animation: Animation) {
+export function transformAnimation(animation: Animation): void {
   'worklet';
   if (!animation) {
     return;
@@ -54,7 +57,7 @@ export function transformAnimation(animation: Animation) {
   animation.startValue = transform(animation.startValue, animation);
 }
 
-export function decorateAnimation(animation: Animation) {
+export function decorateAnimation(animation: Animation): void {
   'worklet';
   if (animation.isHigherOrder) {
     return;
@@ -89,10 +92,15 @@ export function decorateAnimation(animation: Animation) {
   };
 
   const tab = ['H', 'S', 'V', 'A'];
-  const colorOnStart = (animation, value, timestamp, previousAnimation) => {
-    let HSVAValue;
-    let HSVACurrent;
-    let HSVAToValue;
+  const colorOnStart = (
+    animation: Animation,
+    value: string | number,
+    timestamp: Timestamp,
+    previousAnimation: Animation
+  ): void => {
+    let HSVAValue: ParsedColorArray;
+    let HSVACurrent: ParsedColorArray;
+    let HSVAToValue: ParsedColorArray;
     const res = [];
     if (isColor(value)) {
       HSVACurrent = convertToHSVA(animation.current);
@@ -114,10 +122,13 @@ export function decorateAnimation(animation: Animation) {
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res);
+    animation.current = toRGBA(res as ParsedColorArray);
   };
 
-  const colorOnFrame = (animation: Animation, timestamp: Timestamp) => {
+  const colorOnFrame = (
+    animation: Animation,
+    timestamp: Timestamp
+  ): boolean => {
     // TODO
     const HSVACurrent = convertToHSVA(animation.current);
     const res = [];
@@ -128,7 +139,7 @@ export function decorateAnimation(animation: Animation) {
       res.push(animation[i].current);
     });
 
-    animation.current = toRGBA(res);
+    animation.current = toRGBA(res as ParsedColorArray);
     return finished;
   };
 
@@ -172,14 +183,17 @@ export function defineAnimation(
   return create;
 }
 
-export function cancelAnimation(sharedValue: SharedValue) {
+export function cancelAnimation(sharedValue: SharedValue): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
 // TODO it should work only if there was no animation before.
-export function withStartValue(startValue, animation) {
+export function withStartValue(
+  startValue: number | string,
+  animation: Animation
+) {
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';

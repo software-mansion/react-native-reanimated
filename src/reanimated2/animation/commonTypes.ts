@@ -6,16 +6,21 @@ export type PrimitiveValue = number | string;
 // TODO: maybe each type of animation should have own type of animation inherited from interface, and animated utils should use just these interface
 export interface Animation {
   type?: string;
-  onFrame: (animation?: Animation, timestamp?: number) => boolean; // TODO
+  onFrame: (animation?: Animation, timestamp?: Timestamp) => boolean; // TODO
   onStart: (
     nextAnimation: Animation,
-    current: number,
-    timestamp: number,
+    current: number, // TODO
+    timestamp: Timestamp,
     previousAnimation: Animation
   ) => void; // TODO
   startValue?: number; // TODO number | string (?)
   toValue?: number; // TODO number | string (?)
-  current?: number | StyleProps; // TODO
+  current?:
+    | number
+    | StyleProps
+    | AnimatedStyle
+    | unknown
+    | Record<string, unknown>; // TODO
   callback?: AnimationCallback;
   isHigherOrder?: boolean; // TODO
   startTime?: number; // TODO
@@ -30,6 +35,9 @@ export interface Animation {
   finished?: boolean; // TODO
   animationIndex?: number; // TODO
   styleAnimations?: AnimatedStyle; // TODO
+  value?: unknown; // TODO
+  __prefix?: string;
+  __suffix?: string;
 }
 
 export interface AnimationConfig {

@@ -6,4 +6,6 @@ export type StyleProps =
   | TextStyle
   | { originX?: number; originY?: number };
 
-export type AnimatedStyle = Record<string, Animation>;
+export type AnimatedStyle =
+  | Record<string, Animation>
+  | Record<'transform', Record<string, Animation>[]>; // TODO
