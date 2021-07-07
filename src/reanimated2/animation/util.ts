@@ -8,10 +8,13 @@ import {
   NextAnimation,
   Timestamp,
 } from './commonTypes';
+import { AnimatedStyle } from '../commonTypes';
 
 let IN_STYLE_UPDATER = false;
 
-export function initialUpdaterRun(updater) {
+export type UserUpdater = () => AnimatedStyle;
+
+export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;
@@ -162,10 +165,10 @@ export function decorateAnimation(animation: Animation): void {
   };
 }
 
-export function defineAnimation(
+export function defineAnimation<T extends Animation>(
   starting: number | NextAnimation | Record<string, unknown>, // TODO Record<string, unknown> to remove
-  factory: () => Animation
-): Animation {
+  factory: () => T
+): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting;
@@ -193,7 +196,7 @@ export function cancelAnimation(sharedValue: SharedValue): void {
 export function withStartValue(
   startValue: number | string,
   animation: Animation
-) {
+): Animation {
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';

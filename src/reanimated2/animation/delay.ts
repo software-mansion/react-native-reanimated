@@ -1,17 +1,23 @@
 import { defineAnimation } from './util';
-import { Animation, NextAnimation, Timestamp } from './commonTypes';
+import { Animation, AnimationObject, NextAnimation, Timestamp } from './commonTypes';
+
+export interface DelayAnimation extends Animation<DelayAnimation> {
+  startTime: Timestamp;
+  started: boolean; 
+  previousAnimation?: Animation<AnimationObject>
+}
 
 export function withDelay(
   delayMs: number,
   _nextAnimation: NextAnimation
-): Animation {
+): Animation<DelayAnimation> {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
     const nextAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
-    function delay(animation: Animation, now: Timestamp): boolean {
+    function delay(animation: DelayAnimation, now: Timestamp): boolean {
       const { startTime, started, previousAnimation } = animation;
 
       if (now - startTime > delayMs) {
@@ -39,10 +45,10 @@ export function withDelay(
     }
 
     function onStart(
-      animation: Animation,
+      animation: DelayAnimation,
       value: number,
       now: Timestamp,
-      previousAnimation: Animation
+      previousAnimation: Animation<any> // TODO
     ): void {
       animation.startTime = now;
       animation.started = false;
@@ -69,8 +75,8 @@ export function withDelay(
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function delay(
   delayMs: number,
-  _nextAnimation: Animation | (() => Animation)
-): Animation {
+  _nextAnimation: Animation<AnimationObject> | (() => Animation<AnimationObject>)
+): Animation<DelayAnimation> {
   'worklet';
   console.warn('Method `delay` is deprecated. Please use `withDelay` instead');
   return withDelay(delayMs, _nextAnimation);

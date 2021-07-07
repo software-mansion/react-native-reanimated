@@ -7,14 +7,23 @@ interface TimingConfig {
   easing?: EasingFn | EasingFactoryFn;
 }
 
+export interface TimingAnimation extends Animation<TimingAnimation> {
+  type: string;
+  easing?: EasingFn;
+  startValue?: number;
+  startTime?: Timestamp;
+  progress: number;
+  toValue: number;
+}
+
 export function withTiming(
   toValue: number,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation {
+): Animation<TimingAnimation> {
   'worklet';
 
-  return defineAnimation(toValue, () => {
+  return defineAnimation<TimingAnimation>(toValue, () => {
     'worklet';
     const config: Required<TimingConfig> = {
       duration: 300,
@@ -24,7 +33,7 @@ export function withTiming(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function timing(animation: Animation, now: Timestamp): boolean {
+    function timing(animation: TimingAnimation, now: Timestamp): boolean {
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -40,22 +49,22 @@ export function withTiming(
     }
 
     function onStart(
-      animation: Animation,
+      animation: TimingAnimation,
       value: number,
       now: Timestamp,
-      previousAnimation: Animation
+      previousAnimation: Animation<TimingAnimation>
     ): void {
       if (
         previousAnimation &&
-        previousAnimation.type === 'timing' &&
-        previousAnimation.toValue === toValue &&
-        previousAnimation.startTime
+        (previousAnimation as TimingAnimation).type === 'timing' &&
+        (previousAnimation as TimingAnimation).toValue === toValue &&
+        (previousAnimation as TimingAnimation).startTime
       ) {
         // to maintain continuity of timing animations we check if we are starting
         // new timing over the old one with the same parameters. If so, we want
         // to copy animation timeline properties
-        animation.startTime = previousAnimation.startTime;
-        animation.startValue = previousAnimation.startValue;
+        animation.startTime = (previousAnimation as TimingAnimation).startTime;
+        animation.startValue = (previousAnimation as TimingAnimation).startValue;
       } else {
         animation.startTime = now;
         animation.startValue = value;

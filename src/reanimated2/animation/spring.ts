@@ -11,14 +11,20 @@ interface SpringConfig {
   velocity?: number;
 }
 
+export interface SpringAnimation extends Animation<SpringAnimation> {
+  toValue: number, 
+  velocity: number
+  lastTimestamp?: Timestamp,
+}
+
 export function withSpring(
   toValue: number,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation {
+): Animation<SpringAnimation> {
   'worklet';
 
-  return defineAnimation(toValue, () => {
+  return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
 
     // TODO: figure out why we can't use spread or Object.assign here
@@ -37,7 +43,7 @@ export function withSpring(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function spring(animation: Animation, now: Timestamp): boolean {
+    function spring(animation: SpringAnimation, now: Timestamp): boolean {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -114,10 +120,10 @@ export function withSpring(
     }
 
     function onStart(
-      animation: Animation,
+      animation: SpringAnimation,
       value: number,
       now: Timestamp,
-      previousAnimation: Animation
+      previousAnimation: SpringAnimation
     ): void {
       animation.current = value;
       if (previousAnimation) {

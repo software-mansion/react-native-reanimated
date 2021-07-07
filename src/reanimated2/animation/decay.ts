@@ -9,13 +9,20 @@ interface DecayConfig {
   velocity?: number;
 }
 
+export interface DecayAnimation extends Animation<DecayAnimation> {
+  lastTimestamp?: Timestamp,
+  startTimestamp?: Timestamp,
+  initialVelocity?: number,
+  velocity: number
+}
+
 export function withDecay(
   userConfig: DecayConfig,
   callback?: AnimationCallback
-): Animation {
+): Animation<DecayAnimation> {
   'worklet';
 
-  return defineAnimation(0, () => {
+  return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
     const config: DecayConfig = {
       deceleration: 0.998,
@@ -28,7 +35,7 @@ export function withDecay(
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
-    function decay(animation: Animation, now: number): boolean {
+    function decay(animation: DecayAnimation, now: number): boolean {
       const {
         lastTimestamp,
         startTimestamp,
@@ -88,7 +95,7 @@ export function withDecay(
     }
 
     function onStart(
-      animation: Animation,
+      animation: DecayAnimation,
       value: number,
       now: Timestamp
     ): void {
