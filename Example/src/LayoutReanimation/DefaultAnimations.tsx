@@ -15,7 +15,7 @@ import Animated, {
   FlipInEasyX, FlipInEasyY, FlipOutXUp, FlipOutYLeft, FlipOutXDown,
   FlipOutYRight, FlipOutEasyX, FlipOutEasyY, BounceIn, BounceInDown,
   BounceInUp, BounceInLeft, BounceInRight, BounceOut, BounceOutDown,
-  BounceOutUp, BounceOutLeft, BounceOutRight, LightSpeedInRight, LightSpeedInLeft
+  BounceOutUp, BounceOutLeft, BounceOutRight, LightSpeedInRight, LightSpeedInLeft, LightSpeedOutRight, LightSpeedOutLeft, LightSpeedInUp, PinwheelIn, PinwheelOut
 } from 'react-native-reanimated';
 
 interface AnimatedBlockProps {
@@ -145,6 +145,13 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="LightSpeedInRight" animatedStyle={{entering: LightSpeedInRight}} />
       <AnimatedBlock name="LightSpeedInLeft" animatedStyle={{entering: LightSpeedInLeft}} />
 
+      <Text style={styles.groupText}>LightSpeed out</Text>
+      <AnimatedBlock name="LightSpeedOutRight" animatedStyle={{exiting: LightSpeedOutRight}} defaultShow={true}/>
+      <AnimatedBlock name="LightSpeedOutLeft" animatedStyle={{exiting: LightSpeedOutLeft}} defaultShow={true} />
+
+      <Text style={styles.groupText}>Pinwheel</Text>
+      <AnimatedBlock name="PinwheelIn" animatedStyle={{entering: PinwheelIn}} />
+      <AnimatedBlock name="PinwheelOut" animatedStyle={{exiting: PinwheelOut}} defaultShow={true}/>
     </ScrollView>
   );
 }

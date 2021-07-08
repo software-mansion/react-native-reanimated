@@ -4,4 +4,5 @@ export * from './Fade';
 export * from './Slide';
 export * from './Zoom';
 export * from './Bounce';
-export * from './Lightspeed';
+export * from './LightSpeed';
+export * from './Pinwheel';

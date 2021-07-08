@@ -737,6 +737,10 @@ declare module 'react-native-reanimated' {
     export class BounceOutRight extends BounceAnimationBuilder {};
     export class LightSpeedInRight extends BaseAnimationBuilder {};
     export class LightSpeedInLeft extends BaseAnimationBuilder {};
+    export class LightSpeedOutRight extends BaseAnimationBuilder {};
+    export class LightSpeedOutLeft extends BaseAnimationBuilder {};
+    export class PinwheelIn extends BaseAnimationBuilder {};
+    export class PinwheelOut extends BaseAnimationBuilder {};
   }
 
   export default Animated;
@@ -984,4 +988,8 @@ declare module 'react-native-reanimated' {
   export const BounceOutRight: typeof Animated.BounceOutRight;
   export const LightSpeedInRight: typeof Animated.LightSpeedInRight;
   export const LightSpeedInLeft: typeof Animated.LightSpeedInLeft;
+  export const LightSpeedOutRight: typeof Animated.LightSpeedOutRight;
+  export const LightSpeedOutLeft: typeof Animated.LightSpeedOutLeft;
+  export const PinwheelIn: typeof Animated.PinwheelIn;
+  export const PinwheelOut: typeof Animated.PinwheelOut;
 }
