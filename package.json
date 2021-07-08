@@ -59,7 +59,8 @@
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
-    "fbjs": "^3.0.0",
+    "invariant": "^2.2.4",
+    "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
     "string-hash-64": "^1.0.3"
   },

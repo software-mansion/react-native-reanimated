@@ -1,4 +1,4 @@
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import AnimatedNode, { getCallID, setCallID } from './AnimatedNode';
 import AnimatedClock from './AnimatedClock';
 import { val } from '../val';

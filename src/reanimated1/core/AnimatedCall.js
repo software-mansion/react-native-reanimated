@@ -1,4 +1,4 @@
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import ReanimatedEventEmitter from '../../ReanimatedEventEmitter';
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';

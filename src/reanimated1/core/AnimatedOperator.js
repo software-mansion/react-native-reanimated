@@ -1,7 +1,7 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import { adapt } from '../core/AnimatedBlock';
 
 function reduce(fn) {
