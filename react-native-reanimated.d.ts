@@ -749,6 +749,10 @@ declare module 'react-native-reanimated' {
     export class RotateOutDownLeft extends BaseAnimationBuilder {};
     export class RotateOutUpLeft extends BaseAnimationBuilder {};
     export class RotateOutUpRight extends BaseAnimationBuilder {};
+    export class RollInleft extends BaseAnimationBuilder {};
+    export class RollInRight extends BaseAnimationBuilder {};
+    export class RollOutLeft extends BaseAnimationBuilder {};
+    export class RollOutRight extends BaseAnimationBuilder {};
   }
 
   export default Animated;
@@ -1008,4 +1012,8 @@ declare module 'react-native-reanimated' {
   export const RotateOutDownRight: typeof Animated.RotateOutDownRight;
   export const RotateOutUpRight: typeof Animated.RotateOutUpRight;
   export const RotateOutUpLeft: typeof Animated.RotateOutUpLeft;
+  export const RollInLeft: typeof Animated.RollInleft;
+  export const RollInRight: typeof Animated.RollInRight;
+  export const RollOutLeft: typeof Animated.RollOutLeft;
+  export const RollOutRight: typeof Animated.RollOutRight;
 }

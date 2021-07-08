@@ -7,3 +7,4 @@ export * from './Bounce';
 export * from './LightSpeed';
 export * from './Pinwheel';
 export * from './Rotate';
+export * from './Roll';
