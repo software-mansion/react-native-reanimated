@@ -19,7 +19,6 @@ import {
 
 import Reanimated1 from '../reanimated1/App';
 
-import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import WobbleExample from './WobbleExample';
 import DragAndSnapExample from './DragAndSnapExample';
@@ -118,10 +117,6 @@ const SCREENS: Screens = {
     screen: LiquidSwipe,
     title: 'Liquid Swipe Example',
   },
-  // ExtrapolationExample: {
-  //   screen: ExtrapolationExample,
-  //   title: 'Extrapolation Example',
-  // },
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
