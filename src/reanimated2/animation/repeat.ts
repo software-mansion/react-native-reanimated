@@ -2,15 +2,17 @@ import { defineAnimation } from './util';
 import {
   Animation,
   AnimationCallback,
-  AnimationObject,
   NextAnimation,
+  PrimitiveValue,
   Timestamp,
+  HigherOrderAnimation
 } from './commonTypes';
 
-export interface RepeatAnimation extends Animation<RepeatAnimation> {
+export interface RepeatAnimation extends Animation<RepeatAnimation>, HigherOrderAnimation {
   reps: number;
-  startValue: number;
-  toValue: number;
+  startValue: PrimitiveValue;
+  toValue: PrimitiveValue;
+  previousAnimation?: RepeatAnimation
 }
 
 export function withRepeat(
@@ -24,7 +26,7 @@ export function withRepeat(
   return defineAnimation(_nextAnimation, () => {
     'worklet';
 
-    const nextAnimation: Animation<RepeatAnimation> =
+    const nextAnimation: RepeatAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
     function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
@@ -71,7 +73,7 @@ export function withRepeat(
 
     function onStart(
       animation: RepeatAnimation,
-      value: number,
+      value: PrimitiveValue,
       now: Timestamp,
       previousAnimation: RepeatAnimation
     ): void {

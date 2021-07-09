@@ -10,10 +10,11 @@ interface DecayConfig {
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
-  lastTimestamp?: Timestamp,
-  startTimestamp?: Timestamp,
-  initialVelocity?: number,
-  velocity: number
+  lastTimestamp?: Timestamp;
+  startTimestamp?: Timestamp;
+  initialVelocity?: number;
+  velocity: number;
+  current?: number;
 }
 
 export function withDecay(

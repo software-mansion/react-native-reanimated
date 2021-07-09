@@ -5,18 +5,27 @@ export type PrimitiveValue = number | string;
 
 export interface AnimationObject {
   callback: AnimationCallback;
-  current?: number;
+  current?: PrimitiveValue;
+  toValue?: AnimationObject['current'];
+  startValue?: AnimationObject['current'];
+  finished?: boolean;
+
+  __prefix?: string;
+  __suffix?: string;
 }
 
 export interface Animation<T extends AnimationObject> extends AnimationObject {
   onFrame: (animation: T, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: T,
-    current: number,
+    current: T extends NumericAnimation ? number : PrimitiveValue,
     timestamp: Timestamp,
     previousAnimation: T
   ) => void;
 }
+
+export interface NumericAnimation { current?: number; };
+export interface HigherOrderAnimation { isHigherOrder?: boolean; };
 
 // export interface Animation123 {
 //   type?: string;
@@ -56,8 +65,8 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
 
 export type AnimationCallback = (
   finished?: boolean,
-  tmpValue?: number
-) => unknown; // TODO animation is not needed everywhere
+  current?: PrimitiveValue
+) => void;
 
 export type NextAnimation = Animation | (() => Animation);
 
@@ -66,5 +75,5 @@ export type SharedValue = {
   value: unknown;
 };
 
-export type AnimationOnFrame = (animation: Animation, now: number) => boolean;
+// export type AnimationOnFrame = (animation: Animation, now: number) => boolean;
 export type Timestamp = number;

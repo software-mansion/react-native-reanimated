@@ -1,22 +1,31 @@
 import { defineAnimation } from './util';
-import { Animation, Timestamp } from './commonTypes';
+import { Animation, Timestamp, AnimationObject, HigherOrderAnimation } from './commonTypes';
 import { AnimatedStyle } from '../commonTypes';
 import { withTiming } from './timing';
 
-export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
+export interface StyleLayoutAnimation extends HigherOrderAnimation {
+  current: AnimatedStyle;
+  styleAnimations: AnimatedStyle;
+  onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
+  onStart: (
+    nextAnimation: StyleLayoutAnimation,
+    current: any,
+    timestamp: Timestamp,
+    previousAnimation: StyleLayoutAnimation
+  ) => void;
+}
+
+export function withStyleAnimation(styleAnimations: AnimatedStyle): StyleLayoutAnimation {
   'worklet';
   return defineAnimation({}, () => {
     'worklet';
 
-    const onFrame = (animation: Animation, now: Timestamp): boolean => {
+    const onFrame = (animation: StyleLayoutAnimation, now: Timestamp): boolean => {
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
-          const transform = animation.styleAnimations.transform as Record<
-            string,
-            Animation
-          >[]; // TODO
+          const transform = animation.styleAnimations.transform as Record<string, Animation<AnimationObject>>[];
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
             const currentAnimation = transform[i][type];
@@ -53,10 +62,10 @@ export function withStyleAnimation(styleAnimations: AnimatedStyle): Animation {
     };
 
     const onStart = (
-      animation: Animation,
+      animation: StyleLayoutAnimation,
       value: AnimatedStyle,
       now: Timestamp,
-      previousAnimation: Animation
+      previousAnimation: StyleLayoutAnimation
     ): void => {
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {

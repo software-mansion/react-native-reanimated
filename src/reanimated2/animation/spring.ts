@@ -12,6 +12,7 @@ interface SpringConfig {
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
+  current: number,
   toValue: number, 
   velocity: number
   lastTimestamp?: Timestamp,

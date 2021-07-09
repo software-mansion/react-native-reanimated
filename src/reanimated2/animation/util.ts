@@ -7,8 +7,11 @@ import {
   SharedValue,
   NextAnimation,
   Timestamp,
+  AnimationObject,
+  HigherOrderAnimation
 } from './commonTypes';
 import { AnimatedStyle } from '../commonTypes';
+import { StyleLayoutAnimation } from './styleAnimation';
 
 let IN_STYLE_UPDATER = false;
 
@@ -23,8 +26,8 @@ export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
 
 export function transform(
   value: PrimitiveValue,
-  handler: Animation
-): string | number {
+  handler: Animation<AnimationObject>
+): PrimitiveValue {
   'worklet';
   if (value === undefined) {
     return undefined;
@@ -50,7 +53,7 @@ export function transform(
   return handler.__prefix + value + handler.__suffix;
 }
 
-export function transformAnimation(animation: Animation): void {
+export function transformAnimation(animation: Animation<AnimationObject>): void {
   'worklet';
   if (!animation) {
     return;
@@ -60,11 +63,12 @@ export function transformAnimation(animation: Animation): void {
   animation.startValue = transform(animation.startValue, animation);
 }
 
-export function decorateAnimation(animation: Animation): void {
+export function decorateAnimation(animation: Animation<AnimationObject> | StyleLayoutAnimation): void {
   'worklet';
-  if (animation.isHigherOrder) {
+  if ((animation as HigherOrderAnimation).isHigherOrder) {
     return;
   }
+  
   const baseOnStart = animation.onStart;
   const baseOnFrame = animation.onFrame;
   const animationCopy = Object.assign({}, animation);

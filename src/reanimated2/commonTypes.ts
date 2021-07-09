@@ -1,5 +1,5 @@
 import { ViewStyle, TextStyle } from 'react-native';
-import { Animation } from './animation/commonTypes';
+import { Animation, AnimationObject } from './animation/commonTypes';
 
 export type StyleProps =
   | ViewStyle
@@ -7,5 +7,6 @@ export type StyleProps =
   | { originX?: number; originY?: number };
 
 export type AnimatedStyle =
-  | Record<string, Animation>
-  | Record<'transform', Record<string, Animation>[]>; // TODO
+  | Record<string, Animation<AnimationObject>>
+  | Record<'transform', Record<string, Animation<AnimationObject>>[]> // TODO
+  | { transform: Record<string, Animation<AnimationObject>>[] }

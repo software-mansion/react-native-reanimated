@@ -1,7 +1,11 @@
 import { defineAnimation } from './util';
-import { Animation, Timestamp, NextAnimation } from './commonTypes';
+import { Animation, Timestamp, NextAnimation, PrimitiveValue, HigherOrderAnimation } from './commonTypes';
 
-export function withSequence(..._animations: NextAnimation[]): Animation {
+export interface SequenceAnimation extends Animation<SequenceAnimation>, HigherOrderAnimation {
+  animationIndex: number;
+}
+
+export function withSequence(..._animations: NextAnimation[]): Animation<SequenceAnimation> {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -26,7 +30,7 @@ export function withSequence(..._animations: NextAnimation[]): Animation {
       });
     };
 
-    function sequence(animation: Animation, now: Timestamp): boolean {
+    function sequence(animation: SequenceAnimation, now: Timestamp): boolean {
       const currentAnim = animations[animation.animationIndex];
       const finished = currentAnim.onFrame(currentAnim, now);
       animation.current = currentAnim.current;
@@ -48,10 +52,10 @@ export function withSequence(..._animations: NextAnimation[]): Animation {
     }
 
     function onStart(
-      animation: Animation,
-      value: number,
+      animation: SequenceAnimation,
+      value: PrimitiveValue,
       now: Timestamp,
-      previousAnimation: Animation
+      previousAnimation: SequenceAnimation
     ): void {
       if (animations.length === 1) {
         throw Error(
@@ -77,7 +81,7 @@ export function withSequence(..._animations: NextAnimation[]): Animation {
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function sequence(..._animations: NextAnimation[]): Animation {
+export function sequence(..._animations: NextAnimation[]): Animation<SequenceAnimation> {
   'worklet';
   console.warn(
     'Method `sequence` is deprecated. Please use `withSequence` instead'
