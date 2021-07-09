@@ -8,5 +8,5 @@ export type StyleProps =
 
 export type AnimatedStyle =
   | Record<string, Animation<AnimationObject>>
-  | Record<'transform', Record<string, Animation<AnimationObject>>[]> // TODO
-  | { transform: Record<string, Animation<AnimationObject>>[] }
+  | Record<'transform', Record<string, Animation<AnimationObject>>[]>
+  | { transform: Record<string, Animation<AnimationObject>>[] };

@@ -1,6 +1,3 @@
-import { EasingFn } from '../Easing';
-import { AnimatedStyle, StyleProps } from '../commonTypes';
-
 export type PrimitiveValue = number | string;
 
 export interface AnimationObject {
@@ -12,6 +9,13 @@ export interface AnimationObject {
 
   __prefix?: string;
   __suffix?: string;
+  onFrame: (animation: any, timestamp: Timestamp) => boolean;
+  onStart: (
+    nextAnimation: any,
+    current: any,
+    timestamp: Timestamp,
+    previousAnimation: any
+  ) => void;
 }
 
 export interface Animation<T extends AnimationObject> extends AnimationObject {
@@ -24,8 +28,12 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
   ) => void;
 }
 
-export interface NumericAnimation { current?: number; };
-export interface HigherOrderAnimation { isHigherOrder?: boolean; };
+export interface NumericAnimation {
+  current?: number;
+}
+export interface HigherOrderAnimation {
+  isHigherOrder?: boolean;
+}
 
 export type AnimationCallback = (
   finished?: boolean,
@@ -39,5 +47,4 @@ export type SharedValue = {
   value: unknown;
 };
 
-// export type AnimationOnFrame = (animation: Animation, now: number) => boolean;
 export type Timestamp = number;

@@ -1,13 +1,23 @@
 import { defineAnimation } from './util';
-import { Animation, Timestamp, NextAnimation, PrimitiveValue, HigherOrderAnimation } from './commonTypes';
+import {
+  Animation,
+  Timestamp,
+  NextAnimation,
+  PrimitiveValue,
+  HigherOrderAnimation,
+} from './commonTypes';
 
-export interface SequenceAnimation extends Animation<SequenceAnimation>, HigherOrderAnimation {
+export interface SequenceAnimation
+  extends Animation<SequenceAnimation>,
+    HigherOrderAnimation {
   animationIndex: number;
 }
 
-export function withSequence(..._animations: NextAnimation<SequenceAnimation>[]): Animation<SequenceAnimation> {
+export function withSequence(
+  ..._animations: NextAnimation<SequenceAnimation>[]
+): Animation<SequenceAnimation> {
   'worklet';
-  return defineAnimation(_animations[0], () => {
+  return defineAnimation<SequenceAnimation>(_animations[0], () => {
     'worklet';
     const animations = _animations.map((a) => {
       const result = typeof a === 'function' ? a() : a;
@@ -81,7 +91,9 @@ export function withSequence(..._animations: NextAnimation<SequenceAnimation>[])
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function sequence(..._animations: NextAnimation<SequenceAnimation>[]): Animation<SequenceAnimation> {
+export function sequence(
+  ..._animations: NextAnimation<SequenceAnimation>[]
+): Animation<SequenceAnimation> {
   'worklet';
   console.warn(
     'Method `sequence` is deprecated. Please use `withSequence` instead'

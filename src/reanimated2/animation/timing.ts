@@ -1,19 +1,27 @@
 import { Easing, EasingFn, EasingFactoryFn } from '../Easing';
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, Timestamp } from './commonTypes';
+import {
+  Animation,
+  AnimationCallback,
+  Timestamp,
+  NumericAnimation,
+} from './commonTypes';
 
 interface TimingConfig {
   duration?: number;
   easing?: EasingFn | EasingFactoryFn;
 }
 
-export interface TimingAnimation extends Animation<TimingAnimation> {
+export interface TimingAnimation
+  extends Animation<TimingAnimation>,
+    NumericAnimation {
   type: string;
   easing?: EasingFn;
   startValue?: number;
   startTime?: Timestamp;
   progress: number;
   toValue: number;
+  current: number;
 }
 
 export function withTiming(

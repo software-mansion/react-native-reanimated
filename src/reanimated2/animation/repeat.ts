@@ -5,14 +5,16 @@ import {
   NextAnimation,
   PrimitiveValue,
   Timestamp,
-  HigherOrderAnimation
+  HigherOrderAnimation,
 } from './commonTypes';
 
-export interface RepeatAnimation extends Animation<RepeatAnimation>, HigherOrderAnimation {
+export interface RepeatAnimation
+  extends Animation<RepeatAnimation>,
+    HigherOrderAnimation {
   reps: number;
-  startValue: PrimitiveValue;
-  toValue: PrimitiveValue;
-  previousAnimation?: RepeatAnimation
+  startValue?: PrimitiveValue;
+  toValue?: PrimitiveValue;
+  previousAnimation?: RepeatAnimation;
 }
 
 export function withRepeat(
@@ -23,7 +25,7 @@ export function withRepeat(
 ): Animation<RepeatAnimation> {
   'worklet';
 
-  return defineAnimation(_nextAnimation, () => {
+  return defineAnimation<RepeatAnimation>(_nextAnimation, () => {
     'worklet';
 
     const nextAnimation: RepeatAnimation =

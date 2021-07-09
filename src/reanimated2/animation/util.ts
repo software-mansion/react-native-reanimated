@@ -8,10 +8,13 @@ import {
   NextAnimation,
   Timestamp,
   AnimationObject,
-  HigherOrderAnimation
+  HigherOrderAnimation,
 } from './commonTypes';
 import { AnimatedStyle } from '../commonTypes';
 import { StyleLayoutAnimation } from './styleAnimation';
+import { DelayAnimation } from './delay';
+import { RepeatAnimation } from './repeat';
+import { SequenceAnimation } from './sequence';
 
 let IN_STYLE_UPDATER = false;
 
@@ -26,7 +29,7 @@ export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
 
 export function transform(
   value: PrimitiveValue,
-  handler: Animation<AnimationObject>
+  handler: AnimationObject
 ): PrimitiveValue {
   'worklet';
   if (value === undefined) {
@@ -53,7 +56,7 @@ export function transform(
   return handler.__prefix + value + handler.__suffix;
 }
 
-export function transformAnimation(animation: Animation<AnimationObject>): void {
+export function transformAnimation(animation: AnimationObject): void {
   'worklet';
   if (!animation) {
     return;
@@ -63,14 +66,16 @@ export function transformAnimation(animation: Animation<AnimationObject>): void 
   animation.startValue = transform(animation.startValue, animation);
 }
 
-export function decorateAnimation(animation: Animation<AnimationObject> | StyleLayoutAnimation): void {
+export function decorateAnimation<
+  T extends AnimationObject | StyleLayoutAnimation
+>(animation: T): void {
   'worklet';
   if ((animation as HigherOrderAnimation).isHigherOrder) {
     return;
   }
-  
-  const baseOnStart = animation.onStart;
-  const baseOnFrame = animation.onFrame;
+
+  const baseOnStart = (animation as Animation<AnimationObject>).onStart;
+  const baseOnFrame = (animation as Animation<AnimationObject>).onFrame;
   const animationCopy = Object.assign({}, animation);
   delete animationCopy.callback;
 
@@ -89,7 +94,10 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
     transformAnimation(animation);
     if (previousAnimation !== animation) transformAnimation(previousAnimation);
   };
-  const prefNumberSuffOnFrame = (animation: Animation<AnimationObject>, timestamp: number) => {
+  const prefNumberSuffOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: number
+  ) => {
     transformAnimation(animation);
 
     const res = baseOnFrame(animation, timestamp);
@@ -142,6 +150,7 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = HSVACurrent[index];
+      // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
       res.push(animation[i].current);
     });
@@ -151,10 +160,10 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
   };
 
   animation.onStart = (
-    animation: Animation,
+    animation: Animation<AnimationObject>,
     value: number,
     timestamp: Timestamp,
-    previousAnimation: Animation
+    previousAnimation: Animation<AnimationObject>
   ) => {
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
@@ -169,24 +178,36 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
   };
 }
 
-export function defineAnimation<T extends Animation>(
-  starting: number | NextAnimation | Record<string, unknown>, // TODO Record<string, unknown> to remove
-  factory: () => T
-): T {
+type ConditionalyStarting<
+  T extends AnimationObject | StyleLayoutAnimation
+> = T extends StyleLayoutAnimation
+  ? Record<string, unknown>
+  : T extends DelayAnimation
+  ? NextAnimation<DelayAnimation>
+  : T extends RepeatAnimation
+  ? NextAnimation<RepeatAnimation>
+  : T extends SequenceAnimation
+  ? NextAnimation<SequenceAnimation>
+  : PrimitiveValue | T;
+
+export function defineAnimation<
+  T extends AnimationObject | StyleLayoutAnimation
+>(starting: ConditionalyStarting<T>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
-    return starting;
+    return starting as T;
   }
   const create = () => {
     'worklet';
     const animation = factory();
-    decorateAnimation(animation);
+    decorateAnimation<T>(animation);
     return animation;
   };
 
   if (_WORKLET || !NativeReanimated.native) {
     return create();
   }
+  // @ts-ignore: eslint-disable-line
   return create;
 }
 
@@ -198,16 +219,16 @@ export function cancelAnimation(sharedValue: SharedValue): void {
 
 // TODO it should work only if there was no animation before.
 export function withStartValue(
-  startValue: number | string,
-  animation: Animation
-): Animation {
+  startValue: PrimitiveValue,
+  animation: NextAnimation<AnimationObject>
+): Animation<AnimationObject> {
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';
     if (!_WORKLET && typeof animation === 'function') {
       animation = animation();
     }
-    animation.current = startValue;
-    return animation;
+    (animation as Animation<AnimationObject>).current = startValue;
+    return animation as Animation<AnimationObject>;
   });
 }

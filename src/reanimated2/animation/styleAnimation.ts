@@ -1,5 +1,11 @@
 import { defineAnimation } from './util';
-import { Animation, Timestamp, AnimationObject, HigherOrderAnimation, AnimationCallback } from './commonTypes';
+import {
+  Animation,
+  Timestamp,
+  AnimationObject,
+  HigherOrderAnimation,
+  AnimationCallback,
+} from './commonTypes';
 import { AnimatedStyle } from '../commonTypes';
 import { withTiming } from './timing';
 
@@ -16,17 +22,25 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   callback?: AnimationCallback;
 }
 
-export function withStyleAnimation(styleAnimations: AnimatedStyle): StyleLayoutAnimation {
+export function withStyleAnimation(
+  styleAnimations: AnimatedStyle
+): StyleLayoutAnimation {
   'worklet';
-  return defineAnimation({}, () => {
+  return defineAnimation<StyleLayoutAnimation>({}, () => {
     'worklet';
 
-    const onFrame = (animation: StyleLayoutAnimation, now: Timestamp): boolean => {
+    const onFrame = (
+      animation: StyleLayoutAnimation,
+      now: Timestamp
+    ): boolean => {
       let stillGoing = false;
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
-          const transform = animation.styleAnimations.transform as Record<string, Animation<AnimationObject>>[];
+          const transform = animation.styleAnimations.transform as Record<
+            string,
+            Animation<AnimationObject>
+          >[];
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
             const currentAnimation = transform[i][type];
