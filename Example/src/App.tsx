@@ -42,90 +42,90 @@ const SCREENS: Screens = {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
   },
-  CustomLayoutAnimation: {
-    screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
-  },
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  Carousel: {
-    title: '🆕 Carousel',
-    screen: Carousel,
-  },
+  // CustomLayoutAnimation: {
+  //   screen: CustomLayoutAnimationScreen,
+  //   title: '🆕 Custom layout animation',
+  // },
+  // ModalNewAPI: {
+  //   title: '🆕 ModalNewAPI',
+  //   screen: ModalNewAPI,
+  // },
+  // SpringLayoutAnimation: {
+  //   title: '🆕 Spring Layout Animation',
+  //   screen: SpringLayoutAnimation,
+  // },
+  // MountingUnmounting: {
+  //   title: '🆕 Mounting Unmounting',
+  //   screen: MountingUnmounting,
+  // },
+  // SwipeableList: {
+  //   title: '🆕 Swipeable list',
+  //   screen: SwipeableList,
+  // },
+  // Modal: {
+  //   title: '🆕 Modal',
+  //   screen: Modal,
+  // },
+  // Carousel: {
+  //   title: '🆕 Carousel',
+  //   screen: Carousel,
+  // },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
   },
-  WobbleExample: {
-    screen: WobbleExample,
-    title: 'Animation Modifiers (Wobble Effect)',
-  },
+  // WobbleExample: {
+  //   screen: WobbleExample,
+  //   title: 'Animation Modifiers (Wobble Effect)',
+  // },
   DragAndSnapExample: {
     screen: DragAndSnapExample,
     title: 'Drag and Snap',
   },
-  MeasureExample: {
-    screen: MeasureExample,
-    title: 'Synchronous Measure',
-  },
-  ScrollEventExample: {
-    screen: ScrollEventExample,
-    title: 'Scroll Events',
-  },
-  ChatHeadsExample: {
-    screen: ChatHeadsExample,
-    title: 'Chat Heads',
-  },
-  ScrollableToExample: {
-    screen: ScrollToExample,
-    title: 'scrollTo',
-  },
-  SwipeableListExample: {
-    screen: SwipeableListExample,
-    title: '(advanced) Swipeable List',
-  },
-  LightboxExample: {
-    screen: LightboxExample,
-    title: '(advanced) Lightbox',
-  },
-  ScrollableViewExample: {
-    screen: ScrollableViewExample,
-    title: '(advanced) ScrollView imitation',
-  },
-  AnimatedTabBarExample: {
-    screen: AnimatedTabBarExample,
-    title: '(advanced) Tab Bar Example',
-  },
-  LiquidSwipe: {
-    screen: LiquidSwipe,
-    title: 'Liquid Swipe Example',
-  },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: 'Extrapolation Example',
-  },
-  ScrollExample: {
-    screen: ScrollExample,
-    title: 'Scroll Example',
-  },
+  // MeasureExample: {
+  //   screen: MeasureExample,
+  //   title: 'Synchronous Measure',
+  // },
+  // ScrollEventExample: {
+  //   screen: ScrollEventExample,
+  //   title: 'Scroll Events',
+  // },
+  // ChatHeadsExample: {
+  //   screen: ChatHeadsExample,
+  //   title: 'Chat Heads',
+  // },
+  // ScrollableToExample: {
+  //   screen: ScrollToExample,
+  //   title: 'scrollTo',
+  // },
+  // SwipeableListExample: {
+  //   screen: SwipeableListExample,
+  //   title: '(advanced) Swipeable List',
+  // },
+  // LightboxExample: {
+  //   screen: LightboxExample,
+  //   title: '(advanced) Lightbox',
+  // },
+  // ScrollableViewExample: {
+  //   screen: ScrollableViewExample,
+  //   title: '(advanced) ScrollView imitation',
+  // },
+  // AnimatedTabBarExample: {
+  //   screen: AnimatedTabBarExample,
+  //   title: '(advanced) Tab Bar Example',
+  // },
+  // LiquidSwipe: {
+  //   screen: LiquidSwipe,
+  //   title: 'Liquid Swipe Example',
+  // },
+  // ExtrapolationExample: {
+  //   screen: ExtrapolationExample,
+  //   title: 'Extrapolation Example',
+  // },
+  // ScrollExample: {
+  //   screen: ScrollExample,
+  //   title: 'Scroll Example',
+  // },
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };

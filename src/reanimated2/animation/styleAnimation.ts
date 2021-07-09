@@ -15,7 +15,7 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: StyleLayoutAnimation,
-    current: any,
+    current: AnimatedStyle,
     timestamp: Timestamp,
     previousAnimation: StyleLayoutAnimation
   ) => void;
