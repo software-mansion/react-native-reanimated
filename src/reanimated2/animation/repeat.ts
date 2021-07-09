@@ -16,7 +16,7 @@ export interface RepeatAnimation extends Animation<RepeatAnimation>, HigherOrder
 }
 
 export function withRepeat(
-  _nextAnimation: NextAnimation,
+  _nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfReps = 2,
   reverse = false,
   callback: AnimationCallback
@@ -95,7 +95,7 @@ export function withRepeat(
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function repeat(
-  _nextAnimation: NextAnimation,
+  _nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfReps = 2,
   reverse = false,
   callback?: AnimationCallback
@@ -108,7 +108,7 @@ export function repeat(
 }
 
 export function loop(
-  nextAnimation: NextAnimation,
+  nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfLoops = 1
 ): Animation<RepeatAnimation> {
   'worklet';

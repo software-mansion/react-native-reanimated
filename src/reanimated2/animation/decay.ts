@@ -23,7 +23,7 @@ export function withDecay(
 ): Animation<DecayAnimation> {
   'worklet';
 
-  return defineAnimation<DecayAnimation>(0, () => {
+  return defineAnimation(0, () => {
     'worklet';
     const config: DecayConfig = {
       deceleration: 0.998,

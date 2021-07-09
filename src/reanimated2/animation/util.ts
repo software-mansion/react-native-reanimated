@@ -75,10 +75,10 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
   delete animationCopy.callback;
 
   const prefNumberSuffOnStart = (
-    animation: Animation,
+    animation: Animation<AnimationObject>,
     value: PrimitiveValue,
     timestamp: number,
-    previousAnimation: Animation
+    previousAnimation: Animation<AnimationObject>
   ) => {
     const val = transform(value, animation);
     transformAnimation(animation);
@@ -89,7 +89,7 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
     transformAnimation(animation);
     if (previousAnimation !== animation) transformAnimation(previousAnimation);
   };
-  const prefNumberSuffOnFrame = (animation: Animation, timestamp: number) => {
+  const prefNumberSuffOnFrame = (animation: Animation<AnimationObject>, timestamp: number) => {
     transformAnimation(animation);
 
     const res = baseOnFrame(animation, timestamp);
@@ -100,10 +100,10 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
 
   const tab = ['H', 'S', 'V', 'A'];
   const colorOnStart = (
-    animation: Animation,
+    animation: Animation<AnimationObject>,
     value: string | number,
     timestamp: Timestamp,
-    previousAnimation: Animation
+    previousAnimation: Animation<AnimationObject>
   ): void => {
     let HSVAValue: ParsedColorArray;
     let HSVACurrent: ParsedColorArray;
@@ -133,7 +133,7 @@ export function decorateAnimation(animation: Animation<AnimationObject> | StyleL
   };
 
   const colorOnFrame = (
-    animation: Animation,
+    animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
     // TODO

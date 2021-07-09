@@ -11,7 +11,7 @@ export interface DelayAnimation extends Animation<DelayAnimation>, HigherOrderAn
 
 export function withDelay(
   delayMs: number,
-  _nextAnimation: NextAnimation
+  _nextAnimation: NextAnimation<DelayAnimation>
 ): Animation<DelayAnimation> {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
@@ -77,7 +77,7 @@ export function withDelay(
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
 export function delay(
   delayMs: number,
-  _nextAnimation: Animation<AnimationObject> | (() => Animation<AnimationObject>)
+  _nextAnimation: NextAnimation<DelayAnimation>
 ): Animation<DelayAnimation> {
   'worklet';
   console.warn('Method `delay` is deprecated. Please use `withDelay` instead');

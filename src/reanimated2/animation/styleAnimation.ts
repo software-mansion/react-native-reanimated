@@ -1,11 +1,11 @@
 import { defineAnimation } from './util';
-import { Animation, Timestamp, AnimationObject, HigherOrderAnimation } from './commonTypes';
+import { Animation, Timestamp, AnimationObject, HigherOrderAnimation, AnimationCallback } from './commonTypes';
 import { AnimatedStyle } from '../commonTypes';
 import { withTiming } from './timing';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: AnimatedStyle;
-  styleAnimations: AnimatedStyle;
+  styleAnimations?: AnimatedStyle;
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: StyleLayoutAnimation,
@@ -13,6 +13,7 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
     timestamp: Timestamp,
     previousAnimation: StyleLayoutAnimation
   ) => void;
+  callback?: AnimationCallback;
 }
 
 export function withStyleAnimation(styleAnimations: AnimatedStyle): StyleLayoutAnimation {

@@ -5,7 +5,7 @@ export interface SequenceAnimation extends Animation<SequenceAnimation>, HigherO
   animationIndex: number;
 }
 
-export function withSequence(..._animations: NextAnimation[]): Animation<SequenceAnimation> {
+export function withSequence(..._animations: NextAnimation<SequenceAnimation>[]): Animation<SequenceAnimation> {
   'worklet';
   return defineAnimation(_animations[0], () => {
     'worklet';
@@ -81,7 +81,7 @@ export function withSequence(..._animations: NextAnimation[]): Animation<Sequenc
 }
 
 /* Deprecated section, kept for backward compatibility. Will be removed soon */
-export function sequence(..._animations: NextAnimation[]): Animation<SequenceAnimation> {
+export function sequence(..._animations: NextAnimation<SequenceAnimation>[]): Animation<SequenceAnimation> {
   'worklet';
   console.warn(
     'Method `sequence` is deprecated. Please use `withSequence` instead'
