@@ -260,7 +260,7 @@ declare module 'react-native-reanimated' {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?: Layout | LayoutAnimationFunction;
       entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
-      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
+      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
     };
 
     type CodeProps = {

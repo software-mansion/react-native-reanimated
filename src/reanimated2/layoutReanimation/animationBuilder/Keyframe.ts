@@ -20,30 +20,71 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     this.definitions = definitions;
   }
 
-  // TODO add parsing TransformStyle
   parseDefinitions(): Map<string, KeyframePoint> {
-    const parsedDefinitions: Map<string, KeyframePoint> = new Map();
+    const parsedDefinitions: Map<string, KeyframePoint> = new Map<
+      string,
+      KeyframePoint
+    >();
     const duration: number = this.durationV ? this.durationV : 500;
-    const keyframePoints: Array<string> = Array.from(
+    const definitionsPoints: Array<string> = Array.from(
       Object.keys(this.definitions)
     );
     let previousPercentage = 0;
-    keyframePoints
+    const addParsedDefinitions = (
+      key: string,
+      duration: number,
+      value: string | number,
+      canAddNew: boolean
+    ) => {
+      if (!(key in parsedDefinitions)) {
+        if (!canAddNew) {
+          throw Error(
+            'Each keyframe should contains the same set of properties!'
+          );
+        }
+        parsedDefinitions[key] = [];
+      }
+      parsedDefinitions[key].push({
+        duration: duration,
+        value: value,
+      });
+    };
+    definitionsPoints
       .sort((a: string, b: string) => parseInt(a) - parseInt(b))
-      .forEach((point: string) => {
+      .forEach((point: string, index: number) => {
         const keyframe: StyleProps = this.definitions[point];
-        const durationPercentage: number = parseInt(point);
+        let propsInKeyframe = 0;
         Object.keys(keyframe).forEach((key: string) => {
-          if (!(key in parsedDefinitions)) {
-            parsedDefinitions[key] = [];
+          const animationDuration =
+            ((parseInt(point) - previousPercentage) / 100) * duration;
+          if (key === 'transform') {
+            keyframe[key].forEach((transformStyle) => {
+              Object.keys(transformStyle).forEach((key: string) => {
+                propsInKeyframe = propsInKeyframe + 1;
+                addParsedDefinitions(
+                  'transform_' + key,
+                  animationDuration,
+                  transformStyle[key],
+                  index === 0
+                );
+              });
+            });
+          } else {
+            propsInKeyframe = propsInKeyframe + 1;
+            addParsedDefinitions(
+              key,
+              animationDuration,
+              keyframe[key],
+              index === 0
+            );
           }
-          parsedDefinitions[key].push({
-            duration:
-              ((durationPercentage - previousPercentage) / 100) * duration,
-            value: keyframe[key],
-          });
         });
-        previousPercentage = durationPercentage;
+        if (propsInKeyframe !== Object.keys(parsedDefinitions).length) {
+          throw Error(
+            'Each keyframe should contains the same set of properties!'
+          );
+        }
+        previousPercentage = parseInt(point);
       });
     return parsedDefinitions;
   }
@@ -72,24 +113,31 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const delayFunction = this.getDelayFunction();
     const parsedDefinitions = this.parseDefinitions();
+    console.log(Object.entries(parsedDefinitions));
 
     return (_targetValues) => {
       'worklet';
       const animations: StyleProps = {};
       Object.keys(parsedDefinitions).forEach((key: string) => {
         const keyframePoints = parsedDefinitions[key];
-        animations[key] = delayFunction(
+        const animation = delayFunction(
           delay,
           withSequence.apply(
             this,
             keyframePoints.map((keyframePoint: KeyframePoint) =>
               withTiming(keyframePoint.value, {
-                duraiton: keyframePoint.duration,
+                duration: keyframePoint.duration,
                 easing: Easing.linear,
               })
             )
           )
         );
+        if (key.includes('transform_')) {
+          if (!('transform' in animations)) animations.transform = [];
+          animations.transform.push({ [key.substring(10)]: animation });
+        } else {
+          animations[key] = animation;
+        }
       });
       return {
         animations: animations,
