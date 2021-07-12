@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -556,7 +556,9 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     animationsActive.value = true;
     return () => {
       initRef.current = null;
-      viewRef.current = null;
+      if (!isChromeDebugger()) {
+        viewRef.current = null;
+      }
       animationsActive.value = false;
     };
   }, []);
