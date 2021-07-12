@@ -18,6 +18,7 @@ import {
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
+import { isJest } from './reanimated2/PlatformChecker';
 
 const NODE_MAPPING = new Map();
 
@@ -77,7 +78,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         this.animatedStyle = { value: {} };
       }
       this.sv = makeMutable({});
@@ -293,7 +294,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       styles.forEach((style) => {
         if (style?.viewDescriptor) {
           style.viewDescriptor.value = { tag: viewTag, name: viewName };
-          if (process.env.JEST_WORKER_ID) {
+          if (isJest()) {
             /**
              * We need to connect Jest's TestObject instance whose contains just props object
              * with the updateProps() function where we update the properties of the component.
@@ -482,7 +483,7 @@ export default function createAnimatedComponent(Component, options = {}) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
 

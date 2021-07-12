@@ -2,6 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
+import { isJest, shouldBeUseWeb } from './PlatformChecker';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -452,7 +453,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
   let animatedStyle;
-  if (process.env.JEST_WORKER_ID) {
+  if (isJest()) {
     animatedStyle = useRef({});
   }
 
@@ -491,7 +492,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       };
     }
 
-    if (canApplyOptimalisation(upadterFn) && Platform.OS !== 'web') {
+    if (canApplyOptimalisation(upadterFn) && !shouldBeUseWeb()) {
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
@@ -500,7 +501,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
           return style;
         };
       }
-    } else if (Platform.OS !== 'web') {
+    } else if (!shouldBeUseWeb()) {
       optimalization = 0;
       upadterFn = () => {
         'worklet';
@@ -513,7 +514,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       upadterFn.__optimalization = optimalization;
     }
 
-    if (process.env.JEST_WORKER_ID) {
+    if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(

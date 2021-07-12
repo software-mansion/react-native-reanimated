@@ -1,5 +1,9 @@
-import { NativeModules } from 'react-native';
+// import { NativeModules } from 'react-native';
 
-const { ReanimatedModule } = NativeModules;
+// const { ReanimatedModule } = NativeModules;
 
-export default ReanimatedModule;
+// export default ReanimatedModule;
+
+import ReanimatedModuleCompat from './ReanimatedModuleCompat';
+
+export default ReanimatedModuleCompat;

@@ -3,8 +3,8 @@
 // @ts-nocheck
 import { processColor } from './Colors';
 import { makeShareable, isConfigured } from './core';
-import { Platform } from 'react-native';
 import { _updatePropsJS } from './js-reanimated';
+import { shouldBeUseWeb } from './PlatformChecker';
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
 export const colorProps = [
@@ -27,7 +27,7 @@ export const colorProps = [
 const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 let updatePropsByPlatform;
-if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
+if (shouldBeUseWeb()) {
   updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef) => {
     'worklet';
     _updatePropsJS(viewDescriptor.value.tag, null, updates, maybeViewRef);
