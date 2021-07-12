@@ -126,7 +126,6 @@ let _getTimestamp;
 console.log('NativeReanimated', NativeReanimated);
 if (nativeShouldBeMock()) {
   _getTimestamp = () => {
-    console.log('NativeReanimated', NativeReanimated);
     return NativeReanimated.getTimestamp();
   };
 } else {
