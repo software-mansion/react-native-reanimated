@@ -5,7 +5,7 @@ export function isJest(): boolean {
 }
 
 export function isChromeDebugger(): boolean {
-  return !(global as any).nativeCallSyncHook;
+  return !(global as any).nativeCallSyncHook || (global as any).__REMOTEDEV__;
 }
 
 export function isWeb(): boolean {

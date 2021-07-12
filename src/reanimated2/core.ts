@@ -123,7 +123,6 @@ export function getViewProp(viewTag, propName) {
 }
 
 let _getTimestamp;
-console.log('NativeReanimated', NativeReanimated);
 if (nativeShouldBeMock()) {
   _getTimestamp = () => {
     return NativeReanimated.getTimestamp();

@@ -10,6 +10,24 @@ if (shouldBeUseWeb()) {
   global._setGlobalConsole = (_val) => {
     // noop
   };
+  global._measure = () => {
+    console.warn(
+      "[Reanimated] You can't use 'measue' method with Chrome Debugger or with web version"
+    );
+    return {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      pageX: 0,
+      pageY: 0,
+    };
+  };
+  global._scrollTo = () => {
+    console.warn(
+      "[Reanimated] You can't use 'scrollTo' method with Chrome Debugger or with web version"
+    );
+  };
 }
 
 export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
