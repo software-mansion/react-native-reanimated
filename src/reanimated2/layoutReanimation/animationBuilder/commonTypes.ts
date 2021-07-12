@@ -6,6 +6,8 @@ export type StyleProps =
   | TextStyle
   | { originX?: number; originY?: number };
 
+export type KeyFrameProps = StyleProps | { easing?: EasingFn };
+
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
