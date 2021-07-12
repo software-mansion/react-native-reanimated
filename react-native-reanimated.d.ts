@@ -637,7 +637,7 @@ declare module 'react-native-reanimated' {
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
     export class Keyframe {
-      constructor(definitions: Map<number, StyleProps>);
+      constructor(definitions: Map<number, KeyFrameProps[]>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
     }

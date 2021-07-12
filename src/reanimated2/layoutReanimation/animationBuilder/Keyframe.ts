@@ -42,7 +42,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     let previousKeyPoint = 0;
 
     /* 
-       Because one of the assumptions is that each keyframe should contain
+       Because one of the assumptions is that each keyframe should contains
        the same set of properties ( to make animation more consistent )
        new entries in the parsedKeyFrames map can be added only in the first iteration
        ( flag addIfNotExists is then set to true ).
