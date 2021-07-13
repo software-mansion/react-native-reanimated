@@ -38,38 +38,38 @@ LogBox.ignoreLogs(['Calling `getNode()`']);
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
-  DefaultAnimations: {
-    screen: DefaultAnimations,
-    title: '🆕 Default layout animations',
-  },
-  CustomLayoutAnimation: {
-    screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
-  },
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  Carousel: {
-    title: '🆕 Carousel',
-    screen: Carousel,
-  },
+  // DefaultAnimations: {
+  //   screen: DefaultAnimations,
+  //   title: '🆕 Default layout animations',
+  // },
+  // CustomLayoutAnimation: {
+  //   screen: CustomLayoutAnimationScreen,
+  //   title: '🆕 Custom layout animation',
+  // },
+  // ModalNewAPI: {
+  //   title: '🆕 ModalNewAPI',
+  //   screen: ModalNewAPI,
+  // },
+  // SpringLayoutAnimation: {
+  //   title: '🆕 Spring Layout Animation',
+  //   screen: SpringLayoutAnimation,
+  // },
+  // MountingUnmounting: {
+  //   title: '🆕 Mounting Unmounting',
+  //   screen: MountingUnmounting,
+  // },
+  // SwipeableList: {
+  //   title: '🆕 Swipeable list',
+  //   screen: SwipeableList,
+  // },
+  // Modal: {
+  //   title: '🆕 Modal',
+  //   screen: Modal,
+  // },
+  // Carousel: {
+  //   title: '🆕 Carousel',
+  //   screen: Carousel,
+  // },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
@@ -118,10 +118,10 @@ const SCREENS: Screens = {
     screen: LiquidSwipe,
     title: 'Liquid Swipe Example',
   },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: 'Extrapolation Example',
-  },
+  // ExtrapolationExample: {
+  //   screen: ExtrapolationExample,
+  //   title: 'Extrapolation Example',
+  // },
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
