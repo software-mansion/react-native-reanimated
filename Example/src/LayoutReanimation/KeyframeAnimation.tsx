@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button } from 'react-native';
 import Animated, {
   AnimatedLayout,
   Easing,
@@ -11,15 +11,15 @@ export function KeyframeAnimation(): React.ReactElement {
   const enteringAnimation = new Keyframe({
     0: {
       originX: 50,
-      transform: [{ scale: 0.4 }, { rotate: '45deg' }],
+      transform: [{ rotate: '45deg' }],
     },
     30: {
       originX: 10,
-      transform: [{ scale: 1.5 }, { rotate: '-90deg' }],
+      transform: [{ rotate: '-90deg' }],
     },
     100: {
       originX: 0,
-      transform: [{ scale: 1 }, { rotate: '0deg' }],
+      transform: [{ rotate: '0deg' }],
       easing: Easing.quad,
     },
   }).duration(2000);
@@ -53,7 +53,13 @@ export function KeyframeAnimation(): React.ReactElement {
             <Animated.View
               entering={enteringAnimation}
               exiting={exitingAnimation}
-              style={styles.animatedView}
+              style={{
+                height: 100,
+                width: 200,
+                backgroundColor: 'blue',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             />
           </AnimatedLayout>
         )}
@@ -61,13 +67,3 @@ export function KeyframeAnimation(): React.ReactElement {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  animatedView: {
-    height: 100,
-    width: 200,
-    backgroundColor: 'blue',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
