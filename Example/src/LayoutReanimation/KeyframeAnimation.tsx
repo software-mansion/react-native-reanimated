@@ -53,7 +53,8 @@ export function KeyframeAnimation(): React.ReactElement {
             <Animated.View
               entering={enteringAnimation}
               exiting={exitingAnimation}
-              style={styles.animatedView}></Animated.View>
+              style={styles.animatedView}
+            />
           </AnimatedLayout>
         )}
       </View>

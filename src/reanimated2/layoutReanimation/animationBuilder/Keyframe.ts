@@ -8,33 +8,45 @@ import {
   StyleProps,
 } from './commonTypes';
 
-export interface KeyframePoint {
+export interface KeyFramePoint {
   duration: number;
   value: number | string;
   easing?: EasingFn;
 }
+export interface ParsedKeyFramesDefinition {
+  initialValues: StyleProps;
+  keyframes: {
+    [key: string]: KeyFramePoint[];
+  };
+}
+
+export interface KeyFramesDefinition {
+  [key: number]: KeyFrameProps;
+}
 export class Keyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
-  definitions: Map<number, KeyFrameProps>;
+  definitions: KeyFramesDefinition;
 
   /*
     Keyframe definition should be passed in the constructor as the map
     which keys are between range 0 - 100 (%) and correspond to the point in the animation progress.
   */
-  constructor(definitions: Map<number, KeyFrameProps>) {
+  constructor(definitions: KeyFramesDefinition) {
     this.definitions = definitions;
   }
 
-  private parseDefinitions(): Map<string, KeyframePoint[]> {
+  private parseDefinitions(): ParsedKeyFramesDefinition {
     /* 
         for each style property contains an array with all its key points: 
         value, duration of transition to that value, and optional easing function (defaults to Linear)
     */
-    const parsedKeyFrames: Map<string, KeyframePoint[]> = new Map<
-      string,
-      KeyframePoint[]
-    >();
+    const parsedKeyFrames: {
+      [key: string]: KeyFramePoint[];
+    } = {};
+    const initialValues: StyleProps = this.definitions['0']
+      ? (this.definitions['0'] as StyleProps)
+      : {};
     const duration: number = this.durationV ? this.durationV : 500;
     const animationKeyPoints: Array<string> = Array.from(
       Object.keys(this.definitions)
@@ -69,17 +81,19 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       });
     };
     animationKeyPoints
+      .filter((value: string) => parseInt(value) !== 0)
       .sort((a: string, b: string) => parseInt(a) - parseInt(b))
       .forEach((keyPoint: string, index: number) => {
-        if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100)
+        if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
           throw Error('Keyframe should be in between range 0 - 100.');
+        }
         const keyframe: KeyFrameProps = this.definitions[keyPoint];
         let propsInKeyframe = 0;
         const easing = keyframe.easing;
         delete keyframe.easing;
+        const animationDuration =
+          ((parseInt(keyPoint) - previousKeyPoint) / 100) * duration;
         Object.keys(keyframe).forEach((key: string) => {
-          const animationDuration =
-            ((parseInt(keyPoint) - previousKeyPoint) / 100) * duration;
           if (key === 'transform') {
             keyframe[key].forEach((transformStyle) => {
               Object.keys(transformStyle).forEach((key: string) => {
@@ -115,7 +129,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         }
         previousKeyPoint = parseInt(keyPoint);
       });
-    return parsedKeyFrames;
+    return { initialValues: initialValues, keyframes: parsedKeyFrames };
   }
 
   duration(durationMs: number): Keyframe {
@@ -141,7 +155,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
   build: EntryExitAnimationBuild = () => {
     const delay = this.delayV;
     const delayFunction = this.getDelayFunction();
-    const parsedKeyFrames = this.parseDefinitions();
+    const { keyframes, initialValues } = this.parseDefinitions();
 
     return (_targetValues) => {
       'worklet';
@@ -150,13 +164,13 @@ export class Keyframe implements IEntryExitAnimationBuilder {
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
       */
-      Object.keys(parsedKeyFrames).forEach((key: string) => {
-        const keyframePoints = parsedKeyFrames[key];
+      Object.keys(keyframes).forEach((key: string) => {
+        const keyframePoints = keyframes[key];
         const animation = delayFunction(
           delay,
           withSequence.apply(
             this,
-            keyframePoints.map((keyframePoint: KeyframePoint) =>
+            keyframePoints.map((keyframePoint: KeyFramePoint) =>
               withTiming(keyframePoint.value, {
                 duration: keyframePoint.duration,
                 easing: keyframePoint.easing
@@ -167,15 +181,18 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           )
         );
         if (key.includes('transform_')) {
-          if (!('transform' in animations)) animations.transform = [];
+          if (!('transform' in animations)) {
+            animations.transform = [];
+          }
           animations.transform.push({ [key.substring(10)]: animation });
         } else {
           animations[key] = animation;
         }
       });
+
       return {
         animations: animations,
-        initialValues: {},
+        initialValues: initialValues,
       };
     };
   };
