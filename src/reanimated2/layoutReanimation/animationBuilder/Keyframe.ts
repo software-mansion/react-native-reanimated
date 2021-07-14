@@ -4,46 +4,38 @@ import {
   AnimationFunction,
   EntryExitAnimationBuild,
   IEntryExitAnimationBuilder,
-  KeyFrameProps,
+  KeyframeProps,
   StyleProps,
 } from './commonTypes';
 
-export interface KeyFramePoint {
+export interface KeyframePoint {
   duration: number;
   value: number | string;
   easing?: EasingFn;
 }
-export interface ParsedKeyFramesDefinition {
+export interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
-  keyframes: {
-    [key: string]: KeyFramePoint[];
-  };
-}
-
-export interface KeyFramesDefinition {
-  [key: number]: KeyFrameProps;
+  keyframes: Record<string, KeyframePoint[]>;
 }
 export class Keyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
-  definitions: KeyFramesDefinition;
+  definitions: Record<number, KeyframeProps>;
 
   /*
     Keyframe definition should be passed in the constructor as the map
     which keys are between range 0 - 100 (%) and correspond to the point in the animation progress.
   */
-  constructor(definitions: KeyFramesDefinition) {
+  constructor(definitions: Record<number, KeyframeProps>) {
     this.definitions = definitions;
   }
 
-  private parseDefinitions(): ParsedKeyFramesDefinition {
+  private parseDefinitions(): ParsedKeyframesDefinition {
     /* 
-        for each style property contains an array with all its key points: 
+        Each style property contain an array with all their key points: 
         value, duration of transition to that value, and optional easing function (defaults to Linear)
     */
-    const parsedKeyFrames: {
-      [key: string]: KeyFramePoint[];
-    } = {};
+    const parsedKeyframes: Record<string, KeyframePoint[]> = {};
     const initialValues: StyleProps = this.definitions['0']
       ? (this.definitions['0'] as StyleProps)
       : {};
@@ -54,27 +46,33 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     let previousKeyPoint = 0;
 
     /* 
-       Because one of the assumptions is that each keyframe should contains
-       the same set of properties ( to make animation more consistent )
-       new entries in the parsedKeyFrames map can be added only in the first iteration
-       ( flag addIfNotExists is then set to true ).
+       Because one of the assumptions is that each keyframe should contain
+       the same set of properties to make animation more consistent,
+       new entries in the parsedKeyframes map can be added only in the first iteration
+       (flag addIfNotExists is then set to true).
     */
-    const addKeyPoint = (
-      key: string,
-      duration: number,
-      value: string | number,
-      easing: EasingFn,
-      addIfNotExists: boolean
-    ) => {
-      if (!(key in parsedKeyFrames)) {
+    const addKeyPoint = ({
+      key,
+      duration,
+      value,
+      easing,
+      addIfNotExists,
+    }: {
+      key: string;
+      duration: number;
+      value: string | number;
+      easing: EasingFn;
+      addIfNotExists: boolean;
+    }) => {
+      if (!(key in parsedKeyframes)) {
         if (!addIfNotExists) {
           throw Error(
             'Each keyframe should contains the same set of properties!'
           );
         }
-        parsedKeyFrames[key] = [];
+        parsedKeyframes[key] = [];
       }
-      parsedKeyFrames[key].push({
+      parsedKeyframes[key].push({
         duration: duration,
         value: value,
         easing: easing,
@@ -87,49 +85,45 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
           throw Error('Keyframe should be in between range 0 - 100.');
         }
-        const keyframe: KeyFrameProps = this.definitions[keyPoint];
+        const keyframe: KeyframeProps = this.definitions[keyPoint];
         let propsInKeyframe = 0;
         const easing = keyframe.easing;
         delete keyframe.easing;
         const animationDuration =
           ((parseInt(keyPoint) - previousKeyPoint) / 100) * duration;
+        const addKeyPointWith = (key: string, value: string | number) =>
+          addKeyPoint({
+            key,
+            duration: animationDuration,
+            value,
+            easing,
+            addIfNotExists: index === 0,
+          });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
             keyframe[key].forEach((transformStyle) => {
               Object.keys(transformStyle).forEach((key: string) => {
                 propsInKeyframe = propsInKeyframe + 1;
-                addKeyPoint(
-                  'transform_' + key,
-                  animationDuration,
-                  transformStyle[key],
-                  easing,
-                  index === 0
-                );
+                addKeyPointWith('transform_' + key, transformStyle[key]);
               });
             });
           } else {
             propsInKeyframe = propsInKeyframe + 1;
-            addKeyPoint(
-              key,
-              animationDuration,
-              keyframe[key],
-              easing,
-              index === 0
-            );
+            addKeyPointWith(key, keyframe[key]);
           }
         });
         /* 
             If the number of style properties in the current key frame differs from 
             the number of style properties already parsed, it means that some property is missing in one of the key frames
         */
-        if (propsInKeyframe !== Object.keys(parsedKeyFrames).length) {
+        if (propsInKeyframe !== Object.keys(parsedKeyframes).length) {
           throw Error(
             'Each keyframe should contains the same set of properties!'
           );
         }
         previousKeyPoint = parseInt(keyPoint);
       });
-    return { initialValues: initialValues, keyframes: parsedKeyFrames };
+    return { initialValues: initialValues, keyframes: parsedKeyframes };
   }
 
   duration(durationMs: number): Keyframe {
@@ -170,7 +164,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           delay,
           withSequence.apply(
             this,
-            keyframePoints.map((keyframePoint: KeyFramePoint) =>
+            keyframePoints.map((keyframePoint: KeyframePoint) =>
               withTiming(keyframePoint.value, {
                 duration: keyframePoint.duration,
                 easing: keyframePoint.easing

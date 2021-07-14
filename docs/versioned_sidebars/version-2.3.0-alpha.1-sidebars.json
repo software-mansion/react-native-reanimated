@@ -168,10 +168,6 @@
             },
             {
               "type": "doc",
-              "id": "version-2.3.0-alpha.1/api/LayoutAnimations/keyframeAnimations"
-            },
-            {
-              "type": "doc",
               "id": "version-2.3.0-alpha.1/api/LayoutAnimations/layoutTransitions"
             }
           ]

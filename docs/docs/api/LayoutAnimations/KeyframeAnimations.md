@@ -16,7 +16,7 @@ import { Keyframe } from 'react-native-reanimated';
 
 ### 2. Create Keyframe object, define initial and final state
 
-In Keyframe's constructor pass object with definitions of your animation. Object keys correspond to animation progress,
+In Keyframe's constructor pass object with definitions of your animation. Object keys should be within range 0-100 and correspond to animation progress,
 so to 0 assign the style, you want for your object at the beginning of the animation and to 100 assign the style you want for your object to have at the end of the animation.
 
 ```js
@@ -24,10 +24,10 @@ import { Keyframe } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
     0: {
-      transform: [ { rotate: '0deg' }],
+      transform: [{ rotate: '0deg' }],
     },
     100: {
-      transform: [ { rotate: '45deg' }],
+      transform: [{ rotate: '45deg' }],
     },
   }
 ```
@@ -42,32 +42,34 @@ import { Keyframe } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
     0: {
-      transform: [ { rotate: '0deg' }],
+      transform: [{ rotate: '0deg' }],
     },
     45: {
         transform: [{ rotate: '100deg' }]
     },
     100: {
-      transform: [ { rotate: '45deg' }],
+      transform: [{ rotate: '45deg' }],
     },
   }
 ```
 
 ### 4. Customize transitions using an easing function
 
+If easing property is not provided, it defaults to linear easing function.
+
 ```js
 import { Keyframe, Easing } from 'react-native-reanimated';
 
 const keyframe = new Keyframe({
     0: {
-      transform: [ { rotate: '0deg' }],
+      transform: [{ rotate: '0deg' }],
     },
     45: {
         transform: [{ rotate: '100deg' }],
         easing: Easing.exp,
     },
     100: {
-      transform: [ { rotate: '45deg' }],
+      transform: [{ rotate: '45deg' }],
     },
   }
 ```
@@ -89,19 +91,17 @@ Currently, you can define animations using keyframes only for entry and exit ani
 ### 3. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
     <AnimatedLayout> // +
-        <View> sth </View>
-        <View> 
-            <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} >
-        </View>
+        <Text> sth </Text>
+        <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} >
     </AnimatedLayout> // +
 ```
 
 ## Available modifiers
-The order of Modifiers doesn't matter.
+The order of modifiers doesn't matter.
 
 ### duration
 default: 300
-How long the animation should last
+How long the animation should last.
 
 ### delay
 default: 0
