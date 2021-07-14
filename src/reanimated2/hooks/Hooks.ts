@@ -3,7 +3,7 @@
 // @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
 
-import WorkletEventHandler from './WorkletEventHandler';
+import WorkletEventHandler from '../WorkletEventHandler';
 import {
   startMapper,
   stopMapper,
@@ -11,13 +11,16 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
-} from './core';
-import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
-import { initialUpdaterRun, cancelAnimation } from './animations';
-import { getTag } from './NativeMethods';
-import NativeReanimated from './NativeReanimated';
+} from '../core';
+import updateProps, {
+  updatePropsJestWrapper,
+  colorProps,
+} from '../UpdateProps';
+import { initialUpdaterRun, cancelAnimation } from '../animations';
+import { getTag } from '../NativeMethods';
+import NativeReanimated from '../NativeReanimated';
 import { Platform } from 'react-native';
-import { processColor } from './Colors';
+import { processColor } from '../Colors';
 
 export function useSharedValue(init) {
   const ref = useRef(null);
