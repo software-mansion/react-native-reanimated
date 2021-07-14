@@ -30,7 +30,7 @@ runOnUI(() => {
     withStyleAnimation requires the same order of object in `animation.transform` as in `initialValues.transform`
   */
   const sortInitialValues = (style) => {
-    if (!style.animations.transform) {
+    if (!style.animations.transform || style.animations.transform.length <= 1) {
       return;
     }
 
