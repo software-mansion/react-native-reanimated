@@ -26,6 +26,33 @@ runOnUI(() => {
 
   const configs: Record<string, any> = {};
 
+  /* 
+    withStyleAnimation requires the same order of object in `animation.transform` as in `initialValues.transform`
+  */
+  const sortInitialValues = (style) => {
+    if (!style.animations.transform) {
+      return;
+    }
+
+    const transformKeysOrder = [];
+    for (const transformObject of style.animations.transform) {
+      transformKeysOrder.push(Object.keys(transformObject)[0]);
+    }
+
+    const transformValues = {};
+    for (const transformObject of style.initialValues.transform) {
+      const key = Object.keys(transformObject)[0];
+      transformValues[key] = transformObject;
+    }
+
+    const transformInitialValues = [];
+    for (const key of transformKeysOrder) {
+      transformInitialValues.push(transformValues[key]);
+    }
+
+    style.initialValues.transform = transformInitialValues;
+  };
+
   global.LayoutAnimationRepository = {
     configs,
     registerConfig(tag, config) {
@@ -44,6 +71,7 @@ runOnUI(() => {
       }
 
       const style = configs[tag][type](yogaValues);
+      sortInitialValues(style);
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
