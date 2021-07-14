@@ -36,9 +36,31 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         value, duration of transition to that value, and optional easing function (defaults to Linear)
     */
     const parsedKeyframes: Record<string, KeyframePoint[]> = {};
-    const initialValues: StyleProps = this.definitions['0']
-      ? (this.definitions['0'] as StyleProps)
-      : {};
+    /* 
+       One of the assumptions is that keyframe  0 is required to properly set initial values.
+       Every other keyframe should contain properties from the set provided as initial values.
+    */
+    if (!this.definitions['0']) {
+      throw Error(
+        "Please provide 0, or 'from' keyframe with initial state of your object."
+      );
+    }
+    const initialValues: StyleProps = this.definitions['0'] as StyleProps;
+    /*
+      Initialize parsedKeyframes for properties provided in initial keyframe
+    */
+    Object.keys(initialValues).forEach((styleProp: string) => {
+      if (styleProp === 'transform') {
+        initialValues[styleProp].forEach((transformStyle) => {
+          Object.keys(transformStyle).forEach((transformProp: string) => {
+            parsedKeyframes['transform_' + transformProp] = [];
+          });
+        });
+      } else {
+        parsedKeyframes[styleProp] = [];
+      }
+    });
+
     const duration: number = this.durationV ? this.durationV : 500;
     const animationKeyPoints: Array<string> = Array.from(
       Object.keys(this.definitions)
@@ -46,31 +68,25 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     let previousKeyPoint = 0;
 
     /* 
-       Because one of the assumptions is that each keyframe should contain
-       the same set of properties to make animation more consistent,
-       new entries in the parsedKeyframes map can be added only in the first iteration
-       (flag addIfNotExists is then set to true).
+       Other keyframes can't contain properties that were not specified in initial keyframe.
+       In case there are some properties specified in initial keyframe and not in other keyframe,
+       value of that property will be copied from previous keyframe.
     */
     const addKeyPoint = ({
       key,
       duration,
       value,
       easing,
-      addIfNotExists,
     }: {
       key: string;
       duration: number;
       value: string | number;
       easing: EasingFn;
-      addIfNotExists: boolean;
     }) => {
       if (!(key in parsedKeyframes)) {
-        if (!addIfNotExists) {
-          throw Error(
-            'Each keyframe should contains the same set of properties!'
-          );
-        }
-        parsedKeyframes[key] = [];
+        throw Error(
+          "Keyframe can contain only that set of properties that were provide as initial values (keyframe 0 or 'from')"
+        );
       }
       parsedKeyframes[key].push({
         duration: duration,
@@ -86,7 +102,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           throw Error('Keyframe should be in between range 0 - 100.');
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
-        let propsInKeyframe = 0;
+        let propsLeft = Object.keys(parsedKeyframes);
         const easing = keyframe.easing;
         delete keyframe.easing;
         const animationDuration =
@@ -97,30 +113,32 @@ export class Keyframe implements IEntryExitAnimationBuilder {
             duration: animationDuration,
             value,
             easing,
-            addIfNotExists: index === 0,
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
             keyframe[key].forEach((transformStyle) => {
               Object.keys(transformStyle).forEach((key: string) => {
-                propsInKeyframe = propsInKeyframe + 1;
                 addKeyPointWith('transform_' + key, transformStyle[key]);
+                propsLeft = propsLeft.filter(
+                  (value) => value !== 'transform_' + key
+                );
               });
             });
           } else {
-            propsInKeyframe = propsInKeyframe + 1;
             addKeyPointWith(key, keyframe[key]);
+            propsLeft = propsLeft.filter((value) => value !== key);
           }
         });
-        /* 
-            If the number of style properties in the current key frame differs from 
-            the number of style properties already parsed, it means that some property is missing in one of the key frames
-        */
-        if (propsInKeyframe !== Object.keys(parsedKeyframes).length) {
-          throw Error(
-            'Each keyframe should contains the same set of properties!'
-          );
-        }
+        propsLeft.forEach((key: string) => {
+          const lastValue =
+            index === 0
+              ? initialValues[key]
+              : parsedKeyframes[key][index - 1].value;
+          parsedKeyframes[key].push({
+            value: lastValue,
+            duration: animationDuration,
+          });
+        });
         previousKeyPoint = parseInt(keyPoint);
       });
     return { initialValues: initialValues, keyframes: parsedKeyframes };
