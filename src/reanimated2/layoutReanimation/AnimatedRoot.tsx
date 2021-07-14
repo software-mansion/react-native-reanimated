@@ -39,15 +39,15 @@ runOnUI(() => {
       transformKeysOrder.push(Object.keys(transformObject)[0]);
     }
 
-    const transformValues = {};
+    const transformByKey = {};
     for (const transformObject of style.initialValues.transform) {
       const key = Object.keys(transformObject)[0];
-      transformValues[key] = transformObject;
+      transformByKey[key] = transformObject;
     }
 
     const transformInitialValues = [];
     for (const key of transformKeysOrder) {
-      transformInitialValues.push(transformValues[key]);
+      transformInitialValues.push(transformByKey[key]);
     }
 
     style.initialValues.transform = transformInitialValues;
