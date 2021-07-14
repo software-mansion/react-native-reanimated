@@ -50,6 +50,7 @@ module.exports = {
             'api/LayoutAnimations/customAnimations',
             'api/LayoutAnimations/entryAnimations',
             'api/LayoutAnimations/exitAnimations',
+            'api/LayoutAnimations/keyframeAnimations',
             'api/LayoutAnimations/layoutTransitions',
           ],
           Miscellaneous: ['api/runOnJS'],

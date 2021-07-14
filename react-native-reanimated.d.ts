@@ -259,8 +259,8 @@ declare module 'react-native-reanimated' {
     } & { 
       animatedProps?: Partial<AnimateProps<P>>;
       layout?: Layout | LayoutAnimationFunction;
-      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
-      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
+      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
+      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
     };
 
     type CodeProps = {
@@ -636,6 +636,17 @@ declare module 'react-native-reanimated' {
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
+    export type StyleProps =
+      | ViewStyle
+      | TextStyle
+      | { originX?: number; originY?: number };
+
+    export type KeyframeProps = StyleProps | { easing?: EasingFn };
+    export class Keyframe {
+      constructor(definitions: Map<number, KeyframeProps[]>);
+      duration(durationMs: number): Keyframe;
+      delay(delayMs: number): Keyframe;
+    }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
       duration(durationMs: number): BaseAnimationBuilder;
@@ -1016,4 +1027,5 @@ declare module 'react-native-reanimated' {
   export const RollInRight: typeof Animated.RollInRight;
   export const RollOutLeft: typeof Animated.RollOutLeft;
   export const RollOutRight: typeof Animated.RollOutRight;
+  export const Keyframe: Keyframe;
 }
