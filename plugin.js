@@ -121,6 +121,7 @@ const blacklistedFunctions = new Set([
   'apply',
   'call',
   '__callAsync',
+  'includes',
 ]);
 
 const possibleOptFunction = new Set(['interpolate']);

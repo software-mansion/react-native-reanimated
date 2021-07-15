@@ -17,6 +17,7 @@ import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
+import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
 import { processColor } from './Colors';
 
 export function useSharedValue(init) {
@@ -230,7 +231,7 @@ const validateAnimatedStyles = (styles) => {
 };
 
 function styleUpdater(
-  viewDescriptor,
+  viewDescriptors,
   updater,
   state,
   maybeViewRef,
@@ -308,7 +309,7 @@ function styleUpdater(
   } else {
     state.isAnimationCancelled = true;
     state.animations = {};
-    updateProps(viewDescriptor, newValues, maybeViewRef);
+    updateProps(viewDescriptors, newValues, maybeViewRef);
   }
 }
 
@@ -444,10 +445,9 @@ const canApplyOptimalisation = (upadterFn) => {
 };
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
-  const viewDescriptor = useSharedValue({ tag: -1, name: null }, false);
   const initRef = useRef(null);
+  let viewsRef = makeViewsRefSet();
   const inputs = Object.values(updater._closure);
-  const viewRef = useRef(null);
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
@@ -464,18 +464,25 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
   adaptersHash && dependencies.push(adaptersHash);
 
+  const viewDescriptors = makeViewDescriptorsSet();
   if (initRef.current === null) {
-    const initial = initialUpdaterRun(updater);
-    validateAnimatedStyles(initial);
+    const initialStyle = initialUpdaterRun(updater);
+    validateAnimatedStyles(initialStyle);
     initRef.current = {
-      initial,
-      remoteState: makeRemote({ last: initial }),
+      initial: {
+        value: null,
+      },
+      remoteState: makeRemote({ last: initialStyle }),
+      workletViewDescriptors: makeMutable([]),
     };
+    viewDescriptors.rebuildWorkletViewDescriptors(
+      initRef.current.workletViewDescriptors
+    );
   }
-
-  const { remoteState, initial } = initRef.current;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
-
+  dependencies.push(initRef.current.workletViewDescriptors.value);
+  const { initial, remoteState, workletViewDescriptors } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+  initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
     let upadterFn = updater;
@@ -517,7 +524,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          viewDescriptor,
+          workletViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -530,7 +537,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       fun = () => {
         'worklet';
         styleUpdater(
-          viewDescriptor,
+          workletViewDescriptors,
           upadterFn,
           remoteState,
           maybeViewRef,
@@ -555,7 +562,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     animationsActive.value = true;
     return () => {
       initRef.current = null;
-      viewRef.current = null;
+      viewsRef = null;
       animationsActive.value = false;
     };
   }, []);
@@ -597,9 +604,9 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
 
   if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptor, initial, viewRef, animatedStyle };
+    return { viewDescriptors, initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptor, initial, viewRef };
+    return { viewDescriptors, initial, viewsRef };
   }
 }
 
