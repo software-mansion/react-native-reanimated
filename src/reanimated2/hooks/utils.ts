@@ -1,9 +1,9 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
 import WorkletEventHandler from '../WorkletEventHandler';
+import { DependencyObject, WorkletFunction } from './commonTypes';
 
-// TODO type event
-export function useEvent(
-  handler: (event: any) => void,
+export function useEvent<T>(
+  handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
 ): MutableRefObject<WorkletEventHandler> {
@@ -24,18 +24,23 @@ export function useEvent(
 }
 
 // builds one big hash from multiple worklets' hashes
-export function buildWorkletsHash(handlers) {
+export function buildWorkletsHash(
+  handlers: Record<string, WorkletFunction>
+): string {
   return Object.keys(handlers).reduce(
     (previousValue, key) =>
       previousValue === null
-        ? handlers[key].__workletHash
-        : previousValue.toString() + handlers[key].__workletHash.toString(),
+        ? handlers[key].__workletHash.toString()
+        : previousValue + handlers[key].__workletHash.toString(),
     null
   );
 }
 
 // builds dependencies array for gesture handlers
-export function buildDependencies(dependencies, handlers) {
+export function buildDependencies(
+  dependencies: Array<string | DependencyObject>,
+  handlers: Record<string, WorkletFunction>
+): Array<string | DependencyObject> {
   if (!dependencies) {
     dependencies = Object.keys(handlers).map((handlerKey) => {
       const handler = handlers[handlerKey];
@@ -51,15 +56,24 @@ export function buildDependencies(dependencies, handlers) {
 }
 
 // this is supposed to work as useEffect comparison
-export function areDependenciesEqual(nextDeps, prevDeps) {
-  function is(x, y) {
+export function areDependenciesEqual(
+  nextDeps: Array<string | DependencyObject>,
+  prevDeps: Array<string | DependencyObject>
+): boolean {
+  function is(x: number, y: number) {
     /* eslint-disable no-self-compare */
     return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
     /* eslint-enable no-self-compare */
   }
-  const objectIs = typeof Object.is === 'function' ? Object.is : is;
+  const objectIs: (
+    nextDeps: string | DependencyObject,
+    prevDeps: string | DependencyObject
+  ) => boolean = typeof Object.is === 'function' ? Object.is : is;
 
-  function areHookInputsEqual(nextDeps, prevDeps) {
+  function areHookInputsEqual(
+    nextDeps: Array<string | DependencyObject>,
+    prevDeps: Array<string | DependencyObject>
+  ): boolean {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }

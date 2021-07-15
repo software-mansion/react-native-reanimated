@@ -1,9 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animations';
 import { makeMutable, startMapper, stopMapper } from '../core';
+import {
+  BasicWorkletFunction,
+  DependencyList,
+  SharedValue,
+} from './commonTypes';
 
-export function useDerivedValue(processor, dependencies) {
-  const initRef = useRef(null);
+export type DerivedValue<T> = Readonly<SharedValue<T>>;
+
+export function useDerivedValue<T>(
+  processor: BasicWorkletFunction<T>,
+  dependencies: DependencyList
+): DerivedValue<T> {
+  const initRef = useRef<SharedValue<T>>(null);
   const inputs = Object.values(processor._closure);
 
   // build dependencies
