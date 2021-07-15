@@ -86,31 +86,40 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const animationKeyPoints: Array<string> = Array.from(
       Object.keys(this.definitions)
     );
-    let previousKeyPoint = 0;
+
+    const getAnimationDuration = (
+      key: string,
+      currentKeyPoint: number
+    ): number => {
+      const maxDuration = (currentKeyPoint / 100) * duration;
+      const currentDuration = parsedKeyframes[key].reduce(
+        (acc: number, value: KeyframePoint) => acc + value.duration,
+        0
+      );
+      return maxDuration - currentDuration;
+    };
 
     /* 
        Other keyframes can't contain properties that were not specified in initial keyframe.
-       In case there are some properties specified in initial keyframe and not in other keyframe,
-       value of that property will be copied from previous keyframe.
     */
     const addKeyPoint = ({
       key,
-      duration,
       value,
+      currentKeyPoint,
       easing,
     }: {
       key: string;
-      duration: number;
       value: string | number;
+      currentKeyPoint: number;
       easing: EasingFn;
-    }) => {
+    }): void => {
       if (!(key in parsedKeyframes)) {
         throw Error(
           "Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
         );
       }
       parsedKeyframes[key].push({
-        duration: duration,
+        duration: getAnimationDuration(key, currentKeyPoint),
         value: value,
         easing: easing,
       });
@@ -118,21 +127,18 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     animationKeyPoints
       .filter((value: string) => parseInt(value) !== 0)
       .sort((a: string, b: string) => parseInt(a) - parseInt(b))
-      .forEach((keyPoint: string, index: number) => {
+      .forEach((keyPoint: string) => {
         if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
           throw Error('Keyframe should be in between range 0 - 100.');
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
-        let propsLeft = Object.keys(parsedKeyframes);
         const easing = keyframe.easing;
         delete keyframe.easing;
-        const animationDuration =
-          ((parseInt(keyPoint) - previousKeyPoint) / 100) * duration;
         const addKeyPointWith = (key: string, value: string | number) =>
           addKeyPoint({
             key,
-            duration: animationDuration,
             value,
+            currentKeyPoint: parseInt(keyPoint),
             easing,
           });
         Object.keys(keyframe).forEach((key: string) => {
@@ -140,27 +146,12 @@ export class Keyframe implements IEntryExitAnimationBuilder {
             keyframe[key].forEach((transformStyle) => {
               Object.keys(transformStyle).forEach((key: string) => {
                 addKeyPointWith('transform_' + key, transformStyle[key]);
-                propsLeft = propsLeft.filter(
-                  (value) => value !== 'transform_' + key
-                );
               });
             });
           } else {
             addKeyPointWith(key, keyframe[key]);
-            propsLeft = propsLeft.filter((value) => value !== key);
           }
         });
-        propsLeft.forEach((key: string) => {
-          const lastValue =
-            index === 0
-              ? initialValues[key]
-              : parsedKeyframes[key][index - 1].value;
-          parsedKeyframes[key].push({
-            value: lastValue,
-            duration: animationDuration,
-          });
-        });
-        previousKeyPoint = parseInt(keyPoint);
       });
     return { initialValues: initialValues, keyframes: parsedKeyframes };
   }
@@ -201,17 +192,24 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         const keyframePoints = keyframes[key];
         const animation = delayFunction(
           delay,
-          withSequence.apply(
-            this,
-            keyframePoints.map((keyframePoint: KeyframePoint) =>
-              withTiming(keyframePoint.value, {
-                duration: keyframePoint.duration,
-                easing: keyframePoint.easing
-                  ? keyframePoint.easing
+          keyframePoints.length === 1
+            ? withTiming(keyframePoints[0].value, {
+                duration: keyframePoints[0].duration,
+                easing: keyframePoints[0].easing
+                  ? keyframePoints[0].easing
                   : Easing.linear,
               })
-            )
-          )
+            : withSequence.apply(
+                this,
+                keyframePoints.map((keyframePoint: KeyframePoint) =>
+                  withTiming(keyframePoint.value, {
+                    duration: keyframePoint.duration,
+                    easing: keyframePoint.easing
+                      ? keyframePoint.easing
+                      : Easing.linear,
+                  })
+                )
+              )
         );
         if (key.includes('transform_')) {
           if (!('transform' in animations)) {

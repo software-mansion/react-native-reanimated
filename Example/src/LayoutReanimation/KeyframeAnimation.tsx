@@ -16,6 +16,9 @@ export function KeyframeAnimation(): React.ReactElement {
     30: {
       transform: [{ rotate: '-90deg' }],
     },
+    50: {
+      originX: 70,
+    },
     100: {
       originX: 0,
       transform: [{ rotate: '0deg' }],
@@ -28,7 +31,6 @@ export function KeyframeAnimation(): React.ReactElement {
       transform: [{ skewX: '0deg' }],
     },
     30: {
-      opacity: 0.5,
       transform: [{ skewX: '40deg' }],
       easing: Easing.exp,
     },

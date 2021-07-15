@@ -55,7 +55,6 @@ Remember not to provide both `0` and `from`, or `100` and `to` keyframe as it wi
 
 Between edge points, you can define middle points in which you want your object to have certain style properties.
 Remember that you can specify style only for those properties that you set the initial value in `0` or `from` keyframe.
-If you won't specify style for some properties, their value will be copied from the previous keyframe.
 
 ```js
 import { Keyframe } from 'react-native-reanimated';
