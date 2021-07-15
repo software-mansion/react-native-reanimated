@@ -281,7 +281,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptor, updates, maybeViewRef);
+        updateProps(viewDescriptors, updates, maybeViewRef);
       }
 
       if (!allFinished) {
@@ -304,7 +304,7 @@ function styleUpdater(
     state.last = Object.assign({}, oldValues, newValues);
     const style = getStyleWithoutAnimations(oldValues, newValues);
     if (style) {
-      updateProps(viewDescriptor, style, maybeViewRef);
+      updateProps(viewDescriptors, style, maybeViewRef);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -314,7 +314,7 @@ function styleUpdater(
 }
 
 function jestStyleUpdater(
-  viewDescriptor,
+  viewDescriptors,
   updater,
   state,
   maybeViewRef,
@@ -371,7 +371,7 @@ function jestStyleUpdater(
 
     if (Object.keys(updates).length) {
       updatePropsJestWrapper(
-        viewDescriptor,
+        viewDescriptors,
         updates,
         maybeViewRef,
         animatedStyle,
@@ -408,7 +408,7 @@ function jestStyleUpdater(
 
   if (Object.keys(diff).length !== 0) {
     updatePropsJestWrapper(
-      viewDescriptor,
+      viewDescriptors,
       diff,
       maybeViewRef,
       animatedStyle,
@@ -519,6 +519,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     if (typeof updater.__optimalization !== undefined) {
       upadterFn.__optimalization = optimalization;
     }
+    upadterFn.__optimalization = 0;
 
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
@@ -550,8 +551,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       inputs,
       [],
       upadterFn,
-      viewDescriptor.value.tag,
-      viewDescriptor.value.name || 'RCTView'
+      -1, // viewDescriptor.value.tag,
+      '' // viewDescriptor.value.name || 'RCTView'
     );
     return () => {
       stopMapper(mapperId);
