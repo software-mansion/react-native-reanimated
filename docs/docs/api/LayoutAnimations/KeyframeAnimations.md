@@ -16,8 +16,8 @@ import { Keyframe } from 'react-native-reanimated';
 
 ### 2. Create Keyframe object, define initial and final state
 
-In Keyframe's constructor pass object with definitions of your animation. Object keys should be within range 0-100 and correspond to animation progress,
-so to 0 assign the style, you want for your object at the beginning of the animation and to 100 assign the style you want for your object to have at the end of the animation.
+In Keyframe's constructor pass object with definitions of your animation. Object keys should be within range `0-100` and correspond to animation progress,
+so to `0` assign the style, you want for your object at the beginning of the animation and to `100` assign the style you want for your object to have at the end of the animation.
 
 ```js
 import { Keyframe } from 'react-native-reanimated';
@@ -32,10 +32,30 @@ const keyframe = new Keyframe({
   }
 ```
 
+Instead of using '0' and '100', you can define edge points using `from` and `to` keywords. The result will be the same.
+
+```js
+import { Keyframe } from 'react-native-reanimated';
+
+const keyframe = new Keyframe({
+    from: {
+      transform: [{ rotate: '0deg' }],
+    },
+    to: {
+      transform: [{ rotate: '45deg' }],
+    },
+  }
+```
+
+Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate. 
+Make sure you provided the initial value for all style properties you want to animate in other keyframes.
+Remember not to provide both `0` and `from`, or `100` and `to` keyframe as it will result in parsing conflict.
+
 ### 3. Add middle points
 
 Between edge points, you can define middle points in which you want your object to have certain style properties.
-Remember that for every keyframe you should provide the same set of style properties!
+Remember that you can specify style only for those properties that you set the initial value in `0` or `from` keyframe.
+If you won't specify style for some properties, their value will be copied from the previous keyframe.
 
 ```js
 import { Keyframe } from 'react-native-reanimated';
@@ -82,17 +102,17 @@ Currently, you can define animations using keyframes only for entry and exit ani
 ```js
     // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
     // keyframe - Keyframe object
-    <AnimatedComponent exiting={keyframe} >
+    <AnimatedComponent exiting={keyframe} />
 ```
 ### 2. Customize the animation
 ```js
-    <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} >
+    <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
 ```
 ### 3. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
 ```js
     <AnimatedLayout> // +
         <Text> sth </Text>
-        <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} >
+        <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
     </AnimatedLayout> // +
 ```
 

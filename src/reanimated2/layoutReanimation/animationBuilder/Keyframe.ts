@@ -20,13 +20,13 @@ export interface ParsedKeyframesDefinition {
 export class Keyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
-  definitions: Record<number, KeyframeProps>;
+  definitions: Record<string, KeyframeProps>;
 
   /*
     Keyframe definition should be passed in the constructor as the map
     which keys are between range 0 - 100 (%) and correspond to the point in the animation progress.
   */
-  constructor(definitions: Record<number, KeyframeProps>) {
+  constructor(definitions: Record<string, KeyframeProps>) {
     this.definitions = definitions;
   }
 
@@ -36,6 +36,27 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         value, duration of transition to that value, and optional easing function (defaults to Linear)
     */
     const parsedKeyframes: Record<string, KeyframePoint[]> = {};
+    /*
+      Parsing keyframes 'from' and 'to'.
+    */
+    if (this.definitions.from) {
+      if (this.definitions['0']) {
+        throw Error(
+          "You cannot provide both keyframe 0 and 'from' as they both specified initial values"
+        );
+      }
+      this.definitions['0'] = this.definitions.from;
+      delete this.definitions.from;
+    }
+    if (this.definitions.to) {
+      if (this.definitions['100']) {
+        throw Error(
+          "You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
+        );
+      }
+      this.definitions['100'] = this.definitions.to;
+      delete this.definitions.to;
+    }
     /* 
        One of the assumptions is that keyframe  0 is required to properly set initial values.
        Every other keyframe should contain properties from the set provided as initial values.
@@ -85,7 +106,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     }) => {
       if (!(key in parsedKeyframes)) {
         throw Error(
-          "Keyframe can contain only that set of properties that were provide as initial values (keyframe 0 or 'from')"
+          "Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
         );
       }
       parsedKeyframes[key].push({

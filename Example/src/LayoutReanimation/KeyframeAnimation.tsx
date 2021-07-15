@@ -9,7 +9,7 @@ import Animated, {
 export function KeyframeAnimation(): React.ReactElement {
   const [show, setShow] = useState(false);
   const enteringAnimation = new Keyframe({
-    0: {
+    from: {
       originX: 50,
       transform: [{ rotate: '45deg' }],
     },
@@ -32,7 +32,7 @@ export function KeyframeAnimation(): React.ReactElement {
       transform: [{ skewX: '40deg' }],
       easing: Easing.exp,
     },
-    100: {
+    to: {
       opacity: 0,
       transform: [{ skewX: '-10deg' }],
     },
