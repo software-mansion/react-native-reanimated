@@ -76,6 +76,7 @@ project.ext.react = [
         entryFile   : "index.js",
         enableHermes: true,
 ]
+def enableHermes = project.ext.react.get("enableHermes", false);
 
 apply from: "../../node_modules/react-native/react.gradle"
 
@@ -145,10 +146,16 @@ android {
     }
 
     packagingOptions {
+        pickFirst 'lib/**/libturbomodulejsijni.so'
         pickFirst 'lib/**/libc++_shared.so'
         pickFirst 'lib/**/libreanimated.so'
-        pickFirst 'lib/arm64-v8a/libjsc.so'
-        pickFirst 'lib/x86_64/libjsc.so'
+        pickFirst 'lib/**/libjsc.so'
+        pickFirst 'lib/**/libfbjni.so'
+        pickFirst 'lib/**/libreactnativejni.so'
+        pickFirst 'lib/**/libglog.so'
+        pickFirst 'lib/**/libhermes.so'
+        pickFirst 'lib/**/libfolly_json.so'
+        pickFirst 'lib/**/jscexecutor.so'
     }
 }
 
@@ -161,7 +168,6 @@ dependencies {
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    //implementation 'org.webkit:android-jsc:+'
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
@@ -174,9 +180,13 @@ dependencies {
         exclude group: 'com.facebook.flipper'
     }
 
-    def hermesPath = "../../node_modules/hermes-engine/android/"
-    debugImplementation files(hermesPath + "hermes-debug.aar")
-    releaseImplementation files(hermesPath + "hermes-release.aar")
+    if (enableHermes) {
+        def hermesPath = "../../node_modules/hermes-engine/android/"
+        debugImplementation files(hermesPath + "hermes-debug.aar")
+        releaseImplementation files(hermesPath + "hermes-release.aar")
+    } else {
+        implementation 'org.webkit:android-jsc:+'
+    }
 }
 
 // Run this once to be able to run the application with BUCK

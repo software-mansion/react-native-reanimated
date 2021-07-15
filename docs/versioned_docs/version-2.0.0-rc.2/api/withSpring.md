@@ -38,7 +38,7 @@ Allowed parameters are listed below:
 | restDisplacementThreshold | 0.001   |             |
 | restSpeedThreshold        | 0.001   |             |
 
-#### `callback` [function](optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

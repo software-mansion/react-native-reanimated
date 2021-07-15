@@ -253,11 +253,32 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
+      color: "red",
+      backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
         },
+        {
+          rotate: `${Math.PI}rad`
+        }
       ],
+    };
+  });
+  // @ts-expect-error
+  const style2 = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: Math.PI
+        }
+      ],
+    };
+  });
+  // @ts-expect-error
+  const style3 = useAnimatedStyle(() => {
+    return {
+      color: {}
     };
   });
   return (
@@ -678,6 +699,10 @@ function interpolateNodeTest() {
     inputRange: [0, 1],
     outputRange: ['0deg', '100deg'],
   });
+  interpolateNode(value, {
+    inputRange: [0, 1],
+    outputRange: ['0rad', `${Math.PI}rad`],
+  });
 }
 
 function colorTest() {
@@ -709,4 +734,27 @@ function updatePropsTest() {
   useAnimatedProps(() => ({}), null, adapter1);
 
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
+}
+
+// test partial animated props
+function testPartialAnimatedProps() {
+  const ap = useAnimatedProps<ImageProps>(() => ({
+    height: 100
+  }));
+  const aps = useAnimatedProps<ImageProps>(() => ({
+    source: { uri: 'whatever' }
+  }));
+
+  // @ts-expect-error it should fail because `source` is a required prop
+  const test1 = <AnimatedImage />;
+  // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
+  // @ts-expect-error it should fail because `source` is a required prop, even though animatedProps sets it
+  const test2 = <AnimatedImage animatedProps={aps} />
+  // should pass because source is set
+  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />
+  // should pass because source is set and `animatedProps` doesn't change that
+  const test4 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  // TODO: Should this test fail? Setting it twice might not be intentional...
+  // should pass because source is set normally and in `animatedProps`
+  const test5 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
 }

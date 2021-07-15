@@ -22,12 +22,14 @@ setupFiles: ['./jest-setup.js'],
 ...
 ```
 
+If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled for that environment.
+
 ## API
 
 #### Style checker
 - Checking equality of selected styles with current component styles
   #### `expect(component).toHaveAnimatedStyle(expectedStyle)`
-  `component` - tested component  
+  `component` - tested component
   `expectedStyle` - contains expected styles of testing component, for example `{ width: 100 }`
 
 - Checking equality of all current component styles with expected styles

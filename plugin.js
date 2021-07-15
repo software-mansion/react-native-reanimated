@@ -1,11 +1,8 @@
 'use strict';
-
 const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
-const { visitors } = require('@babel/traverse');
 const traverse = require('@babel/traverse').default;
-const parse = require('@babel/parser').parse;
-
+const { transformSync } = require('@babel/core');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -67,6 +64,9 @@ const globals = new Set([
   '_eventTimestamp',
   '_frameTimestamp',
   'isNaN',
+  'LayoutAnimationRepository',
+  '_stopObservingProgress',
+  '_startObservingProgress',
 ]);
 
 // leaving way to avoid deep capturing by adding 'stopCapturing' to the blacklist
@@ -123,6 +123,8 @@ const blacklistedFunctions = new Set([
   '__callAsync',
   'includes',
 ]);
+
+const possibleOptFunction = new Set(['interpolate']);
 
 class ClosureGenerator {
   constructor() {
@@ -256,7 +258,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
     ]);
   }
 
-  fun.traverse({
+  traverse(fun, {
     enter(path) {
       t.removeComments(path.node);
     },
@@ -264,18 +266,20 @@ function buildWorkletString(t, fun, closureVariables, name) {
 
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    fun.node.params,
-    prependClosureVariablesIfNecessary(closureVariables, fun.get('body').node)
+    fun.program.body[0].expression.params,
+    prependClosureVariablesIfNecessary(
+      closureVariables,
+      fun.program.body[0].expression.body
+    )
   );
 
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName) {
+function processWorkletFunction(t, fun, fileName, options = {}) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
-
   const functionName = fun.node.id ? fun.node.id.name : '_f';
 
   const closure = new Map();
@@ -284,9 +288,23 @@ function processWorkletFunction(t, fun, fileName) {
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  const astWorkletCopy = parse('\n(' + fun.toString() + '\n)');
+  const code = '\n(' + fun.toString() + '\n)';
+  const transformed = transformSync(code, {
+    filename: fileName,
+    presets: ['@babel/preset-typescript'],
+    plugins: [
+      '@babel/plugin-transform-shorthand-properties',
+      '@babel/plugin-transform-arrow-functions',
+      '@babel/plugin-proposal-optional-chaining',
+      '@babel/plugin-proposal-nullish-coalescing-operator',
+      ['@babel/plugin-transform-template-literals', { loose: true }],
+    ],
+    ast: true,
+    babelrc: false,
+    configFile: false,
+  });
 
-  traverse(astWorkletCopy, {
+  traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
       if (globals.has(name) || (fun.node.id && fun.node.id.name === name)) {
@@ -297,7 +315,8 @@ function processWorkletFunction(t, fun, fileName) {
 
       if (
         parentNode.type === 'MemberExpression' &&
-        (parentNode.property === path.node && !parentNode.computed)
+        parentNode.property === path.node &&
+        !parentNode.computed
       ) {
         return;
       }
@@ -344,14 +363,19 @@ function processWorkletFunction(t, fun, fileName) {
   const variables = Array.from(closure.values());
 
   const privateFunctionId = t.identifier('_f');
-
-  // if we don't clone other modules won't process parts of newFun defined below
-  // this is weird but couldn't find a better way to force transform helper to
-  // process the function
   const clone = t.cloneNode(fun.node);
-  const funExpression = t.functionExpression(null, clone.params, clone.body);
-
-  const funString = buildWorkletString(t, fun, variables, functionName);
+  let funExpression;
+  if (clone.body.type === 'BlockStatement') {
+    funExpression = t.functionExpression(null, clone.params, clone.body);
+  } else {
+    funExpression = clone;
+  }
+  const funString = buildWorkletString(
+    t,
+    transformed.ast,
+    variables,
+    functionName
+  ).replace("'worklet';", '');
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
@@ -362,69 +386,82 @@ function processWorkletFunction(t, fun, fileName) {
     }
   }
 
+  const steatmentas = [
+    t.variableDeclaration('const', [
+      t.variableDeclarator(privateFunctionId, funExpression),
+    ]),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(privateFunctionId, t.identifier('_closure'), false),
+        closureGenerator.generate(t, variables, closure.keys())
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(privateFunctionId, t.identifier('asString'), false),
+        t.stringLiteral(funString)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__workletHash'),
+          false
+        ),
+        t.numericLiteral(workletHash)
+      )
+    ),
+    t.expressionStatement(
+      t.assignmentExpression(
+        '=',
+        t.memberExpression(
+          privateFunctionId,
+          t.identifier('__location'),
+          false
+        ),
+        t.stringLiteral(fileName)
+      )
+    ),
+  ];
+
+  if (options && options.optFlags) {
+    steatmentas.push(
+      t.expressionStatement(
+        t.assignmentExpression(
+          '=',
+          t.memberExpression(
+            privateFunctionId,
+            t.identifier('__optimalization'),
+            false
+          ),
+          t.numericLiteral(options.optFlags)
+        )
+      )
+    );
+  }
+
+  steatmentas.push(
+    t.expressionStatement(
+      t.callExpression(
+        t.memberExpression(
+          t.identifier('global'),
+          t.identifier('__reanimatedWorkletInit'),
+          false
+        ),
+        [privateFunctionId]
+      )
+    )
+  );
+  steatmentas.push(t.returnStatement(privateFunctionId));
+
   const newFun = t.functionExpression(
     fun.id,
     [],
-    t.blockStatement([
-      t.variableDeclaration('const', [
-        t.variableDeclarator(privateFunctionId, funExpression),
-      ]),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('_closure'),
-            false
-          ),
-          closureGenerator.generate(t, variables, closure.keys())
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('asString'),
-            false
-          ),
-          t.stringLiteral(funString)
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__workletHash'),
-            false
-          ),
-          t.numericLiteral(workletHash)
-        )
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(
-            privateFunctionId,
-            t.identifier('__location'),
-            false
-          ),
-          t.stringLiteral(fileName)
-        )
-      ),
-      t.expressionStatement(
-        t.callExpression(
-          t.memberExpression(
-            t.identifier('global'),
-            t.identifier('__reanimatedWorkletInit'),
-            false
-          ),
-          [privateFunctionId]
-        )
-      ),
-      t.returnStatement(privateFunctionId),
-    ])
+    t.blockStatement(steatmentas)
   );
 
   const replacement = t.callExpression(newFun, []);
@@ -462,7 +499,12 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          processWorkletFunction(t, fun, fileName);
+          const flags = isPossibleOptimization(fun);
+          if (flags) {
+            processWorkletFunction(t, fun, fileName, { optFlags: flags });
+          } else {
+            processWorkletFunction(t, fun, fileName);
+          }
         }
       }
     },
@@ -500,78 +542,53 @@ function processWorklets(t, path, fileName) {
   }
 }
 
-const PLUGIN_BLACKLIST_NAMES = ['@babel/plugin-transform-object-assign'];
+const FUNCTIONLESS_FLAG = 0b00000001;
+const STATEMENTLESS_FLAG = 0b00000010;
 
-const PLUGIN_BLACKLIST = PLUGIN_BLACKLIST_NAMES.map((pluginName) => {
-  try {
-    const blacklistedPluginObject = require(pluginName);
-    // All Babel polyfills use the declare method that's why we can create them like that.
-    // https://github.com/babel/babel/blob/32279147e6a69411035dd6c43dc819d668c74466/packages/babel-helper-plugin-utils/src/index.js#L1
-    const blacklistedPlugin = blacklistedPluginObject.default({
-      assertVersion: (_x) => true,
-    });
-
-    visitors.explode(blacklistedPlugin.visitor);
-    return blacklistedPlugin;
-  } catch (e) {
-    console.warn(`Plugin ${pluginName} couldn't be removed!`);
-  }
-});
-
-// plugin objects are created by babel internals and they don't carry any identifier
-function removePluginsFromBlacklist(plugins) {
-  PLUGIN_BLACKLIST.forEach((blacklistedPlugin) => {
-    if (!blacklistedPlugin) {
-      return;
-    }
-
-    const toRemove = [];
-    for (let i = 0; i < plugins.length; i++) {
-      if (
-        JSON.stringify(Object.keys(plugins[i].visitor)) !==
-        JSON.stringify(Object.keys(blacklistedPlugin.visitor))
-      ) {
-        continue;
+function isPossibleOptimization(fun) {
+  let isFunctionCall = false;
+  let isSteatements = false;
+  fun.scope.path.traverse({
+    CallExpression(path) {
+      if (!possibleOptFunction.has(path.node.callee.name)) {
+        isFunctionCall = true;
       }
-      let areEqual = true;
-      for (const key of Object.keys(blacklistedPlugin.visitor)) {
-        if (
-          blacklistedPlugin.visitor[key].toString() !==
-          plugins[i].visitor[key].toString()
-        ) {
-          areEqual = false;
-          break;
-        }
-      }
-
-      if (areEqual) {
-        toRemove.push(i);
-      }
-    }
-
-    toRemove.forEach((x) => plugins.splice(x, 1));
+    },
+    IfStatement() {
+      isSteatements = true;
+    },
   });
+  let flags = 0;
+  if (!isFunctionCall) {
+    flags = flags | FUNCTIONLESS_FLAG;
+  }
+  if (!isSteatements) {
+    flags = flags | STATEMENTLESS_FLAG;
+  }
+  return flags;
 }
 
-module.exports = function({ types: t }) {
+module.exports = function ({ types: t }) {
   return {
+    pre() {
+      // allows adding custom globals such as host-functions
+      if (this.opts != null && Array.isArray(this.opts.globals)) {
+        this.opts.globals.forEach((name) => {
+          globals.add(name);
+        });
+      }
+    },
     visitor: {
       CallExpression: {
-        exit(path, state) {
+        enter(path, state) {
           processWorklets(t, path, state.file.opts.filename);
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
-        exit(path, state) {
+        enter(path, state) {
           processIfWorkletNode(t, path, state.file.opts.filename);
         },
       },
-    },
-    // In this way we can modify babel options
-    // https://github.com/babel/babel/blob/eea156b2cb8deecfcf82d52aa1b71ba4995c7d68/packages/babel-core/src/transformation/normalize-opts.js#L64
-    manipulateOptions(opts, parserOpts) {
-      const plugins = opts.plugins;
-      removePluginsFromBlacklist(plugins);
     },
   };
 };

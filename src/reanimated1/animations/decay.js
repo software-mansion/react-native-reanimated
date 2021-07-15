@@ -45,8 +45,10 @@ const procDecay = proc(
     decay(clock, { time, velocity, position, finished }, { deceleration })
 );
 
-export default (
+export default function decayAnimation(
   clock,
   { time, velocity, position, finished },
   { deceleration }
-) => procDecay(clock, time, velocity, position, finished, deceleration);
+) {
+  return procDecay(clock, time, velocity, position, finished, deceleration);
+}

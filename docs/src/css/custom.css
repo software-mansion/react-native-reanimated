@@ -1,18 +1,18 @@
 @font-face {
-  font-family: "Aeonik Regular";
-  src: url("/react-native-reanimated/fonts/Aeonik-Regular.woff2") format("woff2"),
-    url("/react-native-reanimated/fonts/Aeonik-Regular.woff") format("woff");
+  font-family: 'Aeonik Regular';
+  src: url('/fonts/Aeonik-Regular.woff2') format('woff2'),
+    url('/fonts/Aeonik-Regular.woff') format('woff');
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Aeonik Bold";
-  src: url("/react-native-reanimated/fonts/Aeonik-Bold.woff2") format("woff2"),
-    url("/react-native-reanimated/fonts/Aeonik-Bold.woff") format("woff");
+  font-family: 'Aeonik Bold';
+  src: url('/fonts/Aeonik-Bold.woff2') format('woff2'),
+    url('/fonts/Aeonik-Bold.woff') format('woff');
   font-display: swap;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap');
 
 :root {
   --h1-font-size: 3rem;
@@ -43,6 +43,10 @@
     Segoe UI Symbol;
   --ifm-font-family-monospace: DM Mono, monospace;
   --ifm-color-primary: var(--swm-color-base);
+  --swm-color-yellow: #ffe780;
+  --swm-color-sea-blue: #87cce8;
+  --swm-color-pink: #ffa3a1;
+  --swm-color-green: #b1dfd0;
   --ifm-color-primary-darkest: #001250;
   --ifm-color-primary-darker: #001661;
   --ifm-color-primary-dark: #001767;
@@ -78,10 +82,26 @@
   --ifm-menu-color: var(--ifm-color-primary);
   --ifm-menu-color-background-active: none;
   --ifm-menu-color-background-hover: none;
-  --ifm-menu-link-sublist-icon: url("data:image/svg+xml;utf8,<svg alt="Arrow" xmlns="http://www.w3.org/2000/svg" width="13px" height="13px" viewBox="0 0 24 24"><path fill="rgba(5,5,76,1)" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg>");
+  --ifm-menu-link-sublist-icon: url('data:image/svg+xml;utf8,<svg alt='Arrow' xmlns='http://www.w3.org/2000/svg' width='13px' height='13px' viewBox='002424'><path fill='rgba(
+      5,
+      5,
+      76,
+      1
+    )' d='M7.4115.41l1210.83l4.594.58l1814l-6-6-66z'></path></svg>');
   --ifm-menu-link-padding-horizontal: 14px;
   --ifm-hr-border-color: #dcdfeb;
   --ifm-container-width: 1900px;
+
+  /*sidebar*/
+  --doc-sidebar-width: 350px !important;
+
+  /*Admonitions*/
+  --ifm-color-info: var(--swm-color-sea-blue);
+  --ifm-color-success: var(--swm-color-green);
+  --ifm-color-warning: var(--swm-color-yellow);
+  --ifm-color-danger: var(--swm-color-pink);
+  --ra-admonition-color: var(--ifm-color-primary);
+  --ifm-alert-color: var(--ifm-color-primary);
 }
 
 .docusaurus-highlight-code-line {
@@ -135,19 +155,19 @@ h6 {
   display: hidden;
 }
 
-.navbar__item.navbar__link[href*="github"] {
+.navbar__item.navbar__link[href*='github'] {
   display: flex;
   font-size: 0;
   padding: 0;
 }
 
-.navbar__item.navbar__link[href*="github"]:before {
-  content: "";
+.navbar__item.navbar__link[href*='github']:before {
+  content: '';
   min-width: 24px;
   width: 24px;
   min-height: 24px;
   height: 24px;
-  background: url("/react-native-reanimated/img/github_logo.svg");
+  background: url('/img/github_logo.svg');
   background-repeat: no-repeat;
 }
 
@@ -168,7 +188,7 @@ h6 {
   text-decoration: none;
 }
 
-.badge--info {
+/* .badge--info {
   --ifm-badge-background-color: #8ed3ef;
   color: var(--ifm-color-primary);
   border-radius: 3px;
@@ -177,13 +197,13 @@ h6 {
   font-weight: 300;
   margin-left: 5px;
   vertical-align: middle;
-}
+} */
 
-.footer--dark {
+/* .footer--dark {
   background-color: var(--swm-color-base);
-}
+} */
 
-.footer-container {
+/* .footer-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -192,27 +212,31 @@ h6 {
   margin-right: 0;
   padding: 20px;
   align-items: center;
-}
+} */
 
-.footer-image-link {
+/* .footer-image-link {
   height: 62px;
   margin-right: 0;
+} */
+
+.github-navbar-logo {
+  margin-left: 20px;
 }
 
-.githubStarLink {
+/* .githubStarLink {
   display: flex;
   justify-content: center;
   align-items: center;
   padding-top: 8px;
   margin-right: 1rem;
-}
+} */
 
 .navbar-sidebar > .navbar__link--active:hover {
-  color: var(--ifm-navbar-link-hover-color);
+  color: var(--ifm-navbar-link-hover-color) !important;
 }
 
 .navbar__link--active {
-  color: var(--ifm-navbar-link-hover-color);
+  color: var(--ifm-navbar-link-hover-color) !important;
 }
 
 header > .container {
@@ -243,7 +267,7 @@ section > .container {
 }
 
 .hero-content {
-  padding: 3rem 0;
+  padding: 3rem 1rem !important;
   flex-direction: column;
   justify-content: center;
 }
@@ -316,6 +340,7 @@ section > .contaner > .row {
 .info-box {
   display: flex;
   margin-bottom: 1rem;
+  flex-direction: column;
 }
 
 .row--box-section {
@@ -440,6 +465,10 @@ section > .contaner > .row {
     --ifm-navbar-padding-horizontal: 20px;
   }
 
+  .navbar-sidebar .menu__link {
+    color: var(--ifm-color-white);
+  }
+
   .navbar__link {
     font-size: var(--ifm-h3-font-size);
   }
@@ -477,15 +506,6 @@ section > .contaner > .row {
 
   .row--box-section {
     flex-direction: row-reverse;
-  }
-
-  .container {
-    margin-left: 0;
-    margin-right: 0;
-    padding: 0 20px;
-    display: flex;
-    flex: 1;
-    max-width: 100%;
   }
 
   .container--center {
@@ -604,6 +624,6 @@ section > .contaner > .row {
     height: 450px;
   }
 }
-.spacer{
-  height:15px;
+.spacer {
+  height: 15px;
 }

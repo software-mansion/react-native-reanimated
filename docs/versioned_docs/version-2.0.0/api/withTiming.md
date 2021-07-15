@@ -36,7 +36,7 @@ Allowed parameters are listed below:
 
 For `easing` parameter we recommend using one of the pre-configured worklets defined in `Easing` module.
 
-#### `callback` [function](optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

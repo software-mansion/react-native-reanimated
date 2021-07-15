@@ -1,13 +1,21 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
-
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
-
 import {
   createStackNavigator,
   StackNavigationProp,
 } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
+import {
+  SpringLayoutAnimation,
+  MountingUnmounting,
+  SwipeableList,
+  Modal,
+  Carousel,
+  ModalNewAPI,
+  DefaultAnimations,
+  CustomLayoutAnimationScreen,
+} from './LayoutReanimation';
 
 import Reanimated1 from '../reanimated1/App';
 
@@ -30,61 +38,93 @@ LogBox.ignoreLogs(['Calling `getNode()`']);
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  Carousel: {
+    title: '🆕 Carousel',
+    screen: Carousel,
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
-    title: '🆕 Animated Style Update',
+    title: 'Animated Style Update',
   },
   WobbleExample: {
     screen: WobbleExample,
-    title: '🆕 Animation Modifiers (Wobble Effect)',
+    title: 'Animation Modifiers (Wobble Effect)',
   },
   DragAndSnapExample: {
     screen: DragAndSnapExample,
-    title: '🆕 Drag and Snap',
+    title: 'Drag and Snap',
   },
   MeasureExample: {
     screen: MeasureExample,
-    title: '🆕 Synchronous Measure',
+    title: 'Synchronous Measure',
   },
   ScrollEventExample: {
     screen: ScrollEventExample,
-    title: '🆕 Scroll Events',
+    title: 'Scroll Events',
   },
   ChatHeadsExample: {
     screen: ChatHeadsExample,
-    title: '🆕 Chat Heads',
+    title: 'Chat Heads',
   },
   ScrollableToExample: {
     screen: ScrollToExample,
-    title: '🆕 scrollTo',
+    title: 'scrollTo',
   },
   SwipeableListExample: {
     screen: SwipeableListExample,
-    title: '🆕 (advanced) Swipeable List',
+    title: '(advanced) Swipeable List',
   },
   LightboxExample: {
     screen: LightboxExample,
-    title: '🆕 (advanced) Lightbox',
+    title: '(advanced) Lightbox',
   },
   ScrollableViewExample: {
     screen: ScrollableViewExample,
-    title: '🆕 (advanced) ScrollView imitation',
+    title: '(advanced) ScrollView imitation',
   },
   AnimatedTabBarExample: {
     screen: AnimatedTabBarExample,
-    title: '🆕 (advanced) Tab Bar Example',
+    title: '(advanced) Tab Bar Example',
   },
   LiquidSwipe: {
     screen: LiquidSwipe,
-    title: '🆕 Liquid Swipe Example',
+    title: 'Liquid Swipe Example',
   },
   ExtrapolationExample: {
     screen: ExtrapolationExample,
-    title: '🆕 Extrapolation Example',
+    title: 'Extrapolation Example',
   },
   ScrollExample: {
     screen: ScrollExample,
-    title: '🆕 Scroll Example',
+    title: 'Scroll Example',
   },
 };
 

@@ -8,7 +8,7 @@ In the real world nothing changes instantly–there is always something between 
 
 To show how event handling is done in Reanimated 2 we are going to lead you step by step towards achieving the following result:
 
-![](/react-native-reanimated/docs/events/final.gif)
+![](/docs/events/final.gif)
 
 ## Handling gesture events
 
@@ -16,7 +16,7 @@ Reanimated 2 integrates tightly with the [react-native-gesture-handler](https://
 
 Going back to the interaction example, we start by focusing on tap events only.
 
-![](/react-native-reanimated/docs/events/touch-final.gif)
+![](/docs/events/touch-final.gif)
 
 ```js
 const EventsExample = () => {
@@ -71,7 +71,7 @@ Also don't forget to pass *animated style* to the *animated view*:
 
 After incorporating the changes described above here is what you will see on the screen:
 
-![](/react-native-reanimated/docs/events/touch-raw.gif)
+![](/docs/events/touch-raw.gif)
 
 Reanimated 2 makes it very easy to animate between state changes. You can try adding *withSpring* or *withTiming* in *useAnimatedStyle* to make this interaction feel much more natural:
 
@@ -81,15 +81,15 @@ Reanimated 2 makes it very easy to animate between state changes. You can try ad
 }
 ```
 
-![](/react-native-reanimated/docs/events/touch-final.gif)
+![](/docs/events/touch-final.gif)
 
 ## Handling continuous gestures
 
-![](/react-native-reanimated/docs/events/final.gif)
+![](/docs/events/final.gif)
 
 In the previous example when we learned how to handle tap gestures, we only responded to events that indicated the start and the end of the gesture. This comes from the fact that tap is a discrete gesture, that is it triggers at a specific point in time when we know the gesture is recognized. If we are interested in handling a movement of a finger on the screen, we need to receive a continuous stream of touch events. For this purpose, *PanGestureHandler* from *react-native-gesture-handler* package can be used. *PanGestureHandler* not only reports down and up events (that we subscribed to with *onStart* and *onEnd* worklets), but also allows us to track the finger as you pan it around the screen. When the panning gesture is recognized it feeds a stream of touch events to *onActive* callback for the whole duration of the user interaction.
 
-![](/react-native-reanimated/docs/events/continous-gestures.png)
+![](/docs/events/continous-gestures.png)
 
 In order to keep track over the view movement, we define a pair of new shared values in which we are going to store the view coordinates:
 
@@ -141,7 +141,7 @@ const uas = useAnimatedStyle(() => {
 
 ## Using context
 
-![](/react-native-reanimated/docs/events/context-gesture.gif)
+![](/docs/events/context-gesture.gif)
 
 Let's now try to modify the above example to make the view stay in the place where we lift the finger up, then allow for it to be panned around from that place. This simple modification makes things a bit more trickier and the reason is that when the new gesture is started, the translation values it provides in the event payload are relative to the starting position of the gesture. As a result, we cannot just directly map the gesture translation to the view offset on the screen. One way to solve this is by making a temporary state where we can keep the starting offset of the view. For this purpose we can use the context argument that is provided to each of the gesture handler worklets. Context is just a Javascript object that is shared between all the callbacks. In other words, all methods defined as gesture handler callbacks receive the same instance of context object–you are free to store any data in it within the callback or read from the context directly.
 

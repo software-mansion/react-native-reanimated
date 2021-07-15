@@ -50,7 +50,7 @@ const internalTiming = proc(function (
   ]);
 });
 
-export default function (clock, state, config) {
+export default function timing(clock, state, config) {
   if (config.duration === 0) {
     // when duration is zero we end the timing immediately
     return block([set(state.position, config.toValue), set(state.finished, 1)]);

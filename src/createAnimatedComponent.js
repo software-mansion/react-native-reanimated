@@ -9,9 +9,15 @@ import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
+import { makeMutable, runOnUI } from './reanimated2/core';
+import {
+  DefaultEntering,
+  DefaultExiting,
+  DefaultLayout,
+} from './reanimated2/layoutReanimation/defaultAnimations/Default';
 
 const NODE_MAPPING = new Map();
 
@@ -57,7 +63,7 @@ function flattenArray(array) {
   return resultArr;
 }
 
-export default function createAnimatedComponent(Component) {
+export default function createAnimatedComponent(Component, options = {}) {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -76,6 +82,7 @@ export default function createAnimatedComponent(Component) {
       if (process.env.JEST_WORKER_ID) {
         this.animatedStyle = { value: {} };
       }
+      this.sv = makeMutable({});
     }
 
     componentWillUnmount() {
@@ -83,6 +90,7 @@ export default function createAnimatedComponent(Component) {
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
       this._detachStyles();
+      this.sv = null;
     }
 
     componentDidMount() {
@@ -107,7 +115,7 @@ export default function createAnimatedComponent(Component) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(node);
+      const viewTag = findNodeHandle(options.setNativeProps ? this : node);
 
       for (const key in this.props) {
         const prop = this.props[key];
@@ -254,8 +262,12 @@ export default function createAnimatedComponent(Component) {
     }
 
     _updateFromNative(props) {
-      // eslint-disable-next-line no-unused-expressions
-      this._component.setNativeProps?.(props);
+      if (options.setNativeProps) {
+        options.setNativeProps(this._component, props);
+      } else {
+        // eslint-disable-next-line no-unused-expressions
+        this._component.setNativeProps?.(props);
+      }
     }
 
     _attachPropUpdater() {
@@ -363,6 +375,44 @@ export default function createAnimatedComponent(Component) {
     _setComponentRef = setAndForwardRef({
       getForwardedRef: () => this.props.forwardedRef,
       setLocalRef: (ref) => {
+        // TODO update config
+        const tag = findNodeHandle(ref);
+        if (
+          (this.props.layout || this.props.entering || this.props.exiting) &&
+          tag != null
+        ) {
+          let layout = this.props.layout ? this.props.layout : DefaultLayout;
+          let entering = this.props.entering
+            ? this.props.entering
+            : DefaultEntering;
+          let exiting = this.props.exiting
+            ? this.props.exiting
+            : DefaultExiting;
+
+          if (layout.build) {
+            layout = layout.build();
+          }
+
+          if (entering.build) {
+            entering = entering.build();
+          }
+
+          if (exiting.build) {
+            exiting = exiting.build();
+          }
+
+          const config = {
+            layout,
+            entering,
+            exiting,
+            sv: this.sv,
+          };
+          runOnUI(() => {
+            'worklet';
+            global.LayoutAnimationRepository.registerConfig(tag, config);
+          })();
+        }
+
         if (ref !== this._component) {
           this._component = ref;
         }
@@ -419,6 +469,9 @@ export default function createAnimatedComponent(Component) {
         } else if (key === 'animatedProps') {
           Object.keys(value.initial.value).forEach((key) => {
             props[key] = value.initial.value[key];
+            if (value.viewRef.current === null) {
+              value.viewRef.current = this;
+            }
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
