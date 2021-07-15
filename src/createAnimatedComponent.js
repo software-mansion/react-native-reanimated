@@ -333,7 +333,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptor) {
+      if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
