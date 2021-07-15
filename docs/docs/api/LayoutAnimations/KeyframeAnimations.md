@@ -32,7 +32,7 @@ const keyframe = new Keyframe({
   }
 ```
 
-Instead of using '0' and '100', you can define edge points using `from` and `to` keywords. The result will be the same.
+Instead of using `0` and `100`, you can define edge points using `from` and `to` keywords. The result will be the same.
 
 ```js
 import { Keyframe } from 'react-native-reanimated';
@@ -120,7 +120,7 @@ Currently, you can define animations using keyframes only for entry and exit ani
 The order of modifiers doesn't matter.
 
 ### duration
-default: 300
+default: 500
 How long the animation should last.
 
 ### delay
