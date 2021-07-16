@@ -20,7 +20,7 @@ export function useAnimatedReaction<T>(
   prepare: BasicWorkletFunction<T>,
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
-) {
+): void {
   const previous = useSharedValue<T>(null);
   if (dependencies === undefined) {
     dependencies = [

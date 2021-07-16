@@ -1,10 +1,43 @@
-import { useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
+import { GestureHandlerStateChangeNativeEvent } from 'react-native-gesture-handler';
 import { makeRemote } from '../core';
+import WorkletEventHandler from '../WorkletEventHandler';
+import {
+  Context,
+  ContextWithDependencies,
+  DependencyList,
+  WorkletFunction,
+} from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 
-export function useAnimatedGestureHandler(handlers, dependencies) {
-  const initRef = useRef(null);
+type Handler<T, TContext extends Context> = (
+  event: T,
+  context: TContext
+) => void;
+
+export interface GestureHandlers<T, TContext extends Context> {
+  onStart?: Handler<T, TContext>;
+  onActive?: Handler<T, TContext>;
+  onEnd?: Handler<T, TContext>;
+  onFail?: Handler<T, TContext>;
+  onCancel?: Handler<T, TContext>;
+  onFinish?: (event: T, context: TContext, isCanceledOrFailed: boolean) => void;
+}
+
+export interface GestureHandlerEvent<T>
+  extends GestureHandlerStateChangeNativeEvent {
+  nativeEvent?: T;
+}
+
+export function useAnimatedGestureHandler<
+  T extends GestureHandlerEvent<T>,
+  TContext extends Context
+>(
+  handlers: GestureHandlers<T, TContext>,
+  dependencies?: DependencyList
+): MutableRefObject<WorkletEventHandler> | ((e: T) => void) {
+  const initRef = useRef<ContextWithDependencies<TContext>>(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),
@@ -20,7 +53,10 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
 
   const { context, savedDependencies } = initRef.current;
 
-  dependencies = buildDependencies(dependencies, handlers);
+  dependencies = buildDependencies(
+    dependencies,
+    <Record<string, WorkletFunction>>handlers
+  );
 
   const dependenciesDiffer = !areDependenciesEqual(
     dependencies,
@@ -28,9 +64,9 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
   );
   initRef.current.savedDependencies = dependencies;
 
-  const handler = (event) => {
+  const handler = (e: T) => {
     'worklet';
-    event = Platform.OS === 'web' ? event.nativeEvent : event;
+    const event = Platform.OS === 'web' ? e.nativeEvent : e;
 
     const FAILED = 1;
     const BEGAN = 2;
@@ -75,7 +111,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     return handler;
   }
 
-  return useEvent(
+  return useEvent<T>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
     dependenciesDiffer

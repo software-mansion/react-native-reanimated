@@ -1,8 +1,10 @@
 export type DependencyList = Array<any> | undefined;
 
+export type Context = Record<string, unknown>;
+
 export interface DependencyObject {
   workletHash: number;
-  closure: Record<string, any>;
+  closure: Context;
 }
 
 export interface SharedValue<T> {
@@ -10,10 +12,15 @@ export interface SharedValue<T> {
 }
 
 export interface WorkletFunction {
-  _closure?: Record<string, any>;
+  _closure?: Context;
   __workletHash?: number;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
+}
+
+export interface ContextWithDependencies<TContext extends Context> {
+  context: TContext;
+  savedDependencies: DependencyList;
 }

@@ -1,9 +1,40 @@
-import { useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef } from 'react';
+import { NativeScrollEvent } from 'react-native';
 import { makeRemote } from '../core';
+import WorkletEventHandler from '../WorkletEventHandler';
+import {
+  Context,
+  ContextWithDependencies,
+  DependencyList,
+  WorkletFunction,
+} from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 
-export function useAnimatedScrollHandler(handlers, dependencies) {
-  const initRef = useRef(null);
+interface ScrollHandler<TContext extends Context> extends WorkletFunction {
+  (event: NativeScrollEvent, context?: TContext): void;
+}
+
+interface ScrollEvent extends NativeScrollEvent {
+  eventName: string;
+}
+interface ScrollHandlers<TContext extends Context> {
+  onScroll?: ScrollHandler<TContext>;
+  onBeginDrag?: ScrollHandler<TContext>;
+  onEndDrag?: ScrollHandler<TContext>;
+  onMomentumBegin?: ScrollHandler<TContext>;
+  onMomentumEnd?: ScrollHandler<TContext>;
+}
+
+interface SingleScrollHandler<TContext extends Context>
+  extends ScrollHandlers<TContext> {
+  (event: NativeScrollEvent, context?: TContext): void;
+}
+
+export function useAnimatedScrollHandler<TContext extends Context>(
+  handlers: ScrollHandlers<TContext> | SingleScrollHandler<TContext>,
+  dependencies?: DependencyList
+): MutableRefObject<WorkletEventHandler> {
+  const initRef = useRef<ContextWithDependencies<TContext>>(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),
@@ -19,7 +50,10 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
 
   const { context, savedDependencies } = initRef.current;
 
-  dependencies = buildDependencies(dependencies, handlers);
+  dependencies = buildDependencies(
+    dependencies,
+    <Record<string, WorkletFunction>>handlers
+  );
 
   const dependenciesDiffer = !areDependenciesEqual(
     dependencies,
@@ -42,8 +76,8 @@ export function useAnimatedScrollHandler(handlers, dependencies) {
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
-  return useEvent(
-    (event) => {
+  return useEvent<ScrollEvent>(
+    (event: ScrollEvent) => {
       'worklet';
       const {
         onScroll,
