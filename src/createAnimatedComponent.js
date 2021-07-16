@@ -155,7 +155,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         }
       } else if (this._viewTag !== -1) {
         for (const style of this._styles) {
-          if (style.viewDescriptors) {
+          if (style?.viewDescriptors) {
             style.viewDescriptors.remove(this._viewTag);
           }
         }
@@ -469,9 +469,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         } else if (key === 'animatedProps') {
           Object.keys(value.initial.value).forEach((key) => {
             props[key] = value.initial.value[key];
-            if (value.viewRef.current === null) {
-              value.viewRef.current = this;
-            }
+            value.viewsRef.add(this);
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components

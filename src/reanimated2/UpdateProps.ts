@@ -28,10 +28,10 @@ const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 let updatePropsByPlatform;
 if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
-  updatePropsByPlatform = (viewDescriptors, updates, maybeViewRef) => {
+  updatePropsByPlatform = (_, updates, maybeViewRef) => {
     'worklet';
-    viewDescriptors.value.forEach((viewDescriptor) => {
-      _updatePropsJS(viewDescriptor.value.tag, null, updates, maybeViewRef);
+    maybeViewRef.items.forEach((item, _) => {
+      _updatePropsJS(updates, item);
     });
   };
 } else {
@@ -46,8 +46,8 @@ if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
 
     viewDescriptors.value.forEach((viewDescriptor) => {
       _updateProps(
-        viewDescriptor.value.tag,
-        viewDescriptor.value.name || 'RCTView',
+        viewDescriptor.tag,
+        viewDescriptor.name || 'RCTView',
         updates
       );
     });

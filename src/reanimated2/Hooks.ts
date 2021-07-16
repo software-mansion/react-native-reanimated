@@ -446,7 +446,8 @@ const canApplyOptimalisation = (upadterFn) => {
 
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const initRef = useRef(null);
-  let viewsRef = makeViewsRefSet();
+  const viewsRef = makeViewsRefSet();
+  const viewDescriptors = makeViewDescriptorsSet();
   const inputs = Object.values(updater._closure);
   adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
@@ -464,7 +465,6 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   }
   adaptersHash && dependencies.push(adaptersHash);
 
-  const viewDescriptors = makeViewDescriptorsSet();
   if (initRef.current === null) {
     const initialStyle = initialUpdaterRun(updater);
     validateAnimatedStyles(initialStyle);
@@ -473,15 +473,17 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         value: null,
       },
       remoteState: makeRemote({ last: initialStyle }),
-      workletViewDescriptors: makeMutable([]),
+      sharableViewDescriptors: makeMutable([]),
     };
-    viewDescriptors.rebuildWorkletViewDescriptors(
-      initRef.current.workletViewDescriptors
+    viewDescriptors.rebuildsharableViewDescriptors(
+      initRef.current.sharableViewDescriptors
     );
   }
-  dependencies.push(initRef.current.workletViewDescriptors.value);
-  const { initial, remoteState, workletViewDescriptors } = initRef.current;
+  dependencies.push(initRef.current.sharableViewDescriptors.value);
+
+  const { initial, remoteState, sharableViewDescriptors } = initRef.current;
   const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+
   initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
@@ -519,13 +521,12 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     if (typeof updater.__optimalization !== undefined) {
       upadterFn.__optimalization = optimalization;
     }
-    upadterFn.__optimalization = 0;
 
     if (process.env.JEST_WORKER_ID) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          workletViewDescriptors,
+          sharableViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -538,7 +539,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       fun = () => {
         'worklet';
         styleUpdater(
-          workletViewDescriptors,
+          sharableViewDescriptors,
           upadterFn,
           remoteState,
           maybeViewRef,
@@ -546,13 +547,13 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
         );
       };
     }
+
     const mapperId = startMapper(
       fun,
       inputs,
       [],
       upadterFn,
-      -1, // viewDescriptor.value.tag,
-      '' // viewDescriptor.value.name || 'RCTView'
+      sharableViewDescriptors
     );
     return () => {
       stopMapper(mapperId);
@@ -562,8 +563,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   useEffect(() => {
     animationsActive.value = true;
     return () => {
-      initRef.current = null;
-      viewsRef = null;
+      // initRef.current = null;
+      // viewsRef = null;
       animationsActive.value = false;
     };
   }, []);

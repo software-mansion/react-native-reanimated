@@ -266,8 +266,7 @@ export function startMapper(
   updater = () => {
     // noop
   },
-  tag = 0,
-  name = ''
+  viewDescriptors = []
 ) {
   isConfiguredCheck();
   return NativeReanimated.startMapper(
@@ -275,8 +274,7 @@ export function startMapper(
     inputs,
     outputs,
     updater,
-    tag,
-    name
+    viewDescriptors
   );
 }
 

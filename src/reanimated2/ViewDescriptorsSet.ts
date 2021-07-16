@@ -11,7 +11,7 @@ export function makeViewDescriptorsSet() {
       tags: new Set(),
       waitForInsertSync: false,
       waitForRemoveSync: false,
-      workletViewDescriptors: makeMutable([]),
+      sharableViewDescriptors: makeMutable([]),
       items: [],
 
       add: (item) => {
@@ -25,7 +25,7 @@ export function makeViewDescriptorsSet() {
           data.waitForInsertSync = true;
 
           setImmediate(() => {
-            data.workletViewDescriptors.value = data.items;
+            data.sharableViewDescriptors.value = data.items;
             data.waitForInsertSync = false;
           });
         }
@@ -47,15 +47,15 @@ export function makeViewDescriptorsSet() {
               }
             }
             data.items = items;
-            data.workletViewDescriptors.value = items;
+            data.sharableViewDescriptors.value = items;
             data.batchToRemove = new Set();
             data.waitForRemoveSync = false;
           });
         }
       },
 
-      rebuildWorkletViewDescriptors: (workletViewDescriptors) => {
-        data.workletViewDescriptors = workletViewDescriptors;
+      rebuildsharableViewDescriptors: (sharableViewDescriptors) => {
+        data.sharableViewDescriptors = sharableViewDescriptors;
       },
     };
     ref.current = data;
