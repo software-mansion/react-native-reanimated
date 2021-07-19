@@ -2,7 +2,12 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -17,7 +22,6 @@ import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
-import { Platform } from 'react-native';
 import { processColor } from './Colors';
 
 export function useSharedValue(init) {
@@ -722,10 +726,11 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
+  const useWeb = isWeb();
 
   const handler = (event) => {
     'worklet';
-    event = Platform.OS === 'web' ? event.nativeEvent : event;
+    event = useWeb ? event.nativeEvent : event;
 
     const FAILED = 1;
     const BEGAN = 2;
@@ -766,7 +771,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     }
   };
 
-  if (Platform.OS === 'web') {
+  if (isWeb()) {
     return handler;
   }
 
