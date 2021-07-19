@@ -470,7 +470,7 @@ export default function createAnimatedComponent(Component, options = {}) {
             props[key] = dummyListener;
           }
         } else if (!(value instanceof AnimatedNode)) {
-          if (!(key === 'onGestureHandlerStateChange' || !isChromeDebugger())) {
+          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
             props[key] = value;
           }
         } else if (value instanceof AnimatedValue) {

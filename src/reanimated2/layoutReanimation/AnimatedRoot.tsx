@@ -8,10 +8,9 @@ let REALayoutView: any;
 if (Platform.OS === 'web' && !requireNativeComponent) {
   REALayoutView = React.Component;
 } else {
-  // REALayoutView = (requireNativeComponent(
-    // 'REALayoutView'
-  // ) as unknown) as React.Component;
-  REALayoutView = {};
+  REALayoutView = (requireNativeComponent(
+    'REALayoutView'
+  ) as unknown) as React.Component;
 }
 
 export class AnimatedLayout extends React.Component {
