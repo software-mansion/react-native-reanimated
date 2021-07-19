@@ -18,7 +18,7 @@ import {
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
-import { isJest } from './reanimated2/PlatformChecker';
+import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 
 const NODE_MAPPING = new Map();
 
@@ -114,15 +114,17 @@ export default function createAnimatedComponent(Component, options = {}) {
     _attachNativeEvents() {
       const node = this._getEventViewRef();
       const viewTag = findNodeHandle(options.setNativeProps ? this : node);
-
+      // console.log(this)
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
+          // console.log("a")
           prop.attachEvent(node, key);
         } else if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
+          // console.log("b")
           prop.current.registerForEvents(viewTag, key);
         }
       }
@@ -471,7 +473,9 @@ export default function createAnimatedComponent(Component, options = {}) {
             props[key] = dummyListener;
           }
         } else if (!(value instanceof AnimatedNode)) {
-          props[key] = value;
+          if (!(key === 'onGestureHandlerStateChange' || !isChromeDebugger())) {
+            props[key] = value;
+          }
         } else if (value instanceof AnimatedValue) {
           // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
           // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
