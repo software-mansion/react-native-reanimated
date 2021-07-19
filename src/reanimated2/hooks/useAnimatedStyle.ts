@@ -1,6 +1,6 @@
 /* global _frameTimestamp */
 
-import { useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef } from 'react';
 
 import {
   startMapper,
@@ -9,18 +9,40 @@ import {
   requestFrame,
   getTimestamp,
 } from '../core';
-import updateProps, {
-  updatePropsJestWrapper,
-  colorProps,
-} from '../UpdateProps';
+import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animations';
 import NativeReanimated from '../NativeReanimated';
 import { Platform } from 'react-native';
-import { processColor } from '../Colors';
 import { useSharedValue } from './useSharedValue';
-import { buildWorkletsHash } from './utils';
+import {
+  buildWorkletsHash,
+  canApplyOptimalisation,
+  getStyleWithoutAnimations,
+  hasColorProps,
+  isAnimated,
+  parseColors,
+  styleDiff,
+  validateAnimatedStyles,
+} from './utils';
+import {
+  AdapterWorkletFunction,
+  AnimatedState,
+  AnimatedStyle,
+  AnimatedStyleValue,
+  AnimationObject,
+  AnimationRef,
+  BasicWorkletFunction,
+  DependencyList,
+  Descriptor,
+  SharedValue,
+  WorkletFunction,
+} from './commonTypes';
 
-function prepareAnimation(animatedProp, lastAnimation, lastValue) {
+function prepareAnimation(
+  animatedProp: AnimatedStyleValue,
+  lastAnimation: AnimatedStyleValue,
+  lastValue: AnimatedStyleValue
+): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
     animatedProp.forEach((prop, index) =>
@@ -30,7 +52,7 @@ function prepareAnimation(animatedProp, lastAnimation, lastValue) {
         lastValue && lastValue[index]
       )
     );
-    return animatedProp;
+    // return animatedProp;
   }
   if (typeof animatedProp === 'object' && animatedProp.onFrame) {
     const animation = animatedProp;
@@ -128,85 +150,15 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
   }
 }
 
-function isAnimated(prop) {
-  'worklet';
-  if (Array.isArray(prop)) {
-    for (let i = 0; i < prop.length; ++i) {
-      const item = prop[i];
-      for (const key in item) {
-        if (item[key].onFrame !== undefined) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  return prop?.onFrame !== undefined;
-}
-
-function styleDiff(oldStyle, newStyle) {
-  'worklet';
-  const diff = {};
-  Object.keys(oldStyle).forEach((key) => {
-    if (newStyle[key] === undefined) {
-      diff[key] = null;
-    }
-  });
-  Object.keys(newStyle).forEach((key) => {
-    const value = newStyle[key];
-    const oldValue = oldStyle[key];
-
-    if (isAnimated(value)) {
-      // do nothing
-      return;
-    }
-    if (
-      oldValue !== value &&
-      JSON.stringify(oldValue) !== JSON.stringify(value)
-    ) {
-      // I'd use deep equal here but that'd take additional work and this was easier
-      diff[key] = value;
-    }
-  });
-  return diff;
-}
-
-function getStyleWithoutAnimations(newStyle) {
-  'worklet';
-  const diff = {};
-
-  for (const key in newStyle) {
-    const value = newStyle[key];
-    if (isAnimated(value)) {
-      continue;
-    }
-    diff[key] = value;
-  }
-  return diff;
-}
-
-const validateAnimatedStyles = (styles) => {
-  'worklet';
-  if (typeof styles !== 'object') {
-    throw new Error(
-      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
-    );
-  } else if (Array.isArray(styles)) {
-    throw new Error(
-      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
-    );
-  }
-};
-
 function styleUpdater(
-  viewDescriptor,
-  updater,
-  state,
-  maybeViewRef,
-  animationsActive
-) {
+  viewDescriptor: SharedValue<Descriptor>,
+  updater: BasicWorkletFunction<AnimatedStyle>,
+  state: AnimatedState,
+  maybeViewRef: MutableRefObject<any> | undefined,
+  animationsActive: SharedValue<boolean>
+): void {
   'worklet';
-  const animations = state.animations || {};
+  const animations = state.animations || [];
   const newValues = updater() || {};
   const oldValues = state.last;
 
@@ -276,22 +228,22 @@ function styleUpdater(
     }
   } else {
     state.isAnimationCancelled = true;
-    state.animations = {};
+    state.animations = [];
     updateProps(viewDescriptor, newValues, maybeViewRef);
   }
 }
 
 function jestStyleUpdater(
-  viewDescriptor,
-  updater,
-  state,
-  maybeViewRef,
-  animationsActive,
-  animatedStyle,
-  adapters = []
-) {
+  viewDescriptor: SharedValue<Descriptor>,
+  updater: BasicWorkletFunction<AnimatedStyle>,
+  state: AnimatedState,
+  maybeViewRef: MutableRefObject<any> | undefined,
+  animationsActive: SharedValue<boolean>,
+  animatedStyle: MutableRefObject<AnimatedStyle>,
+  adapters: WorkletFunction[] = []
+): void {
   'worklet';
-  const animations = state.animations || {};
+  const animations: AnimationObject[] = state.animations || [];
   const newValues = updater() || {};
   const oldValues = state.last;
 
@@ -367,7 +319,7 @@ function jestStyleUpdater(
     }
   } else {
     state.isAnimationCancelled = true;
-    state.animations = {};
+    state.animations = [];
   }
 
   // calculate diff
@@ -384,45 +336,25 @@ function jestStyleUpdater(
     );
   }
 }
-const colorPropsSet = new Set(colorProps);
-const hasColorProps = (updates) => {
-  for (const key in updates) {
-    if (colorPropsSet.has(key)) {
-      return true;
-    }
-  }
-  return false;
-};
 
-const parseColors = (updates) => {
-  'worklet';
-  for (const key in updates) {
-    if (colorProps.indexOf(key) !== -1) {
-      updates[key] = processColor(updates[key]);
-    }
-  }
-};
-
-const canApplyOptimalisation = (upadterFn) => {
-  const FUNCTIONLESS_FLAG = 0b00000001;
-  const STATEMENTLESS_FLAG = 0b00000010;
-  const optimalization = upadterFn.__optimalization;
-  return (
-    optimalization & FUNCTIONLESS_FLAG && optimalization & STATEMENTLESS_FLAG
-  );
-};
-
-export function useAnimatedStyle(updater, dependencies, adapters) {
-  const viewDescriptor = useSharedValue({ tag: -1, name: null });
-  const initRef = useRef(null);
+export function useAnimatedStyle<T extends AnimatedStyle>(
+  updater: BasicWorkletFunction<T>,
+  dependencies?: DependencyList,
+  adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
+) {
+  const viewDescriptor = useSharedValue<Descriptor>({ tag: -1, name: null });
+  const initRef = useRef<AnimationRef>(null);
   const inputs = Object.values(updater._closure);
   const viewRef = useRef(null);
-  adapters = !adapters || Array.isArray(adapters) ? adapters : [adapters];
-  const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
-  const animationsActive = useSharedValue(true);
-  let animatedStyle;
+  const adaptersArray: AdapterWorkletFunction[] =
+    !adapters || Array.isArray(adapters)
+      ? <AdapterWorkletFunction[]>adapters
+      : [adapters];
+  const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
+  const animationsActive = useSharedValue<boolean>(true);
+  let animatedStyle: MutableRefObject<AnimatedStyle>;
   if (process.env.JEST_WORKER_ID) {
-    animatedStyle = useRef({});
+    animatedStyle = useRef<AnimatedStyle>({});
   }
 
   // build dependencies
@@ -434,7 +366,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
-    const initial = initialUpdaterRun(updater);
+    const initial: AnimatedStyle = initialUpdaterRun(updater);
     validateAnimatedStyles(initial);
     initRef.current = {
       initial,
@@ -449,11 +381,11 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     let fun;
     let upadterFn = updater;
     let optimalization = updater.__optimalization;
-    if (adapters) {
+    if (adaptersArray) {
       upadterFn = () => {
         'worklet';
         const newValues = updater();
-        adapters.forEach((adapter) => {
+        adaptersArray.forEach((adapter) => {
           adapter(newValues);
         });
         return newValues;
@@ -492,7 +424,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
           maybeViewRef,
           animationsActive,
           animatedStyle,
-          adapters
+          adaptersArray
         );
       };
     } else {

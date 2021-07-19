@@ -1,6 +1,14 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
+import { processColor } from '../Colors';
+import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { DependencyObject, WorkletFunction } from './commonTypes';
+import {
+  AnimatedStyle,
+  AnimationObject,
+  DependencyObject,
+  StyleProps,
+  WorkletFunction,
+} from './commonTypes';
 
 export function useEvent<T>(
   handler: (event: T) => void,
@@ -25,7 +33,7 @@ export function useEvent<T>(
 
 // builds one big hash from multiple worklets' hashes
 export function buildWorkletsHash(
-  handlers: Record<string, WorkletFunction>
+  handlers: Record<string, WorkletFunction> | Array<WorkletFunction>
 ): string {
   return Object.keys(handlers).reduce(
     (previousValue, key) =>
@@ -87,3 +95,106 @@ export function areDependenciesEqual(
 
   return areHookInputsEqual(nextDeps, prevDeps);
 }
+
+export function hasColorProps(updates: AnimatedStyle): boolean {
+  const colorPropsSet = new Set(colorProps);
+  for (const key in updates) {
+    if (colorPropsSet.has(key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function parseColors(updates: AnimatedStyle): void {
+  'worklet';
+  for (const key in updates) {
+    if (colorProps.indexOf(key) !== -1) {
+      updates[key] = processColor(updates[key]);
+    }
+  }
+}
+
+export function canApplyOptimalisation(upadterFn: WorkletFunction): number {
+  const FUNCTIONLESS_FLAG = 0b00000001;
+  const STATEMENTLESS_FLAG = 0b00000010;
+  const optimalization = upadterFn.__optimalization;
+  return (
+    optimalization & FUNCTIONLESS_FLAG && optimalization & STATEMENTLESS_FLAG
+  );
+}
+
+export function isAnimated(
+  prop: AnimationObject | Array<Record<string, AnimationObject>>
+): boolean {
+  'worklet';
+  if (Array.isArray(prop)) {
+    for (let i = 0; i < prop.length; ++i) {
+      const item = prop[i];
+      for (const key in item) {
+        if (item[key].onFrame !== undefined) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  return prop?.onFrame !== undefined;
+}
+
+export function styleDiff(
+  oldStyle: AnimatedStyle,
+  newStyle: AnimatedStyle
+): AnimatedStyle {
+  'worklet';
+  const diff = {};
+  Object.keys(oldStyle).forEach((key) => {
+    if (newStyle[key] === undefined) {
+      diff[key] = null;
+    }
+  });
+  Object.keys(newStyle).forEach((key) => {
+    const value = newStyle[key];
+    const oldValue = oldStyle[key];
+
+    if (isAnimated(value)) {
+      // do nothing
+      return;
+    }
+    if (
+      oldValue !== value &&
+      JSON.stringify(oldValue) !== JSON.stringify(value)
+    ) {
+      // I'd use deep equal here but that'd take additional work and this was easier
+      diff[key] = value;
+    }
+  });
+  return diff;
+}
+
+export function getStyleWithoutAnimations(newStyle: AnimatedStyle): StyleProps {
+  'worklet';
+  const diff = {};
+
+  for (const key in newStyle) {
+    const value = newStyle[key];
+    if (isAnimated(value)) {
+      continue;
+    }
+    diff[key] = value;
+  }
+  return diff;
+}
+
+export const validateAnimatedStyles = (styles: AnimatedStyle): void => {
+  'worklet';
+  if (typeof styles !== 'object') {
+    throw new Error(
+      `useAnimatedStyle has to return an object, found ${typeof styles} instead`
+    );
+  } else if (Array.isArray(styles)) {
+    throw new Error(
+      'useAnimatedStyle has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    );
+  }
+};
