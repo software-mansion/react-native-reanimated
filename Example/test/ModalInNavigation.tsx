@@ -20,7 +20,7 @@ const Screen1 = ({navigation}: {navigation: NavigationProp<any>}) => {
 const Screen2 = () => {
   return (
     <AnimatedLayout style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <Animated.View style={{position: 'absolute', height: "100%", width: '100%'}} entering={FadeIn.springify()} exiting={FadeOut.duration(2000)}>
+      <Animated.View style={{position: 'absolute', height: "100%", width: '100%'}}  >
         <View style={{backgroundColor: 'black', opacity: 0.5, flex: 1}}/>
       </Animated.View>
       <Animated.View entering={SlideInLeft.springify()} exiting={SlideOutDown.duration(2000)} style={{height: 100, width:100, backgroundColor: 'red'}}>
@@ -35,7 +35,7 @@ const Screen2 = () => {
 const App = () => {
   return (
       <Stack.Navigator
-        detachInactiveScreens={false}
+        detachInactiveScreens={true}
         mode="modal"
         screenOptions={{
           animationEnabled: false,

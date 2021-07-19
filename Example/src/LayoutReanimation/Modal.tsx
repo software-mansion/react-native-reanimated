@@ -60,7 +60,7 @@ function AnimatedView() {
 }
 
 export function Modal(): React.ReactElement {
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(true);
     return (
         <View style={{flexDirection: 'column-reverse'}}>
             <Button title="toggle" onPress={() => {setShow((last) => !last)}}/>

@@ -78,7 +78,7 @@ public class ReactBatchObserver {
                 try {
                     view = hierarchyManager.resolveView(tag);
                 } catch (IllegalViewOperationException e) { }
-                if (view == null || view.getParent() == null) {
+                if (view == null || ViewTraverser.getParent(view) == null) {
                     lambda.exec(null, tag);
                     continue;
                 }

@@ -1,9 +1,11 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.view.View;
+import android.view.Window;
 
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.util.ArrayList;
@@ -38,8 +40,11 @@ public class Snapshooter {
             View current = view;
             while (current != null) {
                 pathToRootView.add(current);
+                if (current instanceof RootView) {
+                    break;
+                }
                 try {
-                    current = (View) current.getParent();
+                    current = (View) ViewTraverser.getParent(current);
                 } catch (ClassCastException e) {
                     current = null;
                 }
@@ -57,8 +62,8 @@ public class Snapshooter {
         values.put(globalOriginX, location[0]);
         values.put(globalOriginY, location[1]);
 
-        View parentView = (View)view.getParent();
-        values.put(parent, (View)view.getParent());
+        View parentView = ViewTraverser.getParent(view);
+        values.put(parent, parentView);
 
         // TODO add viewManager
         ViewManager vm = null;

@@ -21,10 +21,10 @@ const Screen1 = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
 const Screen2 = ({ navigation }: { navigation: NavigationProp<any> }) => {
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, borderColor: 'green', borderWidth: 2, }}>
             <Text> Screen 2 </Text>
             <Modal/>
-            <Button title="next" onPress={() => navigation.navigate('Screen3')} />
+            <Button title="next" onPress={() => navigation.navigate('Screen1')} />
         </View>
     );
 };
@@ -60,20 +60,22 @@ const App = () => {
     return (
         <Stack.Navigator
             detachInactiveScreens={true}
-            mode="modal"
+            
             screenOptions={{
                 animationEnabled: false,
-                headerStyle: { backgroundColor: 'red' },
+                cardStyle: { backgroundColor: 'transparent' },
+                headerStyle: {backgroundColor: 'red'},
                 gestureEnabled: true,
                 // cardOverlayEnabled: true,
             }}>
             <Stack.Screen component={Screen1} name="Screen1"/>
             <Stack.Screen component={Screen2} name="Screen2"/>
-            <Stack.Screen component={Screen3} name="Screen3"/>
+            {/*<Stack.Screen component={Screen3} name="Screen3"/>
             <Stack.Screen component={Screen4} name="Screen4"/>
-            <Stack.Screen component={Screen5} name="Screen5"/>
+            <Stack.Screen component={Screen5} name="Screen5"/> */}
         </Stack.Navigator>
     );
 };
 
 export default App;
+

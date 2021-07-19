@@ -64,12 +64,6 @@ export function ModalNewAPI(): React.ReactElement {
   return (
     <View style={{ flexDirection: 'column-reverse' }}>
       <AnimatedLayout>
-        <Button
-          title="toggle"
-          onPress={() => {
-            setShow((last) => !last);
-          }}
-        />
         <View
           style={{
             height: 400,
@@ -77,7 +71,7 @@ export function ModalNewAPI(): React.ReactElement {
             justifyContent: 'center',
             borderWidth: 1,
           }}>
-          {show && <AnimatedView />}
+          <AnimatedView />
         </View>
       </AnimatedLayout>
     </View>

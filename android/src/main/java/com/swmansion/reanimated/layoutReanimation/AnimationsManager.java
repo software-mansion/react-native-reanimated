@@ -1,14 +1,9 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.accounts.AccountManager;
-import android.os.Build;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-
-import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
@@ -29,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 public class AnimationsManager {
@@ -298,7 +292,7 @@ public class AnimationsManager {
                 //If view is inactive and not present before do nothing
                 continue;
             }
-            if (view.getParent() != null && !(view instanceof AnimatedRoot)) {
+            if (ViewTraverser.getParent(view) != null && !(view instanceof AnimatedRoot)) {
                 continue;
             }
 
@@ -307,14 +301,17 @@ public class AnimationsManager {
                 for (int i = 1; i < pathToTheRoot.size(); ++i) {
                     ViewGroup parent = (ViewGroup) pathToTheRoot.get(i);
                     View cur = pathToTheRoot.get(i-1);
-                    if (cur.getParent() == null) {
-                        parent.addView(cur);
-                        mAnimatedLayoutHangingPoint.put(view.getId(), parent);
+                    if (ViewTraverser.getParent(cur) == null) {
+                        View newParent = ViewTraverser.attach(cur, parent, pathToTheRoot.get(pathToTheRoot.size()-1), startValues);
+                        mAnimatedLayoutHangingPoint.put(view.getId(), newParent);
+                        if (parent != newParent) {
+                            break;
+                        }
                     }
                 }
             } else {
                 ViewGroup parent = (ViewGroup) mParent.get(view.getId());
-                parent.addView(view);
+                ViewTraverser.attach(view, parent, null, startValues);
             }
         }
 
@@ -393,8 +390,8 @@ public class AnimationsManager {
 
         if (view instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) view;
-            for (int i = 0; i < vg.getChildCount(); ++i) {
-                View child = vg.getChildAt(i);
+            for (int i = 0; i < ViewTraverser.getChildCount(vg); ++i) {
+                View child = ViewTraverser.getChildAt(vg, i);
                 boolean childAns = dfs(child, disappearing || disappearingAbove); // we still want to go down
                 active = active || childAns;
             }
@@ -414,14 +411,14 @@ public class AnimationsManager {
                         if (view instanceof AnimatedRoot) {
                             View hangingPoint = mAnimatedLayoutHangingPoint.get(curView.getId());
                             View tmp = view;
-                            while (tmp.getParent() != null && tmp.getParent() != hangingPoint) {
-                                ViewGroup next = (ViewGroup)tmp.getParent();
+                            while (ViewTraverser.getParent(tmp) != null && tmp != hangingPoint) {
+                                ViewGroup next = (ViewGroup)ViewTraverser.getParent(tmp);
                                 next.removeView(tmp);
                                 tmp = next;
                             }
                             mAnimatedLayoutHangingPoint.remove(curView.getId());
                         } else  {
-                            ViewGroup parent = (ViewGroup) view.getParent();
+                            ViewGroup parent = (ViewGroup) ViewTraverser.getParent(view);
                             parent.removeView(curView);
                         }
                     }

@@ -1,11 +1,13 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.app.Application;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.react.uimanager.ViewGroupManager;
-import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.rnscreens.Screen;
+import com.swmansion.rnscreens.ScreenContainer;
+
+import java.util.HashMap;
 
 interface TraversingLambda {
     public void exec(View view);
@@ -14,21 +16,68 @@ interface TraversingLambda {
 public class ViewTraverser {
     static View getParent(View view) {
         if (view instanceof Screen) {
-            if (view.isActivated()) {
-
+            Screen screen = (Screen) view;
+            ScreenContainer container = screen.getContainer();
+            if (container == null || !container.hasScreen(screen.getFragment())) {
+                // Screen has been deleted
+                // Attached to window
+                if (!screen.isAttachedToWindow()) {
+                    return null;
+                }
+                return (View) screen.getParent();
             } else {
-
+                return container;
             }
         }
         return (View) view.getParent();
     }
 
-    static int getChildCount(ViewGroup view, ViewGroupManager vm) {
-        return vm.getChildCount(view);
+    static int getChildCount(ViewGroup view) {
+        if (view instanceof ScreenContainer) {
+            ScreenContainer sc = (ScreenContainer) view;
+            return sc.getScreenCount();
+        }
+        return view.getChildCount();
     }
 
-    static View getChildAt(ViewGroup view, int i,  ViewGroupManager vm) {
-        return vm.getChildAt(view, i);
+    static View getChildAt(ViewGroup view, int i) {
+        if (view instanceof ScreenContainer) {
+            ScreenContainer sc = (ScreenContainer) view;
+            Screen screen = (Screen) sc.getScreenAt(i);
+            return screen;
+        }
+        return view.getChildAt(i);
+    }
+
+    static View attach(View view, View parentCan, View highestKnownView, HashMap<String, Object> startValues) {
+        if (parentCan instanceof ViewGroup) {
+            ViewGroup parent = (ViewGroup) parentCan;
+            if (view instanceof Screen) {
+                Screen screen = (Screen) view;
+                if (view.getParent() != null) {
+                    ((ViewGroup)view.getParent()).removeView(view);
+                }
+                ViewGroup container = (ViewGroup) highestKnownView;
+                screen.setContainer(null);
+                container.addView(screen);
+                // convert origin
+                int l = ((Number)startValues.get(Snapshooter.originX)).intValue();
+                int t = ((Number)startValues.get(Snapshooter.originY)).intValue();
+                int r = ((Number)startValues.get(Snapshooter.width)).intValue() + l;
+                int b = ((Number)startValues.get(Snapshooter.height)).intValue() + t;
+                startValues.put(Snapshooter.originX, l);
+                startValues.put(Snapshooter.originY, t);
+                view.measure(
+                        View.MeasureSpec.makeMeasureSpec(r-l, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(b-t, View.MeasureSpec.EXACTLY));
+                view.layout(l, t, r, b);
+                highestKnownView.requestLayout();
+                return container;
+            }
+            parent.addView(view);
+            return parent;
+        }
+        return null;
     }
 
     static void traverse(View view, TraversingLambda lambda) {
@@ -51,8 +100,8 @@ public class ViewTraverser {
 
         if (view instanceof ViewGroup) {
             ViewGroup viewGroup = (ViewGroup)view;
-            for  (int i = 0; i < viewGroup.getChildCount(); ++i) {
-                internalTraverse(viewGroup.getChildAt(i), lambda,depth - 1, false);
+            for  (int i = 0; i < getChildCount(viewGroup); ++i) {
+                internalTraverse(getChildAt(viewGroup, i), lambda,depth - 1, false);
             }
         }
 
