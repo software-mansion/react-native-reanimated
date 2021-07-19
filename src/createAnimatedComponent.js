@@ -114,17 +114,14 @@ export default function createAnimatedComponent(Component, options = {}) {
     _attachNativeEvents() {
       const node = this._getEventViewRef();
       const viewTag = findNodeHandle(options.setNativeProps ? this : node);
-      // console.log(this)
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
-          // console.log("a")
           prop.attachEvent(node, key);
         } else if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
-          // console.log("b")
           prop.current.registerForEvents(viewTag, key);
         }
       }
