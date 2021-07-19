@@ -55,6 +55,7 @@ Remember not to provide both `0` and `from`, or `100` and `to` keyframe as it wi
 
 Between edge points, you can define middle points in which you want your object to have certain style properties.
 Remember that you can specify style only for those properties that you set the initial value in `0` or `from` keyframe.
+If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
 
 ```js
 import { Keyframe } from 'react-native-reanimated';
@@ -64,7 +65,7 @@ const keyframe = new Keyframe({
       transform: [{ rotate: '0deg' }],
     },
     45: {
-        transform: [{ rotate: '100deg' }]
+      transform: [{ rotate: '100deg' }]
     },
     100: {
       transform: [{ rotate: '45deg' }],
@@ -84,8 +85,8 @@ const keyframe = new Keyframe({
       transform: [{ rotate: '0deg' }],
     },
     45: {
-        transform: [{ rotate: '100deg' }],
-        easing: Easing.exp,
+      transform: [{ rotate: '100deg' }],
+      easing: Easing.exp,
     },
     100: {
       transform: [{ rotate: '45deg' }],

@@ -72,11 +72,15 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp].forEach((transformStyle) => {
-          Object.keys(transformStyle).forEach((transformProp: string) => {
-            parsedKeyframes['transform_' + transformProp] = [];
-          });
-        });
+        initialValues[styleProp].forEach(
+          (transformStyle: Record<string, string | number>, index: number) => {
+            Object.keys(transformStyle).forEach((transformProp: string) => {
+              parsedKeyframes[
+                index.toString() + '_transform:' + transformProp
+              ] = [];
+            });
+          }
+        );
       } else {
         parsedKeyframes[styleProp] = [];
       }
@@ -143,11 +147,19 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key].forEach((transformStyle) => {
-              Object.keys(transformStyle).forEach((key: string) => {
-                addKeyPointWith('transform_' + key, transformStyle[key]);
-              });
-            });
+            keyframe[key].forEach(
+              (
+                transformStyle: Record<string, string | number>,
+                index: number
+              ) => {
+                Object.keys(transformStyle).forEach((transformProp: string) => {
+                  addKeyPointWith(
+                    index.toString() + '_transform:' + transformProp,
+                    transformStyle[transformProp]
+                  );
+                });
+              }
+            );
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
@@ -184,6 +196,12 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     return (_targetValues) => {
       'worklet';
       const animations: StyleProps = {};
+
+      const getTransformPropName = (keyframePropName: string): string => {
+        const prefixEnd = keyframePropName.indexOf(':');
+        return keyframePropName.substring(prefixEnd + 1);
+      };
+
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
@@ -211,11 +229,11 @@ export class Keyframe implements IEntryExitAnimationBuilder {
                 )
               )
         );
-        if (key.includes('transform_')) {
+        if (key.includes('transform')) {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform.push({ [key.substring(10)]: animation });
+          animations.transform.push({ [getTransformPropName(key)]: animation });
         } else {
           animations[key] = animation;
         }
@@ -223,9 +241,11 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       Object.keys(initialValues).forEach((key: string) => {
         if (key.includes('transform')) {
           initialValues[key].forEach(
-            (transformProp: Record<string, number | string>) => {
+            (transformProp: Record<string, number | string>, index: number) => {
               Object.keys(transformProp).forEach((transformPropKey: string) => {
-                addAnimation('transform_' + transformPropKey);
+                addAnimation(
+                  index.toString() + '_transform:' + transformPropKey
+                );
               });
             }
           );
