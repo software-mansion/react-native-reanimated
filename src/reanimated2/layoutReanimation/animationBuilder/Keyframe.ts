@@ -197,11 +197,6 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       'worklet';
       const animations: StyleProps = {};
 
-      const getTransformPropName = (keyframePropName: string): string => {
-        const prefixEnd = keyframePropName.indexOf(':');
-        return keyframePropName.substring(prefixEnd + 1);
-      };
-
       /* 
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
@@ -233,7 +228,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform.push({ [getTransformPropName(key)]: animation });
+          animations.transform.push({ [key.split(':')[1]]: animation });
         } else {
           animations[key] = animation;
         }
