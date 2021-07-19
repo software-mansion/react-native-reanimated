@@ -188,7 +188,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
       */
-      Object.keys(keyframes).forEach((key: string) => {
+      const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
         const animation = delayFunction(
           delay,
@@ -219,8 +219,20 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         } else {
           animations[key] = animation;
         }
+      };
+      Object.keys(initialValues).forEach((key: string) => {
+        if (key.includes('transform')) {
+          initialValues[key].forEach(
+            (transformProp: Record<string, number | string>) => {
+              Object.keys(transformProp).forEach((transformPropKey: string) => {
+                addAnimation('transform_' + transformPropKey);
+              });
+            }
+          );
+        } else {
+          addAnimation(key);
+        }
       });
-
       return {
         animations: animations,
         initialValues: initialValues,

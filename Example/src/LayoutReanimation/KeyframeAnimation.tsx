@@ -11,17 +11,17 @@ export function KeyframeAnimation(): React.ReactElement {
   const enteringAnimation = new Keyframe({
     from: {
       originX: 50,
-      transform: [{ rotate: '45deg' }],
+      transform: [{ rotate: '45deg' }, { scale: 0.5 }],
     },
     30: {
-      transform: [{ rotate: '-90deg' }],
+      transform: [{ rotate: '-90deg' }, { scale: 2 }],
     },
     50: {
       originX: 70,
     },
     100: {
       originX: 0,
-      transform: [{ rotate: '0deg' }],
+      transform: [{ rotate: '0deg' }, { scale: 1 }],
       easing: Easing.quad,
     },
   }).duration(2000);
