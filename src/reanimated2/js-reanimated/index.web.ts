@@ -6,8 +6,8 @@ const reanimatedJS = new JSReanimated();
 
 global._frameTimestamp = null;
 
-export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
-  if (viewRef.current && viewRef.current._component) {
+export const _updatePropsJS = (updates, viewRef) => {
+  if (viewRef?._component) {
     const [rawStyles] = Object.keys(updates).reduce(
       (acc, key) => {
         const value = updates[key];
@@ -18,15 +18,15 @@ export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
       [{}, {}]
     );
 
-    if (typeof viewRef.current._component.setNativeProps === 'function') {
-      viewRef.current._component.setNativeProps({ style: rawStyles });
-    } else if (Object.keys(viewRef.current._component.props).length > 0) {
-      Object.keys(viewRef.current._component.props).forEach((key) => {
+    if (typeof viewRef._component.setNativeProps === 'function') {
+      viewRef._component.setNativeProps({ style: rawStyles });
+    } else if (Object.keys(viewRef._component.props).length > 0) {
+      Object.keys(viewRef._component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;
         }
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-        viewRef.current._component._touchableNode.setAttribute(
+        viewRef._component._touchableNode.setAttribute(
           dashedKey,
           rawStyles[key]
         );

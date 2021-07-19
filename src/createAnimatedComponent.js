@@ -73,6 +73,8 @@ export default function createAnimatedComponent(Component, options = {}) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    _styles = null;
+    _viewTag = -1;
 
     constructor(props) {
       super(props);
@@ -87,6 +89,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      this._detachStyles();
       this.sv = null;
     }
 
@@ -139,6 +142,25 @@ export default function createAnimatedComponent(Component, options = {}) {
           prop.current instanceof WorkletEventHandler
         ) {
           prop.current.unregisterFromEvents();
+        }
+      }
+    }
+
+    _detachStyles() {
+      if (Platform.OS === 'web') {
+        for (const style of this._styles) {
+          if (style.viewsRef) {
+            style.viewsRef.remove(this);
+          }
+        }
+      } else if (this._viewTag !== -1) {
+        for (const style of this._styles) {
+          if (style?.viewDescriptors) {
+            style.viewDescriptors.remove(this._viewTag);
+          }
+        }
+        if (this.props.animatedProps?.viewDescriptors) {
+          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
       }
     }
@@ -261,6 +283,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         ? this.props.style
         : [this.props.style];
       styles = flattenArray(styles);
+      this._styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -289,10 +312,11 @@ export default function createAnimatedComponent(Component, options = {}) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
+      this._viewTag = viewTag;
 
       styles.forEach((style) => {
-        if (style?.viewDescriptor) {
-          style.viewDescriptor.value = { tag: viewTag, name: viewName };
+        if (style?.viewDescriptors) {
+          style.viewDescriptors.add({ tag: viewTag, name: viewName });
           if (process.env.JEST_WORKER_ID) {
             /**
              * We need to connect Jest's TestObject instance whose contains just props object
@@ -302,29 +326,29 @@ export default function createAnimatedComponent(Component, options = {}) {
              */
             this.animatedStyle.value = {
               ...this.animatedStyle.value,
-              ...style.initial,
+              ...style.initial.value,
             };
             style.animatedStyle.current = this.animatedStyle;
           }
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptor) {
-        this.props.animatedProps.viewDescriptor.value = {
+      if (this.props.animatedProps?.viewDescriptors) {
+        this.props.animatedProps.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
-        };
+        });
       }
     }
 
     _hasReanimated2Props(flattenStyles) {
-      if (this.props.animatedProps?.viewDescriptor) {
+      if (this.props.animatedProps?.viewDescriptors) {
         return true;
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
           // eslint-disable-next-line no-prototype-builtins
-          if (style?.hasOwnProperty('viewDescriptor')) {
+          if (style?.hasOwnProperty('viewDescriptors')) {
             return true;
           }
         }
@@ -345,6 +369,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       this._reattachNativeEvents(prevProps);
 
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
+      this._attachAnimatedStyles();
     }
 
     _setComponentRef = setAndForwardRef({
@@ -430,12 +455,10 @@ export default function createAnimatedComponent(Component, options = {}) {
         if (key === 'style') {
           const styles = Array.isArray(value) ? value : [value];
           const processedStyle = styles.map((style) => {
-            if (style && style.viewDescriptor) {
+            if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
-              if (style.viewRef.current === null) {
-                style.viewRef.current = this;
-              }
-              return style.initial;
+              style.viewsRef.add(this);
+              return style.initial.value;
             } else {
               return style;
             }
@@ -444,11 +467,9 @@ export default function createAnimatedComponent(Component, options = {}) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial).forEach((key) => {
-            props[key] = value.initial[key];
-            if (value.viewRef.current === null) {
-              value.viewRef.current = this;
-            }
+          Object.keys(value.initial.value).forEach((key) => {
+            props[key] = value.initial.value[key];
+            value.viewsRef.add(this);
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components

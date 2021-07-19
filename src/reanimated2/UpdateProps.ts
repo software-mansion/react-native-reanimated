@@ -28,12 +28,14 @@ const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 let updatePropsByPlatform;
 if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
-  updatePropsByPlatform = (viewDescriptor, updates, maybeViewRef) => {
+  updatePropsByPlatform = (_, updates, maybeViewRef) => {
     'worklet';
-    _updatePropsJS(viewDescriptor.value.tag, null, updates, maybeViewRef);
+    maybeViewRef.items.forEach((item, _) => {
+      _updatePropsJS(updates, item);
+    });
   };
 } else {
-  updatePropsByPlatform = (viewDescriptor, updates, _) => {
+  updatePropsByPlatform = (viewDescriptors, updates, _) => {
     'worklet';
 
     for (const key in updates) {
@@ -42,18 +44,20 @@ if (Platform.OS === 'web' || process.env.JEST_WORKER_ID) {
       }
     }
 
-    _updateProps(
-      viewDescriptor.value.tag,
-      viewDescriptor.value.name || 'RCTView',
-      updates
-    );
+    viewDescriptors.value.forEach((viewDescriptor) => {
+      _updateProps(
+        viewDescriptor.tag,
+        viewDescriptor.name || 'RCTView',
+        updates
+      );
+    });
   };
 }
 
 export const updateProps = updatePropsByPlatform;
 
 export const updatePropsJestWrapper = (
-  viewDescriptor,
+  viewDescriptors,
   updates,
   maybeViewRef,
   animatedStyle,
@@ -67,7 +71,7 @@ export const updatePropsJestWrapper = (
     ...updates,
   };
 
-  updateProps(viewDescriptor, updates, maybeViewRef);
+  updateProps(viewDescriptors, updates, maybeViewRef);
 };
 
 export default updateProps;
