@@ -46,7 +46,7 @@ function hasAnimatedNodes(value) {
 
 function flattenArray(array) {
   if (!Array.isArray(array)) {
-    return array;
+    return [array];
   }
   const resultArr = [];
 
