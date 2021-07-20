@@ -1,10 +1,8 @@
 'use strict';
 const generate = require('@babel/generator').default;
 const hash = require('string-hash-64');
-const { visitors } = require('@babel/traverse');
 const traverse = require('@babel/traverse').default;
-const parse = require('@babel/parser').parse;
-const { transformSync } = require("@babel/core");
+const { transformSync } = require('@babel/core');
 /**
  * holds a map of function names as keys and array of argument indexes as values which should be automatically workletized(they have to be functions)(starting from 0)
  */
@@ -123,6 +121,7 @@ const blacklistedFunctions = new Set([
   'apply',
   'call',
   '__callAsync',
+  'includes',
 ]);
 
 const possibleOptFunction = new Set(['interpolate']);
@@ -268,13 +267,16 @@ function buildWorkletString(t, fun, closureVariables, name) {
   const workletFunction = t.functionExpression(
     t.identifier(name),
     fun.program.body[0].expression.params,
-    prependClosureVariablesIfNecessary(closureVariables, fun.program.body[0].expression.body)
+    prependClosureVariablesIfNecessary(
+      closureVariables,
+      fun.program.body[0].expression.body
+    )
   );
 
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName, options = {}) {
+function processWorkletFunction(t, fun, fileName) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
@@ -283,25 +285,32 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   const closure = new Map();
   const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
+  const options = {};
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   const code = '\n(' + fun.toString() + '\n)';
   const transformed = transformSync(code, {
     filename: fileName,
-    "presets": ["@babel/preset-typescript"],
-    "plugins": [
-      "@babel/plugin-transform-shorthand-properties",
-      "@babel/plugin-transform-arrow-functions", 
-      "@babel/plugin-proposal-optional-chaining",
-      "@babel/plugin-proposal-nullish-coalescing-operator",
-      ["@babel/plugin-transform-template-literals", { "loose": true }],
+    presets: ['@babel/preset-typescript'],
+    plugins: [
+      '@babel/plugin-transform-shorthand-properties',
+      '@babel/plugin-transform-arrow-functions',
+      '@babel/plugin-proposal-optional-chaining',
+      '@babel/plugin-proposal-nullish-coalescing-operator',
+      ['@babel/plugin-transform-template-literals', { loose: true }],
     ],
     ast: true,
     babelrc: false,
     configFile: false,
   });
-
+  if (
+    fun.parent &&
+    fun.parent.callee &&
+    fun.parent.callee.name === 'useAnimatedStyle'
+  ) {
+    options.optFlags = isPossibleOptimization(transformed.ast);
+  }
   traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
@@ -362,8 +371,18 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
 
   const privateFunctionId = t.identifier('_f');
   const clone = t.cloneNode(fun.node);
-  const funExpression = t.functionExpression(null, clone.params, clone.body);
-  const funString = buildWorkletString(t, transformed.ast, variables, functionName).replace("'worklet';", '');
+  let funExpression;
+  if (clone.body.type === 'BlockStatement') {
+    funExpression = t.functionExpression(null, clone.params, clone.body);
+  } else {
+    funExpression = clone;
+  }
+  const funString = buildWorkletString(
+    t,
+    transformed.ast,
+    variables,
+    functionName
+  ).replace("'worklet';", '');
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
@@ -487,12 +506,7 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          const flags = isPossibleOptimization(fun);
-          if (flags) {
-            processWorkletFunction(t, fun, fileName, { optFlags: flags });
-          } else {
-            processWorkletFunction(t, fun, fileName);
-          }
+          processWorkletFunction(t, fun, fileName);
         }
       }
     },
@@ -530,13 +544,13 @@ function processWorklets(t, path, fileName) {
   }
 }
 
-const FUNCTIONLESS_FLAG =   0b00000001;
-const STATEMENTLESS_FLAG =  0b00000010;
+const FUNCTIONLESS_FLAG = 0b00000001;
+const STATEMENTLESS_FLAG = 0b00000010;
 
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
   let isSteatements = false;
-  fun.scope.path.traverse({
+  traverse(fun, {
     CallExpression(path) {
       if (!possibleOptFunction.has(path.node.callee.name)) {
         isFunctionCall = true;
@@ -562,8 +576,8 @@ module.exports = function ({ types: t }) {
       // allows adding custom globals such as host-functions
       if (this.opts != null && Array.isArray(this.opts.globals)) {
         this.opts.globals.forEach((name) => {
-          globals.add(name)
-        })
+          globals.add(name);
+        });
       }
     },
     visitor: {

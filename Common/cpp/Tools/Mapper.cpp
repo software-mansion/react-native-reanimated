@@ -8,25 +8,13 @@ Mapper::Mapper(NativeReanimatedModule *module,
                unsigned long id,
                std::shared_ptr<jsi::Function> mapper,
                std::vector<std::shared_ptr<MutableValue>> inputs,
-               std::vector<std::shared_ptr<MutableValue>> outputs,
-               std::shared_ptr<ShareableValue> updater,
-               const int viewTag,
-               const std::string& viewName,
-               const int optimalizationLvl):
+               std::vector<std::shared_ptr<MutableValue>> outputs):
 id(id),
 module(module),
 mapper(mapper),
 inputs(inputs),
-outputs(outputs),
-viewTag(viewTag),
-optimalizationLvl(optimalizationLvl)
+outputs(outputs)
 {
-  jsi::Runtime* rt = module->runtime.get();
-  this->viewName = jsi::Value(*rt, jsi::String::createFromUtf8(*rt, viewName));
-  updateProps = &module->updaterFunction;
-  userUpdater = std::make_shared<jsi::Function>(updater->getValue(*rt).asObject(*rt).asFunction(*rt));
-  
-  
   auto markDirty = [this, module]() {
     this->dirty = true;
     module->maybeRequestRender();
@@ -39,11 +27,40 @@ optimalizationLvl(optimalizationLvl)
 void Mapper::execute(jsi::Runtime &rt) {
   dirty = false;
   if(optimalizationLvl == 0) {
-    mapper->callWithThis(rt, *mapper);// call styleUpdater
+    mapper->callWithThis(rt, *mapper); // call styleUpdater
   }
   else {
-    (*updateProps)(rt, viewTag, viewName, userUpdater->call(rt).asObject(rt));
+    for(auto& viewDescriptor : viewDescriptors) {
+      (*updateProps)(rt, viewDescriptor.tag, viewDescriptor.name, userUpdater->call(rt).asObject(rt));
+    }
   }
+}
+
+void Mapper::enableFastMode(
+  const int optimalizationLvl,
+  const std::shared_ptr<ShareableValue>& updater,
+  const std::shared_ptr<ShareableValue>& jsViewDescriptors
+) {
+  if(optimalizationLvl == 0) {
+    return;
+  }
+  this->optimalizationLvl = optimalizationLvl;
+  updateProps = &module->updaterFunction;
+  jsi::Runtime* rt = module->runtime.get();
+  userUpdater = std::make_shared<jsi::Function>(updater->getValue(*rt).asObject(*rt).asFunction(*rt));
+  auto jsViewDescriptorArray = jsViewDescriptors->getValue(*rt)
+                                .getObject(*rt)
+                                .getProperty(*rt, "value")
+                                .asObject(*rt)
+                                .getArray(*rt);
+  for(int i = 0; i < jsViewDescriptorArray.length(*rt); ++i) {
+    auto jsViewDescriptor = jsViewDescriptorArray.getValueAtIndex(*rt, i).getObject(*rt);
+    viewDescriptors.push_back(ViewDescriptor {
+      (int)jsViewDescriptor.getProperty(*rt, "tag").asNumber(),
+      jsViewDescriptor.getProperty(*rt, "name"),
+    });
+  }
+  
 }
 
 Mapper::~Mapper() {

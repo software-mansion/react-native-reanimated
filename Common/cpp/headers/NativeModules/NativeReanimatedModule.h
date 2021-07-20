@@ -48,8 +48,7 @@ public:
                          const jsi::Value &inputs,
                          const jsi::Value &outputs,
                          const jsi::Value &updater,
-                         const jsi::Value &tag,
-                         const jsi::Value &name) override;
+                         const jsi::Value &viewDescriptors) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) override;

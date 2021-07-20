@@ -119,9 +119,7 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                const jsi::Value &inputs,
                                                const jsi::Value &outputs,
                                                const jsi::Value &updater,
-                                               const jsi::Value &tag,
-                                               const jsi::Value &name
-                                               )
+                                               const jsi::Value &viewDescriptors)
 {
   static unsigned long MAPPER_ID = 1;
 
@@ -136,8 +134,7 @@ jsi::Value NativeReanimatedModule::startMapper(
     optimalizationLvl = optimalization.asNumber();
   }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
-  const int tagInt = tag.asNumber();
-  const std::string nameStr = name.asString(rt).utf8(rt);
+  auto viewDescriptorsSV = ShareableValue::adapt(rt, viewDescriptors, this);
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
@@ -148,12 +145,11 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                                      newMapperId,
                                                                      mapperFunctionPointer,
                                                                      inputMutables,
-                                                                     outputMutables,
-                                                                     updaterSV,
-                                                                     tagInt,
-                                                                     nameStr,
-                                                                     optimalizationLvl
+                                                                     outputMutables
                                                                      );
+    if(optimalizationLvl > 0) {
+      mapperPointer->enableFastMode(optimalizationLvl, updaterSV, viewDescriptorsSV);
+    }
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
   });
