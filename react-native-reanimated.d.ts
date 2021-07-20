@@ -668,6 +668,8 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold(restDisplacementThresholdFactor: number): BaseAnimationBuilder;
       static restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
       restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
+      static withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
+      withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
     }
 
     export class Layout extends BaseAnimationBuilder {};

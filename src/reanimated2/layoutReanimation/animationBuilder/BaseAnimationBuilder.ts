@@ -7,6 +7,7 @@ import {
   EntryExitAnimationBuild,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
+import { useSharedValue } from '../../Hooks';
 
 export class BaseAnimationBuilder {
   durationV?: number;
@@ -20,6 +21,7 @@ export class BaseAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
+  callback: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
   build: EntryExitAnimationBuild = () => {
@@ -137,6 +139,18 @@ export class BaseAnimationBuilder {
 
   restSpeedThreshold(restSpeedThreshold: number): BaseAnimationBuilder {
     this.restSpeedThresholdV = restSpeedThreshold;
+    return this;
+  }
+
+  static withCallback(
+    callback: (finished: boolean) => void
+  ): BaseAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.withCallback(callback);
+  }
+
+  withCallback(callback: (finsihed: boolean) => void): BaseAnimationBuilder {
+    this.callback = callback;
     return this;
   }
 

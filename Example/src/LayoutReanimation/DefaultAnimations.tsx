@@ -69,7 +69,10 @@ export function DefaultAnimations(): React.ReactElement {
 
       <Text style={styles.groupText}>Fade out</Text>
       <AnimatedBlock name="FadeOut" animatedStyle={{exiting: FadeOut}} defaultShow={true} />
-      <AnimatedBlock name="FadeOutRight" animatedStyle={{exiting: FadeOutRight}} defaultShow={true} />
+      <AnimatedBlock name="FadeOutRight" animatedStyle={{exiting: FadeOutRight.withCallback((_finished: boolean) => {
+        'worklet';
+        console.log("mleko");
+      }).duration(2000)}} defaultShow={true} />
       <AnimatedBlock name="FadeOutLeft" animatedStyle={{exiting: FadeOutLeft}} defaultShow={true} />
       <AnimatedBlock name="FadeOutUp" animatedStyle={{exiting: FadeOutUp}} defaultShow={true} />
       <AnimatedBlock name="FadeOutDown" animatedStyle={{exiting: FadeOutDown}} defaultShow={true} />
