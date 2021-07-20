@@ -29,21 +29,26 @@ import {
   AdapterWorkletFunction,
   AnimatedState,
   AnimatedStyle,
-  AnimatedStyleValue,
   AnimationObject,
   AnimationRef,
   BasicWorkletFunction,
   DependencyList,
   Descriptor,
+  PrimitiveValue,
   SharedValue,
   WorkletFunction,
 } from './commonTypes';
-import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
+import {
+  makeViewDescriptorsSet,
+  makeViewsRefSet,
+  ViewDescriptorsSet,
+  ViewRefSet,
+} from '../ViewDescriptorsSet';
 
 function prepareAnimation(
-  animatedProp: AnimatedStyleValue,
-  lastAnimation: AnimatedStyleValue,
-  lastValue: AnimatedStyleValue
+  animatedProp: AnimationObject,
+  lastAnimation: AnimationObject,
+  lastValue: AnimationObject | SharedValue<PrimitiveValue>
 ): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
@@ -153,10 +158,10 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 }
 
 function styleUpdater(
-  viewDescriptors: SharedValue<Descriptor>,
+  viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
-  maybeViewRef: MutableRefObject<any> | undefined,
+  maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>
 ): void {
   'worklet';
@@ -236,10 +241,10 @@ function styleUpdater(
 }
 
 function jestStyleUpdater(
-  viewDescriptors: SharedValue<Descriptor>,
+  viewDescriptors: SharedValue<Descriptor[]>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
-  maybeViewRef: MutableRefObject<any> | undefined,
+  maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
   adapters: WorkletFunction[] = []
@@ -344,8 +349,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ) {
-  const viewsRef = makeViewsRefSet();
-  const viewDescriptors = makeViewDescriptorsSet();
+  const viewsRef: ViewRefSet<any> = makeViewsRefSet();
+  const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>(null);
   const inputs = Object.values(updater._closure);
   const adaptersArray: AdapterWorkletFunction[] =
@@ -454,6 +459,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       inputs,
       [],
       upadterFn,
+      // TODO fix this
       sharableViewDescriptors
     );
     return () => {

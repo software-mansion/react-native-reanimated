@@ -38,11 +38,6 @@ export type AnimatedStyle =
   | Record<string, Animation<AnimationObject>>
   | { transform: Record<string, Animation<AnimationObject>>[] };
 
-export type AnimatedStyleValue =
-  | Animation<AnimationObject>
-  | Record<string, Animation<AnimationObject>>[]
-  | Record<string, Animation<AnimationObject>>;
-
 export type PrimitiveValue = number | string;
 export interface NumericAnimation {
   current?: number;
@@ -84,22 +79,23 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
 
 // end of section
 export interface Descriptor {
-  tag: -1;
+  tag: number;
   name: string;
 }
-
 export interface AnimatedState {
   last: AnimatedStyle;
   animations: AnimationObject[];
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
 }
-
 export interface AdapterWorkletFunction extends WorkletFunction {
   (value: AnimatedStyle): void;
 }
 
 export interface AnimationRef {
-  initial: AnimatedStyle;
+  initial: {
+    value: AnimatedStyle;
+  };
   remoteState: AnimatedState;
+  sharableViewDescriptors: SharedValue<Descriptor[]>;
 }
