@@ -8,6 +8,7 @@ import {
   makeRemote,
   requestFrame,
   getTimestamp,
+  makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animations';
@@ -37,6 +38,7 @@ import {
   SharedValue,
   WorkletFunction,
 } from './commonTypes';
+import { makeViewDescriptorsSet, makeViewsRefSet } from '../ViewDescriptorsSet';
 
 function prepareAnimation(
   animatedProp: AnimatedStyleValue,
@@ -151,7 +153,7 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 }
 
 function styleUpdater(
-  viewDescriptor: SharedValue<Descriptor>,
+  viewDescriptors: SharedValue<Descriptor>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: MutableRefObject<any> | undefined,
@@ -201,7 +203,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptor, updates, maybeViewRef);
+        updateProps(viewDescriptors, updates, maybeViewRef);
       }
 
       if (!allFinished) {
@@ -224,17 +226,17 @@ function styleUpdater(
     state.last = Object.assign({}, oldValues, newValues);
     const style = getStyleWithoutAnimations(oldValues);
     if (style) {
-      updateProps(viewDescriptor, style, maybeViewRef);
+      updateProps(viewDescriptors, style, maybeViewRef);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
-    updateProps(viewDescriptor, newValues, maybeViewRef);
+    updateProps(viewDescriptors, newValues, maybeViewRef);
   }
 }
 
 function jestStyleUpdater(
-  viewDescriptor: SharedValue<Descriptor>,
+  viewDescriptors: SharedValue<Descriptor>,
   updater: BasicWorkletFunction<AnimatedStyle>,
   state: AnimatedState,
   maybeViewRef: MutableRefObject<any> | undefined,
@@ -291,7 +293,7 @@ function jestStyleUpdater(
 
     if (Object.keys(updates).length) {
       updatePropsJestWrapper(
-        viewDescriptor,
+        viewDescriptors,
         updates,
         maybeViewRef,
         animatedStyle,
@@ -328,7 +330,7 @@ function jestStyleUpdater(
 
   if (Object.keys(diff).length !== 0) {
     updatePropsJestWrapper(
-      viewDescriptor,
+      viewDescriptors,
       diff,
       maybeViewRef,
       animatedStyle,
@@ -342,10 +344,10 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
 ) {
-  const viewDescriptor = useSharedValue<Descriptor>({ tag: -1, name: null });
+  const viewsRef = makeViewsRefSet();
+  const viewDescriptors = makeViewDescriptorsSet();
   const initRef = useRef<AnimationRef>(null);
   const inputs = Object.values(updater._closure);
-  const viewRef = useRef(null);
   const adaptersArray: AdapterWorkletFunction[] =
     !adapters || Array.isArray(adapters)
       ? <AdapterWorkletFunction[]>adapters
@@ -366,17 +368,25 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   adaptersHash && dependencies.push(adaptersHash);
 
   if (initRef.current === null) {
-    const initial: AnimatedStyle = initialUpdaterRun(updater);
-    validateAnimatedStyles(initial);
+    const initialStyle: AnimatedStyle = initialUpdaterRun(updater);
+    validateAnimatedStyles(initialStyle);
     initRef.current = {
-      initial,
-      remoteState: makeRemote({ last: initial }),
+      initial: {
+        value: null,
+      },
+      remoteState: makeRemote({ last: initialStyle }),
+      sharableViewDescriptors: makeMutable([]),
     };
+    viewDescriptors.rebuildsharableViewDescriptors(
+      initRef.current.sharableViewDescriptors
+    );
   }
+  dependencies.push(initRef.current.sharableViewDescriptors.value);
 
-  const { remoteState, initial } = initRef.current;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewRef;
+  const { initial, remoteState, sharableViewDescriptors } = initRef.current;
+  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
 
+  initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
     let upadterFn = updater;
@@ -418,7 +428,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       fun = () => {
         'worklet';
         jestStyleUpdater(
-          viewDescriptor,
+          sharableViewDescriptors,
           updater,
           remoteState,
           maybeViewRef,
@@ -431,7 +441,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       fun = () => {
         'worklet';
         styleUpdater(
-          viewDescriptor,
+          sharableViewDescriptors,
           upadterFn,
           remoteState,
           maybeViewRef,
@@ -444,8 +454,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       inputs,
       [],
       upadterFn,
-      viewDescriptor.value.tag,
-      viewDescriptor.value.name || 'RCTView'
+      sharableViewDescriptors
     );
     return () => {
       stopMapper(mapperId);
@@ -455,8 +464,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   useEffect(() => {
     animationsActive.value = true;
     return () => {
-      initRef.current = null;
-      viewRef.current = null;
+      // initRef.current = null;
+      // viewsRef = null;
       animationsActive.value = false;
     };
   }, []);
@@ -498,8 +507,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   }
 
   if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptor, initial, viewRef, animatedStyle };
+    return { viewDescriptors, initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptor, initial, viewRef };
+    return { viewDescriptors, initial, viewsRef };
   }
 }
