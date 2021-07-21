@@ -20,10 +20,12 @@ import { EasingFn } from '../../Easing';
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
+  [key: string]: any;
 }
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;
+  [key: string]: any;
 }
 
 export type TransformProperty =

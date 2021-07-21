@@ -72,7 +72,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp].forEach((transformStyle, index) => {
+        initialValues[styleProp]?.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
             parsedKeyframes[
               index.toString() + '_transform:' + transformProp
@@ -113,7 +113,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing: EasingFn;
+      easing?: EasingFn;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw Error(
@@ -145,14 +145,16 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key].forEach((transformStyle, index) => {
-              Object.keys(transformStyle).forEach((transformProp: string) => {
-                addKeyPointWith(
-                  index.toString() + '_transform:' + transformProp,
-                  transformStyle[transformProp]
-                );
-              });
-            });
+            keyframe[key]?.forEach(
+              (transformStyle: { [key: string]: any }, index) => {
+                Object.keys(transformStyle).forEach((transformProp: string) => {
+                  addKeyPointWith(
+                    index.toString() + '_transform:' + transformProp,
+                    transformStyle[transformProp]
+                  );
+                });
+              }
+            );
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
@@ -221,7 +223,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform.push(<TransformProperty>{
+          animations.transform?.push(<TransformProperty>{
             [key.split(':')[1]]: animation,
           });
         } else {
