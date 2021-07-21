@@ -11,6 +11,7 @@ export type KeyframeProps = StyleProps | { easing?: EasingFn };
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
+  callback?: (finished: boolean) => void;
 };
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock

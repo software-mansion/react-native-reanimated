@@ -629,7 +629,7 @@ export function withDecay(userConfig, callback) {
   });
 }
 
-export function withDelay(delayMs, _nextAnimation, callback) {
+export function withDelay(delayMs, _nextAnimation) {
   'worklet';
   return defineAnimation(_nextAnimation, () => {
     'worklet';
@@ -670,11 +670,11 @@ export function withDelay(delayMs, _nextAnimation, callback) {
       animation.previousAnimation = previousAnimation;
     }
 
-    // const callback = (finished) => {
-    //   if (nextAnimation.callback) {
-    //     nextAnimation.callback(finished);
-    //   }
-    // };
+    const callback = (finished) => {
+      if (nextAnimation.callback) {
+        nextAnimation.callback(finished);
+      }
+    };
 
     return {
       isHigherOrder: true,

@@ -1,5 +1,4 @@
 import { withDelay, withTiming } from '../../animations';
-import { makeMutable } from '../../core';
 import {
   EntryExitAnimationFunction,
   AnimationFunction,
@@ -53,21 +52,13 @@ export class BaseBounceAnimationBuilder {
   }
 
   getDelayFunction(): AnimationFunction {
-    const callback = this.callbackV;
-    const executed = makeMutable(false);
-    const callbackFunction = callback
-      ? (finished: boolean) => {
+    const delay = this.delayV;
+    return delay
+      ? withDelay
+      : (_, animation) => {
           'worklet';
-          if (!executed.value) {
-            executed.value = true;
-            callback(finished);
-          }
-        }
-      : undefined;
-    return (delay = 0, animation) => {
-      'worklet';
-      return withDelay(delay, animation, callbackFunction);
-    };
+          return animation;
+        };
   }
 
   getAnimationAndConfig(): LayoutAnimationAndConfig {

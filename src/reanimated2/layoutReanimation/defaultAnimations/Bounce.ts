@@ -19,6 +19,7 @@ export class BounceIn
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -41,6 +42,7 @@ export class BounceIn
         initialValues: {
           transform: [{ scale: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -57,6 +59,7 @@ export class BounceInDown
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -83,6 +86,7 @@ export class BounceInDown
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -99,6 +103,7 @@ export class BounceInUp
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -121,6 +126,7 @@ export class BounceInUp
         initialValues: {
           transform: [{ translateY: targetValues.originY - height }],
         },
+        callback: callback,
       };
     };
   };
@@ -137,6 +143,7 @@ export class BounceInLeft
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -159,6 +166,7 @@ export class BounceInLeft
         initialValues: {
           transform: [{ translateX: targetValues.originX - width }],
         },
+        callback: callback,
       };
     };
   };
@@ -175,6 +183,7 @@ export class BounceInRight
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -197,6 +206,7 @@ export class BounceInRight
         initialValues: {
           transform: [{ translateX: targetValues.originX + width }],
         },
+        callback: callback,
       };
     };
   };
@@ -213,6 +223,7 @@ export class BounceOut
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -235,6 +246,7 @@ export class BounceOut
         initialValues: {
           transform: [{ scale: 1 }],
         },
+        callback: callback,
       };
     };
   };
@@ -251,6 +263,7 @@ export class BounceOutDown
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -275,6 +288,7 @@ export class BounceOutDown
         initialValues: {
           originY: 0,
         },
+        callback: callback,
       };
     };
   };
@@ -291,6 +305,7 @@ export class BounceOutUp
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -315,6 +330,7 @@ export class BounceOutUp
         initialValues: {
           transform: [{ translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -331,6 +347,7 @@ export class BounceOutLeft
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -355,6 +372,7 @@ export class BounceOutLeft
         initialValues: {
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -371,6 +389,7 @@ export class BounceOutRight
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -395,6 +414,7 @@ export class BounceOutRight
         initialValues: {
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };

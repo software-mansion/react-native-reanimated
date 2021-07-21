@@ -7,8 +7,6 @@ import {
   LayoutAnimationAndConfig,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
-import { makeMutable } from '../../core';
-
 export class BaseAnimationBuilder {
   durationV?: number;
   easingV?: EasingFn;
@@ -160,21 +158,13 @@ export class BaseAnimationBuilder {
   }
 
   getDelayFunction(): AnimationFunction {
-    const callback = this.callbackV;
-    const executed = makeMutable(false);
-    const callbackFunction = callback
-      ? (finished: boolean) => {
+    const delay = this.delayV;
+    return delay
+      ? withDelay
+      : (_, animation) => {
           'worklet';
-          if (!executed.value) {
-            executed.value = true;
-            callback(finished);
-          }
-        }
-      : undefined;
-    return (delay = 0, animation) => {
-      'worklet';
-      return withDelay(delay, animation, callbackFunction);
-    };
+          return animation;
+        };
   }
 
   getAnimationAndConfig(): LayoutAnimationAndConfig {
