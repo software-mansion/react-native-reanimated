@@ -636,12 +636,16 @@ declare module 'react-native-reanimated' {
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
-    export type StyleProps =
-      | ViewStyle
-      | TextStyle
-      | { originX?: number; originY?: number };
-
-    export type KeyframeProps = StyleProps | { easing?: EasingFn };
+    export interface StyleProps extends ViewStyle, TextStyle {
+      originX?: number;
+      originY?: number;
+      [key: string]: any;
+    }
+    
+    export interface KeyframeProps extends StyleProps {
+      easing?: EasingFn;
+      [key: string]: any;
+    }
     export class Keyframe {
       constructor(definitions: Map<number, KeyframeProps[]>);
       duration(durationMs: number): Keyframe;

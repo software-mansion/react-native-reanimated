@@ -1,12 +1,47 @@
-import { ViewStyle, TextStyle } from 'react-native';
+import {
+  ViewStyle,
+  TextStyle,
+  PerpectiveTransform,
+  RotateTransform,
+  RotateXTransform,
+  RotateYTransform,
+  RotateZTransform,
+  ScaleTransform,
+  ScaleXTransform,
+  ScaleYTransform,
+  TranslateXTransform,
+  TranslateYTransform,
+  SkewXTransform,
+  SkewYTransform,
+  MatrixTransform,
+} from 'react-native';
 import { EasingFn } from '../../Easing';
 
-export type StyleProps =
-  | ViewStyle
-  | TextStyle
-  | { originX?: number; originY?: number };
+export interface StyleProps extends ViewStyle, TextStyle {
+  originX?: number;
+  originY?: number;
+  [key: string]: any;
+}
 
-export type KeyframeProps = StyleProps | { easing?: EasingFn };
+export interface KeyframeProps extends StyleProps {
+  easing?: EasingFn;
+  [key: string]: any;
+}
+
+export type TransformProperty =
+  | PerpectiveTransform
+  | RotateTransform
+  | RotateXTransform
+  | RotateYTransform
+  | RotateZTransform
+  | ScaleTransform
+  | ScaleXTransform
+  | ScaleYTransform
+  | TranslateXTransform
+  | TranslateYTransform
+  | SkewXTransform
+  | SkewYTransform
+  | MatrixTransform;
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
