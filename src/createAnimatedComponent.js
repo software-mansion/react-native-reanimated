@@ -46,7 +46,7 @@ function hasAnimatedNodes(value) {
 
 function flattenArray(array) {
   if (!Array.isArray(array)) {
-    return array;
+    return [array];
   }
   const resultArr = [];
 
@@ -279,10 +279,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _attachAnimatedStyles() {
-      let styles = Array.isArray(this.props.style)
-        ? this.props.style
-        : [this.props.style];
-      styles = flattenArray(styles);
+      const styles = flattenArray(this.props.style);
       this._styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
@@ -453,7 +450,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          const styles = Array.isArray(value) ? value : [value];
+          const styles = flattenArray(value);
           const processedStyle = styles.map((style) => {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
