@@ -1,4 +1,5 @@
 import { withDelay, withTiming } from '../../animations';
+import { makeMutable } from '../../core';
 import {
   EntryExitAnimationFunction,
   AnimationFunction,
@@ -10,6 +11,7 @@ import {
 export class BaseBounceAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseBounceAnimationBuilder;
   build: EntryExitAnimationBuild = () => {
@@ -36,14 +38,36 @@ export class BaseBounceAnimationBuilder {
     return this;
   }
 
+  static withCallback(
+    callback: (finished: boolean) => void
+  ): BaseBounceAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.withCallback(callback);
+  }
+
+  withCallback(
+    callback: (finsihed: boolean) => void
+  ): BaseBounceAnimationBuilder {
+    this.callbackV = callback;
+    return this;
+  }
+
   getDelayFunction(): AnimationFunction {
-    const delay = this.delayV;
-    return delay
-      ? withDelay
-      : (_, animation) => {
+    const callback = this.callbackV;
+    const executed = makeMutable(false);
+    const callbackFunction = callback
+      ? (finished: boolean) => {
           'worklet';
-          return animation;
-        };
+          if (!executed.value) {
+            executed.value = true;
+            callback(finished);
+          }
+        }
+      : undefined;
+    return (delay = 0, animation) => {
+      'worklet';
+      return withDelay(delay, animation, callbackFunction);
+    };
   }
 
   getAnimationAndConfig(): LayoutAnimationAndConfig {

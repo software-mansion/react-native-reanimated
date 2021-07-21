@@ -684,6 +684,8 @@ declare module 'react-native-reanimated' {
       duration(durationMs: number): BounceAnimationBuilder;
       static delay(durationMs: number): BounceAnimationBuilder;
       delay(durationMs: number): BounceAnimationBuilder;
+      static withCallback(callback: (finished: boolean) => void): BaseBounceAnimationBuilder;
+      withCallback(callback: (finished: boolean) => void): BaseBounceAnimationBuilder;
     };
     
     export interface AnimatedLayout extends React.Component {};

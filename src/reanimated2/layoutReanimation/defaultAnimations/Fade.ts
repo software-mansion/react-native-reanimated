@@ -20,7 +20,7 @@ export class FadeIn
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config, this.callback)),
+          opacity: delayFunction(delay, animation(1, config)),
         },
         initialValues: {
           opacity: 0,
@@ -46,7 +46,7 @@ export class FadeInRight
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config, this.callback)),
+          opacity: delayFunction(delay, animation(1, config)),
           transform: [
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
@@ -76,7 +76,7 @@ export class FadeInLeft
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config, this.callback)),
+          opacity: delayFunction(delay, animation(1, config)),
           transform: [
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
@@ -106,7 +106,7 @@ export class FadeInUp
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config, this.callback)),
+          opacity: delayFunction(delay, animation(1, config)),
           transform: [
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
@@ -136,7 +136,7 @@ export class FadeInDown
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config, this.callback)),
+          opacity: delayFunction(delay, animation(1, config)),
           transform: [
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
@@ -166,7 +166,7 @@ export class FadeOut
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config, this.callback)),
+          opacity: delayFunction(delay, animation(0, config)),
         },
         initialValues: {
           opacity: 1,
@@ -192,7 +192,7 @@ export class FadeOutRight
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config, this.callback)),
+          opacity: delayFunction(delay, animation(0, config)),
           transform: [
             { translateX: delayFunction(delay, animation(25, config)) },
           ],
@@ -222,7 +222,7 @@ export class FadeOutLeft
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config, this.callback)),
+          opacity: delayFunction(delay, animation(0, config)),
           transform: [
             { translateX: delayFunction(delay, animation(-25, config)) },
           ],
@@ -252,7 +252,7 @@ export class FadeOutUp
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config, this.callback)),
+          opacity: delayFunction(delay, animation(0, config)),
           transform: [
             { translateY: delayFunction(delay, animation(-25, config)) },
           ],
@@ -282,7 +282,7 @@ export class FadeOutDown
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config, this.callback)),
+          opacity: delayFunction(delay, animation(0, config)),
           transform: [
             { translateY: delayFunction(delay, animation(25, config)) },
           ],

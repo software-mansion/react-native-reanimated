@@ -71,14 +71,17 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="FadeOut" animatedStyle={{exiting: FadeOut}} defaultShow={true} />
       <AnimatedBlock name="FadeOutRight" animatedStyle={{exiting: FadeOutRight.withCallback((_finished: boolean) => {
         'worklet';
-        console.log("mleko");
+        console.log("callback");
       }).duration(2000)}} defaultShow={true} />
       <AnimatedBlock name="FadeOutLeft" animatedStyle={{exiting: FadeOutLeft}} defaultShow={true} />
       <AnimatedBlock name="FadeOutUp" animatedStyle={{exiting: FadeOutUp}} defaultShow={true} />
       <AnimatedBlock name="FadeOutDown" animatedStyle={{exiting: FadeOutDown}} defaultShow={true} />
 
       <Text style={styles.groupText}>Bounce in</Text>
-      <AnimatedBlock name="BounceIn" animatedStyle={{entering: BounceIn}} />
+      <AnimatedBlock name="BounceIn" animatedStyle={{entering: BounceIn.withCallback((finished: boolean) => {
+        'worklet';
+        console.log(finished);
+      })}} />
       <AnimatedBlock name="BounceInRight" animatedStyle={{entering: BounceInRight}} />
       <AnimatedBlock name="BounceInLeft" animatedStyle={{entering: BounceInLeft}} />
       <AnimatedBlock name="BounceInUp" animatedStyle={{entering: BounceInUp}} />

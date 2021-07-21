@@ -3,11 +3,11 @@ import {
   EntryExitAnimationFunction,
   AnimationFunction,
   BaseBuilderAnimationConfig,
-  LayoutAnimationAndConfig,
   EntryExitAnimationBuild,
+  LayoutAnimationAndConfig,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
-import { useSharedValue } from '../../Hooks';
+import { makeMutable } from '../../core';
 
 export class BaseAnimationBuilder {
   durationV?: number;
@@ -21,7 +21,7 @@ export class BaseAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
-  callback: (finished: boolean) => void;
+  callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
   build: EntryExitAnimationBuild = () => {
@@ -150,7 +150,7 @@ export class BaseAnimationBuilder {
   }
 
   withCallback(callback: (finsihed: boolean) => void): BaseAnimationBuilder {
-    this.callback = callback;
+    this.callbackV = callback;
     return this;
   }
 
@@ -160,13 +160,21 @@ export class BaseAnimationBuilder {
   }
 
   getDelayFunction(): AnimationFunction {
-    const delay = this.delayV;
-    return delay
-      ? withDelay
-      : (_, animation) => {
+    const callback = this.callbackV;
+    const executed = makeMutable(false);
+    const callbackFunction = callback
+      ? (finished: boolean) => {
           'worklet';
-          return animation;
-        };
+          if (!executed.value) {
+            executed.value = true;
+            callback(finished);
+          }
+        }
+      : undefined;
+    return (delay = 0, animation) => {
+      'worklet';
+      return withDelay(delay, animation, callbackFunction);
+    };
   }
 
   getAnimationAndConfig(): LayoutAnimationAndConfig {
