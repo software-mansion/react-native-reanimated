@@ -10,6 +10,7 @@ module.exports = {
         'shared-values',
         'animations',
         'events',
+        'custom_events',
         'layout_animations',
         'architecture',
         'migration',
@@ -31,6 +32,8 @@ module.exports = {
             'api/useAnimatedRef',
             'api/useAnimatedReaction',
             'api/useAnimatedProps',
+            'api/useHandler',
+            'api/useEvent',
           ],
           Animations: [
             'api/withTiming',

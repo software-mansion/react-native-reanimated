@@ -11,4 +11,6 @@ include ':react-native-gesture-handler'
 project(':react-native-gesture-handler').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-gesture-handler/android')
 include ':react-native-screens'
 project(':react-native-screens').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-screens/android')
+include ':react-native-pager-view'
+project(':react-native-pager-view').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-pager-view/android')
 include ':app'

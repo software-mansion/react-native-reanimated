@@ -16,6 +16,7 @@ import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.horcrux.svg.SvgPackage;
+import com.reactnativepagerview.PagerViewPackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
 import com.swmansion.reanimated.ReanimatedJSIModulePackage;
 import com.swmansion.reanimated.ReanimatedPackage;
@@ -44,7 +45,8 @@ public class MainApplication extends Application implements ReactApplication {
           new ReanimatedPackage(),
           new RNGestureHandlerPackage(),
           new SafeAreaContextPackage(),
-          new RNScreensPackage()
+          new RNScreensPackage(),
+          new PagerViewPackage()
       );
     }
 

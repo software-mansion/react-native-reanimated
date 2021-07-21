@@ -1,14 +1,9 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { MutableRefObject } from 'react';
 import { WorkletFunction } from '../commonTypes';
-import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
-import {
-  Context,
-  ContextWithDependencies,
-  DependencyList,
-} from './commonTypes';
-import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
+import { Context, DependencyList } from './commonTypes';
+import { useEvent, useHandler } from './Hooks';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
@@ -52,30 +47,7 @@ export function useAnimatedGestureHandler<
   handlers: GestureHandlers<T, TContext>,
   dependencies?: DependencyList
 ): MutableRefObject<WorkletEventHandler | null> | ((e: T) => void) {
-  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      context: makeRemote({}),
-      savedDependencies: [],
-    };
-  }
-
-  useEffect(() => {
-    return () => {
-      initRef.current = null;
-    };
-  }, []);
-
-  const { context, savedDependencies } = initRef.current;
-
-  dependencies = buildDependencies(dependencies, handlers);
-
-  const dependenciesDiffer = !areDependenciesEqual(
-    dependencies,
-    savedDependencies
-  );
-  initRef.current.savedDependencies = dependencies;
-  const useWeb = isWeb();
+  const { context, doDependenciesDiffer, useWeb } = useHandler(handlers, dependencies);
 
   const handler = (e: T) => {
     'worklet';
@@ -130,6 +102,6 @@ export function useAnimatedGestureHandler<
   return useEvent<T>(
     handler,
     ['onGestureHandlerStateChange', 'onGestureHandlerEvent'],
-    dependenciesDiffer
+    doDependenciesDiffer
   );
 }
