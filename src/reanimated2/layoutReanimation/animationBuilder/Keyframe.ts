@@ -6,8 +6,8 @@ import {
   IEntryExitAnimationBuilder,
   KeyframeProps,
   StyleProps,
+  TransformProperty,
 } from './commonTypes';
-
 export interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -72,15 +72,13 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp].forEach(
-          (transformStyle: Record<string, string | number>, index: number) => {
-            Object.keys(transformStyle).forEach((transformProp: string) => {
-              parsedKeyframes[
-                index.toString() + '_transform:' + transformProp
-              ] = [];
-            });
-          }
-        );
+        initialValues[styleProp].forEach((transformStyle, index) => {
+          Object.keys(transformStyle).forEach((transformProp: string) => {
+            parsedKeyframes[
+              index.toString() + '_transform:' + transformProp
+            ] = [];
+          });
+        });
       } else {
         parsedKeyframes[styleProp] = [];
       }
@@ -147,19 +145,14 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key].forEach(
-              (
-                transformStyle: Record<string, string | number>,
-                index: number
-              ) => {
-                Object.keys(transformStyle).forEach((transformProp: string) => {
-                  addKeyPointWith(
-                    index.toString() + '_transform:' + transformProp,
-                    transformStyle[transformProp]
-                  );
-                });
-              }
-            );
+            keyframe[key].forEach((transformStyle, index) => {
+              Object.keys(transformStyle).forEach((transformProp: string) => {
+                addKeyPointWith(
+                  index.toString() + '_transform:' + transformProp,
+                  transformStyle[transformProp]
+                );
+              });
+            });
           } else {
             addKeyPointWith(key, keyframe[key]);
           }
@@ -228,7 +221,9 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform.push({ [key.split(':')[1]]: animation });
+          animations.transform.push(<TransformProperty>{
+            [key.split(':')[1]]: animation,
+          });
         } else {
           animations[key] = animation;
         }
