@@ -20,6 +20,7 @@ export class LightSpeedInRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -48,6 +49,7 @@ export class LightSpeedInRight
           opacity: 0,
           transform: [{ skewX: '-45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -65,6 +67,7 @@ export class LightSpeedInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -93,6 +96,7 @@ export class LightSpeedInLeft
           opacity: 0,
           transform: [{ skewX: '45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -109,6 +113,7 @@ export class LightSpeedOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -130,6 +135,7 @@ export class LightSpeedOutRight
           opacity: 1,
           transform: [{ skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -146,6 +152,7 @@ export class LightSpeedOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -167,6 +174,7 @@ export class LightSpeedOutLeft
           opacity: 1,
           transform: [{ skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };

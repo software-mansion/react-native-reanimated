@@ -15,6 +15,7 @@ export class RotateInDownLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -35,6 +36,7 @@ export class RotateInDownLeft
             { translateY: -(values.width / 2 - values.height / 2) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -51,6 +53,7 @@ export class RotateInDownRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -71,6 +74,7 @@ export class RotateInDownRight
             { translateY: -(values.width / 2 - values.height / 2) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -87,6 +91,7 @@ export class RotateInUpLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -107,6 +112,7 @@ export class RotateInUpLeft
             { translateY: values.width / 2 - values.height / 2 },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -123,6 +129,7 @@ export class RotateInUpRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -143,6 +150,7 @@ export class RotateInUpRight
             { translateY: values.width / 2 - values.height / 2 },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -159,6 +167,7 @@ export class RotateOutDownLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -185,6 +194,7 @@ export class RotateOutDownLeft
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -201,6 +211,7 @@ export class RotateOutDownRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -227,6 +238,7 @@ export class RotateOutDownRight
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -243,6 +255,7 @@ export class RotateOutUpLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -269,6 +282,7 @@ export class RotateOutUpLeft
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -285,6 +299,7 @@ export class RotateOutUpRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -311,6 +326,7 @@ export class RotateOutUpRight
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };

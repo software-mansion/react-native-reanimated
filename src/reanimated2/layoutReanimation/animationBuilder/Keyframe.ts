@@ -20,6 +20,7 @@ export interface ParsedKeyframesDefinition {
 export class Keyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  callbackV?: (finished: boolean) => void;
   definitions: Record<string, KeyframeProps>;
 
   /*
@@ -173,6 +174,11 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     return this;
   }
 
+  withCallback(callback: (finsihed: boolean) => void): Keyframe {
+    this.callbackV = callback;
+    return this;
+  }
+
   private getDelayFunction(): AnimationFunction {
     const delay = this.delayV;
     return delay
@@ -187,6 +193,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const delayFunction = this.getDelayFunction();
     const { keyframes, initialValues } = this.parseDefinitions();
+    const callback = this.callbackV;
 
     return (_targetValues) => {
       'worklet';
@@ -248,6 +255,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       return {
         animations: animations,
         initialValues: initialValues,
+        callback: callback,
       };
     };
   };

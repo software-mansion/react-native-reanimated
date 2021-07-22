@@ -42,7 +42,6 @@ runOnUI(() => {
       if (typeof configs[tag][type] !== 'function') {
         console.error(`${type} animation for a tag: ${tag} it not a function!`);
       }
-
       const style = configs[tag][type](yogaValues);
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
@@ -54,6 +53,9 @@ runOnUI(() => {
       animation.callback = (finished: boolean) => {
         if (finished) {
           _stopObservingProgress(tag, finished);
+        }
+        if (style.callback) {
+          style.callback(finished);
         }
       };
       configs[tag].sv.value = animation;

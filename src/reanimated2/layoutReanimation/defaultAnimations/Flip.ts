@@ -15,6 +15,7 @@ export class FlipInXUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -33,6 +34,7 @@ export class FlipInXUp
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -49,6 +51,7 @@ export class FlipInYLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -67,6 +70,7 @@ export class FlipInYLeft
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -83,6 +87,7 @@ export class FlipInXDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -101,6 +106,7 @@ export class FlipInXDown
             { translateY: delayFunction(delay, animation(0, config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -117,6 +123,7 @@ export class FlipInYRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -135,6 +142,7 @@ export class FlipInYRight
             { translateX: delayFunction(delay, animation(0, config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -151,6 +159,7 @@ export class FlipInEasyX
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -164,6 +173,7 @@ export class FlipInEasyX
             { rotateX: delayFunction(delay, animation('0deg', config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -180,6 +190,7 @@ export class FlipInEasyY
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -193,6 +204,7 @@ export class FlipInEasyY
             { rotateY: delayFunction(delay, animation('0deg', config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -209,6 +221,7 @@ export class FlipOutXUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -232,6 +245,7 @@ export class FlipOutXUp
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -248,6 +262,7 @@ export class FlipOutYLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -271,6 +286,7 @@ export class FlipOutYLeft
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -287,6 +303,7 @@ export class FlipOutXDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -310,6 +327,7 @@ export class FlipOutXDown
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -326,6 +344,7 @@ export class FlipOutYRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (targetValues) => {
       'worklet';
@@ -349,6 +368,7 @@ export class FlipOutYRight
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -365,6 +385,7 @@ export class FlipOutEasyX
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -378,6 +399,7 @@ export class FlipOutEasyX
             { rotateX: delayFunction(delay, animation('90deg', config)) },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -394,6 +416,7 @@ export class FlipOutEasyY
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -407,6 +430,7 @@ export class FlipOutEasyY
             { rotateY: delayFunction(delay, animation('90deg', config)) },
           ],
         },
+        callback: callback,
       };
     };
   };

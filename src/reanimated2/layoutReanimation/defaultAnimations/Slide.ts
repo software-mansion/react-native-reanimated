@@ -18,6 +18,7 @@ export class SlideInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -28,6 +29,7 @@ export class SlideInRight
         initialValues: {
           originX: values.originX + width,
         },
+        callback: callback,
       };
     };
   };
@@ -44,6 +46,7 @@ export class SlideInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -54,6 +57,7 @@ export class SlideInLeft
         initialValues: {
           originX: values.originX - width,
         },
+        callback: callback,
       };
     };
   };
@@ -70,6 +74,7 @@ export class SlideOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -83,6 +88,7 @@ export class SlideOutRight
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -99,6 +105,7 @@ export class SlideOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -112,6 +119,7 @@ export class SlideOutLeft
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -128,6 +136,7 @@ export class SlideInUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -138,6 +147,7 @@ export class SlideInUp
         initialValues: {
           originY: height,
         },
+        callback: callback,
       };
     };
   };
@@ -154,6 +164,7 @@ export class SlideInDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -164,6 +175,7 @@ export class SlideInDown
         initialValues: {
           originY: values.originY - height,
         },
+        callback: callback,
       };
     };
   };
@@ -180,6 +192,7 @@ export class SlideOutUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -191,6 +204,7 @@ export class SlideOutUp
           ),
         },
         initialValues: {},
+        callback: callback,
       };
     };
   };
@@ -207,6 +221,7 @@ export class SlideOutDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -218,6 +233,7 @@ export class SlideOutDown
           ),
         },
         initialValues: {},
+        callback: callback,
       };
     };
   };

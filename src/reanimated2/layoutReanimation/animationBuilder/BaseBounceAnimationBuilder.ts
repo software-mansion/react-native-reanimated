@@ -10,6 +10,7 @@ import {
 export class BaseBounceAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseBounceAnimationBuilder;
   build: EntryExitAnimationBuild = () => {
@@ -33,6 +34,20 @@ export class BaseBounceAnimationBuilder {
 
   delay(delayMs: number): BaseBounceAnimationBuilder {
     this.delayV = delayMs;
+    return this;
+  }
+
+  static withCallback(
+    callback: (finished: boolean) => void
+  ): BaseBounceAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.withCallback(callback);
+  }
+
+  withCallback(
+    callback: (finsihed: boolean) => void
+  ): BaseBounceAnimationBuilder {
+    this.callbackV = callback;
     return this;
   }
 

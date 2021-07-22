@@ -19,6 +19,7 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
+  callbackV: (finished: boolean) => void;
 
   static duration(durationMs: number): LayoutAnimationBuilder {
     const instance = new LayoutAnimationBuilder();
@@ -124,6 +125,18 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
     return this;
   }
 
+  static withCallback(
+    callback: (finished: boolean) => void
+  ): LayoutAnimationBuilder {
+    const instance = new LayoutAnimationBuilder();
+    return instance.withCallback(callback);
+  }
+
+  withCallback(callback: (finished: boolean) => void): LayoutAnimationBuilder {
+    this.callbackV = callback;
+    return this;
+  }
+
   static build(): LayoutAnimationFunction {
     const instance = new LayoutAnimationBuilder();
     return instance.build();
@@ -140,6 +153,7 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
     const overshootClamping = this.overshootClampingV;
     const restDisplacementThreshold = this.restDisplacementThresholdV;
     const restSpeedThreshold = this.restSpeedThresholdV;
+    const callback = this.callbackV;
 
     const delayFunction: AnimationFunction = delay
       ? withDelay
@@ -195,6 +209,7 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
           width: delayFunction(delay, animation(values.width, config)),
           height: delayFunction(delay, animation(values.height, config)),
         },
+        callback: callback,
       };
     };
   };
