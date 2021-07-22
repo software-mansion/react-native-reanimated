@@ -164,6 +164,7 @@ function workletValueSetter(value) {
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
     if (this._value === animation.current && !animation.isHigherOrder) {
+      animation.callback && animation.callback(true);
       return;
     }
     // animated set

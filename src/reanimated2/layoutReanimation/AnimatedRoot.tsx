@@ -54,9 +54,7 @@ runOnUI(() => {
         if (finished) {
           _stopObservingProgress(tag, finished);
         }
-        if (style.callback) {
-          style.callback(finished);
-        }
+        style.callback && style.callback(finished);
       };
       configs[tag].sv.value = animation;
       _startObservingProgress(tag, sv);
