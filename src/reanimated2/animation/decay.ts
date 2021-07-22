@@ -1,8 +1,9 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, Timestamp } from './commonTypes';
+import { Animation, AnimationCallback, PrimitiveValue, Timestamp } from './commonTypes';
 import { Platform } from 'react-native';
 
 interface DecayConfig {
+  [key: string]: any;
   deceleration?: number;
   velocityFactor?: number;
   clamp?: number[];
@@ -10,11 +11,16 @@ interface DecayConfig {
 }
 
 export interface DecayAnimation extends Animation<DecayAnimation> {
-  lastTimestamp?: Timestamp;
-  startTimestamp?: Timestamp;
-  initialVelocity?: number;
+  lastTimestamp: Timestamp;
+  startTimestamp: Timestamp;
+  initialVelocity: number;
   velocity: number;
-  current?: number;
+  current: PrimitiveValue;
+}
+
+export interface InnerDecayAnimation extends Omit<DecayAnimation, 'toValue'|'current'> {
+  toValue: number;
+  current: number;
 }
 
 export function withDecay(
@@ -25,9 +31,11 @@ export function withDecay(
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
-    const config: DecayConfig = {
+    const config: Required<DecayConfig> = {
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      clamp: [],
+      velocity: 0
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
@@ -36,7 +44,7 @@ export function withDecay(
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
-    function decay(animation: DecayAnimation, now: number): boolean {
+    function decay(animation: InnerDecayAnimation, now: number): boolean {
       const {
         lastTimestamp,
         startTimestamp,
@@ -72,6 +80,7 @@ export function withDecay(
       if (Math.abs(v) < VELOCITY_EPS) {
         return true;
       }
+      return false;
     }
 
     function validateConfig(): void {
@@ -110,8 +119,12 @@ export function withDecay(
     return {
       onFrame: decay,
       onStart,
-      velocity: config.velocity || 0,
       callback,
-    };
+      velocity: config.velocity || 0,
+      initialVelocity: 0,
+      current: 0,
+      lastTimestamp: 0,
+      startTimestamp: 0
+    } as DecayAnimation;
   });
 }

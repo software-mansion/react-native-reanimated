@@ -33,7 +33,7 @@ export function withTiming(
   toValue: PrimitiveValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation<InnerTimingAnimation> {
+): Animation<TimingAnimation> {
   'worklet';
 
   return defineAnimation<TimingAnimation>(toValue, () => {

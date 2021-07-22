@@ -1,8 +1,8 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, Timestamp } from './commonTypes';
+import { Animation, AnimationCallback, PrimitiveValue, Timestamp } from './commonTypes';
 
 interface SpringConfig {
-  damping?: number;
+  [key: string]: any;
   mass?: number;
   stiffness?: number;
   overshootClamping?: boolean;
@@ -12,14 +12,19 @@ interface SpringConfig {
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
-  current: number,
-  toValue: number, 
+  current: PrimitiveValue,
+  toValue: PrimitiveValue, 
   velocity: number
-  lastTimestamp?: Timestamp,
+  lastTimestamp: Timestamp,
+}
+
+export interface InnerSpringAnimation extends Omit<SpringAnimation, 'toValue'|'current'> {
+  toValue: number;
+  current: number;
 }
 
 export function withSpring(
-  toValue: number,
+  toValue: PrimitiveValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
 ): Animation<SpringAnimation> {
@@ -44,7 +49,7 @@ export function withSpring(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function spring(animation: SpringAnimation, now: Timestamp): boolean {
+    function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {
       const { toValue, lastTimestamp, current, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
@@ -118,6 +123,7 @@ export function withSpring(
         }
         return true;
       }
+      return false;
     }
 
     function onStart(
@@ -143,6 +149,7 @@ export function withSpring(
       velocity: config.velocity || 0,
       current: toValue,
       callback,
-    };
+      lastTimestamp: 0
+    } as SpringAnimation;
   });
 }
