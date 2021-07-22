@@ -203,36 +203,42 @@ public class AnimationsManager implements ViewHierarchyObserver{
             }
             HashSet<Integer> toRemove = mToRemove;
             mToRemove = new HashSet<>();
-            ArrayList<View> toRemoveFromBottomToTop = new ArrayList<>();
-            int [] intHolder = new int[1];
-            intHolder[0] = 0;
+            HashSet<Integer> discovered = new HashSet<>();
             // go through ready to remove from bottom to top
             for (int tag: toRemove) {
                 View view = mViewForTag.get(tag);
-                dfs(view, intHolder, toRemoveFromBottomToTop, toRemove, );
+                dfs(view, discovered, toRemove);
             }
-
-            for (View view : toRemoveFromBottomToTop) {
-                if (!(view instanceof ViewGroup) || ((((ViewGroup) view).getChildCount() == 0))) {
-                    if (view.getParent() != null) {
-                        ViewGroup parent = (ViewGroup) view.getParent();
-                        parent.removeView(view);
-                    }
-                }
-                View curView = view;
-                mStates.remove(curView.getId());
-                mViewForTag.remove(curView.getId());
-                mViewManager.remove(curView.getId());
-                mParentViewManager.remove(curView.getId());
-                mParent.remove(curView.getId());
-                mNativeMethodsHolder.removeConfigForTag(curView.getId());
-            }
-
         });
     }
 
-    private void dfs(View view, int[] intHolder, ArrayList<View> toRemoveFromBottomToTop, HashSet<Integer> cands) {
-
+    private void dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
+        if (!cands.contains(view.getId())) {
+            return;
+        }
+        if (discovered.contains(view.getId())) {
+            return;
+        }
+        discovered.add(view.getId());
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); ++i) {
+                dfs(vg.getChildAt(i), discovered, cands);
+            }
+        }
+        if (!(view instanceof ViewGroup) || ((((ViewGroup) view).getChildCount() == 0))) {
+            if (view.getParent() != null) {
+                ViewGroup parent = (ViewGroup) view.getParent();
+                parent.removeView(view);
+            }
+            View curView = view;
+            mStates.remove(curView.getId());
+            mViewForTag.remove(curView.getId());
+            mViewManager.remove(curView.getId());
+            mParentViewManager.remove(curView.getId());
+            mParent.remove(curView.getId());
+            mNativeMethodsHolder.removeConfigForTag(curView.getId());
+        }
     }
 
     public HashMap<String, Float> prepareDataForAnimationWorklet(HashMap<String, Object> values) {
