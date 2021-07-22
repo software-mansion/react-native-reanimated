@@ -1,5 +1,5 @@
 import { Dimensions } from 'react-native';
-import { withSequence, withTiming } from '../../animations';
+import { withSequence, withTiming } from '../../animation';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import {
   EntryExitAnimationBuild,
@@ -36,7 +36,7 @@ export class LightSpeedInRight
                 delay,
                 withSequence(
                   withTiming('10deg', { duration: duration }),
-                  withTiming('-5deg', { duraiton: duration / 5 }),
+                  withTiming('-5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -81,7 +81,7 @@ export class LightSpeedInLeft
                 delay,
                 withSequence(
                   withTiming('-10deg', { duration: duration }),
-                  withTiming('5deg', { duraiton: duration / 5 }),
+                  withTiming('5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),

@@ -30,7 +30,7 @@ export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
 export function transform(
   value: PrimitiveValue,
   handler: AnimationObject
-): PrimitiveValue {
+): PrimitiveValue | undefined {
   'worklet';
   if (value === undefined) {
     return undefined;
@@ -39,7 +39,7 @@ export function transform(
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
-    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/);
+    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/) as string[];
     const prefix = match[1];
     const suffix = match[3];
     const number = match[2];
@@ -141,12 +141,11 @@ export function decorateAnimation<
   };
 
   const colorOnFrame = (
-    animation: Animation<AnimationObject>,
+    animation: Animation<AnimationObject> ,
     timestamp: Timestamp
   ): boolean => {
-    // TODO
     const HSVACurrent = convertToHSVA(animation.current);
-    const res = [];
+    const res: number[] = [];
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = HSVACurrent[index];

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-import { EasingFn } from '../../Easing';
-import { StyleProps } from '../../commonTypes';
-=======
 import {
   ViewStyle,
   TextStyle,
@@ -46,7 +42,6 @@ export type TransformProperty =
   | SkewXTransform
   | SkewYTransform
   | MatrixTransform;
->>>>>>> master
 
 export type LayoutAnimation = {
   initialValues: StyleProps;

@@ -5,6 +5,7 @@ import {
   NextAnimation,
   PrimitiveValue,
   HigherOrderAnimation,
+  AnimationObject,
 } from './commonTypes';
 
 export interface SequenceAnimation
@@ -14,7 +15,7 @@ export interface SequenceAnimation
 }
 
 export function withSequence(
-  ..._animations: NextAnimation<SequenceAnimation>[]
+  ..._animations: NextAnimation<AnimationObject>[]
 ): Animation<SequenceAnimation> {
   'worklet';
   return defineAnimation<SequenceAnimation>(_animations[0], () => {

@@ -4,31 +4,36 @@ import {
   Animation,
   AnimationCallback,
   Timestamp,
-  NumericAnimation,
+  PrimitiveValue,
 } from './commonTypes';
 
 interface TimingConfig {
+  [key: string]: any
   duration?: number;
   easing?: EasingFn | EasingFactoryFn;
 }
 
 export interface TimingAnimation
-  extends Animation<TimingAnimation>,
-    NumericAnimation {
+  extends Animation<TimingAnimation> {
   type: string;
-  easing?: EasingFn;
-  startValue?: number;
-  startTime?: Timestamp;
+  easing: EasingFn;
+  startValue: PrimitiveValue;
+  startTime: Timestamp;
   progress: number;
+  toValue: PrimitiveValue;
+  current: PrimitiveValue;
+}
+
+export interface InnerTimingAnimation extends Omit<TimingAnimation, 'toValue'|'current'> {
   toValue: number;
   current: number;
 }
 
 export function withTiming(
-  toValue: number,
+  toValue: PrimitiveValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
-): Animation<TimingAnimation> {
+): Animation<InnerTimingAnimation> {
   'worklet';
 
   return defineAnimation<TimingAnimation>(toValue, () => {
@@ -41,7 +46,7 @@ export function withTiming(
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
     }
 
-    function timing(animation: TimingAnimation, now: Timestamp): boolean {
+    function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
       const { toValue, startTime, startValue } = animation;
       const runtime = now - startTime;
 
@@ -52,7 +57,7 @@ export function withTiming(
         return true;
       }
       const progress = animation.easing(runtime / config.duration);
-      animation.current = startValue + (toValue - startValue) * progress;
+      animation.current = (startValue as number) + (toValue - (startValue as number)) * progress;
       return false;
     }
 
@@ -88,11 +93,14 @@ export function withTiming(
     return {
       type: 'timing',
       onFrame: timing,
-      onStart,
+      onStart: onStart as (animation: TimingAnimation, now: number) => boolean,
       progress: 0,
       toValue,
+      startValue: 0,
+      startTime: 0,
+      easing: () => 0,
       current: toValue,
       callback,
-    };
+    } as TimingAnimation;
   });
 }

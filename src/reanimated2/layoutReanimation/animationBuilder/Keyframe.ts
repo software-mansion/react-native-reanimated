@@ -1,5 +1,5 @@
 import { Easing, EasingFn } from '../../Easing';
-import { withDelay, withSequence, withTiming } from '../../animations';
+import { withDelay, withSequence, withTiming } from '../../animation';
 import {
   AnimationFunction,
   EntryExitAnimationBuild,
