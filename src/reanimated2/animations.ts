@@ -38,7 +38,15 @@ export function transform(value, handler) {
     return value;
   }
 
-  return handler.__prefix + value + handler.__suffix;
+  return (
+    handler.__prefix +
+    value.toLocaleString('fullwide', {
+      useGrouping: false,
+      maximumFractionDigits: 20,
+      maximumSignificantDigits: 20,
+    }) +
+    handler.__suffix
+  );
 }
 
 export function transformAnimation(animation) {
