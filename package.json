@@ -90,7 +90,7 @@
     "babel-eslint": "^10.0.3",
     "babel-jest": "^26.6.3",
     "babel-plugin-module-resolver": "^4.1.0",
-    "eslint": "^6.5.1",
+    "eslint": "^7.31.0",
     "eslint-config-prettier": "^6.4.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-import-resolver-babel-module": "^5.2.0",

@@ -52,10 +52,10 @@ runOnUI(() => {
 
       animation.callback = (finished: boolean) => {
         if (finished) {
-          if (style.callback) {
-            style.callback(finished);
-          }
           _stopObservingProgress(tag, finished);
+        }
+        if (style.callback) {
+          style.callback(finished);
         }
       };
       configs[tag].sv.value = animation;

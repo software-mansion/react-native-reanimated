@@ -157,7 +157,7 @@ export function DefaultAnimations(): React.ReactElement {
           exiting: FadeOutRight.withCallback((_finished: boolean) => {
             'worklet';
             console.log('callback');
-          }).duration(2000),
+          }),
         }}
         defaultShow={true}
       />
