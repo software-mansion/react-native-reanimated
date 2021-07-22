@@ -61,12 +61,12 @@ public class ViewTraverser {
                 screen.setContainer(null);
                 container.addView(screen);
                 // convert origin
-                int l = ((Number)startValues.get(Snapshooter.originX)).intValue();
-                int t = ((Number)startValues.get(Snapshooter.originY)).intValue();
-                int r = ((Number)startValues.get(Snapshooter.width)).intValue() + l;
-                int b = ((Number)startValues.get(Snapshooter.height)).intValue() + t;
-                startValues.put(Snapshooter.originX, l);
-                startValues.put(Snapshooter.originY, t);
+                int l = ((Number)startValues.get(Snapshot.ORIGIN_X)).intValue();
+                int t = ((Number)startValues.get(Snapshot.ORIGIN_Y)).intValue();
+                int r = ((Number)startValues.get(Snapshot.WIDTH)).intValue() + l;
+                int b = ((Number)startValues.get(Snapshot.HEIGHT)).intValue() + t;
+                startValues.put(Snapshot.ORIGIN_X, l);
+                startValues.put(Snapshot.ORIGIN_Y, t);
                 view.measure(
                         View.MeasureSpec.makeMeasureSpec(r-l, View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(b-t, View.MeasureSpec.EXACTLY));
@@ -78,33 +78,5 @@ public class ViewTraverser {
             return parent;
         }
         return null;
-    }
-
-    static void traverse(View view, TraversingLambda lambda) {
-        if (!(view instanceof AnimatedRoot)) {
-            return;
-        }
-        AnimatedRoot root = (AnimatedRoot)view;
-        int depth = (int)1e9;
-        internalTraverse(root, lambda, depth, false);
-    }
-
-    static void internalTraverse(View view, TraversingLambda lambda, int depth, boolean shouldSkipAnimationRoots) {
-        if ((view instanceof AnimatedRoot) && shouldSkipAnimationRoots) {
-            return;
-        }
-
-        if (depth == 0) {
-            return;
-        }
-
-        if (view instanceof ViewGroup) {
-            ViewGroup viewGroup = (ViewGroup)view;
-            for  (int i = 0; i < getChildCount(viewGroup); ++i) {
-                internalTraverse(getChildAt(viewGroup, i), lambda,depth - 1, false);
-            }
-        }
-
-        lambda.exec(view);
     }
 }

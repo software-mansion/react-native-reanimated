@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class AnimationsManager implements ViewHierarchyObserver{
-    private final static String[] LAYOUT_KEYS = { Snapshooter.originX, Snapshooter.originY, Snapshooter.width, Snapshooter.height };
+    private final static String[] LAYOUT_KEYS = { Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT };
     private ReactContext mContext;
     private UIImplementation mUIImplementation;
     private UIManagerModule mUIManager;
@@ -106,9 +106,9 @@ public class AnimationsManager implements ViewHierarchyObserver{
             mStates.put(view.getId(), ViewState.Inactive);
             mViewForTag.put(view.getId(), view);
             HashMap<String, Object> data = after.toMap();
-            mViewManager.put(view.getId(), (ViewManager)data.get(Snapshooter.viewManager));
-            mParentViewManager.put(view.getId(), (ViewManager)data.get(Snapshooter.parentViewManager));
-            mParent.put(view.getId(), ((View)data.get(Snapshooter.parent)));
+            mViewManager.put(view.getId(), (ViewManager)data.get(Snapshot.VIEW_MANAGER));
+            mParentViewManager.put(view.getId(), (ViewManager)data.get(Snapshot.PARENT_VIEW_MANAGER));
+            mParent.put(view.getId(), ((View)data.get(Snapshot.PARENT)));
         }
         Integer tag = view.getId();
         String type = "entering";
@@ -244,8 +244,8 @@ public class AnimationsManager implements ViewHierarchyObserver{
     public HashMap<String, Float> prepareDataForAnimationWorklet(HashMap<String, Object> values) {
         HashMap<String, Float> preparedValues = new HashMap<>();
 
-        ArrayList<String> keys = new ArrayList<String>(Arrays.asList(Snapshooter.width, Snapshooter.height, Snapshooter.originX,
-                Snapshooter.originY, Snapshooter.globalOriginX, Snapshooter.globalOriginY));
+        ArrayList<String> keys = new ArrayList<String>(Arrays.asList(Snapshot.WIDTH, Snapshot.HEIGHT, Snapshot.ORIGIN_X,
+                Snapshot.ORIGIN_Y, Snapshot.GLOBAL_ORIGIN_X, Snapshot.GLOBAL_ORIGIN_Y));
         for (String key : keys) {
             preparedValues.put(key, PixelUtil.toDIPFromPixel((int)values.get(key)));
         }
@@ -268,15 +268,15 @@ public class AnimationsManager implements ViewHierarchyObserver{
                             ViewManager viewManager,
                             ViewManager parentViewManager,
                             Integer parentTag) {
-        float x = (props.get(Snapshooter.originX) != null)? ((Double)props.get(Snapshooter.originX)).floatValue() : PixelUtil.toDIPFromPixel(view.getLeft());
-        float y = (props.get(Snapshooter.originY) != null)? ((Double)props.get(Snapshooter.originY)).floatValue() : PixelUtil.toDIPFromPixel(view.getTop());
-        float width = (props.get(Snapshooter.width) != null)? ((Double)props.get(Snapshooter.width)).floatValue() : PixelUtil.toDIPFromPixel(view.getWidth());
-        float height = (props.get(Snapshooter.height) != null)? ((Double)props.get(Snapshooter.height)).floatValue() : PixelUtil.toDIPFromPixel(view.getHeight());
+        float x = (props.get(Snapshot.ORIGIN_X) != null)? ((Double)props.get(Snapshot.ORIGIN_X)).floatValue() : PixelUtil.toDIPFromPixel(view.getLeft());
+        float y = (props.get(Snapshot.ORIGIN_Y) != null)? ((Double)props.get(Snapshot.ORIGIN_Y)).floatValue() : PixelUtil.toDIPFromPixel(view.getTop());
+        float width = (props.get(Snapshot.WIDTH) != null)? ((Double)props.get(Snapshot.WIDTH)).floatValue() : PixelUtil.toDIPFromPixel(view.getWidth());
+        float height = (props.get(Snapshot.HEIGHT) != null)? ((Double)props.get(Snapshot.HEIGHT)).floatValue() : PixelUtil.toDIPFromPixel(view.getHeight());
         updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
-        props.remove(Snapshooter.originX);
-        props.remove(Snapshooter.originY);
-        props.remove(Snapshooter.width);
-        props.remove(Snapshooter.height);
+        props.remove(Snapshot.ORIGIN_X);
+        props.remove(Snapshot.ORIGIN_Y);
+        props.remove(Snapshot.WIDTH);
+        props.remove(Snapshot.HEIGHT);
 
         if (props.size() == 0) {
             return;

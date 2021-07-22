@@ -84,7 +84,7 @@ public class ReactBatchObserver {
             }
             deactivate = false;
             forceRemove = false;
-            for (int tag : mAffectedNodes) {
+            for (int tag : affectedTags) {
                 View view = nativeViewHierarchyManager.resolveView(tag);
                 if (view == null && alreadySeen.contains(tag)) { // removed not new
                     throw new RuntimeException("removed view was null at starting block");
@@ -98,7 +98,7 @@ public class ReactBatchObserver {
 
         //TODO use weakRefs inside the lambda
         mUIManager.addUIBlock(nativeViewHierarchyManager -> {
-            for (int tag : mAffectedNodes) {
+            for (int tag : affectedTags) {
                 View view = nativeViewHierarchyManager.resolveView(tag);
                 if (view == null && alreadySeen.contains(tag)) { // removed not new
                     continue;
