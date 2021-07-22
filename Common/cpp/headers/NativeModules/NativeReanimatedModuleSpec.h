@@ -36,8 +36,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
                                  const jsi::Value &inputs,
                                  const jsi::Value &outputs,
                                  const jsi::Value &updater,
-                                 const jsi::Value &tag,
-                                 const jsi::Value &name) = 0;
+                                 const jsi::Value &viewDescriptors) = 0;
   virtual void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) = 0;
 
   // events

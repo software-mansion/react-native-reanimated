@@ -15,7 +15,10 @@ import Animated, {
   FlipInEasyX, FlipInEasyY, FlipOutXUp, FlipOutYLeft, FlipOutXDown,
   FlipOutYRight, FlipOutEasyX, FlipOutEasyY, BounceIn, BounceInDown,
   BounceInUp, BounceInLeft, BounceInRight, BounceOut, BounceOutDown,
-  BounceOutUp, BounceOutLeft, BounceOutRight
+  BounceOutUp, BounceOutLeft, BounceOutRight, 
+  LightSpeedInRight, LightSpeedInLeft, LightSpeedOutRight, LightSpeedOutLeft, 
+  PinwheelIn, PinwheelOut, RotateInDownLeft, RotateInDownRight, RotateInUpLeft, RotateInUpRight, 
+  RotateOutDownLeft, RotateOutDownRight, RotateOutUpLeft, RotateOutUpRight, RollInLeft, RollInRight, RollOutLeft, RollOutRight
 } from 'react-native-reanimated';
 
 interface AnimatedBlockProps {
@@ -141,6 +144,35 @@ export function DefaultAnimations(): React.ReactElement {
       <AnimatedBlock name="SlideOutUp" animatedStyle={{exiting: SlideOutUp}} defaultShow={true} />
       <AnimatedBlock name="SlideOutDown" animatedStyle={{exiting: SlideOutDown}} defaultShow={true} />
 
+      <Text style={styles.groupText}>LightSpeed in</Text>
+      <AnimatedBlock name="LightSpeedInRight" animatedStyle={{entering: LightSpeedInRight}} />
+      <AnimatedBlock name="LightSpeedInLeft" animatedStyle={{entering: LightSpeedInLeft}} />
+
+      <Text style={styles.groupText}>LightSpeed out</Text>
+      <AnimatedBlock name="LightSpeedOutRight" animatedStyle={{exiting: LightSpeedOutRight}} defaultShow/>
+      <AnimatedBlock name="LightSpeedOutLeft" animatedStyle={{exiting: LightSpeedOutLeft}} defaultShow />
+
+      <Text style={styles.groupText}>Pinwheel</Text>
+      <AnimatedBlock name="PinwheelIn" animatedStyle={{entering: PinwheelIn}} />
+      <AnimatedBlock name="PinwheelOut" animatedStyle={{exiting: PinwheelOut}} defaultShow/>
+
+      <Text style={styles.groupText}>Rotate in</Text>
+      <AnimatedBlock name="RotateInDownLeft" animatedStyle={{entering: RotateInDownLeft}} />
+      <AnimatedBlock name="RotateInDownRight" animatedStyle={{entering: RotateInDownRight}} />
+      <AnimatedBlock name="RotateInUpLeft" animatedStyle={{entering: RotateInUpLeft}} />
+      <AnimatedBlock name="RotateInUpRight" animatedStyle={{entering: RotateInUpRight}} />
+
+      <Text style={styles.groupText}>Rotate out</Text>
+      <AnimatedBlock name="RotateOutDownLeft" animatedStyle={{exiting: RotateOutDownLeft}} defaultShow/>
+      <AnimatedBlock name="RotateOutDownRight" animatedStyle={{exiting: RotateOutDownRight}} defaultShow/>
+      <AnimatedBlock name="RotateOutUpLeft" animatedStyle={{exiting: RotateOutUpLeft}} defaultShow/>
+      <AnimatedBlock name="RotateOutUpRight" animatedStyle={{exiting: RotateOutUpRight}} defaultShow/>
+
+      <Text style={styles.groupText}>Roll</Text>
+      <AnimatedBlock name="RollInLeft" animatedStyle={{entering: RollInLeft}} />
+      <AnimatedBlock name="RollInRight" animatedStyle={{entering: RollInRight}} />
+      <AnimatedBlock name="RollOutLeft" animatedStyle={{exiting: RollOutLeft}} defaultShow/>
+      <AnimatedBlock name="RollOutRight" animatedStyle={{exiting: RollOutRight}} defaultShow/>
     </ScrollView>
   );
 }

@@ -6,7 +6,8 @@ sidebar_label: Exiting Animations
 
 In React Native during unmounting of components from the hierarchy of views, it just disappears in the next frame. However you can beautify this process using `Exiting Animations`. Reanimated make a pretty animation of disappearing of component for you.
 #### How it is possible? 
-Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation.
+Reanimated listen on changes in tree of views and if detect that some of component should disappear in next frame, It replaces this process with exiting animation. It is easy and fast. You can use predefined animations - examples below or you can define your own custom animation. If you want to create more complex animation you can use [Keyframes](keyframeAnimations).
+
 
 ## How to use predefined exiting animation?
 
@@ -187,3 +188,96 @@ Animation based on horizontal or vertical moving of object.
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317603-22118080-c2df-11eb-9083-b5ba3f043dbc.mov" controls="controls" muted="muted"></video>
+
+### LightSpeed
+
+Animation based on horizontal moving of object with changing of opacity and skew.
+
+#### Animations
+- LightSpeedOutRight
+- LightSpeedOutLeft
+
+#### Modifiers
+* `duration` (in ms) default: 250
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058070-2e40e880-e0aa-11eb-98eb-326a34f23f39.mov" controls="controls" muted="muted"></video>
+
+### Pinwheel
+
+Animation based on rotation with scale and opacity change.
+
+#### Animations
+- PinwheelOut
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058201-57617900-e0aa-11eb-951f-46ac27787d3e.mov" controls="controls" muted="muted"></video>
+
+### Roll
+
+Animation based on horizontal moving of object with rotation.
+
+#### Animations
+- RollOutLeft
+- RollOutRight
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058307-6e07d000-e0aa-11eb-8379-4536c0806aee.mov" controls="controls" muted="muted"></video>
+
+### Rotate
+
+Animation based on rotation of object.
+
+#### Animations
+- RotateOutDownLeft
+- RotateOutDownRight
+- RotateOutUpLeft
+- RotateOutUpRight
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058418-8841ae00-e0aa-11eb-9ac1-39df437512c4.mov" controls="controls" muted="muted"></video>

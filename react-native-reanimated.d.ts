@@ -259,8 +259,8 @@ declare module 'react-native-reanimated' {
     } & { 
       animatedProps?: Partial<AnimateProps<P>>;
       layout?: Layout | LayoutAnimationFunction;
-      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
-      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
+      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
+      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction | Keyframe;
     };
 
     type CodeProps = {
@@ -636,6 +636,21 @@ declare module 'react-native-reanimated' {
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
+    export interface StyleProps extends ViewStyle, TextStyle {
+      originX?: number;
+      originY?: number;
+      [key: string]: any;
+    }
+    
+    export interface KeyframeProps extends StyleProps {
+      easing?: EasingFn;
+      [key: string]: any;
+    }
+    export class Keyframe {
+      constructor(definitions: Map<number, KeyframeProps[]>);
+      duration(durationMs: number): Keyframe;
+      delay(delayMs: number): Keyframe;
+    }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
       duration(durationMs: number): BaseAnimationBuilder;
@@ -675,7 +690,6 @@ declare module 'react-native-reanimated' {
     
     export interface AnimatedLayout extends React.Component {};
 
-    export class SlideInRight extends BaseAnimationBuilder {};
     export class SlideInRight extends BaseAnimationBuilder {};
     export class SlideOutRight extends BaseAnimationBuilder {}; 
     export class SlideInUp extends BaseAnimationBuilder {};
@@ -736,6 +750,24 @@ declare module 'react-native-reanimated' {
     export class BounceOutUp extends BounceAnimationBuilder {};
     export class BounceOutLeft extends BounceAnimationBuilder {};
     export class BounceOutRight extends BounceAnimationBuilder {};
+    export class LightSpeedInRight extends BaseAnimationBuilder {};
+    export class LightSpeedInLeft extends BaseAnimationBuilder {};
+    export class LightSpeedOutRight extends BaseAnimationBuilder {};
+    export class LightSpeedOutLeft extends BaseAnimationBuilder {};
+    export class PinwheelIn extends BaseAnimationBuilder {};
+    export class PinwheelOut extends BaseAnimationBuilder {};
+    export class RotateInDownLeft extends BaseAnimationBuilder {};
+    export class RotateInDownRight extends BaseAnimationBuilder {};
+    export class RotateInUpRight extends BaseAnimationBuilder {};
+    export class RotateInUpLeft extends BaseAnimationBuilder {};
+    export class RotateOutDownRight extends BaseAnimationBuilder {};
+    export class RotateOutDownLeft extends BaseAnimationBuilder {};
+    export class RotateOutUpLeft extends BaseAnimationBuilder {};
+    export class RotateOutUpRight extends BaseAnimationBuilder {};
+    export class RollInleft extends BaseAnimationBuilder {};
+    export class RollInRight extends BaseAnimationBuilder {};
+    export class RollOutLeft extends BaseAnimationBuilder {};
+    export class RollOutRight extends BaseAnimationBuilder {};
   }
 
   export default Animated;
@@ -981,4 +1013,23 @@ declare module 'react-native-reanimated' {
   export const BounceOutUp: typeof Animated.BounceOutUp;
   export const BounceOutLeft: typeof Animated.BounceOutLeft;
   export const BounceOutRight: typeof Animated.BounceOutRight;
+  export const LightSpeedInRight: typeof Animated.LightSpeedInRight;
+  export const LightSpeedInLeft: typeof Animated.LightSpeedInLeft;
+  export const LightSpeedOutRight: typeof Animated.LightSpeedOutRight;
+  export const LightSpeedOutLeft: typeof Animated.LightSpeedOutLeft;
+  export const PinwheelIn: typeof Animated.PinwheelIn;
+  export const PinwheelOut: typeof Animated.PinwheelOut;
+  export const RotateInDownLeft: typeof Animated.RotateInDownLeft;
+  export const RotateInDownRight: typeof Animated.RotateInDownRight;
+  export const RotateInUpLeft: typeof Animated.RotateInUpLeft;
+  export const RotateInUpRight: typeof Animated.RotateInUpRight;
+  export const RotateOutDownLeft: typeof Animated.RotateOutDownLeft;
+  export const RotateOutDownRight: typeof Animated.RotateOutDownRight;
+  export const RotateOutUpRight: typeof Animated.RotateOutUpRight;
+  export const RotateOutUpLeft: typeof Animated.RotateOutUpLeft;
+  export const RollInLeft: typeof Animated.RollInleft;
+  export const RollInRight: typeof Animated.RollInRight;
+  export const RollOutLeft: typeof Animated.RollOutLeft;
+  export const RollOutRight: typeof Animated.RollOutRight;
+  export const Keyframe: Keyframe;
 }
