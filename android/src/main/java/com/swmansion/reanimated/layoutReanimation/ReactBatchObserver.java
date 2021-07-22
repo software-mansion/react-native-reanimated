@@ -2,6 +2,7 @@ package com.swmansion.reanimated.layoutReanimation;
 
 import android.os.Build;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.RequiresApi;
 
@@ -21,22 +22,24 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-
-// Use java BiFunction when minSdk is Bumped to 24
-interface BiFunction<A, B> {
-    void exec(A a, B b);
-}
+import java.util.Map;
 
 public class ReactBatchObserver {
-
-    static HashSet<Integer> animatedRoots = new HashSet<Integer>();
 
     private ReactContext mContext;
     private UIManagerModule mUIManager;
     private UIImplementation mUIImplementation;
     private NodesManager mNodesManager;
-    private HashSet<Integer> mAffectedAnimatedRoots = new HashSet<Integer>();
+    private HashSet<Integer> mAffectedNodes = new HashSet<Integer>();
     private AnimationsManager mAnimationsManager;
+
+    /* UI ONLY*/
+    public HashSet<Integer> alreadySeen = new HashSet<>();
+    public HashMap<Integer, ViewGroup> parents = new HashMap();
+    public HashMap<Integer, Snapshot> snapshotsOfRemoved = new HashMap();
+    public boolean deactivate = true;
+    public boolean forceRemove = true;
+    private NativeViewHierarchyManager mNativeViewHierarchyManager = null;
 
     public ReactBatchObserver(ReactContext context, UIManagerModule uiManager, UIImplementation uiImplementation, NodesManager nodesManager) {
         mContext = context;
@@ -69,72 +72,97 @@ public class ReactBatchObserver {
     }
 
     public void willMount() {
-        final HashSet<Integer> affectedTags = new HashSet<>(mAffectedAnimatedRoots);
-        mAffectedAnimatedRoots = new HashSet<>();
+        final HashSet<Integer> affectedTags = new HashSet<>(mAffectedNodes);
+        mAffectedNodes = new HashSet<>();
 
-        BiFunction<NativeViewHierarchyManager, BiFunction<AnimatedRoot, Integer>> goThroughAffectedWithLambda = (hierarchyManager, lambda) -> {
-            for (Integer tag : affectedTags) {
-                View view = null;
-                try {
-                    view = hierarchyManager.resolveView(tag);
-                } catch (IllegalViewOperationException e) { }
-                if (view == null || ViewTraverser.getParent(view) == null) {
-                    lambda.exec(null, tag);
-                    continue;
-                }
-                if (view instanceof AnimatedRoot) {
-                    lambda.exec((AnimatedRoot)view, tag);
-                }
-            }
-        };
-
-        final HashMap<Integer, Snapshooter> firstSnapshots = new HashMap<>();
+        final HashMap<Integer, Snapshot> firstSnapshots = new HashMap<>();
 
         //TODO use weakRefs here
         mUIManager.prependUIBlock(nativeViewHierarchyManager -> {
-            BiFunction<AnimatedRoot, Integer> lambda = (AnimatedRoot root, Integer tag) -> {
-                Snapshooter snapshooter = new Snapshooter(tag);
-                if (root != null) {
-                    ViewTraverser.traverse(root, (view) -> {
-                        snapshooter.takeSnapshot(view, nativeViewHierarchyManager);
-                    });
+            if (mNativeViewHierarchyManager == null) {
+                mNativeViewHierarchyManager = nativeViewHierarchyManager;
+            }
+            deactivate = false;
+            forceRemove = false;
+            for (int tag : mAffectedNodes) {
+                View view = nativeViewHierarchyManager.resolveView(tag);
+                if (view == null && alreadySeen.contains(tag)) { // removed not new
+                    throw new RuntimeException("removed view was null at starting block");
                 }
-
-                firstSnapshots.put(tag, snapshooter);
-            };
-            goThroughAffectedWithLambda.exec(nativeViewHierarchyManager, lambda);
+                if (view == null && !alreadySeen.contains(tag)) { // it is a new view
+                     continue; //(we cannot take a snapshot or add a listener lets wait for closing UI Block it won't be a null there)
+                }
+                firstSnapshots.put(tag, new Snapshot(view, nativeViewHierarchyManager));
+            }
         });
 
         //TODO use weakRefs inside the lambda
         mUIManager.addUIBlock(nativeViewHierarchyManager -> {
-            BiFunction<AnimatedRoot, Integer> lambda = (AnimatedRoot root, Integer tag) -> {
-                Snapshooter snapshooter = new Snapshooter(tag);
-                if (root != null) {
-                    ViewTraverser.traverse(root, (view) -> {
-                        snapshooter.takeSnapshot(view, nativeViewHierarchyManager);
-                    });
+            for (int tag : mAffectedNodes) {
+                View view = nativeViewHierarchyManager.resolveView(tag);
+                if (view == null && alreadySeen.contains(tag)) { // removed not new
+                    continue;
                 }
-
-                mAnimationsManager.notifyAboutSnapshots(firstSnapshots.get(tag), snapshooter);
-            };
-            goThroughAffectedWithLambda.exec(nativeViewHierarchyManager, lambda);
+                if (view == null && !alreadySeen.contains(tag)) { // it is a new view
+                    throw new RuntimeException("a new view was still null at closing block");
+                }
+                if (!alreadySeen.contains(tag) && view.isAttachedToWindow()) {
+                    addViewListener(view);
+                }
+                Snapshot snapshot = firstSnapshots.get(tag);
+                if (snapshot != null) {
+                    mAnimationsManager.onViewUpdate(view, snapshot, new Snapshot(view, nativeViewHierarchyManager));
+                }
+            }
+            forceRemove = true;
+            for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
+                mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue());
+            }
+            deactivate = true;
         });
 
     }
 
-    public void willLayout() {
-        mAffectedAnimatedRoots = new HashSet<>();
-        HashSet<Integer> tags = new HashSet<>(ReactBatchObserver.animatedRoots);
-        for (Integer tag : tags) {
-            if (mUIImplementation.resolveShadowNode(tag) != null) {
-                ReactShadowNode sn = mUIImplementation.resolveShadowNode(tag);
-                if (sn.hasUpdates()) {
-                    mAffectedAnimatedRoots.add(tag);
-                }
-            } else {
-                mAffectedAnimatedRoots.add(tag);
-                ReactBatchObserver.animatedRoots.remove(tag);
+    private void addViewListener(View view) {
+        alreadySeen.add(view.getId());
+        parents.put(view.getId(), (ViewGroup) view.getParent());
+        mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view, mNativeViewHierarchyManager));
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {
+                //do-nothing
             }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                if (forceRemove) {
+                    parents.remove(view.getId());
+                    alreadySeen.remove(view.getId());
+                    view.removeOnAttachStateChangeListener(this);
+                }
+                if (deactivate) return;
+                ViewGroup parent = parents.get(view.getId());
+                parent.addView(view);
+                snapshotsOfRemoved.put(view.getId(), new Snapshot(view, mNativeViewHierarchyManager));
+                deactivate = true;
+                parent.removeView(view);
+                deactivate = false;
+            }
+        });
+    }
+
+    public void willLayout() {
+      ReactShadowNode rootShadowNode = mUIImplementation.resolveShadowNode(1);
+      findAffected(rootShadowNode);
+    }
+
+    public void findAffected(ReactShadowNode rsn) {
+        if (!rsn.isDirty() && (rsn.getParent() != null && !(rsn.getParent().isDirty()))) {
+            return;
+        }
+        mAffectedNodes.add(rsn.getReactTag());
+        for (int i = 0; i < rsn.getChildCount(); ++i) {
+            findAffected(rsn.getChildAt(i));
         }
     }
 
@@ -146,6 +174,10 @@ public class ReactBatchObserver {
         mAnimationsManager = null;
         mUIImplementation = null;
         mNodesManager = null;
+        alreadySeen = null;
+        snapshotsOfRemoved = null;
+        parents = null;
+        mNativeViewHierarchyManager = null;
     }
 
     public AnimationsManager getAnimationsManager() {

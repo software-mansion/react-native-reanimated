@@ -21,10 +21,15 @@ import CustomLayout3 from './CustomLayout3';
 import ModalInNavigation from './ModalInNavigation';
 import WithNavigation from './WithNavigation';
 import WithNavigationNested from './WithNavigationNested';
+import TestRemovalOrder from './TestRemovalOrder';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
+  TestRemovalOrder: {
+    screen: TestRemovalOrder,
+    title: 'test removal Order',
+  },
   SimpleTest: {
     screen: SimpleTest,
     title: '🆕 Simple test',

@@ -6,7 +6,6 @@ import Animated, { AnimatedLayout, SlideInLeft, SlideInDown, SlideOutDown, FadeI
 import { View, Text, Button } from 'react-native';
 import { ModalNewAPI, Modal, Carousel, MountingUnmounting, SpringLayoutAnimation } from '../src/LayoutReanimation';
 
-enableScreens(true);
 const Stack = createStackNavigator();
 
 const Screen1 = ({ navigation }: { navigation: NavigationProp<any> }) => {
