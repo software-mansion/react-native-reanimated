@@ -134,7 +134,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libfbjni.so"]
+        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libc++_shared.so", "**/libfbjni.so"]
     }
 
     tasks.withType(JavaCompile) {
