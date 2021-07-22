@@ -14,19 +14,8 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
     duration: 500,
     easing: Easing.bezier(0.5, 0.01, 0, 1),
   };
-  const a = () => {
-    'worklet'
-    throw 'mleko';
-  }
+
   const style = useAnimatedStyle(() => {
-    if(_WORKLET) {
-      try {
-        a();
-      }
-      catch(e) {
-        console.log("ok", e);
-      }
-    }
     return {
       width: withTiming(randomWidth.value, config),
     };
