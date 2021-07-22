@@ -18,6 +18,7 @@ export class ZoomIn
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -28,6 +29,7 @@ export class ZoomIn
         initialValues: {
           transform: [{ scale: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -45,6 +47,7 @@ export class ZoomInRotate
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const rotate = this.rotateV ? this.rotateV : '0.3';
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -58,6 +61,7 @@ export class ZoomInRotate
         initialValues: {
           transform: [{ scale: 0 }, { rotate: rotate }],
         },
+        callback: callback,
       };
     };
   };
@@ -74,6 +78,7 @@ export class ZoomInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -86,6 +91,7 @@ export class ZoomInLeft
           transform: [{ scale: 0 }],
           originX: values.originX - width,
         },
+        callback: callback,
       };
     };
   };
@@ -102,6 +108,7 @@ export class ZoomInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -114,6 +121,7 @@ export class ZoomInRight
           transform: [{ scale: 0 }],
           originX: values.originX + width,
         },
+        callback: callback,
       };
     };
   };
@@ -130,6 +138,7 @@ export class ZoomInUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -142,6 +151,7 @@ export class ZoomInUp
           transform: [{ scale: 0 }],
           originY: values.originY - height,
         },
+        callback: callback,
       };
     };
   };
@@ -158,6 +168,7 @@ export class ZoomInDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -170,6 +181,7 @@ export class ZoomInDown
           transform: [{ scale: 0 }],
           originY: values.originY + height,
         },
+        callback: callback,
       };
     };
   };
@@ -186,6 +198,8 @@ export class ZoomInEasyUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
+
     return (values) => {
       'worklet';
       return {
@@ -197,6 +211,7 @@ export class ZoomInEasyUp
           transform: [{ scale: 0 }],
           originY: -values.height,
         },
+        callback: callback,
       };
     };
   };
@@ -205,7 +220,7 @@ export class ZoomInEasyUp
 export class ZoomInEasyDown
   extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
-  static createInstance() {
+  static createInstance(): ZoomInEasyDown {
     return new ZoomInEasyDown();
   }
 
@@ -213,6 +228,8 @@ export class ZoomInEasyDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
+
     return (values) => {
       'worklet';
       return {
@@ -224,6 +241,7 @@ export class ZoomInEasyDown
           transform: [{ scale: 0 }],
           originY: values.height,
         },
+        callback: callback,
       };
     };
   };
@@ -240,6 +258,7 @@ export class ZoomOut
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -250,6 +269,7 @@ export class ZoomOut
         initialValues: {
           transform: [{ scale: 1 }],
         },
+        callback: callback,
       };
     };
   };
@@ -267,6 +287,7 @@ export class ZoomOutRotate
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const rotate = this.rotateV ? this.rotateV : '0.3';
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -280,6 +301,7 @@ export class ZoomOutRotate
         initialValues: {
           transform: [{ scale: 1 }, { rotate: '0' }],
         },
+        callback: callback,
       };
     };
   };
@@ -296,6 +318,7 @@ export class ZoomOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -311,6 +334,7 @@ export class ZoomOutLeft
           transform: [{ scale: 1 }],
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -327,6 +351,7 @@ export class ZoomOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -342,6 +367,7 @@ export class ZoomOutRight
           transform: [{ scale: 1 }],
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -358,6 +384,7 @@ export class ZoomOutUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -373,6 +400,7 @@ export class ZoomOutUp
           transform: [{ scale: 1 }],
           originY: 0,
         },
+        callback: callback,
       };
     };
   };
@@ -389,6 +417,7 @@ export class ZoomOutDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -404,6 +433,7 @@ export class ZoomOutDown
           transform: [{ scale: 1 }],
           originY: 0,
         },
+        callback: callback,
       };
     };
   };
@@ -420,6 +450,8 @@ export class ZoomOutEasyUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
+
     return (values) => {
       'worklet';
       return {
@@ -431,6 +463,7 @@ export class ZoomOutEasyUp
           transform: [{ scale: 1 }],
           originY: 0,
         },
+        callback: callback,
       };
     };
   };
@@ -447,6 +480,8 @@ export class ZoomOutEasyDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
+
     return (values) => {
       'worklet';
       return {
@@ -458,6 +493,7 @@ export class ZoomOutEasyDown
           transform: [{ scale: 1 }],
           originY: 0,
         },
+        callback: callback,
       };
     };
   };

@@ -68,6 +68,9 @@ Worklet that drives the easing curve for the animation
 default: 0
 Allows to start with a specified delay.
 
+### withCallback
+Allows to execute code when keyframe animation ends
+
 ## Example
 
 <video src="https://user-images.githubusercontent.com/36106620/120326673-44100080-c2e9-11eb-8b14-564d3b4e3102.mov" controls="controls" muted="muted"></video>

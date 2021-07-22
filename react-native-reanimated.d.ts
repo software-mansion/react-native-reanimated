@@ -646,6 +646,7 @@ declare module 'react-native-reanimated' {
       constructor(definitions: Map<number, KeyframeProps[]>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
+      withCallback(callback: (finished: boolean) => void);
     }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
