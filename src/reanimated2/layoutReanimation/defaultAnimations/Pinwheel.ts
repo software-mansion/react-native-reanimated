@@ -15,6 +15,7 @@ export class PinwheelIn
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (_values) => {
       'worklet';
@@ -41,6 +42,7 @@ export class PinwheelIn
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -57,6 +59,7 @@ export class PinwheelOut
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (_values) => {
       'worklet';
@@ -83,6 +86,7 @@ export class PinwheelOut
             },
           ],
         },
+        callback: callback,
       };
     };
   };

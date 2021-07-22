@@ -650,6 +650,7 @@ declare module 'react-native-reanimated' {
       constructor(definitions: Map<number, KeyframeProps[]>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
+      withCallback(callback: (finished: boolean) => void);
     }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
@@ -672,6 +673,8 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold(restDisplacementThresholdFactor: number): BaseAnimationBuilder;
       static restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
       restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
+      static withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
+      withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
     }
 
     export class Layout extends BaseAnimationBuilder {};
@@ -686,6 +689,8 @@ declare module 'react-native-reanimated' {
       duration(durationMs: number): BounceAnimationBuilder;
       static delay(durationMs: number): BounceAnimationBuilder;
       delay(durationMs: number): BounceAnimationBuilder;
+      static withCallback(callback: (finished: boolean) => void): BaseBounceAnimationBuilder;
+      withCallback(callback: (finished: boolean) => void): BaseBounceAnimationBuilder;
     };
     
     export interface AnimatedLayout extends React.Component {};

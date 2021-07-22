@@ -18,6 +18,7 @@ export class RollInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -32,6 +33,7 @@ export class RollInLeft
           originX: values.originX - width,
           transform: [{ rotate: '-180deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -48,6 +50,7 @@ export class RollInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -62,6 +65,7 @@ export class RollInRight
           originX: values.originX + width,
           transform: [{ rotate: '180deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -78,6 +82,7 @@ export class RollOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -95,6 +100,7 @@ export class RollOutLeft
           originX: values.originX,
           transform: [{ rotate: '0deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -111,6 +117,7 @@ export class RollOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -128,6 +135,7 @@ export class RollOutRight
           originX: values.originX,
           transform: [{ rotate: '0deg' }],
         },
+        callback: callback,
       };
     };
   };

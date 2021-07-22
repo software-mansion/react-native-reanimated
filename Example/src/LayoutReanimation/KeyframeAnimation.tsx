@@ -24,7 +24,14 @@ export function KeyframeAnimation(): React.ReactElement {
       transform: [{ rotate: '0deg' }, { scale: 1 }],
       easing: Easing.quad,
     },
-  }).duration(2000);
+  })
+    .duration(2000)
+    .withCallback((finished: boolean) => {
+      'worklet';
+      if (finished) {
+        console.log('callback');
+      }
+    });
   const exitingAnimation = new Keyframe({
     0: {
       opacity: 1,
