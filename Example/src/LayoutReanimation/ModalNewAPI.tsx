@@ -63,7 +63,6 @@ export function ModalNewAPI(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>
-      <AnimatedLayout>
         <View
           style={{
             height: 400,
@@ -73,7 +72,6 @@ export function ModalNewAPI(): React.ReactElement {
           }}>
           <AnimatedView />
         </View>
-      </AnimatedLayout>
     </View>
   );
 }

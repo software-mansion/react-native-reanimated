@@ -74,6 +74,7 @@ public class ReactBatchObserver {
     public void willMount() {
         final HashSet<Integer> affectedTags = new HashSet<>(mAffectedNodes);
         mAffectedNodes = new HashSet<>();
+        snapshotsOfRemoved.clear();
 
         final HashMap<Integer, Snapshot> firstSnapshots = new HashMap<>();
 
@@ -85,12 +86,17 @@ public class ReactBatchObserver {
             deactivate = false;
             forceRemove = false;
             for (int tag : affectedTags) {
-                View view = nativeViewHierarchyManager.resolveView(tag);
+                View view = null;
+                try {
+                    view = nativeViewHierarchyManager.resolveView(tag);
+                } catch (IllegalViewOperationException e) {
+                    //noop
+                }
                 if (view == null && alreadySeen.contains(tag)) { // removed not new
-                    throw new RuntimeException("removed view was null at starting block");
+                   continue;
                 }
                 if (view == null && !alreadySeen.contains(tag)) { // it is a new view
-                     continue; //(we cannot take a snapshot or add a listener lets wait for closing UI Block it won't be a null there)
+                    continue; //(we cannot take a snapshot or add a listener lets wait for closing UI Block it won't be a null there)
                 }
                 firstSnapshots.put(tag, new Snapshot(view, nativeViewHierarchyManager));
             }
@@ -99,15 +105,22 @@ public class ReactBatchObserver {
         //TODO use weakRefs inside the lambda
         mUIManager.addUIBlock(nativeViewHierarchyManager -> {
             for (int tag : affectedTags) {
-                View view = nativeViewHierarchyManager.resolveView(tag);
+                View view = null;
+                try {
+                    view = nativeViewHierarchyManager.resolveView(tag);
+                } catch (IllegalViewOperationException e) {
+                    //noop
+                }
                 if (view == null && alreadySeen.contains(tag)) { // removed not new
                     continue;
                 }
                 if (view == null && !alreadySeen.contains(tag)) { // it is a new view
-                    throw new RuntimeException("a new view was still null at closing block");
+                    continue;
+
                 }
                 if (!alreadySeen.contains(tag) && view.isAttachedToWindow()) {
                     addViewListener(view);
+                    continue;
                 }
                 Snapshot snapshot = firstSnapshots.get(tag);
                 if (snapshot != null) {
@@ -115,10 +128,10 @@ public class ReactBatchObserver {
                 }
             }
             forceRemove = true;
+            deactivate = true;
             for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
                 mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue());
             }
-            deactivate = true;
         });
 
     }
@@ -130,7 +143,10 @@ public class ReactBatchObserver {
         view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View view) {
-                //do-nothing
+                if (deactivate) return;
+                if (snapshotsOfRemoved.containsKey(view.getId())) {
+                    snapshotsOfRemoved.remove(view.getId());
+                }
             }
 
             @Override
@@ -142,10 +158,16 @@ public class ReactBatchObserver {
                 }
                 if (deactivate) return;
                 ViewGroup parent = parents.get(view.getId());
-                parent.addView(view);
-                snapshotsOfRemoved.put(view.getId(), new Snapshot(view, mNativeViewHierarchyManager));
                 deactivate = true;
-                parent.removeView(view);
+                boolean attachedForSnapshot = false;
+                if (view.getParent() == null) {
+                    parent.addView(view);
+                    attachedForSnapshot = true;
+                }
+                snapshotsOfRemoved.put(view.getId(), new Snapshot(view, mNativeViewHierarchyManager));
+                if (attachedForSnapshot) {
+                    parent.removeView(view);
+                }
                 deactivate = false;
             }
         });

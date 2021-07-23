@@ -135,6 +135,9 @@ public class AnimationsManager implements ViewHierarchyObserver{
         HashMap<String, Object> targetValues = after.toMap();
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
+        if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
+            return;
+        }
         // If startValues are equal to targetValues it means that there was no UI Operation changing
         // layout of the View. So dirtiness of that View is false positive
         if (state == ViewState.Appearing) {
