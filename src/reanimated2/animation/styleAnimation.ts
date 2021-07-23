@@ -5,9 +5,8 @@ import {
   AnimationCallback,
   AnimationObject,
 } from './commonTypes';
-import { AnimatedStyle, StyleProps } from '../commonTypes';
+import { AnimatedStyle, StyleProps, TransformProperty } from '../commonTypes';
 import { withTiming } from './timing';
-import { TransformProperty } from '../layoutReanimation/animationBuilder/commonTypes';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: StyleProps;

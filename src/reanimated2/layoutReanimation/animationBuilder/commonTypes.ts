@@ -1,18 +1,3 @@
-import {
-  PerpectiveTransform,
-  RotateTransform,
-  RotateXTransform,
-  RotateYTransform,
-  RotateZTransform,
-  ScaleTransform,
-  ScaleXTransform,
-  ScaleYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-  SkewXTransform,
-  SkewYTransform,
-  MatrixTransform,
-} from 'react-native';
 import { EasingFn } from '../../Easing';
 import { StyleProps } from '../../commonTypes';
 
@@ -20,21 +5,6 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;
   [key: string]: any;
 }
-
-export type TransformProperty =
-  | PerpectiveTransform
-  | RotateTransform
-  | RotateXTransform
-  | RotateYTransform
-  | RotateZTransform
-  | ScaleTransform
-  | ScaleXTransform
-  | ScaleYTransform
-  | TranslateXTransform
-  | TranslateYTransform
-  | SkewXTransform
-  | SkewYTransform
-  | MatrixTransform;
 
 export type LayoutAnimation = {
   initialValues: StyleProps;

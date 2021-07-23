@@ -1,5 +1,36 @@
-import { ViewStyle, TextStyle } from 'react-native';
+import {
+  PerpectiveTransform,
+  RotateTransform,
+  RotateXTransform,
+  RotateYTransform,
+  RotateZTransform,
+  ScaleTransform,
+  ScaleXTransform,
+  ScaleYTransform,
+  TranslateXTransform,
+  TranslateYTransform,
+  SkewXTransform,
+  SkewYTransform,
+  MatrixTransform,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 import { Animation, AnimationObject } from './animation/commonTypes';
+
+export type TransformProperty =
+  | PerpectiveTransform
+  | RotateTransform
+  | RotateXTransform
+  | RotateYTransform
+  | RotateZTransform
+  | ScaleTransform
+  | ScaleXTransform
+  | ScaleYTransform
+  | TranslateXTransform
+  | TranslateYTransform
+  | SkewXTransform
+  | SkewYTransform
+  | MatrixTransform;
 
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;

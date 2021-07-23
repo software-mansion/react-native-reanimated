@@ -5,9 +5,8 @@ import {
   EntryExitAnimationBuild,
   IEntryExitAnimationBuilder,
   KeyframeProps,
-  TransformProperty,
 } from './commonTypes';
-import { StyleProps } from '../../commonTypes';
+import { TransformProperty, StyleProps } from '../../commonTypes';
 export interface KeyframePoint {
   duration: number;
   value: number | string;
