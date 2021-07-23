@@ -168,7 +168,7 @@ export function withStyleAnimation(
         Object.keys(styleAnimations).forEach((key) => {
           const currentAnimation = styleAnimations[key];
           if (key === 'transform') {
-            const transform = styleAnimations.transform as Array<AnimatedStyle>; // TODO
+            const transform = styleAnimations.transform as Array<AnimatedStyle>;
             for (let i = 0; i < transform.length; i++) {
               const type = Object.keys(transform[i])[0];
               const currentAnimation = transform[i][type];
