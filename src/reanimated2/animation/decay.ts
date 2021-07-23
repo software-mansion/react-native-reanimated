@@ -1,5 +1,10 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, PrimitiveValue, Timestamp } from './commonTypes';
+import {
+  Animation,
+  AnimationCallback,
+  PrimitiveValue,
+  Timestamp,
+} from './commonTypes';
 import { Platform } from 'react-native';
 
 interface DecayConfig {
@@ -18,8 +23,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   current: PrimitiveValue;
 }
 
-export interface InnerDecayAnimation extends Omit<DecayAnimation, 'toValue'|'current'> {
-  toValue: number;
+export interface InnerDecayAnimation extends Omit<DecayAnimation, 'current'> {
   current: number;
 }
 
@@ -35,7 +39,7 @@ export function withDecay(
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
       clamp: [],
-      velocity: 0
+      velocity: 0,
     };
     if (userConfig) {
       Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
@@ -124,7 +128,7 @@ export function withDecay(
       initialVelocity: 0,
       current: 0,
       lastTimestamp: 0,
-      startTimestamp: 0
+      startTimestamp: 0,
     } as DecayAnimation;
   });
 }

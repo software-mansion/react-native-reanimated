@@ -10,11 +10,10 @@ import {
 export interface DelayAnimation
   extends Animation<DelayAnimation>,
     HigherOrderAnimation {
-  startTime?: Timestamp;
-  started?: boolean;
-  previousAnimation?: DelayAnimation;
+  startTime: Timestamp;
+  started: boolean;
+  previousAnimation: DelayAnimation | null;
   current: PrimitiveValue;
-  value?: PrimitiveValue;
 }
 
 export function withDelay(
@@ -36,7 +35,7 @@ export function withDelay(
             nextAnimation,
             animation.current,
             now,
-            previousAnimation
+            previousAnimation as DelayAnimation
           );
           animation.previousAnimation = null;
           animation.started = true;
@@ -78,7 +77,10 @@ export function withDelay(
       onStart,
       current: nextAnimation.current,
       callback,
-    };
+      previousAnimation: null,
+      startTime: 0,
+      started: false,
+    } as DelayAnimation;
   });
 }
 

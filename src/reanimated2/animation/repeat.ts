@@ -12,16 +12,22 @@ export interface RepeatAnimation
   extends Animation<RepeatAnimation>,
     HigherOrderAnimation {
   reps: number;
-  startValue?: PrimitiveValue;
+  startValue: PrimitiveValue;
   toValue?: PrimitiveValue;
   previousAnimation?: RepeatAnimation;
+}
+
+export interface InnerRepeatAnimation
+  extends Omit<RepeatAnimation, 'toValue' | 'startValue'> {
+  toValue: number;
+  startValue: number;
 }
 
 export function withRepeat(
   _nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfReps = 2,
   reverse = false,
-  callback: AnimationCallback
+  callback?: AnimationCallback
 ): Animation<RepeatAnimation> {
   'worklet';
 
@@ -31,7 +37,7 @@ export function withRepeat(
     const nextAnimation: RepeatAnimation =
       typeof _nextAnimation === 'function' ? _nextAnimation() : _nextAnimation;
 
-    function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
+    function repeat(animation: InnerRepeatAnimation, now: Timestamp): boolean {
       const finished = nextAnimation.onFrame(nextAnimation, now);
       animation.current = nextAnimation.current;
       if (finished) {
@@ -46,7 +52,7 @@ export function withRepeat(
         }
 
         const startValue = reverse
-          ? nextAnimation.current
+          ? (nextAnimation.current as number)
           : animation.startValue;
         if (reverse) {
           nextAnimation.toValue = animation.startValue;
@@ -56,7 +62,7 @@ export function withRepeat(
           nextAnimation,
           startValue,
           now,
-          nextAnimation.previousAnimation
+          nextAnimation.previousAnimation as RepeatAnimation
         );
         return false;
       }
@@ -91,7 +97,8 @@ export function withRepeat(
       reps: 0,
       current: nextAnimation.current,
       callback: repCallback,
-    };
+      startValue: 0,
+    } as RepeatAnimation;
   });
 }
 
