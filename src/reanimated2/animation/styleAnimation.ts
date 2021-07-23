@@ -3,12 +3,14 @@ import {
   Timestamp,
   HigherOrderAnimation,
   AnimationCallback,
+  AnimationObject,
 } from './commonTypes';
-import { AnimatedStyle } from '../commonTypes';
+import { AnimatedStyle, StyleProps } from '../commonTypes';
 import { withTiming } from './timing';
+import { TransformProperty } from '../layoutReanimation/animationBuilder/commonTypes';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
-  current: AnimatedStyle;
+  current: StyleProps;
   styleAnimations: AnimatedStyle;
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
@@ -36,12 +38,9 @@ export function withStyleAnimation(
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
           const transform = animation.styleAnimations.transform;
-          console.log('animation', animation);
-          console.log('transform', transform);
-
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
-            const currentAnimation = transform[i][type];
+            const currentAnimation: AnimationObject = transform[i][type];
             if (currentAnimation.finished) {
               continue;
             }
@@ -54,6 +53,7 @@ export function withStyleAnimation(
             } else {
               stillGoing = true;
             }
+            // @ts-ignore: eslint-disable-line
             animation.current.transform[i][type] = currentAnimation.current;
           }
         } else {
@@ -83,15 +83,14 @@ export function withStyleAnimation(
       Object.keys(styleAnimations).forEach((key) => {
         if (key === 'transform') {
           animation.current.transform = [];
-          const transform = styleAnimations.transform as Array<AnimatedStyle>; // TODO
+          const transform = styleAnimations.transform as Array<AnimatedStyle>;
           const prevTransform = null;
-          const valueTransform = value.transform as Array<AnimatedStyle>; // TODO
-
+          const valueTransform = value.transform as Array<AnimatedStyle>;
           for (let i = 0; i < transform.length; i++) {
             // duplication of code to avoid function calls
-            let prevAnimation = null;
+            let prevAnimation: AnimationObject | null = null;
             const type = Object.keys(transform[i])[0];
-            if (prevTransform && prevTransform.length > i) {
+            if (prevTransform && (prevTransform as []).length > i) {
               const prevTransformStep = prevTransform[i];
               const prevType = Object.keys(prevTransformStep)[0];
               if (prevType === type) {
@@ -101,7 +100,7 @@ export function withStyleAnimation(
 
             let prevVal = 0;
             if (prevAnimation != null) {
-              prevVal = prevAnimation.current;
+              prevVal = (prevAnimation as AnimationObject).current as number;
             }
             if (
               valueTransform != null &&
@@ -110,9 +109,10 @@ export function withStyleAnimation(
             ) {
               prevVal = valueTransform[i][type];
             }
-            const obj = {};
+
+            const obj: { [key: string]: any } = {};
             obj[type] = prevVal;
-            animation.current.transform[i] = obj;
+            animation.current.transform[i] = obj as TransformProperty;
             let currentAnimation = transform[i][type];
             if (
               typeof currentAnimation !== 'object' &&
