@@ -17,8 +17,6 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &labe
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   // This property will be used for debugging
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, label));
-
-  jsi::Object dummyGlobal(rt);
   auto dummyFunction = [](
                           jsi::Runtime &rt,
                           const jsi::Value &thisValue,
@@ -29,8 +27,8 @@ void RuntimeDecorator::decorateRuntime(jsi::Runtime &rt, const std::string &labe
   };
   jsi::Function __reanimatedWorkletInit = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "__reanimatedWorkletInit"), 1, dummyFunction);
 
-  dummyGlobal.setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
-  rt.global().setProperty(rt, "global", dummyGlobal);
+  rt.global().setProperty(rt, "__reanimatedWorkletInit", __reanimatedWorkletInit);
+  rt.global().setProperty(rt, "global", rt.global());
 
   rt.global().setProperty(rt, "jsThis", jsi::Value::undefined());
 
@@ -154,7 +152,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
-    
+
   // layout animation
   std::weak_ptr<LayoutAnimationsProxy> layoutProxy = layoutAnimationsProxy;
   auto clb7 = [layoutProxy](
@@ -172,7 +170,7 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value _startObservingProgress = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_startObservingProgress"), 0, clb7);
   rt.global().setProperty(rt, "_startObservingProgress", _startObservingProgress);
-  
+
   auto clb8 = [layoutProxy](
                                jsi::Runtime &rt,
                                const jsi::Value &thisValue,
