@@ -1,11 +1,14 @@
 import { ViewStyle, TextStyle } from 'react-native';
 import { Animation, AnimationObject } from './animation/commonTypes';
 
-export type StyleProps =
-  | ViewStyle
-  | TextStyle
-  | { originX?: number; originY?: number };
+export interface StyleProps extends ViewStyle, TextStyle {
+  originX?: number;
+  originY?: number;
+  [key: string]: any;
+}
 
-export type AnimatedStyle =
-  | Record<string, Animation<AnimationObject>>
-  | { transform: Record<string, Animation<AnimationObject>>[] };
+export interface AnimatedStyle
+  extends Record<string, Animation<AnimationObject>> {
+  [key: string]: any;
+  transform: Array<Record<string, Animation<AnimationObject>>>;
+}

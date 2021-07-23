@@ -1,8 +1,6 @@
 import { defineAnimation } from './util';
 import {
-  Animation,
   Timestamp,
-  AnimationObject,
   HigherOrderAnimation,
   AnimationCallback,
 } from './commonTypes';
@@ -11,7 +9,7 @@ import { withTiming } from './timing';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: AnimatedStyle;
-  styleAnimations?: AnimatedStyle;
+  styleAnimations: AnimatedStyle;
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: StyleLayoutAnimation,
@@ -37,10 +35,10 @@ export function withStyleAnimation(
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
-          const transform = animation.styleAnimations.transform as Record<
-            string,
-            Animation<AnimationObject>
-          >[];
+          const transform = animation.styleAnimations.transform;
+          console.log('animation', animation);
+          console.log('transform', transform);
+
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
             const currentAnimation = transform[i][type];
@@ -199,6 +197,6 @@ export function withStyleAnimation(
       current: {},
       styleAnimations,
       callback,
-    };
+    } as StyleLayoutAnimation;
   });
 }

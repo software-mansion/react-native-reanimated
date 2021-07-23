@@ -39,7 +39,9 @@ export function transform(
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
-    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/) as string[];
+    const match = value.match(
+      /([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/
+    ) as string[];
     const prefix = match[1];
     const suffix = match[3];
     const number = match[2];
@@ -61,8 +63,11 @@ export function transformAnimation(animation: AnimationObject): void {
   if (!animation) {
     return;
   }
-  animation.toValue = transform(animation.toValue, animation);
-  animation.current = transform(animation.current, animation);
+  // @ts-ignore: eslint-disable-line
+  animation.toValue = transform(animation.toValue, animation) as PrimitiveValue;
+  // @ts-ignore: eslint-disable-line
+  animation.current = transform(animation.current, animation) as PrimitiveValue;
+  // @ts-ignore: eslint-disable-line
   animation.startValue = transform(animation.startValue, animation);
 }
 
@@ -85,7 +90,7 @@ export function decorateAnimation<
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
-    const val = transform(value, animation);
+    const val = transform(value, animation) as PrimitiveValue;
     transformAnimation(animation);
     if (previousAnimation !== animation) transformAnimation(previousAnimation);
 
@@ -116,7 +121,7 @@ export function decorateAnimation<
     let HSVAValue: ParsedColorArray;
     let HSVACurrent: ParsedColorArray;
     let HSVAToValue: ParsedColorArray;
-    const res = [];
+    const res: Array<number> = [];
     if (isColor(value)) {
       HSVACurrent = convertToHSVA(animation.current);
       HSVAValue = convertToHSVA(value);
@@ -141,11 +146,11 @@ export function decorateAnimation<
   };
 
   const colorOnFrame = (
-    animation: Animation<AnimationObject> ,
+    animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
     const HSVACurrent = convertToHSVA(animation.current);
-    const res: number[] = [];
+    const res: Array<number> = [];
     let finished = true;
     tab.forEach((i, index) => {
       animation[i].current = HSVACurrent[index];

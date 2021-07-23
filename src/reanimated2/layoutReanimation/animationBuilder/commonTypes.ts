@@ -1,6 +1,4 @@
 import {
-  ViewStyle,
-  TextStyle,
   PerpectiveTransform,
   RotateTransform,
   RotateXTransform,
@@ -16,12 +14,7 @@ import {
   MatrixTransform,
 } from 'react-native';
 import { EasingFn } from '../../Easing';
-
-export interface StyleProps extends ViewStyle, TextStyle {
-  originX?: number;
-  originY?: number;
-  [key: string]: any;
-}
+import { StyleProps } from '../../commonTypes';
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFn;

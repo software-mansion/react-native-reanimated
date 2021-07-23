@@ -1,6 +1,7 @@
 export type PrimitiveValue = number | string;
 
 export interface AnimationObject {
+  [key: string]: any;
   callback: AnimationCallback;
   current?: PrimitiveValue;
   toValue?: AnimationObject['current'];
