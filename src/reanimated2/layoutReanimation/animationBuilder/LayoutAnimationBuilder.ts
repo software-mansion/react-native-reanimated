@@ -214,3 +214,5 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
     };
   };
 }
+
+export const Layout = LayoutAnimationBuilder;
