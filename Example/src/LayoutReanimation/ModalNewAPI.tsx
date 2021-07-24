@@ -63,6 +63,12 @@ export function ModalNewAPI(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>
+        <Button
+          title="toggle"
+          onPress={() => {
+            setShow((last) => !last);
+          }}
+        />
         <View
           style={{
             height: 400,
@@ -70,7 +76,7 @@ export function ModalNewAPI(): React.ReactElement {
             justifyContent: 'center',
             borderWidth: 1,
           }}>
-          <AnimatedView />
+          {show && <AnimatedView />}
         </View>
     </View>
   );

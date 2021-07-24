@@ -51,9 +51,7 @@ export function Carousel(): React.ReactElement {
         <View style={{flexDirection: 'column-reverse'}}>
             <Button title="toggle" onPress={() => { incrementIndex((prev) => ((prev+1) % DATA.length))}}/>
             <View style={{height: 400, alignItems: 'center', justifyContent: 'center', borderWidth: 1}}>
-                <AnimatedLayout> 
                     <AnimatedView key={currentIndex} pokemon={DATA[currentIndex]} />
-                </AnimatedLayout>
             </View>
         </View>
     );

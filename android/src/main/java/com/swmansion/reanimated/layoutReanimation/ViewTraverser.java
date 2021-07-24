@@ -74,6 +74,7 @@ public class ViewTraverser {
                 highestKnownView.requestLayout();
                 return container;
             }
+            if (view.getParent() != null) return parent;
             parent.addView(view);
             return parent;
         }

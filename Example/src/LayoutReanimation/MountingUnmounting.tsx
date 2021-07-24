@@ -7,7 +7,7 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 function SWMLogo() {
 
     return (
-        <AnimatedLayout>
+        <View>
             <Animated.View 
                 entering={SlideInRight.delay(300)} 
                 exiting={SlideOutLeft.delay(300)} 
@@ -30,7 +30,7 @@ function SWMLogo() {
                     SWM 
                 </AnimatedText>
             </Animated.View>
-        </AnimatedLayout>
+        </View>
     );
 }
 

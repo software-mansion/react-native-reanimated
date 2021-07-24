@@ -118,9 +118,13 @@ public class ReactBatchObserver {
                     continue;
 
                 }
-                if (!alreadySeen.contains(tag) && view.isAttachedToWindow()) {
-                    addViewListener(view);
-                    continue;
+                if (!alreadySeen.contains(tag)) {
+                    if (view.isAttachedToWindow()) {
+                        addViewListener(view);
+                        continue;
+                    } else {
+                        continue;
+                    }
                 }
                 Snapshot snapshot = firstSnapshots.get(tag);
                 if (snapshot != null) {
@@ -179,6 +183,9 @@ public class ReactBatchObserver {
     }
 
     public void findAffected(ReactShadowNode rsn) {
+        if (rsn == null) {
+            return;
+        }
         if (!rsn.isDirty() && (rsn.getParent() != null && !(rsn.getParent().isDirty()))) {
             return;
         }

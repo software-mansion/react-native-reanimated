@@ -25,7 +25,6 @@ interface AnimatedBlockProps {
 const AnimatedBlock = ({ name, animatedStyle, defaultShow }: AnimatedBlockProps) => {
   const [show, setShow] = useState(defaultShow);
   return (
-    <AnimatedLayout>
       <View style={styles.animatedBox}>
         {show ? 
           <TouchableWithoutFeedback onPress={() => setShow(!show)}>
@@ -48,7 +47,6 @@ const AnimatedBlock = ({ name, animatedStyle, defaultShow }: AnimatedBlockProps)
           </Animated.View>
         : null}
       </View>
-    </AnimatedLayout>
   );
 }
 

@@ -51,11 +51,9 @@ function AnimatedView() {
     }
 
     return (
-        <AnimatedLayout>
-            <Animated.View {...{entering, exiting}} style={[styles.animatedView, style]} >
-                <Text> kk </Text>
-            </Animated.View>
-        </AnimatedLayout>
+        <Animated.View {...{entering, exiting}} style={[styles.animatedView, style]} >
+            <Text> kk </Text>
+        </Animated.View>
     );
 }
 
