@@ -39,6 +39,7 @@ public class AnimationsManager implements ViewHierarchyObserver{
     private HashMap<Integer, ViewManager> mViewManager;
     private HashMap<Integer, ViewManager> mParentViewManager;
     private HashMap<Integer, View> mParent;
+    private boolean mCleaningScheduled = false;
 
     public enum ViewState {
         Appearing, Disappearing, Layout, Inactive, ToRemove;
@@ -197,22 +198,50 @@ public class AnimationsManager implements ViewHierarchyObserver{
         }
     }
 
+    private void removeLeftovers() {
+        HashSet<Integer> toRemove = mToRemove;
+        mToRemove = new HashSet<>();
+        HashSet<Integer> discovered = new HashSet<>();
+        HashSet<Integer> roots = new HashSet<>();
+        // go through ready to remove from bottom to top
+        for (int tag: toRemove) {
+            View view = mViewForTag.get(tag);
+            findRoot(view, discovered, roots);
+        }
+        discovered.clear();
+        for (int tag: roots) {
+            View view = mViewForTag.get(tag);
+            dfs(view, discovered, toRemove);
+        }
+    }
+
     private void scheduleCleaning() {
+        if (mCleaningScheduled) return;
+        mCleaningScheduled = true;
         WeakReference<AnimationsManager> animationsManagerWeakReference = new WeakReference<>(this);
         mContext.runOnUiQueueThread(() -> {
             AnimationsManager thiz = animationsManagerWeakReference.get();
             if (thiz == null) {
                 return;
             }
-            HashSet<Integer> toRemove = mToRemove;
-            mToRemove = new HashSet<>();
-            HashSet<Integer> discovered = new HashSet<>();
-            // go through ready to remove from bottom to top
-            for (int tag: toRemove) {
-                View view = mViewForTag.get(tag);
-                dfs(view, discovered, toRemove);
-            }
+            removeLeftovers();
         });
+    }
+
+    private void findRoot(View view, HashSet<Integer> discovered, HashSet<Integer> roots) {
+        if (discovered.contains(view.getId())) return;
+        discovered.add(view.getId());
+        ViewGroup parent = (ViewGroup) view.getParent();
+        ViewState state = mStates.get(parent.getId());
+        if (state == ViewState.ToRemove) {
+            findRoot(parent, discovered, roots);
+            return;
+        }
+        if (state == ViewState.Disappearing) {
+            return;
+        }
+        roots.add(view.getId());
+        return;
     }
 
     private void dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
