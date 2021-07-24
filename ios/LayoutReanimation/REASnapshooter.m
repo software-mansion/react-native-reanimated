@@ -28,10 +28,12 @@ int Id = 1e9;
   
   if ([view isKindOfClass:[REAAnimationRootView class]]) {
     NSMutableArray * pathToWindow = [NSMutableArray new];
-    UIView *current = view;
+    UIResponder *current = view;
     do {
-      [pathToWindow addObject:current];
-      current = current.superview;
+      if (![current isKindOfClass:[UIViewController class]]) {
+        [pathToWindow addObject:current];
+      }
+      current = current.nextResponder;
     } while (current != windowView);
     values[@"pathToWindow"] = pathToWindow;
   }
