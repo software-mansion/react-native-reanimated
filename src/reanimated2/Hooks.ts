@@ -2,6 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
+import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
 
 import WorkletEventHandler from './WorkletEventHandler';
 import {
@@ -16,7 +17,6 @@ import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
 import { initialUpdaterRun, cancelAnimation } from './animations';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
-import { Platform } from 'react-native';
 import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
 import { processColor } from './Colors';
 
@@ -453,7 +453,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   const adaptersHash = adapters ? buildWorkletsHash(adapters) : null;
   const animationsActive = useSharedValue(true);
   let animatedStyle;
-  if (process.env.JEST_WORKER_ID) {
+  if (isJest()) {
     animatedStyle = useRef({});
   }
 
@@ -500,7 +500,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       };
     }
 
-    if (canApplyOptimalisation(upadterFn) && Platform.OS !== 'web') {
+    if (canApplyOptimalisation(upadterFn) && !shouldBeUseWeb()) {
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
@@ -509,7 +509,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
           return style;
         };
       }
-    } else if (Platform.OS !== 'web') {
+    } else if (!shouldBeUseWeb()) {
       optimalization = 0;
       upadterFn = () => {
         'worklet';
@@ -522,7 +522,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
       upadterFn.__optimalization = optimalization;
     }
 
-    if (process.env.JEST_WORKER_ID) {
+    if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
@@ -563,8 +563,6 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
   useEffect(() => {
     animationsActive.value = true;
     return () => {
-      // initRef.current = null;
-      // viewsRef = null;
       animationsActive.value = false;
     };
   }, []);
@@ -728,10 +726,11 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
+  const useWeb = isWeb();
 
   const handler = (event) => {
     'worklet';
-    event = Platform.OS === 'web' ? event.nativeEvent : event;
+    event = useWeb ? event.nativeEvent : event;
 
     const FAILED = 1;
     const BEGAN = 2;
@@ -772,7 +771,7 @@ export function useAnimatedGestureHandler(handlers, dependencies) {
     }
   };
 
-  if (Platform.OS === 'web') {
+  if (isWeb()) {
     return handler;
   }
 
