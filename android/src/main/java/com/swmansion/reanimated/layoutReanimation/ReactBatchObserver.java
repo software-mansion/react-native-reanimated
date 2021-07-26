@@ -134,7 +134,7 @@ public class ReactBatchObserver {
             forceRemove = true;
             deactivate = true;
             for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
-                mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue());
+                mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue()); // TODO check for each od them if they are detached in the sense of Screens
             }
         });
 

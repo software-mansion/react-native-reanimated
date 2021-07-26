@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class AnimationsManager implements ViewHierarchyObserver{
+public class AnimationsManager implements ViewHierarchyObserver {
     private final static String[] LAYOUT_KEYS = { Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT };
     private ReactContext mContext;
     private UIImplementation mUIImplementation;
@@ -72,11 +72,12 @@ public class AnimationsManager implements ViewHierarchyObserver{
 
     @Override
     public void onViewRemoval(View view, ViewGroup parent, Snapshot before) {
+        // TODO fix removal
         Integer tag = view.getId();
         String type = "entering";
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
-        ViewTraverser.attach(view, parent, null, startValues);
+        ViewTraverser.attach(view, parent, startValues);
 
         if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
             return;
@@ -91,6 +92,7 @@ public class AnimationsManager implements ViewHierarchyObserver{
         if (state == ViewState.Inactive) {
             if (startValues != null) {
                 mStates.put(view.getId(), ViewState.ToRemove);
+                mToRemove.add(view.getId());
                 scheduleCleaning();
             }
             return;
@@ -115,10 +117,6 @@ public class AnimationsManager implements ViewHierarchyObserver{
         String type = "entering";
         HashMap<String, Object> targetValues = after.toMap();
         ViewState state = mStates.get(view.getId());
-
-        if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
-            return;
-        }
 
         if (state == ViewState.Inactive) { // it can be a fresh view
             if (targetValues != null) {
@@ -199,19 +197,17 @@ public class AnimationsManager implements ViewHierarchyObserver{
     }
 
     private void removeLeftovers() {
-        HashSet<Integer> toRemove = mToRemove;
-        mToRemove = new HashSet<>();
         HashSet<Integer> discovered = new HashSet<>();
         HashSet<Integer> roots = new HashSet<>();
         // go through ready to remove from bottom to top
-        for (int tag: toRemove) {
+        for (int tag: mToRemove) {
             View view = mViewForTag.get(tag);
             findRoot(view, discovered, roots);
         }
         discovered.clear();
         for (int tag: roots) {
             View view = mViewForTag.get(tag);
-            dfs(view, discovered, toRemove);
+            dfs(view, discovered, mToRemove);
         }
     }
 
@@ -220,11 +216,13 @@ public class AnimationsManager implements ViewHierarchyObserver{
         mCleaningScheduled = true;
         WeakReference<AnimationsManager> animationsManagerWeakReference = new WeakReference<>(this);
         mContext.runOnUiQueueThread(() -> {
+            mCleaningScheduled = false;
             AnimationsManager thiz = animationsManagerWeakReference.get();
             if (thiz == null) {
                 return;
             }
             removeLeftovers();
+
         });
     }
 
@@ -232,6 +230,7 @@ public class AnimationsManager implements ViewHierarchyObserver{
         if (discovered.contains(view.getId())) return;
         discovered.add(view.getId());
         ViewGroup parent = (ViewGroup) view.getParent();
+        if (parent == null) return; // e.g. Screen wrapper
         ViewState state = mStates.get(parent.getId());
         if (state == ViewState.ToRemove) {
             findRoot(parent, discovered, roots);
@@ -270,6 +269,7 @@ public class AnimationsManager implements ViewHierarchyObserver{
             mParentViewManager.remove(curView.getId());
             mParent.remove(curView.getId());
             mNativeMethodsHolder.removeConfigForTag(curView.getId());
+            mToRemove.remove(view.getId());
         }
     }
 

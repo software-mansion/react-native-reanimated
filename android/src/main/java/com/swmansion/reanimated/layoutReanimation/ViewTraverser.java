@@ -1,21 +1,17 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.app.Application;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import com.swmansion.rnscreens.Screen;
 import com.swmansion.rnscreens.ScreenContainer;
 
 import java.util.HashMap;
 
-interface TraversingLambda {
-    public void exec(View view);
-}
-
 public class ViewTraverser {
     static View getParent(View view) {
-        if (view instanceof Screen) {
+       /* if (view instanceof Screen) {
             Screen screen = (Screen) view;
             ScreenContainer container = screen.getContainer();
             if (container == null || !container.hasScreen(screen.getFragment())) {
@@ -28,36 +24,36 @@ public class ViewTraverser {
             } else {
                 return container;
             }
-        }
+        }*/
         return (View) view.getParent();
     }
 
     static int getChildCount(ViewGroup view) {
-        if (view instanceof ScreenContainer) {
+        /*if (view instanceof ScreenContainer) {
             ScreenContainer sc = (ScreenContainer) view;
             return sc.getScreenCount();
-        }
+        }*/
         return view.getChildCount();
     }
 
     static View getChildAt(ViewGroup view, int i) {
-        if (view instanceof ScreenContainer) {
+       /* if (view instanceof ScreenContainer) {
             ScreenContainer sc = (ScreenContainer) view;
             Screen screen = (Screen) sc.getScreenAt(i);
             return screen;
-        }
+        }*/
         return view.getChildAt(i);
     }
 
-    static View attach(View view, View parentCan, View highestKnownView, HashMap<String, Object> startValues) {
+    static View attach(View view, View parentCan, HashMap<String, Object> startValues) {
         if (parentCan instanceof ViewGroup) {
             ViewGroup parent = (ViewGroup) parentCan;
             if (view instanceof Screen) {
-                Screen screen = (Screen) view;
+               /* Screen screen = (Screen) view;
                 if (view.getParent() != null) {
                     ((ViewGroup)view.getParent()).removeView(view);
                 }
-                ViewGroup container = (ViewGroup) highestKnownView;
+                ViewGroup container = (ViewGroup) screen.getContainer();
                 screen.setContainer(null);
                 container.addView(screen);
                 // convert origin
@@ -72,8 +68,14 @@ public class ViewTraverser {
                         View.MeasureSpec.makeMeasureSpec(b-t, View.MeasureSpec.EXACTLY));
                 view.layout(l, t, r, b);
                 highestKnownView.requestLayout();
-                return container;
+                return container;*/
+                throw new RuntimeException("Screens should be turned off");
             }
+
+            /*if (view instanceof FrameLayout && parent instanceof ScreenContainer) {
+                return null;
+            }*/
+
             if (view.getParent() != null) return parent;
             parent.addView(view);
             return parent;

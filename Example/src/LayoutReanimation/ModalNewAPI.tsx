@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { useRef } from 'react';
+import { findNodeHandle } from 'react-native';
 import { View, Text, Button, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   AnimatedLayout,
@@ -10,6 +13,10 @@ import Animated, {
 const { width } = Dimensions.get('window');
 
 function AnimatedView() {
+  const ref = useRef(null);
+  useEffect(() => {
+    console.log("tag ", findNodeHandle(ref.current));
+  }, []);
   const entering = (targetValues) => {
     'worklet';
     const animations = {
@@ -52,6 +59,7 @@ function AnimatedView() {
 
   return (
     <Animated.View
+      ref={ref}
       style={[styles.animatedView]}
       {...{ entering, exiting, layout }}>
       <Text> kk </Text>
