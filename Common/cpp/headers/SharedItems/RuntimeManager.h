@@ -28,7 +28,7 @@ public:
     errorHandler(errorHandler), 
     scheduler(scheduler), 
     workletsCache(std::make_unique<WorkletsCache>()),
-    storeUserData(std::shared_ptr<StaticStoreUser>())
+    storeUserData(std::make_shared<StaticStoreUser>())
   { 
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
