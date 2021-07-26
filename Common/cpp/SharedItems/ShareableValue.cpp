@@ -177,7 +177,8 @@ std::shared_ptr<ShareableValue> ShareableValue::adapt(jsi::Runtime &rt, const js
 
 jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
   // TODO: maybe we can cache toJSValue results on a per-runtime basis, need to avoid ref loops
-  if (RuntimeDecorator::isWorkletRuntime(rt)) {
+  if (&rt == runtimeManager->runtime.get()) {
+    // Getting value on the same runtime where it was created, prepare remoteValue
     if (remoteValue.expired()) {
       remoteValue = getWeakRef(rt);
     }
@@ -187,6 +188,7 @@ jsi::Value ShareableValue::getValue(jsi::Runtime &rt) {
     }
     return jsi::Value(rt, *remoteValue.lock());
   } else {
+    // Getting value on a different runtime than where it was created from, prepare hostValue
     if (hostValue.get() == nullptr) {
       hostValue = std::make_unique<jsi::Value>(toJSValue(rt));
     }
