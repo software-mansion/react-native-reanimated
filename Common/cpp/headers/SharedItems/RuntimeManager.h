@@ -33,7 +33,7 @@ public:
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
 
-  ~RuntimeManager() {
+  virtual ~RuntimeManager() {
     clearStore();
   }
 
