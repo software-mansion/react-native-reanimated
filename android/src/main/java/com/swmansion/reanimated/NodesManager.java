@@ -284,11 +284,13 @@ public class NodesManager implements EventDispatcherListener {
    * iOS behavior when the app won't just crash.
    */
   public Object getNodeValue(int nodeID) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node != null) {
-      return node.value();
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(nodeID);
+      if (node != null) {
+        return node.value();
+      }
+      return ZERO;
     }
-    return ZERO;
   }
 
   /**
@@ -297,128 +299,142 @@ public class NodesManager implements EventDispatcherListener {
    * returns 0 as a value.
    */
   public <T extends Node> T findNodeById(int id, Class<T> type) {
-    Node node = mAnimatedNodes.get(id);
-    if (node == null) {
-      if (type == Node.class || type == ValueNode.class) {
-        return (T) mNoopNode;
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(id);
+      if (node == null) {
+        if (type == Node.class || type == ValueNode.class) {
+          return (T) mNoopNode;
+        }
+        throw new IllegalArgumentException("Requested node with id " + id + " of type " + type +
+                " cannot be found");
       }
-      throw new IllegalArgumentException("Requested node with id " + id + " of type " + type +
-              " cannot be found");
+      if (type.isInstance(node)) {
+        return (T) node;
+      }
+      throw new IllegalArgumentException("Node with id " + id + " is of incompatible type " +
+              node.getClass() + ", requested type was " + type);
     }
-    if (type.isInstance(node)) {
-      return (T) node;
-    }
-    throw new IllegalArgumentException("Node with id " + id + " is of incompatible type " +
-            node.getClass() + ", requested type was " + type);
   }
 
   public void createNode(int nodeID, ReadableMap config) {
-    if (mAnimatedNodes.get(nodeID) != null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
-              " already exists");
+    synchronized (mAnimatedNodes) {
+      if (mAnimatedNodes.get(nodeID) != null) {
+        throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
+                " already exists");
+      }
+      String type = config.getString("type");
+      final Node node;
+      if ("props".equals(type)) {
+        node = new PropsNode(nodeID, config, this, mUIImplementation);
+      } else if ("style".equals(type)) {
+        node = new StyleNode(nodeID, config, this);
+      } else if ("transform".equals(type)) {
+        node = new TransformNode(nodeID, config, this);
+      } else if ("value".equals(type)) {
+        node = new ValueNode(nodeID, config, this);
+      } else if ("block".equals(type)) {
+        node = new BlockNode(nodeID, config, this);
+      } else if ("cond".equals(type)) {
+        node = new CondNode(nodeID, config, this);
+      } else if ("op".equals(type)) {
+        node = new OperatorNode(nodeID, config, this);
+      } else if ("set".equals(type)) {
+        node = new SetNode(nodeID, config, this);
+      } else if ("debug".equals(type)) {
+        node = new DebugNode(nodeID, config, this);
+      } else if ("clock".equals(type)) {
+        node = new ClockNode(nodeID, config, this);
+      } else if ("clockStart".equals(type)) {
+        node = new ClockOpNode.ClockStartNode(nodeID, config, this);
+      } else if ("clockStop".equals(type)) {
+        node = new ClockOpNode.ClockStopNode(nodeID, config, this);
+      } else if ("clockTest".equals(type)) {
+        node = new ClockOpNode.ClockTestNode(nodeID, config, this);
+      } else if ("call".equals(type)) {
+        node = new JSCallNode(nodeID, config, this);
+      } else if ("bezier".equals(type)) {
+        node = new BezierNode(nodeID, config, this);
+      } else if ("event".equals(type)) {
+        node = new EventNode(nodeID, config, this);
+      } else if ("always".equals(type)) {
+        node = new AlwaysNode(nodeID, config, this);
+      } else if ("concat".equals(type)) {
+        node = new ConcatNode(nodeID, config, this);
+      } else if ("param".equals(type)) {
+        node = new ParamNode(nodeID, config, this);
+      } else if ("func".equals(type)) {
+        node = new FunctionNode(nodeID, config, this);
+      } else if ("callfunc".equals(type)) {
+        node = new CallFuncNode(nodeID, config, this);
+      } else {
+        throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
+      }
+      mAnimatedNodes.put(nodeID, node);
     }
-    String type = config.getString("type");
-    final Node node;
-    if ("props".equals(type)) {
-      node = new PropsNode(nodeID, config, this, mUIImplementation);
-    } else if ("style".equals(type)) {
-      node = new StyleNode(nodeID, config, this);
-    } else if ("transform".equals(type)) {
-      node = new TransformNode(nodeID, config, this);
-    } else if ("value".equals(type)) {
-      node = new ValueNode(nodeID, config, this);
-    } else if ("block".equals(type)) {
-      node = new BlockNode(nodeID, config, this);
-    } else if ("cond".equals(type)) {
-      node = new CondNode(nodeID, config, this);
-    } else if ("op".equals(type)) {
-      node = new OperatorNode(nodeID, config, this);
-    } else if ("set".equals(type)) {
-      node = new SetNode(nodeID, config, this);
-    } else if ("debug".equals(type)) {
-      node = new DebugNode(nodeID, config, this);
-    } else if ("clock".equals(type)) {
-      node = new ClockNode(nodeID, config, this);
-    } else if ("clockStart".equals(type)) {
-      node = new ClockOpNode.ClockStartNode(nodeID, config, this);
-    } else if ("clockStop".equals(type)) {
-      node = new ClockOpNode.ClockStopNode(nodeID, config, this);
-    } else if ("clockTest".equals(type)) {
-      node = new ClockOpNode.ClockTestNode(nodeID, config, this);
-    } else if ("call".equals(type)) {
-      node = new JSCallNode(nodeID, config, this);
-    } else if ("bezier".equals(type)) {
-      node = new BezierNode(nodeID, config, this);
-    } else if ("event".equals(type)) {
-      node = new EventNode(nodeID, config, this);
-    } else if ("always".equals(type)) {
-      node = new AlwaysNode(nodeID, config, this);
-    } else if ("concat".equals(type)) {
-      node = new ConcatNode(nodeID, config, this);
-    } else if ("param".equals(type)) {
-      node = new ParamNode(nodeID, config, this);
-    } else if ("func".equals(type)) {
-      node = new FunctionNode(nodeID, config, this);
-    } else if ("callfunc".equals(type)) {
-      node = new CallFuncNode(nodeID, config, this);
-    } else {
-      throw new JSApplicationIllegalArgumentException("Unsupported node type: " + type);
-    }
-    mAnimatedNodes.put(nodeID, node);
   }
 
   public void dropNode(int tag) {
-    Node node = mAnimatedNodes.get(tag);
-    if (node != null) {
-      node.onDrop();
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(tag);
+      if (node != null) {
+        node.onDrop();
+      }
+      mAnimatedNodes.remove(tag);
     }
-    mAnimatedNodes.remove(tag);
   }
 
   public void connectNodes(int parentID, int childID) {
-    Node parentNode = mAnimatedNodes.get(parentID);
-    Node childNode = mAnimatedNodes.get(childID);
-    if (childNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
-              " does not exists");
+    synchronized (mAnimatedNodes) {
+      Node parentNode = mAnimatedNodes.get(parentID);
+      Node childNode = mAnimatedNodes.get(childID);
+      if (childNode == null) {
+        throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
+                " does not exists");
+      }
+      parentNode.addChild(childNode);
     }
-    parentNode.addChild(childNode);
   }
 
   public void disconnectNodes(int parentID, int childID) {
-    Node parentNode = mAnimatedNodes.get(parentID);
-    Node childNode = mAnimatedNodes.get(childID);
-    if (childNode == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
-              " does not exists");
+    synchronized (mAnimatedNodes) {
+      Node parentNode = mAnimatedNodes.get(parentID);
+      Node childNode = mAnimatedNodes.get(childID);
+      if (childNode == null) {
+        throw new JSApplicationIllegalArgumentException("Animated node with ID " + childID +
+                " does not exists");
+      }
+      parentNode.removeChild(childNode);
     }
-    parentNode.removeChild(childNode);
   }
 
   public void connectNodeToView(int nodeID, int viewTag) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
-              " does not exists");
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(nodeID);
+      if (node == null) {
+        throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
+                " does not exists");
+      }
+      if (!(node instanceof PropsNode)) {
+        throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
+                "of type " + PropsNode.class.getName());
+      }
+      ((PropsNode) node).connectToView(viewTag);
     }
-    if (!(node instanceof PropsNode)) {
-      throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
-              "of type " + PropsNode.class.getName());
-    }
-    ((PropsNode) node).connectToView(viewTag);
   }
 
   public void disconnectNodeFromView(int nodeID, int viewTag) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
-              " does not exists");
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(nodeID);
+      if (node == null) {
+        throw new JSApplicationIllegalArgumentException("Animated node with ID " + nodeID +
+                " does not exists");
+      }
+      if (!(node instanceof PropsNode)) {
+        throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
+                "of type " + PropsNode.class.getName());
+      }
+      ((PropsNode) node).disconnectFromView(viewTag);
     }
-    if (!(node instanceof PropsNode)) {
-      throw new JSApplicationIllegalArgumentException("Animated node connected to view should be" +
-              "of type " + PropsNode.class.getName());
-    }
-    ((PropsNode) node).disconnectFromView(viewTag);
   }
 
   public void enqueueUpdateViewOnNativeThread(int viewTag, WritableMap nativeProps, boolean trySynchronously) {
@@ -429,17 +445,19 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
-    String key = viewTag + eventName;
+    synchronized (mAnimatedNodes) {
+      String key = viewTag + eventName;
 
-    EventNode node = (EventNode) mAnimatedNodes.get(eventNodeID);
-    if (node == null) {
-      throw new JSApplicationIllegalArgumentException("Event node " + eventNodeID + " does not exists");
-    }
-    if (mEventMapping.containsKey(key)) {
-      throw new JSApplicationIllegalArgumentException("Event handler already set for the given view and event type");
-    }
+      EventNode node = (EventNode) mAnimatedNodes.get(eventNodeID);
+      if (node == null) {
+        throw new JSApplicationIllegalArgumentException("Event node " + eventNodeID + " does not exists");
+      }
+      if (mEventMapping.containsKey(key)) {
+        throw new JSApplicationIllegalArgumentException("Event handler already set for the given view and event type");
+      }
 
-    mEventMapping.put(key, node);
+      mEventMapping.put(key, node);
+    }
   }
 
   public void detachEvent(int viewTag, String eventName, int eventNodeID) {
@@ -453,7 +471,9 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void getValue(int nodeID, Callback callback) {
-    callback.invoke(mAnimatedNodes.get(nodeID).value());
+    synchronized (mAnimatedNodes) {
+      callback.invoke(mAnimatedNodes.get(nodeID).value());
+    }
   }
 
   public void postRunUpdatesAfterAnimation() {
@@ -533,9 +553,11 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void setValue(int nodeID, Double newValue) {
-    Node node = mAnimatedNodes.get(nodeID);
-    if (node != null) {
-      ((ValueNode) node).setValue(newValue);
+    synchronized (mAnimatedNodes) {
+      Node node = mAnimatedNodes.get(nodeID);
+      if (node != null) {
+        ((ValueNode) node).setValue(newValue);
+      }
     }
   }
 
