@@ -73,7 +73,7 @@ export class BounceInDown
                   withTiming(-20, { duration: duration }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(5, { duration: (duration * 100) / 250 })
+                  withTiming(0, { duration: (duration * 100) / 250 })
                 )
               ),
             },
