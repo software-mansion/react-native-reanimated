@@ -25,7 +25,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec, public Runtime
 {
   friend ShareableValue;
   friend MutableValue;
-  
+
 public:
   NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                          std::shared_ptr<Scheduler> scheduler,
@@ -34,8 +34,6 @@ public:
                          std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                          std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
                          PlatformDepMethodsHolder platformDepMethodsHolder);
-
-  virtual ~NativeReanimatedModule();
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) override;
 
