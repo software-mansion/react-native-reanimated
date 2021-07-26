@@ -278,7 +278,7 @@ void NativeReanimatedModule::onRender(double timestampMs)
 
 NativeReanimatedModule::~NativeReanimatedModule()
 {
-  StoreUser::clearStore();
+  clearStore();
 }
 
 } // namespace reanimated
