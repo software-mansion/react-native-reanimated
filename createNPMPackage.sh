@@ -6,7 +6,7 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.65.0-rc.2" "0.64.1" "0.63.3" "0.62.2 --dev")
+versions=("0.65.0-rc.3" "0.64.1" "0.63.3" "0.62.2 --dev")
 version_name=("65" "64" "63" "62")
 
 for index in {0..3}
