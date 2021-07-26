@@ -576,8 +576,8 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     }
     return !result;
   };
-  const isError = Object.keys(initial).some((key) => {
-    const element = initial[key];
+  const isError = Object.keys(initial.value).some((key) => {
+    const element = initial.value[key];
     let result = false;
     // a case for transform that has a format of an array of objects
     if (Array.isArray(element)) {
