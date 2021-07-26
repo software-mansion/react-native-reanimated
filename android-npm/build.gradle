@@ -8,6 +8,15 @@ def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
 def engine = "jsc"
 rootProject.getSubprojects().forEach({project ->
+    if(project.getProperties().get("android")) {
+        def projectProperties = project.getProperties()
+        if(!projectProperties.get("reanimated")
+          || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+        ) {
+            project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
+        }
+    }
+
     if (project.plugins.hasPlugin("com.android.application")) {
         if(project.ext.react.enableHermes) {
             engine = "hermes"

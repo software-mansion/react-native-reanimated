@@ -94,6 +94,9 @@ if(!System.getenv('IS_TRAVIS')) {
 }
 
 android {
+    buildFeatures {
+        prefab true
+    }
     compileSdkVersion safeExtGet('compileSdkVersion', 29)
     buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
     defaultConfig {
@@ -131,7 +134,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = ["**/libc++_shared.so"]
+        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libc++_shared.so", "**/libfbjni.so"]
     }
 
     tasks.withType(JavaCompile) {
@@ -460,10 +463,11 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation 'com.facebook.fbjni:fbjni:0.2.2'
+    implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")
-    extractSO("com.facebook.fbjni:fbjni:0.0.2")
+    extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
+    extractSO("com.facebook.fbjni:fbjni:0.2.2")
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile

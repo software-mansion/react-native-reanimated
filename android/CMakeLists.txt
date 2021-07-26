@@ -88,12 +88,6 @@ find_library(
         log
 )
 find_library(
-        FBJNI_LIB
-        fbjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
         HERMES_LIB
         hermes
         PATHS ${HERMES_DIR}
@@ -118,16 +112,12 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        FBJNI_LIBRARY fbjni
-        PATHS ${libfbjni_link_DIRS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
         GLOG_LIB 
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+find_package(fbjni REQUIRED CONFIG)
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -140,7 +130,7 @@ if(${FOR_HERMES})
             ${LOG_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
-            ${FBJNI_LIB}
+            fbjni::fbjni
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
@@ -151,7 +141,7 @@ else()
             ${LOG_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
-            ${FBJNI_LIB}
+            fbjni::fbjni
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android

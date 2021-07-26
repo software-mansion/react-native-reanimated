@@ -43,4 +43,6 @@ npm pack
 mv android android-npm
 mv android-temp android
 
+rm -rf ./lib
+
 echo "Done!"
