@@ -35,8 +35,8 @@ Allowed parameters are listed below:
 | mass                      | 1       |             |
 | stiffness                 | 100     |             |
 | overshootClamping         | false   |             |
-| restDisplacementThreshold | 0.001   |             |
-| restSpeedThreshold        | 0.001   |             |
+| restDisplacementThreshold | 0.01    |             |
+| restSpeedThreshold        | 2       |             |
 
 #### `callback` [function]\(optional\)
 
