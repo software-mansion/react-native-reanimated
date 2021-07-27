@@ -27,7 +27,7 @@ export class PinwheelIn
               scale: delayFunction(delay, animation(1, config)),
             },
             {
-              rotate: delayFunction(delay, animation('0turn', config)),
+              rotate: delayFunction(delay, animation('0', config)),
             },
           ],
         },
@@ -38,7 +38,7 @@ export class PinwheelIn
               scale: 0,
             },
             {
-              rotate: '5turn',
+              rotate: '5',
             },
           ],
         },
@@ -71,7 +71,7 @@ export class PinwheelOut
               scale: delayFunction(delay, animation(0, config)),
             },
             {
-              rotate: delayFunction(delay, animation('5turn', config)),
+              rotate: delayFunction(delay, animation('5', config)),
             },
           ],
         },
@@ -82,7 +82,7 @@ export class PinwheelOut
               scale: 1,
             },
             {
-              rotate: '0turn',
+              rotate: '0',
             },
           ],
         },
