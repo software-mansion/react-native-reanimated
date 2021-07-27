@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from 'react-native';
-import { View } from 'react-native';
+import { Button, View } from 'react-native';
 import Animated, {
   AnimatedLayout,
   Easing,
@@ -18,7 +17,7 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(500)
+    .delay(1000)
     .duration(500);
   const yellowRingAnimation = new Keyframe({
     from: {
@@ -28,7 +27,7 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(1000)
+    .delay(1500)
     .duration(500);
   const blackRingAnimation = new Keyframe({
     from: {
@@ -38,7 +37,7 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(1500)
+    .delay(2000)
     .duration(500);
   const greenRingAnimation = new Keyframe({
     from: {
@@ -48,68 +47,77 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(2000)
+    .delay(2500)
     .duration(500);
   const redRingAnimation = new Keyframe({
     from: {
       opacity: 0,
-      transform: [{ translateX: -300 }, { translateY: 0 }],
+      transform: [{ translateX: -83 }, { translateY: 0 }, { scale: 0 }],
     },
-    20: {
+    10: {
       opacity: 1,
-      transform: [{ translateX: -153 }, { translateY: 0 }],
+      transform: [{ translateX: -83 }, { translateY: 0 }, { scale: 1 }],
       easing: Easing.quad,
     },
-    40: {
+    20: {
+      transform: [{ translateX: -153 }, { translateY: 0 }],
+      easing: Easing.inOut(Easing.quad),
+    },
+    30: {
       transform: [{ translateX: -118 }, { translateY: 30 }],
       easing: Easing.inOut(Easing.quad),
     },
-    60: {
+    40: {
       transform: [{ translateX: -83 }, { translateY: 0 }],
       easing: Easing.inOut(Easing.quad),
     },
-    80: {
+    50: {
       transform: [{ translateX: -48 }, { translateY: 30 }],
       easing: Easing.inOut(Easing.quad),
     },
-    to: {
+    60: {
       transform: [{ translateX: -13 }, { translateY: 0 }],
       easing: Easing.inOut(Easing.quad),
     },
-  }).duration(2500);
+  }).duration(5000);
   const blueRingExitAnimation = new Keyframe({
     from: {
       zIndex: 1,
       opacity: 1,
       transform: [{ translateX: -13 }, { translateY: 0 }, { scale: 1 }],
     },
-    20: {
+    10: {
       opacity: 1,
       transform: [{ translateX: 22 }, { translateY: 30 }, { scale: 1 }],
       easing: Easing.inOut(Easing.quad),
     },
+    20: {
+      opacity: 1,
+      transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
+      easing: Easing.inOut(Easing.quad),
+    },
+    30: {
+      opacity: 1,
+      transform: [{ translateX: 92 }, { translateY: 30 }, { scale: 1 }],
+      easing: Easing.inOut(Easing.quad),
+    },
     40: {
+      opacity: 1,
+      transform: [{ translateX: 127 }, { translateY: 0 }, { scale: 1 }],
+      easing: Easing.inOut(Easing.quad),
+    },
+    50: {
       opacity: 1,
       transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
       easing: Easing.inOut(Easing.quad),
     },
     60: {
-      opacity: 1,
-      transform: [{ translateX: 92 }, { translateY: 30 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
-    },
-    80: {
-      opacity: 1,
-      transform: [{ translateX: 127 }, { translateY: 0 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
-    },
-    to: {
       zIndex: 10,
       opacity: 0,
-      transform: [{ translateX: 200 }, { translateY: 50 }, { scale: 1.6 }],
-      easing: Easing.quad,
+      transform: [{ translateX: 107 }, { translateY: 50 }, { scale: 1.6 }],
+      easing: Easing.out(Easing.quad),
     },
-  }).duration(2500);
+  }).duration(5000);
   const yellowRingExitAnimation = new Keyframe({
     from: {
       opacity: 1,
