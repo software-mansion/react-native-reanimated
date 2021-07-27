@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {View, Button, Text, StyleSheet } from 'react-native';
-import Animated, { AnimatedLayout, ZoomOut, Layout} from 'react-native-reanimated';
+import Animated, { ZoomOut, Layout} from 'react-native-reanimated';
 
 const FRUITS = [
     'banana',

@@ -162,6 +162,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
             return;
         }
+        mStates.put(view.getId(), ViewState.Layout);
         HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
         HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
         HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
@@ -181,7 +182,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     public void notifyAboutEnd(int tag, boolean cancelled) {
-
         if (!cancelled) {
             ViewState state = mStates.get(tag);
             if (state == ViewState.Appearing) {

@@ -3,8 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, 
   TouchableOpacity, TouchableWithoutFeedback 
 } from 'react-native';
-import Animated, { 
-  AnimatedLayout, SlideInRight, SlideOutRight, SlideInUp, SlideInDown, 
+import Animated, { SlideInRight, SlideOutRight, SlideInUp, SlideInDown, 
   SlideOutUp, SlideOutDown, FadeIn, FadeInRight, FadeInLeft, FadeInUp, 
   FadeInDown, FadeOut, FadeOutRight, FadeOutLeft, FadeOutUp, FadeOutDown,
   SlideOutLeft, SlideInLeft, ZoomIn, ZoomInRotate, ZoomInRight, ZoomInLeft,

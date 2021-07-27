@@ -6,26 +6,6 @@ import React from 'react';
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animations';
 
-let REALayoutView;
-if (Platform.OS === 'web' && !requireNativeComponent) {
-  REALayoutView = React.Component;
-} else {
-  REALayoutView = (requireNativeComponent(
-    'REALayoutView'
-  ) as any) as React.Component;
-}
-
-export class AnimatedLayout extends React.Component<
-  Record<string, unknown>,
-  Record<string, unknown>
-> {
-  render() {
-    return <REALayoutView collapsable={false} {...this.props} />;
-  }
-}
-
-// Register LayoutAnimationRepository
-
 runOnUI(() => {
   'worklet';
 

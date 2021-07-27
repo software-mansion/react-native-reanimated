@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, findNodeHandle } from 'react-native';
-import Animated, { AnimatedLayout, Layout } from 'react-native-reanimated';
+import Animated, { Layout } from 'react-native-reanimated';
 
 function Box({label, state}: {label: string, state: boolean}) {
   const ind = label.charCodeAt(0) - ('A').charCodeAt(0);

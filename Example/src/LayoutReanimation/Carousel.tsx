@@ -4,7 +4,6 @@ import Animated, {
     Layout,
     SlideInLeft,
     SlideOutRight,
-    AnimatedLayout,
 } from 'react-native-reanimated';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);

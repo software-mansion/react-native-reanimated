@@ -4,7 +4,6 @@ import { useRef } from 'react';
 import { findNodeHandle } from 'react-native';
 import { View, Text, Button, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   withTiming,
   withDelay,
   layout,
