@@ -302,6 +302,7 @@ export function withStyleAnimation(styleAnimations) {
             previousAnimation.styleAnimations &&
             previousAnimation.styleAnimations.transform
           ) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             prevAnimation = previousAnimation.styleAnimations.transform;
           }
 
