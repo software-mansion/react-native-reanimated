@@ -17,13 +17,13 @@ typedef JSCExecutorFactory ExecutorFactory;
 @implementation UIResponder (Reanimated)
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  const auto executor = reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL);
+  const auto installer = reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL);
 
 #if RNVERSION >= 64
   // installs globals such as console, nativePerformanceNow, etc.
-  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(executor));
+  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(installer));
 #else
-  return std::make_unique<ExecutorFactory>(executor);
+  return std::make_unique<ExecutorFactory>(installer);
 #endif
 }
 
