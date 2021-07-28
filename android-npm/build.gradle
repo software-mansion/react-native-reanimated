@@ -32,12 +32,14 @@ abstract class replaceOsTask extends DefaultTask {
     }
 }
 
+def replaceOsTaskDebug
+def replaceOsTaskRelease
 if(Integer.parseInt(minor) < 65) {
     tasks.register("replaceOsTaskDebug", replaceOsTask)
     tasks.register("replaceOsTaskRelease", replaceOsTask)
+    replaceOsTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskDebug")
+    replaceOsTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskRelease")
 }
-def replaceOsTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskDebug")
-def replaceOsTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskRelease")
 
 rootProject.getSubprojects().forEach({project ->
     if (project.plugins.hasPlugin("com.android.application")) {
