@@ -1,4 +1,4 @@
-import groovy.json.JsonSlurper;
+import groovy.json.JsonSlurper
 configurations.maybeCreate("default")
 
 def inputFile = new File(projectDir, '../../react-native/package.json')
@@ -7,19 +7,68 @@ def reactNativeVersion = json.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
 def engine = "jsc"
-rootProject.getSubprojects().forEach({project ->
-    if(project.getProperties().get("android")) {
-        def projectProperties = project.getProperties()
-        if(!projectProperties.get("reanimated")
-          || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
-        ) {
-            project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
+
+abstract class replaceOsTask extends DefaultTask {
+    public static String appName = ":app"
+    public static String buildDir = "../../../android/app/build"
+    public static String engine = "jsc"
+    public static String reactVersion = "64"
+
+    @TaskAction
+    def run() {
+        ant.unzip(
+            src: "./react-native-reanimated-${reactVersion}-${engine}.aar",
+            dest: "./tmp"
+        )
+        for(def abiVersion in ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]) {
+            ant.sequential {
+                copy(
+                    tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
+                    file: "./tmp/jni/${abiVersion}/libfbjni.so",
+                    overwrite: true
+                )
+            }
         }
     }
+}
 
+if(Integer.parseInt(minor) < 65) {
+    tasks.register("replaceOsTaskDebug", replaceOsTask)
+    tasks.register("replaceOsTaskRelease", replaceOsTask)
+}
+def replaceOsTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskDebug")
+def replaceOsTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskRelease")
+
+rootProject.getSubprojects().forEach({project ->
     if (project.plugins.hasPlugin("com.android.application")) {
         if(project.ext.react.enableHermes) {
             engine = "hermes"
+        }
+
+        if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
+            def projectProperties = project.getProperties()
+            if(!projectProperties.get("reanimated")
+                || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+            ) {
+                replaceOsTask.appName = project.getProperties().path
+                replaceOsTask.buildDir = project.getProperties().buildDir
+                replaceOsTask.engine = engine
+                replaceOsTask.reactVersion = minor
+                def appName = project.getProperties().path
+                project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
+
+                replaceOsTaskDebug.dependsOn(
+                    project.getTasks().getByPath("${appName}:mergeDebugNativeLibs"),
+                    project.getTasks().getByPath("${appName}:stripDebugDebugSymbols")
+                )
+                project.getTasks().getByPath("${appName}:packageDebug").dependsOn(replaceOsTaskDebug)
+
+                replaceOsTaskRelease.dependsOn(
+                    project.getTasks().getByPath("${appName}:mergeReleaseNativeLibs"),
+                    project.getTasks().getByPath("${appName}:stripReleaseDebugSymbols")
+                )
+                project.getTasks().getByPath("${appName}:packageRelease").dependsOn(replaceOsTaskRelease)
+            }
         }
     }
 })
