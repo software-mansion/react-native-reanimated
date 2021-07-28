@@ -17,6 +17,7 @@ export function initialUpdaterRun(updater) {
 
 /*
   converts float to string and removes the scientific notation
+  https://stackoverflow.com/questions/1685680/how-to-avoid-scientific-notation-for-large-numbers-in-javascript/46545519#46545519
 */
 function parseString(num) {
   'worklet';
