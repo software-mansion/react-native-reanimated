@@ -15,6 +15,32 @@ export function initialUpdaterRun(updater) {
   return result;
 }
 
+/*
+  converts float to string and removes the scientific notation
+*/
+function parseString(num) {
+  'worklet';
+  let numStr = num.toString();
+  if (Math.abs(num) < 1.0) {
+    const e = parseInt(num.toString().split('e-')[1]);
+    if (e) {
+      const negative = num < 0;
+      if (negative) num *= -1;
+      num *= Math.pow(10, e - 1);
+      numStr = '0.' + new Array(e).join('0') + num.toString().substring(2);
+      if (negative) numStr = '-' + numStr;
+    }
+  } else {
+    const e = parseInt(num.toString().split('+')[1]);
+    if (e > 20) {
+      e -= 20;
+      num /= Math.pow(10, e);
+      numStr = num.toString() + new Array(e + 1).join('0');
+    }
+  }
+  return numStr;
+}
+
 export function transform(value, handler) {
   'worklet';
   if (value === undefined) {
@@ -38,15 +64,7 @@ export function transform(value, handler) {
     return value;
   }
 
-  return (
-    handler.__prefix +
-    value.toLocaleString('fullwide', {
-      useGrouping: false,
-      maximumFractionDigits: 20,
-      maximumSignificantDigits: 20,
-    }) +
-    handler.__suffix
-  );
+  return handler.__prefix + parseString(value) + handler.__suffix;
 }
 
 export function transformAnimation(animation) {
