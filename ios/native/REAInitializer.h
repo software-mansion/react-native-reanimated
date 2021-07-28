@@ -13,6 +13,7 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
+#import <jsireact/JSIExecutor.h>
 
 #if RNVERSION >= 64
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
