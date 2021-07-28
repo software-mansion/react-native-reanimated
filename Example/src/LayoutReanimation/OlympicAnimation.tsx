@@ -111,10 +111,10 @@ export function OlympicAnimation(): React.ReactElement {
       transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
       easing: Easing.inOut(Easing.quad),
     },
-    90: {
+    60: {
       opacity: 0,
       transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
-      easing: Easing.out(Easing.quad),
+      easing: Easing.quad,
     },
   }).duration(5000);
   const yellowRingExitAnimation = new Keyframe({
