@@ -35,15 +35,15 @@ export function KeyframeAnimation(): React.ReactElement {
   const exitingAnimation = new Keyframe({
     0: {
       opacity: 1,
-      transform: [{ skewX: '0deg' }],
+      originY: 0,
     },
     30: {
-      transform: [{ skewX: '40deg' }],
+      originY: -50,
       easing: Easing.exp,
     },
     to: {
       opacity: 0,
-      transform: [{ skewX: '-10deg' }],
+      originY: 500,
     },
   }).duration(2000);
   return (
