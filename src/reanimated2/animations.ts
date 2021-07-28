@@ -296,6 +296,7 @@ export function withStyleAnimation(styleAnimations) {
           const transform = styleAnimations.transform;
           const prevTransform = null;
           const valueTransform = value.transform;
+          let prevAnimation;
           if (
             previousAnimation &&
             previousAnimation.styleAnimations &&
