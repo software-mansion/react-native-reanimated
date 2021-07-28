@@ -82,7 +82,7 @@ export function OlympicAnimation(): React.ReactElement {
   }).duration(5000);
   const blueRingExitAnimation = new Keyframe({
     from: {
-      zIndex: 1,
+      zIndex: 2,
       opacity: 1,
       transform: [{ translateX: -13 }, { translateY: 0 }, { scale: 1 }],
     },
@@ -111,10 +111,9 @@ export function OlympicAnimation(): React.ReactElement {
       transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
       easing: Easing.inOut(Easing.quad),
     },
-    60: {
-      zIndex: 10,
+    90: {
       opacity: 0,
-      transform: [{ translateX: 107 }, { translateY: 50 }, { scale: 1.6 }],
+      transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
       easing: Easing.out(Easing.quad),
     },
   }).duration(5000);
