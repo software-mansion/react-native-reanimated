@@ -4,11 +4,18 @@ import Animated, {
   AnimatedLayout,
   Easing,
   Keyframe,
+  useAnimatedProps,
+  useSharedValue,
 } from 'react-native-reanimated';
 import Svg, { Path, ClipPath } from 'react-native-svg';
 
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 export function OlympicAnimation(): React.ReactElement {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
+  const showBlueRingIndent = useSharedValue(true);
+  const showRedRingIndent = useSharedValue(true);
+
   const blueRingAnimation = new Keyframe({
     from: {
       opacity: 0,
@@ -17,8 +24,8 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(1000)
-    .duration(500);
+    .delay(600)
+    .duration(300);
   const yellowRingAnimation = new Keyframe({
     from: {
       opacity: 0,
@@ -27,8 +34,8 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(1500)
-    .duration(500);
+    .delay(900)
+    .duration(300);
   const blackRingAnimation = new Keyframe({
     from: {
       opacity: 0,
@@ -37,8 +44,12 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(2000)
-    .duration(500);
+    .delay(1200)
+    .duration(300)
+    .withCallback(() => {
+      'worklet';
+      showRedRingIndent.value = true;
+    });
   const greenRingAnimation = new Keyframe({
     from: {
       opacity: 0,
@@ -47,8 +58,8 @@ export function OlympicAnimation(): React.ReactElement {
       opacity: 1,
     },
   })
-    .delay(2500)
-    .duration(500);
+    .delay(1500)
+    .duration(300);
   const redRingAnimation = new Keyframe({
     from: {
       opacity: 0,
@@ -79,7 +90,7 @@ export function OlympicAnimation(): React.ReactElement {
       transform: [{ translateX: -13 }, { translateY: 0 }],
       easing: Easing.inOut(Easing.quad),
     },
-  }).duration(5000);
+  }).duration(3000);
   const blueRingExitAnimation = new Keyframe({
     from: {
       zIndex: 2,
@@ -116,7 +127,7 @@ export function OlympicAnimation(): React.ReactElement {
       transform: [{ translateX: 1100 }, { translateY: 1100 }, { scale: 20 }],
       easing: Easing.quad,
     },
-  }).duration(5000);
+  }).duration(3000);
   const yellowRingExitAnimation = new Keyframe({
     from: {
       opacity: 1,
@@ -126,7 +137,7 @@ export function OlympicAnimation(): React.ReactElement {
       easing: Easing.out(Easing.exp),
     },
   })
-    .delay(400)
+    .delay(200)
     .duration(100);
   const blackRingExitAnimation = new Keyframe({
     from: {
@@ -137,7 +148,7 @@ export function OlympicAnimation(): React.ReactElement {
       easing: Easing.out(Easing.exp),
     },
   })
-    .delay(900)
+    .delay(500)
     .duration(100);
   const greenRingExitAnimation = new Keyframe({
     from: {
@@ -148,7 +159,7 @@ export function OlympicAnimation(): React.ReactElement {
       easing: Easing.out(Easing.exp),
     },
   })
-    .delay(1400)
+    .delay(800)
     .duration(100);
   const redRingExitAnimation = new Keyframe({
     from: {
@@ -159,13 +170,39 @@ export function OlympicAnimation(): React.ReactElement {
       easing: Easing.out(Easing.exp),
     },
   })
-    .delay(1900)
+    .delay(1100)
     .duration(100);
+
+  const blueRingAnimatedProps = useAnimatedProps(() => {
+    const d = showBlueRingIndent.value
+      ? 'M165.6 179.7c-3.3-8.2-9.7-14.7-17.9-18.1-4.1-1.7-8.5-2.6-12.9-2.6-13.4 0-25.4 8-30.7 20.3-1.7 4.1-2.6 8.5-2.6 13 0 13.4 8 25.4 20.3 30.6 4.1 1.7 8.5 2.6 12.9 2.6.7 0 1.3 0 1.9-.1-.2-1.3-.2-2.6-.2-3.9 0-1.4.1-2.7.3-4.1-.6.1-1.3.1-2 .1-3.4 0-6.7-.7-9.8-2-9.4-3.9-15.4-13.1-15.4-23.2 0-3.4.7-6.7 2-9.9 4-9.4 13.1-15.4 23.3-15.4 3.4 0 6.7.7 9.8 2 6.2 2.6 11 7.5 13.6 13.8 2.5 6.2 2.5 13.1-.1 19.3-2.5 6-7.1 10.6-12.8 13.2-.5 2-.8 4.1-.8 6.3 0 .8 0 1.7.1 2.5 9.2-2.8 16.9-9.6 20.8-18.9 3.5-8.3 3.5-17.3.2-25.5z'
+      : '';
+
+    return {
+      d,
+    };
+  });
+
+  const redRingAnimatedProps = useAnimatedProps(() => {
+    const d = showRedRingIndent.value
+      ? 'M301.3 176.1c-5.9-10.5-17-17.1-29.1-17.1-5.6 0-11.2 1.5-16.1 4.2-7.8 4.3-13.4 11.4-15.8 19.9-.5 1.7-.8 3.4-1 5.1 2.7.1 5.3.5 7.9 1.2.2-1.4.4-2.7.8-4.1 1.8-6.5 6.1-11.9 12-15.1 3.8-2.1 8-3.2 12.2-3.2 9.2 0 17.6 5 22.1 13 2.1 3.7 3.2 8 3.2 12.3 0 9.2-4.9 17.6-13 22-3.8 2.1-8 3.2-12.2 3.2-9.2 0-17.6-5-22.1-13-1.2-2.1-2-4.3-2.5-6.5-2.7-1.1-5.5-1.6-8.4-1.7.5 4.2 1.8 8.3 4 12.2 5.9 10.5 17 17.1 29.1 17.1 5.6 0 11.2-1.5 16.1-4.2 10.6-5.8 17.1-17 17.1-29.1-.1-5.7-1.5-11.3-4.3-16.2z'
+      : '';
+
+    return {
+      d,
+    };
+  });
   return (
     <AnimatedLayout>
       <Button
         title="show"
         onPress={() => {
+          if (show) {
+            showBlueRingIndent.value = false;
+          } else {
+            showBlueRingIndent.value = true;
+            showRedRingIndent.value = false;
+          }
           setShow(!show);
         }}
       />
@@ -185,7 +222,7 @@ export function OlympicAnimation(): React.ReactElement {
                 clipPath="url(#c1)"
               />
               <ClipPath id="c1">
-                <Path d="M165.6 179.7c-3.3-8.2-9.7-14.7-17.9-18.1-4.1-1.7-8.5-2.6-12.9-2.6-13.4 0-25.4 8-30.7 20.3-1.7 4.1-2.6 8.5-2.6 13 0 13.4 8 25.4 20.3 30.6 4.1 1.7 8.5 2.6 12.9 2.6.7 0 1.3 0 1.9-.1-.2-1.3-.2-2.6-.2-3.9 0-1.4.1-2.7.3-4.1-.6.1-1.3.1-2 .1-3.4 0-6.7-.7-9.8-2-9.4-3.9-15.4-13.1-15.4-23.2 0-3.4.7-6.7 2-9.9 4-9.4 13.1-15.4 23.3-15.4 3.4 0 6.7.7 9.8 2 6.2 2.6 11 7.5 13.6 13.8 2.5 6.2 2.5 13.1-.1 19.3-2.5 6-7.1 10.6-12.8 13.2-.5 2-.8 4.1-.8 6.3 0 .8 0 1.7.1 2.5 9.2-2.8 16.9-9.6 20.8-18.9 3.5-8.3 3.5-17.3.2-25.5z" />
+                <AnimatedPath animatedProps={blueRingAnimatedProps} />
               </ClipPath>
             </Svg>
           </Animated.View>
@@ -259,7 +296,7 @@ export function OlympicAnimation(): React.ReactElement {
                 clipPath="url(#c5)"
               />
               <ClipPath id="c5">
-                <Path d="M301.3 176.1c-5.9-10.5-17-17.1-29.1-17.1-5.6 0-11.2 1.5-16.1 4.2-7.8 4.3-13.4 11.4-15.8 19.9-.5 1.7-.8 3.4-1 5.1 2.7.1 5.3.5 7.9 1.2.2-1.4.4-2.7.8-4.1 1.8-6.5 6.1-11.9 12-15.1 3.8-2.1 8-3.2 12.2-3.2 9.2 0 17.6 5 22.1 13 2.1 3.7 3.2 8 3.2 12.3 0 9.2-4.9 17.6-13 22-3.8 2.1-8 3.2-12.2 3.2-9.2 0-17.6-5-22.1-13-1.2-2.1-2-4.3-2.5-6.5-2.7-1.1-5.5-1.6-8.4-1.7.5 4.2 1.8 8.3 4 12.2 5.9 10.5 17 17.1 29.1 17.1 5.6 0 11.2-1.5 16.1-4.2 10.6-5.8 17.1-17 17.1-29.1-.1-5.7-1.5-11.3-4.3-16.2z" />
+                <AnimatedPath animatedProps={redRingAnimatedProps} />
               </ClipPath>
             </Svg>
           </Animated.View>
