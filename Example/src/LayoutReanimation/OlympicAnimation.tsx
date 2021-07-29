@@ -72,23 +72,18 @@ export function OlympicAnimation(): React.ReactElement {
     },
     20: {
       transform: [{ translateX: -153 }, { translateY: 0 }],
-      easing: Easing.inOut(Easing.quad),
     },
     30: {
       transform: [{ translateX: -118 }, { translateY: 30 }],
-      easing: Easing.inOut(Easing.quad),
     },
     40: {
       transform: [{ translateX: -83 }, { translateY: 0 }],
-      easing: Easing.inOut(Easing.quad),
     },
     50: {
       transform: [{ translateX: -48 }, { translateY: 30 }],
-      easing: Easing.inOut(Easing.quad),
     },
     60: {
       transform: [{ translateX: -13 }, { translateY: 0 }],
-      easing: Easing.inOut(Easing.quad),
     },
   }).duration(3000);
   const blueRingExitAnimation = new Keyframe({
@@ -100,27 +95,22 @@ export function OlympicAnimation(): React.ReactElement {
     10: {
       opacity: 1,
       transform: [{ translateX: 22 }, { translateY: 30 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
     },
     20: {
       opacity: 1,
       transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
     },
     30: {
       opacity: 1,
       transform: [{ translateX: 92 }, { translateY: 30 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
     },
     40: {
       opacity: 1,
       transform: [{ translateX: 127 }, { translateY: 0 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
     },
     50: {
       opacity: 1,
       transform: [{ translateX: 57 }, { translateY: 0 }, { scale: 1 }],
-      easing: Easing.inOut(Easing.quad),
     },
     60: {
       opacity: 0,
