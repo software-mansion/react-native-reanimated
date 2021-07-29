@@ -8,7 +8,7 @@ def (major, minor, patch) = reactNativeVersion.tokenize('.')
 
 def engine = "jsc"
 
-abstract class replaceOsTask extends DefaultTask {
+abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
     public static String buildDir = "../../../android/app/build"
     public static String engine = "jsc"
@@ -32,12 +32,14 @@ abstract class replaceOsTask extends DefaultTask {
     }
 }
 
+def replaceSoTaskDebug
+def replaceSoTaskRelease
 if(Integer.parseInt(minor) < 65) {
-    tasks.register("replaceOsTaskDebug", replaceOsTask)
-    tasks.register("replaceOsTaskRelease", replaceOsTask)
+    tasks.register("replaceSoTaskDebug", replaceSoTask)
+    tasks.register("replaceSoTaskRelease", replaceSoTask)
+    replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
+    replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
 }
-def replaceOsTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskDebug")
-def replaceOsTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceOsTaskRelease")
 
 rootProject.getSubprojects().forEach({project ->
     if (project.plugins.hasPlugin("com.android.application")) {
@@ -50,24 +52,24 @@ rootProject.getSubprojects().forEach({project ->
             if(!projectProperties.get("reanimated")
                 || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
             ) {
-                replaceOsTask.appName = project.getProperties().path
-                replaceOsTask.buildDir = project.getProperties().buildDir
-                replaceOsTask.engine = engine
-                replaceOsTask.reactVersion = minor
+                replaceSoTask.appName = project.getProperties().path
+                replaceSoTask.buildDir = project.getProperties().buildDir
+                replaceSoTask.engine = engine
+                replaceSoTask.reactVersion = minor
                 def appName = project.getProperties().path
                 project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
 
-                replaceOsTaskDebug.dependsOn(
+                replaceSoTaskDebug.dependsOn(
                     project.getTasks().getByPath("${appName}:mergeDebugNativeLibs"),
                     project.getTasks().getByPath("${appName}:stripDebugDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:packageDebug").dependsOn(replaceOsTaskDebug)
+                project.getTasks().getByPath("${appName}:packageDebug").dependsOn(replaceSoTaskDebug)
 
-                replaceOsTaskRelease.dependsOn(
+                replaceSoTaskRelease.dependsOn(
                     project.getTasks().getByPath("${appName}:mergeReleaseNativeLibs"),
                     project.getTasks().getByPath("${appName}:stripReleaseDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:packageRelease").dependsOn(replaceOsTaskRelease)
+                project.getTasks().getByPath("${appName}:packageRelease").dependsOn(replaceSoTaskRelease)
             }
         }
     }
