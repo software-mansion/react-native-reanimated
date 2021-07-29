@@ -27,8 +27,8 @@ private:
   bool dirty = true;
   std::shared_ptr<jsi::Function> userUpdater;
   UpdaterFunction* updateProps;
-  std::vector<ViewDescriptor> viewDescriptors;
   int optimalizationLvl = 0;
+  std::shared_ptr<ShareableValue> viewDescriptors;
 
 public:
   Mapper(NativeReanimatedModule *module,

@@ -1,6 +1,6 @@
 export { BaseAnimationBuilder } from './BaseAnimationBuilder';
 export { BaseBounceAnimationBuilder } from './BaseBounceAnimationBuilder';
-export { LayoutAnimationBuilder } from './LayoutAnimationBuilder';
+export { LayoutAnimationBuilder, Layout } from './LayoutAnimationBuilder';
 export { Keyframe } from './Keyframe';
 export {
   StyleProps,

@@ -19,7 +19,7 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
-  callbackV: (finished: boolean) => void;
+  callbackV?: (finished: boolean) => void;
 
   static duration(durationMs: number): LayoutAnimationBuilder {
     const instance = new LayoutAnimationBuilder();
@@ -214,3 +214,4 @@ export class LayoutAnimationBuilder implements ILayoutAnimationBuilder {
     };
   };
 }
+export const Layout = LayoutAnimationBuilder;

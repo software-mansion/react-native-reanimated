@@ -296,11 +296,13 @@ export function withStyleAnimation(styleAnimations) {
           const transform = styleAnimations.transform;
           const prevTransform = null;
           const valueTransform = value.transform;
+          let prevAnimation;
           if (
             previousAnimation &&
             previousAnimation.styleAnimations &&
             previousAnimation.styleAnimations.transform
           ) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             prevAnimation = previousAnimation.styleAnimations.transform;
           }
 

@@ -37,7 +37,7 @@ export class LightSpeedInRight
                 delay,
                 withSequence(
                   withTiming('10deg', { duration: duration }),
-                  withTiming('-5deg', { duraiton: duration / 5 }),
+                  withTiming('-5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -84,7 +84,7 @@ export class LightSpeedInLeft
                 delay,
                 withSequence(
                   withTiming('-10deg', { duration: duration }),
-                  withTiming('5deg', { duraiton: duration / 5 }),
+                  withTiming('5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),

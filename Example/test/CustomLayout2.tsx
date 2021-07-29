@@ -1,4 +1,3 @@
-import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
@@ -52,7 +51,7 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export function CustomLayoutAnimationScreen2(): React.ReactElement {
+export default function CustomLayoutAnimationScreen2(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>
@@ -85,6 +84,3 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
-
-
-
