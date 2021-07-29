@@ -30,8 +30,15 @@ void Mapper::execute(jsi::Runtime &rt) {
     mapper->callWithThis(rt, *mapper); // call styleUpdater
   }
   else {
-    for(auto& viewDescriptor : viewDescriptors) {
-      (*updateProps)(rt, viewDescriptor.tag, viewDescriptor.name, userUpdater->call(rt).asObject(rt));
+    jsi::Object newStyle = userUpdater->call(rt).asObject(rt);
+    auto jsViewDescriptorArray = viewDescriptors->getValue(rt)
+                                  .getObject(rt)
+                                  .getProperty(rt, "value")
+                                  .asObject(rt)
+                                  .getArray(rt);
+    for(int i = 0; i < jsViewDescriptorArray.length(rt); ++i) {
+      auto jsViewDescriptor = jsViewDescriptorArray.getValueAtIndex(rt, i).getObject(rt);
+      (*updateProps)(rt, (int)jsViewDescriptor.getProperty(rt, "tag").asNumber(), jsViewDescriptor.getProperty(rt, "name"), newStyle);
     }
   }
 }
@@ -44,23 +51,11 @@ void Mapper::enableFastMode(
   if(optimalizationLvl == 0) {
     return;
   }
+  viewDescriptors = jsViewDescriptors;
   this->optimalizationLvl = optimalizationLvl;
   updateProps = &module->updaterFunction;
   jsi::Runtime* rt = module->runtime.get();
   userUpdater = std::make_shared<jsi::Function>(updater->getValue(*rt).asObject(*rt).asFunction(*rt));
-  auto jsViewDescriptorArray = jsViewDescriptors->getValue(*rt)
-                                .getObject(*rt)
-                                .getProperty(*rt, "value")
-                                .asObject(*rt)
-                                .getArray(*rt);
-  for(int i = 0; i < jsViewDescriptorArray.length(*rt); ++i) {
-    auto jsViewDescriptor = jsViewDescriptorArray.getValueAtIndex(*rt, i).getObject(*rt);
-    viewDescriptors.push_back(ViewDescriptor {
-      (int)jsViewDescriptor.getProperty(*rt, "tag").asNumber(),
-      jsViewDescriptor.getProperty(*rt, "name"),
-    });
-  }
-  
 }
 
 Mapper::~Mapper() {
