@@ -311,7 +311,7 @@ public class AnimationsManager {
                 parent.addView(view);
             }
         }
-        
+
         for (View view : allViews) {
             Integer tag = view.getId();
             String type = "entering";
