@@ -1,8 +1,7 @@
 #include "JSIStoreValueUser.h"
+#include "RuntimeManager.h"
 
 namespace reanimated {
-
-std::shared_ptr<StaticStoreUser> StoreUser::staticStoreUserData = std::make_shared<StaticStoreUser>();
 
 std::weak_ptr<jsi::Value> StoreUser::getWeakRef(jsi::Runtime &rt) {
   const std::lock_guard<std::recursive_mutex> lock(storeUserData->storeMutex);
@@ -15,8 +14,8 @@ std::weak_ptr<jsi::Value> StoreUser::getWeakRef(jsi::Runtime &rt) {
   return sv;
 }
 
-StoreUser::StoreUser(std::shared_ptr<Scheduler> s): scheduler(s) {
-  storeUserData = StoreUser::staticStoreUserData;
+StoreUser::StoreUser(std::shared_ptr<Scheduler> s, RuntimeManager &runtimeManager): scheduler(s) {
+  storeUserData = runtimeManager.storeUserData;
   identifier = storeUserData->ctr++;
 }
 
@@ -32,12 +31,6 @@ StoreUser::~StoreUser() {
       }
     });
   }
-}
-
-
-void StoreUser::clearStore() {
-  const std::lock_guard<std::recursive_mutex> lock(StoreUser::staticStoreUserData->storeMutex);
-  StoreUser::staticStoreUserData->store.clear();
 }
 
 }

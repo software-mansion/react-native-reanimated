@@ -22,7 +22,6 @@ var f = function () {
   _f.asString = \\"function f(){const{x,objX}=jsThis._closure;{return{res:x+objX.x};}}\\";
   _f.__workletHash = 10184269015616;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (4:4)\\";
-  _f.__optimalization = 3;
 
   global.__reanimatedWorkletInit(_f);
 
@@ -40,7 +39,6 @@ exports[`babel plugin doesn't capture globals 1`] = `
   _f.asString = \\"function f(){console.log(\\\\\\"test\\\\\\");}\\";
   _f.__workletHash = 6265462104213;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (2:6)\\";
-  _f.__optimalization = 2;
 
   global.__reanimatedWorkletInit(_f);
 
@@ -62,7 +60,7 @@ var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-rea
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);
   var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
-    const _f = function () {
+    var _f = function _f() {
       return {
         transform: [{
           translateX: offset.value * 255
@@ -71,11 +69,12 @@ function Box() {
     };
 
     _f._closure = {
-      offset
+      offset: offset
     };
     _f.asString = \\"function _f(){const{offset}=jsThis._closure;{return{transform:[{translateX:offset.value*255}]};}}\\";
     _f.__workletHash = 7114514849439;
     _f.__location = \\"${ process.cwd() }/jest tests fixture (7:48)\\";
+    _f.__optimalization = 3;
 
     global.__reanimatedWorkletInit(_f);
 

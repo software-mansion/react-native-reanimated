@@ -145,7 +145,7 @@ export class ZoomInUp
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(0, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
           transform: [{ scale: 0 }],
@@ -175,7 +175,7 @@ export class ZoomInDown
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(0, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
           transform: [{ scale: 0 }],
@@ -205,7 +205,7 @@ export class ZoomInEasyUp
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(0, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
           transform: [{ scale: 0 }],
@@ -235,7 +235,7 @@ export class ZoomInEasyDown
       return {
         animations: {
           transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(0, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
           transform: [{ scale: 0 }],

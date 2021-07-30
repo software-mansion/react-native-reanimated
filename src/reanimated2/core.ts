@@ -4,6 +4,7 @@
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
+import { nativeShouldBeMock } from './PlatformChecker';
 
 global.__reanimatedWorkletInit = function (worklet) {
   worklet.__worklet = true;
@@ -21,7 +22,7 @@ const testWorklet = () => {
 };
 
 export const checkPluginState = (throwError = true) => {
-  if (!testWorklet.__workletHash && !process.env.JEST_WORKER_ID) {
+  if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
     if (throwError) {
       throw new Error(
         "Reanimated 2 failed to create a worklet, maybe you forgot to add Reanimated's babel plugin?"
@@ -122,9 +123,9 @@ export function getViewProp(viewTag, propName) {
 }
 
 let _getTimestamp;
-if (process.env.JEST_WORKER_ID) {
+if (nativeShouldBeMock()) {
   _getTimestamp = () => {
-    return Date.now();
+    return NativeReanimated.getTimestamp();
   };
 } else {
   _getTimestamp = () => {
@@ -164,6 +165,7 @@ function workletValueSetter(value) {
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
     if (this._value === animation.current && !animation.isHigherOrder) {
+      animation.callback && animation.callback(true);
       return;
     }
     // animated set

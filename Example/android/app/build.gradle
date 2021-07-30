@@ -97,7 +97,9 @@ def enableProguardInReleaseBuilds = false
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-
+    configurations {
+        all*.exclude module: 'fbjni-java-only'
+    }
     defaultConfig {
         applicationId "com.swmansion.reanimated.example"
         minSdkVersion rootProject.ext.minSdkVersion

@@ -18,6 +18,7 @@ import {
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
+import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 
 const NODE_MAPPING = new Map();
 
@@ -79,7 +80,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     constructor(props) {
       super(props);
       this._attachProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         this.animatedStyle = { value: {} };
       }
       this.sv = makeMutable({});
@@ -116,7 +117,6 @@ export default function createAnimatedComponent(Component, options = {}) {
     _attachNativeEvents() {
       const node = this._getEventViewRef();
       const viewTag = findNodeHandle(options.setNativeProps ? this : node);
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
@@ -314,7 +314,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       styles.forEach((style) => {
         if (style?.viewDescriptors) {
           style.viewDescriptors.add({ tag: viewTag, name: viewName });
-          if (process.env.JEST_WORKER_ID) {
+          if (isJest()) {
             /**
              * We need to connect Jest's TestObject instance whose contains just props object
              * with the updateProps() function where we update the properties of the component.
@@ -488,7 +488,9 @@ export default function createAnimatedComponent(Component, options = {}) {
             props[key] = dummyListener;
           }
         } else if (!(value instanceof AnimatedNode)) {
-          props[key] = value;
+          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
+            props[key] = value;
+          }
         } else if (value instanceof AnimatedValue) {
           // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
           // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
@@ -500,7 +502,7 @@ export default function createAnimatedComponent(Component, options = {}) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
 
