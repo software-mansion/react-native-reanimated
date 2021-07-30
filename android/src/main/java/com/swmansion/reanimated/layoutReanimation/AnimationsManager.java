@@ -311,7 +311,6 @@ public class AnimationsManager {
                 parent.addView(view);
             }
         }
-
         for (View view : allViews) {
             Integer tag = view.getId();
             String type = "entering";
@@ -332,7 +331,7 @@ public class AnimationsManager {
 
             // If startValues are equal to targetValues it means that there was no UI Operation changing
             // layout of the View. So dirtiness of that View is false positive
-            if (state == ViewState.Appearing) {
+            if (state != ViewState.Inactive && startValues != null && targetValues != null) {
                 boolean doNotStartLayout = true;
                 for (String key : LAYOUT_KEYS) {
                     double startV = ((Number) startValues.get(key)).doubleValue();
