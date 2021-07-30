@@ -15,6 +15,15 @@ export function initialUpdaterRun(updater) {
   return result;
 }
 
+export function recognizePrefixSuffix(value, handler): void {
+  'worklet';
+  const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/);
+  const prefix = match[1];
+  const suffix = match[3];
+  handler.__prefix = prefix;
+  handler.__suffix = suffix;
+}
+
 export function transform(value, handler) {
   'worklet';
   if (value === undefined) {
@@ -24,12 +33,13 @@ export function transform(value, handler) {
   if (typeof value === 'string') {
     // toInt
     // TODO handle color
-    const match = value.match(/([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/);
-    const prefix = match[1];
-    const suffix = match[3];
-    const number = match[2];
-    handler.__prefix = prefix;
-    handler.__suffix = suffix;
+    let number = value;
+    if (handler.__prefix) {
+      number = number.replace(handler.__prefix, '');
+    }
+    if (handler.__suffix) {
+      number = number.replace(handler.__suffix, '');
+    }
     return parseFloat(number);
   }
 
@@ -67,6 +77,8 @@ export function decorateAnimation(animation) {
     timestamp,
     previousAnimation
   ) => {
+    // recognize prefix and suffix on animation starts
+    recognizePrefixSuffix(value, animation);
     const val = transform(value, animation);
     transformAnimation(animation);
     if (previousAnimation !== animation) transformAnimation(previousAnimation);
