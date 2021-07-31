@@ -162,6 +162,7 @@ public class ReactBatchObserver {
                     parents.remove(view.getId());
                     alreadySeen.remove(view.getId());
                     view.removeOnAttachStateChangeListener(this);
+                    return;
                 }
                 if (deactivate) return;
                 ViewGroup parent = parents.get(view.getId());

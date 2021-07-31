@@ -231,25 +231,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
         return;
     }
 
-    private void dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
-        if ((!cands.contains(view.getId())) || (!mStates.containsKey(view.getId()))) {
-            return;
+    private boolean dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
+        if ((!cands.contains(view.getId())) && (mStates.containsKey(view.getId()))) {
+            return true;
         }
+        boolean cannotStripe = false;
         if (discovered.contains(view.getId())) {
-            return;
+            return false;
         }
         discovered.add(view.getId());
         if (view instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) view;
             for (int i = 0; i < vg.getChildCount(); ++i) {
-                dfs(vg.getChildAt(i), discovered, cands);
+                cannotStripe = cannotStripe || dfs(vg.getChildAt(i), discovered, cands);
             }
         }
         Log.d("dfs-remove", view.toString());
         if (mStates.get(view.getId()) != ViewState.ToRemove) {
             Log.d("dfs-remove", view.toString());
         }
-        if (!(view instanceof ViewGroup) || ((((ViewGroup) view).getChildCount() == 0))) {
+        if (!cannotStripe) {
             if (view.getParent() != null) {
                 ViewGroup parent = (ViewGroup) view.getParent();
                 parent.removeView(view);
@@ -263,6 +264,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             mNativeMethodsHolder.removeConfigForTag(curView.getId());
             mToRemove.remove(view.getId());
         }
+        return cannotStripe;
     }
 
     public HashMap<String, Float> prepareDataForAnimationWorklet(HashMap<String, Object> values) {
