@@ -58,8 +58,8 @@ const SCREENS: Screens = {
   SuperScreen: {
     screen: Counter,
     title: 'counter',
-  }
-  /*DefaultAnimations: {
+  },
+  DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
   },
@@ -146,7 +146,7 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
-  },*/
+  },
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };
