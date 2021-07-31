@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -82,13 +83,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
         if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
             return;
         }
-        if (state == ViewState.Appearing) {
-            mStates.put(tag, ViewState.Disappearing);
-            type = "exiting";
-            HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-            mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-            return;
-        }
         if (state == ViewState.Inactive) {
             if (startValues != null) {
                 mStates.put(view.getId(), ViewState.ToRemove);
@@ -97,6 +91,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             }
             return;
         }
+        Log.d("REANIMATED", tag + state.name());
         mStates.put(tag, ViewState.Disappearing);
         type = "exiting";
         HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
@@ -134,7 +129,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         HashMap<String, Object> targetValues = after.toMap();
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
-        if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
+        if (state == ViewState.Disappearing || state == ViewState.ToRemove || state == ViewState.Inactive) {
             return;
         }
         // If startValues are equal to targetValues it means that there was no UI Operation changing
@@ -155,13 +150,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
         // View must be in Layout state
         type = "layout";
-        if (startValues != null && targetValues == null) {
-            mStates.put(view.getId(), ViewState.Disappearing);
-            type = "exiting";
-            HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-            mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-            return;
-        }
         mStates.put(view.getId(), ViewState.Layout);
         HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
         HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
@@ -232,7 +220,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         ViewGroup parent = (ViewGroup) view.getParent();
         if (parent == null) return; // e.g. Screen wrapper
         ViewState state = mStates.get(parent.getId());
-        if (state == ViewState.ToRemove) {
+        if (state == ViewState.ToRemove || state == null) {
             findRoot(parent, discovered, roots);
             return;
         }
@@ -244,7 +232,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     private void dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
-        if (!cands.contains(view.getId())) {
+        if ((!cands.contains(view.getId())) || (!mStates.containsKey(view.getId()))) {
             return;
         }
         if (discovered.contains(view.getId())) {
@@ -256,6 +244,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
             for (int i = 0; i < vg.getChildCount(); ++i) {
                 dfs(vg.getChildAt(i), discovered, cands);
             }
+        }
+        Log.d("dfs-remove", view.toString());
+        if (mStates.get(view.getId()) != ViewState.ToRemove) {
+            Log.d("dfs-remove", view.toString());
         }
         if (!(view instanceof ViewGroup) || ((((ViewGroup) view).getChildCount() == 0))) {
             if (view.getParent() != null) {

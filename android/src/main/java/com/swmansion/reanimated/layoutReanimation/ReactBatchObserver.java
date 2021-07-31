@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.layoutReanimation;
 
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -135,12 +136,14 @@ public class ReactBatchObserver {
             deactivate = true;
             for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
                 mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue()); // TODO check for each od them if they are detached in the sense of Screens
+                alreadySeen.remove(entry.getValue().view.getId());
             }
         });
 
     }
 
     private void addViewListener(View view) {
+        Log.d("reanimated", "dodaje" + view.getId());
         alreadySeen.add(view.getId());
         parents.put(view.getId(), (ViewGroup) view.getParent());
         mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view, mNativeViewHierarchyManager));
@@ -178,7 +181,11 @@ public class ReactBatchObserver {
     }
 
     public void willLayout() {
-      ReactShadowNode rootShadowNode = mUIImplementation.resolveShadowNode(1);
+      ReactShadowNode rootShadowNode = null;
+      for (int i = 1; i < 1001; i += 10) { // after full reload root tag increases by 10
+          rootShadowNode = mUIImplementation.resolveShadowNode(i);
+          if (rootShadowNode != null) break;
+      }
       findAffected(rootShadowNode);
     }
 
@@ -228,7 +235,7 @@ public class ReactBatchObserver {
     class FakeLastRootShadowNode extends LayoutShadowNode {
         FakeLastRootShadowNode() {
             super();
-            this.setReactTag(51); // % 10 == 1
+            this.setReactTag(50001); // % 10 == 1
         }
 
         @Override

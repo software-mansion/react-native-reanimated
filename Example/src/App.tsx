@@ -1,5 +1,5 @@
-import React from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { FlatList, StyleSheet, Text, View, LogBox, Button } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import {
   createStackNavigator,
@@ -35,10 +35,31 @@ import LiquidSwipe from './LiquidSwipe';
 import ScrollExample from './AnimatedScrollExample';
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
+import Animated, { FadeOut, FadeIn } from 'react-native-reanimated';
+import { findNodeHandle } from 'react-native';
+
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
+function Counter() {
+  const [ctr, setState] = useState(0);
+  const ref = useRef(null);
+  useEffect(() => {
+    console.log("tag ", findNodeHandle(ref.current)); 
+  },[]);
+  return (
+    <Animated.View ref={ref} entering={FadeIn.duration(3000)} >
+      <Text>{ctr}</Text>
+      <Button title="inc" onPress={() => { setState((i) => i+1) }}/>
+    </Animated.View>
+  );
+}
+
 const SCREENS: Screens = {
-  DefaultAnimations: {
+  SuperScreen: {
+    screen: Counter,
+    title: 'counter',
+  }
+  /*DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
   },
@@ -125,7 +146,7 @@ const SCREENS: Screens = {
   ScrollExample: {
     screen: ScrollExample,
     title: 'Scroll Example',
-  },
+  },*/
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };
