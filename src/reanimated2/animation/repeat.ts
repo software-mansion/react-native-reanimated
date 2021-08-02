@@ -102,7 +102,9 @@ export function withRepeat(
   });
 }
 
-/* Deprecated section, kept for backward compatibility. Will be removed soon */
+/**
+ * @deprecated Kept for backward compatibility. Will be removed soon.
+ */
 export function repeat(
   _nextAnimation: NextAnimation<RepeatAnimation>,
   numberOfReps = 2,

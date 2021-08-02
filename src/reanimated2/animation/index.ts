@@ -1,9 +1,17 @@
-export * from './commonTypes';
-export * from './util';
-export * from './timing';
-export * from './spring';
-export * from './decay';
-export * from './delay';
-export * from './repeat';
-export * from './sequence';
-export * from './styleAnimation';
+export {
+  AnimationObject,
+  Animation,
+  HigherOrderAnimation,
+  AnimationCallback,
+  NextAnimation,
+  SharedValue,
+  Timestamp,
+} from './commonTypes';
+export { cancelAnimation, defineAnimation } from './util';
+export { withTiming } from './timing';
+export { withSpring } from './spring';
+export { withDecay } from './decay';
+export { withDelay } from './delay';
+export { withRepeat } from './repeat';
+export { withSequence } from './sequence';
+export { withStyleAnimation } from './styleAnimation';

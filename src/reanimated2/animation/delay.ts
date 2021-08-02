@@ -84,7 +84,9 @@ export function withDelay(
   });
 }
 
-/* Deprecated section, kept for backward compatibility. Will be removed soon */
+/**
+ * @deprecated Kept for backward compatibility. Will be removed soon.
+ */
 export function delay(
   delayMs: number,
   _nextAnimation: NextAnimation<DelayAnimation>

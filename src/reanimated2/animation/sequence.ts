@@ -96,7 +96,9 @@ export function withSequence(
   );
 }
 
-/* Deprecated section, kept for backward compatibility. Will be removed soon */
+/**
+ * @deprecated Kept for backward compatibility. Will be removed soon.
+ */
 export function sequence(
   ..._animations: NextAnimation<SequenceAnimation>[]
 ): Animation<SequenceAnimation> {

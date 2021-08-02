@@ -27,7 +27,7 @@ export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
   return result;
 }
 
-export function transform(
+function transform(
   value: PrimitiveValue,
   handler: AnimationObject
 ): PrimitiveValue | undefined {
@@ -58,7 +58,7 @@ export function transform(
   return handler.__prefix + value + handler.__suffix;
 }
 
-export function transformAnimation(animation: AnimationObject): void {
+function transformAnimation(animation: AnimationObject): void {
   'worklet';
   if (!animation) {
     return;
@@ -71,9 +71,9 @@ export function transformAnimation(animation: AnimationObject): void {
   animation.startValue = transform(animation.startValue, animation);
 }
 
-export function decorateAnimation<
-  T extends AnimationObject | StyleLayoutAnimation
->(animation: T): void {
+function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
+  animation: T
+): void {
   'worklet';
   if ((animation as HigherOrderAnimation).isHigherOrder) {
     return;
@@ -182,7 +182,7 @@ export function decorateAnimation<
   };
 }
 
-type ConditionalyStarting<
+type AniamtionToDecoration<
   T extends AnimationObject | StyleLayoutAnimation
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
@@ -196,7 +196,7 @@ type ConditionalyStarting<
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
->(starting: ConditionalyStarting<T>, factory: () => T): T {
+>(starting: AniamtionToDecoration<T>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting as T;

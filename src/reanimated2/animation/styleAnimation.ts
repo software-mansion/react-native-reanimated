@@ -85,6 +85,15 @@ export function withStyleAnimation(
           const transform = styleAnimations.transform as Array<AnimatedStyle>;
           const prevTransform = null;
           const valueTransform = value.transform as Array<AnimatedStyle>;
+          let prevAnimation;
+          if (
+            previousAnimation &&
+            previousAnimation.styleAnimations &&
+            previousAnimation.styleAnimations.transform
+          ) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            prevAnimation = previousAnimation.styleAnimations.transform;
+          }
           for (let i = 0; i < transform.length; i++) {
             // duplication of code to avoid function calls
             let prevAnimation: AnimationObject | null = null;

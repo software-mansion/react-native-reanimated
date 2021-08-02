@@ -2,6 +2,7 @@ import { defineAnimation } from './util';
 import {
   Animation,
   AnimationCallback,
+  AnimationObject,
   PrimitiveValue,
   Timestamp,
 } from './commonTypes';
@@ -23,7 +24,9 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   current: PrimitiveValue;
 }
 
-export interface InnerDecayAnimation extends Omit<DecayAnimation, 'current'> {
+export interface InnerDecayAnimation
+  extends Omit<DecayAnimation, 'current'>,
+    AnimationObject {
   current: number;
 }
 
@@ -81,28 +84,24 @@ export function withDecay(
         }
       }
 
-      if (Math.abs(v) < VELOCITY_EPS) {
-        return true;
-      }
-      return false;
+      return Math.abs(v) < VELOCITY_EPS;
     }
 
     function validateConfig(): void {
       if (config.clamp) {
-        if (Array.isArray(config.clamp)) {
-          if (config.clamp.length !== 2) {
-            console.error(
-              `clamp array must contain 2 items but is given ${config.clamp.length}`
-            );
-          }
-        } else {
-          console.error(
+        if (!Array.isArray(config.clamp)) {
+          throw Error(
             `config.clamp must be an array but is ${typeof config.clamp}`
+          );
+        }
+        if (config.clamp.length !== 2) {
+          throw Error(
+            `clamp array must contain 2 items but is given ${config.clamp.length}`
           );
         }
       }
       if (config.velocityFactor <= 0) {
-        console.error(
+        throw Error(
           `config.velocityFactor must be greather then 0 but is ${config.velocityFactor}`
         );
       }
@@ -124,7 +123,7 @@ export function withDecay(
       onFrame: decay,
       onStart,
       callback,
-      velocity: config.velocity || 0,
+      velocity: config.velocity ?? 0,
       initialVelocity: 0,
       current: 0,
       lastTimestamp: 0,

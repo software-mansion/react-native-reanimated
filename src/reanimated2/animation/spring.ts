@@ -1,5 +1,10 @@
 import { defineAnimation } from './util';
-import { Animation, AnimationCallback, PrimitiveValue, Timestamp } from './commonTypes';
+import {
+  Animation,
+  AnimationCallback,
+  PrimitiveValue,
+  Timestamp,
+} from './commonTypes';
 
 interface SpringConfig {
   [key: string]: any;
@@ -9,16 +14,18 @@ interface SpringConfig {
   restDisplacementThreshold?: number;
   restSpeedThreshold?: number;
   velocity?: number;
+  damping?: number;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
-  current: PrimitiveValue,
-  toValue: PrimitiveValue, 
-  velocity: number
-  lastTimestamp: Timestamp,
+  current: PrimitiveValue;
+  toValue: PrimitiveValue;
+  velocity: number;
+  lastTimestamp: Timestamp;
 }
 
-export interface InnerSpringAnimation extends Omit<SpringAnimation, 'toValue'|'current'> {
+export interface InnerSpringAnimation
+  extends Omit<SpringAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
 }
@@ -149,7 +156,7 @@ export function withSpring(
       velocity: config.velocity || 0,
       current: toValue,
       callback,
-      lastTimestamp: 0
+      lastTimestamp: 0,
     } as SpringAnimation;
   });
 }
