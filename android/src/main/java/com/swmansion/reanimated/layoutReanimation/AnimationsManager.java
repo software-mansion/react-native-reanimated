@@ -78,7 +78,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         String type = "entering";
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
-        ViewTraverser.attach(view, parent, startValues);
+        ViewHierarchyProxy.attach(view, parent, startValues);
 
         if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
             return;

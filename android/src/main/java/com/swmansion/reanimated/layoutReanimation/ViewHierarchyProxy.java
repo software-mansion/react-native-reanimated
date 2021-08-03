@@ -9,7 +9,7 @@ import com.swmansion.rnscreens.ScreenContainer;
 
 import java.util.HashMap;
 
-public class ViewTraverser {
+public class ViewHierarchyProxy {
     static View getParent(View view) {
        /* if (view instanceof Screen) {
             Screen screen = (Screen) view;

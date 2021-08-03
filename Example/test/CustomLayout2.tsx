@@ -57,12 +57,12 @@ export default function CustomLayoutAnimationScreen2(): React.ReactElement {
   return (
     <View style={{ marginTop: 30 }}>
       <View style={{ height: 300, borderWidth: 1 }}>
-        <AnimatedLayout
+        <View
           style={{ flex: 1, flexDirection: state ? 'row' : 'column', borderWidth: 1 }}>
           <Box key="a" label="A" state={state} />
           <Box key="b" label="B" state={state} />
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
 
       <Button

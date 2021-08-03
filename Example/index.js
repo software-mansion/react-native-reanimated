@@ -1,8 +1,8 @@
 import { AppRegistry, Platform } from 'react-native';
 import { name as appName } from './app.json';
-import App from './src/App';
+import TestApp from './test/TestApp';
 
-AppRegistry.registerComponent(appName, () => App);
+AppRegistry.registerComponent(appName, () => TestApp);
 
 // TODO(Bacon): When `expo` has removed Updates, replace this with using the `expo` entry for better error handling
 if (Platform.OS === 'web') {
