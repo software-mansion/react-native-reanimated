@@ -52,7 +52,7 @@ jni::local_ref<JNIHelper::PropsMap> JNIHelper::ConvertToPropsMap(jsi::Runtime &r
       }
       else
       {
-        map->put(key, ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
+        map->put(key, WritableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, value)));
       }
     }
   }
