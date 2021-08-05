@@ -6,6 +6,7 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
 #import <RNReanimated/REAEventDispatcher.h>
+#import "REAUIManager.h"
 
 #if RNVERSION >= 64
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
@@ -34,10 +35,17 @@ typedef JSCExecutorFactory ExecutorFactory;
 @implementation UIResponder (Reanimated)
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
+  [bridge moduleForClass:[RCTUIManager class]];
+  REAUIManager* reaUiManager = [REAUIManager new];
+  [reaUiManager setBridge:bridge];
+  RCTUIManager* uiManager = reaUiManager;
+  [bridge updateModuleWithInstance:uiManager];
+  
   [bridge moduleForClass:[RCTEventDispatcher class]];
   RCTEventDispatcher *eventDispatcher = [REAEventDispatcher new];
   [eventDispatcher setBridge:bridge];
   [bridge updateModuleWithInstance:eventDispatcher];
+    
    _bridge_reanimated = bridge;
   __weak __typeof(self) weakSelf = self;
 
