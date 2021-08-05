@@ -1,8 +1,9 @@
+import { convertToHSVA, isColor, toRGBA } from './Colors';
+
 /* global _WORKLET */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Easing } from './Easing';
-import { isColor, convertToHSVA, toRGBA } from './Colors';
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 
@@ -243,6 +244,39 @@ export function withTiming(toValue: any, userConfig: any, callback?: any) {
   });
 }
 
+// resolves path to value for nested objects
+function resolvePath(obj, path) {
+  'worklet';
+  const keys = Array.isArray(path) ? path : [path];
+  return keys.reduce((previous, current) => {
+    if (previous) {
+      return previous[current];
+    }
+    return undefined;
+  }, obj);
+}
+
+// set value at given path
+function setPath(obj, path, value) {
+  'worklet';
+  const keys = Array.isArray(path) ? path : [path];
+  let currObj = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    // creates entry if there isn't one
+    if (!currObj[keys[i]]) {
+      // if next key is number creates array
+      if (typeof keys[i + 1] === 'number') {
+        currObj[keys[i]] = [];
+      } else {
+        currObj[keys[i]] = {};
+      }
+    }
+    currObj = currObj[keys[i]];
+  }
+
+  currObj[keys[keys.length - 1]] = value;
+}
+
 export function withStyleAnimation(styleAnimations) {
   'worklet';
   return defineAnimation({}, () => {
@@ -250,127 +284,70 @@ export function withStyleAnimation(styleAnimations) {
 
     const onFrame = (animation, now) => {
       let stillGoing = false;
-      Object.keys(styleAnimations).forEach((key) => {
-        const currentAnimation = animation.styleAnimations[key];
-        if (key === 'transform') {
-          const transform = animation.styleAnimations.transform;
-          for (let i = 0; i < transform.length; i++) {
-            const type = Object.keys(transform[i])[0];
-            const currentAnimation = transform[i][type];
-            if (currentAnimation.finished) {
-              continue;
-            }
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
-            }
-            animation.current.transform[i][type] = currentAnimation.current;
+      const onFrameRecursive = (currentStyleAnimation, currentPath): void => {
+        if (currentStyleAnimation.onFrame !== undefined) {
+          if (currentStyleAnimation.finished) {
+            return;
           }
-        } else {
-          if (!currentAnimation.finished) {
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
+          const finished = currentStyleAnimation.onFrame(
+            currentStyleAnimation,
+            now
+          );
+          if (finished) {
+            currentStyleAnimation.finished = true;
+            if (currentStyleAnimation.callback) {
+              currentStyleAnimation.callback(true);
             }
-            animation.current[key] = currentAnimation.current;
+          } else {
+            stillGoing = true;
           }
+          setPath(
+            animation.current,
+            currentPath,
+            currentStyleAnimation.current
+          );
+        } else if (typeof styleAnimations === 'object') {
+          // nested object
+          Object.keys(currentStyleAnimation).forEach((key) => {
+            onFrameRecursive(currentStyleAnimation[key], [...currentPath, key]);
+          });
+        } else if (Array.isArray(currentStyleAnimation)) {
+          currentStyleAnimation.forEach((element, index) =>
+            onFrameRecursive(element, [...currentPath, index])
+          );
         }
-      });
+      };
+      onFrameRecursive(animation.styleAnimations, []);
       return !stillGoing;
     };
 
     const onStart = (animation, value, now, previousAnimation) => {
-      Object.keys(styleAnimations).forEach((key) => {
-        if (key === 'transform') {
-          animation.current.transform = [];
-          const transform = styleAnimations.transform;
-          const prevTransform = null;
-          const valueTransform = value.transform;
-          let prevAnimation;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations.transform
-          ) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            prevAnimation = previousAnimation.styleAnimations.transform;
-          }
-
-          for (let i = 0; i < transform.length; i++) {
-            // duplication of code to avoid function calls
-            let prevAnimation = null;
-            const type = Object.keys(transform[i])[0];
-            if (prevTransform && prevTransform.length > i) {
-              const prevTransformStep = prevTransform[i];
-              const prevType = Object.keys(prevTransformStep)[0];
-              if (prevType === type) {
-                prevAnimation = prevTransformStep[prevType];
-              }
-            }
-
-            let prevVal = 0;
-            if (prevAnimation != null) {
-              prevVal = prevAnimation.current;
-            }
-            if (
-              valueTransform != null &&
-              valueTransform.length > i &&
-              valueTransform[i][type]
-            ) {
-              prevVal = valueTransform[i][type];
-            }
-            const obj = {};
-            obj[type] = prevVal;
-            animation.current.transform[i] = obj;
-            let currentAnimation = transform[i][type];
-            if (
-              typeof currentAnimation !== 'object' &&
-              !Array.isArray(currentAnimation)
-            ) {
-              currentAnimation = withTiming(currentAnimation, { duration: 0 });
-              transform[i][type] = currentAnimation;
-            }
-            currentAnimation.onStart(
-              currentAnimation,
-              prevVal,
-              now,
-              prevAnimation
-            );
-          }
+      const onStartRecursive = (currentStyleAnimation, currentPath) => {
+        if (Array.isArray(currentStyleAnimation)) {
+          currentStyleAnimation.forEach((element, index) =>
+            onStartRecursive(element, [...currentPath, index])
+          );
+        } else if (
+          typeof currentStyleAnimation === 'object' &&
+          currentStyleAnimation.onStart === undefined
+        ) {
+          Object.keys(currentStyleAnimation).forEach((key) =>
+            onStartRecursive(currentStyleAnimation[key], [...currentPath, key])
+          );
         } else {
-          let prevAnimation = null;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations[key]
-          ) {
-            prevAnimation = previousAnimation.styleAnimations[key];
-          }
-          let prevVal = 0;
-          if (prevAnimation != null) {
+          const prevAnimation = resolvePath(
+            previousAnimation?.styleAnimations,
+            currentPath
+          );
+          let prevVal = resolvePath(value, currentPath);
+          if (prevAnimation && !prevVal) {
             prevVal = prevAnimation.current;
           }
-          if (value[key]) {
-            prevVal = value[key];
-          }
-          animation.current[key] = prevVal;
-          let currentAnimation = animation.styleAnimations[key];
-          if (
-            typeof currentAnimation !== 'object' &&
-            !Array.isArray(currentAnimation)
-          ) {
+          setPath(animation.current, currentPath, prevVal);
+          let currentAnimation = currentStyleAnimation;
+          if (!currentAnimation.onStart) {
             currentAnimation = withTiming(currentAnimation, { duration: 0 });
-            animation.styleAnimations[key] = currentAnimation;
+            setPath(animation.styleAnimations, currentPath, currentAnimation);
           }
           currentAnimation.onStart(
             currentAnimation,
@@ -379,7 +356,8 @@ export function withStyleAnimation(styleAnimations) {
             prevAnimation
           );
         }
-      });
+      };
+      onStartRecursive(styleAnimations, []);
     };
 
     const callback = (finished) => {
