@@ -226,7 +226,7 @@
 - (void) onViewRemoval: (UIView*) view parent:(NSObject*) parent before:(REASnapshot*) before
 {
   NSNumber* tag = view.reactTag;
-  NSMutableDictionary<NSString*, NSObject*>* startValues = [before toMap];
+  NSMutableDictionary<NSString*, NSObject*>* startValues = before.values;
   ViewState state = [_states[tag] intValue];
   if(state == Disappearing || state == ToRemove) {
     return;
@@ -253,7 +253,7 @@
     _viewManager[tag] = view;
     _parentViewManager[tag] = parent;
   }
-  NSMutableDictionary* targetValues = [after toMap];
+  NSMutableDictionary* targetValues = after.values;
   ViewState state = [_states[tag] intValue];
   if(state == Inactive) {
     if(targetValues != nil) {
@@ -267,8 +267,8 @@
 - (void) onViewUpdate: (UIView*) view before:(REASnapshot*) before after:(REASnapshot*) after
 {
   NSNumber* tag = view.reactTag;
-  NSMutableDictionary* targetValues = [after toMap];
-  NSMutableDictionary* startValues = [before toMap];
+  NSMutableDictionary* targetValues = after.values;
+  NSMutableDictionary* startValues = before.values;
   ViewState state = [_states[tag] intValue];
   if(state == Disappearing || state == ToRemove || state == Inactive) {
     return;
