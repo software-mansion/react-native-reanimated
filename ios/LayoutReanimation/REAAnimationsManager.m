@@ -19,9 +19,7 @@
   RCTUIManager* _uiManager;
   NSMutableDictionary<NSNumber*, NSNumber *>* _states;
   NSMutableDictionary<NSNumber*, UIView *>* _viewForTag;
-  NSMutableDictionary<NSNumber*, NSNumber *>* _animatedLayout;
   NSMutableSet<NSNumber*>* _toRemove;
-  NSMutableDictionary<NSNumber*, UIView *>* _animatedLayoutHangingPoint;
   NSMutableDictionary<NSNumber*, UIView *>* _viewManager;
   NSMutableDictionary<NSNumber*, UIView *>* _parentViewManager;
   BOOL _cleaningScheduled;
@@ -43,9 +41,7 @@
     _uiManager = uiManager;
     _states = [NSMutableDictionary new];
     _viewForTag = [NSMutableDictionary new];
-    _animatedLayout = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
-    _animatedLayoutHangingPoint = [NSMutableDictionary new];
     _viewManager = [NSMutableDictionary new];
     _parentViewManager = [NSMutableDictionary new];
     _cleaningScheduled = false;
@@ -59,10 +55,8 @@
   _removeConfigForTag = nil;
   _uiManager = nil;
   _states = nil;
-  _animatedLayout = nil;
   _viewForTag = nil;
   _toRemove = nil;
-  _animatedLayoutHangingPoint = nil;
   _viewManager = nil;
   _parentViewManager = nil;
   _cleaningScheduled = false;
