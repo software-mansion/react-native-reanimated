@@ -1,23 +1,23 @@
-/* global _frameTimestamp */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { useEffect, useRef, useCallback } from 'react';
-import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
-
-import WorkletEventHandler from './WorkletEventHandler';
+import { cancelAnimation, initialUpdaterRun } from './animations';
 import {
-  startMapper,
-  stopMapper,
+  getTimestamp,
   makeMutable,
   makeRemote,
   requestFrame,
-  getTimestamp,
+  startMapper,
+  stopMapper,
 } from './core';
-import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
-import { initialUpdaterRun, cancelAnimation } from './animations';
-import { getTag } from './NativeMethods';
-import NativeReanimated from './NativeReanimated';
+import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
 import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
+import updateProps, { colorProps, updatePropsJestWrapper } from './UpdateProps';
+/* global _frameTimestamp */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { useCallback, useEffect, useRef } from 'react';
+
+import NativeReanimated from './NativeReanimated';
+import WorkletEventHandler from './WorkletEventHandler';
+import { getTag } from './NativeMethods';
 import { processColor } from './Colors';
 
 export function useSharedValue(init) {
@@ -163,17 +163,14 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 function isAnimated(prop) {
   'worklet';
   if (Array.isArray(prop)) {
-    for (let i = 0; i < prop.length; ++i) {
-      const item = prop[i];
-      for (const key in item) {
-        if (item[key].onFrame !== undefined) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return prop.some((item) => isAnimated(item));
+  } else if (prop?.onFrame !== undefined) {
+    return true;
+  } else if (typeof prop === 'object') {
+    return Object.values(prop).some((value) => isAnimated(value));
   }
-  return prop?.onFrame !== undefined;
+  // otherwise it is not animated prop
+  return false;
 }
 
 function styleDiff(oldStyle, newStyle) {
@@ -302,7 +299,7 @@ function styleUpdater(
       }
     }
     state.last = Object.assign({}, oldValues, newValues);
-    const style = getStyleWithoutAnimations(oldValues, newValues);
+    const style = getStyleWithoutAnimations(state.last);
     if (style) {
       updateProps(viewDescriptors, style, maybeViewRef);
     }
@@ -444,6 +441,30 @@ const canApplyOptimalisation = (upadterFn) => {
   );
 };
 
+// check for invalid usage of shared values in returned object
+function checkSharedValueUsage(prop, currentKey): void {
+  // if shared value is passed insted of its value, throw an error
+  if (
+    currentKey !== undefined &&
+    typeof prop === 'object' &&
+    prop.value !== undefined
+  ) {
+    throw new Error(
+      `invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    );
+  } else if (prop === 'object') {
+    // it it's a nested object, run validation for all its props
+    Object.keys(prop).forEach((key) => {
+      checkSharedValueUsage(prop[key], key);
+    });
+  } else if (Array.isArray(prop)) {
+    // if it's an array (transform) validate all its elements
+    prop.forEach((element) => {
+      checkSharedValueUsage(element, currentKey);
+    });
+  }
+}
+
 export function useAnimatedStyle(updater, dependencies, adapters) {
   const initRef = useRef(null);
   const viewsRef = makeViewsRefSet();
@@ -567,41 +588,7 @@ export function useAnimatedStyle(updater, dependencies, adapters) {
     };
   }, []);
 
-  // check for invalid usage of shared values in returned object
-  let wrongKey;
-  const isObjectValid = (element, key) => {
-    const result = typeof element === 'object' && element.value !== undefined;
-    if (result) {
-      wrongKey = key;
-    }
-    return !result;
-  };
-  const isError = Object.keys(initial.value).some((key) => {
-    const element = initial.value[key];
-    let result = false;
-    // a case for transform that has a format of an array of objects
-    if (Array.isArray(element)) {
-      for (const elementArrayItem of element) {
-        // this means unhandled format and it doesn't match the transform format
-        if (typeof elementArrayItem !== 'object') {
-          break;
-        }
-        const objectValue = Object.values(elementArrayItem)[0];
-        result = isObjectValid(objectValue, key);
-        if (!result) {
-          break;
-        }
-      }
-    } else {
-      result = isObjectValid(element, key);
-    }
-    return !result;
-  });
-  if (isError && wrongKey !== undefined) {
-    throw new Error(
-      `invalid value passed to \`${wrongKey}\`, maybe you forgot to use \`.value\`?`
-    );
-  }
+  checkSharedValueUsage(initial.value, undefined);
 
   if (process.env.JEST_WORKER_ID) {
     return { viewDescriptors, initial, viewsRef, animatedStyle };
