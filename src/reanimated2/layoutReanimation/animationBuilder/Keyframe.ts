@@ -204,6 +204,8 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       */
       const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
+        // in case if property was only passed as initial value
+        if (keyframePoints.length === 0) return;
         const animation = delayFunction(
           delay,
           keyframePoints.length === 1

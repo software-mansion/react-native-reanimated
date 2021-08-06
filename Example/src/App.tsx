@@ -34,6 +34,7 @@ import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import ScrollExample from './AnimatedScrollExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
@@ -46,6 +47,10 @@ const SCREENS: Screens = {
   KeyframeAnimation: {
     screen: KeyframeAnimation,
     title: '🆕 Keyframe animation',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation'
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
