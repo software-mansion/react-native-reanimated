@@ -121,16 +121,16 @@
       // TODO use weak self
         void (^block)(REAAnimationRootView*, NSNumber *) = ^void(REAAnimationRootView* view, NSNumber *tag) {
           NSSet* capturableProps = view.capturablePropeties;
-          REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
+//          REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
           
           if (view.shouldBeAnimated) {
             //TODO
           }
           
-          [REAViewTraverser traverse:view withBlock:^(UIView* view) {
-            [snapshooter takeSnapshot: view];
-          }];
-          snapshooterDict[tag] = snapshooter;
+//          [REAViewTraverser traverse:view withBlock:^(UIView* view) { // TODO
+//            [snapshooter takeSnapshot: view];
+//          }];
+//          snapshooterDict[tag] = snapshooter;
         };
       
         goThroughAffectedWithBlock(viewRegistry, block);
@@ -141,11 +141,11 @@
       // TODO use weak self
         void (^block)(REAAnimationRootView*, NSNumber *) = ^void(REAAnimationRootView* view, NSNumber *tag) {
           NSSet* capturableProps = view.capturablePropeties;
-          REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
+//          REASnapshooter* snapshooter = [[REASnapshooter alloc] initWithTag:tag capturableProps:capturableProps];
           if (view) {
-            [REAViewTraverser traverse:view withBlock:^(UIView* view) {
-              [snapshooter takeSnapshot: view];
-            }];
+//            [REAViewTraverser traverse:view withBlock:^(UIView* view) { // TODO
+//              [snapshooter takeSnapshot: view];
+//            }];
           }
           
 //          [_animationsManager notifyAboutChangeWithBeforeSnapshots:snapshooterDict[tag] afterSnapshooter:snapshooter]; // TODO

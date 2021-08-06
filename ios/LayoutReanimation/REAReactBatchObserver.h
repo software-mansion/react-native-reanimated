@@ -16,7 +16,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property NSMutableDictionary<NSString*, REASnapshot*>* snapshotsOfRemoved;
 @property BOOL deactivate;
 @property BOOL forceRemove;
-@property NSObject* mNativeViewHierarchyManager; // TODO NativeViewHierarchyManager
 
 - (void) invalidate;
 - (instancetype)initWithBridge:(RCTBridge*)bridge;
