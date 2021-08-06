@@ -361,29 +361,26 @@ export function withStyleAnimation(styleAnimations) {
     };
 
     const callback = (finished) => {
-      if (!finished) {
-        Object.keys(styleAnimations).forEach((key) => {
-          const currentAnimation = styleAnimations[key];
-          if (key === 'transform') {
-            const transform = styleAnimations.transform;
-            for (let i = 0; i < transform.length; i++) {
-              const type = Object.keys(transform[i])[0];
-              const currentAnimation = transform[i][type];
-              if (currentAnimation.finished) {
-                continue;
-              }
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
-            }
-          } else {
-            if (!currentAnimation.finished) {
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
-            }
+      const recursiveCallback = (currentStyleAnimation) => {
+        if (currentStyleAnimation.onFrame) {
+          if (
+            !currentStyleAnimation.finished &&
+            currentStyleAnimation.callback
+          ) {
+            currentStyleAnimation.callback(false);
           }
-        });
+        } else if (Array.isArray(currentStyleAnimation)) {
+          currentStyleAnimation.forEach((element) =>
+            recursiveCallback(element)
+          );
+        } else if (typeof currentStyleAnimation === 'object') {
+          Object.values(currentStyleAnimation).forEach((value) =>
+            recursiveCallback(value)
+          );
+        }
+      };
+      if (!finished) {
+        recursiveCallback(styleAnimations);
       }
     };
 
