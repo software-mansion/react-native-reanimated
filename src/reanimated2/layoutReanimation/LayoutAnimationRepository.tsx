@@ -1,7 +1,7 @@
 /* global _stopObservingProgress, _startObservingProgress */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import { Platform, requireNativeComponent } from 'react-native';
+import { Platform, requireNativeComponent, SliderComponent } from 'react-native';
 import React from 'react';
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animations';

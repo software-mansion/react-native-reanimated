@@ -5,9 +5,6 @@ import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/
 import Animated, { AnimatedLayout, SlideInLeft, SlideInDown, SlideOutDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 import { ModalNewAPI, Modal, Carousel, MountingUnmounting, SpringLayoutAnimation } from '../src/LayoutReanimation';
-import { MyStripeLib } from './JsPartOfMyStripeLib';
-
-MyStripeLib.init({key: "wekjfbwirbgiwrbgjwtnbowbnr"});
 
 enableScreens(true);
 const Stack = createStackNavigator();
