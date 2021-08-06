@@ -14,7 +14,7 @@ import {
   getTimestamp,
 } from './core';
 import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
-import { initialUpdaterRun, cancelAnimation } from './animations';
+import { initialUpdaterRun, cancelAnimation } from './animation';
 import { getTag } from './NativeMethods';
 import NativeReanimated from './NativeReanimated';
 import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
