@@ -5,11 +5,13 @@ import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.UIManager;
+import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.util.List;
 
+@ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
     public ReanimatedUIManager(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagerResolver, minTimeLeftInFrameForNonBatchedOperationMs);

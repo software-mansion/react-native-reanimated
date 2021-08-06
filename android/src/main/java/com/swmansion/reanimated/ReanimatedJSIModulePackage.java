@@ -14,6 +14,7 @@ public class ReanimatedJSIModulePackage implements JSIModulePackage {
 
   @Override
   public List<JSIModuleSpec> getJSIModules(ReactApplicationContext reactApplicationContext, JavaScriptContextHolder jsContext) {
+
     NodesManager nodesManager = reactApplicationContext.getNativeModule(ReanimatedModule.class).getNodesManager();
     nodesManager.initWithContext(reactApplicationContext);
     return Arrays.<JSIModuleSpec>asList();
