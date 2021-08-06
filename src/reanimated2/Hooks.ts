@@ -453,12 +453,12 @@ function checkSharedValueUsage(prop, currentKey): void {
       `invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   } else if (prop === 'object') {
-    // it it's a nested object, run validation for all its props
+    // if it's a nested object, run validation for all its props
     Object.keys(prop).forEach((key) => {
       checkSharedValueUsage(prop[key], key);
     });
   } else if (Array.isArray(prop)) {
-    // if it's an array (transform) validate all its elements
+    // if it's an array (i.ex. transform) validate all its elements
     prop.forEach((element) => {
       checkSharedValueUsage(element, currentKey);
     });

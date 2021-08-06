@@ -264,7 +264,7 @@ function setPath(obj, path, value) {
   for (let i = 0; i < keys.length - 1; i++) {
     // creates entry if there isn't one
     if (!currObj[keys[i]]) {
-      // if next key is number creates array
+      // if next key is a number create an array
       if (typeof keys[i + 1] === 'number') {
         currObj[keys[i]] = [];
       } else {
