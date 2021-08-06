@@ -8,13 +8,11 @@ import {
 } from './commonTypes';
 
 interface TimingConfig {
-  [key: string]: any
   duration?: number;
   easing?: EasingFn | EasingFactoryFn;
 }
 
-export interface TimingAnimation
-  extends Animation<TimingAnimation> {
+export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
   easing: EasingFn;
   startValue: PrimitiveValue;
@@ -24,7 +22,8 @@ export interface TimingAnimation
   current: PrimitiveValue;
 }
 
-export interface InnerTimingAnimation extends Omit<TimingAnimation, 'toValue'|'current'> {
+export interface InnerTimingAnimation
+  extends Omit<TimingAnimation, 'toValue' | 'current'> {
   toValue: number;
   current: number;
 }
@@ -43,7 +42,10 @@ export function withTiming(
       easing: Easing.inOut(Easing.quad),
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
     }
 
     function timing(animation: InnerTimingAnimation, now: Timestamp): boolean {
@@ -57,7 +59,8 @@ export function withTiming(
         return true;
       }
       const progress = animation.easing(runtime / config.duration);
-      animation.current = (startValue as number) + (toValue - (startValue as number)) * progress;
+      animation.current =
+        (startValue as number) + (toValue - (startValue as number)) * progress;
       return false;
     }
 

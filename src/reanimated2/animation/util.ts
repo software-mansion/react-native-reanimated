@@ -182,7 +182,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AniamtionToDecoration<
+type AnimationToDecoration<
   T extends AnimationObject | StyleLayoutAnimation
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
@@ -196,7 +196,7 @@ type AniamtionToDecoration<
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
->(starting: AniamtionToDecoration<T>, factory: () => T): T {
+>(starting: AnimationToDecoration<T>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
     return starting as T;

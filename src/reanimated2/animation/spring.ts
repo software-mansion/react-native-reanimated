@@ -7,7 +7,7 @@ import {
 } from './commonTypes';
 
 interface SpringConfig {
-  [key: string]: any;
+  // [key: string]: any;
   mass?: number;
   stiffness?: number;
   overshootClamping?: boolean;
@@ -53,7 +53,10 @@ export function withSpring(
       velocity: 0,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
     }
 
     function spring(animation: InnerSpringAnimation, now: Timestamp): boolean {

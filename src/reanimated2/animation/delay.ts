@@ -65,7 +65,7 @@ export function withDelay(
       animation.previousAnimation = previousAnimation;
     }
 
-    const callback = (finished: boolean): void => {
+    const callback = (finished?: boolean): void => {
       if (nextAnimation.callback) {
         nextAnimation.callback(finished);
       }
@@ -80,7 +80,7 @@ export function withDelay(
       previousAnimation: null,
       startTime: 0,
       started: false,
-    } as DelayAnimation;
+    };
   });
 }
 

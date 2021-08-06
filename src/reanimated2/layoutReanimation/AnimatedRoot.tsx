@@ -4,7 +4,7 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 
 // Register LayoutAnimationRepository
 
-runOnUI(() => {
+const init = runOnUI(() => {
   'worklet';
 
   const configs: Record<string, any> = {};
@@ -33,7 +33,7 @@ runOnUI(() => {
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(style.animations);
 
-      animation.callback = (finished: boolean) => {
+      animation.callback = (finished?: boolean) => {
         if (finished) {
           _stopObservingProgress(tag, finished);
         }
@@ -43,4 +43,6 @@ runOnUI(() => {
       _startObservingProgress(tag, sv);
     },
   };
-})();
+});
+
+export default init;

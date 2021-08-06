@@ -9,7 +9,6 @@ import {
 import { Platform } from 'react-native';
 
 interface DecayConfig {
-  [key: string]: any;
   deceleration?: number;
   velocityFactor?: number;
   clamp?: number[];
@@ -45,7 +44,10 @@ export function withDecay(
       velocity: 0,
     };
     if (userConfig) {
-      Object.keys(userConfig).forEach((key) => (config[key] = userConfig[key]));
+      Object.keys(userConfig).forEach(
+        (key) =>
+          ((config as any)[key] = userConfig[key as keyof typeof userConfig])
+      );
     }
 
     const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
