@@ -9,7 +9,7 @@ The `AnimatedLayout` component is responsible for observing changes in its subtr
 
 
 ## Example
-You can use `AnimatedLayout` as regural React component and his children can use by transitions and mounting/unmpunting animations.
+You can use `AnimatedLayout` as regular React component and his children can use by transitions and mounting/unmounting animations.
 
 ```js
     import { AnimatedLayout } from 'react-native-reanimated';

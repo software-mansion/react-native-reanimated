@@ -1,5 +1,5 @@
 import { Dimensions } from 'react-native';
-import { withSequence, withTiming } from '../../animations';
+import { withSequence, withTiming } from '../../animation';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import {
   EntryExitAnimationBuild,
