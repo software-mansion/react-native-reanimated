@@ -1,13 +1,12 @@
 import { Easing, EasingFn } from '../../Easing';
-import { withDelay, withSequence, withTiming } from '../../animations';
+import { withDelay, withSequence, withTiming } from '../../animation';
 import {
   AnimationFunction,
   EntryExitAnimationBuild,
   IEntryExitAnimationBuilder,
   KeyframeProps,
-  StyleProps,
-  TransformProperty,
 } from './commonTypes';
+import { TransformProperty, StyleProps } from '../../commonTypes';
 export interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -205,6 +204,8 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       */
       const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
+        // in case if property was only passed as initial value
+        if (keyframePoints.length === 0) return;
         const animation = delayFunction(
           delay,
           keyframePoints.length === 1

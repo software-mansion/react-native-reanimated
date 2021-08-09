@@ -1,4 +1,4 @@
-import { cancelAnimation, initialUpdaterRun } from './animations';
+import { cancelAnimation, initialUpdaterRun } from './animation';
 import {
   getTimestamp,
   makeMutable,
@@ -7,9 +7,8 @@ import {
   startMapper,
   stopMapper,
 } from './core';
-import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import updateProps, { updatePropsJestWrapper, colorProps } from './UpdateProps';
 import { makeViewDescriptorsSet, makeViewsRefSet } from './ViewDescriptorsSet';
-import updateProps, { colorProps, updatePropsJestWrapper } from './UpdateProps';
 /* global _frameTimestamp */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
@@ -19,6 +18,7 @@ import NativeReanimated from './NativeReanimated';
 import WorkletEventHandler from './WorkletEventHandler';
 import { getTag } from './NativeMethods';
 import { processColor } from './Colors';
+import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
 
 export function useSharedValue(init) {
   const ref = useRef(null);

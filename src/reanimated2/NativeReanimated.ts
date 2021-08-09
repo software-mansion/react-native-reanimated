@@ -67,4 +67,4 @@ if (nativeShouldBeMock()) {
   exportedModule = NativeReanimated;
 }
 
-export default exportedModule;
+export default exportedModule as any; // TODO: just temporary type
