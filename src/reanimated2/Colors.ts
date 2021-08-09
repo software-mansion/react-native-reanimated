@@ -634,9 +634,9 @@ export function processColor(color: unknown): number | null | undefined {
   return normalizedColor;
 }
 
-export function convertToHSVA(
-  color: unknown
-): [number, number, number, number] {
+export type ParsedColorArray = [number, number, number, number];
+
+export function convertToHSVA(color: unknown): ParsedColorArray {
   'worklet';
   const processedColor = processColorInitially(color)!; // argb;
   const a = (processedColor >>> 24) / 255;
@@ -647,7 +647,7 @@ export function convertToHSVA(
   return [h, s, v, a];
 }
 
-export function toRGBA(HSVA: [number, number, number, number]): string {
+export function toRGBA(HSVA: ParsedColorArray): string {
   'worklet';
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;

@@ -11,9 +11,8 @@ import {
   makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
-import { initialUpdaterRun } from '../animations';
+import { initialUpdaterRun } from '../animation';
 import NativeReanimated from '../NativeReanimated';
-import { Platform } from 'react-native';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -44,6 +43,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from '../ViewDescriptorsSet';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 function prepareAnimation(
   animatedProp: AnimationObject,
@@ -360,7 +360,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
   let animatedStyle: MutableRefObject<AnimatedStyle>;
-  if (process.env.JEST_WORKER_ID) {
+  if (isJest()) {
     animatedStyle = useRef<AnimatedStyle>({});
   }
 
@@ -407,7 +407,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       };
     }
 
-    if (canApplyOptimalisation(upadterFn) && Platform.OS !== 'web') {
+    if (canApplyOptimalisation(upadterFn) && !shouldBeUseWeb()) {
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
@@ -416,7 +416,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           return style;
         };
       }
-    } else if (Platform.OS !== 'web') {
+    } else if (!shouldBeUseWeb()) {
       optimalization = 0;
       upadterFn = () => {
         'worklet';
@@ -429,7 +429,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       upadterFn.__optimalization = optimalization;
     }
 
-    if (process.env.JEST_WORKER_ID) {
+    if (isJest()) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
@@ -485,8 +485,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     }
     return !result;
   };
-  const isError = Object.keys(initial).some((key) => {
-    const element = initial[key];
+  const isError = Object.keys(initial.value).some((key) => {
+    const element = initial.value[key];
     let result = false;
     // a case for transform that has a format of an array of objects
     if (Array.isArray(element)) {

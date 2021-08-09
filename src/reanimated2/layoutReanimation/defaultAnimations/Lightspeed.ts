@@ -1,5 +1,5 @@
 import { Dimensions } from 'react-native';
-import { withSequence, withTiming } from '../../animations';
+import { withSequence, withTiming } from '../../animation';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import {
   EntryExitAnimationBuild,
@@ -20,6 +20,7 @@ export class LightSpeedInRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -36,7 +37,7 @@ export class LightSpeedInRight
                 delay,
                 withSequence(
                   withTiming('10deg', { duration: duration }),
-                  withTiming('-5deg', { duraiton: duration / 5 }),
+                  withTiming('-5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -48,6 +49,7 @@ export class LightSpeedInRight
           opacity: 0,
           transform: [{ skewX: '-45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -65,6 +67,7 @@ export class LightSpeedInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -81,7 +84,7 @@ export class LightSpeedInLeft
                 delay,
                 withSequence(
                   withTiming('-10deg', { duration: duration }),
-                  withTiming('5deg', { duraiton: duration / 5 }),
+                  withTiming('5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -93,6 +96,7 @@ export class LightSpeedInLeft
           opacity: 0,
           transform: [{ skewX: '45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -109,6 +113,7 @@ export class LightSpeedOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -130,6 +135,7 @@ export class LightSpeedOutRight
           opacity: 1,
           transform: [{ skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -146,6 +152,7 @@ export class LightSpeedOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -167,6 +174,7 @@ export class LightSpeedOutLeft
           opacity: 1,
           transform: [{ skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };

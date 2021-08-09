@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { useRef } from 'react';
 import { makeMutable } from './core';
-import { SharedValue } from './hooks/commonTypes';
+import { SharedValue } from './hook/commonTypes';
 
 export interface ViewRefSet<T> {
   items: Set<T>;

@@ -1,6 +1,6 @@
 ---
 id: layout_animations
-title: Layout Aniamations
+title: Layout Animations
 sidebar_label: Layout Animations
 ---
 

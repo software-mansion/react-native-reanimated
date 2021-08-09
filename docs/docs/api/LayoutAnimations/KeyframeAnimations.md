@@ -127,6 +127,8 @@ How long the animation should last.
 default: 0
 Allows to start with a specified delay.
 
+### withCallback
+Allows to execute code when keyframe animation ends.
 ## Example
 
 ```js

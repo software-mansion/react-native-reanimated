@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { cancelAnimation } from '../animations';
+import { cancelAnimation } from '../animation';
 import { makeMutable } from '../core';
 import { SharedValue } from './commonTypes';
 

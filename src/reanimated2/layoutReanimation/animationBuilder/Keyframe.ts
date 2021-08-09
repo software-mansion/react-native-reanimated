@@ -1,13 +1,12 @@
 import { Easing, EasingFn } from '../../Easing';
-import { withDelay, withSequence, withTiming } from '../../animations';
+import { withDelay, withSequence, withTiming } from '../../animation';
 import {
   AnimationFunction,
   EntryExitAnimationBuild,
   IEntryExitAnimationBuilder,
   KeyframeProps,
-  StyleProps,
 } from './commonTypes';
-
+import { TransformProperty, StyleProps } from '../../commonTypes';
 export interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -20,6 +19,7 @@ export interface ParsedKeyframesDefinition {
 export class Keyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  callbackV?: (finished: boolean) => void;
   definitions: Record<string, KeyframeProps>;
 
   /*
@@ -72,15 +72,13 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     */
     Object.keys(initialValues).forEach((styleProp: string) => {
       if (styleProp === 'transform') {
-        initialValues[styleProp].forEach(
-          (transformStyle: Record<string, string | number>, index: number) => {
-            Object.keys(transformStyle).forEach((transformProp: string) => {
-              parsedKeyframes[
-                index.toString() + '_transform:' + transformProp
-              ] = [];
-            });
-          }
-        );
+        initialValues[styleProp]?.forEach((transformStyle, index) => {
+          Object.keys(transformStyle).forEach((transformProp: string) => {
+            parsedKeyframes[
+              index.toString() + '_transform:' + transformProp
+            ] = [];
+          });
+        });
       } else {
         parsedKeyframes[styleProp] = [];
       }
@@ -115,7 +113,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing: EasingFn;
+      easing?: EasingFn;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw Error(
@@ -147,11 +145,8 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           });
         Object.keys(keyframe).forEach((key: string) => {
           if (key === 'transform') {
-            keyframe[key].forEach(
-              (
-                transformStyle: Record<string, string | number>,
-                index: number
-              ) => {
+            keyframe[key]?.forEach(
+              (transformStyle: { [key: string]: any }, index) => {
                 Object.keys(transformStyle).forEach((transformProp: string) => {
                   addKeyPointWith(
                     index.toString() + '_transform:' + transformProp,
@@ -178,6 +173,11 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     return this;
   }
 
+  withCallback(callback: (finsihed: boolean) => void): Keyframe {
+    this.callbackV = callback;
+    return this;
+  }
+
   private getDelayFunction(): AnimationFunction {
     const delay = this.delayV;
     return delay
@@ -192,6 +192,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
     const delay = this.delayV;
     const delayFunction = this.getDelayFunction();
     const { keyframes, initialValues } = this.parseDefinitions();
+    const callback = this.callbackV;
 
     return (_targetValues) => {
       'worklet';
@@ -203,6 +204,8 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       */
       const addAnimation = (key: string) => {
         const keyframePoints = keyframes[key];
+        // in case if property was only passed as initial value
+        if (keyframePoints.length === 0) return;
         const animation = delayFunction(
           delay,
           keyframePoints.length === 1
@@ -228,7 +231,9 @@ export class Keyframe implements IEntryExitAnimationBuilder {
           if (!('transform' in animations)) {
             animations.transform = [];
           }
-          animations.transform.push({ [key.split(':')[1]]: animation });
+          animations.transform?.push(<TransformProperty>{
+            [key.split(':')[1]]: animation,
+          });
         } else {
           animations[key] = animation;
         }
@@ -251,6 +256,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       return {
         animations: animations,
         initialValues: initialValues,
+        callback: callback,
       };
     };
   };

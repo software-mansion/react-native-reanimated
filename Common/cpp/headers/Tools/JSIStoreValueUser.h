@@ -13,6 +13,8 @@ using namespace facebook;
 
 namespace reanimated {
 
+class RuntimeManager;
+
 struct StaticStoreUser {
     std::atomic<int> ctr;
     std::unordered_map<int, std::vector<std::shared_ptr<jsi::Value>>> store;
@@ -21,17 +23,15 @@ struct StaticStoreUser {
 
 class StoreUser {
   int identifier = 0;
-  static std::shared_ptr<StaticStoreUser> staticStoreUserData;
-  std::shared_ptr<StaticStoreUser> storeUserData;
   std::weak_ptr<Scheduler> scheduler;
+  std::shared_ptr<StaticStoreUser> storeUserData;
   
 public:
-  StoreUser(std::shared_ptr<Scheduler> s);
+  StoreUser(std::shared_ptr<Scheduler> s, RuntimeManager &runtimeManager);
   
   std::weak_ptr<jsi::Value> getWeakRef(jsi::Runtime &rt);
   void removeRefs();
   
-  static void clearStore();
   virtual ~StoreUser();
 };
 

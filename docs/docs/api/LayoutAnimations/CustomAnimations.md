@@ -20,9 +20,13 @@ function CustomExitingAnimation(startingValues) {
     const initialValues = {
         // initial values for animations
     };
+    const callback = (finished: boolean) => {
+        // optional callback that will fire when layout animation ends
+    };
     return {
       initialValues,
       animations,
+      callback,
     }
 }
 ```
@@ -76,9 +80,13 @@ function CustomEnteringAnimation(targetValues) {
     const initialValues = {
         // initial values for animations
     };
+    const callback = (finished: boolean) => {
+        // optional callback that will fire when layout animation ends
+    };
     return {
       initialValues,
       animations,
+      callback,
     }
 }
 ```
@@ -143,9 +151,13 @@ function CustomLayoutTransition(values) {
     const initialValues = {
         // initial values for animations
     };
+    const callback = (finished: boolean) => {
+        // optional callback that will fire when layout animation ends
+    };
     return {
       initialValues,
       animations,
+      callback,
     }
 }
 ```

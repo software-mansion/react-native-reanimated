@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { initialUpdaterRun } from '../animations';
+import { initialUpdaterRun } from '../animation';
 import { makeMutable, startMapper, stopMapper } from '../core';
 import {
   BasicWorkletFunction,

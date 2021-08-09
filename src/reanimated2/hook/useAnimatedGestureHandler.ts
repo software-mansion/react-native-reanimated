@@ -1,7 +1,7 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
 import { GestureHandlerStateChangeNativeEvent } from 'react-native-gesture-handler';
 import { makeRemote } from '../core';
+import { isWeb } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
 import {
   Context,
@@ -63,10 +63,11 @@ export function useAnimatedGestureHandler<
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
+  const useWeb = isWeb();
 
-  const handler = (e: T) => {
+  const handler = (event: T) => {
     'worklet';
-    const event = Platform.OS === 'web' ? e.nativeEvent : e;
+    event = useWeb ? event.nativeEvent : event;
 
     const FAILED = 1;
     const BEGAN = 2;
@@ -107,7 +108,7 @@ export function useAnimatedGestureHandler<
     }
   };
 
-  if (Platform.OS === 'web') {
+  if (isWeb()) {
     return handler;
   }
 
