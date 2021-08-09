@@ -162,7 +162,7 @@ function CustomLayoutTransition(values) {
 }
 ```
 
-* `values` - contains before and after information about the view's origin and dimations
+* `values` - contains before and after information about the view's origin and dimentions
     * `values.originX` - X coordinate of top left corner in parent's coordinate system (after)
     * `values.originY` - Y coordinate of top left corner in parent's coordinate system (after)
     * `values.width` - view's width (after)
