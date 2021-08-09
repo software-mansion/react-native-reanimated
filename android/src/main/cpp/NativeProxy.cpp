@@ -99,6 +99,10 @@ void NativeProxy::installJSIBindings()
     scrollTo(viewTag, x, y, animated);
   };
 
+  auto getSensorDataFunction = [this](int sensor) -> std::vector<std::pair<std::string, double>> {
+    return getSensorData(sensor);
+  };
+
 #if FOR_HERMES
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
@@ -130,6 +134,7 @@ void NativeProxy::installJSIBindings()
     scrollToFunction,
     measuringFunction,
     getCurrentTime,
+    getSensorDataFunction,
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
@@ -221,6 +226,42 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag)
   result.push_back({"height", elements[5]});
 
   return result;
+}
+
+std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(int sensor) {
+  auto method = javaPart_
+          ->getClass()
+          ->getMethod<local_ref<JArrayFloat>(int)>("getSensorData");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), sensor);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
+  result.push_back({"sensor", elements[0]});
+  return result;
+}
+
+int NativeProxy::registerSensor(
+  int sensorType,
+  const jsi::Object& sensorDataContainer,
+  //or lambda here
+  int interval
+) {
+  //TODO
+  auto method = javaPart_
+          ->getClass()
+          ->getMethod<local_ref<JArrayFloat>(int)>("registerSensor");
+//  local_ref<JInteger> output = method(javaPart_.get(), sensorType, sensorDataContainer, interval);
+//  size_t size = output->size();
+//  auto id = output->getRegion(0, size);
+//  return id;
+  return 1;
+}
+
+void NativeProxy::rejectSensor(int sensorId) {
+  auto method = javaPart_
+          ->getClass()
+          ->getMethod<void(int)>("rejectSensor");
+  method(javaPart_.get(), sensorId);
 }
 
 } // namespace reanimated

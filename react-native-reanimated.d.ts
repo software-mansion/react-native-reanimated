@@ -589,6 +589,8 @@ declare module 'react-native-reanimated' {
       animated: boolean
     ): void;
 
+    export function useAnimatedSensor();
+
     // gesture-handler
     type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
       event: T

@@ -85,6 +85,9 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                       platformDepMethodsHolder.scrollToFunction,
                                       platformDepMethodsHolder.measuringFunction,
                                       platformDepMethodsHolder.getCurrentTime,
+                                      platformDepMethodsHolder.getSensorData,
+                                      platformDepMethodsHolder.registerSensor,
+                                      platformDepMethodsHolder.rejectSensor,
                                       layoutAnimationsProxy);
    onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;

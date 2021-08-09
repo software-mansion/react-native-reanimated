@@ -18,3 +18,5 @@ declare namespace NodeJS {
     };
   }
 }
+declare const _registerSensor: (a: any, b: any, c: any) => number;
+declare const _rejectSensor: (sensorId: number) => void;

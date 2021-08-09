@@ -33,6 +33,9 @@ public:
                                 const ScrollToFunction scrollTo,
                                 const MeasuringFunction measure,
                                 const TimeProviderFunction getCurrentTime,
+                                const GetSensorDataFunction getSensorData,
+                                const RegisterSensorFunction registerSensor,
+                                const RejectSensorFunction rejectSensor,
                                 std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
   
   /**

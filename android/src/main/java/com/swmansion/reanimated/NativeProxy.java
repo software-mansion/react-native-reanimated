@@ -15,11 +15,16 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
+import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import android.hardware.SensorManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 
 public class NativeProxy {
 
@@ -74,6 +79,7 @@ public class NativeProxy {
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
+  private ReanimatedSensorContainer reanimatedSensorContainer;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
@@ -82,6 +88,7 @@ public class NativeProxy {
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
+    reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
   }
 
   private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, LayoutAnimations LayoutAnimations);
@@ -123,6 +130,48 @@ public class NativeProxy {
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);
+  }
+
+  static class SensorListener implements SensorEventListener {
+    public static float value;
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+      value = event.values[0];
+      System.out.println(event.values[0]);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+  }
+  SensorListener listener = new SensorListener();
+  boolean isInit = false;
+  SensorManager sensorManager;
+  Sensor sensor;
+
+  @DoNotStrip
+  private float[] getSensorData(int sensorType) {
+    //TODO
+    if(!isInit) {
+      sensorManager = (SensorManager)mContext.get().getSystemService(mContext.get().SENSOR_SERVICE);
+      sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+      sensorManager.registerListener(listener, sensor, 2 * 1000);
+    }
+    float[] result = new float [1];
+    result[0] = SensorListener.value;
+    return result;
+  }
+
+  @DoNotStrip
+  private int registerSensor() {
+    //TODO
+    return reanimatedSensorContainer.registerSensor(Sensor.TYPE_ACCELEROMETER);
+  }
+
+  @DoNotStrip
+  private void rejectSensor(int sensorId) {
+    reanimatedSensorContainer.rejectSensor(sensorId);
   }
 
   public void onCatalystInstanceDestroy() {

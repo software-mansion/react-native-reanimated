@@ -73,6 +73,9 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
                                          const ScrollToFunction scrollTo,
                                          const MeasuringFunction measure,
                                          const TimeProviderFunction getCurrentTime,
+                                         const GetSensorDataFunction getSensorData,
+                                         const RegisterSensorFunction registerSensor,
+                                         const RejectSensorFunction rejectSensor,
                                          std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
@@ -151,6 +154,52 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   };
   jsi::Value timeFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
   rt.global().setProperty(rt, "_getCurrentTime", timeFun);
+
+  auto clb_sensor = [getSensorData](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          const size_t count
+  ) -> jsi::Value {
+      int sensor = (int)args[0].asNumber();
+      auto result = getSensorData(sensor);
+      jsi::Object resultObject(rt);
+      for (auto &i:result) {
+          resultObject.setProperty(rt, i.first.c_str(), i.second);
+      }
+      return resultObject;
+  };
+  jsi::Value getSensorDataFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getSensorData"), 1, clb_sensor);
+  rt.global().setProperty(rt, "_getSensorData", getSensorDataFun);
+
+  auto clb_registerSensor = [registerSensor](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          const size_t count
+  ) -> jsi::Value {
+    //TODO
+//      registerSensor();
+    // sc::adapt inside lambda
+      int sensorType = (int)args[0].asNumber();
+      jsi::Value sensorDataContainer = args[1].asObject(rt);
+      int interval = (int)args[2].asNumber();
+      return jsi::Value::undefined();
+  };
+  jsi::Value registerSensorFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_registerSensor"), 1, clb_registerSensor);
+  rt.global().setProperty(rt, "_registerSensor", registerSensorFun);
+
+  auto clb_rejectSensor = [rejectSensor](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          const size_t count
+  ) -> jsi::Value {
+      rejectSensor((int)args[0].asNumber());
+      return jsi::Value::undefined();
+  };
+  jsi::Value rejectSensorFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_rejectSensor"), 1, clb_rejectSensor);
+  rt.global().setProperty(rt, "_rejectSensor", rejectSensorFun);
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
