@@ -11,7 +11,7 @@ import {
   makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
-import { initialUpdaterRun } from '../animation';
+import { AnimationObject, initialUpdaterRun } from '../animation';
 import NativeReanimated from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
@@ -27,13 +27,10 @@ import {
 import {
   AdapterWorkletFunction,
   AnimatedState,
-  AnimatedStyle,
-  AnimationObject,
   AnimationRef,
   BasicWorkletFunction,
   DependencyList,
   Descriptor,
-  PrimitiveValue,
   SharedValue,
   WorkletFunction,
 } from './commonTypes';
@@ -44,6 +41,8 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { PrimitiveValue } from '../animation/commonTypes';
+import { AnimatedStyle } from '../commonTypes';
 
 function prepareAnimation(
   animatedProp: AnimationObject,

@@ -4,7 +4,7 @@ import { useSharedValue } from './useSharedValue';
 
 interface RefObjectFunction<T> {
   current: T | null;
-  (component): number;
+  (component: T): number;
 }
 
 export function useAnimatedRef<T extends Component>(): RefObject<T> {

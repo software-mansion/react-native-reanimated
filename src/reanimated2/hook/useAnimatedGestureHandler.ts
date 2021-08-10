@@ -11,18 +11,18 @@ import {
 } from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 
-type Handler<T, TContext extends Context> = (
-  event: T,
-  context: TContext
-) => void;
+interface Handler<T, TContext extends Context> extends WorkletFunction {
+  (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
+}
 
 export interface GestureHandlers<T, TContext extends Context> {
+  [key: string]: Handler<T, TContext>;
   onStart?: Handler<T, TContext>;
   onActive?: Handler<T, TContext>;
   onEnd?: Handler<T, TContext>;
   onFail?: Handler<T, TContext>;
   onCancel?: Handler<T, TContext>;
-  onFinish?: (event: T, context: TContext, isCanceledOrFailed: boolean) => void;
+  onFinish?: Handler<T, TContext>;
 }
 
 export interface GestureHandlerEvent<T>
@@ -53,10 +53,7 @@ export function useAnimatedGestureHandler<
 
   const { context, savedDependencies } = initRef.current;
 
-  dependencies = buildDependencies(
-    dependencies,
-    <Record<string, WorkletFunction>>handlers
-  );
+  dependencies = buildDependencies(dependencies, handlers);
 
   const dependenciesDiffer = !areDependenciesEqual(
     dependencies,

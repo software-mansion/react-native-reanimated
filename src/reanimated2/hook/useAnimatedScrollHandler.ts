@@ -18,6 +18,7 @@ interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
 }
 interface ScrollHandlers<TContext extends Context> {
+  [key: string]: ScrollHandler<TContext>;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
   onEndDrag?: ScrollHandler<TContext>;
@@ -25,15 +26,13 @@ interface ScrollHandlers<TContext extends Context> {
   onMomentumEnd?: ScrollHandler<TContext>;
 }
 
-interface SingleScrollHandler<TContext extends Context>
-  extends ScrollHandlers<TContext> {
-  (event: NativeScrollEvent, context?: TContext): void;
-}
-
 export function useAnimatedScrollHandler<TContext extends Context>(
-  handlers: ScrollHandlers<TContext> | SingleScrollHandler<TContext>,
+  handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
 ): MutableRefObject<WorkletEventHandler> {
+  // case when handlers is a function
+  const scrollHandlers: ScrollHandlers<TContext> =
+    typeof handlers === 'function' ? { onScroll: handlers } : handlers;
   const initRef = useRef<ContextWithDependencies<TContext>>(null);
   if (initRef.current === null) {
     initRef.current = {
@@ -50,10 +49,7 @@ export function useAnimatedScrollHandler<TContext extends Context>(
 
   const { context, savedDependencies } = initRef.current;
 
-  dependencies = buildDependencies(
-    dependencies,
-    <Record<string, WorkletFunction>>handlers
-  );
+  dependencies = buildDependencies(dependencies, scrollHandlers);
 
   const dependenciesDiffer = !areDependenciesEqual(
     dependencies,
@@ -63,16 +59,16 @@ export function useAnimatedScrollHandler<TContext extends Context>(
 
   // build event subscription array
   const subscribeForEvents = ['onScroll'];
-  if (handlers.onBeginDrag !== undefined) {
+  if (scrollHandlers.onBeginDrag !== undefined) {
     subscribeForEvents.push('onScrollBeginDrag');
   }
-  if (handlers.onEndDrag !== undefined) {
+  if (scrollHandlers.onEndDrag !== undefined) {
     subscribeForEvents.push('onScrollEndDrag');
   }
-  if (handlers.onMomentumBegin !== undefined) {
+  if (scrollHandlers.onMomentumBegin !== undefined) {
     subscribeForEvents.push('onMomentumScrollBegin');
   }
-  if (handlers.onMomentumEnd !== undefined) {
+  if (scrollHandlers.onMomentumEnd !== undefined) {
     subscribeForEvents.push('onMomentumScrollEnd');
   }
 
@@ -85,13 +81,9 @@ export function useAnimatedScrollHandler<TContext extends Context>(
         onEndDrag,
         onMomentumBegin,
         onMomentumEnd,
-      } = handlers;
-      if (event.eventName.endsWith('onScroll')) {
-        if (onScroll) {
-          onScroll(event, context);
-        } else if (typeof handlers === 'function') {
-          handlers(event, context);
-        }
+      } = scrollHandlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        onScroll(event, context);
       } else if (onBeginDrag && event.eventName.endsWith('onScrollBeginDrag')) {
         onBeginDrag(event, context);
       } else if (onEndDrag && event.eventName.endsWith('onScrollEndDrag')) {

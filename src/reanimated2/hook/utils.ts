@@ -1,14 +1,9 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
+import { AnimatedStyle, StyleProps } from '../commonTypes';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import {
-  AnimatedStyle,
-  AnimationObject,
-  DependencyObject,
-  StyleProps,
-  WorkletFunction,
-} from './commonTypes';
+import { WorkletFunction } from './commonTypes';
 
 export function useEvent<T>(
   handler: (event: T) => void,
@@ -46,9 +41,9 @@ export function buildWorkletsHash(
 
 // builds dependencies array for gesture handlers
 export function buildDependencies(
-  dependencies: Array<string | DependencyObject>,
+  dependencies: Array<unknown>,
   handlers: Record<string, WorkletFunction>
-): Array<string | DependencyObject> {
+): Array<unknown> {
   if (!dependencies) {
     dependencies = Object.keys(handlers).map((handlerKey) => {
       const handler = handlers[handlerKey];
@@ -65,22 +60,20 @@ export function buildDependencies(
 
 // this is supposed to work as useEffect comparison
 export function areDependenciesEqual(
-  nextDeps: Array<string | DependencyObject>,
-  prevDeps: Array<string | DependencyObject>
+  nextDeps: Array<unknown>,
+  prevDeps: Array<unknown>
 ): boolean {
   function is(x: number, y: number) {
     /* eslint-disable no-self-compare */
     return (x === y && (x !== 0 || 1 / x === 1 / y)) || (x !== x && y !== y);
     /* eslint-enable no-self-compare */
   }
-  const objectIs: (
-    nextDeps: string | DependencyObject,
-    prevDeps: string | DependencyObject
-  ) => boolean = typeof Object.is === 'function' ? Object.is : is;
+  const objectIs: (nextDeps: unknown, prevDeps: unknown) => boolean =
+    typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(
-    nextDeps: Array<string | DependencyObject>,
-    prevDeps: Array<string | DependencyObject>
+    nextDeps: Array<unknown>,
+    prevDeps: Array<unknown>
   ): boolean {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
@@ -124,9 +117,7 @@ export function canApplyOptimalisation(upadterFn: WorkletFunction): number {
   );
 }
 
-export function isAnimated(
-  prop: AnimationObject | Array<Record<string, AnimationObject>>
-): boolean {
+export function isAnimated(prop: AnimatedStyle): boolean {
   'worklet';
   if (Array.isArray(prop)) {
     for (let i = 0; i < prop.length; ++i) {
