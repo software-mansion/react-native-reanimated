@@ -164,7 +164,7 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private int registerSensor() {
+  private int registerSensor(int sensorType, int interval) {
     //TODO
     return reanimatedSensorContainer.registerSensor(Sensor.TYPE_ACCELEROMETER);
   }

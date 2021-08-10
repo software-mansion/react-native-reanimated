@@ -21,6 +21,7 @@ class ShareableValue: public std::enable_shared_from_this<ShareableValue>, publi
 friend WorkletsCache;
 friend FrozenObject;
 friend LayoutAnimationsProxy;
+friend NativeReanimatedModule;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);

@@ -60,6 +60,11 @@ public:
 
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
+  RegisterSensorFunction registerSensorFunction;
+  RejectSensorFunction rejectSensorFunction;
+  
+  jsi::Value registerSensor(jsi::Runtime &rt, const jsi::Value &sensorType, const jsi::Value &interval, const jsi::Value &sensorDataContainer) override;
+  void rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;

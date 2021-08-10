@@ -56,6 +56,14 @@ if (nativeShouldBeMock()) {
     getViewProp(viewTag, propName, callback) {
       return InnerNativeModule.getViewProp(viewTag, propName, callback);
     },
+
+    registerSensor(sensorType: number, interval: number) {
+      return InnerNativeModule.registerSensor(sensorType, interval);
+    },
+
+    rejectSensor(sensorId: number) {
+      return InnerNativeModule.rejectSensor(sensorId);
+    },
   };
 
   if (NativeReanimated.useOnlyV1 && Platform.OS === 'android') {

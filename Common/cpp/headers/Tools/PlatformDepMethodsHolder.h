@@ -15,7 +15,7 @@ using MeasuringFunction = std::function<std::vector<std::pair<std::string, doubl
 using TimeProviderFunction = std::function<double(void)>;
 using GetSensorDataFunction = std::function<std::vector<std::pair<std::string, double>>(int)>;
 
-using RegisterSensorFunction = std::function<int()>;
+using RegisterSensorFunction = std::function<int(int, int, std::function<void(double)>)>;
 using RejectSensorFunction = std::function<void(int)>;
 
 struct PlatformDepMethodsHolder {

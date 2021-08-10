@@ -241,20 +241,19 @@ std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(int senso
 }
 
 int NativeProxy::registerSensor(
-  int sensorType,
-  const jsi::Object& sensorDataContainer,
-  //or lambda here
-  int interval
+        int sensorType,
+        int interval,
+        std::function<void(double)> setter
 ) {
   //TODO
-  auto method = javaPart_
-          ->getClass()
-          ->getMethod<local_ref<JArrayFloat>(int)>("registerSensor");
-//  local_ref<JInteger> output = method(javaPart_.get(), sensorType, sensorDataContainer, interval);
+//  auto method = javaPart_
+//          ->getClass()
+//          ->getMethod<local_ref<JFloat>(int)>("registerSensor");
+//  local_ref<JInteger> output = method(javaPart_.get(), sensorType, interval, setter);
 //  size_t size = output->size();
 //  auto id = output->getRegion(0, size);
 //  return id;
-  return 1;
+return 2;
 }
 
 void NativeProxy::rejectSensor(int sensorId) {

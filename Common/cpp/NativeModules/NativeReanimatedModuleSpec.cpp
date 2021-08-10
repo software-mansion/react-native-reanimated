@@ -94,6 +94,25 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getViewProp(
     return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerSensor(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->registerSensor(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_rejectSensor(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+        ->rejectSensor(rt, std::move(args[0]));
+    return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["installCoreFunctions"] = MethodMetadata{
@@ -120,6 +139,11 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
 
   methodMap_["getViewProp"] = MethodMetadata{
     3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
+      
+  methodMap_["registerSensor"] = MethodMetadata{
+    3, __hostFunction_NativeReanimatedModuleSpec_registerSensor};
+  methodMap_["rejectSensor"] = MethodMetadata{
+    1, __hostFunction_NativeReanimatedModuleSpec_rejectSensor};
 }
 
 }

@@ -14,10 +14,11 @@ using namespace facebook;
 namespace reanimated {
 
 class MutableValue : public jsi::HostObject, public std::enable_shared_from_this<MutableValue>, public StoreUser {
-private:
   friend MutableValueSetterProxy;
-  RuntimeManager *runtimeManager;
   friend LayoutAnimationsProxy;
+  
+private:
+  RuntimeManager *runtimeManager;
   std::mutex readWriteMutex;
   std::shared_ptr<ShareableValue> value;
   std::weak_ptr<jsi::Value> animation;

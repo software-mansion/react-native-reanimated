@@ -935,44 +935,47 @@ export enum SensorType {
 }
 
 export type SensorConfig = {
-  interval: number
+  interval: number;
 };
 
 export type AnimatedSensor = {
-  sensor: SensorValue3D | SensorValueRotation,
-  reject: () => void,
-}
+  sensor: SensorValue3D | SensorValueRotation;
+  reject: () => void;
+};
 
 export type SensorValue3D = {
-  x: number,
-  y: number,
-  z: number
-}
+  x: number;
+  y: number;
+  z: number;
+};
 
 export type SensorValueRotation = {
-  qw: number,
-  qx: number,
-  qy: number,
-  qz: number,
-  yaw: number,
-  pitch: number,
-  roll: number,
-}
+  qw: number;
+  qx: number;
+  qy: number;
+  qz: number;
+  yaw: number;
+  pitch: number;
+  roll: number;
+};
 
-export function useAnimatedSensor(sensorType: SensorType, userConfig?: SensorConfig): AnimatedSensor  {
+export function useAnimatedSensor(
+  sensorType: SensorType,
+  userConfig?: SensorConfig
+): AnimatedSensor {
   const ref = useRef(null);
 
   if (ref.current === null) {
     const config: SensorConfig = Object.assign({ interval: 10 }, userConfig);
     let sensorData: SensorValue3D | SensorValueRotation;
-    if(sensorType === SensorType.ROTATION_VECTOR) {
+    if (sensorType === SensorType.ROTATION_VECTOR) {
       sensorData = {
+        mleko: 0,
         x: makeMutable(0),
         y: makeMutable(0),
-        z: makeMutable(0)
-      }
-    }
-    else {
+        z: makeMutable(0),
+      };
+    } else {
       sensorData = {
         qw: makeMutable(0),
         qx: makeMutable(0),
@@ -981,13 +984,17 @@ export function useAnimatedSensor(sensorType: SensorType, userConfig?: SensorCon
         yaw: makeMutable(0),
         pitch: makeMutable(0),
         roll: makeMutable(0),
-      }
+      };
     }
 
-    const id = _registerSensor(sensorType, sensorData, config.interval);
+    const id = NativeReanimated.registerSensor(
+      sensorType,
+      config.interval,
+      sensorData
+    );
     const animatedSensor: AnimatedSensor = {
       sensor: sensorData,
-      reject: () => _rejectSensor(id)
+      reject: () => NativeReanimated.rejectSensor(id),
     };
     ref.current = animatedSensor;
   }

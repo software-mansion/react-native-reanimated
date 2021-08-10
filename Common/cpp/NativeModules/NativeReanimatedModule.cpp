@@ -94,6 +94,8 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     this->onRender(timestampMs);
   };
   updaterFunction = platformDepMethodsHolder.updaterFunction;
+  registerSensorFunction = platformDepMethodsHolder.registerSensor;
+  rejectSensorFunction = platformDepMethodsHolder.rejectSensor;
 }
 
 void NativeReanimatedModule::installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter)
@@ -277,6 +279,22 @@ void NativeReanimatedModule::onRender(double timestampMs)
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+jsi::Value NativeReanimatedModule::registerSensor(jsi::Runtime &rt, const jsi::Value &sensorType, const jsi::Value &interval, const jsi::Value &sensorDataContainer) {
+  auto mleko = sensorDataContainer.asObject(rt).getProperty(rt, "mleko");
+  auto sharedValue = ShareableValue::adapt(rt, mleko, this);
+  auto& tmp = rt;
+  auto setter = [&tmp, sharedValue](double newValue){
+    auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
+    auto a = jsi::Value(newValue);
+    mutableObject->setValue(tmp, a);
+  };
+  return registerSensorFunction(sensorType.asNumber(), interval.asNumber(), nullptr);
+}
+
+void NativeReanimatedModule::rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) {
+  rejectSensorFunction(sensorId.asNumber());
 }
 
 } // namespace reanimated

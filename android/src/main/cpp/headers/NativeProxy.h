@@ -109,7 +109,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void scrollTo(int viewTag, double x, double y, bool animated);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
   std::vector<std::pair<std::string, double>> getSensorData(int sensor);
-  int registerSensor(int sensorType,const jsi::Object& sensorDataContainer, int interval);
+  int registerSensor(int sensorType, int interval, std::function<void(double)> setter);
   void rejectSensor(int sensorId);
 
   explicit NativeProxy(
