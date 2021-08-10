@@ -968,9 +968,9 @@ export function useAnimatedSensor(
   if (ref.current === null) {
     const config: SensorConfig = Object.assign({ interval: 10 }, userConfig);
     let sensorData: SensorValue3D | SensorValueRotation;
-    if (sensorType === SensorType.ROTATION_VECTOR) {
+    if (sensorType !== SensorType.ROTATION_VECTOR) {
       sensorData = {
-        mleko: 0,
+        mleko: makeMutable(0),
         x: makeMutable(0),
         y: makeMutable(0),
         z: makeMutable(0),
@@ -997,6 +997,7 @@ export function useAnimatedSensor(
       reject: () => NativeReanimated.rejectSensor(id),
     };
     ref.current = animatedSensor;
+    console.log('ID:', id);
   }
 
   useEffect(() => {

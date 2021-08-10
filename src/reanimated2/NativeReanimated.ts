@@ -57,8 +57,8 @@ if (nativeShouldBeMock()) {
       return InnerNativeModule.getViewProp(viewTag, propName, callback);
     },
 
-    registerSensor(sensorType: number, interval: number) {
-      return InnerNativeModule.registerSensor(sensorType, interval);
+    registerSensor(sensorType: number, interval: number, sensorData) {
+      return InnerNativeModule.registerSensor(sensorType, interval, sensorData);
     },
 
     rejectSensor(sensorId: number) {

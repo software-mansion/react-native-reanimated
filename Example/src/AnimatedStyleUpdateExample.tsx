@@ -3,7 +3,7 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   Easing,
-  useAnimatedSensor
+  useAnimatedSensor,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
@@ -21,8 +21,8 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       width: withTiming(randomWidth.value, config),
     };
   });
-  const animatedSensor = useAnimatedSensor();
-  console.log(animatedSensor)
+  const animatedSensor = useAnimatedSensor(1);
+  console.log(animatedSensor);
 
   return (
     <View

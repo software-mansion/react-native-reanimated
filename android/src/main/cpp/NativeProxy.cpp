@@ -103,6 +103,18 @@ void NativeProxy::installJSIBindings()
     return getSensorData(sensor);
   };
 
+  auto registerSensorFunction = [this](
+          int sensorType,
+          int interval,
+          std::function<void(double)> setter
+  ) -> int {
+      return registerSensor(sensorType, interval, setter);
+  };
+
+  auto rejectSensorFunction = [this](int sensorId) {
+      rejectSensor(sensorId);
+  };
+
 #if FOR_HERMES
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
@@ -135,6 +147,8 @@ void NativeProxy::installJSIBindings()
     measuringFunction,
     getCurrentTime,
     getSensorDataFunction,
+    registerSensorFunction,
+    rejectSensorFunction
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(jsCallInvoker_,
@@ -245,15 +259,10 @@ int NativeProxy::registerSensor(
         int interval,
         std::function<void(double)> setter
 ) {
-  //TODO
-//  auto method = javaPart_
-//          ->getClass()
-//          ->getMethod<local_ref<JFloat>(int)>("registerSensor");
-//  local_ref<JInteger> output = method(javaPart_.get(), sensorType, interval, setter);
-//  size_t size = output->size();
-//  auto id = output->getRegion(0, size);
-//  return id;
-return 2;
+  auto method = javaPart_
+          ->getClass()
+          ->getMethod<int(int, int)>("registerSensor");
+  return method(javaPart_.get(), sensorType, interval); // todo: setter
 }
 
 void NativeProxy::rejectSensor(int sensorId) {

@@ -120,7 +120,28 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations);
 };
 
+class SensorSetter : public HybridClass<SensorSetter> {
+public:
+    static auto constexpr kJavaDescriptor =
+            "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
 
+    void setter(double value) {
+        callback_(value);
+    }
 
+    static void registerNatives() {
+        javaClassStatic()->registerNatives(
+            {makeNativeMethod("onAnimationFrame", SensorSetter::setter),}
+        );
+    }
+
+private:
+    friend HybridBase;
+
+    SensorSetter(std::function<void(double)> callback)
+            : callback_(std::move(callback)) {}
+
+    std::function<void(double)> callback_;
+};
 
 }

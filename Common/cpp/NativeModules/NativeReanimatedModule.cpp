@@ -283,13 +283,14 @@ void NativeReanimatedModule::onRender(double timestampMs)
 }
 
 jsi::Value NativeReanimatedModule::registerSensor(jsi::Runtime &rt, const jsi::Value &sensorType, const jsi::Value &interval, const jsi::Value &sensorDataContainer) {
-  auto mleko = sensorDataContainer.asObject(rt).getProperty(rt, "mleko");
+  auto mleko = sensorDataContainer.getObject(rt).getProperty(rt, "mleko");
   auto sharedValue = ShareableValue::adapt(rt, mleko, this);
   auto setter = [&rt, sharedValue](double newValue){
     auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
     mutableObject->setValue(rt, jsi::Value(newValue));
   };
-  return registerSensorFunction(sensorType.asNumber(), interval.asNumber(), setter);
+  setter(123);
+  return jsi::Value(registerSensorFunction(sensorType.asNumber(), interval.asNumber(), setter));
 }
 
 void NativeReanimatedModule::rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) {

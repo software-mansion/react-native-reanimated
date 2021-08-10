@@ -172,47 +172,6 @@ void RuntimeDecorator::decorateUIRuntime(jsi::Runtime &rt,
   jsi::Value getSensorDataFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_getSensorData"), 1, clb_sensor);
   rt.global().setProperty(rt, "_getSensorData", getSensorDataFun);
 
-//  auto clb_registerSensor = [registerSensor](
-//          jsi::Runtime &rt,
-//          const jsi::Value &thisValue,
-//          const jsi::Value *args,
-//          const size_t count
-//  ) -> jsi::Value {
-//    //TODO
-//    int sensorType = (int)args[0].asNumber();
-//    const jsi::Value sensorDataContainer = args[1].asObject(rt);
-//    int interval = (int)args[2].asNumber();
-////      sensorDataContainer.getObject(rt).getProperty(rt, "x").
-////    ShareableValue::adapt(rt, sensorDataContainer, module);
-////    RuntimeManager a;
-////    auto mleko = sensorDataContainer.asObject(rt).getProperty(rt, "mleko");
-////    auto sharedValue = ShareableValue::adapt(rt, mleko, (RuntimeManager*)&module);
-////    auto& tmp = rt;
-////    auto setter = [&tmp, sharedValue](double newValue){
-////      auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
-////      auto a = jsi::Value(newValue);
-////      mutableObject->setValue(tmp, a);
-////    };
-//
-////    registerSensor(sensorType, interval, setter);
-//
-//    return jsi::Value::undefined();
-//  };
-//  jsi::Value registerSensorFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_registerSensor"), 1, clb_registerSensor);
-//  rt.global().setProperty(rt, "_registerSensor", registerSensorFun);
-
-  auto clb_rejectSensor = [rejectSensor](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          const size_t count
-  ) -> jsi::Value {
-      rejectSensor((int)args[0].asNumber());
-      return jsi::Value::undefined();
-  };
-  jsi::Value rejectSensorFun = jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "_rejectSensor"), 1, clb_rejectSensor);
-  rt.global().setProperty(rt, "_rejectSensor", rejectSensorFun);
-
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());
     
