@@ -24,10 +24,9 @@ private:
   std::weak_ptr<jsi::Value> animation;
   std::map<unsigned long, std::function<void()>> listeners;
 
+public:
   void setValue(jsi::Runtime &rt, const jsi::Value &newValue);
   jsi::Value getValue(jsi::Runtime &rt);
-
-public:
   MutableValue(jsi::Runtime &rt, const jsi::Value &initial, RuntimeManager *runtimeManager, std::shared_ptr<Scheduler> s);
 
 public:

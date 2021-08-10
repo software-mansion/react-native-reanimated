@@ -11,6 +11,7 @@
 #include <memory>
 #include "JSIStoreValueUser.h"
 #include "ReanimatedHiddenHeaders.h"
+#include "MutableValue.h"
 
 using namespace facebook;
 
@@ -284,13 +285,11 @@ void NativeReanimatedModule::onRender(double timestampMs)
 jsi::Value NativeReanimatedModule::registerSensor(jsi::Runtime &rt, const jsi::Value &sensorType, const jsi::Value &interval, const jsi::Value &sensorDataContainer) {
   auto mleko = sensorDataContainer.asObject(rt).getProperty(rt, "mleko");
   auto sharedValue = ShareableValue::adapt(rt, mleko, this);
-  auto& tmp = rt;
-  auto setter = [&tmp, sharedValue](double newValue){
+  auto setter = [&rt, sharedValue](double newValue){
     auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
-    auto a = jsi::Value(newValue);
-    mutableObject->setValue(tmp, a);
+    mutableObject->setValue(rt, jsi::Value(newValue));
   };
-  return registerSensorFunction(sensorType.asNumber(), interval.asNumber(), nullptr);
+  return registerSensorFunction(sensorType.asNumber(), interval.asNumber(), setter);
 }
 
 void NativeReanimatedModule::rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) {
