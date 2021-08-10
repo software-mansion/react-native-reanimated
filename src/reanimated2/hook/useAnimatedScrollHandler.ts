@@ -1,4 +1,4 @@
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 import { NativeScrollEvent } from 'react-native';
 import { makeRemote } from '../core';
 import WorkletEventHandler from '../WorkletEventHandler';
@@ -18,7 +18,7 @@ interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
 }
 interface ScrollHandlers<TContext extends Context> {
-  [key: string]: ScrollHandler<TContext>;
+  [key: string]: ScrollHandler<TContext> | undefined;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
   onEndDrag?: ScrollHandler<TContext>;
@@ -29,11 +29,11 @@ interface ScrollHandlers<TContext extends Context> {
 export function useAnimatedScrollHandler<TContext extends Context>(
   handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
   dependencies?: DependencyList
-): MutableRefObject<WorkletEventHandler> {
+): RefObject<WorkletEventHandler> {
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<TContext> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const initRef = useRef<ContextWithDependencies<TContext>>(null);
+  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),

@@ -1,4 +1,5 @@
 declare const _WORKLET: boolean;
+declare const _frameTimestamp: number;
 declare const _stopObservingProgress: (tag: number, flag: boolean) => void;
 declare const _startObservingProgress: (
   tag: number,

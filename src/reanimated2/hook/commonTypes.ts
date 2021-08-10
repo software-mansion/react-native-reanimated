@@ -1,4 +1,3 @@
-import { AnimationObject } from '../animation';
 import { AnimatedStyle } from '../commonTypes';
 
 export type DependencyList = Array<unknown> | undefined;
@@ -28,7 +27,7 @@ export interface Descriptor {
 }
 export interface AnimatedState {
   last: AnimatedStyle;
-  animations: AnimationObject[];
+  animations: AnimatedStyle;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
 }

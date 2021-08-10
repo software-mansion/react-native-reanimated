@@ -16,7 +16,7 @@ interface Handler<T, TContext extends Context> extends WorkletFunction {
 }
 
 export interface GestureHandlers<T, TContext extends Context> {
-  [key: string]: Handler<T, TContext>;
+  [key: string]: Handler<T, TContext> | undefined;
   onStart?: Handler<T, TContext>;
   onActive?: Handler<T, TContext>;
   onEnd?: Handler<T, TContext>;
@@ -27,7 +27,7 @@ export interface GestureHandlers<T, TContext extends Context> {
 
 export interface GestureHandlerEvent<T>
   extends GestureHandlerStateChangeNativeEvent {
-  nativeEvent?: T;
+  nativeEvent: T;
 }
 
 export function useAnimatedGestureHandler<
@@ -36,8 +36,8 @@ export function useAnimatedGestureHandler<
 >(
   handlers: GestureHandlers<T, TContext>,
   dependencies?: DependencyList
-): MutableRefObject<WorkletEventHandler> | ((e: T) => void) {
-  const initRef = useRef<ContextWithDependencies<TContext>>(null);
+): MutableRefObject<WorkletEventHandler | null> | ((e: T) => void) {
+  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
       context: makeRemote({}),
@@ -62,9 +62,9 @@ export function useAnimatedGestureHandler<
   initRef.current.savedDependencies = dependencies;
   const useWeb = isWeb();
 
-  const handler = (event: T) => {
+  const handler = (e: T) => {
     'worklet';
-    event = useWeb ? event.nativeEvent : event;
+    const event = useWeb ? e.nativeEvent : e;
 
     const FAILED = 1;
     const BEGAN = 2;

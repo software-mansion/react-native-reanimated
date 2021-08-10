@@ -3,14 +3,14 @@ import { processColor } from '../Colors';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { WorkletFunction } from './commonTypes';
+import { DependencyList, WorkletFunction } from './commonTypes';
 
 export function useEvent<T>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
-): MutableRefObject<WorkletEventHandler> {
-  const initRef = useRef<WorkletEventHandler>(null);
+): MutableRefObject<WorkletEventHandler | null> {
+  const initRef = useRef<WorkletEventHandler | null>(null);
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {
@@ -30,38 +30,39 @@ export function useEvent<T>(
 export function buildWorkletsHash(
   handlers: Record<string, WorkletFunction> | Array<WorkletFunction>
 ): string {
-  return Object.keys(handlers).reduce(
-    (previousValue, key) =>
-      previousValue === null
-        ? handlers[key].__workletHash.toString()
-        : previousValue + handlers[key].__workletHash.toString(),
-    null
+  return Object.values(handlers).reduce(
+    (acc: string, worklet: WorkletFunction) =>
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      acc + worklet.__workletHash!.toString(),
+    ''
   );
 }
 
 // builds dependencies array for gesture handlers
 export function buildDependencies(
-  dependencies: Array<unknown>,
-  handlers: Record<string, WorkletFunction>
+  dependencies: DependencyList,
+  handlers: Record<string, WorkletFunction | undefined>
 ): Array<unknown> {
+  const handlersList: WorkletFunction[] = Object.values(handlers).filter(
+    (handler) => handler !== undefined
+  ) as WorkletFunction[];
   if (!dependencies) {
-    dependencies = Object.keys(handlers).map((handlerKey) => {
-      const handler = handlers[handlerKey];
+    dependencies = handlersList.map((handler) => {
       return {
         workletHash: handler.__workletHash,
         closure: handler._closure,
       };
     });
   } else {
-    dependencies.push(buildWorkletsHash(handlers));
+    dependencies.push(buildWorkletsHash(handlersList));
   }
   return dependencies;
 }
 
 // this is supposed to work as useEffect comparison
 export function areDependenciesEqual(
-  nextDeps: Array<unknown>,
-  prevDeps: Array<unknown>
+  nextDeps: DependencyList,
+  prevDeps: DependencyList
 ): boolean {
   function is(x: number, y: number) {
     /* eslint-disable no-self-compare */
@@ -72,8 +73,8 @@ export function areDependenciesEqual(
     typeof Object.is === 'function' ? Object.is : is;
 
   function areHookInputsEqual(
-    nextDeps: Array<unknown>,
-    prevDeps: Array<unknown>
+    nextDeps: DependencyList,
+    prevDeps: DependencyList
   ): boolean {
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
@@ -111,7 +112,8 @@ export function parseColors(updates: AnimatedStyle): void {
 export function canApplyOptimalisation(upadterFn: WorkletFunction): number {
   const FUNCTIONLESS_FLAG = 0b00000001;
   const STATEMENTLESS_FLAG = 0b00000010;
-  const optimalization = upadterFn.__optimalization;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const optimalization = upadterFn.__optimalization!;
   return (
     optimalization & FUNCTIONLESS_FLAG && optimalization & STATEMENTLESS_FLAG
   );
@@ -138,7 +140,7 @@ export function styleDiff(
   newStyle: AnimatedStyle
 ): AnimatedStyle {
   'worklet';
-  const diff = {};
+  const diff: AnimatedStyle = {};
   Object.keys(oldStyle).forEach((key) => {
     if (newStyle[key] === undefined) {
       diff[key] = null;
@@ -165,7 +167,7 @@ export function styleDiff(
 
 export function getStyleWithoutAnimations(newStyle: AnimatedStyle): StyleProps {
   'worklet';
-  const diff = {};
+  const diff: StyleProps = {};
 
   for (const key in newStyle) {
     const value = newStyle[key];

@@ -10,5 +10,5 @@ export function useWorkletCallback<A extends unknown[], R>(
   fun: (...args: A) => R,
   deps?: DependencyList
 ): (...args: Parameters<typeof fun>) => R {
-  return useCallback(fun, deps);
+  return useCallback(fun, deps ?? []);
 }

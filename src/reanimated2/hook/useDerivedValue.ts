@@ -13,8 +13,8 @@ export function useDerivedValue<T>(
   processor: BasicWorkletFunction<T>,
   dependencies: DependencyList
 ): DerivedValue<T> {
-  const initRef = useRef<SharedValue<T>>(null);
-  const inputs = Object.values(processor._closure);
+  const initRef = useRef<SharedValue<T> | null>(null);
+  const inputs = Object.values(processor._closure ?? {});
 
   // build dependencies
   if (dependencies === undefined) {
@@ -27,7 +27,8 @@ export function useDerivedValue<T>(
     initRef.current = makeMutable(initialUpdaterRun(processor));
   }
 
-  const sharedValue = initRef.current;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const sharedValue: SharedValue<T> = initRef.current!;
 
   useEffect(() => {
     const fun = () => {

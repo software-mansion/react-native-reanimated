@@ -21,11 +21,11 @@ export function useAnimatedReaction<T>(
   react: AnimatedReactionWorkletFunction<T>,
   dependencies: DependencyList
 ): void {
-  const previous = useSharedValue<T>(null);
+  const previous = useSharedValue<T | null>(null);
   if (dependencies === undefined) {
     dependencies = [
-      Object.values(prepare._closure),
-      Object.values(react._closure),
+      Object.values(prepare._closure ?? {}),
+      Object.values(react._closure ?? {}),
       prepare.__workletHash,
       react.__workletHash,
     ];
@@ -40,7 +40,11 @@ export function useAnimatedReaction<T>(
       react(input, previous.value);
       previous.value = input;
     };
-    const mapperId = startMapper(fun, Object.values(prepare._closure), []);
+    const mapperId = startMapper(
+      fun,
+      Object.values(prepare._closure ?? {}),
+      []
+    );
     return () => {
       stopMapper(mapperId);
     };

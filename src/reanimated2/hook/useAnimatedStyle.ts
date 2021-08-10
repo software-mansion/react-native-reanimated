@@ -1,5 +1,4 @@
 /* global _frameTimestamp */
-
 import { MutableRefObject, useEffect, useRef } from 'react';
 
 import {
@@ -11,7 +10,7 @@ import {
   makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
-import { AnimationObject, initialUpdaterRun } from '../animation';
+import { initialUpdaterRun, Timestamp } from '../animation';
 import NativeReanimated from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
@@ -41,13 +40,24 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { PrimitiveValue } from '../animation/commonTypes';
 import { AnimatedStyle } from '../commonTypes';
+import {
+  Animation,
+  AnimationObject,
+  PrimitiveValue,
+} from '../animation/commonTypes';
+
+export interface AnimatedStyleResult {
+  viewDescriptors: ViewDescriptorsSet;
+  initial: AnimatedStyle;
+  viewsRef: ViewRefSet<any>;
+  animatedStyle?: MutableRefObject<AnimatedStyle>;
+}
 
 function prepareAnimation(
-  animatedProp: AnimationObject,
-  lastAnimation: AnimationObject,
-  lastValue: AnimationObject | SharedValue<PrimitiveValue>
+  animatedProp: AnimatedStyle,
+  lastAnimation: AnimatedStyle,
+  lastValue: AnimatedStyle
 ): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
@@ -84,7 +94,7 @@ function prepareAnimation(
       }
     }
 
-    animation.callStart = (timestamp) => {
+    animation.callStart = (timestamp: Timestamp) => {
       animation.onStart(animation, value, timestamp, lastAnimation);
     };
     animation.callStart(getTimestamp());
@@ -101,7 +111,13 @@ function prepareAnimation(
   }
 }
 
-function runAnimations(animation, timestamp, key, result, animationsActive) {
+function runAnimations(
+  animation: AnimatedStyle,
+  timestamp: Timestamp,
+  key: PrimitiveValue,
+  result: AnimatedStyle,
+  animationsActive: SharedValue<boolean>
+): boolean {
   'worklet';
   if (!animationsActive.value) {
     return true;
@@ -164,8 +180,8 @@ function styleUpdater(
   animationsActive: SharedValue<boolean>
 ): void {
   'worklet';
-  const animations = state.animations || [];
-  const newValues = updater() || {};
+  const animations = state.animations ?? {};
+  const newValues = updater() ?? {};
   const oldValues = state.last;
 
   let hasAnimations = false;
@@ -181,14 +197,14 @@ function styleUpdater(
   }
 
   if (hasAnimations) {
-    const frame = (timestamp) => {
+    const frame = (timestamp: Timestamp) => {
       const { animations, last, isAnimationCancelled } = state;
       if (isAnimationCancelled) {
         state.isAnimationRunning = false;
         return;
       }
 
-      const updates = {};
+      const updates: AnimatedStyle = {};
       let allFinished = true;
       for (const propName in animations) {
         const finished = runAnimations(
@@ -249,8 +265,8 @@ function jestStyleUpdater(
   adapters: WorkletFunction[] = []
 ): void {
   'worklet';
-  const animations: AnimationObject[] = state.animations || [];
-  const newValues = updater() || {};
+  const animations: AnimatedStyle = state.animations ?? {};
+  const newValues = updater() ?? {};
   const oldValues = state.last;
 
   // extract animated props
@@ -270,14 +286,14 @@ function jestStyleUpdater(
     }
   });
 
-  function frame(timestamp) {
+  function frame(timestamp: Timestamp) {
     const { animations, last, isAnimationCancelled } = state;
     if (isAnimationCancelled) {
       state.isAnimationRunning = false;
       return;
     }
 
-    const updates = {};
+    const updates: AnimatedStyle = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
       const finished = runAnimations(
@@ -347,21 +363,21 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   updater: BasicWorkletFunction<T>,
   dependencies?: DependencyList,
   adapters?: AdapterWorkletFunction | AdapterWorkletFunction[]
-) {
+): AnimatedStyleResult {
   const viewsRef: ViewRefSet<any> = makeViewsRefSet();
   const viewDescriptors: ViewDescriptorsSet = makeViewDescriptorsSet();
-  const initRef = useRef<AnimationRef>(null);
-  const inputs = Object.values(updater._closure);
-  const adaptersArray: AdapterWorkletFunction[] =
-    !adapters || Array.isArray(adapters)
-      ? <AdapterWorkletFunction[]>adapters
-      : [adapters];
+  const initRef = useRef<AnimationRef>();
+  const inputs = Object.values(updater._closure ?? {});
+  const adaptersArray: AdapterWorkletFunction[] = adapters
+    ? Array.isArray(adapters)
+      ? adapters
+      : [adapters]
+    : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const animationsActive = useSharedValue<boolean>(true);
-  let animatedStyle: MutableRefObject<AnimatedStyle>;
-  if (isJest()) {
-    animatedStyle = useRef<AnimatedStyle>({});
-  }
+  const animatedStyle: MutableRefObject<AnimatedStyle> = useRef<AnimatedStyle>(
+    {}
+  );
 
   // build dependencies
   if (!dependencies) {
@@ -371,23 +387,25 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   }
   adaptersHash && dependencies.push(adaptersHash);
 
-  if (initRef.current === null) {
+  if (!initRef.current) {
     const initialStyle: AnimatedStyle = initialUpdaterRun(updater);
     validateAnimatedStyles(initialStyle);
     initRef.current = {
       initial: {
-        value: null,
+        value: initialStyle,
       },
       remoteState: makeRemote({ last: initialStyle }),
       sharableViewDescriptors: makeMutable([]),
     };
     viewDescriptors.rebuildsharableViewDescriptors(
-      initRef.current.sharableViewDescriptors
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      initRef.current!.sharableViewDescriptors
     );
   }
-  dependencies.push(initRef.current.sharableViewDescriptors.value);
+  dependencies.push(initRef.current?.sharableViewDescriptors.value);
 
-  const { initial, remoteState, sharableViewDescriptors } = initRef.current;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
   const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
 
   initial.value = initialUpdaterRun(updater);
@@ -395,7 +413,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     let fun;
     let upadterFn = updater;
     let optimalization = updater.__optimalization;
-    if (adaptersArray) {
+    if (adapters) {
       upadterFn = () => {
         'worklet';
         const newValues = updater();
@@ -477,7 +495,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   // check for invalid usage of shared values in returned object
   let wrongKey;
-  const isObjectValid = (element, key) => {
+  const isObjectValid = (element: AnimationObject, key: string) => {
     const result = typeof element === 'object' && element.value !== undefined;
     if (result) {
       wrongKey = key;
@@ -494,7 +512,9 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         if (typeof elementArrayItem !== 'object') {
           break;
         }
-        const objectValue = Object.values(elementArrayItem)[0];
+        const objectValue: Animation<AnimationObject> = <
+          Animation<AnimationObject>
+        >Object.values(elementArrayItem)[0];
         result = isObjectValid(objectValue, key);
         if (!result) {
           break;
@@ -512,8 +532,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   }
 
   if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptors, initial, viewsRef, animatedStyle };
+    return { viewDescriptors, initial: initial.value, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptors, initial, viewsRef };
+    return { viewDescriptors, initial: initial.value, viewsRef };
   }
 }

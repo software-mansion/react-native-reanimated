@@ -8,8 +8,8 @@ interface RefObjectFunction<T> {
 }
 
 export function useAnimatedRef<T extends Component>(): RefObject<T> {
-  const tag = useSharedValue<number>(-1);
-  const ref = useRef<RefObject<T>>(null);
+  const tag = useSharedValue<number | null>(-1);
+  const ref = useRef<RefObject<T>>();
 
   if (!ref.current) {
     const fun: RefObjectFunction<T> = <RefObjectFunction<T>>(

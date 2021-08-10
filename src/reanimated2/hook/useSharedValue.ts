@@ -4,7 +4,7 @@ import { makeMutable } from '../core';
 import { SharedValue } from './commonTypes';
 
 export function useSharedValue<T>(init: T): SharedValue<T> {
-  const ref = useRef<SharedValue<T>>(null);
+  const ref = useRef<SharedValue<T>>(makeMutable(init));
 
   if (ref.current === null) {
     ref.current = makeMutable(init);
@@ -12,9 +12,11 @@ export function useSharedValue<T>(init: T): SharedValue<T> {
 
   useEffect(() => {
     return () => {
-      cancelAnimation(ref.current);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      cancelAnimation(ref.current!);
     };
   }, []);
 
-  return ref.current;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return ref.current!;
 }
