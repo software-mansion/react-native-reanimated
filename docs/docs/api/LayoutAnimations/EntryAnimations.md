@@ -151,7 +151,7 @@ Animation based on changing scale of object.
 - ZoomInUp
 - ZoomInDown
 - ZoomInEasyUp
-- ZoomInEadyDown
+- ZoomInEasyDown
 
 #### Modifiers
 * `duration` (in ms) default: 300
