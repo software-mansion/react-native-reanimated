@@ -39,71 +39,19 @@ function recognizePrefixSuffix(value: PrimitiveValue): RecognizedPrefixSuffix {
     const match = value.match(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
+    if (!match) {
+      throw Error(
+        "Couldn't parse animation value. Check if it there isn't any typo"
+      );
+    }
     const prefix = match[1];
     const suffix = match[4];
     // number with scientific notation
     const number = match[2] + (match[3] ?? '');
     return { prefix, suffix, strippedValue: parseFloat(number) };
+  } else {
+    return { strippedValue: value };
   }
-}
-
-interface TransformedAnimationValue {
-  value: PrimitiveValue | undefined;
-  stripped?: number;
-}
-
-function transform(
-  value: PrimitiveValue,
-  strippedValue: number,
-  handler: AnimationObject
-): TransformedAnimationValue {
-  'worklet';
-  if (value === undefined) {
-    return { value: undefined };
-  }
-
-  if (typeof value === 'string') {
-    // toInt
-    // TODO handle color
-    return { value: strippedValue };
-  }
-
-  // toString if __prefix is available and number otherwise
-  if (handler.__prefix === undefined) {
-    return { value: value };
-  }
-  return {
-    value: handler.__prefix + value + handler.__suffix,
-    stripped: value,
-  };
-}
-
-function transformAnimation(animation: AnimationObject): void {
-  'worklet';
-  if (!animation) {
-    return;
-  }
-  const { value: toValue, stripped: strippedToValue } = transform(
-    animation.toValue,
-    animation.strippedToValue,
-    animation
-  );
-  animation.toValue = toValue;
-  if (strippedToValue) animation.strippedToValue = strippedToValue;
-  const { value: current, stripped: strippedCurrent } = transform(
-    animation.current,
-    animation.strippedCurrent,
-    animation
-  );
-  animation.current = current;
-  if (strippedCurrent) animation.strippedCurrent = strippedCurrent;
-  const { value: startValue, stripped: strippedStartValue } = transform(
-    animation.startValue,
-    animation.strippedStartValue,
-    animation
-  );
-  animation.startValue = startValue;
-  if (strippedStartValue) animation.strippedStartValue = strippedStartValue;
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
@@ -125,34 +73,46 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
-    // recognize prefix, suffix, and updates stripped value on animation starts
+    // recognize prefix, suffix, and updates stripped value on animation start
     const { prefix, suffix, strippedValue } = recognizePrefixSuffix(value);
     animation.__prefix = prefix;
     animation.__suffix = suffix;
     animation.strippedCurrent = strippedValue;
-    animation.strippedStartValue = strippedValue;
     const { strippedValue: strippedToValue } = recognizePrefixSuffix(
-      animation.toValue
+      animation.toValue as PrimitiveValue
     );
-    animation.strippedToValue = strippedToValue;
-    const { value: val } = transform(value, strippedValue, animation);
-    transformAnimation(animation);
-    if (previousAnimation !== animation) transformAnimation(previousAnimation);
+    animation.current = strippedValue;
+    animation.startValue = strippedValue;
+    animation.toValue = strippedToValue;
+    if (previousAnimation && previousAnimation !== animation) {
+      previousAnimation.current = previousAnimation.strippedCurrent;
+    }
 
-    baseOnStart(animation, val as PrimitiveValue, timestamp, previousAnimation);
+    baseOnStart(animation, strippedValue, timestamp, previousAnimation);
 
-    transformAnimation(animation);
-    if (previousAnimation !== animation) transformAnimation(previousAnimation);
+    animation.current =
+      (animation.__prefix ?? '') +
+      animation.current +
+      (animation.__suffix ?? '');
+
+    if (previousAnimation && previousAnimation !== animation) {
+      previousAnimation.current =
+        (previousAnimation.__prefix ?? '') +
+        previousAnimation.current +
+        (previousAnimation.__suffix ?? '');
+    }
   };
   const prefNumberSuffOnFrame = (
     animation: Animation<AnimationObject>,
     timestamp: number
   ) => {
-    transformAnimation(animation);
-
+    animation.current = animation.strippedCurrent;
     const res = baseOnFrame(animation, timestamp);
-
-    transformAnimation(animation);
+    animation.strippedCurrent = animation.current;
+    animation.current =
+      (animation.__prefix ?? '') +
+      animation.current +
+      (animation.__suffix ?? '');
     return res;
   };
 
