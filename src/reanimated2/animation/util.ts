@@ -41,7 +41,7 @@ function recognizePrefixSuffix(value: PrimitiveValue): RecognizedPrefixSuffix {
     );
     if (!match) {
       throw Error(
-        "Couldn't parse animation value. Check if it there isn't any typo"
+        "Couldn't parse animation value. Check if there isn't any typo."
       );
     }
     const prefix = match[1];
