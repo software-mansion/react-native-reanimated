@@ -7,7 +7,7 @@ export {
   SharedValue,
   Timestamp,
 } from './commonTypes';
-export { cancelAnimation, defineAnimation } from './util';
+export { cancelAnimation, defineAnimation, initialUpdaterRun } from './util';
 export { withTiming } from './timing';
 export { withSpring } from './spring';
 export { withDecay } from './decay';
