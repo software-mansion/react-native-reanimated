@@ -7,6 +7,7 @@ export interface AnimationObject {
   toValue?: AnimationObject['current'];
   startValue?: AnimationObject['current'];
   finished?: boolean;
+  strippedCurrent?: number;
 
   __prefix?: string;
   __suffix?: string;

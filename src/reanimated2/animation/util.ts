@@ -1,20 +1,21 @@
-/* global _WORKLET */
-import { isColor, convertToHSVA, toRGBA, ParsedColorArray } from '../Colors';
-import NativeReanimated from '../NativeReanimated';
 import {
   Animation,
-  PrimitiveValue,
-  SharedValue,
-  NextAnimation,
-  Timestamp,
   AnimationObject,
   HigherOrderAnimation,
+  NextAnimation,
+  PrimitiveValue,
+  SharedValue,
+  Timestamp,
 } from './commonTypes';
+/* global _WORKLET */
+import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
+
 import { AnimatedStyle } from '../commonTypes';
-import { StyleLayoutAnimation } from './styleAnimation';
 import { DelayAnimation } from './delay';
+import NativeReanimated from '../NativeReanimated';
 import { RepeatAnimation } from './repeat';
 import { SequenceAnimation } from './sequence';
+import { StyleLayoutAnimation } from './styleAnimation';
 
 let IN_STYLE_UPDATER = false;
 
@@ -26,49 +27,31 @@ export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
   IN_STYLE_UPDATER = false;
   return result;
 }
-
-function transform(
-  value: PrimitiveValue,
-  handler: AnimationObject
-): PrimitiveValue | undefined {
-  'worklet';
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (typeof value === 'string') {
-    // toInt
-    // TODO handle color
-    const match = value.match(
-      /([A-Za-z]*)(-?\d*\.?\d*)([A-Za-z%]*)/
-    ) as string[];
-    const prefix = match[1];
-    const suffix = match[3];
-    const number = match[2];
-    handler.__prefix = prefix;
-    handler.__suffix = suffix;
-    return parseFloat(number);
-  }
-
-  // toString if __prefix is available and number otherwise
-  if (handler.__prefix === undefined) {
-    return value;
-  }
-
-  return handler.__prefix + value + handler.__suffix;
+interface RecognizedPrefixSuffix {
+  prefix?: string;
+  suffix?: string;
+  strippedValue: number;
 }
 
-function transformAnimation(animation: AnimationObject): void {
+function recognizePrefixSuffix(value: PrimitiveValue): RecognizedPrefixSuffix {
   'worklet';
-  if (!animation) {
-    return;
+  if (typeof value === 'string') {
+    const match = value.match(
+      /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
+    );
+    if (!match) {
+      throw Error(
+        "Couldn't parse animation value. Check if there isn't any typo."
+      );
+    }
+    const prefix = match[1];
+    const suffix = match[4];
+    // number with scientific notation
+    const number = match[2] + (match[3] ?? '');
+    return { prefix, suffix, strippedValue: parseFloat(number) };
+  } else {
+    return { strippedValue: value };
   }
-  // @ts-ignore: eslint-disable-line
-  animation.toValue = transform(animation.toValue, animation) as PrimitiveValue;
-  // @ts-ignore: eslint-disable-line
-  animation.current = transform(animation.current, animation) as PrimitiveValue;
-  // @ts-ignore: eslint-disable-line
-  animation.startValue = transform(animation.startValue, animation);
 }
 
 function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
@@ -90,24 +73,46 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
-    const val = transform(value, animation) as PrimitiveValue;
-    transformAnimation(animation);
-    if (previousAnimation !== animation) transformAnimation(previousAnimation);
+    // recognize prefix, suffix, and updates stripped value on animation start
+    const { prefix, suffix, strippedValue } = recognizePrefixSuffix(value);
+    animation.__prefix = prefix;
+    animation.__suffix = suffix;
+    animation.strippedCurrent = strippedValue;
+    const { strippedValue: strippedToValue } = recognizePrefixSuffix(
+      animation.toValue as PrimitiveValue
+    );
+    animation.current = strippedValue;
+    animation.startValue = strippedValue;
+    animation.toValue = strippedToValue;
+    if (previousAnimation && previousAnimation !== animation) {
+      previousAnimation.current = previousAnimation.strippedCurrent;
+    }
 
-    baseOnStart(animation, val, timestamp, previousAnimation);
+    baseOnStart(animation, strippedValue, timestamp, previousAnimation);
 
-    transformAnimation(animation);
-    if (previousAnimation !== animation) transformAnimation(previousAnimation);
+    animation.current =
+      (animation.__prefix ?? '') +
+      animation.current +
+      (animation.__suffix ?? '');
+
+    if (previousAnimation && previousAnimation !== animation) {
+      previousAnimation.current =
+        (previousAnimation.__prefix ?? '') +
+        previousAnimation.current +
+        (previousAnimation.__suffix ?? '');
+    }
   };
   const prefNumberSuffOnFrame = (
     animation: Animation<AnimationObject>,
     timestamp: number
   ) => {
-    transformAnimation(animation);
-
+    animation.current = animation.strippedCurrent;
     const res = baseOnFrame(animation, timestamp);
-
-    transformAnimation(animation);
+    animation.strippedCurrent = animation.current;
+    animation.current =
+      (animation.__prefix ?? '') +
+      animation.current +
+      (animation.__suffix ?? '');
     return res;
   };
 

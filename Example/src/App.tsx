@@ -1,40 +1,40 @@
-import React from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+import {
+  Carousel,
+  CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  SpringLayoutAnimation,
+  SwipeableList,
+} from './LayoutReanimation';
+import { FlatList, LogBox, StyleSheet, Text, View } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import {
-  createStackNavigator,
   StackNavigationProp,
+  createStackNavigator,
 } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  SpringLayoutAnimation,
-  MountingUnmounting,
-  SwipeableList,
-  Modal,
-  Carousel,
-  ModalNewAPI,
-  DefaultAnimations,
-  CustomLayoutAnimationScreen,
-} from './LayoutReanimation';
 
-import Reanimated1 from '../reanimated1/App';
-
-import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import WobbleExample from './WobbleExample';
-import DragAndSnapExample from './DragAndSnapExample';
-import ScrollEventExample from './ScrollEventExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import MeasureExample from './MeasureExample';
-import SwipeableListExample from './SwipeableListExample';
-import ScrollableViewExample from './ScrollableViewExample';
-import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
-import ScrollExample from './AnimatedScrollExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
+import MeasureExample from './MeasureExample';
+import { NavigationContainer } from '@react-navigation/native';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import React from 'react';
+import Reanimated1 from '../reanimated1/App';
+import ScrollEventExample from './ScrollEventExample';
+import ScrollExample from './AnimatedScrollExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import WobbleExample from './WobbleExample';
+
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
@@ -50,7 +50,7 @@ const SCREENS: Screens = {
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
-    title: '🆕 Olympic animation'
+    title: '🆕 Olympic animation',
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
