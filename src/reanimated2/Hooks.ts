@@ -163,11 +163,21 @@ function runAnimations(animation, timestamp, key, result, animationsActive) {
 function isAnimated(prop) {
   'worklet';
   if (Array.isArray(prop)) {
-    return prop.some((item) => isAnimated(item));
+    for (const item of prop) {
+      if (isAnimated(item)) {
+        return true;
+      }
+    }
+    return false;
   } else if (prop?.onFrame !== undefined) {
     return true;
   } else if (typeof prop === 'object') {
-    return Object.values(prop).some((value) => isAnimated(value));
+    for (const item of Object.values(prop)) {
+      if (isAnimated(item)) {
+        return true;
+      }
+    }
+    return false;
   }
   // otherwise it is not animated prop
   return false;
@@ -454,14 +464,14 @@ function checkSharedValueUsage(prop, currentKey): void {
     );
   } else if (prop === 'object') {
     // if it's a nested object, run validation for all its props
-    Object.keys(prop).forEach((key) => {
+    for (const key of Object.keys(prop)) {
       checkSharedValueUsage(prop[key], key);
-    });
+    }
   } else if (Array.isArray(prop)) {
     // if it's an array (i.ex. transform) validate all its elements
-    prop.forEach((element) => {
+    for (const element of prop) {
       checkSharedValueUsage(element, currentKey);
-    });
+    }
   }
 }
 

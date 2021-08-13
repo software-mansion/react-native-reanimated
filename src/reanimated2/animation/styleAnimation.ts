@@ -92,17 +92,23 @@ export function withStyleAnimation(
         currentPath: PrimitiveValue[]
       ): void => {
         if (Array.isArray(currentStyleAnimation)) {
-          currentStyleAnimation.forEach((element, index) =>
-            onFrameRecursive(element, [...currentPath, index])
-          );
+          for (let index = 0; index < currentStyleAnimation.length; index++) {
+            onFrameRecursive(
+              currentStyleAnimation[index],
+              currentPath.concat(index)
+            );
+          }
         } else if (
           typeof currentStyleAnimation === 'object' &&
           currentStyleAnimation.onFrame === undefined
         ) {
           // nested object
-          Object.keys(currentStyleAnimation).forEach((key) => {
-            onFrameRecursive(currentStyleAnimation[key], [...currentPath, key]);
-          });
+          for (const key of Object.keys(currentStyleAnimation)) {
+            onFrameRecursive(
+              currentStyleAnimation[key],
+              currentPath.concat(key)
+            );
+          }
         } else {
           const currentAnimation: AnimationObject = currentStyleAnimation as AnimationObject;
           if (currentAnimation.finished) {
@@ -137,16 +143,22 @@ export function withStyleAnimation(
         currentPath: PrimitiveValue[]
       ) => {
         if (Array.isArray(currentStyleAnimation)) {
-          currentStyleAnimation.forEach((element, index) =>
-            onStartRecursive(element, [...currentPath, index])
-          );
+          for (let index = 0; index < currentStyleAnimation.length; index++) {
+            onStartRecursive(
+              currentStyleAnimation[index],
+              currentPath.concat(index)
+            );
+          }
         } else if (
           typeof currentStyleAnimation === 'object' &&
           currentStyleAnimation.onStart === undefined
         ) {
-          Object.keys(currentStyleAnimation).forEach((key) =>
-            onStartRecursive(currentStyleAnimation[key], [...currentPath, key])
-          );
+          for (const key of Object.keys(currentStyleAnimation)) {
+            onStartRecursive(
+              currentStyleAnimation[key],
+              currentPath.concat(key)
+            );
+          }
         } else {
           const prevAnimation = resolvePath(
             previousAnimation?.styleAnimations,
@@ -186,16 +198,16 @@ export function withStyleAnimation(
         currentStyleAnimation: NestedObjectValues<AnimationObject>
       ) => {
         if (Array.isArray(currentStyleAnimation)) {
-          currentStyleAnimation.forEach((element) =>
-            recursiveCallback(element)
-          );
+          for (const element of currentStyleAnimation) {
+            recursiveCallback(element);
+          }
         } else if (
           typeof currentStyleAnimation === 'object' &&
           currentStyleAnimation.onStart === undefined
         ) {
-          Object.values(currentStyleAnimation).forEach((value) =>
-            recursiveCallback(value)
-          );
+          for (const value of Object.values(currentStyleAnimation)) {
+            recursiveCallback(value);
+          }
         } else {
           const currentAnimation: AnimationObject = currentStyleAnimation as AnimationObject;
           if (!currentAnimation.finished && currentAnimation.callback) {
