@@ -261,8 +261,8 @@ int NativeProxy::registerSensor(
 ) {
   auto method = javaPart_
           ->getClass()
-          ->getMethod<int(int, int)>("registerSensor");
-  return method(javaPart_.get(), sensorType, interval); // todo: setter
+          ->getMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
+  return method(javaPart_.get(), sensorType, interval, SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 
 void NativeProxy::rejectSensor(int sensorId) {

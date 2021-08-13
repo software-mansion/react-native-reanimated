@@ -74,6 +74,20 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public static class SensorSetter {
+
+    @DoNotStrip
+    private final HybridData mHybridData;
+
+    @DoNotStrip
+    private SensorSetter(HybridData hybridData) {
+      mHybridData = hybridData;
+    }
+
+    public native void sensorSetter(double value);
+  }
+
+  @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
   private NodesManager mNodesManager;
@@ -164,7 +178,7 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private int registerSensor(int sensorType, int interval) {
+  private int registerSensor(int sensorType, int interval, SensorSetter setter) {
     //TODO
     return reanimatedSensorContainer.registerSensor(Sensor.TYPE_ACCELEROMETER);
   }

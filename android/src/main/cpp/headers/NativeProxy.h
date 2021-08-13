@@ -125,13 +125,13 @@ public:
     static auto constexpr kJavaDescriptor =
             "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
 
-    void setter(double value) {
+    void sensorSetter(double value) {
         callback_(value);
     }
 
     static void registerNatives() {
         javaClassStatic()->registerNatives(
-            {makeNativeMethod("onAnimationFrame", SensorSetter::setter),}
+            {makeNativeMethod("sensorSetter", SensorSetter::sensorSetter),}
         );
     }
 
