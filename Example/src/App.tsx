@@ -29,6 +29,7 @@ import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
 import React from 'react';
 import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
+import AirbnbHeaderExample from './AirbnbHeaderExample';
 import ScrollExample from './AnimatedScrollExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollableViewExample from './ScrollableViewExample';
@@ -131,6 +132,10 @@ const SCREENS: Screens = {
   ExtrapolationExample: {
     screen: ExtrapolationExample,
     title: 'Extrapolation Example',
+  },
+  AirbnbHeaderExample: {
+    screen: AirbnbHeaderExample,
+    title: 'Airbnb Header Example',
   },
   ScrollExample: {
     screen: ScrollExample,
