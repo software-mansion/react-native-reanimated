@@ -77,6 +77,29 @@ class EventHandler : public HybridClass<EventHandler> {
   std::function<void(std::string,std::string)> handler_;
 };
 
+class SensorSetter : public HybridClass<SensorSetter> {
+public:
+    static auto constexpr kJavaDescriptor =
+            "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
+
+    void sensorSetter(double value) {
+        callback_(value);
+    }
+
+    static void registerNatives() {
+        javaClassStatic()->registerNatives({
+           makeNativeMethod("sensorSetter", SensorSetter::sensorSetter),
+       });
+    }
+
+private:
+    friend HybridBase;
+
+    SensorSetter(std::function<void(double)> callback)
+        : callback_(std::move(callback)) {}
+
+    std::function<void(double)> callback_;
+};
 
 class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
@@ -118,30 +141,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
       std::shared_ptr<Scheduler> scheduler,
       jni::global_ref<LayoutAnimations::javaobject> _layoutAnimations);
-};
-
-class SensorSetter : public HybridClass<SensorSetter> {
-public:
-    static auto constexpr kJavaDescriptor =
-            "Lcom/swmansion/reanimated/NativeProxy$SensorSetter;";
-
-    void sensorSetter(double value) {
-        callback_(value);
-    }
-
-    static void registerNatives() {
-        javaClassStatic()->registerNatives(
-            {makeNativeMethod("sensorSetter", SensorSetter::sensorSetter),}
-        );
-    }
-
-private:
-    friend HybridBase;
-
-    SensorSetter(std::function<void(double)> callback)
-            : callback_(std::move(callback)) {}
-
-    std::function<void(double)> callback_;
 };
 
 }

@@ -180,6 +180,7 @@ public class NativeProxy {
   @DoNotStrip
   private int registerSensor(int sensorType, int interval, SensorSetter setter) {
     //TODO
+    setter.sensorSetter(51);
     return reanimatedSensorContainer.registerSensor(Sensor.TYPE_ACCELEROMETER);
   }
 

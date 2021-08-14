@@ -289,7 +289,6 @@ jsi::Value NativeReanimatedModule::registerSensor(jsi::Runtime &rt, const jsi::V
     auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
     mutableObject->setValue(rt, jsi::Value(newValue));
   };
-  setter(123);
   return jsi::Value(registerSensorFunction(sensorType.asNumber(), interval.asNumber(), setter));
 }
 
