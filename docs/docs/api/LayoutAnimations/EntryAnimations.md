@@ -22,7 +22,7 @@ import { AnimationName } from 'react-native-reanimated';
 <AnimatedComponent entering={AnimationName} > 
 ```
 ### 3. Customize the animation
-Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
+Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particular animation type.
 ```js
 <AnimatedComponent entering={AnimationName.duration(3000).otherModifier()} >
 ```
@@ -151,7 +151,7 @@ Animation based on changing scale of object.
 - ZoomInUp
 - ZoomInDown
 - ZoomInEasyUp
-- ZoomInEadyDown
+- ZoomInEasyDown
 
 #### Modifiers
 * `duration` (in ms) default: 300

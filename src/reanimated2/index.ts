@@ -1,5 +1,5 @@
 export * from './core';
-export * from './Hooks';
+export * from './hook';
 export * from './animation';
 export * from './interpolation';
 export * from './Easing';

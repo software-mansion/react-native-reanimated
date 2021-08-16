@@ -7,7 +7,12 @@ import {
   AnimationObject,
   Animation,
 } from './commonTypes';
-import { AnimatedStyle, StyleProps } from '../commonTypes';
+import {
+  AnimatedStyle,
+  NestedObject,
+  NestedObjectValues,
+  StyleProps,
+} from '../commonTypes';
 import { withTiming } from './timing';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
@@ -22,12 +27,6 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   ) => void;
   callback?: AnimationCallback;
 }
-
-interface NestedObject<T> {
-  [key: string]: NestedObjectValues<T>;
-}
-
-type NestedObjectValues<T> = T | Array<NestedObject<T>> | NestedObject<T>;
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined

@@ -7,6 +7,7 @@ export interface AnimationObject {
   toValue?: AnimationObject['current'];
   startValue?: AnimationObject['current'];
   finished?: boolean;
+  strippedCurrent?: number;
 
   __prefix?: string;
   __suffix?: string;
@@ -42,10 +43,5 @@ export type AnimationCallback = (
 ) => void;
 
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
-
-export type SharedValue = {
-  // TODO: just temporary mock
-  value: unknown;
-};
 
 export type Timestamp = number;

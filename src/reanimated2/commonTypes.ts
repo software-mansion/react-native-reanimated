@@ -43,3 +43,16 @@ export interface AnimatedStyle
   [key: string]: any;
   transform?: Array<Record<string, Animation<AnimationObject>>>;
 }
+
+export interface SharedValue<T> {
+  value: T;
+}
+
+export interface NestedObject<T> {
+  [key: string]: NestedObjectValues<T>;
+}
+
+export type NestedObjectValues<T> =
+  | T
+  | Array<NestedObject<T>>
+  | NestedObject<T>;

@@ -31,7 +31,7 @@ function CustomExitingAnimation(startingValues) {
 }
 ```
 
-* `startingValues` - contains information about where view was displayed and what were its dimentions
+* `startingValues` - contains information about where view was displayed and what were its dimensions
     * `startingValues.originX` - X coordinate of top left corner in parent's coordinate system
     * `startingValues.originY` - Y coordinate of top left corner in parent's coordinate system
     * `startingValues.width` - view's width
@@ -91,7 +91,7 @@ function CustomEnteringAnimation(targetValues) {
 }
 ```
 
-* `targetValues` - contains information about where view wants to be displayed and what are its dimentions
+* `targetValues` - contains information about where view wants to be displayed and what are its dimensions
     * `targetValues.originX` - X coordinate of top left corner in parent's coordinate system
     * `targetValues.originY` - Y coordinate of top left corner in parent's coordinate system
     * `targetValues.width` - view's width
@@ -162,7 +162,7 @@ function CustomLayoutTransition(values) {
 }
 ```
 
-* `values` - contains before and after information about the view's origin and dimations
+* `values` - contains before and after information about the view's origin and dimensions
     * `values.originX` - X coordinate of top left corner in parent's coordinate system (after)
     * `values.originY` - Y coordinate of top left corner in parent's coordinate system (after)
     * `values.width` - view's width (after)

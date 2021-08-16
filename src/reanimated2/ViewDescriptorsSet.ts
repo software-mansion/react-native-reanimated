@@ -2,8 +2,29 @@
 // @ts-nocheck
 import { useRef } from 'react';
 import { makeMutable } from './core';
+import { SharedValue } from './hook/commonTypes';
 
-export function makeViewDescriptorsSet() {
+export interface ViewRefSet<T> {
+  items: Set<T>;
+  add: (item: T) => void;
+  remove: (item: T) => void;
+}
+
+export interface ViewDescriptorsSet {
+  batchToRemove: Set<number>;
+  tags: Set<number>;
+  waitForInsertSync: boolean;
+  waitForRemoveSync: boolean;
+  sharableViewDescriptors: SharedValue<Descriptor[]>;
+  items: Descriptor[];
+  add: (item: Descriptor) => void;
+  remove: (viewTag: number) => void;
+  rebuildsharableViewDescriptors: (
+    sharableViewDescriptor: SharedValue<Descriptor[]>
+  ) => void;
+}
+
+export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const ref = useRef(null);
   if (ref.current === null) {
     const data = {
@@ -14,7 +35,7 @@ export function makeViewDescriptorsSet() {
       sharableViewDescriptors: makeMutable([]),
       items: [],
 
-      add: (item) => {
+      add: (item: Descriptor) => {
         if (data.tags.has(item.tag)) {
           return;
         }
@@ -31,7 +52,7 @@ export function makeViewDescriptorsSet() {
         }
       },
 
-      remove: (viewTag) => {
+      remove: (viewTag: number) => {
         data.batchToRemove.add(viewTag);
 
         if (!data.waitForRemoveSync) {
@@ -54,7 +75,9 @@ export function makeViewDescriptorsSet() {
         }
       },
 
-      rebuildsharableViewDescriptors: (sharableViewDescriptors) => {
+      rebuildsharableViewDescriptors: (
+        sharableViewDescriptors: SharedValue<Descriptor[]>
+      ) => {
         data.sharableViewDescriptors = sharableViewDescriptors;
       },
     };
@@ -64,7 +87,7 @@ export function makeViewDescriptorsSet() {
   return ref.current;
 }
 
-export function makeViewsRefSet() {
+export function makeViewsRefSet(): ViewRefSet {
   const ref = useRef(null);
   if (ref.current === null) {
     const data = {

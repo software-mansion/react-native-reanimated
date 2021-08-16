@@ -43,7 +43,7 @@ export const _updatePropsJS = (updates, viewRef) => {
     );
 
     if (typeof viewRef._component.setNativeProps === 'function') {
-      viewRef._component.setNativeProps({ style: rawStyles });
+      setNativeProps(viewRef._component, rawStyles);
     } else if (Object.keys(viewRef._component.props).length > 0) {
       Object.keys(viewRef._component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -59,6 +59,13 @@ export const _updatePropsJS = (updates, viewRef) => {
       console.warn('It is not possible to manipulate component');
     }
   }
+};
+
+const setNativeProps = (component, style) => {
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...style };
+  component.previousStyle = currentStyle;
+  component.setNativeProps({ style: currentStyle });
 };
 
 export default reanimatedJS;

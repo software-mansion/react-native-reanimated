@@ -263,12 +263,12 @@ export function makeRemote(object = {}) {
 
 export function startMapper(
   mapper,
-  inputs = [],
-  outputs = [],
+  inputs: any[] = [],
+  outputs: any[] = [],
   updater = () => {
     // noop
   },
-  viewDescriptors = []
+  viewDescriptors: any = []
 ) {
   isConfiguredCheck();
   return NativeReanimated.startMapper(

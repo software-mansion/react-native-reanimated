@@ -7,7 +7,7 @@ const jsListener = (eventName, handler) => (evt) => {
 };
 
 export default class WorkletEventHandler {
-  constructor(worklet, eventNames = []) {
+  constructor(worklet, eventNames: string[] = []) {
     this.worklet = worklet;
     this.eventNames = eventNames;
     this.reattachNeeded = false;
