@@ -15,6 +15,14 @@ interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
 }
 
+enum EventState {
+  FAILED = 1,
+  BEGAN,
+  CANCELLED,
+  ACTIVE,
+  END,
+}
+
 export interface GestureHandlers<T, TContext extends Context> {
   [key: string]: Handler<T, TContext> | undefined;
   onStart?: Handler<T, TContext>;
@@ -66,41 +74,45 @@ export function useAnimatedGestureHandler<
     'worklet';
     const event = useWeb ? e.nativeEvent : e;
 
-    const FAILED = 1;
-    const BEGAN = 2;
-    const CANCELLED = 3;
-    const ACTIVE = 4;
-    const END = 5;
-
-    if (event.state === BEGAN && handlers.onStart) {
+    if (event.state === EventState.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
     }
-    if (event.state === ACTIVE && handlers.onActive) {
+    if (event.state === EventState.ACTIVE && handlers.onActive) {
       handlers.onActive(event, context);
     }
-    if (event.oldState === ACTIVE && event.state === END && handlers.onEnd) {
+    if (
+      event.oldState === EventState.ACTIVE &&
+      event.state === EventState.END &&
+      handlers.onEnd
+    ) {
       handlers.onEnd(event, context);
     }
-    if (event.oldState === BEGAN && event.state === FAILED && handlers.onFail) {
+    if (
+      event.oldState === EventState.BEGAN &&
+      event.state === EventState.FAILED &&
+      handlers.onFail
+    ) {
       handlers.onFail(event, context);
     }
     if (
-      event.oldState === ACTIVE &&
-      event.state === CANCELLED &&
+      event.oldState === EventState.ACTIVE &&
+      event.state === EventState.CANCELLED &&
       handlers.onCancel
     ) {
       handlers.onCancel(event, context);
     }
     if (
-      (event.oldState === BEGAN || event.oldState === ACTIVE) &&
-      event.state !== BEGAN &&
-      event.state !== ACTIVE &&
+      (event.oldState === EventState.BEGAN ||
+        event.oldState === EventState.ACTIVE) &&
+      event.state !== EventState.BEGAN &&
+      event.state !== EventState.ACTIVE &&
       handlers.onFinish
     ) {
       handlers.onFinish(
         event,
         context,
-        event.state === CANCELLED || event.state === FAILED
+        event.state === EventState.CANCELLED ||
+          event.state === EventState.FAILED
       );
     }
   };

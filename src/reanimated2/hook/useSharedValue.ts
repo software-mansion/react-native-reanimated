@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { cancelAnimation } from '../animation';
+import { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
-import { SharedValue } from './commonTypes';
 
 export function useSharedValue<T>(init: T): SharedValue<T> {
   const ref = useRef<SharedValue<T>>(makeMutable(init));

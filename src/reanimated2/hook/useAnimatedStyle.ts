@@ -24,13 +24,9 @@ import {
   validateAnimatedStyles,
 } from './utils';
 import {
-  AdapterWorkletFunction,
-  AnimatedState,
-  AnimationRef,
   BasicWorkletFunction,
   DependencyList,
   Descriptor,
-  SharedValue,
   WorkletFunction,
 } from './commonTypes';
 import {
@@ -40,7 +36,7 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimatedStyle } from '../commonTypes';
+import { AnimatedStyle, SharedValue } from '../commonTypes';
 import {
   Animation,
   AnimationObject,
@@ -52,6 +48,25 @@ export interface AnimatedStyleResult {
   initial: AnimatedStyle;
   viewsRef: ViewRefSet<any>;
   animatedStyle?: MutableRefObject<AnimatedStyle>;
+}
+
+export interface AdapterWorkletFunction extends WorkletFunction {
+  (value: AnimatedStyle): void;
+}
+
+interface AnimatedState {
+  last: AnimatedStyle;
+  animations: AnimatedStyle;
+  isAnimationRunning: boolean;
+  isAnimationCancelled: boolean;
+}
+
+interface AnimationRef {
+  initial: {
+    value: AnimatedStyle;
+  };
+  remoteState: AnimatedState;
+  sharableViewDescriptors: SharedValue<Descriptor[]>;
 }
 
 function prepareAnimation(

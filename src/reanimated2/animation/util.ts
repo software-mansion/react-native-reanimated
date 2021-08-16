@@ -4,13 +4,12 @@ import NativeReanimated from '../NativeReanimated';
 import {
   Animation,
   PrimitiveValue,
-  SharedValue,
   NextAnimation,
   Timestamp,
   AnimationObject,
   HigherOrderAnimation,
 } from './commonTypes';
-import { AnimatedStyle } from '../commonTypes';
+import { AnimatedStyle, SharedValue } from '../commonTypes';
 import { StyleLayoutAnimation } from './styleAnimation';
 import { DelayAnimation } from './delay';
 import { RepeatAnimation } from './repeat';
@@ -215,7 +214,7 @@ export function defineAnimation<
   return create;
 }
 
-export function cancelAnimation(sharedValue: SharedValue): void {
+export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign

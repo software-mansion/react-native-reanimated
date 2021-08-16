@@ -43,3 +43,7 @@ export interface AnimatedStyle
   [key: string]: any;
   transform?: Array<Record<string, Animation<AnimationObject>>>;
 }
+
+export interface SharedValue<T> {
+  value: T;
+}

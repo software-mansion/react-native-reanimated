@@ -10,14 +10,15 @@ import {
 } from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 
-interface ScrollHandler<TContext extends Context> extends WorkletFunction {
+export interface ScrollHandler<TContext extends Context>
+  extends WorkletFunction {
   (event: NativeScrollEvent, context?: TContext): void;
 }
 
 interface ScrollEvent extends NativeScrollEvent {
   eventName: string;
 }
-interface ScrollHandlers<TContext extends Context> {
+export interface ScrollHandlers<TContext extends Context> {
   [key: string]: ScrollHandler<TContext> | undefined;
   onScroll?: ScrollHandler<TContext>;
   onBeginDrag?: ScrollHandler<TContext>;
