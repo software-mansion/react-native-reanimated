@@ -109,7 +109,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <View collapsable={false} style={{flex:1}}>
-        <Stack.Navigator detachInactiveScreens={true}>
+        <Stack.Navigator detachInactiveScreens={false}>
           <Stack.Screen
             name="Home"
             options={{ title: '🎬 Reanimated 2.x Examples' }}

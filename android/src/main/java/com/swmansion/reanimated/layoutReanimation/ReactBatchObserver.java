@@ -134,12 +134,16 @@ public class ReactBatchObserver {
             }
             forceRemove = true;
             deactivate = true;
-            for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
-                mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue()); // TODO check for each od them if they are detached in the sense of Screens
-                alreadySeen.remove(entry.getValue().view.getId());
-            }
+            notifyAboutRemovals(snapshotsOfRemoved);
         });
 
+    }
+
+    private void notifyAboutRemovals(HashMap<Integer, Snapshot> snapshotsOfRemoved) {
+
+        for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
+            mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue()); // TODO check for each od them if they are detached in the sense of Screens
+        }
     }
 
     private void addViewListener(View view) {
@@ -244,7 +248,6 @@ public class ReactBatchObserver {
             willMount();
         }
     }
-
 }
 
 
