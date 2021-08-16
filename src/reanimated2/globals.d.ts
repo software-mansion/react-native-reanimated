@@ -1,5 +1,11 @@
+import { WorkletFunction } from './hook/commonTypes';
+
 declare const _WORKLET: boolean;
 declare const _frameTimestamp: number;
+declare const _eventTimestamp: number;
+declare const _getCurrentTime: () => number;
+declare const _setGlobalConsole: () => void;
+declare const __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
 declare const _stopObservingProgress: (tag: number, flag: boolean) => void;
 declare const _startObservingProgress: (
   tag: number,

@@ -11,6 +11,7 @@ export interface WorkletFunction {
   _closure?: Context;
   __workletHash?: number;
   __optimalization?: number;
+  __worklet?: boolean;
 }
 
 export interface BasicWorkletFunction<T> extends WorkletFunction {

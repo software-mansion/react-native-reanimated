@@ -1,12 +1,11 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
-import { nativeShouldBeMock } from './PlatformChecker';
+import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
+import { BasicWorkletFunction, WorkletFunction } from './hook/commonTypes';
 
-global.__reanimatedWorkletInit = function (worklet) {
+global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
 };
 
@@ -17,11 +16,13 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
-const testWorklet = () => {
+const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
 };
 
-export const checkPluginState = (throwError = true) => {
+export const checkPluginState: (throwError: boolean) => boolean = (
+  throwError = true
+) => {
   if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
     if (throwError) {
       throw new Error(
@@ -33,11 +34,13 @@ export const checkPluginState = (throwError = true) => {
   return true;
 };
 
-export const isConfigured = (throwError = false) => {
+export const isConfigured: (throwError: boolean) => boolean = (
+  throwError = false
+) => {
   return checkPluginState(throwError) && !NativeReanimated.useOnlyV1;
 };
 
-export const isConfiguredCheck = () => {
+export const isConfiguredCheck: () => void = () => {
   if (!isConfigured(true)) {
     throw new Error(
       'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation'
