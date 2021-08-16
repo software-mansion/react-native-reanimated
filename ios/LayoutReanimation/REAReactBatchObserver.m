@@ -1,8 +1,6 @@
 #import "REAReactBatchObserver.h"
 #import "RCTShadowView.h"
 #import "REAAnimationRootView.h"
-#import "REAViewTraverser.h"
-#import "REASnapshooter.h"
 #import "REAUIManager.h"
 
 @interface REAReactBatchObserver ()

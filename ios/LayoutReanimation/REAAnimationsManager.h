@@ -1,5 +1,4 @@
 #import <Foundation/Foundation.h>
-#import "REASnapshooter.h"
 #import <React/RCTUIManager.h>
 #import "REASnapshot.h"
 

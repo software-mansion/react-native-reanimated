@@ -50,13 +50,29 @@ BOOL blockSetter = false;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
-    [super _manageChildren:containerTag
-           moveFromIndices:moveFromIndices
-             moveToIndices:moveToIndices
-         addChildReactTags:addChildReactTags
-              addAtIndices:addAtIndices
-           removeAtIndices:removeAtIndices
-                  registry:registry];
+//  removeDisappearing();
+//  notifyAboutRemoval();
+  [super _manageChildren:containerTag
+         moveFromIndices:moveFromIndices
+           moveToIndices:moveToIndices
+       addChildReactTags:addChildReactTags
+            addAtIndices:addAtIndices
+         removeAtIndices:removeAtIndices
+                registry:registry];
+//  addDisappearing();
+}
+
+- (void)removeDisappearing:(UIView*) view
+{
+  
+}
+- (void)notifyAboutRemoval:(UIView*) view removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
+{
+  
+}
+- (void)addDisappearing:(UIView*) view
+{
+  
 }
 
 - (Class)class {

@@ -3,7 +3,6 @@
 #import "REAAnimationRootView.h"
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
-#import "REAViewTraverser.h"
 
 @interface REAAnimationsManager ()
 
