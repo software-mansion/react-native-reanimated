@@ -4,7 +4,6 @@ export {
   HigherOrderAnimation,
   AnimationCallback,
   NextAnimation,
-  SharedValue,
   Timestamp,
 } from './commonTypes';
 export { cancelAnimation, defineAnimation, initialUpdaterRun } from './util';
