@@ -23,12 +23,7 @@ import {
   styleDiff,
   validateAnimatedStyles,
 } from './utils';
-import {
-  BasicWorkletFunction,
-  DependencyList,
-  Descriptor,
-  WorkletFunction,
-} from './commonTypes';
+import { DependencyList, Descriptor } from './commonTypes';
 import {
   makeViewDescriptorsSet,
   makeViewsRefSet,
@@ -36,7 +31,12 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimatedStyle, SharedValue } from '../commonTypes';
+import {
+  AnimatedStyle,
+  BasicWorkletFunction,
+  SharedValue,
+  WorkletFunction,
+} from '../commonTypes';
 import {
   Animation,
   AnimationObject,

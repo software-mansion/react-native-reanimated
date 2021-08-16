@@ -1,9 +1,4 @@
-export {
-  DependencyList,
-  Context,
-  WorkletFunction,
-  BasicWorkletFunction,
-} from './commonTypes';
+export { DependencyList, Context } from './commonTypes';
 export { useAnimatedProps, useWorkletCallback } from './Hooks';
 export { useSharedValue } from './useSharedValue';
 export {

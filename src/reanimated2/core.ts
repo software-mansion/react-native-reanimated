@@ -3,7 +3,12 @@ import NativeReanimated from './NativeReanimated';
 import { Platform } from 'react-native';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
-import { BasicWorkletFunction, WorkletFunction } from './hook/commonTypes';
+import {
+  BasicWorkletFunction,
+  WorkletFunction,
+  ComplexWorkletFunction,
+} from './commonTypes';
+import { Timestamp } from './animation/commonTypes';
 
 global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
@@ -48,7 +53,7 @@ export const isConfiguredCheck: () => void = () => {
   }
 };
 
-function _toArrayReanimated(object) {
+function _toArrayReanimated<T>(object: Iterable<T> | ArrayLike<T> | T[]): T[] {
   'worklet';
   if (Array.isArray(object)) {
     return object;
@@ -57,19 +62,20 @@ function _toArrayReanimated(object) {
     typeof Symbol !== 'undefined' &&
     (typeof Symbol === 'function' ? Symbol.iterator : '@@iterator') in
       Object(object)
-  )
+  ) {
     return Array.from(object);
+  }
   throw new 'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'();
 }
 
-function _mergeObjectsReanimated() {
+function _mergeObjectsReanimated(): unknown {
   'worklet';
   // we can't use rest parameters in worklets at the moment
   // eslint-disable-next-line prefer-rest-params
   return Object.assign.apply(null, arguments);
 }
 
-global.__reanimatedWorkletInit = function (worklet) {
+global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
 
   if (worklet._closure) {
@@ -86,11 +92,11 @@ global.__reanimatedWorkletInit = function (worklet) {
   }
 };
 
-function pushFrame(frame) {
+function pushFrame(frame: (timestamp: Timestamp) => void): void {
   NativeReanimated.pushFrame(frame);
 }
 
-export function requestFrame(frame) {
+export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
   if (NativeReanimated.native) {
     requestAnimationFrame(frame);
@@ -104,11 +110,14 @@ global._log = function (s) {
   console.log(s);
 };
 
-export function runOnUI(worklet) {
+export function runOnUI<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => R {
   return makeShareable(worklet);
 }
 
-export function makeShareable(value) {
+// TODO add return value
+export function makeShareable<T>(value: T) {
   isConfiguredCheck();
   return NativeReanimated.makeShareable(value);
 }
