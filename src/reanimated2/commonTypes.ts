@@ -41,5 +41,9 @@ export interface StyleProps extends ViewStyle, TextStyle {
 export interface AnimatedStyle
   extends Record<string, Animation<AnimationObject>> {
   [key: string]: any;
-  transform: Array<Record<string, Animation<AnimationObject>>>;
+  transform?: Array<Record<string, Animation<AnimationObject>>>;
+}
+
+export interface SharedValue<T> {
+  value: T;
 }

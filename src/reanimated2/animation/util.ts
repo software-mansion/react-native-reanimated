@@ -4,13 +4,12 @@ import {
   HigherOrderAnimation,
   NextAnimation,
   PrimitiveValue,
-  SharedValue,
   Timestamp,
 } from './commonTypes';
 /* global _WORKLET */
 import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
 
-import { AnimatedStyle } from '../commonTypes';
+import { AnimatedStyle, SharedValue } from '../commonTypes';
 import { DelayAnimation } from './delay';
 import NativeReanimated from '../NativeReanimated';
 import { RepeatAnimation } from './repeat';
@@ -220,7 +219,7 @@ export function defineAnimation<
   return create;
 }
 
-export function cancelAnimation(sharedValue: SharedValue): void {
+export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign

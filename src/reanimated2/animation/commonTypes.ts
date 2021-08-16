@@ -44,9 +44,4 @@ export type AnimationCallback = (
 
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
 
-export type SharedValue = {
-  // TODO: just temporary mock
-  value: unknown;
-};
-
 export type Timestamp = number;

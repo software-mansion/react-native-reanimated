@@ -36,7 +36,8 @@ export function withStyleAnimation(
       Object.keys(styleAnimations).forEach((key) => {
         const currentAnimation = animation.styleAnimations[key];
         if (key === 'transform') {
-          const transform = animation.styleAnimations.transform;
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const transform = animation.styleAnimations.transform!;
           for (let i = 0; i < transform.length; i++) {
             const type = Object.keys(transform[i])[0];
             const currentAnimation: AnimationObject = transform[i][type];
