@@ -40,6 +40,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     private HashMap<Integer, ViewManager> mViewManager;
     private HashMap<Integer, ViewManager> mParentViewManager;
     private HashMap<Integer, View> mParent;
+    private HashMap<Integer, Runnable> mCallbacks;
     private boolean mCleaningScheduled = false;
     private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
 
@@ -65,6 +66,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         mViewManager = new HashMap<>();
         mParentViewManager = new HashMap<>();
         mParent = new HashMap();
+        mCallbacks = new HashMap<>();
     }
 
     public void onCatalystInstanceDestroy() {
@@ -78,16 +80,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
         mViewManager = null;
         mParent = null;
         mParentViewManager = null;
+        mCallbacks = null;
     }
 
     @Override
-    public void onViewRemoval(View view, ViewGroup parent, Snapshot before) {
+    public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
         // TODO fix removal
         Integer tag = view.getId();
         String type = "entering";
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
         ViewHierarchyProxy.attach(view, parent, startValues);
+        mCallbacks.put(tag, callback);
 
         if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
             return;
@@ -138,7 +142,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         HashMap<String, Object> targetValues = after.toMap();
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
-        if (state == ViewState.Disappearing || state == ViewState.ToRemove || state == ViewState.Inactive) {
+        if (state == null || state == ViewState.Disappearing || state == ViewState.ToRemove || state == ViewState.Inactive) {
             return;
         }
         // If startValues are equal to targetValues it means that there was no UI Operation changing
@@ -260,9 +264,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
             Log.d("dfs-remove", view.toString());
         }
         if (!cannotStripe) {
-            if (view.getParent() != null) {
-                ViewGroup parent = (ViewGroup) view.getParent();
-                mReanimatedNativeHierarchyManager.removeView(parent, view);
+            if (mCallbacks.containsKey(view.getId())) {
+                Runnable runnable = mCallbacks.get(view.getId());
+                mCallbacks.remove(view.getId());
+                runnable.run();
             }
             View curView = view;
             mStates.remove(curView.getId());

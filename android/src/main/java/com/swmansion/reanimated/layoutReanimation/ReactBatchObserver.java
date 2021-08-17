@@ -35,11 +35,7 @@ public class ReactBatchObserver {
     private AnimationsManager mAnimationsManager;
 
     /* UI ONLY*/
-    public HashSet<Integer> alreadySeen = new HashSet<>();
     public HashMap<Integer, ViewGroup> parents = new HashMap();
-    public HashMap<Integer, Snapshot> snapshotsOfRemoved = new HashMap();
-    public boolean deactivate = true;
-    public boolean forceRemove = true;
     private NativeViewHierarchyManager mNativeViewHierarchyManager = null;
 
     public ReactBatchObserver(ReactContext context, UIManagerModule uiManager, UIImplementation uiImplementation, NodesManager nodesManager) {
@@ -73,95 +69,11 @@ public class ReactBatchObserver {
     }
 
     public void willMount() {
-        final HashSet<Integer> affectedTags = new HashSet<>(mAffectedNodes);
-        mAffectedNodes = new HashSet<>();
-        snapshotsOfRemoved.clear();
 
-        final HashMap<Integer, Snapshot> firstSnapshots = new HashMap<>();
-
-        //TODO use weakRefs here
-        mUIManager.prependUIBlock(nativeViewHierarchyManager -> {
-            if (mNativeViewHierarchyManager == null) {
-                mNativeViewHierarchyManager = nativeViewHierarchyManager;
-            }
-            deactivate = false;
-            forceRemove = false;
-            for (int tag : affectedTags) {
-                View view = null;
-                try {
-                    view = nativeViewHierarchyManager.resolveView(tag);
-                } catch (IllegalViewOperationException e) {
-                    //noop
-                }
-                if (view == null && alreadySeen.contains(tag)) { // removed not new
-                   continue;
-                }
-                if (view == null && !alreadySeen.contains(tag)) { // it is a new view
-                    continue; //(we cannot take a snapshot or add a listener lets wait for closing UI Block it won't be a null there)
-                }
-                firstSnapshots.put(tag, new Snapshot(view, nativeViewHierarchyManager));
-            }
-        });
-
-        //TODO use weakRefs inside the lambda
-        mUIManager.addUIBlock(nativeViewHierarchyManager -> {
-            for (int tag : affectedTags) {
-                View view = null;
-                try {
-                    view = nativeViewHierarchyManager.resolveView(tag);
-                } catch (IllegalViewOperationException e) {
-                    //noop
-                }
-                if (view == null && alreadySeen.contains(tag)) { // removed not new
-                    continue;
-                }
-                if (view == null && !alreadySeen.contains(tag)) { // it is a new view
-                    continue;
-
-                }
-                if (!alreadySeen.contains(tag)) {
-                    if (view.isAttachedToWindow()) {
-                        notifyAboutANewView(view);
-                        continue;
-                    } else {
-                        continue;
-                    }
-                }
-                Snapshot snapshot = firstSnapshots.get(tag);
-                if (snapshot != null) {
-                    mAnimationsManager.onViewUpdate(view, snapshot, new Snapshot(view, nativeViewHierarchyManager));
-                }
-            }
-        });
-
-    }
-
-    private void notifyAboutANewView(View view) {
-        alreadySeen.add(view.getId());
-        parents.put(view.getId(), (ViewGroup) view.getParent());
-        mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view, mNativeViewHierarchyManager));
     }
 
     public void willLayout() {
-      ReactShadowNode rootShadowNode = null;
-      for (int i = 1; i < 1001; i += 10) { // after full reload root tag increases by 10
-          rootShadowNode = mUIImplementation.resolveShadowNode(i);
-          if (rootShadowNode != null) break;
-      }
-      findAffected(rootShadowNode);
-    }
 
-    public void findAffected(ReactShadowNode rsn) {
-        if (rsn == null) {
-            return;
-        }
-        if (!rsn.isDirty() && (rsn.getParent() != null && !(rsn.getParent().isDirty()))) {
-            return;
-        }
-        mAffectedNodes.add(rsn.getReactTag());
-        for (int i = 0; i < rsn.getChildCount(); ++i) {
-            findAffected(rsn.getChildAt(i));
-        }
     }
 
     public void onCatalystInstanceDestroy() {
@@ -172,8 +84,6 @@ public class ReactBatchObserver {
         mAnimationsManager = null;
         mUIImplementation = null;
         mNodesManager = null;
-        alreadySeen = null;
-        snapshotsOfRemoved = null;
         parents = null;
         mNativeViewHierarchyManager = null;
     }
