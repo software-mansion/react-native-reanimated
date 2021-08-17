@@ -120,15 +120,17 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
         super(viewManagers);
-        Class clazz = super.getClass();
+        Class clazz = this.getClass().getSuperclass();
         try {
             Field field = clazz.getDeclaredField("mLayoutAnimator");
             field.setAccessible(true);
-            field.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            Field modifiersField = Field.class.getDeclaredField("accessFlags");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             field.set(this, new ReaLayoutAnimator(reactContext, this));
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            //noop
+            e.printStackTrace();
         }
     }
 
