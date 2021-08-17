@@ -26,6 +26,17 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
+export type ReanimatedConsole = Pick<
+  Console,
+  'debug' | 'log' | 'warn' | 'info' | 'error'
+>;
+interface WorkletValueSetterContext {
+  _animation?: AnimationObject | null;
+  _value?: PrimitiveValue | Descriptor;
+  value?: PrimitiveValue;
+  _setValue?: (val: PrimitiveValue | Descriptor) => void;
+}
+
 const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
 };
@@ -165,13 +176,6 @@ export function getTimestamp(): number {
     return NativeReanimated.getTimestamp();
   }
   return _getTimestamp();
-}
-
-interface WorkletValueSetterContext {
-  _animation?: AnimationObject | null;
-  _value?: PrimitiveValue | Descriptor;
-  value?: PrimitiveValue;
-  _setValue?: (val: PrimitiveValue | Descriptor) => void;
 }
 
 function workletValueSetter(
