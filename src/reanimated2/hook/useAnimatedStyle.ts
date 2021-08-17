@@ -32,6 +32,7 @@ import {
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import {
+  AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
   SharedValue,
@@ -48,10 +49,6 @@ export interface AnimatedStyleResult {
   initial: AnimatedStyle;
   viewsRef: ViewRefSet<any>;
   animatedStyle?: MutableRefObject<AnimatedStyle>;
-}
-
-export interface AdapterWorkletFunction extends WorkletFunction {
-  (value: AnimatedStyle): void;
 }
 
 interface AnimatedState {

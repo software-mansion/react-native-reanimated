@@ -63,3 +63,16 @@ export interface ComplexWorkletFunction<A extends any[], R>
   extends WorkletFunction {
   (...args: A): R;
 }
+
+export interface NestedObject<T> {
+  [key: string]: NestedObjectValues<T>;
+}
+
+export type NestedObjectValues<T> =
+  | T
+  | Array<NestedObjectValues<T>>
+  | NestedObject<T>;
+
+export interface AdapterWorkletFunction extends WorkletFunction {
+  (value: NestedObject<string | number | AnimationObject>): void;
+}

@@ -8,6 +8,7 @@ export interface AnimationObject {
   startValue?: AnimationObject['current'];
   finished?: boolean;
   strippedCurrent?: number;
+  cancelled?: boolean;
 
   __prefix?: string;
   __suffix?: string;
