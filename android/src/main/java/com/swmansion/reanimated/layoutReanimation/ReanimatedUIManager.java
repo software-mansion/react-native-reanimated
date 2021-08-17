@@ -31,12 +31,16 @@ import com.facebook.react.uimanager.ReactRoot;
 import com.facebook.react.uimanager.ReactRootViewTagGenerator;
 import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
+import com.facebook.react.uimanager.ReanimatedUIImplementation;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIBlock;
+import com.facebook.react.uimanager.UIImplementation;
+import com.facebook.react.uimanager.UIImplementationProvider;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import com.facebook.react.uimanager.ViewManager;
+import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.YogaNodePool;
 import com.facebook.react.uimanager.common.ViewUtil;
 import com.facebook.react.uimanager.debug.NotThreadSafeViewHierarchyUpdateDebugListener;
@@ -48,14 +52,29 @@ import com.facebook.systrace.SystraceMessage;
 import java.util.List;
 import java.util.Map;
 
+class ReaUiImplementationProvider extends UIImplementationProvider {
+    UIImplementation createUIImplementation(
+            ReactApplicationContext reactContext,
+            ViewManagerRegistry viewManagerRegistry,
+            EventDispatcher eventDispatcher,
+            int minTimeLeftInFrameForNonBatchedOperationMs) {
+        return new ReanimatedUIImplementation(
+                reactContext,
+                viewManagerRegistry,
+                eventDispatcher,
+                minTimeLeftInFrameForNonBatchedOperationMs);
+    }
+}
+
 @ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
+
     public ReanimatedUIManager(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagerResolver, minTimeLeftInFrameForNonBatchedOperationMs);
+        super(reactContext, viewManagerResolver, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagersList, minTimeLeftInFrameForNonBatchedOperationMs);
+        super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
     @Override
