@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -21,12 +22,13 @@ import java.util.HashSet;
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
     private AnimationsManager mAnimationsManager = null;
     private HashMap<Integer, HashSet<View>> mDisappearing = new HashMap<>();
+    private volatile boolean mInitialized = false;
+    private ReactApplicationContext mContext = null;
+
 
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
         super(viewManagers);
-        ReanimatedModule reanimatedModule = reactContext.getNativeModule(ReanimatedModule.class);
-        mAnimationsManager = reanimatedModule.getNodesManager().getReactBatchObserver().getAnimationsManager();
-        mAnimationsManager.setReanimatedNativeHierarchyManager(this);
+        mContext = reactContext;
     }
 
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, RootViewManager manager) {
@@ -39,20 +41,32 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         addDisappearing(parent);
     }
 
+    public void maybeInit() {
+        if (!mInitialized) {
+            mInitialized = true;
+            ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
+            mAnimationsManager = reanimatedModule.getNodesManager().getReactBatchObserver().getAnimationsManager();
+            mAnimationsManager.setReanimatedNativeHierarchyManager(this);
+        }
+    }
+
     @Override
     public synchronized void manageChildren(int tag, @Nullable int[] indicesToRemove, @Nullable ViewAtIndex[] viewsToAdd, @Nullable int[] tagsToDelete) {
         //children: [child1, child2,...,childS| disappearingChild1, disappearingChild2...disappearingChildK]
-        //View view = resolveView(tag);
-        //removeDisappearing(view);
-        //notifyAboutRemoval(view, indicesToRemove, tagsToDelete);
+        maybeInit();
+        Log.d("REAPOW", "YeahManage");
+        View view = resolveView(tag);
+        removeDisappearing(view);
+        notifyAboutRemoval(view, indicesToRemove, tagsToDelete);
         super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
-        //addDisappearing(view);
+        addDisappearing(view);
     }
 
     private void addDisappearing(View view) {
         if (!(view instanceof ViewGroup)) return;
         ViewGroupManager vm = (ViewGroupManager) resolveViewManager(view.getId());
         HashSet<View> disappearingChildren = mDisappearing.get(view.getId());
+        if (disappearingChildren == null) return;
         vm.addViews((ViewGroup) view, new ArrayList<>(disappearingChildren));
     }
 
@@ -76,6 +90,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         if (!(view instanceof ViewGroup)) return;
         ViewGroupManager vm = (ViewGroupManager) resolveViewManager(view.getId());
         HashSet<View> disappearingChildren = mDisappearing.get(view.getId());
+        if (disappearingChildren == null) return;
         int disappearingCount = disappearingChildren.size();
         while ((disappearingCount--) != 0) {
             vm.removeViewAt((ViewGroup) view, vm.getChildCount((ViewGroup) view) - 1);
