@@ -121,7 +121,7 @@ public class ReactBatchObserver {
                 }
                 if (!alreadySeen.contains(tag)) {
                     if (view.isAttachedToWindow()) {
-                        addViewListener(view);
+                        notifyAboutANewView(view);
                         continue;
                     } else {
                         continue;
@@ -132,57 +132,14 @@ public class ReactBatchObserver {
                     mAnimationsManager.onViewUpdate(view, snapshot, new Snapshot(view, nativeViewHierarchyManager));
                 }
             }
-            forceRemove = true;
-            deactivate = true;
-            notifyAboutRemovals(snapshotsOfRemoved);
         });
 
     }
 
-    private void notifyAboutRemovals(HashMap<Integer, Snapshot> snapshotsOfRemoved) {
-
-        for (Map.Entry<Integer, Snapshot> entry : snapshotsOfRemoved.entrySet()) {
-            mAnimationsManager.onViewRemoval(entry.getValue().view, entry.getValue().parent, entry.getValue()); // TODO check for each od them if they are detached in the sense of Screens
-        }
-    }
-
-    private void addViewListener(View view) {
-        Log.d("reanimated", "dodaje" + view.getId());
+    private void notifyAboutANewView(View view) {
         alreadySeen.add(view.getId());
         parents.put(view.getId(), (ViewGroup) view.getParent());
         mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view, mNativeViewHierarchyManager));
-        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(View view) {
-                if (deactivate) return;
-                if (snapshotsOfRemoved.containsKey(view.getId())) {
-                    snapshotsOfRemoved.remove(view.getId());
-                }
-            }
-
-            @Override
-            public void onViewDetachedFromWindow(View view) {
-                if (forceRemove) {
-                    parents.remove(view.getId());
-                    alreadySeen.remove(view.getId());
-                    view.removeOnAttachStateChangeListener(this);
-                    return;
-                }
-                if (deactivate) return;
-                ViewGroup parent = parents.get(view.getId());
-                deactivate = true;
-                boolean attachedForSnapshot = false;
-                if (view.getParent() == null) {
-                    parent.addView(view);
-                    attachedForSnapshot = true;
-                }
-                snapshotsOfRemoved.put(view.getId(), new Snapshot(view, mNativeViewHierarchyManager));
-                if (attachedForSnapshot) {
-                    parent.removeView(view);
-                }
-                deactivate = false;
-            }
-        });
     }
 
     public void willLayout() {

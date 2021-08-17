@@ -10,21 +10,29 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.events.EventDispatcher;
+import com.swmansion.reanimated.layoutReanimation.ReanimatedNativeHierarchyManager;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class ReanimatedUIImplementation extends UIImplementation {
     public ReanimatedUIImplementation(ReactApplicationContext reactContext, UIManagerModule.ViewManagerResolver viewManagerResolver, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagerResolver, eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
+        this(reactContext, new ViewManagerRegistry(viewManagerResolver), eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
     public ReanimatedUIImplementation(ReactApplicationContext reactContext, List<ViewManager> viewManagerList, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagerList, eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
+        this(reactContext, new ViewManagerRegistry(viewManagerList), eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
     public ReanimatedUIImplementation(ReactApplicationContext reactContext, ViewManagerRegistry viewManagerRegistry, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagerRegistry, eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
+        super(
+                reactContext,
+                viewManagerRegistry,
+                new UIViewOperationQueue(
+                        reactContext,
+                        new ReanimatedNativeHierarchyManager(viewManagerRegistry, reactContext),
+                        minTimeLeftInFrameForNonBatchedOperationMs),
+                eventDispatcher);
     }
 
     /**

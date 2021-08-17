@@ -41,6 +41,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
     private HashMap<Integer, ViewManager> mParentViewManager;
     private HashMap<Integer, View> mParent;
     private boolean mCleaningScheduled = false;
+    private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
+
+    public void setReanimatedNativeHierarchyManager(ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
+        this.mReanimatedNativeHierarchyManager = reanimatedNativeHierarchyManager;
+    }
+
+    public ReanimatedNativeHierarchyManager getReanimatedNativeHierarchyManager() {
+        return mReanimatedNativeHierarchyManager;
+    }
 
     public enum ViewState {
         Appearing, Disappearing, Layout, Inactive, ToRemove;
@@ -253,7 +262,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         if (!cannotStripe) {
             if (view.getParent() != null) {
                 ViewGroup parent = (ViewGroup) view.getParent();
-                parent.removeView(view);
+                mReanimatedNativeHierarchyManager.removeView(parent, view);
             }
             View curView = view;
             mStates.remove(curView.getId());
