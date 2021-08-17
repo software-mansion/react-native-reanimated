@@ -42,11 +42,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     @Override
     public synchronized void manageChildren(int tag, @Nullable int[] indicesToRemove, @Nullable ViewAtIndex[] viewsToAdd, @Nullable int[] tagsToDelete) {
         //children: [child1, child2,...,childS| disappearingChild1, disappearingChild2...disappearingChildK]
-        View view = resolveView(tag);
-        removeDisappearing(view);
-        notifyAboutRemoval(view, indicesToRemove, tagsToDelete);
+        //View view = resolveView(tag);
+        //removeDisappearing(view);
+        //notifyAboutRemoval(view, indicesToRemove, tagsToDelete);
         super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
-        addDisappearing(view);
+        //addDisappearing(view);
     }
 
     private void addDisappearing(View view) {

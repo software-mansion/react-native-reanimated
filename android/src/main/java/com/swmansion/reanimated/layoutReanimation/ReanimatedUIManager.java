@@ -1,9 +1,10 @@
-package com.swmansion.reanimated.layoutReanimation;
+package com.facebook.react.uimanager;
 
 import static com.facebook.react.uimanager.common.UIManagerType.FABRIC;
 
 import android.content.ComponentCallbacks2;
 import android.content.res.Configuration;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -53,11 +54,14 @@ import java.util.List;
 import java.util.Map;
 
 class ReaUiImplementationProvider extends UIImplementationProvider {
+
+    @Override
     UIImplementation createUIImplementation(
             ReactApplicationContext reactContext,
             ViewManagerRegistry viewManagerRegistry,
             EventDispatcher eventDispatcher,
             int minTimeLeftInFrameForNonBatchedOperationMs) {
+        Log.d("REAPOW", "Yeah");
         return new ReanimatedUIImplementation(
                 reactContext,
                 viewManagerRegistry,
@@ -71,10 +75,12 @@ public class ReanimatedUIManager extends UIManagerModule {
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagerResolver, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
+        Log.d("REAPOW", "Yeah1");
     }
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
+        Log.d("REAPOW", "Yeah2");
     }
 
     @Override
