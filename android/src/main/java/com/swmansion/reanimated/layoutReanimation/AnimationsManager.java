@@ -87,15 +87,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
     public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
         // TODO fix removal
         Integer tag = view.getId();
-        String type = "entering";
+        String type = "exiting";
         HashMap<String, Object> startValues = before.toMap();
         ViewState state = mStates.get(view.getId());
-        ViewHierarchyProxy.attach(view, parent, startValues);
-        mCallbacks.put(tag, callback);
 
-        if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
+        if (state == null || state == ViewState.Disappearing || state == ViewState.ToRemove) {
             return;
         }
+        mCallbacks.put(tag, callback);
         if (state == ViewState.Inactive) {
             if (startValues != null) {
                 mStates.put(view.getId(), ViewState.ToRemove);
@@ -106,7 +105,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
         }
         Log.d("REANIMATED", tag + state.name());
         mStates.put(tag, ViewState.Disappearing);
-        type = "exiting";
         HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
         mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
     }
@@ -269,6 +267,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
                 mCallbacks.remove(view.getId());
                 runnable.run();
             }
+            if (mParent.containsKey(view.getId())) {
+                ViewGroup parent = (ViewGroup) mParent.get(view.getId());
+                parent.removeView(view);
+            }
             View curView = view;
             mStates.remove(curView.getId());
             mViewForTag.remove(curView.getId());
@@ -277,6 +279,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             mParent.remove(curView.getId());
             mNativeMethodsHolder.removeConfigForTag(curView.getId());
             mToRemove.remove(view.getId());
+
         }
         return cannotStripe;
     }
