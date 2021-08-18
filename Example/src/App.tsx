@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox, Button } from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox, Button, Platform, UIManager } from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import {
   createStackNavigator,
@@ -37,6 +37,12 @@ LogBox.ignoreLogs(['Calling `getNode()`']);
 
 import Animated, { FadeOut, FadeIn } from 'react-native-reanimated';
 import { findNodeHandle } from 'react-native';
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 

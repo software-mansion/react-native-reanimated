@@ -31,7 +31,7 @@ import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.systrace.Systrace;
-import com.swmansion.reanimated.layoutReanimation.ReanimatedUIManager;
+import com.facebook.react.uimanager.ReanimatedUIManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
