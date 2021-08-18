@@ -15,6 +15,8 @@
            addAtIndices:(NSArray<NSNumber *> *)addAtIndices
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
+
+//- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
 @end
 
 @implementation REAUIManager
@@ -63,10 +65,13 @@ BOOL blockSetter = false;
                 registry:registry];
 }
 
+// Overrided https://github.com/facebook/react-native/blob/v0.65.0/React/Modules/RCTUIManager.m#L530
 - (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
 {
 //  RCTAssertUIManagerQueue();
 
+//  [super uiBlockWithLayoutUpdateForRootView: rootShadowView];
+  
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
@@ -175,7 +180,8 @@ BOOL blockSetter = false;
       if (view.isHidden != isHidden) {
         view.hidden = isHidden;
       }
-
+      
+      REASnapshot* snapshotBefore = [[REASnapshot alloc] init:view];
       if (creatingLayoutAnimation) {
         // Animate view creation
         [view reactSetFrame:frame];
@@ -220,6 +226,16 @@ BOOL blockSetter = false;
         [view reactSetFrame:frame];
         completion(YES);
       }
+      
+      if(isNew) {
+        REASnapshot* snapshot = [[REASnapshot alloc] init:view];
+        [self->_animationsManager onViewCreate:view parent:view.superview after:snapshot];
+      }
+      else {
+        REASnapshot* snapshotAfter = [[REASnapshot alloc] init:view];
+        [self->_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+      }
+      
     }
 
     // Clean up
@@ -227,11 +243,73 @@ BOOL blockSetter = false;
   };
 }
 
-- (Class)class {
+///**
+// * Remove subviews from their parent with an animation.
+// */
+//- (void)_removeChildren:(NSArray<UIView *> *)children
+//          fromContainer:(UIView *)container
+//          withAnimation:(RCTLayoutAnimationGroup *)animation
+//{
+//  RCTAssertMainQueue();
+//  RCTLayoutAnimation *deletingLayoutAnimation = animation.deletingLayoutAnimation;
+//
+//  __block NSUInteger completionsCalled = 0;
+//  for (UIView *removedChild in children) {
+//    void (^completion)(BOOL) = ^(BOOL finished) {
+//      completionsCalled++;
+//
+//      [removedChild removeFromSuperview];
+//
+//      if (animation.callback && completionsCalled == children.count) {
+//        animation.callback(@[ @(finished) ]);
+//
+//        // It's unsafe to call this callback more than once, so we nil it out here
+//        // to make sure that doesn't happen.
+//        animation.callback = nil;
+//      }
+//    };
+//
+//    // Hack: At this moment we have two contradict intents.
+//    // First one: We want to delete the view from view hierarchy.
+//    // Second one: We want to animate this view, which implies the existence of this view in the hierarchy.
+//    // So, we have to remove this view from React's view hierarchy but postpone removing from UIKit's hierarchy.
+//    // Here the problem: the default implementation of `-[UIView removeReactSubview:]` also removes the view from
+//    // UIKit's hierarchy. So, let's temporary restore the view back after removing. To do so, we have to memorize
+//    // original `superview` (which can differ from `container`) and an index of removed view.
+//    UIView *originalSuperview = removedChild.superview;
+//    NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:removedChild];
+//    [container removeReactSubview:removedChild];
+//    // Disable user interaction while the view is animating
+//    // since the view is (conceptually) deleted and not supposed to be interactive.
+//    removedChild.userInteractionEnabled = NO;
+//    [originalSuperview insertSubview:removedChild atIndex:originalIndex];
+//
+//    NSString *property = deletingLayoutAnimation.property;
+//    [deletingLayoutAnimation
+//          performAnimations:^{
+//            if ([property isEqualToString:@"scaleXY"]) {
+//              removedChild.layer.transform = CATransform3DMakeScale(0.001, 0.001, 0.001);
+//            } else if ([property isEqualToString:@"scaleX"]) {
+//              removedChild.layer.transform = CATransform3DMakeScale(0.001, 1, 0.001);
+//            } else if ([property isEqualToString:@"scaleY"]) {
+//              removedChild.layer.transform = CATransform3DMakeScale(1, 0.001, 0.001);
+//            } else if ([property isEqualToString:@"opacity"]) {
+//              removedChild.layer.opacity = 0.0;
+//            } else {
+//              RCTLogError(@"Unsupported layout animation createConfig property %@", deletingLayoutAnimation.property);
+//            }
+//          }
+//        withCompletionBlock:completion];
+//  }
+//}
+
+- (Class)class
+{
     return [RCTUIManager class];
 }
 
-+ (Class)class {
++ (Class)class
+{
     return [RCTUIManager class];
 }
 

@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
   _view = view;
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
   CGPoint originFromRootPerspective = [[view superview] convertPoint:view.center toView:windowView];
-  
+  _values = [NSMutableDictionary new];
   _values[@"width"] = [NSNumber numberWithDouble:(double)(view.bounds.size.width)];
   _values[@"height"] = [NSNumber numberWithDouble:(double)(view.bounds.size.height)];
   _values[@"originX"] = [NSNumber numberWithDouble:view.center.x - view.bounds.size.width/2.0];

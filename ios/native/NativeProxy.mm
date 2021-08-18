@@ -140,10 +140,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
   
   // Layout Animations start
-//  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
-  RCTUIManager* reaUiManager = [bridge moduleForClass:[REAUIManager class]];
-  __weak REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
-
+  REAUIManager* reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
+  RCTUIManager* reaUiManager = reaUiManagerNoCast;
+  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+  reaUiManagerNoCast.animationsManager = animationsManager;
   
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
     if (animationsManager) {
