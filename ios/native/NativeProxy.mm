@@ -9,7 +9,7 @@
 #import <React/RCTUIManager.h>
 #import "LayoutAnimationsProxy.h"
 #import "REAAnimationsManager.h"
-#import "REAReactBatchObserver.h"
+#import "REAUIManager.h"
 
 #if __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
@@ -140,7 +140,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
   
   // Layout Animations start
-  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
+//  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
+  RCTUIManager* reaUiManager = [bridge moduleForClass:[REAUIManager class]];
+  __weak REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+
   
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
     if (animationsManager) {
