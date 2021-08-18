@@ -49,7 +49,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         if (!mInitialized) {
             mInitialized = true;
             ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
-            mAnimationsManager = reanimatedModule.getNodesManager().getReactBatchObserver().getAnimationsManager();
+            mAnimationsManager = reanimatedModule.getNodesManager().getAnimationsManager();
         }
     }
 
@@ -122,7 +122,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
         if (vm != null) {
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
-            mAnimationsManager.onViewRemoval(view, (ViewGroup) view.getParent(), before, () -> {});
+            mAnimationsManager.onViewRemoval(view, (ViewGroup) view.getParent(), before, () -> {
+                ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager = (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
+                reanimatedNativeHierarchyManager.publicDropView(view);
+            });
         }
         if (vm instanceof ViewGroupManager) {
             ViewGroupManager vgm = (ViewGroupManager) vm;
@@ -153,6 +156,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, RootViewManager manager) {
         super(viewManagers, manager);
+    }
+
+    public void publicDropView(View view) {
+        dropView(view);
     }
 
 

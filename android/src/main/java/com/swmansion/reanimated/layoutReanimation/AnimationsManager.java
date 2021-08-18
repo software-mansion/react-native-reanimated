@@ -56,7 +56,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         Appearing, Disappearing, Layout, Inactive, ToRemove;
     }
 
-    AnimationsManager(ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
+    public AnimationsManager(ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
         mContext = context;
         mUIImplementation = uiImplementation;
         mUIManager = uiManagerModule;
