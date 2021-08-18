@@ -1,6 +1,5 @@
 #import "REAAnimationsManager.h"
 #import <React/RCTComponentData.h>
-#import "REAAnimationRootView.h"
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
 
