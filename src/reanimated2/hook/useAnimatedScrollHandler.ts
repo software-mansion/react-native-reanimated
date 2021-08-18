@@ -1,12 +1,12 @@
 import { RefObject, useEffect, useRef } from 'react';
 import { NativeScrollEvent } from 'react-native';
+import { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import WorkletEventHandler from '../WorkletEventHandler';
 import {
   Context,
   ContextWithDependencies,
   DependencyList,
-  WorkletFunction,
 } from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 

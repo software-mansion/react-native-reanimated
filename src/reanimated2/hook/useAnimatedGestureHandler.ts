@@ -1,5 +1,6 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { GestureHandlerStateChangeNativeEvent } from 'react-native-gesture-handler';
+import { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
@@ -7,7 +8,6 @@ import {
   Context,
   ContextWithDependencies,
   DependencyList,
-  WorkletFunction,
 } from './commonTypes';
 import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 

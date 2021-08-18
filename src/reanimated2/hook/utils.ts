@@ -1,9 +1,9 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
 import { processColor } from '../Colors';
-import { AnimatedStyle, StyleProps } from '../commonTypes';
+import { AnimatedStyle, StyleProps, WorkletFunction } from '../commonTypes';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { DependencyList, WorkletFunction } from './commonTypes';
+import { DependencyList } from './commonTypes';
 
 export function useEvent<T>(
   handler: (event: T) => void,

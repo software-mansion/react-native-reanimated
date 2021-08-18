@@ -20,7 +20,7 @@ let IN_STYLE_UPDATER = false;
 
 export type UserUpdater = () => AnimatedStyle;
 
-export function initialUpdaterRun(updater: UserUpdater): AnimatedStyle {
+export function initialUpdaterRun<T>(updater: () => T): T {
   IN_STYLE_UPDATER = true;
   const result = updater();
   IN_STYLE_UPDATER = false;

@@ -23,12 +23,7 @@ import {
   styleDiff,
   validateAnimatedStyles,
 } from './utils';
-import {
-  BasicWorkletFunction,
-  DependencyList,
-  Descriptor,
-  WorkletFunction,
-} from './commonTypes';
+import { DependencyList, Descriptor } from './commonTypes';
 import {
   makeViewDescriptorsSet,
   makeViewsRefSet,
@@ -36,18 +31,19 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimatedStyle, NestedObjectValues, SharedValue } from '../commonTypes';
 import { AnimationObject, PrimitiveValue } from '../animation/commonTypes';
-
+import {
+  AdapterWorkletFunction,
+  AnimatedStyle,
+  BasicWorkletFunction,
+  SharedValue,
+  WorkletFunction,
+} from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
   viewsRef: ViewRefSet<any>;
   animatedStyle?: MutableRefObject<AnimatedStyle>;
-}
-
-export interface AdapterWorkletFunction extends WorkletFunction {
-  (value: AnimatedStyle): void;
 }
 
 interface AnimatedState {
@@ -530,8 +526,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       animationsActive.value = false;
     };
   }, []);
-
-  console.log(initial.value);
 
   checkSharedValueUsage(initial.value);
 

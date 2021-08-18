@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
+import { BasicWorkletFunction, WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
-import {
-  BasicWorkletFunction,
-  DependencyList,
-  WorkletFunction,
-} from './commonTypes';
+import { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 
 export interface AnimatedReactionWorkletFunction<T> extends WorkletFunction {
