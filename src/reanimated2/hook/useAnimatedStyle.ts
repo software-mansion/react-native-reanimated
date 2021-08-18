@@ -36,6 +36,7 @@ import {
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
+  NestedObjectValues,
   SharedValue,
   WorkletFunction,
 } from '../commonTypes';

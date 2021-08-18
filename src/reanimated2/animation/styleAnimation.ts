@@ -74,6 +74,11 @@ function setPath<T>(
   ] = value;
 }
 
+interface NestedObjectEntry<T> {
+  value: NestedObjectValues<T>;
+  path: PrimitiveValue[];
+}
+
 export function withStyleAnimation(
   styleAnimations: AnimatedStyle
 ): StyleLayoutAnimation {
@@ -86,46 +91,53 @@ export function withStyleAnimation(
       now: Timestamp
     ): boolean => {
       let stillGoing = false;
-      const onFrameRecursive = (
-        currentStyleAnimation: NestedObjectValues<AnimationObject>,
-        currentPath: PrimitiveValue[]
-      ): void => {
-        if (Array.isArray(currentStyleAnimation)) {
-          for (let index = 0; index < currentStyleAnimation.length; index++) {
-            onFrameRecursive(
-              currentStyleAnimation[index],
-              currentPath.concat(index)
-            );
+      const entriesToCheck: NestedObjectEntry<AnimationObject>[] = [
+        { value: animation.styleAnimations, path: [] },
+      ];
+      while (entriesToCheck.length > 0) {
+        const currentEntry: NestedObjectEntry<AnimationObject> = entriesToCheck.pop() as NestedObjectEntry<AnimationObject>;
+        if (Array.isArray(currentEntry.value)) {
+          for (let index = 0; index < currentEntry.value.length; index++) {
+            entriesToCheck.push({
+              value: currentEntry.value[index],
+              path: currentEntry.path.concat(index),
+            });
           }
         } else if (
-          typeof currentStyleAnimation === 'object' &&
-          currentStyleAnimation.onFrame === undefined
+          typeof currentEntry.value === 'object' &&
+          currentEntry.value.onFrame === undefined
         ) {
           // nested object
-          for (const key of Object.keys(currentStyleAnimation)) {
-            onFrameRecursive(
-              currentStyleAnimation[key],
-              currentPath.concat(key)
-            );
+          for (const key of Object.keys(currentEntry.value)) {
+            entriesToCheck.push({
+              value: currentEntry.value[key],
+              path: currentEntry.path.concat(key),
+            });
           }
         } else {
-          const currentAnimation: AnimationObject = currentStyleAnimation as AnimationObject;
-          if (currentAnimation.finished) {
-            return;
+          const currentStyleAnimation: AnimationObject = currentEntry.value as AnimationObject;
+          if (currentStyleAnimation.finished) {
+            continue;
           }
-          const finished = currentAnimation.onFrame(currentAnimation, now);
+          const finished = currentStyleAnimation.onFrame(
+            currentStyleAnimation,
+            now
+          );
           if (finished) {
-            currentAnimation.finished = true;
-            if (currentAnimation.callback) {
-              currentAnimation.callback(true);
+            currentStyleAnimation.finished = true;
+            if (currentStyleAnimation.callback) {
+              currentStyleAnimation.callback(true);
             }
           } else {
             stillGoing = true;
           }
-          setPath(animation.current, currentPath, currentAnimation.current);
+          setPath(
+            animation.current,
+            currentEntry.path,
+            currentStyleAnimation.current
+          );
         }
-      };
-      onFrameRecursive(animation.styleAnimations, []);
+      }
       return !stillGoing;
     };
 
@@ -135,51 +147,58 @@ export function withStyleAnimation(
       now: Timestamp,
       previousAnimation: StyleLayoutAnimation
     ): void => {
-      const onStartRecursive = (
-        currentStyleAnimation: NestedObjectValues<
+      const entriesToCheck: NestedObjectEntry<
+        AnimationObject | PrimitiveValue
+      >[] = [{ value: styleAnimations, path: [] }];
+      while (entriesToCheck.length > 0) {
+        const currentEntry: NestedObjectEntry<
           AnimationObject | PrimitiveValue
-        >,
-        currentPath: PrimitiveValue[]
-      ) => {
-        if (Array.isArray(currentStyleAnimation)) {
-          for (let index = 0; index < currentStyleAnimation.length; index++) {
-            onStartRecursive(
-              currentStyleAnimation[index],
-              currentPath.concat(index)
-            );
+        > = entriesToCheck.pop() as NestedObjectEntry<
+          AnimationObject | PrimitiveValue
+        >;
+        if (Array.isArray(currentEntry.value)) {
+          for (let index = 0; index < currentEntry.value.length; index++) {
+            entriesToCheck.push({
+              value: currentEntry.value[index],
+              path: currentEntry.path.concat(index),
+            });
           }
         } else if (
-          typeof currentStyleAnimation === 'object' &&
-          currentStyleAnimation.onStart === undefined
+          typeof currentEntry.value === 'object' &&
+          currentEntry.value.onStart === undefined
         ) {
-          for (const key of Object.keys(currentStyleAnimation)) {
-            onStartRecursive(
-              currentStyleAnimation[key],
-              currentPath.concat(key)
-            );
+          for (const key of Object.keys(currentEntry.value)) {
+            entriesToCheck.push({
+              value: currentEntry.value[key],
+              path: currentEntry.path.concat(key),
+            });
           }
         } else {
           const prevAnimation = resolvePath(
             previousAnimation?.styleAnimations,
-            currentPath
+            currentEntry.path
           );
-          let prevVal = resolvePath(value, currentPath);
+          let prevVal = resolvePath(value, currentEntry.path);
           if (prevAnimation && !prevVal) {
             prevVal = prevAnimation.current;
           }
-          setPath(animation.current, currentPath, prevVal);
+          setPath(animation.current, currentEntry.path, prevVal);
           let currentAnimation: AnimationObject;
           if (
-            typeof currentStyleAnimation !== 'object' ||
-            !currentStyleAnimation.onStart
+            typeof currentEntry.value !== 'object' ||
+            !currentEntry.value.onStart
           ) {
             currentAnimation = withTiming(
-              currentStyleAnimation as PrimitiveValue,
+              currentEntry.value as PrimitiveValue,
               { duration: 0 }
             );
-            setPath(animation.styleAnimations, currentPath, currentAnimation);
+            setPath(
+              animation.styleAnimations,
+              currentEntry.path,
+              currentAnimation
+            );
           } else {
-            currentAnimation = currentStyleAnimation as Animation<AnimationObject>;
+            currentAnimation = currentEntry.value as Animation<AnimationObject>;
           }
           currentAnimation.onStart(
             currentAnimation,
@@ -188,34 +207,37 @@ export function withStyleAnimation(
             prevAnimation
           );
         }
-      };
-      onStartRecursive(styleAnimations, []);
+      }
     };
 
     const callback = (finished: boolean): void => {
-      const recursiveCallback = (
-        currentStyleAnimation: NestedObjectValues<AnimationObject>
-      ) => {
-        if (Array.isArray(currentStyleAnimation)) {
-          for (const element of currentStyleAnimation) {
-            recursiveCallback(element);
-          }
-        } else if (
-          typeof currentStyleAnimation === 'object' &&
-          currentStyleAnimation.onStart === undefined
-        ) {
-          for (const value of Object.values(currentStyleAnimation)) {
-            recursiveCallback(value);
-          }
-        } else {
-          const currentAnimation: AnimationObject = currentStyleAnimation as AnimationObject;
-          if (!currentAnimation.finished && currentAnimation.callback) {
-            currentAnimation.callback(false);
+      if (!finished) {
+        const animationsToCheck: NestedObjectValues<AnimationObject>[] = [
+          styleAnimations,
+        ];
+        while (animationsToCheck.length > 0) {
+          const currentAnimation: NestedObjectValues<AnimationObject> = animationsToCheck.pop() as NestedObjectValues<AnimationObject>;
+          if (Array.isArray(currentAnimation)) {
+            for (const element of currentAnimation) {
+              animationsToCheck.push(element);
+            }
+          } else if (
+            typeof currentAnimation === 'object' &&
+            currentAnimation.onStart === undefined
+          ) {
+            for (const value of Object.values(currentAnimation)) {
+              animationsToCheck.push(value);
+            }
+          } else {
+            const currentStyleAnimation: AnimationObject = currentAnimation as AnimationObject;
+            if (
+              !currentStyleAnimation.finished &&
+              currentStyleAnimation.callback
+            ) {
+              currentStyleAnimation.callback(false);
+            }
           }
         }
-      };
-      if (!finished) {
-        recursiveCallback(styleAnimations);
       }
     };
 
