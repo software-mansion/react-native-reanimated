@@ -224,11 +224,11 @@
 - (void) onViewRemoval: (UIView*) view parent:(NSObject*) parent before:(REASnapshot*) before
 {
   NSNumber* tag = view.reactTag;
-  NSMutableDictionary<NSString*, NSObject*>* startValues = before.values;
   ViewState state = [_states[tag] intValue];
   if(state == Disappearing || state == ToRemove) {
     return;
   }
+  NSMutableDictionary<NSString*, NSObject*>* startValues = before.values;
   if(state == Inactive) {
     if(startValues != nil) {
       _states[tag] = [NSNumber numberWithInt:ToRemove];

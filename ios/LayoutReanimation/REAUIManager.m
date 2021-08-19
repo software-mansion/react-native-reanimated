@@ -16,7 +16,6 @@
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
 
-//- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
 - (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
                                                     atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
@@ -63,13 +62,9 @@ BOOL blockSetter = false;
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   if(isUIViewRegistry) {
     for (UIView *removedChild in permanentlyRemovedChildren) {
-      REASnapshot* snapshot = [[REASnapshot alloc] init:removedChild];
-      [self->_animationsManager onViewRemoval:removedChild parent:removedChild.superview before:snapshot];
+      [self callAnimationForTree: removedChild];
     }
-//    UIView* currentView = (UIView*)container;
-//    REASnapshot* snapshot = [[REASnapshot alloc] init:currentView];
-//    [self->_animationsManager onViewRemoval:currentView parent:currentView.superview before:snapshot];
-//    removeAtIndices = nil;
+    removeAtIndices = nil;
   }
   
   [super _manageChildren:containerTag
@@ -79,6 +74,25 @@ BOOL blockSetter = false;
             addAtIndices:addAtIndices
          removeAtIndices:removeAtIndices
                 registry:registry];
+}
+
+- (void) callAnimationForTree:(UIView*) view
+{
+  REASnapshot* snapshot = [[REASnapshot alloc] init:view];
+  [self->_animationsManager onViewRemoval:view parent:view.superview before:snapshot];
+  
+  NSArray<UIView*>* copy = [[NSArray alloc] initWithArray:view.reactSubviews copyItems:YES];
+  for(UIView* subView in view.reactSubviews) {
+    REASnapshot* snapshot = [[REASnapshot alloc] init:subView];
+    [self->_animationsManager onViewRemoval:subView parent:subView.superview before:snapshot];
+    [self callAnimationForTree:subView];
+  }
+//  for(int i = 0; i < view.reactSubviews.count; ++i) {
+//    UIView* subView = view.reactSubviews[i];
+//    [self callAnimationForTree:subView];
+//    REASnapshot* snapshot = [[REASnapshot alloc] init:subView];
+//    [self->_animationsManager onViewRemoval:subView parent:subView.superview before:snapshot];
+//  }
 }
 
 // Overrided https://github.com/facebook/react-native/blob/v0.65.0/React/Modules/RCTUIManager.m#L530
@@ -258,66 +272,6 @@ BOOL blockSetter = false;
     [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
   };
 }
-
-///**
-// * Remove subviews from their parent with an animation.
-// */
-//- (void)_removeChildren:(NSArray<UIView *> *)children
-//          fromContainer:(UIView *)container
-//          withAnimation:(RCTLayoutAnimationGroup *)animation
-//{
-//  RCTAssertMainQueue();
-//  RCTLayoutAnimation *deletingLayoutAnimation = animation.deletingLayoutAnimation;
-//
-//  __block NSUInteger completionsCalled = 0;
-//  for (UIView *removedChild in children) {
-//    void (^completion)(BOOL) = ^(BOOL finished) {
-//      completionsCalled++;
-//
-//      [removedChild removeFromSuperview];
-//
-//      if (animation.callback && completionsCalled == children.count) {
-//        animation.callback(@[ @(finished) ]);
-//
-//        // It's unsafe to call this callback more than once, so we nil it out here
-//        // to make sure that doesn't happen.
-//        animation.callback = nil;
-//      }
-//    };
-//
-//    // Hack: At this moment we have two contradict intents.
-//    // First one: We want to delete the view from view hierarchy.
-//    // Second one: We want to animate this view, which implies the existence of this view in the hierarchy.
-//    // So, we have to remove this view from React's view hierarchy but postpone removing from UIKit's hierarchy.
-//    // Here the problem: the default implementation of `-[UIView removeReactSubview:]` also removes the view from
-//    // UIKit's hierarchy. So, let's temporary restore the view back after removing. To do so, we have to memorize
-//    // original `superview` (which can differ from `container`) and an index of removed view.
-//    UIView *originalSuperview = removedChild.superview;
-//    NSUInteger originalIndex = [originalSuperview.subviews indexOfObjectIdenticalTo:removedChild];
-//    [container removeReactSubview:removedChild];
-//    // Disable user interaction while the view is animating
-//    // since the view is (conceptually) deleted and not supposed to be interactive.
-//    removedChild.userInteractionEnabled = NO;
-//    [originalSuperview insertSubview:removedChild atIndex:originalIndex];
-//
-//    NSString *property = deletingLayoutAnimation.property;
-//    [deletingLayoutAnimation
-//          performAnimations:^{
-//            if ([property isEqualToString:@"scaleXY"]) {
-//              removedChild.layer.transform = CATransform3DMakeScale(0.001, 0.001, 0.001);
-//            } else if ([property isEqualToString:@"scaleX"]) {
-//              removedChild.layer.transform = CATransform3DMakeScale(0.001, 1, 0.001);
-//            } else if ([property isEqualToString:@"scaleY"]) {
-//              removedChild.layer.transform = CATransform3DMakeScale(1, 0.001, 0.001);
-//            } else if ([property isEqualToString:@"opacity"]) {
-//              removedChild.layer.opacity = 0.0;
-//            } else {
-//              RCTLogError(@"Unsupported layout animation createConfig property %@", deletingLayoutAnimation.property);
-//            }
-//          }
-//        withCompletionBlock:completion];
-//  }
-//}
 
 - (Class)class
 {
