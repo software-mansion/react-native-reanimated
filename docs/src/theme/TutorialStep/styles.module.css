@@ -1,0 +1,41 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid #dcdfeb
+}
+
+.description {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roundedStep {
+    border-radius: 10px;
+    width: 60%;
+    padding: 10px;
+    background-color: #dcdfeb;
+    border-left: 6px solid #dcdfeb;
+}
+
+.roundedStep:hover{
+    border-color: blue;
+}
+
+.stepTitle {
+    font-size: .70588rem;
+    line-height: 1.33337;
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+.code {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333336;
+}

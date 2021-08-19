@@ -15,6 +15,7 @@ module.exports = {
         'migration',
         'web-support',
         'troubleshooting',
+        'tutorial',
       ],
     },
     {

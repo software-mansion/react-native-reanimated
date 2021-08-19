@@ -9,8 +9,7 @@ import clsx from 'clsx';
 import { useThemeConfig, isSamePath } from '@docusaurus/theme-common';
 import useUserPreferencesContext from '@theme/hooks/useUserPreferencesContext';
 import useLockBodyScroll from '@theme/hooks/useLockBodyScroll';
-import useWindowSize, { windowSizes } from '@theme/hooks/useWindowSize';
-import useScrollPosition from '@theme/hooks/useScrollPosition';
+import useWindowSize from '@theme/hooks/useWindowSize';
 import Link from '@docusaurus/Link';
 import isInternalUrl from '@docusaurus/isInternalUrl';
 import Logo from '@theme/Logo';
@@ -190,11 +189,10 @@ function DocSidebar({
     hideableSidebar,
   } = useThemeConfig();
   const { isAnnouncementBarClosed } = useUserPreferencesContext();
-  const { scrollY } = useScrollPosition();
   useLockBodyScroll(showResponsiveSidebar);
   const windowSize = useWindowSize();
   useEffect(() => {
-    if (windowSize === windowSizes.desktop) {
+    if (windowSize === 'desktop') {
       setShowResponsiveSidebar(false);
     }
   }, [windowSize]);
@@ -214,7 +212,7 @@ function DocSidebar({
           {
             'menu--show': showResponsiveSidebar,
             [styles.menuWithAnnouncementBar]:
-              !isAnnouncementBarClosed && scrollY === 0,
+              !isAnnouncementBarClosed,
           }
         )}>
         <button
