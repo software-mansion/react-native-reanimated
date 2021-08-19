@@ -17,6 +17,8 @@
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry;
 
 //- (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView;
+- (NSArray<id<RCTComponent>> *)_childrenToRemoveFromContainer:(id<RCTComponent>)container
+                                                    atIndices:(NSArray<NSNumber *> *)atIndices;
 @end
 
 @implementation REAUIManager
@@ -56,6 +58,20 @@ BOOL blockSetter = false;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
+  id<RCTComponent> container = registry[containerTag];
+  NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+  BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
+  if(isUIViewRegistry) {
+    for (UIView *removedChild in permanentlyRemovedChildren) {
+      REASnapshot* snapshot = [[REASnapshot alloc] init:removedChild];
+      [self->_animationsManager onViewRemoval:removedChild parent:removedChild.superview before:snapshot];
+    }
+//    UIView* currentView = (UIView*)container;
+//    REASnapshot* snapshot = [[REASnapshot alloc] init:currentView];
+//    [self->_animationsManager onViewRemoval:currentView parent:currentView.superview before:snapshot];
+//    removeAtIndices = nil;
+  }
+  
   [super _manageChildren:containerTag
          moveFromIndices:moveFromIndices
            moveToIndices:moveToIndices
