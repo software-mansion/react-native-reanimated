@@ -110,6 +110,9 @@
 - (BOOL) dfs:(UIView*)view discovered:(NSMutableSet<NSNumber*>*)discovered cands:(NSMutableSet<NSNumber*>*)cands
 {
   NSNumber* tag = view.reactTag;
+  if(tag == nil) {
+    return false;
+  }
   if(![cands containsObject:tag] && _states[tag] != nil) {
     return true;
   }
@@ -138,12 +141,13 @@
 {
   NSMutableSet<NSNumber*>* discovered = [NSMutableSet new];
   NSMutableSet<NSNumber*>* roots = [NSMutableSet new];
-  for(NSNumber* viewTag in _toRemove) {
+  NSMutableSet<NSNumber*>* toRemoveCopy = [[NSMutableSet alloc] initWithSet:_toRemove copyItems:YES];
+  for(NSNumber* viewTag in toRemoveCopy) {
     UIView* view = _viewForTag[viewTag];
     [self findRoot:view discovered:discovered roots:roots];
   }
   [discovered removeAllObjects];
-  for(NSNumber* viewTag in _toRemove) {
+  for(NSNumber* viewTag in toRemoveCopy) {
     UIView* view = _viewForTag[viewTag];
     [self dfs:view discovered:discovered cands:_toRemove];
   }
