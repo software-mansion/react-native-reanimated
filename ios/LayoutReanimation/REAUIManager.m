@@ -61,19 +61,9 @@ BOOL blockSetter = false;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   if(isUIViewRegistry) {
-    NSMutableArray<UIView*>* viewSet = [[NSMutableArray<UIView*> alloc] init];
     for (UIView *removedChild in permanentlyRemovedChildren) {
-      [self treeToList: removedChild viewSet:viewSet];
+      [self callAnimationForTree: removedChild];
     }
-    for(int i = 0; i < viewSet.count; ++i) {
-      UIView* pendingView = viewSet[i];
-      REASnapshot* snapshot = [[REASnapshot alloc] init:pendingView];
-      [self->_animationsManager onViewRemoval:pendingView parent:pendingView.superview before:snapshot];
-    }
-//    for(UIView* pendingView in viewSet) {
-//      REASnapshot* snapshot = [[REASnapshot alloc] init:pendingView];
-//      [self->_animationsManager onViewRemoval:pendingView parent:pendingView.superview before:snapshot];
-//    }
     removeAtIndices = nil;
   }
   
@@ -86,42 +76,21 @@ BOOL blockSetter = false;
                 registry:registry];
 }
 
-- (void) callAnimationForTree:(UIView*) view viewSet:(NSMutableSet<UIView*>*) viewSet
+- (void) callAnimationForTree:(UIView*) view
 {
-//  REASnapshot* snapshot = [[REASnapshot alloc] init:view];
-//  [self->_animationsManager onViewRemoval:view parent:view.superview before:snapshot];
-  [viewSet addObject:view];
-//  NSArray<UIView*>* copy = [[NSArray alloc] initWithArray:view.reactSubviews copyItems:YES];
+  REASnapshot* snapshot = [[REASnapshot alloc] init:view];
+  [self->_animationsManager onViewRemoval:view parent:view.superview before:snapshot];
+  
   for(UIView* subView in view.reactSubviews) {
-//    REASnapshot* snapshot = [[REASnapshot alloc] init:subView];
-//    [self->_animationsManager onViewRemoval:subView parent:subView.superview before:snapshot];
-    [viewSet addObject:subView];
-    [self callAnimationForTree:subView viewSet:viewSet];
-  }
-//  for(int i = 0; i < view.reactSubviews.count; ++i) {
-//    UIView* subView = view.reactSubviews[i];
-//    [self callAnimationForTree:subView];
-//    REASnapshot* snapshot = [[REASnapshot alloc] init:subView];
-//    [self->_animationsManager onViewRemoval:subView parent:subView.superview before:snapshot];
-//  }
-}
-
-- (void) treeToList:(UIView*) view viewSet:(NSMutableArray<UIView*>*) viewSet
-{
-  [viewSet addObject:view];
-  for(UIView* subView in view.reactSubviews) {
-    [viewSet addObject:subView];
-    [self treeToList:subView viewSet:viewSet];
+    REASnapshot* snapshot = [[REASnapshot alloc] init:subView];
+    [self->_animationsManager onViewRemoval:subView parent:subView.superview before:snapshot];
+    [self callAnimationForTree:subView];
   }
 }
 
 // Overrided https://github.com/facebook/react-native/blob/v0.65.0/React/Modules/RCTUIManager.m#L530
 - (RCTViewManagerUIBlock)uiBlockWithLayoutUpdateForRootView:(RCTRootShadowView *)rootShadowView
-{
-//  RCTAssertUIManagerQueue();
-
-//  [super uiBlockWithLayoutUpdateForRootView: rootShadowView];
-  
+{  
   NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 

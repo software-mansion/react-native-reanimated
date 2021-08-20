@@ -92,6 +92,9 @@
   if([discovered containsObject:view.reactTag]) {
     return;
   }
+  if(view.reactTag == nil) {
+    return;
+  }
   [discovered addObject:view.reactTag];
   UIView* parent = view.superview;
   if(parent == nil) {
@@ -111,7 +114,7 @@
 {
   NSNumber* tag = view.reactTag;
   if(tag == nil) {
-    return false;
+    return true;
   }
   if(![cands containsObject:tag] && _states[tag] != nil) {
     return true;
@@ -162,7 +165,9 @@
     }
     if (state == Disappearing) {
       _states[tag] = [NSNumber numberWithInt:ToRemove];
-      [_toRemove addObject:tag];
+      if(tag != nil) {
+        [_toRemove addObject:tag];
+      }
       [self scheduleCleaning];
     }
   }
@@ -229,7 +234,7 @@
 {
   NSNumber* tag = view.reactTag;
   ViewState state = [_states[tag] intValue];
-  if(state == Disappearing || state == ToRemove) {
+  if(state == Disappearing || state == ToRemove || tag == nil) {
     return;
   }
   NSMutableDictionary<NSString*, NSObject*>* startValues = before.values;
