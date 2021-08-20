@@ -19,6 +19,10 @@
     padding: 10px;
     background-color: #dcdfeb;
     border-left: 6px solid #dcdfeb;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: -0.2px;
 }
 
 
@@ -27,6 +31,7 @@
     line-height: 1.33;
     font-weight: 600;
     letter-spacing: -0.1px;
+    margin-bottom: 10px;
 }
 
 .code {
@@ -34,7 +39,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #333336;
 }
 
 .code img,
@@ -42,6 +46,10 @@
     width: 100%;
     height: 100%;
     margin: 0
+}
+
+.codeInactive {
+    background-color: #333336;
 }
 
 .codeInactive img,

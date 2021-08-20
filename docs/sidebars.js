@@ -15,7 +15,6 @@ module.exports = {
         'migration',
         'web-support',
         'troubleshooting',
-        'tutorial',
       ],
     },
     {
@@ -61,7 +60,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['testing'],
+      items: ['guide/testing', 'guide/LayoutAnimations/animated_list'],
     },
   ],
 };
