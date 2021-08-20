@@ -57,13 +57,22 @@ BOOL blockSetter = false;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
-  id<RCTComponent> container = registry[containerTag];
-  NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
-  if(isUIViewRegistry) {
+  if(isUIViewRegistry) {    
+    id<RCTComponent> container = registry[containerTag];
+    NSArray<id<RCTComponent>> *permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+    
+    for(NSNumber* index in removeAtIndices) {
+      NSInteger lastIndex = [container reactSubviews].count - 1;
+      id<RCTComponent> toMoveView = [[container reactSubviews] objectAtIndex:index.unsignedIntegerValue];
+      [container removeReactSubview:toMoveView];
+      [container insertReactSubview:toMoveView atIndex:lastIndex];
+    }
+    
     for (UIView *removedChild in permanentlyRemovedChildren) {
       [self callAnimationForTree: removedChild];
     }
+    
     removeAtIndices = nil;
   }
   

@@ -129,6 +129,7 @@
   }
   if(!cannotStripe) {
     if(view.superview != nil) {
+      [view.superview removeReactSubview:view];
       [view removeFromSuperview];
     }
     [_states removeObjectForKey:tag];
