@@ -31,19 +31,15 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { AnimationObject, PrimitiveValue } from '../animation/commonTypes';
 import {
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
+  NestedObjectValues,
   SharedValue,
   WorkletFunction,
 } from '../commonTypes';
-import {
-  Animation,
-  AnimationObject,
-  PrimitiveValue,
-} from '../animation/commonTypes';
-
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
   initial: AnimatedStyle;
@@ -256,7 +252,7 @@ function styleUpdater(
       }
     }
     state.last = Object.assign({}, oldValues, newValues);
-    const style = getStyleWithoutAnimations(oldValues);
+    const style = getStyleWithoutAnimations(state.last);
     if (style) {
       updateProps(viewDescriptors, style, maybeViewRef);
     }
@@ -367,6 +363,33 @@ function jestStyleUpdater(
       maybeViewRef,
       animatedStyle,
       adapters
+    );
+  }
+}
+
+// check for invalid usage of shared values in returned object
+function checkSharedValueUsage(
+  prop: NestedObjectValues<AnimationObject>,
+  currentKey?: string
+): void {
+  if (Array.isArray(prop)) {
+    // if it's an array (i.ex. transform) validate all its elements
+    for (const element of prop) {
+      checkSharedValueUsage(element, currentKey);
+    }
+  } else if (typeof prop === 'object' && prop.value === undefined) {
+    // if it's a nested object, run validation for all its props
+    for (const key of Object.keys(prop)) {
+      checkSharedValueUsage(prop[key], key);
+    }
+  } else if (
+    currentKey !== undefined &&
+    typeof prop === 'object' &&
+    prop.value !== undefined
+  ) {
+    // if shared value is passed insted of its value, throw an error
+    throw new Error(
+      `invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
 }
@@ -505,43 +528,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     };
   }, []);
 
-  // check for invalid usage of shared values in returned object
-  let wrongKey;
-  const isObjectValid = (element: AnimationObject, key: string) => {
-    const result = typeof element === 'object' && element.value !== undefined;
-    if (result) {
-      wrongKey = key;
-    }
-    return !result;
-  };
-  const isError = Object.keys(initial.value).some((key) => {
-    const element = initial.value[key];
-    let result = false;
-    // a case for transform that has a format of an array of objects
-    if (Array.isArray(element)) {
-      for (const elementArrayItem of element) {
-        // this means unhandled format and it doesn't match the transform format
-        if (typeof elementArrayItem !== 'object') {
-          break;
-        }
-        const objectValue: Animation<AnimationObject> = <
-          Animation<AnimationObject>
-        >Object.values(elementArrayItem)[0];
-        result = isObjectValid(objectValue, key);
-        if (!result) {
-          break;
-        }
-      }
-    } else {
-      result = isObjectValid(element, key);
-    }
-    return !result;
-  });
-  if (isError && wrongKey !== undefined) {
-    throw new Error(
-      `invalid value passed to \`${wrongKey}\`, maybe you forgot to use \`.value\`?`
-    );
-  }
+  checkSharedValueUsage(initial.value);
 
   if (process.env.JEST_WORKER_ID) {
     return { viewDescriptors, initial: initial.value, viewsRef, animatedStyle };
