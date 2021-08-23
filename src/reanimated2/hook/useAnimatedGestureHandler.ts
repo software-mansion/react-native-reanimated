@@ -1,5 +1,8 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-import { GestureHandlerStateChangeNativeEvent } from 'react-native-gesture-handler';
+import {
+  GestureHandlerStateChangeNativeEvent,
+  State,
+} from 'react-native-gesture-handler';
 import { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
@@ -13,14 +16,6 @@ import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext, isCanceledOrFailed?: boolean): void;
-}
-
-enum EventState {
-  FAILED = 1,
-  BEGAN,
-  CANCELLED,
-  ACTIVE,
-  END,
 }
 
 export interface GestureHandlers<T, TContext extends Context> {
@@ -74,45 +69,43 @@ export function useAnimatedGestureHandler<
     'worklet';
     const event = useWeb ? e.nativeEvent : e;
 
-    if (event.state === EventState.BEGAN && handlers.onStart) {
+    if (event.state === State.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
     }
-    if (event.state === EventState.ACTIVE && handlers.onActive) {
+    if (event.state === State.ACTIVE && handlers.onActive) {
       handlers.onActive(event, context);
     }
     if (
-      event.oldState === EventState.ACTIVE &&
-      event.state === EventState.END &&
+      event.oldState === State.ACTIVE &&
+      event.state === State.END &&
       handlers.onEnd
     ) {
       handlers.onEnd(event, context);
     }
     if (
-      event.oldState === EventState.BEGAN &&
-      event.state === EventState.FAILED &&
+      event.oldState === State.BEGAN &&
+      event.state === State.FAILED &&
       handlers.onFail
     ) {
       handlers.onFail(event, context);
     }
     if (
-      event.oldState === EventState.ACTIVE &&
-      event.state === EventState.CANCELLED &&
+      event.oldState === State.ACTIVE &&
+      event.state === State.CANCELLED &&
       handlers.onCancel
     ) {
       handlers.onCancel(event, context);
     }
     if (
-      (event.oldState === EventState.BEGAN ||
-        event.oldState === EventState.ACTIVE) &&
-      event.state !== EventState.BEGAN &&
-      event.state !== EventState.ACTIVE &&
+      (event.oldState === State.BEGAN || event.oldState === State.ACTIVE) &&
+      event.state !== State.BEGAN &&
+      event.state !== State.ACTIVE &&
       handlers.onFinish
     ) {
       handlers.onFinish(
         event,
         context,
-        event.state === EventState.CANCELLED ||
-          event.state === EventState.FAILED
+        event.state === State.CANCELLED || event.state === State.FAILED
       );
     }
   };
