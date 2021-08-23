@@ -14,10 +14,10 @@ interface EventParticipant {
 
 function Participant({
   name,
-  onDelete,
+  onRemove,
 }: {
   name: string;
-  onDelete: () => void;
+  onRemove: () => void;
 }): React.ReactElement {
   return (
     <Animated.View
@@ -38,7 +38,7 @@ function Participant({
         },
       ]}>
       <Text>{name}</Text>
-      <Button title="Remove" color="red" onPress={onDelete} />
+      <Button title="Remove" color="red" onPress={onRemove} />
     </Animated.View>
   );
 }
@@ -56,7 +56,7 @@ export default function AnimatedListExample(): React.ReactElement {
     setInputValue('');
   };
 
-  const deleteParticipant = (id: string) => {
+  const removeParticipant = (id: string) => {
     setParticipantList(
       participantList.filter((participant) => participant.id !== id)
     );
@@ -80,7 +80,7 @@ export default function AnimatedListExample(): React.ReactElement {
             <Participant
               key={participant.id}
               name={participant.name}
-              onDelete={() => deleteParticipant(participant.id)}
+              onRemove={() => removeParticipant(participant.id)}
             />
           ))}
         </ScrollView>

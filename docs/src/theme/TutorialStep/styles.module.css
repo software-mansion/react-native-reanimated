@@ -4,10 +4,21 @@
     margin-bottom: 60px;
 }
 
+@media only screen and (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .roundedStep {
+        position: static !important;;
+    }
+  }
 .description {
     flex: 1;
     display: flex;
     justify-content: center;
+    margin-bottom: 20px;
+    height: fit-content;
 }
 
 .roundedStep {
@@ -46,10 +57,6 @@
     width: 100%;
     height: 100%;
     margin: 0
-}
-
-.codeInactive {
-    background-color: #333336;
 }
 
 .codeInactive img,

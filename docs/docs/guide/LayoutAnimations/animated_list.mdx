@@ -2,12 +2,20 @@
 id: animated_list
 title: Animated list using layout animations
 sidebar_label: Layout Animations
+hide_table_of_contents: true
 ---
 
 import TutorialStep from '@theme/TutorialStep';
 import TutorialCode from './_tutorialCode.md';
 import Step1 from './_step1.md';
 import Step2 from './_step2.md';
+import Step3 from './_step3.md';
+import Step4 from './_step4.md';
+import Step5 from './_step5.md';
+import Step7 from './_step7.md';
+import Step8 from './_step8.md';
+import ParticipantList from '@site/static/img/tutorial/animated_list_before.gif';
+import AnimatedList from '@site/static/img/tutorial/animated_list_after.gif';
 
 On this page you can find step by step tutorial on how to use all types of Layout Animations:
 - entering animation
@@ -20,40 +28,63 @@ or remove people from the list.
 
 <TutorialStep stepNumber="1">
     <div>
-        Firstly, we are gonna build list without any animation. Let's start with creating new component with View and some basic styles.
+        Firstly, we are gonna build a list without any animation. Let's start with creating a new component with View and some basic styles.
     </div>
     <Step1/>
     
 </TutorialStep>
 <TutorialStep stepNumber="2">
     <div>
-        Then we have to think about participant model. As we are building quite simple list, we will store only participant's name and id.
+        In the next step, we will add a participant interface. As we are building quite a simple list, we will store only the participant's name and id.
     </div>
     <Step2/>
 </TutorialStep>
 <TutorialStep stepNumber="3">
     <div>
-        Do something
-        Install something
+        Now we have to import `useState` hook, which we will use to store a list of participants and value from form. Let's also add methods for adding and removing participants from the list.
     </div>
-    <TutorialCode/>
+    <Step3/>
     
 </TutorialStep>
 <TutorialStep stepNumber="4">
     <div>
-        Do something
-        Install something
+        When our list logic is done, it's time to display current participants and add a simple form for adding participants.
     </div>
-    <TutorialCode/>
+    <Step4/>
     
 </TutorialStep>
 <TutorialStep stepNumber="5">
     <div>
-        Do something
-        Install something
+        Finally, let's create a component for displaying participant's cards in the list.
     </div>
-    <TutorialCode/>
+    <Step5/>
+    
+</TutorialStep>
+<TutorialStep stepNumber="6">
+    <div>
+        Our participant's list is now ready, however, the user experience isn't great, because of the lack of animations. We are gonna add them in the next step.
+    </div>
+    <img src={ParticipantList} style={{height: '500px', width: 'auto'}}/>
+    
+</TutorialStep>
+<TutorialStep stepNumber="7">
+    <div>
+       Let's add layout animations to our list. Firstly we have to change View to Animated.View in Participant component.
+    </div>
+    <Step7/>
     
 </TutorialStep>
 
-![](/docs/events/final.gif)
+<TutorialStep stepNumber="8">
+    <div>
+       Then all we have to do is to specify what type of animation we want on component entering, exiting, and layout transition. I'll go with lightspeed effect and spring layout transition.
+    </div>
+    <Step8/>
+    
+</TutorialStep>
+
+#### And that's all! You can see that adding layout animations to our list was super easy and the user experience is way better.
+<center>
+    <img src={AnimatedList} height="500px"/>
+</center>
+
