@@ -23,6 +23,7 @@ typedef NS_ENUM(NSInteger, ViewState) {
 - (void) onViewRemoval:(UIView*)view parent:(NSObject*)parent before:(REASnapshot*)before;
 - (void) onViewCreate:(UIView*)view parent:(UIView*)parent after:(REASnapshot*)after;
 - (void) onViewUpdate:(UIView*)view before:(REASnapshot*)before after:(REASnapshot*)after;
+- (void) setToBeRemovedRegistry:(NSMutableDictionary<NSNumber*, NSMutableSet<id<RCTComponent>>*>*) toBeRemovedRegister;
 
 @end
 

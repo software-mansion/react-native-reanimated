@@ -2,6 +2,7 @@
 #import <React/RCTComponentData.h>
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
+#import "REAUIManager.h"
 
 @interface REAAnimationsManager ()
 
@@ -15,6 +16,7 @@
 
 @implementation REAAnimationsManager {
   RCTUIManager* _uiManager;
+  REAUIManager* _reaUiManager;
   NSMutableDictionary<NSNumber*, NSNumber *>* _states;
   NSMutableDictionary<NSNumber*, UIView *>* _viewForTag;
   NSMutableSet<NSNumber*>* _toRemove;
@@ -37,6 +39,7 @@
 {
   if (self = [super init]) {
     _uiManager = uiManager;
+    _reaUiManager = (REAUIManager*)uiManager;
     _states = [NSMutableDictionary new];
     _viewForTag = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
@@ -131,6 +134,7 @@
     if(view.superview != nil) {
       [view.superview removeReactSubview:view];
       [view removeFromSuperview];
+      [_reaUiManager unregisterView: view];
     }
     [_states removeObjectForKey:tag];
     [_viewForTag removeObjectForKey:tag];
