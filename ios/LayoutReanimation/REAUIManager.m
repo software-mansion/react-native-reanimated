@@ -64,9 +64,7 @@ REAAnimationsManager* _animationsManager;
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
   if(isUIViewRegistry) {    
-    container = registry[containerTag];
-    NSMutableSet<id<RCTComponent>>* tmp = _toBeRemovedRegister[containerTag];
-    
+    container = registry[containerTag];    
     for(id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
       [container removeReactSubview:toRemoveChild];
     }
