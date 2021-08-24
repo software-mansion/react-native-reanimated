@@ -1,6 +1,12 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
+import { AnimationObject } from '../animation';
 import { processColor } from '../Colors';
-import { AnimatedStyle, StyleProps, WorkletFunction } from '../commonTypes';
+import {
+  AnimatedStyle,
+  NestedObjectValues,
+  StyleProps,
+  WorkletFunction,
+} from '../commonTypes';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { DependencyList } from './commonTypes';
@@ -119,20 +125,27 @@ export function canApplyOptimalisation(upadterFn: WorkletFunction): number {
   );
 }
 
-export function isAnimated(prop: AnimatedStyle): boolean {
+export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
-  if (Array.isArray(prop)) {
-    for (let i = 0; i < prop.length; ++i) {
-      const item = prop[i];
-      for (const key in item) {
-        if (item[key].onFrame !== undefined) {
-          return true;
-        }
+  const propsToCheck: NestedObjectValues<AnimationObject>[] = [prop];
+  while (propsToCheck.length > 0) {
+    const currentProp: NestedObjectValues<AnimationObject> = propsToCheck.pop() as NestedObjectValues<AnimationObject>;
+    if (Array.isArray(currentProp)) {
+      for (const item of currentProp) {
+        propsToCheck.push(item);
+      }
+    } else if (currentProp?.onFrame !== undefined) {
+      return true;
+    } else if (typeof prop === 'object') {
+      for (const item of Object.values(currentProp)) {
+        propsToCheck.push(item);
       }
     }
-    return false;
+    // if none of the above, it's not the animated prop, check next one
   }
-  return prop?.onFrame !== undefined;
+
+  // when none of the props were animated return false
+  return false;
 }
 
 export function styleDiff(

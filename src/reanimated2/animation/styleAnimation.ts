@@ -3,9 +3,16 @@ import {
   Timestamp,
   HigherOrderAnimation,
   AnimationCallback,
+  PrimitiveValue,
   AnimationObject,
+  Animation,
 } from './commonTypes';
-import { AnimatedStyle, StyleProps, TransformProperty } from '../commonTypes';
+import {
+  AnimatedStyle,
+  NestedObject,
+  NestedObjectValues,
+  StyleProps,
+} from '../commonTypes';
 import { withTiming } from './timing';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
@@ -21,6 +28,57 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   callback?: AnimationCallback;
 }
 
+// resolves path to value for nested objects
+// if path cannot be resolved returns undefined
+function resolvePath<T>(
+  obj: NestedObject<T>,
+  path: PrimitiveValue[] | PrimitiveValue
+): NestedObjectValues<T> | undefined {
+  'worklet';
+  const keys: PrimitiveValue[] = Array.isArray(path) ? path : [path];
+  return keys.reduce<NestedObjectValues<T> | undefined>((acc, current) => {
+    if (Array.isArray(acc) && typeof current === 'number') {
+      return acc[current];
+    } else if (typeof acc === 'object' && current in acc) {
+      return (acc as { [key: string]: NestedObjectValues<T> })[current];
+    }
+    return undefined;
+  }, obj);
+}
+
+// set value at given path
+function setPath<T>(
+  obj: NestedObject<T>,
+  path: PrimitiveValue[] | PrimitiveValue,
+  value: NestedObjectValues<T>
+) {
+  'worklet';
+  const keys: PrimitiveValue[] = Array.isArray(path) ? path : [path];
+  let currObj: NestedObjectValues<T> = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    // creates entry if there isn't one
+    currObj = currObj as { [key: string]: NestedObjectValues<T> };
+    if (!currObj[keys[i]]) {
+      // if next key is a number create an array
+      if (typeof keys[i + 1] === 'number') {
+        currObj[keys[i]] = [];
+      } else {
+        currObj[keys[i]] = {};
+      }
+    }
+    currObj = currObj[keys[i]];
+  }
+
+  (currObj as { [key: string]: NestedObjectValues<T> })[
+    keys[keys.length - 1]
+  ] = value;
+}
+
+interface NestedObjectEntry<T> {
+  value: NestedObjectValues<T>;
+  path: PrimitiveValue[];
+}
+
 export function withStyleAnimation(
   styleAnimations: AnimatedStyle
 ): StyleLayoutAnimation {
@@ -33,44 +91,53 @@ export function withStyleAnimation(
       now: Timestamp
     ): boolean => {
       let stillGoing = false;
-      Object.keys(styleAnimations).forEach((key) => {
-        const currentAnimation = animation.styleAnimations[key];
-        if (key === 'transform') {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const transform = animation.styleAnimations.transform!;
-          for (let i = 0; i < transform.length; i++) {
-            const type = Object.keys(transform[i])[0];
-            const currentAnimation: AnimationObject = transform[i][type];
-            if (currentAnimation.finished) {
-              continue;
-            }
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
-            }
-            // @ts-ignore: eslint-disable-line
-            animation.current.transform[i][type] = currentAnimation.current;
+      const entriesToCheck: NestedObjectEntry<AnimationObject>[] = [
+        { value: animation.styleAnimations, path: [] },
+      ];
+      while (entriesToCheck.length > 0) {
+        const currentEntry: NestedObjectEntry<AnimationObject> = entriesToCheck.pop() as NestedObjectEntry<AnimationObject>;
+        if (Array.isArray(currentEntry.value)) {
+          for (let index = 0; index < currentEntry.value.length; index++) {
+            entriesToCheck.push({
+              value: currentEntry.value[index],
+              path: currentEntry.path.concat(index),
+            });
+          }
+        } else if (
+          typeof currentEntry.value === 'object' &&
+          currentEntry.value.onFrame === undefined
+        ) {
+          // nested object
+          for (const key of Object.keys(currentEntry.value)) {
+            entriesToCheck.push({
+              value: currentEntry.value[key],
+              path: currentEntry.path.concat(key),
+            });
           }
         } else {
-          if (!currentAnimation.finished) {
-            const finished = currentAnimation.onFrame(currentAnimation, now);
-            if (finished) {
-              currentAnimation.finished = true;
-              if (currentAnimation.callback) {
-                currentAnimation.callback(true);
-              }
-            } else {
-              stillGoing = true;
-            }
-            animation.current[key] = currentAnimation.current;
+          const currentStyleAnimation: AnimationObject = currentEntry.value as AnimationObject;
+          if (currentStyleAnimation.finished) {
+            continue;
           }
+          const finished = currentStyleAnimation.onFrame(
+            currentStyleAnimation,
+            now
+          );
+          if (finished) {
+            currentStyleAnimation.finished = true;
+            if (currentStyleAnimation.callback) {
+              currentStyleAnimation.callback(true);
+            }
+          } else {
+            stillGoing = true;
+          }
+          setPath(
+            animation.current,
+            currentEntry.path,
+            currentStyleAnimation.current
+          );
         }
-      });
+      }
       return !stillGoing;
     };
 
@@ -80,87 +147,58 @@ export function withStyleAnimation(
       now: Timestamp,
       previousAnimation: StyleLayoutAnimation
     ): void => {
-      Object.keys(styleAnimations).forEach((key) => {
-        if (key === 'transform') {
-          animation.current.transform = [];
-          const transform = styleAnimations.transform as Array<AnimatedStyle>;
-          const prevTransform = null;
-          const valueTransform = value.transform as Array<AnimatedStyle>;
-          let prevAnimation;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations.transform
-          ) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            prevAnimation = previousAnimation.styleAnimations.transform;
+      const entriesToCheck: NestedObjectEntry<
+        AnimationObject | PrimitiveValue
+      >[] = [{ value: styleAnimations, path: [] }];
+      while (entriesToCheck.length > 0) {
+        const currentEntry: NestedObjectEntry<
+          AnimationObject | PrimitiveValue
+        > = entriesToCheck.pop() as NestedObjectEntry<
+          AnimationObject | PrimitiveValue
+        >;
+        if (Array.isArray(currentEntry.value)) {
+          for (let index = 0; index < currentEntry.value.length; index++) {
+            entriesToCheck.push({
+              value: currentEntry.value[index],
+              path: currentEntry.path.concat(index),
+            });
           }
-          for (let i = 0; i < transform.length; i++) {
-            // duplication of code to avoid function calls
-            let prevAnimation: AnimationObject | null = null;
-            const type = Object.keys(transform[i])[0];
-            if (prevTransform && (prevTransform as []).length > i) {
-              const prevTransformStep = prevTransform[i];
-              const prevType = Object.keys(prevTransformStep)[0];
-              if (prevType === type) {
-                prevAnimation = prevTransformStep[prevType];
-              }
-            }
-
-            let prevVal = 0;
-            if (prevAnimation != null) {
-              prevVal = (prevAnimation as AnimationObject).current as number;
-            }
-            if (
-              valueTransform != null &&
-              valueTransform.length > i &&
-              valueTransform[i][type]
-            ) {
-              prevVal = valueTransform[i][type];
-            }
-
-            const obj: { [key: string]: any } = {};
-            obj[type] = prevVal;
-            animation.current.transform[i] = obj as TransformProperty;
-            let currentAnimation = transform[i][type];
-            if (
-              typeof currentAnimation !== 'object' &&
-              !Array.isArray(currentAnimation)
-            ) {
-              currentAnimation = withTiming(currentAnimation, { duration: 0 });
-              transform[i][type] = currentAnimation;
-            }
-            currentAnimation.onStart(
-              currentAnimation,
-              prevVal,
-              now,
-              prevAnimation
-            );
+        } else if (
+          typeof currentEntry.value === 'object' &&
+          currentEntry.value.onStart === undefined
+        ) {
+          for (const key of Object.keys(currentEntry.value)) {
+            entriesToCheck.push({
+              value: currentEntry.value[key],
+              path: currentEntry.path.concat(key),
+            });
           }
         } else {
-          let prevAnimation = null;
-          if (
-            previousAnimation &&
-            previousAnimation.styleAnimations &&
-            previousAnimation.styleAnimations[key]
-          ) {
-            prevAnimation = previousAnimation.styleAnimations[key];
-          }
-          let prevVal = 0;
-          if (prevAnimation != null) {
+          const prevAnimation = resolvePath(
+            previousAnimation?.styleAnimations,
+            currentEntry.path
+          );
+          let prevVal = resolvePath(value, currentEntry.path);
+          if (prevAnimation && !prevVal) {
             prevVal = prevAnimation.current;
           }
-          if (value[key]) {
-            prevVal = value[key];
-          }
-          animation.current[key] = prevVal;
-          let currentAnimation = animation.styleAnimations[key];
+          setPath(animation.current, currentEntry.path, prevVal);
+          let currentAnimation: AnimationObject;
           if (
-            typeof currentAnimation !== 'object' &&
-            !Array.isArray(currentAnimation)
+            typeof currentEntry.value !== 'object' ||
+            !currentEntry.value.onStart
           ) {
-            currentAnimation = withTiming(currentAnimation, { duration: 0 });
-            animation.styleAnimations[key] = currentAnimation;
+            currentAnimation = withTiming(
+              currentEntry.value as PrimitiveValue,
+              { duration: 0 }
+            );
+            setPath(
+              animation.styleAnimations,
+              currentEntry.path,
+              currentAnimation
+            );
+          } else {
+            currentAnimation = currentEntry.value as Animation<AnimationObject>;
           }
           currentAnimation.onStart(
             currentAnimation,
@@ -169,33 +207,37 @@ export function withStyleAnimation(
             prevAnimation
           );
         }
-      });
+      }
     };
 
     const callback = (finished: boolean): void => {
       if (!finished) {
-        Object.keys(styleAnimations).forEach((key) => {
-          const currentAnimation = styleAnimations[key];
-          if (key === 'transform') {
-            const transform = styleAnimations.transform as Array<AnimatedStyle>;
-            for (let i = 0; i < transform.length; i++) {
-              const type = Object.keys(transform[i])[0];
-              const currentAnimation = transform[i][type];
-              if (currentAnimation.finished) {
-                continue;
-              }
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
+        const animationsToCheck: NestedObjectValues<AnimationObject>[] = [
+          styleAnimations,
+        ];
+        while (animationsToCheck.length > 0) {
+          const currentAnimation: NestedObjectValues<AnimationObject> = animationsToCheck.pop() as NestedObjectValues<AnimationObject>;
+          if (Array.isArray(currentAnimation)) {
+            for (const element of currentAnimation) {
+              animationsToCheck.push(element);
+            }
+          } else if (
+            typeof currentAnimation === 'object' &&
+            currentAnimation.onStart === undefined
+          ) {
+            for (const value of Object.values(currentAnimation)) {
+              animationsToCheck.push(value);
             }
           } else {
-            if (!currentAnimation.finished) {
-              if (currentAnimation.callback) {
-                currentAnimation.callback(false);
-              }
+            const currentStyleAnimation: AnimationObject = currentAnimation as AnimationObject;
+            if (
+              !currentStyleAnimation.finished &&
+              currentStyleAnimation.callback
+            ) {
+              currentStyleAnimation.callback(false);
             }
           }
-        });
+        }
       }
     };
 
