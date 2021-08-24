@@ -1,4 +1,6 @@
 import groovy.json.JsonSlurper
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 configurations.maybeCreate("default")
 
 def inputFile = new File(projectDir, '../../react-native/package.json')
@@ -32,6 +34,25 @@ abstract class replaceSoTask extends DefaultTask {
     }
 }
 
+def getCurrentFlavor() {
+    Gradle gradle = getGradle()
+    String taskRequestName = gradle.getStartParameter().getTaskRequests().toString()
+    Pattern pattern
+
+    if(taskRequestName.contains("assemble")) {
+        pattern = Pattern.compile("assemble(\\w+)(Release|Debug)")
+    }
+    else {
+        pattern = Pattern.compile("generate(\\w+)(Release|Debug)")
+    }
+    Matcher matcher = pattern.matcher(taskRequestName)
+
+    if(matcher.find()) {
+        return matcher.group(1).toLowerCase()
+    }
+    return ""
+}
+
 def replaceSoTaskDebug
 def replaceSoTaskRelease
 if(Integer.parseInt(minor) < 65) {
@@ -52,6 +73,7 @@ rootProject.getSubprojects().forEach({project ->
             if(!projectProperties.get("reanimated")
                 || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
             ) {
+                def flavorString = getCurrentFlavor()
                 replaceSoTask.appName = project.getProperties().path
                 replaceSoTask.buildDir = project.getProperties().buildDir
                 replaceSoTask.engine = engine
@@ -60,16 +82,16 @@ rootProject.getSubprojects().forEach({project ->
                 project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
 
                 replaceSoTaskDebug.dependsOn(
-                    project.getTasks().getByPath("${appName}:mergeDebugNativeLibs"),
-                    project.getTasks().getByPath("${appName}:stripDebugDebugSymbols")
+                    project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
+                    project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:packageDebug").dependsOn(replaceSoTaskDebug)
+                project.getTasks().getByPath("${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
 
                 replaceSoTaskRelease.dependsOn(
-                    project.getTasks().getByPath("${appName}:mergeReleaseNativeLibs"),
-                    project.getTasks().getByPath("${appName}:stripReleaseDebugSymbols")
+                    project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
+                    project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:packageRelease").dependsOn(replaceSoTaskRelease)
+                project.getTasks().getByPath("${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
             }
         }
     }
