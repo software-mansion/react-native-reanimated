@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
@@ -137,7 +138,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
-
+    private HashMap<Integer, HashMap<Integer, View>> toBeRemoved = new HashMap();
+    private HashMap<Integer, Runnable> cleanerCallback = new HashMap();
+    private LayoutAnimationController mReaLayoutAnimator = null;
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
         super(viewManagers);
         Class clazz = this.getClass().getSuperclass();
@@ -147,7 +150,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
             Field modifiersField = Field.class.getDeclaredField("accessFlags");
             modifiersField.setAccessible(true);
             modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-            field.set(this, new ReaLayoutAnimator(reactContext, this));
+            mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
+            field.set(this, mReaLayoutAnimator);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
@@ -158,9 +162,63 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         super(viewManagers, manager);
     }
 
+    @Override
+    public synchronized void manageChildren(int tag, @Nullable int[] indicesToRemove, @Nullable ViewAtIndex[] viewsToAdd, @Nullable int[] tagsToDelete) {
+        ViewGroup viewGroup = (ViewGroup) resolveView(tag);
+        ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+        if (toBeRemoved.containsKey(tag)) {
+                HashMap<Integer, View> childrenToBeRemoved = toBeRemoved.get(tag);
+                while (viewGroupManager.getChildCount(viewGroup) != 0) {
+                View child = viewGroupManager.getChildAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
+                if (childrenToBeRemoved.containsKey(child.getId())) {
+                    viewGroupManager.removeViewAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
+                } else {
+                    break;
+                }
+            }
+        }
+        if (tagsToDelete != null) {
+            if (!toBeRemoved.containsKey(tag)) {
+                toBeRemoved.put(tag, new HashMap<>());
+            }
+            HashMap<Integer, View> toBeRemovedChildren = toBeRemoved.get(tag);
+            for (Integer childtag : tagsToDelete) {
+                View view = resolveView(childtag);
+                toBeRemovedChildren.put(view.getId(), view);
+                cleanerCallback.put(view.getId(), new Runnable() {
+                    @Override
+                    public void run() {
+                        toBeRemovedChildren.remove(view.getId());
+                    }
+                });
+            }
+        }
+        super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
+        if (toBeRemoved.containsKey(tag)) {
+            HashMap<Integer, View> childrenToBeRemoved = toBeRemoved.get(tag);
+            for (View child : childrenToBeRemoved.values()) {
+                viewGroupManager.addView(viewGroup, child, viewGroupManager.getChildCount(viewGroup));
+            }
+        }
+        super.manageChildren(tag, null, null, tagsToDelete);
+    }
+
     public void publicDropView(View view) {
         dropView(view);
     }
 
-
+    @Override
+    protected synchronized void dropView(View view) {
+        if (toBeRemoved.containsKey(view.getId())) {
+            toBeRemoved.remove(view.getId());
+        }
+        if (cleanerCallback.containsKey(view.getId())) {
+            Runnable runnable = cleanerCallback.get(view.getId());
+            cleanerCallback.remove(view.getId());
+            runnable.run();
+        }
+        // childrens' callbacks should be cleaned by former publicDropView calls as Animation Manager
+        // stripes views from bottom to top
+        super.dropView(view);
+    }
 }

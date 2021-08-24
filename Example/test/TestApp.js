@@ -22,10 +22,15 @@ import ModalInNavigation from './ModalInNavigation';
 import WithNavigation from './WithNavigation';
 import WithNavigationNested from './WithNavigationNested';
 import TestRemovalOrder from './TestRemovalOrder';
+import LayoutAnimationsRemovalTest from './LayoutAnimationsRemovalTest';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
 const SCREENS = {
+  LayoutAnimationsRemovalTest: {
+    screen: LayoutAnimationsRemovalTest,
+    title: 'test exiting animations',
+  },
   TestRemovalOrder: {
     screen: TestRemovalOrder,
     title: 'test removal Order',
