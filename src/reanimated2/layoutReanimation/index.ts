@@ -1,5 +1,4 @@
-import init from './LayoutAnimationRepository';
-init();
+import './LayoutAnimationRepository';
 export * from './AnimatedLayout';
 export * from './animationBuilder';
 export * from './defaultAnimations';
