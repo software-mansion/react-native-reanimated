@@ -3,7 +3,6 @@
 #import "REANodesManager.h"
 #import "Transitioning/REATransitionManager.h"
 #import "native/NativeProxy.h"
-#import "REAReactBatchObserver.h"
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
@@ -19,8 +18,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
-  [_reactBatchObserver invalidate];
-  _reactBatchObserver = nil;
   _bridge_reanimated = nil;
   _transitionManager = nil;
   [_nodesManager invalidate];
@@ -46,8 +43,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _transitionManager = [[REATransitionManager alloc] initWithUIManager:self.bridge.uiManager];
 
   [bridge.uiManager.observerCoordinator addObserver:self];
-    
-  _reactBatchObserver = [[REAReactBatchObserver alloc] initWithBridge:bridge];
 }
 
 #pragma mark -- Transitioning API
