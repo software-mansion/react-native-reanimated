@@ -531,8 +531,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   checkSharedValueUsage(initial.value);
 
   if (process.env.JEST_WORKER_ID) {
-    return { viewDescriptors, initial: initial.value, viewsRef, animatedStyle };
+    return { viewDescriptors, initial: initial, viewsRef, animatedStyle };
   } else {
-    return { viewDescriptors, initial: initial.value, viewsRef };
+    return { viewDescriptors, initial: initial, viewsRef };
   }
 }
