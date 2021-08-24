@@ -2,9 +2,7 @@
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
 
-// Register LayoutAnimationRepository
-
-const init = runOnUI(() => {
+runOnUI(() => {
   'worklet';
 
   const configs: Record<string, any> = {};
@@ -43,6 +41,4 @@ const init = runOnUI(() => {
       _startObservingProgress(tag, sv);
     },
   };
-});
-
-export default init;
+})();

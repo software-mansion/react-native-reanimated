@@ -37,7 +37,6 @@ public class LayoutAnimations {
         if (context != null) {
             context.getNativeModule(ReanimatedModule.class)
                     .getNodesManager()
-                    .getReactBatchObserver()
                     .getAnimationsManager()
                     .notifyAboutEnd(tag, (cancelledInt == 0)? false : true);
         }
@@ -48,7 +47,6 @@ public class LayoutAnimations {
         if (context != null) {
             context.getNativeModule(ReanimatedModule.class)
                     .getNodesManager()
-                    .getReactBatchObserver()
                     .getAnimationsManager()
                     .notifyAboutProgress(newStyle, tag);
         }

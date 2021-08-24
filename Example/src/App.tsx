@@ -1,3 +1,19 @@
+import React from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  Platform,
+  UIManager,
+} from 'react-native';
+import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
 import {
   Carousel,
   CustomLayoutAnimationScreen,
@@ -8,12 +24,6 @@ import {
   SpringLayoutAnimation,
   SwipeableList,
 } from './LayoutReanimation';
-import { FlatList, LogBox, StyleSheet, Text, View } from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import {
-  StackNavigationProp,
-  createStackNavigator,
-} from '@react-navigation/stack';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
@@ -24,9 +34,7 @@ import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
-import { NavigationContainer } from '@react-navigation/native';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
-import React from 'react';
 import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
@@ -36,6 +44,12 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
@@ -205,7 +219,7 @@ function LaunchReanimated1({
 const Stack = createStackNavigator();
 
 const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
-  <Stack.Navigator>
+  <Stack.Navigator detachInactiveScreens={false}>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}

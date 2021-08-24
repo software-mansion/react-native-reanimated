@@ -1,11 +1,5 @@
-//
-//  REAInitializer.m
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 27/07/2021.
-//
-
 #import "REAInitializer.h"
+#import "REAUIManager.h"
 
 @interface RCTEventDispatcher(Reanimated)
 
@@ -22,11 +16,17 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     RCTBridge* bridge,
     JSIExecutor::RuntimeInstaller runtimeInstallerToWrap)
 {
+    [bridge moduleForClass:[RCTUIManager class]];
+    REAUIManager* reaUiManager = [REAUIManager new];
+    [reaUiManager setBridge:bridge];
+    RCTUIManager* uiManager = reaUiManager;
+    [bridge updateModuleWithInstance:uiManager];
+  
     [bridge moduleForClass:[RCTEventDispatcher class]];
     RCTEventDispatcher *eventDispatcher = [REAEventDispatcher new];
     [eventDispatcher setBridge:bridge];
     [bridge updateModuleWithInstance:eventDispatcher];
-     _bridge_reanimated = bridge;
+    _bridge_reanimated = bridge;
     const auto runtimeInstaller = [bridge, runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
       if (!bridge) {
         return;

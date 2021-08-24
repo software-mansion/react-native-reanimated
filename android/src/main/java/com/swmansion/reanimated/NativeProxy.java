@@ -136,7 +136,6 @@ public class NativeProxy {
     AnimationsManager animationsManager = mContext.get()
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
-            .getReactBatchObserver()
             .getAnimationsManager();
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
