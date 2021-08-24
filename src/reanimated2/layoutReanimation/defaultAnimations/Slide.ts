@@ -1,19 +1,24 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import {
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
+} from '../animationBuilder/commonTypes';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export class SlideInRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInRight {
     return new SlideInRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -24,20 +29,24 @@ export class SlideInRight extends BaseAnimationBuilder {
         initialValues: {
           originX: values.originX + width,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideInLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInLeft {
     return new SlideInLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -48,20 +57,24 @@ export class SlideInLeft extends BaseAnimationBuilder {
         initialValues: {
           originX: values.originX - width,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideOutRight extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutRight
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutRight {
     return new SlideOutRight();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -75,20 +88,24 @@ export class SlideOutRight extends BaseAnimationBuilder {
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideOutLeft extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutLeft
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutLeft {
     return new SlideOutLeft();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -102,20 +119,24 @@ export class SlideOutLeft extends BaseAnimationBuilder {
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideInUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInUp {
     return new SlideInUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -126,20 +147,24 @@ export class SlideInUp extends BaseAnimationBuilder {
         initialValues: {
           originY: height,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideInDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideInDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideInDown {
     return new SlideInDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -150,20 +175,24 @@ export class SlideInDown extends BaseAnimationBuilder {
         initialValues: {
           originY: values.originY - height,
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideOutUp extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutUp
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutUp {
     return new SlideOutUp();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -175,20 +204,24 @@ export class SlideOutUp extends BaseAnimationBuilder {
           ),
         },
         initialValues: {},
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class SlideOutDown extends BaseAnimationBuilder {
-  static createInstance() {
+export class SlideOutDown
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): SlideOutDown {
     return new SlideOutDown();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -200,8 +233,8 @@ export class SlideOutDown extends BaseAnimationBuilder {
           ),
         },
         initialValues: { originY: values.originY },
+        callback: callback,
       };
     };
-  }
+  };
 }
-

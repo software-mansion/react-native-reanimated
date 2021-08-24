@@ -54,7 +54,9 @@ import { Bezier } from './Bezier';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-type EasingFn = (t: number) => number;
+export type EasingFn = (t: number) => number;
+
+export type EasingFactoryFn = { factory: () => EasingFn };
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
  * one.

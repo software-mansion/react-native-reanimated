@@ -1,5 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox, Button, Platform, UIManager } from 'react-native';
+import React from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  Platform,
+  UIManager,
+} from 'react-native';
 import { RectButton, ScrollView } from 'react-native-gesture-handler';
 import {
   createStackNavigator,
@@ -7,36 +15,35 @@ import {
 } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import {
-  SpringLayoutAnimation,
-  MountingUnmounting,
-  SwipeableList,
-  Modal,
   Carousel,
-  ModalNewAPI,
-  DefaultAnimations,
   CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  SpringLayoutAnimation,
+  SwipeableList,
 } from './LayoutReanimation';
 
-import Reanimated1 from '../reanimated1/App';
-
-import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import WobbleExample from './WobbleExample';
-import DragAndSnapExample from './DragAndSnapExample';
-import ScrollEventExample from './ScrollEventExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import MeasureExample from './MeasureExample';
-import SwipeableListExample from './SwipeableListExample';
-import ScrollableViewExample from './ScrollableViewExample';
-import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import MeasureExample from './MeasureExample';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import Reanimated1 from '../reanimated1/App';
+import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
-LogBox.ignoreLogs(['Calling `getNode()`']);
+import ScrollToExample from './ScrollToExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import WobbleExample from './WobbleExample';
 
-import Animated, { FadeOut, FadeIn } from 'react-native-reanimated';
-import { findNodeHandle } from 'react-native';
+LogBox.ignoreLogs(['Calling `getNode()`']);
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -46,28 +53,18 @@ if (Platform.OS === 'android') {
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
-function Counter() {
-  const [ctr, setState] = useState(0);
-  const ref = useRef(null);
-  useEffect(() => {
-    console.log("tag ", findNodeHandle(ref.current)); 
-  },[]);
-  return (
-    <Animated.View ref={ref} entering={FadeIn.duration(3000)} >
-      <Text>{ctr}</Text>
-      <Button title="inc" onPress={() => { setState((i) => i+1) }}/>
-    </Animated.View>
-  );
-}
-
 const SCREENS: Screens = {
-  SuperScreen: {
-    screen: Counter,
-    title: 'counter',
-  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  KeyframeAnimation: {
+    screen: KeyframeAnimation,
+    title: '🆕 Keyframe animation',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation',
   },
   CustomLayoutAnimation: {
     screen: CustomLayoutAnimationScreen,
@@ -271,5 +268,3 @@ export const styles = StyleSheet.create({
 });
 
 export default App;
-
-

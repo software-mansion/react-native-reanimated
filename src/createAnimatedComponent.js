@@ -8,9 +8,9 @@ import AnimatedValue from './reanimated1/core/AnimatedValue';
 import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
-import "./reanimated2/layoutReanimation/LayoutAnimationRepository";
+import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
 import { makeMutable, runOnUI } from './reanimated2/core';
@@ -18,7 +18,8 @@ import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
-} from './reanimated2/layoutReanimation/defaultAnimationsBuilder';
+} from './reanimated2/layoutReanimation/defaultAnimations/Default';
+import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 
 const NODE_MAPPING = new Map();
 
@@ -47,7 +48,7 @@ function hasAnimatedNodes(value) {
 
 function flattenArray(array) {
   if (!Array.isArray(array)) {
-    return array;
+    return [array];
   }
   const resultArr = [];
 
@@ -74,11 +75,13 @@ export default function createAnimatedComponent(Component, options = {}) {
 
   class AnimatedComponent extends React.Component {
     _invokeAnimatedPropsCallbackOnMount = false;
+    _styles = null;
+    _viewTag = -1;
 
     constructor(props) {
       super(props);
       this._attachProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         this.animatedStyle = { value: {} };
       }
       this.sv = makeMutable({});
@@ -88,6 +91,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       this._detachPropUpdater();
       this._propsAnimated && this._propsAnimated.__detach();
       this._detachNativeEvents();
+      this._detachStyles();
       this.sv = null;
     }
 
@@ -114,7 +118,6 @@ export default function createAnimatedComponent(Component, options = {}) {
     _attachNativeEvents() {
       const node = this._getEventViewRef();
       const viewTag = findNodeHandle(options.setNativeProps ? this : node);
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
@@ -140,6 +143,25 @@ export default function createAnimatedComponent(Component, options = {}) {
           prop.current instanceof WorkletEventHandler
         ) {
           prop.current.unregisterFromEvents();
+        }
+      }
+    }
+
+    _detachStyles() {
+      if (Platform.OS === 'web') {
+        for (const style of this._styles) {
+          if (style.viewsRef) {
+            style.viewsRef.remove(this);
+          }
+        }
+      } else if (this._viewTag !== -1) {
+        for (const style of this._styles) {
+          if (style?.viewDescriptors) {
+            style.viewDescriptors.remove(this._viewTag);
+          }
+        }
+        if (this.props.animatedProps?.viewDescriptors) {
+          this.props.animatedProps.viewDescriptors.remove(this._viewTag);
         }
       }
     }
@@ -258,10 +280,8 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _attachAnimatedStyles() {
-      let styles = Array.isArray(this.props.style)
-        ? this.props.style
-        : [this.props.style];
-      styles = flattenArray(styles);
+      const styles = flattenArray(this.props.style);
+      this._styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -290,11 +310,12 @@ export default function createAnimatedComponent(Component, options = {}) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
+      this._viewTag = viewTag;
 
       styles.forEach((style) => {
-        if (style?.viewDescriptor) {
-          style.viewDescriptor.value = { tag: viewTag, name: viewName };
-          if (process.env.JEST_WORKER_ID) {
+        if (style?.viewDescriptors) {
+          style.viewDescriptors.add({ tag: viewTag, name: viewName });
+          if (isJest()) {
             /**
              * We need to connect Jest's TestObject instance whose contains just props object
              * with the updateProps() function where we update the properties of the component.
@@ -303,29 +324,29 @@ export default function createAnimatedComponent(Component, options = {}) {
              */
             this.animatedStyle.value = {
               ...this.animatedStyle.value,
-              ...style.initial,
+              ...style.initial.value,
             };
             style.animatedStyle.current = this.animatedStyle;
           }
         }
       });
       // attach animatedProps property
-      if (this.props.animatedProps?.viewDescriptor) {
-        this.props.animatedProps.viewDescriptor.value = {
+      if (this.props.animatedProps?.viewDescriptors) {
+        this.props.animatedProps.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
-        };
+        });
       }
     }
 
     _hasReanimated2Props(flattenStyles) {
-      if (this.props.animatedProps?.viewDescriptor) {
+      if (this.props.animatedProps?.viewDescriptors) {
         return true;
       }
       if (this.props.style) {
         for (const style of flattenStyles) {
           // eslint-disable-next-line no-prototype-builtins
-          if (style?.hasOwnProperty('viewDescriptor')) {
+          if (style?.hasOwnProperty('viewDescriptors')) {
             return true;
           }
         }
@@ -346,6 +367,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       this._reattachNativeEvents(prevProps);
 
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
+      this._attachAnimatedStyles();
     }
 
     _setComponentRef = setAndForwardRef({
@@ -429,14 +451,12 @@ export default function createAnimatedComponent(Component, options = {}) {
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          const styles = Array.isArray(value) ? value : [value];
+          const styles = flattenArray(value);
           const processedStyle = styles.map((style) => {
-            if (style && style.viewDescriptor) {
+            if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
-              if (style.viewRef.current === null) {
-                style.viewRef.current = this;
-              }
-              return style.initial;
+              style.viewsRef.add(this);
+              return style.initial.value;
             } else {
               return style;
             }
@@ -445,11 +465,9 @@ export default function createAnimatedComponent(Component, options = {}) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial).forEach((key) => {
-            props[key] = value.initial[key];
-            if (value.viewRef.current === null) {
-              value.viewRef.current = this;
-            }
+          Object.keys(value.initial.value).forEach((key) => {
+            props[key] = value.initial.value[key];
+            value.viewsRef.add(this);
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
@@ -471,7 +489,9 @@ export default function createAnimatedComponent(Component, options = {}) {
             props[key] = dummyListener;
           }
         } else if (!(value instanceof AnimatedNode)) {
-          props[key] = value;
+          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
+            props[key] = value;
+          }
         } else if (value instanceof AnimatedValue) {
           // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
           // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
@@ -483,7 +503,7 @@ export default function createAnimatedComponent(Component, options = {}) {
 
     render() {
       const props = this._filterNonAnimatedProps(this.props);
-      if (process.env.JEST_WORKER_ID) {
+      if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
 

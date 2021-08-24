@@ -5,6 +5,7 @@
 #include "Scheduler.h"
 #include "WorkletsCache.h"
 #include "RuntimeDecorator.h"
+#include "JSIStoreValueUser.h"
 #include <jsi/jsi.h>
 #include <memory>
 
@@ -22,14 +23,20 @@ public:
     std::shared_ptr<ErrorHandler> errorHandler,
     std::shared_ptr<Scheduler> scheduler,
     RuntimeType runtimeType = RuntimeType::Worklet
-  ) : 
-    runtime(runtime), 
-    errorHandler(errorHandler), 
-    scheduler(scheduler), 
-    workletsCache(std::make_unique<WorkletsCache>()) 
-  { 
+  ) :
+    runtime(runtime),
+    errorHandler(errorHandler),
+    scheduler(scheduler),
+    workletsCache(std::make_unique<WorkletsCache>()),
+    storeUserData(std::make_shared<StaticStoreUser>())
+  {
     RuntimeDecorator::registerRuntime(this->runtime.get(), runtimeType);
   }
+
+  virtual ~RuntimeManager() {
+    clearStore();
+  }
+
 public:
   /**
    Holds the jsi::Function worklet that is responsible for updating values in JS.
@@ -52,6 +59,16 @@ public:
    Holds a list of adapted Worklets which are cached to avoid unneccessary recreation.
    */
   std::unique_ptr<WorkletsCache> workletsCache;
+  /**
+   Holds the JSI-Value Store where JSI::Values are cached on a per-RuntimeManager basis.
+   */
+  std::shared_ptr<StaticStoreUser> storeUserData;
+
+private:
+  void clearStore() {
+    const std::lock_guard<std::recursive_mutex> lock(storeUserData->storeMutex);
+    storeUserData->store.clear();
+  }
 };
 
 }

@@ -1,16 +1,21 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { BaseAnimationBuilder } from '../defaultAnimationsBuilder';
+import {
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationBuild,
+} from '../animationBuilder/commonTypes';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
-export class StretchInX extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchInX
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): StretchInX {
     return new StretchInX();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -21,20 +26,24 @@ export class StretchInX extends BaseAnimationBuilder {
         initialValues: {
           transform: [{ scaleX: 0 }],
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class StretchInY extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchInY
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): StretchInY {
     return new StretchInY();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -45,20 +54,24 @@ export class StretchInY extends BaseAnimationBuilder {
         initialValues: {
           transform: [{ scaleY: 0 }],
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class StretchOutX extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchOutX
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): StretchOutX {
     return new StretchOutX();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -69,20 +82,24 @@ export class StretchOutX extends BaseAnimationBuilder {
         initialValues: {
           transform: [{ scaleX: 1 }],
         },
+        callback: callback,
       };
     };
-  }
+  };
 }
 
-export class StretchOutY extends BaseAnimationBuilder {
-  static createInstance() {
+export class StretchOutY
+  extends BaseAnimationBuilder
+  implements IEntryExitAnimationBuilder {
+  static createInstance(): StretchOutY {
     return new StretchOutY();
   }
 
-  build() {
+  build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -93,7 +110,8 @@ export class StretchOutY extends BaseAnimationBuilder {
         initialValues: {
           transform: [{ scaleY: 1 }],
         },
+        callback: callback,
       };
     };
-  }
+  };
 }

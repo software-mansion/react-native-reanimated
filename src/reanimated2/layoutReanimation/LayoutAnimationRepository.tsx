@@ -1,15 +1,11 @@
 /* global _stopObservingProgress, _startObservingProgress */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import { Platform, requireNativeComponent, SliderComponent } from 'react-native';
-import React from 'react';
 import { runOnUI } from '../core';
-import { withStyleAnimation } from '../animations';
+import { withStyleAnimation } from '../animation/styleAnimation';
 
-runOnUI(() => {
+const init = runOnUI(() => {
   'worklet';
 
-  const configs = {};
+  const configs: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
     configs,
@@ -27,22 +23,24 @@ runOnUI(() => {
       if (typeof configs[tag][type] !== 'function') {
         console.error(`${type} animation for a tag: ${tag} it not a function!`);
       }
-
       const style = configs[tag][type](yogaValues);
-      const sv = configs[tag].sv;
+      const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
       sv._value = Object.assign({}, sv._value, style.initialValues);
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(style.animations);
 
-      animation.callback = (finished) => {
+      animation.callback = (finished?: boolean) => {
         if (finished) {
           _stopObservingProgress(tag, finished);
         }
+        style.callback && style.callback(finished);
       };
       configs[tag].sv.value = animation;
       _startObservingProgress(tag, sv);
     },
   };
-})();
+});
+
+export default init;

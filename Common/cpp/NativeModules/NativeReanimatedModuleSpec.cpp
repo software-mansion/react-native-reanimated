@@ -52,8 +52,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_startMapper(
                     std::move(args[1]),
                     std::move(args[2]),
                     std::move(args[3]),
-                    std::move(args[4]),
-                    std::move(args[5]));
+                    std::move(args[4]));
 }
 
 static jsi::Value __hostFunction_NativeReanimatedModuleSpec_stopMapper(
@@ -110,7 +109,7 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(std::shared_ptr<CallInvok
       
 
   methodMap_["startMapper"] = MethodMetadata{
-    6, __hostFunction_NativeReanimatedModuleSpec_startMapper};
+    5, __hostFunction_NativeReanimatedModuleSpec_startMapper};
   methodMap_["stopMapper"] = MethodMetadata{
     1, __hostFunction_NativeReanimatedModuleSpec_stopMapper};
 

@@ -186,3 +186,96 @@ Animation based on horizontal or vertical moving of object.
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317587-1a51dc00-c2df-11eb-937a-c53a237afca2.mov" controls="controls" muted="muted"></video>
+
+### LightSpeed
+
+Animation based on horizontal moving of object with changing of opacity and skew.
+
+#### Animations
+- LightSpeedInRight
+- LightSpeedInLeft
+
+#### Modifiers
+* `duration` (in ms) default: 250
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125057634-c094bc80-e0a9-11eb-98d9-0c8eed1e63b0.mov" controls="controls" muted="muted"></video>
+
+### Pinwheel
+
+Animation based on rotation with scale and opacity change.
+
+#### Animations
+- PinwheelIn
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058126-40228b80-e0aa-11eb-8396-7f373af7fcbe.mov" controls="controls" muted="muted"></video>
+
+### Roll
+
+Animation based on horizontal moving of object with rotation.
+
+#### Animations
+- RollInLeft
+- RollInRight
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058243-60524a80-e0aa-11eb-94c8-79728688e2f3.mov" controls="controls" muted="muted"></video>
+
+### Rotate
+
+Animation based on rotation of object.
+
+#### Animations
+- RotateInDownLeft
+- RotateInDownRight
+- RotateInUpLeft
+- RotateInUpRight
+
+#### Modifiers
+* `duration` (in ms) default: 300
+* `delay` (in ms) default: 0
+* `easing` same easing worklet as with `withTiming`
+* `springify` change animation to spring
+* `damping ` default: 10
+* `mass` default: 1
+* `stiffness` default: 100
+* `overshootClamping` default: false
+* `restDisplacementThreshold` default: 0.001
+* `restSpeedThreshold` default: 0.001
+
+#### Example
+<video src="https://user-images.githubusercontent.com/48885911/125058359-79f39200-e0aa-11eb-8c78-c31e461e3748.mov" controls="controls" muted="muted"></video>

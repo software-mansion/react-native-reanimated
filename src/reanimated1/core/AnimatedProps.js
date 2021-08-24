@@ -4,8 +4,8 @@ import AnimatedNode from './AnimatedNode';
 import AnimatedEvent from './AnimatedEvent';
 import { createOrReuseStyleNode } from './AnimatedStyle';
 
-import invariant from 'fbjs/lib/invariant';
-import deepEqual from 'fbjs/lib/areEqual';
+import invariant from 'invariant';
+import deepEqual from 'lodash.isequal';
 import { val } from '../val';
 
 function sanitizeProps(inputProps) {

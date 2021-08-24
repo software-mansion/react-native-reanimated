@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
-import { useRef } from 'react';
-import { findNodeHandle } from 'react-native';
+import React, { useState, useRef } from 'react';
 import { View, Text, Button, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   withTiming,
@@ -13,9 +10,6 @@ const { width } = Dimensions.get('window');
 
 function AnimatedView() {
   const ref = useRef(null);
-  useEffect(() => {
-    console.log("tag ", findNodeHandle(ref.current));
-  }, []);
   const entering = (targetValues) => {
     'worklet';
     const animations = {
@@ -70,21 +64,21 @@ export function ModalNewAPI(): React.ReactElement {
   const [show, setShow] = useState(false);
   return (
     <View style={{ flexDirection: 'column-reverse' }}>
-        <Button
-          title="toggle"
-          onPress={() => {
-            setShow((last) => !last);
-          }}
-        />
-        <View
-          style={{
-            height: 400,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-          }}>
-          {show && <AnimatedView />}
-        </View>
+      <Button
+        title="toggle"
+        onPress={() => {
+          setShow((last) => !last);
+        }}
+      />
+      <View
+        style={{
+          height: 400,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+        }}>
+        {show && <AnimatedView />}
+      </View>
     </View>
   );
 }

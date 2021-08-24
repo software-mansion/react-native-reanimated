@@ -186,18 +186,6 @@ export const setUpTests = (userConfig = {}) => {
       return compareStyle(received, expectedStyle, config);
     },
   });
-
-  jest.mock('./js-reanimated', () => require('./js-reanimated/index.web'));
-  jest.mock('../ReanimatedModule', () => require('../ReanimatedModuleCompat'));
-  jest.mock('./NativeReanimated', () => {
-    let module;
-    try {
-      module = require('./NativeReanimated.js');
-    } catch {
-      module = require('./NativeReanimated.ts');
-    }
-    return module.default;
-  });
 };
 
 export const getAnimatedStyle = (received) => {
