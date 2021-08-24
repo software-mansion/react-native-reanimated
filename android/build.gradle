@@ -67,14 +67,14 @@ def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
 
 buildscript {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
+        classpath('com.android.tools.build:gradle:4.2.1')
         classpath("de.undercouch:gradle-download-task:4.0.4")
     }
 }
@@ -97,12 +97,12 @@ android {
     buildFeatures {
         prefab true
     }
-    compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+    compileSdkVersion safeExtGet('compileSdkVersion', 30)
+    buildToolsVersion safeExtGet('buildToolsVersion', '30.0.2')
     defaultConfig {
 
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 29)
+        targetSdkVersion safeExtGet('targetSdkVersion', 30)
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -145,10 +145,6 @@ android {
     configurations {
         extractHeaders
         extractSO
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -448,6 +444,7 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -458,7 +455,6 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    jcenter()
 }
 
 dependencies {
