@@ -1,8 +1,4 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-import {
-  GestureHandlerStateChangeNativeEvent,
-  State,
-} from 'react-native-gesture-handler';
 import { WorkletFunction } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
@@ -26,6 +22,22 @@ export interface GestureHandlers<T, TContext extends Context> {
   onFail?: Handler<T, TContext>;
   onCancel?: Handler<T, TContext>;
   onFinish?: Handler<T, TContext>;
+}
+
+export enum EventType {
+  UNDETERMINED = 0,
+  FAILED,
+  BEGAN,
+  CANCELLED,
+  ACTIVE,
+  END,
+}
+
+export interface GestureHandlerStateChangeNativeEvent {
+  handlerTag: number;
+  numberOfPointers: number;
+  state: EventType;
+  oldState: EventType;
 }
 
 export interface GestureHandlerEvent<T>
@@ -69,43 +81,44 @@ export function useAnimatedGestureHandler<
     'worklet';
     const event = useWeb ? e.nativeEvent : e;
 
-    if (event.state === State.BEGAN && handlers.onStart) {
+    if (event.state === EventType.BEGAN && handlers.onStart) {
       handlers.onStart(event, context);
     }
-    if (event.state === State.ACTIVE && handlers.onActive) {
+    if (event.state === EventType.ACTIVE && handlers.onActive) {
       handlers.onActive(event, context);
     }
     if (
-      event.oldState === State.ACTIVE &&
-      event.state === State.END &&
+      event.oldState === EventType.ACTIVE &&
+      event.state === EventType.END &&
       handlers.onEnd
     ) {
       handlers.onEnd(event, context);
     }
     if (
-      event.oldState === State.BEGAN &&
-      event.state === State.FAILED &&
+      event.oldState === EventType.BEGAN &&
+      event.state === EventType.FAILED &&
       handlers.onFail
     ) {
       handlers.onFail(event, context);
     }
     if (
-      event.oldState === State.ACTIVE &&
-      event.state === State.CANCELLED &&
+      event.oldState === EventType.ACTIVE &&
+      event.state === EventType.CANCELLED &&
       handlers.onCancel
     ) {
       handlers.onCancel(event, context);
     }
     if (
-      (event.oldState === State.BEGAN || event.oldState === State.ACTIVE) &&
-      event.state !== State.BEGAN &&
-      event.state !== State.ACTIVE &&
+      (event.oldState === EventType.BEGAN ||
+        event.oldState === EventType.ACTIVE) &&
+      event.state !== EventType.BEGAN &&
+      event.state !== EventType.ACTIVE &&
       handlers.onFinish
     ) {
       handlers.onFinish(
         event,
         context,
-        event.state === State.CANCELLED || event.state === State.FAILED
+        event.state === EventType.CANCELLED || event.state === EventType.FAILED
       );
     }
   };
