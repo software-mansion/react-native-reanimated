@@ -1,14 +1,10 @@
 package com.swmansion.reanimated.layoutReanimation;
 
-import android.accounts.AccountManager;
-import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-
-import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactContext;
@@ -29,11 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
-public class AnimationsManager {
-    private final static String[] LAYOUT_KEYS = { Snapshooter.originX, Snapshooter.originY, Snapshooter.width, Snapshooter.height };
+public class AnimationsManager implements ViewHierarchyObserver {
+    private final static String[] LAYOUT_KEYS = { Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT };
     private ReactContext mContext;
     private UIImplementation mUIImplementation;
     private UIManagerModule mUIManager;
@@ -41,29 +36,37 @@ public class AnimationsManager {
 
     private HashMap<Integer, ViewState> mStates;
     private HashMap<Integer, View> mViewForTag;
-    private HashMap<Integer, Integer> mAnimatedLayout;
     private HashSet<Integer> mToRemove;
-    private HashMap<Integer, View> mAnimatedLayoutHangingPoint;
     private HashMap<Integer, ViewManager> mViewManager;
     private HashMap<Integer, ViewManager> mParentViewManager;
     private HashMap<Integer, View> mParent;
+    private HashMap<Integer, Runnable> mCallbacks;
+    private boolean mCleaningScheduled = false;
+    private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
+
+    public void setReanimatedNativeHierarchyManager(ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
+        this.mReanimatedNativeHierarchyManager = reanimatedNativeHierarchyManager;
+    }
+
+    public ReanimatedNativeHierarchyManager getReanimatedNativeHierarchyManager() {
+        return mReanimatedNativeHierarchyManager;
+    }
 
     public enum ViewState {
         Appearing, Disappearing, Layout, Inactive, ToRemove;
     }
 
-    AnimationsManager(ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
+    public AnimationsManager(ReactContext context, UIImplementation uiImplementation, UIManagerModule uiManagerModule) {
         mContext = context;
         mUIImplementation = uiImplementation;
         mUIManager = uiManagerModule;
         mStates = new HashMap<>();
         mViewForTag = new HashMap<>();
-        mAnimatedLayout = new HashMap<>();
-        mAnimatedLayoutHangingPoint = new HashMap<>();
         mToRemove = new HashSet<>();
         mViewManager = new HashMap<>();
         mParentViewManager = new HashMap<>();
         mParent = new HashMap();
+        mCallbacks = new HashMap<>();
     }
 
     public void onCatalystInstanceDestroy() {
@@ -74,11 +77,98 @@ public class AnimationsManager {
         mStates = null;
         mToRemove = null;
         mViewForTag = null;
-        mAnimatedLayoutHangingPoint = null;
-        mAnimatedLayout = null;
         mViewManager = null;
         mParent = null;
         mParentViewManager = null;
+        mCallbacks = null;
+    }
+
+    @Override
+    public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
+        // TODO fix removal
+        Integer tag = view.getId();
+        String type = "exiting";
+        HashMap<String, Object> startValues = before.toMap();
+        ViewState state = mStates.get(view.getId());
+
+        if (state == null || state == ViewState.Disappearing || state == ViewState.ToRemove) {
+            return;
+        }
+        mCallbacks.put(tag, callback);
+        if (state == ViewState.Inactive) {
+            if (startValues != null) {
+                mStates.put(view.getId(), ViewState.ToRemove);
+                mToRemove.add(view.getId());
+                scheduleCleaning();
+            }
+            return;
+        }
+        Log.d("REANIMATED", tag + state.name());
+        mStates.put(tag, ViewState.Disappearing);
+        HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
+        mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+    }
+
+    @Override
+    public void onViewCreate(View view, ViewGroup parent, Snapshot after) {
+        if (!mStates.containsKey(view.getId())) {
+            mStates.put(view.getId(), ViewState.Inactive);
+            mViewForTag.put(view.getId(), view);
+            HashMap<String, Object> data = after.toMap();
+            mViewManager.put(view.getId(), (ViewManager)data.get(Snapshot.VIEW_MANAGER));
+            mParentViewManager.put(view.getId(), (ViewManager)data.get(Snapshot.PARENT_VIEW_MANAGER));
+            mParent.put(view.getId(), ((View)data.get(Snapshot.PARENT)));
+        }
+        Integer tag = view.getId();
+        String type = "entering";
+        HashMap<String, Object> targetValues = after.toMap();
+        ViewState state = mStates.get(view.getId());
+
+        if (state == ViewState.Inactive) { // it can be a fresh view
+            if (targetValues != null) {
+                HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues);
+                mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+            }
+            return;
+        }
+    }
+
+    @Override
+    public void onViewUpdate(View view, Snapshot before, Snapshot after) {
+        Integer tag = view.getId();
+        String type = "entering";
+        HashMap<String, Object> targetValues = after.toMap();
+        HashMap<String, Object> startValues = before.toMap();
+        ViewState state = mStates.get(view.getId());
+        if (state == null || state == ViewState.Disappearing || state == ViewState.ToRemove || state == ViewState.Inactive) {
+            return;
+        }
+        // If startValues are equal to targetValues it means that there was no UI Operation changing
+        // layout of the View. So dirtiness of that View is false positive
+        if (state == ViewState.Appearing) {
+            boolean doNotStartLayout = true;
+            for (String key : LAYOUT_KEYS) {
+                double startV = ((Number) startValues.get(key)).doubleValue();
+                double targetV = ((Number) targetValues.get(key)).doubleValue();
+                if (startV != targetV) {
+                    doNotStartLayout = false;
+                }
+            }
+            if (doNotStartLayout) {
+                return;
+            }
+        }
+
+        // View must be in Layout state
+        type = "layout";
+        mStates.put(view.getId(), ViewState.Layout);
+        HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
+        HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
+        HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
+        for (String key : preparedStartValues.keySet()) {
+            preparedValues.put("b" + key, preparedStartValues.get(key));
+        }
+        mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
     }
 
     public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
@@ -91,7 +181,6 @@ public class AnimationsManager {
     }
 
     public void notifyAboutEnd(int tag, boolean cancelled) {
-
         if (!cancelled) {
             ViewState state = mStates.get(tag);
             if (state == ViewState.Appearing) {
@@ -106,36 +195,100 @@ public class AnimationsManager {
         }
     }
 
+    private void removeLeftovers() {
+        HashSet<Integer> discovered = new HashSet<>();
+        HashSet<Integer> roots = new HashSet<>();
+        // go through ready to remove from bottom to top
+        for (int tag: mToRemove) {
+            View view = mViewForTag.get(tag);
+            findRoot(view, discovered, roots);
+        }
+        discovered.clear();
+        for (int tag: roots) {
+            View view = mViewForTag.get(tag);
+            dfs(view, discovered, mToRemove);
+        }
+    }
+
     private void scheduleCleaning() {
+        if (mCleaningScheduled) return;
+        mCleaningScheduled = true;
         WeakReference<AnimationsManager> animationsManagerWeakReference = new WeakReference<>(this);
         mContext.runOnUiQueueThread(() -> {
+            mCleaningScheduled = false;
             AnimationsManager thiz = animationsManagerWeakReference.get();
             if (thiz == null) {
                 return;
             }
-            HashSet<Integer> toRemove = mToRemove;
-            mToRemove = new HashSet<>();
+            removeLeftovers();
 
-            HashSet<Integer> candidates = new HashSet<>();
-            for (Integer tag : toRemove) {
-                View view = mViewForTag.get(tag);
-                if (view == null) {
-                    continue;
-                }
-                candidates.add(mAnimatedLayout.get(tag));
-            }
-
-            for (Integer tag : candidates) {
-                removeLeftovers(tag);
-            }
         });
+    }
+
+    private void findRoot(View view, HashSet<Integer> discovered, HashSet<Integer> roots) {
+        if (discovered.contains(view.getId())) return;
+        discovered.add(view.getId());
+        ViewGroup parent = (ViewGroup) view.getParent();
+        if (parent == null) return; // e.g. Screen wrapper
+        ViewState state = mStates.get(parent.getId());
+        if (state == ViewState.ToRemove || state == null) {
+            findRoot(parent, discovered, roots);
+            return;
+        }
+        if (state == ViewState.Disappearing) {
+            return;
+        }
+        roots.add(view.getId());
+        return;
+    }
+
+    private boolean dfs(View view, HashSet<Integer> discovered, HashSet<Integer> cands) {
+        if ((!cands.contains(view.getId())) && (mStates.containsKey(view.getId()))) {
+            return true;
+        }
+        boolean cannotStripe = false;
+        if (discovered.contains(view.getId())) {
+            return false;
+        }
+        discovered.add(view.getId());
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); ++i) {
+                cannotStripe = cannotStripe || dfs(vg.getChildAt(i), discovered, cands);
+            }
+        }
+        Log.d("dfs-remove", view.toString());
+        if (mStates.get(view.getId()) != ViewState.ToRemove) {
+            Log.d("dfs-remove", view.toString());
+        }
+        if (!cannotStripe) {
+            if (mCallbacks.containsKey(view.getId())) {
+                Runnable runnable = mCallbacks.get(view.getId());
+                mCallbacks.remove(view.getId());
+                runnable.run();
+            }
+            if (mParent.containsKey(view.getId())) {
+                ViewGroup parent = (ViewGroup) mParent.get(view.getId());
+                parent.removeView(view);
+            }
+            View curView = view;
+            mStates.remove(curView.getId());
+            mViewForTag.remove(curView.getId());
+            mViewManager.remove(curView.getId());
+            mParentViewManager.remove(curView.getId());
+            mParent.remove(curView.getId());
+            mNativeMethodsHolder.removeConfigForTag(curView.getId());
+            mToRemove.remove(view.getId());
+
+        }
+        return cannotStripe;
     }
 
     public HashMap<String, Float> prepareDataForAnimationWorklet(HashMap<String, Object> values) {
         HashMap<String, Float> preparedValues = new HashMap<>();
 
-        ArrayList<String> keys = new ArrayList<String>(Arrays.asList(Snapshooter.width, Snapshooter.height, Snapshooter.originX,
-                Snapshooter.originY, Snapshooter.globalOriginX, Snapshooter.globalOriginY));
+        ArrayList<String> keys = new ArrayList<String>(Arrays.asList(Snapshot.WIDTH, Snapshot.HEIGHT, Snapshot.ORIGIN_X,
+                Snapshot.ORIGIN_Y, Snapshot.GLOBAL_ORIGIN_X, Snapshot.GLOBAL_ORIGIN_Y));
         for (String key : keys) {
             preparedValues.put(key, PixelUtil.toDIPFromPixel((int)values.get(key)));
         }
@@ -158,15 +311,15 @@ public class AnimationsManager {
                             ViewManager viewManager,
                             ViewManager parentViewManager,
                             Integer parentTag) {
-        float x = (props.get(Snapshooter.originX) != null)? ((Double)props.get(Snapshooter.originX)).floatValue() : PixelUtil.toDIPFromPixel(view.getLeft());
-        float y = (props.get(Snapshooter.originY) != null)? ((Double)props.get(Snapshooter.originY)).floatValue() : PixelUtil.toDIPFromPixel(view.getTop());
-        float width = (props.get(Snapshooter.width) != null)? ((Double)props.get(Snapshooter.width)).floatValue() : PixelUtil.toDIPFromPixel(view.getWidth());
-        float height = (props.get(Snapshooter.height) != null)? ((Double)props.get(Snapshooter.height)).floatValue() : PixelUtil.toDIPFromPixel(view.getHeight());
+        float x = (props.get(Snapshot.ORIGIN_X) != null)? ((Double)props.get(Snapshot.ORIGIN_X)).floatValue() : PixelUtil.toDIPFromPixel(view.getLeft());
+        float y = (props.get(Snapshot.ORIGIN_Y) != null)? ((Double)props.get(Snapshot.ORIGIN_Y)).floatValue() : PixelUtil.toDIPFromPixel(view.getTop());
+        float width = (props.get(Snapshot.WIDTH) != null)? ((Double)props.get(Snapshot.WIDTH)).floatValue() : PixelUtil.toDIPFromPixel(view.getWidth());
+        float height = (props.get(Snapshot.HEIGHT) != null)? ((Double)props.get(Snapshot.HEIGHT)).floatValue() : PixelUtil.toDIPFromPixel(view.getHeight());
         updateLayout(view, parentViewManager, parentTag, view.getId(), x, y, width, height);
-        props.remove(Snapshooter.originX);
-        props.remove(Snapshooter.originY);
-        props.remove(Snapshooter.width);
-        props.remove(Snapshooter.height);
+        props.remove(Snapshot.ORIGIN_X);
+        props.remove(Snapshot.ORIGIN_Y);
+        props.remove(Snapshot.WIDTH);
+        props.remove(Snapshot.HEIGHT);
 
         if (props.size() == 0) {
             return;
@@ -262,176 +415,5 @@ public class AnimationsManager {
             viewToUpdate.layout(x, y, x + width, y + height);
         }
 
-    }
-
-    public void notifyAboutSnapshots(Snapshooter before, Snapshooter after) {
-        HashSet<View> alreadyKnown = new HashSet<>();
-        ArrayList<View> allViews = new ArrayList<>();
-        for (View view : before.listOfViews) {
-            allViews.add(view);
-            alreadyKnown.add(view);
-        }
-        for (View view : after.listOfViews) {
-            if (!alreadyKnown.contains(view)) {
-                allViews.add(view);
-            }
-        }
-
-        // update data for view
-        for (View view : allViews) {
-            if (!mStates.containsKey(view.getId())) {
-                mStates.put(view.getId(), ViewState.Inactive);
-                mViewForTag.put(view.getId(), view);
-                mAnimatedLayout.put(view.getId(), before.tag);
-                HashMap<String, Object> data = after.capturedValues.get(view.getId());
-                mViewManager.put(view.getId(), (ViewManager)data.get(Snapshooter.viewManager));
-                mParentViewManager.put(view.getId(), (ViewManager)data.get(Snapshooter.parentViewManager));
-                mParent.put(view.getId(), ((View)data.get(Snapshooter.parent)));
-            }
-        }
-
-        // attach all orphan views
-        for (View view : allViews) {
-            if (view.getParent() != null) {
-                continue;
-            }
-
-            if (view instanceof AnimatedRoot) {
-                ArrayList<View> pathToTheRoot = (ArrayList<View>) before.capturedValues.get(view.getId()).get(Snapshooter.pathToTheRootView);
-                for (int i = 1; i < pathToTheRoot.size(); ++i) {
-                    ViewGroup parent = (ViewGroup) pathToTheRoot.get(i);
-                    View cur = pathToTheRoot.get(i-1);
-                    if (cur.getParent() == null) {
-                        parent.addView(cur);
-                        mAnimatedLayoutHangingPoint.put(view.getId(), parent);
-                    }
-                }
-            } else {
-                ViewGroup parent = (ViewGroup) mParent.get(view.getId());
-                parent.addView(view);
-            }
-        }
-
-        for (View view : allViews) {
-            Integer tag = view.getId();
-            String type = "entering";
-            HashMap<String, Object> startValues = before.capturedValues.get(view.getId());
-            HashMap<String, Object> targetValues = after.capturedValues.get(view.getId());
-            ViewState state = mStates.get(view.getId());
-
-            if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
-                continue;
-            }
-            if (state == ViewState.Appearing && startValues != null && targetValues == null) {
-                mStates.put(tag, ViewState.Disappearing);
-                type = "exiting";
-                HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-                mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-                continue;
-            }
-
-            // If startValues are equal to targetValues it means that there was no UI Operation changing
-            // layout of the View. So dirtiness of that View is false positive
-            if (state != ViewState.Inactive && startValues != null && targetValues != null) {
-                boolean doNotStartLayout = true;
-                for (String key : LAYOUT_KEYS) {
-                    double startV = ((Number) startValues.get(key)).doubleValue();
-                    double targetV = ((Number) targetValues.get(key)).doubleValue();
-                    if (startV != targetV) {
-                        doNotStartLayout = false;
-                    }
-                }
-                if (doNotStartLayout) {
-                    continue;
-                }
-            }
-
-            if (state == ViewState.Inactive) { // it can be a fresh view
-                if (startValues == null && targetValues != null) {
-                    HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues);
-                    mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-                }
-                if (startValues != null && targetValues == null) {
-                    mStates.put(view.getId(), ViewState.ToRemove);
-                }
-                continue;
-            }
-            // View must be in Layout state
-            type = "layout";
-            if (startValues != null && targetValues == null) {
-                mStates.put(view.getId(), ViewState.Disappearing);
-                type = "exiting";
-                HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-                mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-                continue;
-            }
-            HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
-            HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
-            HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
-            for (String key : preparedStartValues.keySet()) {
-                preparedValues.put("b" + key, preparedStartValues.get(key));
-            }
-            mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
-        }
-        removeLeftovers(before.tag);
-    }
-
-    boolean dfs(View view, boolean disappearingAbove) {
-        boolean active = false;
-        ViewState state = mStates.get(view.getId());
-        boolean disappearing = ((state == ViewState.ToRemove) || (state == ViewState.Disappearing));
-
-        if (view instanceof ViewGroup) {
-            ViewGroup vg = (ViewGroup) view;
-            for (int i = 0; i < vg.getChildCount(); ++i) {
-                View child = vg.getChildAt(i);
-                boolean childAns = dfs(child, disappearing || disappearingAbove); // we still want to go down
-                active = active || childAns;
-            }
-        }
-
-        if ((!disappearingAbove) && (state == ViewState.ToRemove) && (!active)) {
-            ViewTraverser.internalTraverse(view,
-                (View curView) -> {
-                    mStates.remove(curView.getId());
-                    mAnimatedLayout.remove(curView.getId());
-                    mViewForTag.remove(curView.getId());
-                    mViewManager.remove(curView.getId());
-                    mParentViewManager.remove(curView.getId());
-                    mParent.remove(curView.getId());
-                    mNativeMethodsHolder.removeConfigForTag(curView.getId());
-                    if (view.getId() == curView.getId()) {
-                        if (view instanceof AnimatedRoot) {
-                            View hangingPoint = mAnimatedLayoutHangingPoint.get(curView.getId());
-                            View tmp = view;
-                            while (tmp.getParent() != null && tmp.getParent() != hangingPoint) {
-                                ViewGroup next = (ViewGroup)tmp.getParent();
-                                next.removeView(tmp);
-                                tmp = next;
-                            }
-                            mAnimatedLayoutHangingPoint.remove(curView.getId());
-                        } else  {
-                            ViewGroup parent = (ViewGroup) view.getParent();
-                            parent.removeView(curView);
-                        }
-                    }
-                    if (curView instanceof ViewGroup) {
-                        ViewGroup vg = (ViewGroup)curView;
-                        vg.removeAllViews();
-                    }
-                },
-                (int)1e9,
-                false
-            );
-        }
-
-        return active || (!(state == ViewState.ToRemove));
-    }
-
-    private void removeLeftovers(Integer tag) {
-        View view = mViewForTag.get(tag);
-        if (view != null) {
-            dfs(view, false);
-        }
     }
 }

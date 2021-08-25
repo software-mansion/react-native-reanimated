@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import Animated, { AnimatedLayout, SlideInRight, SlideOutRight, SlideInDown, SlideOutUp, FadeIn, FadeOut, SlideOutLeft, SlideInLeft } from 'react-native-reanimated';
+import Animated, { SlideInRight, SlideOutRight, SlideInDown, SlideOutUp, FadeIn, FadeOut, SlideOutLeft, SlideInLeft } from 'react-native-reanimated';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 function SWMLogo() {
 
     return (
-        <AnimatedLayout>
+        <View>
             <Animated.View 
                 entering={SlideInRight.delay(300)} 
                 exiting={SlideOutLeft.delay(300)} 
@@ -30,7 +30,7 @@ function SWMLogo() {
                     SWM 
                 </AnimatedText>
             </Animated.View>
-        </AnimatedLayout>
+        </View>
     );
 }
 
