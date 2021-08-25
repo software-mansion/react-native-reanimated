@@ -4,7 +4,7 @@ title: Community
 sidebar_label: Community
 ---
 
-Reanimated community is best! 🎉  We want to say thank you to all community users, and we really appreciate all your activity and commitment. Yours PR, reported issues and many discussions help us in our daily work and it motivates us to develop Reanimated!
+Reanimated community is the best! 🎉  We want to say thank you to all community users, and we really appreciate all your activity and commitment. Yours PR, reported issues and many discussions help us in our daily work and it motivates us to develop Reanimated!
 
 ## Reanimated Team 🚀
 <div class="community-holder-maintainer">
@@ -41,10 +41,11 @@ We really appreciate our sponsor! Thanks to this we can develop our library and 
 <a href="https://www.shopify.com/"><img class="imageHolder-sponsor" src="https://cdn.shopify.com/assets/images/logos/shopify-bag.png" /></a>
 
 ## Special thanks
-In our community we have really smart and talented peoples whose help us many times, we want to say thank you again 🙌
+In our community we have really smart and talented peoples who helped us many times, we want to say thank you again 🙌
 - William Candillon <a href="https://twitter.com/wcandillon">@wcandillon</a>
 - Terry Sahaidak <a href="https://twitter.com/terrysahaidak">@terrysahaidak</a>
 - Marc Rousavy <a href="https://twitter.com/mrousavy">@mrousavy</a>
+- and many others!
 
 ## Community projects
 We want to appreciate also great initiatives managed by our reanimated community - great job!
