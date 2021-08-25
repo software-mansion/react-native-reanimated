@@ -26,7 +26,7 @@ import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.swmansion.reanimated.layoutReanimation.ReactBatchObserver;
+import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nodes.AlwaysNode;
 import com.swmansion.reanimated.nodes.BezierNode;
 import com.swmansion.reanimated.nodes.BlockNode;
@@ -93,7 +93,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
-  private ReactBatchObserver mReactBatchObserver;
+  private AnimationsManager mAnimationManager = null;
   private final SparseArray<Node> mAnimatedNodes = new SparseArray<>();
   private final Map<String, EventNode> mEventMapping = new HashMap<>();
   private final UIImplementation mUIImplementation;
@@ -118,13 +118,13 @@ public class NodesManager implements EventDispatcherListener {
 
   private NativeProxy mNativeProxy;
 
-  public ReactBatchObserver getReactBatchObserver() {
-    return mReactBatchObserver;
+  public AnimationsManager getAnimationsManager() {
+    return mAnimationManager;
   }
 
   public void onCatalystInstanceDestroy() {
-    if (mReactBatchObserver != null) {
-      mReactBatchObserver.onCatalystInstanceDestroy();
+    if (mAnimationManager != null) {
+      mAnimationManager.onCatalystInstanceDestroy();
     }
 
     if (mNativeProxy != null) {
@@ -172,7 +172,7 @@ public class NodesManager implements EventDispatcherListener {
     // This method indirectly uses `mChoreographerCallback` which was created after event registration, creating race condition
     mUIManager.getEventDispatcher().addListener(this);
 
-    mReactBatchObserver = new ReactBatchObserver(mContext, mUIManager, mUIImplementation, this);
+    mAnimationManager = new AnimationsManager(mContext, mUIImplementation, mUIManager);
   }
 
   public void onHostPause() {

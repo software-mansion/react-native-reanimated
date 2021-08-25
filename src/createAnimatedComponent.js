@@ -8,6 +8,7 @@ import AnimatedValue from './reanimated1/core/AnimatedValue';
 import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
+import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';

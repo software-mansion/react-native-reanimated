@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   SlideInRight,
   SlideOutRight,
   SlideInUp,
@@ -102,27 +101,25 @@ const AnimatedBlock = ({
 }: AnimatedBlockProps) => {
   const [show, setShow] = useState(defaultShow);
   return (
-    <AnimatedLayout>
-      <View style={styles.animatedBox}>
-        {show ? (
-          <TouchableWithoutFeedback onPress={() => setShow(!show)}>
-            <Animated.View style={styles.animatedBlock} {...animatedStyle}>
-              <Text style={styles.animatedText}>{name}</Text>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-        ) : null}
-        {!show ? (
-          <Animated.View
-            entering={'entering' in animatedStyle ? null : FadeIn.delay(350)}>
-            <TouchableOpacity
-              style={styles.animatedBlockPlaceholder}
-              onPress={() => setShow(!show)}>
-              <Text style={styles.animatedTextPlaceholder}>{name}</Text>
-            </TouchableOpacity>
+    <View style={styles.animatedBox}>
+      {show ? (
+        <TouchableWithoutFeedback onPress={() => setShow(!show)}>
+          <Animated.View style={styles.animatedBlock} {...animatedStyle}>
+            <Text style={styles.animatedText}>{name}</Text>
           </Animated.View>
-        ) : null}
-      </View>
-    </AnimatedLayout>
+        </TouchableWithoutFeedback>
+      ) : null}
+      {!show ? (
+        <Animated.View
+          entering={'entering' in animatedStyle ? null : FadeIn.delay(350)}>
+          <TouchableOpacity
+            style={styles.animatedBlockPlaceholder}
+            onPress={() => setShow(!show)}>
+            <Text style={styles.animatedTextPlaceholder}>{name}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      ) : null}
+    </View>
   );
 };
 

@@ -8382,10 +8382,11 @@ react-native-safe-area-context@^3.1.9:
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-3.1.9.tgz#48864ea976b0fa57142a2cc523e1fd3314e7247e"
   integrity sha512-wmcGbdyE/vBSL5IjDPReoJUEqxkZsywZw5gPwsVUV1NBpw5eTIdnL6Y0uNKHE25Z661moxPHQz6kwAkYQyorxA==
 
-react-native-screens@^2.17.1:
-  version "2.17.1"
-  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-2.17.1.tgz#c3c0ac750af48741c5b1635511e6af2a27b74309"
-  integrity sha512-B4gD5e4csvlVwlhf+RNqjQZ9mHTwe/iL3rXondgZxnKz4oW0QAmtLnLRKOrYVxoaJaF9Fy7jhjo//24/472APQ==
+"react-native-screens@git+https://github.com/software-mansion/react-native-screens.git#cf8dd9496e21982d04ad3ba984ae76973d5952c6":
+  version "3.4.0"
+  resolved "git+https://github.com/software-mansion/react-native-screens.git#cf8dd9496e21982d04ad3ba984ae76973d5952c6"
+  dependencies:
+    warn-once "^0.1.0"
 
 react-native-status-bar-height@^2.4.0:
   version "2.6.0"
@@ -9813,6 +9814,11 @@ walker@^1.0.7, walker@~1.0.5:
   resolved "https://registry.yarnpkg.com/walker/-/walker-1.0.7.tgz#2f7f9b8fd10d677262b18a884e28d19618e028fb"
   dependencies:
     makeerror "1.0.x"
+
+warn-once@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/warn-once/-/warn-once-0.1.0.tgz#4f58d89b84f968d0389176aa99e0cf0f14ffd4c8"
+  integrity sha512-recZTSvuaH/On5ZU5ywq66y99lImWqzP93+AiUo9LUwG8gXHW+LJjhOd6REJHm7qb0niYqrEQJvbHSQfuJtTqA==
 
 wcwidth@^1.0.1:
   version "1.0.1"
