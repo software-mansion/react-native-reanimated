@@ -62,5 +62,9 @@ module.exports = {
       label: 'Guides',
       items: ['testing'],
     },
+    {
+      type: 'doc',
+      id: 'community',
+    },
   ],
 };

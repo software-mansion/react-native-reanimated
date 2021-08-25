@@ -212,6 +212,20 @@ function Home() {
             </div>
           </div>
         </section>
+        <section>
+          <div className="container">
+            <div className="row row--center">
+              <div className="col col--7 text--center col--bottom-section">
+                <h2>Sponsors</h2>
+                <p>We really appreciate our sponsor! Thanks to this we can develop our library and make the react-native world a better place. Special thanks for:</p>
+                <h3>Shopify</h3>
+                <div>
+                  <a href="https://www.shopify.com/"><img class="imageHolder-sponsor" src="https://cdn.shopify.com/assets/images/logos/shopify-bag.png" /></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </Layout>
   );

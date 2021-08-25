@@ -84,3 +84,8 @@ Below we highlight some of the problems that we are aware of (in most of the cas
   </RCTTextView>
   ```
   and the `RCTVirtualText` is a virtual component.
+
+### Sponsors
+We really appreciate our sponsor! Thanks to this we can develop our library and make the react-native world a better place. Special thanks for:
+##### Shopify
+<a href="https://www.shopify.com/"><img class="imageHolder-sponsor" src="https://cdn.shopify.com/assets/images/logos/shopify-bag.png" /></a>

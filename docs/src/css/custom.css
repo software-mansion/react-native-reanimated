@@ -627,3 +627,18 @@ section > .contaner > .row {
 .spacer {
   height: 15px;
 }
+
+.community-holder-maintainer {
+  display: flex;
+  flex-wrap: wrap;
+}
+.community-holder-item-maintainer {
+  margin-right: 20px;
+  text-align: center;
+}
+.community-imageHolder-maintainer {
+  max-width: 150px;
+}
+.imageHolder-sponsor {
+  max-width: 100px;
+}
