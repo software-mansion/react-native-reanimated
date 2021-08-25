@@ -1,7 +1,7 @@
 ---
 id: community
-title: Comminity
-sidebar_label: Comminity
+title: Community
+sidebar_label: Community
 ---
 
 Reanimated community is best! 🎉  We want to say thank you to all community users, and we really appreciate all your activity and commitment. Yours PR, reported issues and many discussions help us in our daily work and it motivates us to develop Reanimated!
