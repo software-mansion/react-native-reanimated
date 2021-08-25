@@ -1,5 +1,4 @@
-```jsx {1,12}
-import Animated, {LightSpeedInLeft} from 'react-native-reanimated';
+```jsx {10,14}
 ...
 function Participant({
   name,
@@ -9,12 +8,11 @@ function Participant({
   onRemove: () => void;
 }): React.ReactElement {
   return (
-    <Animated.View
-      entering={LightSpeedInLeft}
+    <View
       style={[styles.participantView]}>
       <Text>{name}</Text>
       <Button title="Remove" color="red" onPress={onRemove} />
-    </Animated.View>
+    </View>
   );
 }
 ...

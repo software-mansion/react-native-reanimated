@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 import clsx from 'clsx';
 
 const MARGIN_BOTTOM = 60;
-const TutorialStep = ({ children, stepNumber }) => {
+const TutorialStep = ({ children, title }) => {
   const [isActive, setIsActive] = useState(false);
   const componentRef = useRef();
   const handleScroll = () => {
@@ -31,7 +31,7 @@ const TutorialStep = ({ children, stepNumber }) => {
     <div className={clsx(styles.container)} ref={componentRef} >
       <div className={clsx(styles.description)}>
         <div className={clsx(styles.roundedStep)} style={isActive ? {'borderColor': '#001a72'} : {}}>
-          <div className={clsx(styles.stepTitle)}>Step {stepNumber}</div>
+          <div className={clsx(styles.stepTitle)}>{title}</div>
           {children[0]}
         </div>
       </div>

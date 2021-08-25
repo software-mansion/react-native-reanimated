@@ -1,10 +1,6 @@
+```jsx
 import React, { useState } from 'react';
 import { Button, View, Text, ScrollView, TextInput } from 'react-native';
-import Animated, {
-  Layout,
-  LightSpeedInLeft,
-  LightSpeedOutRight,
-} from 'react-native-reanimated';
 
 interface EventParticipant {
   name: string;
@@ -39,12 +35,12 @@ const styles = {
     alignItems: 'center',
     padding: 10,
   },
-  textInput: {
+  textInput:  {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
   },
-};
+}
 
 function Participant({
   name,
@@ -54,14 +50,11 @@ function Participant({
   onRemove: () => void;
 }): React.ReactElement {
   return (
-    <Animated.View
-      entering={LightSpeedInLeft}
-      exiting={LightSpeedOutRight}
-      layout={Layout.springify()}
+    <View
       style={[styles.participantView]}>
       <Text>{name}</Text>
       <Button title="Remove" color="red" onPress={onRemove} />
-    </Animated.View>
+    </View>
   );
 }
 
@@ -85,7 +78,8 @@ export default function AnimatedListExample(): React.ReactElement {
   };
 
   return (
-    <View style={[styles.listView]}>
+    <View
+      style={[styles.listView]}>
       <ScrollView style={[{ width: '100%' }]}>
         {participantList.map((participant) => (
           <Participant
@@ -96,8 +90,10 @@ export default function AnimatedListExample(): React.ReactElement {
         ))}
       </ScrollView>
 
-      <View style={[styles.bottomRow]}>
-        <View style={[styles.textInput]}>
+      <View
+        style={[ styles.bottomRow]}>
+        <View
+          style={[styles.textInput]}>
           <Text>Add participant: </Text>
           <TextInput
             placeholder="Name"
@@ -115,3 +111,4 @@ export default function AnimatedListExample(): React.ReactElement {
     </View>
   );
 }
+```

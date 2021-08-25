@@ -1,20 +1,20 @@
-```js
-import React from 'react';
-import { View } from 'react-native';
-
-export default function ParticipantList(): React.ReactElement {
+```jsx {1,11,15}
+import Animated from 'react-native-reanimated';
+...
+function Participant({
+  name,
+  onRemove,
+}: {
+  name: string;
+  onRemove: () => void;
+}): React.ReactElement {
   return (
-    <View
-      style={[
-        {
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: '100%',
-          paddingBottom: 30,
-        },
-      ]}></View>
+    <Animated.View
+      style={[styles.participantView]}>
+      <Text>{name}</Text>
+      <Button title="Remove" color="red" onPress={onRemove} />
+    </Animated.View>
   );
 }
+...
 ```

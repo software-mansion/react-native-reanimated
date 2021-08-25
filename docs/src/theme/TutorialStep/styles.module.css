@@ -7,18 +7,23 @@
 @media only screen and (max-width: 1200px) {
     .container {
         flex-direction: column;
+        align-items: center;
     }
 
     .roundedStep {
         position: static !important;;
     }
+
+    .description {
+        justify-content: center;
+    }
   }
 .description {
     flex: 1;
     display: flex;
-    justify-content: center;
     margin-bottom: 20px;
     height: fit-content;
+    max-width: 450px;
 }
 
 .roundedStep {
@@ -26,7 +31,6 @@
     height: fit-content;
     position: relative;
     top: 40px;
-    width: 60%;
     padding: 10px;
     background-color: #dcdfeb;
     border-left: 6px solid #dcdfeb;
@@ -34,6 +38,7 @@
     line-height: 1.5;
     font-weight: 400;
     letter-spacing: -0.2px;
+    margin-right: 40px;
 }
 
 
