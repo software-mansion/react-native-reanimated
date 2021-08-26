@@ -1,42 +1,27 @@
 ---
-id: withSpring
-title: withSpring
-sidebar_label: withSpring
+id: withDecay
+title: withDecay
+sidebar_label: withDecay
 ---
 
-Starts a spring-based animation.
+Starts a velocity based "scroll" animation.
 
 ### Arguments
 
-#### `toValue` [number | string]
-
-The target value at which the spring should settle.
-It can be specified as a color value by providing string like: `rgba(255, 105, 180, 0)`.
-
-Currently supported formats are:
-
-- `"rgb(r, g, b)"`
-- `"rgba(r, g, b, a)"`
-- `"hsl(h, s, l)"`
-- `"hsla(h, s, l, a)"`
-- `"#rgb"`
-- `"#rgba"`
-- `"#rrggbb"`
-- `"#rrggbbaa"`
-
 #### `options` [object]
 
-Object carrying spring configuration.
+Object containing animation configuration.
 Allowed parameters are listed below:
 
-| Options                   | Default | Description |
-| ------------------------- | ------- | ----------- |
-| damping                   | 10      |             |
-| mass                      | 1       |             |
-| stiffness                 | 100     |             |
-| overshootClamping         | false   |             |
-| restDisplacementThreshold | 0.001   |             |
-| restSpeedThreshold        | 0.001   |             |
+| Options        | Default | Description                                  |
+| -------------- | ------- | -------------------------------------------- |
+| velocity       | 0       | Initial velocity                             |
+| deceleration   | 0.998   | Rate of decay                                |
+| clamp          | []      | Array of two animation boundaries (optional) |
+| velocityFactor | 1       | Factor to modify velocity unit (optional)    |
+
+##### `velocityFactor`
+The default unit of velocity in decay is pixel per second but it can be problematic when you want to animate value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to more matched for the required domain.
 
 #### `callback` [function]\(optional\)
 
@@ -49,7 +34,7 @@ This method returns an animation object. It can be either assigned directly to a
 
 ## Example
 
-```js {20}
+```js
 import Animated, {
   useSharedValue,
   withSpring,
@@ -68,8 +53,11 @@ function App() {
     onActive: (event, ctx) => {
       x.value = ctx.startX + event.translationX;
     },
-    onEnd: (_) => {
-      x.value = withSpring(0);
+    onEnd: (evt) => {
+      x.value = withDecay({
+        velocity: evt.velocityX,
+        clamp: [0, 200], // optionally define boundaries for the animation
+      });
     },
   });
 

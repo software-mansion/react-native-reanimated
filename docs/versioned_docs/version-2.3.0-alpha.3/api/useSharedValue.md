@@ -22,18 +22,6 @@ Shared Values are just javascript objects, so you can pass them to children comp
 The first argument takes the initial value, which could be any of the primitive JavaScript types, and assigns it as the initial value of the created Shared Value.
 The value then can be read from the Shared Value reference using `.value` attribute.
 
-#### `shouldRebuild` [bool = true]
-
-This is optional and specifies whether the value of share value should be updated on rerender. This matters when a value passed to the hooks changes when components is rendered - for example when it is dependent on the state:
-
-```js {3}
-const App = () => {
-  const [state, setState] = useState(0)
-  const sv = useSharedValue(state)
-  //...
-}
-```
-
 ### Returns
 
 The hook returns a reference to shared value initialized with the provided data.

@@ -14,7 +14,7 @@ worklet used for data preparation for the second parameter. It also defines the 
 
 #### `react` [Function]
 
-worklet which takes data prepared by the one in the first parameter and performs some actions. It can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
+worklet which takes data prepared by the `prepare` callback (being the first parameter of the hook) and performs some actions. As a second parameter it receives a result of the previous `prepare` call(starting with `null`). It can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
 
 #### `dependencies` [Array]
 
@@ -30,8 +30,10 @@ const App = () => {
 
   const derived = useAnimatedReaction(() => {
     return sv1.value * state;
-  }, (result) => {
-    sv2.value = result - 5;
+  }, (result, previous) => {
+    if (result !== previous) {
+        sv2.value = result - 5;
+    }
   }, dependencies);
   //...
   return <></>
