@@ -212,6 +212,26 @@ function Home() {
             </div>
           </div>
         </section>
+        <section>
+          <div className="container">
+            <div className="row row--center">
+              <div className="col col--7 text--center col--bottom-section">
+                <h2>Sponsors</h2>
+                <p>We really appreciate our sponsors! Thanks to them we can develop our library and make the react-native world a better place. Special thanks for:</p>
+                <div className="row row--center">
+                  <div style={{'margin-right': '40px'}}>
+                    <a href="https://www.shopify.com/"><img class="imageHolder-sponsor" src="https://avatars1.githubusercontent.com/u/8085?v=3&s=100" /></a>
+                    <h6>Shopify</h6>
+                  </div>
+                  <div>
+                    <a href="https://expo.dev"><img class="imageHolder-sponsor" src="https://avatars2.githubusercontent.com/u/12504344?v=3&s=100" /></a>
+                    <h6>Expo</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </Layout>
   );
