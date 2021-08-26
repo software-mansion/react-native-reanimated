@@ -210,6 +210,10 @@
             "id": "version-2.3.0-alpha.3/tutorials/LayoutAnimations/layoutAnimations"
           }
         ]
+      },
+      {
+        "type": "doc",
+        "id": "version-2.3.0-alpha.3/community"
       }
     ]
   }
