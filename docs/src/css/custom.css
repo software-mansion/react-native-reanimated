@@ -178,7 +178,9 @@ h6 {
 .menu {
   background-color: var(--swm-color-bright);
 }
-
+.thin-scrollbar {
+  padding-left: 25px !important;
+}
 .menu > ul.menu__list ul.menu__list {
   border-left: 2px solid var(--ifm-hr-border-color);
   margin-left: var(--ifm-menu-link-padding-horizontal);
