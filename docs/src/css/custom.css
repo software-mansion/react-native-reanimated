@@ -628,15 +628,15 @@ section > .contaner > .row {
   height: 15px;
 }
 
-.community-holder-maintainer {
+.community-holder-container {
   display: flex;
   flex-wrap: wrap;
 }
-.community-holder-item-maintainer {
+.community-holder-container-item {
   margin-right: 20px;
   text-align: center;
 }
-.community-imageHolder-maintainer {
+.community-imageHolder {
   max-width: 150px;
 }
 .imageHolder-sponsor {
