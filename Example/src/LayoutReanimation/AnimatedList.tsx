@@ -75,7 +75,6 @@ export default function AnimatedListExample(): React.ReactElement {
     setParticipantList(
       [{ name: inputValue, id: Date.now().toString() }].concat(participantList)
     );
-    setInputValue('');
   };
 
   const removeParticipant = (id: string) => {

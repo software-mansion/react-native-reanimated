@@ -6,6 +6,7 @@ hide_table_of_contents: true
 ---
 
 import TutorialStep from '@theme/TutorialStep';
+import BeforeAndAfter from '@theme/BeforeAndAfter';
 import FullCode from './_fullCode.md';
 import ParticipantComponent from './_participantComponent.md';
 import ParticipantInternals from './_participantInternals.md';
@@ -13,39 +14,37 @@ import Step1 from './_step1.md';
 import Step2 from './_step2.md';
 import Step3 from './_step3.md';
 import Step4 from './_step4.md';
-import ParticipantList from '@site/static/img/tutorial/animated_list_before.gif';
-import AnimatedList from '@site/static/img/tutorial/animated_list_after.gif';
+import Before from '@site/static/img/tutorial/layoutAnimations/before.gif';
+import Entering from '@site/static/img/tutorial/layoutAnimations/entering.gif';
+import Layout from '@site/static/img/tutorial/layoutAnimations/layout.gif';
+import After from '@site/static/img/tutorial/layoutAnimations/after.gif';
 
-This tutorial will help you make your screens and compoennts more smooth by adding animations.
-We will use new feature from reanimated library - Layout Animations which lets us animate:
+This tutorial will help you make your screens and components more smooth by adding animations.
+We will use a new feature from the Reanimated library - Layout Animations which lets us animate:
 * components appearance
 * components disappearance
 * layout changes
 
-using predefined animations. There are plenty of predefined animations you can use
-, however if you need to create more customized animation, you can easily implemented your own.
+using predefined animations. There are plenty of predefined animations you can use, however, 
+if you need to create more customized animation, you can easily implemented your own.
 
-To give you a better understanding of how to use those animations
-, we are gonna prettify already existing screen - participant list, by adding layout animations to its components.
+To give you a better understanding of how to use those animations, 
+we are gonna prettify already existing screen - participant list, by adding layout animations to its components.
 Here you can see, change that we will get after going through this tutorial.
 
-<center>
-    <img src={ParticipantList} height="500px" style={{borderRadius: "5%"}}/>
-    <img src={AnimatedList} height="500px" style={{borderRadius: "5%"}}/>
-</center>
-<br/>
+<BeforeAndAfter before={Before} after={After}/>
 
 <TutorialStep title="Screen Introduction">
     <div>
-        Here we have already existing codebase for participant list, which you can easily copy and try for yourself.
-        Let's focus on parts which we will animate, in this case - Participant component.
+        Here we have already an existing codebase for participant list, which you can easily copy and try for yourself.
+        Let's focus on parts that we will animate, in this case - Participant component.
     </div>
     <FullCode/>
     
 </TutorialStep>
 <TutorialStep title="Participant component">
     <div>
-        Participant component is responsible for displaying list item, which we will be animating.
+        Participant component is responsible for displaying a list item, which we will be animating.
     </div>
     <ParticipantComponent/>
 </TutorialStep>
@@ -65,7 +64,7 @@ Here you can see, change that we will get after going through this tutorial.
 </TutorialStep>
 <TutorialStep title="Step 2">
     <div>
-        Now let's add entering animation. We can choose entering animation from plenty of available&nbsp;
+        Now let's add an entering animation. We can choose entering animation from plenty of available&nbsp;
         <a href="https://docs.swmansion.com/react-native-reanimated/docs/api/LayoutAnimations/entryAnimations">
             predefined animation.
         </a>
@@ -78,7 +77,7 @@ Here you can see, change that we will get after going through this tutorial.
     <div>
        Here you can see, the effect we have achieved by adding entering animation.
     </div>
-    <img src={ParticipantList} style={{height: '500px', width: 'auto', borderRadius: "5%"}}/>
+    <img src={Entering} style={{height: '500px', width: 'auto', borderRadius: "5%"}}/>
     
 </TutorialStep>
 <TutorialStep title="Step 3">
@@ -92,12 +91,12 @@ Here you can see, change that we will get after going through this tutorial.
     <div>
        Here you can see, the effect we have achieved by adding layout transition.
     </div>
-    <img src={ParticipantList} style={{height: '500px', width: 'auto', borderRadius: "5%"}}/>
+    <img src={Layout} style={{height: '500px', width: 'auto', borderRadius: "5%"}}/>
     
 </TutorialStep>
 <TutorialStep title="Step 4">
     <div>
-        Now let's add exiting animation. We can choose exiting animation from plenty of available&nbsp;
+        Now let's add an exiting animation. We can choose exiting animation from plenty of available&nbsp;
         <a href="https://docs.swmansion.com/react-native-reanimated/docs/api/LayoutAnimations/exitingAnimations">
             predefined animation.
         </a>
@@ -107,9 +106,9 @@ Here you can see, change that we will get after going through this tutorial.
     
 </TutorialStep>
 
-#### And that's all! You can see that adding layout animations to our list was super easy and the user experience is way better. Full code of the animated list you can find [here](https://github.com/software-mansion/react-native-reanimated). 
+#### And that's all! You can see that adding layout animations to our list was super easy and the user experience is way better. Full code of the animated list you can find [here](https://gist.github.com/jmysliv/0056d6cd3021883ea0f2c7f4af0526b2). 
 
 <center>
-    <img src={AnimatedList} height="500px" style={{borderRadius: "5%"}}/>
+    <img src={After} height="500px" style={{borderRadius: "5%"}}/>
 </center>
 
