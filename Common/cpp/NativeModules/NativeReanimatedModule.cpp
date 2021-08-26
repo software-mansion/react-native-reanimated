@@ -283,12 +283,31 @@ void NativeReanimatedModule::onRender(double timestampMs)
 }
 
 jsi::Value NativeReanimatedModule::registerSensor(jsi::Runtime &rt, const jsi::Value &sensorType, const jsi::Value &interval, const jsi::Value &sensorDataContainer) {
-  auto mleko = sensorDataContainer.getObject(rt).getProperty(rt, "mleko");
-  auto sharedValue = ShareableValue::adapt(rt, mleko, this);
-  auto setter = [&rt, sharedValue](double newValue){
-    auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
-    mutableObject->setValue(rt, jsi::Value(newValue));
+  std::vector<std::shared_ptr<ShareableValue>> sharedProperties;
+  std::vector<std::string> propertiesName;
+  if(sensorType.asNumber() == 5) { // ROTATION_VECTOR
+    propertiesName = {"x", "y", "z"};
+  }
+  else {
+    propertiesName = {"qw", "qx", "qy", "qz", "yaw", "pitch", "roll"};
+  }
+  auto dataObject = sensorDataContainer.getObject(rt);
+  sharedProperties.reserve(propertiesName.size());
+  for(const auto& propName : propertiesName) {
+    sharedProperties.emplace_back(
+      ShareableValue::adapt(rt, dataObject.getProperty(rt, propName.c_str()), this)
+    );
+  }
+  auto setter = [&rt, &sharedProperties](double newValue){ // newValues[]
+    int index = 0;
+    for(const auto& sharedValue : sharedProperties) {
+//      auto& mutableObject = ValueWrapper::asMutableValue(sharedValue->valueContainer);
+////      mutableObject->setValue(rt, jsi::Value(newValues[index]));
+//      mutableObject->setValue(rt, jsi::Value(newValue));
+      index++;
+    }
   };
+
   return jsi::Value(registerSensorFunction(sensorType.asNumber(), interval.asNumber(), setter));
 }
 

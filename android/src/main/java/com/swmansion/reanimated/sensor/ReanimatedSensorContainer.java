@@ -3,6 +3,7 @@ package com.swmansion.reanimated.sensor;
 import android.hardware.Sensor;
 
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.swmansion.reanimated.NativeProxy;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -18,8 +19,8 @@ public class ReanimatedSensorContainer {
         id++;
     }
 
-    public int registerSensor(int sensorType) {
-        sensors.put(id, new ReanimatedSensor(reactContext, 1));
+    public int registerSensor(int sensorType, int interval, NativeProxy.SensorSetter setter) {
+        sensors.put(id, new ReanimatedSensor(reactContext, sensorType, interval, setter));
         return id;
     }
 

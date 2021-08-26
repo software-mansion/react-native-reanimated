@@ -40,6 +40,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
         title="toggle"
         onPress={() => {
           randomWidth.value = Math.random() * 350;
+          console.log(animatedSensor);
         }}
       />
     </View>

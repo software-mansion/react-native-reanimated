@@ -58,7 +58,6 @@ if (nativeShouldBeMock()) {
     },
 
     registerSensor(sensorType: number, interval: number, sensorData) {
-      console.log(InnerNativeModule.registerSensor);
       return InnerNativeModule.registerSensor(sensorType, interval, sensorData);
     },
 

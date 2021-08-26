@@ -927,8 +927,8 @@ export function createWorklet(fun) {
 }
 
 export enum SensorType {
+  ACCELEROMETER = 1,
   GYROSCOPE,
-  ACCELEROMETER,
   GRAVITY,
   MAGNETIC_FIELD,
   ROTATION_VECTOR,
@@ -966,11 +966,10 @@ export function useAnimatedSensor(
   const ref = useRef(null);
 
   if (ref.current === null) {
-    const config: SensorConfig = Object.assign({ interval: 10 }, userConfig);
+    const config: SensorConfig = Object.assign({ interval: 1000 }, userConfig);
     let sensorData: SensorValue3D | SensorValueRotation;
     if (sensorType !== SensorType.ROTATION_VECTOR) {
       sensorData = {
-        mleko: makeMutable(0),
         x: makeMutable(0),
         y: makeMutable(0),
         z: makeMutable(0),
