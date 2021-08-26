@@ -67,5 +67,9 @@ module.exports = {
       label: 'Tutorials',
       items: ['tutorials/LayoutAnimations/layoutAnimations'],
     },
+    {
+      type: 'doc',
+      id: 'community',
+    },
   ],
 };

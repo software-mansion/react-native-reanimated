@@ -644,3 +644,18 @@ section > .contaner > .row {
 .spacer {
   height: 15px;
 }
+
+.community-holder-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.community-holder-container-item {
+  margin-right: 20px;
+  text-align: center;
+}
+.community-imageHolder {
+  max-width: 150px;
+}
+.imageHolder-sponsor {
+  max-width: 100px;
+}
