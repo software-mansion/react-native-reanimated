@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button, View } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   Easing,
   Keyframe,
   useAnimatedProps,
@@ -183,7 +182,7 @@ export function OlympicAnimation(): React.ReactElement {
     };
   });
   return (
-    <AnimatedLayout>
+    <>
       <Button
         title="show"
         onPress={() => {
@@ -292,6 +291,6 @@ export function OlympicAnimation(): React.ReactElement {
           </Animated.View>
         </View>
       )}
-    </AnimatedLayout>
+    </>
   );
 }
