@@ -24,6 +24,7 @@
     margin-bottom: 20px;
     height: fit-content;
     max-width: 450px;
+    width: 100%;
 }
 
 .roundedStep {
@@ -38,7 +39,7 @@
     line-height: 1.5;
     font-weight: 400;
     letter-spacing: -0.2px;
-    margin-right: 40px;
+    margin-right: 20px;
 }
 
 
