@@ -97,6 +97,12 @@ module.exports = {
       title: 'React Native Reanimated',
       items: [
         {
+          type: 'doc',
+          position: 'right',
+          docId: 'about',
+          label: 'Docs',
+        },
+        {
           type: 'docsVersionDropdown',
           position: 'right',
         },
