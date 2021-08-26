@@ -171,6 +171,16 @@ h6 {
   background-repeat: no-repeat;
 }
 
+.navbar-sidebar__back {
+  color: var(--swm-color-bright)
+}
+
+.menu {
+  background-color: var(--swm-color-bright);
+}
+.thin-scrollbar {
+  padding-left: 25px !important;
+}
 .menu > ul.menu__list ul.menu__list {
   border-left: 2px solid var(--ifm-hr-border-color);
   margin-left: var(--ifm-menu-link-padding-horizontal);
@@ -221,6 +231,9 @@ h6 {
 
 .github-navbar-logo {
   margin-left: 20px;
+}
+.github-navbar-logo>span{
+  display: none;
 }
 
 /* .githubStarLink {
@@ -513,6 +526,10 @@ section > .contaner > .row {
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+
+  .menu {
+    background-color: var(--swm-color-base);
   }
 }
 

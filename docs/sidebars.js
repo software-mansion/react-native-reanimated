@@ -60,7 +60,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['testing'],
+      items: ['guide/testing'],
+    },
+    {
+      type: 'category',
+      label: 'Tutorials',
+      items: ['tutorials/LayoutAnimations/layoutAnimations'],
     },
   ],
 };

@@ -42,6 +42,7 @@ import ScrollToExample from './ScrollToExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,6 +62,10 @@ const SCREENS: Screens = {
   KeyframeAnimation: {
     screen: KeyframeAnimation,
     title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
