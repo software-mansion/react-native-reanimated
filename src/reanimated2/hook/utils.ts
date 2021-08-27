@@ -11,7 +11,11 @@ import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { Context, ContextWithDependencies, DependencyList } from './commonTypes';
+import {
+  Context,
+  ContextWithDependencies,
+  DependencyList,
+} from './commonTypes';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
@@ -178,7 +182,7 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
       }
     } else if (currentProp?.onFrame !== undefined) {
       return true;
-    } else if (typeof prop === 'object') {
+    } else if (typeof currentProp === 'object') {
       for (const item of Object.values(currentProp)) {
         propsToCheck.push(item);
       }
