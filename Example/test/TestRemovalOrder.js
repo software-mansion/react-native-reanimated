@@ -1,27 +1,15 @@
-import Animated, {
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-  Easing,
-  useAnimatedReaction,
-  withRepeat,
-  withDelay,
-  withSequence,
-  withSpring,
-  withDecay,
-} from 'react-native-reanimated';
-import { View, Button, ScrollView, Text } from 'react-native';
-import React, { useMemo, useState, useEffect } from 'react';
+import { View, Button, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
 
 function ChildA() {
   return (
-    <AnimatedLayout>
+    <View>
       <View collapsable={false}> 
         <View collapsable={false}>
           <Text> Szymon </Text>
         </View>
       </View>
-    </AnimatedLayout>
+    </View>
   );
 }
 
