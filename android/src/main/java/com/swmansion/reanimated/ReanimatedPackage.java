@@ -2,38 +2,22 @@ package com.swmansion.reanimated;
 
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_END;
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_START;
-
-import android.app.Application;
-
 import androidx.annotation.Nullable;
-
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.ReactPackage;
 import com.facebook.react.TurboReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMarker;
-import com.facebook.react.devsupport.LogBoxModule;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
-import com.facebook.react.modules.bundleloader.NativeDevSplitBundleLoaderModule;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.modules.core.ExceptionsManagerModule;
-import com.facebook.react.modules.core.HeadlessJsTaskSupportModule;
-import com.facebook.react.modules.core.TimingModule;
-import com.facebook.react.modules.debug.DevSettingsModule;
-import com.facebook.react.modules.debug.SourceCodeModule;
-import com.facebook.react.modules.deviceinfo.DeviceInfoModule;
-import com.facebook.react.modules.systeminfo.AndroidInfoModule;
 import com.facebook.react.turbomodule.core.interfaces.TurboModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.systrace.Systrace;
 import com.facebook.react.uimanager.ReanimatedUIManager;
-
-import java.util.Arrays;
+import com.facebook.react.uimanager.ViewManagerResolver;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,8 +75,8 @@ public class ReanimatedPackage extends TurboReactPackage {
     int minTimeLeftInFrameForNonBatchedOperationMs = -1;
     try {
       if (lazyViewManagersEnabled) {
-        UIManagerModule.ViewManagerResolver resolver =
-                new UIManagerModule.ViewManagerResolver() {
+        ViewManagerResolver resolver =
+                new ViewManagerResolver() {
                   @Override
                   public @Nullable
                   ViewManager getViewManager(String viewManagerName) {
