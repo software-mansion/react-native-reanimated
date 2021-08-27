@@ -61,7 +61,6 @@ class ReaUiImplementationProvider extends UIImplementationProvider {
             ViewManagerRegistry viewManagerRegistry,
             EventDispatcher eventDispatcher,
             int minTimeLeftInFrameForNonBatchedOperationMs) {
-        Log.d("REAPOW", "Yeah");
         return new ReanimatedUIImplementation(
                 reactContext,
                 viewManagerRegistry,
@@ -75,12 +74,10 @@ public class ReanimatedUIManager extends UIManagerModule {
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagerResolver, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
-        Log.d("REAPOW", "Yeah1");
     }
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
-        Log.d("REAPOW", "Yeah2");
     }
 
     @Override
