@@ -221,12 +221,12 @@ export function CustomLayoutTransitionExample(): React.ReactElement {
   return (
     <View style={{marginTop: 30}} >
       <View style={{height: 300}} >
-        <AnimatedLayout style={{flexDirection: state? 'row' : 'column'}} >
+        <View style={{flexDirection: state? 'row' : 'column'}} >
           {state && <Box key="a" label="A" state={state} />}
           <Box key="b" label="B" state={state} />
           {!state && <Box key="a" label="A" state={state} />}
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
     
       <Button onPress={() => {setState(!state)}} title="toggle" />

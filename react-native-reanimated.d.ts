@@ -567,11 +567,11 @@ declare module 'react-native-reanimated' {
       handler: (e: T) => void,
       eventNames?: string[],
       rebuild?: boolean
-    ): (e: NativeSyntheticEvent<T>) => void
+    ): (e: NativeSyntheticEvent<T>) => void;
     export function useHandler<T, TContext extends Context = {}>(
       handlers: Record<string, Handler<T, TContext>>,
-      deps?: DependencyList,
-    ): { context: TContext, doDependenciesDiffer: boolean, useWeb: boolean };
+      deps?: DependencyList
+    ): { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
       TContext extends Context = {}
@@ -731,8 +731,6 @@ declare module 'react-native-reanimated' {
         callback: (finished: boolean) => void
       ): BaseBounceAnimationBuilder;
     }
-
-    export interface AnimatedLayout extends React.Component {}
 
     export class SlideInRight extends BaseAnimationBuilder {}
     export class SlideOutRight extends BaseAnimationBuilder {}
@@ -997,7 +995,6 @@ declare module 'react-native-reanimated' {
   export const interpolate: typeof Animated.interpolate;
 
   export const Layout: typeof Animated.Layout;
-  export const AnimatedLayout: typeof Animated.AnimatedLayout;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;

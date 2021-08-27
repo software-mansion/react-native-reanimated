@@ -49,7 +49,6 @@ module.exports = {
             'api/nativeMethods/scrollTo',
           ],
           'Layout Animations': [
-            'api/LayoutAnimations/animatedLayout',
             'api/LayoutAnimations/customAnimations',
             'api/LayoutAnimations/entryAnimations',
             'api/LayoutAnimations/exitAnimations',

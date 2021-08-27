@@ -13,7 +13,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export function OlympicAnimation(): React.ReactElement {
   const [show, setShow] = useState(true);
   const showBlueRingIndent = useSharedValue(true);
-  const showRedRingIndent = useSharedValue(true);
+  const showRedRingIndent = useSharedValue(false);
 
   const blueRingAnimation = new Keyframe({
     from: {
