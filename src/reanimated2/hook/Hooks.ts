@@ -12,3 +12,5 @@ export function useWorkletCallback<A extends unknown[], R>(
 ): (...args: Parameters<typeof fun>) => R {
   return useCallback(fun, deps ?? []);
 }
+
+export { useEvent, useHandler } from './utils';

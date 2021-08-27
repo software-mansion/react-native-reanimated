@@ -28,6 +28,7 @@ import {
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
+import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
@@ -98,6 +99,10 @@ const SCREENS: Screens = {
   Carousel: {
     title: '🆕 Carousel',
     screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: '🆕 Custom Handler Example - Pager',
   },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
