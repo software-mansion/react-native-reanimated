@@ -17,7 +17,6 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.systrace.Systrace;
 import com.facebook.react.uimanager.ReanimatedUIManager;
-import com.facebook.react.uimanager.ViewManagerResolver;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,32 +70,12 @@ public class ReanimatedPackage extends TurboReactPackage {
     ReactMarker.logMarker(CREATE_UI_MANAGER_MODULE_START);
     Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "createUIManagerModule");
     final ReactInstanceManager reactInstanceManager = ((ReactApplication)reactContext.getApplicationContext()).getReactNativeHost().getReactInstanceManager();
-    boolean lazyViewManagersEnabled = false;
     int minTimeLeftInFrameForNonBatchedOperationMs = -1;
     try {
-      if (lazyViewManagersEnabled) {
-        ViewManagerResolver resolver =
-                new ViewManagerResolver() {
-                  @Override
-                  public @Nullable
-                  ViewManager getViewManager(String viewManagerName) {
-                    return reactInstanceManager.createViewManager(viewManagerName);
-                  }
-
-                  @Override
-                  public List<String> getViewManagerNames() {
-                    return reactInstanceManager.getViewManagerNames();
-                  }
-                };
-
-        return new ReanimatedUIManager(
-                reactContext, resolver, minTimeLeftInFrameForNonBatchedOperationMs);
-      } else {
         return new ReanimatedUIManager(
                 reactContext,
                 reactInstanceManager.getOrCreateViewManagers(reactContext),
                 minTimeLeftInFrameForNonBatchedOperationMs);
-      }
     } finally {
       Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
       ReactMarker.logMarker(CREATE_UI_MANAGER_MODULE_END);
