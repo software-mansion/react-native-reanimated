@@ -10,6 +10,7 @@ module.exports = {
         'shared-values',
         'animations',
         'events',
+        'custom_events',
         'layout_animations',
         'architecture',
         'migration',
@@ -31,6 +32,8 @@ module.exports = {
             'api/hooks/useAnimatedRef',
             'api/hooks/useAnimatedReaction',
             'api/hooks/useAnimatedProps',
+            'api/hooks/useHandler',
+            'api/hooks/useEvent',
           ],
           Animations: [
             'api/animations/withTiming',
@@ -64,7 +67,16 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['testing'],
+      items: ['guide/testing'],
+    },
+    {
+      type: 'category',
+      label: 'Tutorials',
+      items: ['tutorials/LayoutAnimations/layoutAnimations'],
+    },
+    {
+      type: 'doc',
+      id: 'community',
     },
   ],
 };

@@ -1,0 +1,220 @@
+{
+    "version-2.3.0-alpha.3/docs": [
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Fundamentals",
+        "items": [
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/about"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/installation"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/worklets"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/shared-values"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/animations"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/events"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/layout_animations"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/architecture"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/migration"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/web-support"
+          },
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/troubleshooting"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "API Reference",
+        "items": [
+          {
+            "collapsed": true,
+            "type": "category",
+            "label": "Hooks",
+            "items": [
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useSharedValue"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedStyle"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useDerivedValue"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedScrollHandler"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedGestureHandler"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedRef"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedReaction"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useAnimatedProps"
+              }
+            ]
+          },
+          {
+            "collapsed": true,
+            "type": "category",
+            "label": "Animations",
+            "items": [
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withTiming"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withSpring"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withDecay"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/cancelAnimation"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withDelay"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withSequence"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/withRepeat"
+              }
+            ]
+          },
+          {
+            "collapsed": true,
+            "type": "category",
+            "label": "Native methods",
+            "items": [
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/nativeMethods/measure"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/nativeMethods/scrollTo"
+              }
+            ]
+          },
+          {
+            "collapsed": true,
+            "type": "category",
+            "label": "Layout Animations",
+            "items": [
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/animatedLayout"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/customAnimations"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/entryAnimations"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/exitAnimations"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/keyframeAnimations"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/layoutTransitions"
+              }
+            ]
+          },
+          {
+            "collapsed": true,
+            "type": "category",
+            "label": "Miscellaneous",
+            "items": [
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/runOnJS"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Guides",
+        "items": [
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/guide/testing"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "Tutorials",
+        "items": [
+          {
+            "type": "doc",
+            "id": "version-2.3.0-alpha.3/tutorials/LayoutAnimations/layoutAnimations"
+          }
+        ]
+      },
+      {
+        "type": "doc",
+        "id": "version-2.3.0-alpha.3/community"
+      }
+    ]
+  }
+  

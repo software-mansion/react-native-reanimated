@@ -7,9 +7,19 @@ import {
   StyleProps,
   WorkletFunction,
 } from '../commonTypes';
+import { makeRemote } from '../core';
+import { isWeb } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { DependencyList } from './commonTypes';
+import { Context, ContextWithDependencies, DependencyList } from './commonTypes';
+
+interface Handler<T, TContext extends Context> extends WorkletFunction {
+  (event: T, context: TContext): void;
+}
+
+interface Handlers<T, TContext extends Context> {
+  [key: string]: Handler<T, TContext> | undefined;
+}
 
 export function useEvent<T>(
   handler: (event: T) => void,
@@ -30,6 +40,38 @@ export function useEvent<T>(
   }, []);
 
   return initRef;
+}
+
+export function useHandler<T, TContext extends Context>(
+  handlers: Handlers<T, TContext>,
+  dependencies?: DependencyList
+) {
+  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
+  if (initRef.current === null) {
+    initRef.current = {
+      context: makeRemote({}),
+      savedDependencies: [],
+    };
+  }
+
+  useEffect(() => {
+    return () => {
+      initRef.current = null;
+    };
+  }, []);
+
+  const { context, savedDependencies } = initRef.current;
+
+  dependencies = buildDependencies(dependencies, handlers);
+
+  const doDependenciesDiffer = !areDependenciesEqual(
+    dependencies,
+    savedDependencies
+  );
+  initRef.current.savedDependencies = dependencies;
+  const useWeb = isWeb();
+
+  return { context, doDependenciesDiffer, useWeb };
 }
 
 // builds one big hash from multiple worklets' hashes

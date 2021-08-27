@@ -1,14 +1,9 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { RefObject } from 'react';
 import { NativeScrollEvent } from 'react-native';
 import { WorkletFunction } from '../commonTypes';
-import { makeRemote } from '../core';
 import WorkletEventHandler from '../WorkletEventHandler';
-import {
-  Context,
-  ContextWithDependencies,
-  DependencyList,
-} from './commonTypes';
-import { areDependenciesEqual, buildDependencies, useEvent } from './utils';
+import { Context, DependencyList } from './commonTypes';
+import { useEvent, useHandler } from './Hooks';
 
 export interface ScrollHandler<TContext extends Context>
   extends WorkletFunction {
@@ -34,29 +29,7 @@ export function useAnimatedScrollHandler<TContext extends Context>(
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<TContext> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
-  if (initRef.current === null) {
-    initRef.current = {
-      context: makeRemote({}),
-      savedDependencies: [],
-    };
-  }
-
-  useEffect(() => {
-    return () => {
-      initRef.current = null;
-    };
-  }, []);
-
-  const { context, savedDependencies } = initRef.current;
-
-  dependencies = buildDependencies(dependencies, scrollHandlers);
-
-  const dependenciesDiffer = !areDependenciesEqual(
-    dependencies,
-    savedDependencies
-  );
-  initRef.current.savedDependencies = dependencies;
+  const { context, doDependenciesDiffer } = useHandler(scrollHandlers, dependencies);
 
   // build event subscription array
   const subscribeForEvents = ['onScroll'];
@@ -102,6 +75,6 @@ export function useAnimatedScrollHandler<TContext extends Context>(
       }
     },
     subscribeForEvents,
-    dependenciesDiffer
+    doDependenciesDiffer
   );
 }

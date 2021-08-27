@@ -28,6 +28,7 @@ import {
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import ChatHeadsExample from './ChatHeadsExample';
+import { PagerExample } from './CustomHandler';
 import DragAndSnapExample from './DragAndSnapExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
@@ -42,6 +43,7 @@ import ScrollToExample from './ScrollToExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,6 +63,10 @@ const SCREENS: Screens = {
   KeyframeAnimation: {
     screen: KeyframeAnimation,
     title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
   },
   OlympicAnimation: {
     screen: OlympicAnimation,
@@ -93,6 +99,10 @@ const SCREENS: Screens = {
   Carousel: {
     title: '🆕 Carousel',
     screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: '🆕 Custom Handler Example - Pager',
   },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
