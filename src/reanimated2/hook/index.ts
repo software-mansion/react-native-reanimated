@@ -18,3 +18,4 @@ export {
   ScrollHandlers,
 } from './useAnimatedScrollHandler';
 export { useDerivedValue, DerivedValue } from './useDerivedValue';
+export { useEvent } from './utils';
