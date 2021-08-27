@@ -99,7 +99,7 @@ module.exports = {
         {
           type: 'doc',
           position: 'right',
-          docId: 'about',
+          docId: 'fundamentals/about',
           label: 'Docs',
         },
         {

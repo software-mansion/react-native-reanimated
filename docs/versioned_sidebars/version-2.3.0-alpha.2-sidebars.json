@@ -183,7 +183,15 @@
             "items": [
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.2/api/runOnJS"
+                "id": "version-2.3.0-alpha.2/api/miscellaneous/runOnJS"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.2/api/miscellaneous/runOnUI"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.2/api/miscellaneous/interpolate"
               }
             ]
           }
