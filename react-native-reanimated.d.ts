@@ -563,6 +563,15 @@ declare module 'react-native-reanimated' {
       deps?: DependencyList | null,
       adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
     ): Partial<T>;
+    export function useEvent<T extends {}>(
+      handler: (e: T) => void,
+      eventNames?: string[],
+      rebuild?: boolean
+    ): (e: NativeSyntheticEvent<T>) => void
+    export function useHandler<T, TContext extends Context = {}>(
+      handlers: Record<string, Handler<T, TContext>>,
+      deps?: DependencyList,
+    ): { context: TContext, doDependenciesDiffer: boolean, useWeb: boolean };
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
       TContext extends Context = {}
@@ -970,6 +979,8 @@ declare module 'react-native-reanimated' {
   export const useWorkletCallback: typeof Animated.useWorkletCallback;
   export const createWorklet: typeof Animated.createWorklet;
   export const interpolateColor: typeof Animated.interpolateColor;
+  export const useEvent: typeof Animated.useEvent;
+  export const useHandler: typeof Animated.useHandler;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
