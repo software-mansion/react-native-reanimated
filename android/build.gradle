@@ -462,7 +462,6 @@ dependencies {
     implementation 'com.facebook.fbjni:fbjni:0.2.2'
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    implementation project(path: ':react-native-screens')
     extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
     extractSO("com.facebook.fbjni:fbjni:0.2.2")
 
