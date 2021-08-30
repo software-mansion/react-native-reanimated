@@ -4,7 +4,7 @@
 #include <fbjni/fbjni.h>
 
 
-
+a=b+c;
 namespace reanimated
 {
 
