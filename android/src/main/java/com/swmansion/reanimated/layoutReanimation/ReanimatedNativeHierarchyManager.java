@@ -1,12 +1,17 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.react.uimanager.IViewManagerWithChildren;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
+import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
@@ -14,7 +19,11 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
+import com.facebook.systrace.Systrace;
+import com.facebook.systrace.SystraceMessage;
 import com.swmansion.reanimated.ReanimatedModule;
+import com.swmansion.rnscreens.Screen;
+import com.swmansion.rnscreens.ScreenContainer;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -37,6 +46,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
             mInitialized = true;
             ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
             mAnimationsManager = reanimatedModule.getNodesManager().getAnimationsManager();
+            mAnimationsManager.setReanimatedNativeHierarchyManager((ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManage.get());
         }
     }
 
@@ -67,7 +77,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         maybeInit();
 
         final int reactTag = view.getId();
-
+        if (view instanceof Screen) {
+            Log.v("mleko", "aaa");
+        }
         // Determine which animation to use : if view is initially invisible, use create animation,
         // otherwise use update animation. This approach is easier than maintaining a list of tags
         // for recently created views.
@@ -147,6 +159,19 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, RootViewManager manager) {
         super(viewManagers, manager);
+    }
+
+    public synchronized void updateLayout(int parentTag, int tag, int x, int y, int width, int height) {
+        super.updateLayout(parentTag, tag, x, y, width, height);
+        View viewToUpdate = this.resolveView(tag);
+        ViewManager parentViewManager = this.resolveViewManager(parentTag);
+        IViewManagerWithChildren parentViewManagerWithChildren = (IViewManagerWithChildren)parentViewManager;
+        if(parentViewManagerWithChildren != null
+                && viewToUpdate instanceof Screen
+                && ((Screen)viewToUpdate).getActivityState() != Screen.ActivityState.INACTIVE
+        ) {
+            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, x, y, width, height);
+        }
     }
 
     @Override

@@ -201,12 +201,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     private void removeLeftovers() {
+        Log.v("rea", "removeLeftovers");
         HashSet<Integer> discovered = new HashSet<>();
         HashSet<Integer> roots = new HashSet<>();
         // go through ready to remove from bottom to top
         for (int tag: mToRemove) {
             View view = mViewForTag.get(tag);
             findRoot(view, discovered, roots);
+            printSubTree(view, 0);
         }
         discovered.clear();
         for (int tag: roots) {
@@ -216,6 +218,32 @@ public class AnimationsManager implements ViewHierarchyObserver {
                     Log.v("eee", "aaa");
                 }
                 dfs(view, view, mToRemove);
+            }
+        }
+    }
+
+    public void printSubTree(View view, int level) {
+        if (level == 0) {
+            Log.v("rea", "----------------------");
+        }
+        if (view == null) {
+            return;
+        }
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < level; ++i) {
+            out.append("+");
+        }
+        out.append(" TAG:");
+        out.append(view.getId());
+        out.append(" STATE:");
+        out.append(this.mStates.get(view.getId()));
+        out.append(" CLASS:");
+        out.append(view.getClass().getSimpleName());
+        Log.v("rea", out.toString());
+
+        if (view instanceof ViewGroup) {
+            for(int i = 0; i < ((ViewGroup)view).getChildCount(); ++i) {
+                printSubTree(((ViewGroup)view).getChildAt(i), level + 1);
             }
         }
     }
@@ -239,9 +267,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
         View currentView = view;
         int lastToRemoveTag = -1;
         while (currentView != null) {
-            if (currentView.getId() != -1 && discovered.contains(currentView.getId())) {
-                return;
-            }
             discovered.add(currentView.getId());
             ViewState state = mStates.get(currentView.getId());
             if (state == ViewState.Disappearing) {
@@ -258,6 +283,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
         }
         if (lastToRemoveTag != -1) {
             roots.add(lastToRemoveTag);
+            printSubTree(mReanimatedNativeHierarchyManager.resolveView(lastToRemoveTag), 0);
         }
     }
 
@@ -268,8 +294,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
         boolean cannotStripe = false;
         if (view instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) view;
+            ArrayList<View> children = new ArrayList<>();
             for (int i = 0; i < vg.getChildCount(); ++i) {
-                cannotStripe = cannotStripe || dfs(root, vg.getChildAt(i), cands);
+                children.add(vg.getChildAt(i));
+            }
+            for (View child : children) {
+                cannotStripe = cannotStripe || dfs(root, child, cands);
             }
         }
         if (!cannotStripe) {
@@ -291,9 +321,6 @@ public class AnimationsManager implements ViewHierarchyObserver {
             mParent.remove(curView.getId());
             mNativeMethodsHolder.removeConfigForTag(curView.getId());
             mToRemove.remove(view.getId());
-            if (view instanceof Screen && view == root) {
-                ((ViewGroup)parentView.getParent()).removeView(root);
-            }
         }
         return cannotStripe;
     }
