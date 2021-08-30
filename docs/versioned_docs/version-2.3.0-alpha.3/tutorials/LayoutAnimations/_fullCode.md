@@ -1,47 +1,5 @@
 ```jsx
-import React, { useState } from 'react';
-import { Button, View, Text, ScrollView, TextInput } from 'react-native';
-
-interface EventParticipant {
-  name: string;
-  id: string;
-}
-
-const styles = {
-  participantView: {
-    borderBottomColor: 'black',
-    width: '100%',
-    borderBottomWidth: 1,
-    padding: 10,
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fffbeb',
-  },
-  listView: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: '100%',
-    paddingBottom: 30,
-  },
-  bottomRow: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-  },
-  textInput:  {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-}
-
+...
 function Participant({
   name,
   onRemove,
