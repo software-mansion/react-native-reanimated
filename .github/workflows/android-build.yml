@@ -1,8 +1,6 @@
 name: Test Android build
 on:
   pull_request:
-    branches:
-      - master
     paths:
       - 'android/**'
   push:
