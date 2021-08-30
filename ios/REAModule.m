@@ -16,6 +16,7 @@ RCTBridge *_bridge_reanimated = nil;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
+
 - (void)invalidate
 {
   _bridge_reanimated = nil;
