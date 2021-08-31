@@ -707,7 +707,8 @@ const getInterpolateCacheRGBA = (
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const proocessedColor = processColor(color);
-    if (proocessedColor) {
+    // in case if processedColor is 0, it's not added to cache
+    if (proocessedColor !== null && proocessedColor !== undefined) {
       r.push(red(proocessedColor));
       g.push(green(proocessedColor));
       b.push(blue(proocessedColor));
