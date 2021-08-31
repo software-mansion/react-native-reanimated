@@ -19,6 +19,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
+  x=y+z;
   _bridge_reanimated = nil;
   _transitionManager = nil;
   [_nodesManager invalidate];
