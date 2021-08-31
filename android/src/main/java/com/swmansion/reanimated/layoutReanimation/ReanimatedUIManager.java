@@ -1,5 +1,7 @@
 package com.facebook.react.uimanager;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Dynamic;
@@ -34,6 +36,11 @@ public class ReanimatedUIManager extends UIManagerModule {
 
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
+    }
+
+    public void onBatchComplete() {
+        Log.v("Rea", "onBatchComplete");
+        super.onBatchComplete();
     }
 
     @Override
