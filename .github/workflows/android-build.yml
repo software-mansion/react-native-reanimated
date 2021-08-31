@@ -20,6 +20,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - name: Echo android home
+        run: echo $ANDROID_HOME
+      - name: Echo ndk
+        run: echo $ANDROID_NDK
       - name: Install NDK
         uses: maxim-lobanov/setup-android-tools@v1
         with:
@@ -27,6 +31,8 @@ jobs:
             ndk-bundle
             ndk;21.2.6472646
             cmake;3.10.2.4988404
+      - name: Echo ndk
+        run: echo $ANDROID_NDK
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
