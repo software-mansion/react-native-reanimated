@@ -140,15 +140,12 @@
 
 - (void)removeLeftovers
 {
-  NSMutableSet<NSNumber*>* discovered = [NSMutableSet new];
   NSMutableSet<NSNumber*>* roots = [NSMutableSet new];
-  NSMutableSet<NSNumber*>* toRemoveCopy = [[NSMutableSet alloc] initWithSet:_toRemove copyItems:YES];
-  for(NSNumber* viewTag in toRemoveCopy) {
+  for(NSNumber* viewTag in _toRemove) {
     UIView* view = _viewForTag[viewTag];
     [self findRoot:view roots:roots];
   }
-  [discovered removeAllObjects];
-  for(NSNumber* viewTag in toRemoveCopy) {
+  for(NSNumber* viewTag in roots) {
     UIView* view = _viewForTag[viewTag];
     [self dfs:view view:view cands:_toRemove];
   }
