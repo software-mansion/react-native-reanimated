@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: Example
+      ANDROID_NDK: $ANDROID_HOME/ndk-bundle
+      ANDROID_NDK_ROOT: $ANDROID_HOME/ndk-bundle
+      ANDROID_NDK_HOME: $ANDROID_NDK_ROOT
     concurrency:
       group: android-${{ github.ref }}
       cancel-in-progress: true
