@@ -22,13 +22,9 @@ jobs:
         run: echo $ANDROID_HOME
       - name: Echo ndk
         run: echo $ANDROID_NDK
-      - name: Install NDK
-        uses: maxim-lobanov/setup-android-tools@v1
-        with:
-          packages: |
-            ndk-bundle
-            ndk;21.2.6472646
-            cmake;3.10.2.4988404
+      - name: Accept licenses
+        run: |
+          /bin/bash -c "yes | ${{ env.ANDROID_HOME }}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
       - name: Echo ndk
         run: echo $ANDROID_NDK
       - name: Use Node.js 14
