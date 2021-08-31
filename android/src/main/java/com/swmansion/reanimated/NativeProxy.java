@@ -89,6 +89,10 @@ public class NativeProxy {
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
+  public Scheduler getScheduler() {
+    return mScheduler;
+  }
+
   @DoNotStrip
   private void requestRender(AnimationFrameCallback callback) {
     mNodesManager.postOnAnimation(callback);

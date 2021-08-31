@@ -26,10 +26,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import com.swmansion.reanimated.ReanimatedModule;
+import com.swmansion.reanimated.Scheduler;
 import com.swmansion.rnscreens.Screen;
 
 public class AnimationsManager implements ViewHierarchyObserver {
     private final static String[] LAYOUT_KEYS = { Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT };
+    private WeakReference<Scheduler> mScheduler;
     private ReactContext mContext;
     private UIImplementation mUIImplementation;
     private UIManagerModule mUIManager;
@@ -51,6 +55,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     public ReanimatedNativeHierarchyManager getReanimatedNativeHierarchyManager() {
         return mReanimatedNativeHierarchyManager;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        mScheduler = new WeakReference<>(scheduler);
     }
 
     public enum ViewState {
@@ -116,6 +124,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     @Override
     public void onViewCreate(View view, ViewGroup parent, Snapshot after) {
+        Scheduler strongScheduler = mScheduler.get();
+        if (strongScheduler != null) {
+            strongScheduler.triggerUI();
+        }
+        Log.v("Rea", "onViewCreate " + view.getId());
         if (!mStates.containsKey(view.getId())) {
             mStates.put(view.getId(), ViewState.Inactive);
             mViewForTag.put(view.getId(), view);
@@ -179,6 +192,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
        ViewState state = mStates.get(tag);
        if (state == ViewState.Inactive) {
+           Log.v("Rea", "inactive -> appearing " + tag);
            mStates.put(tag, ViewState.Appearing);
        }
 
