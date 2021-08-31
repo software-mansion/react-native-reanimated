@@ -3,14 +3,13 @@
 #include <string>
 #include <fbjni/fbjni.h>
 
-
-
 namespace reanimated
 {
 
 using namespace facebook::jni;
 
 AndroidErrorHandler::AndroidErrorHandler(std::shared_ptr<Scheduler> scheduler) {
+  this->scheduler = scheduler;
   this->scheduler = scheduler;
   this->error = std::make_shared<ErrorWrapper>();
 }
