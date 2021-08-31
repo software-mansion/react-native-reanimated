@@ -90,30 +90,26 @@
   });
 }
 
-- (void) findRoot:(UIView*)view discovered:(NSMutableSet<NSNumber*>*)discovered roots:(NSMutableSet<NSNumber*>*)roots
+- (void) findRoot:(UIView*)view roots:(NSMutableSet<NSNumber*>*)roots
 {
-  if([discovered containsObject:view.reactTag]) {
-    return;
+  UIView* currentView = view;
+  NSNumber* lastToRemoveTag;
+  while (currentView != nil) {
+    ViewState state = [_states[currentView.reactTag] intValue];
+    if(state == Disappearing) {
+      return;
+    }
+    if(state == ToRemove) {
+      lastToRemoveTag = currentView.reactTag;
+    }
+    currentView = currentView.superview;
   }
-  if(view.reactTag == nil) {
-    return;
+  if(lastToRemoveTag != nil) {
+    [roots addObject:lastToRemoveTag];
   }
-  [discovered addObject:view.reactTag];
-  UIView* parent = view.superview;
-  if(parent == nil) {
-    return;
-  }
-  ViewState state = [_states[parent.reactTag] intValue];
-  if(state == ToRemove) {
-    [self findRoot:parent discovered:discovered roots:roots];
-  }
-  if(state == Disappearing) {
-    return;
-  }
-  [roots addObject:view.reactTag];
 }
 
-- (BOOL) dfs:(UIView*)view discovered:(NSMutableSet<NSNumber*>*)discovered cands:(NSMutableSet<NSNumber*>*)cands
+- (BOOL) dfs:(UIView*)root view:(UIView*)view cands:(NSMutableSet<NSNumber*>*)cands
 {
   NSNumber* tag = view.reactTag;
   if(tag == nil) {
@@ -123,12 +119,9 @@
     return true;
   }
   BOOL cannotStripe = false;
-  if([discovered containsObject:tag]) {
-    return false;
-  }
-  [discovered addObject:tag];
-  for (UIView* child in view.subviews) {
-    cannotStripe |= [self dfs:child discovered:discovered cands:cands];
+  NSArray<UIView*>* toRemoveCopy = [view.subviews copy];
+  for (UIView* child in toRemoveCopy) {
+    cannotStripe |= [self dfs:root view:child cands:cands];
   }
   if(!cannotStripe) {
     if(view.superview != nil) {
@@ -152,12 +145,12 @@
   NSMutableSet<NSNumber*>* toRemoveCopy = [[NSMutableSet alloc] initWithSet:_toRemove copyItems:YES];
   for(NSNumber* viewTag in toRemoveCopy) {
     UIView* view = _viewForTag[viewTag];
-    [self findRoot:view discovered:discovered roots:roots];
+    [self findRoot:view roots:roots];
   }
   [discovered removeAllObjects];
   for(NSNumber* viewTag in toRemoveCopy) {
     UIView* view = _viewForTag[viewTag];
-    [self dfs:view discovered:discovered cands:_toRemove];
+    [self dfs:view view:view cands:_toRemove];
   }
 }
 
