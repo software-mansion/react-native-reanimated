@@ -32,7 +32,9 @@ jobs:
         with:
           node-version: 14
           cache: 'yarn'
-      - name: Install node dependencies
+      - name: Install root node dependencies
+        run: yarn
+      - name: Install example app node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
       - name: Build app
