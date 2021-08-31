@@ -24,7 +24,7 @@ jobs:
         run: echo $ANDROID_NDK
       - name: Accept licenses
         run: |
-          /bin/bash -c "yes | ${{ env.ANDROID_HOME }}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+          /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
       - name: Echo ndk
         run: echo $ANDROID_NDK
       - name: Use Node.js 14
