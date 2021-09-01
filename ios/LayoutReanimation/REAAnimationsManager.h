@@ -20,8 +20,8 @@ typedef NS_ENUM(NSInteger, ViewState) {
 - (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber*)tag;
 - (void)notifyAboutEnd:(NSNumber*)tag cancelled:(BOOL)cancelled;
 - (void)invalidate;
-- (void) onViewRemoval:(UIView*)view parent:(NSObject*)parent before:(REASnapshot*)before;
-- (void) onViewCreate:(UIView*)view parent:(UIView*)parent after:(REASnapshot*)after;
+- (void) onViewRemoval:(UIView*)view before:(REASnapshot*)before;
+- (void) onViewCreate:(UIView*)view after:(REASnapshot*)after;
 - (void) onViewUpdate:(UIView*)view before:(REASnapshot*)before after:(REASnapshot*)after;
 - (void) setToBeRemovedRegistry:(NSMutableDictionary<NSNumber*, NSMutableSet<id<RCTComponent>>*>*) toBeRemovedRegister;
 

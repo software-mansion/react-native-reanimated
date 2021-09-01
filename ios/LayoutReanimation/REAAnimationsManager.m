@@ -219,7 +219,7 @@
   return preparedData;
 }
 
-- (void) onViewRemoval: (UIView*) view parent:(NSObject*) parent before:(REASnapshot*) before
+- (void) onViewRemoval:(UIView*) view before:(REASnapshot*) before
 {
   NSNumber* tag = view.reactTag;
   ViewState state = [_states[tag] intValue];
@@ -240,7 +240,7 @@
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
 
-- (void) onViewCreate: (UIView*) view parent:(UIView*) parent after:(REASnapshot*) after
+- (void) onViewCreate:(UIView*) view after:(REASnapshot*) after
 {
   NSNumber* tag = view.reactTag;
   if(_states[tag] == nil) {

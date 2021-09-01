@@ -113,7 +113,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 {
   REASnapshot* snapshot = [[REASnapshot alloc] init:view];
   _parentMapper[view.reactTag] = parentTag;
-  [_animationsManager onViewRemoval:view parent:view.reactSuperview before:snapshot];
+  [_animationsManager onViewRemoval:view before:snapshot];
   
   for(UIView* subView in view.reactSubviews) {
     [self callAnimationForTree:subView parentTag:view.reactTag];
@@ -280,7 +280,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       
       if(isNew) {
         REASnapshot* snapshot = [[REASnapshot alloc] init:view];
-        [_animationsManager onViewCreate:view parent:view.superview after:snapshot];
+        [_animationsManager onViewCreate:view after:snapshot];
       }
       else {
         REASnapshot* snapshotAfter = [[REASnapshot alloc] init:view];
