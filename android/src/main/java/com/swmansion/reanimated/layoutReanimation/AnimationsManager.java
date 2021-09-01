@@ -29,7 +29,6 @@ import java.util.Map;
 
 import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.Scheduler;
-import com.swmansion.rnscreens.Screen;
 
 public class AnimationsManager implements ViewHierarchyObserver {
     private final static String[] LAYOUT_KEYS = { Snapshot.ORIGIN_X, Snapshot.ORIGIN_Y, Snapshot.WIDTH, Snapshot.HEIGHT };

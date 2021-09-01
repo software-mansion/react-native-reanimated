@@ -5,7 +5,6 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
-import com.facebook.react.uimanager.UIViewOperationQueue;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -42,7 +41,6 @@ public class Scheduler {
         mUIThreadRunnable.run();
       }
     });
-   // mContext.runOnUiQueueThread(mUIThreadRunnable);
   }
 
   public void deactivate() {
