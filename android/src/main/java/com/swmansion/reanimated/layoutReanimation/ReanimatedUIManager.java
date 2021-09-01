@@ -36,6 +36,10 @@ public class ReanimatedUIManager extends UIManagerModule {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
+    public void onBatchComplete() {
+        super.onBatchComplete();
+    }
+
     @Override
     public boolean canOverrideExistingModule() {
         return true;

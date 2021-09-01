@@ -62,7 +62,7 @@ const App = () => {
             mode='modal'
             screenOptions={{
                 animationEnabled: false,
-                cardStyle: { backgroundColor: 'transparent' },
+                cardStyle: { backgroundColor: 'white' },
                 headerStyle: {backgroundColor: 'red'},
                 gestureEnabled: true,
                 // cardOverlayEnabled: true,

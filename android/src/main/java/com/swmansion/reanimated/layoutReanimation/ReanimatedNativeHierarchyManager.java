@@ -2,10 +2,10 @@ package com.swmansion.reanimated.layoutReanimation;
 
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.react.uimanager.IViewManagerWithChildren;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
@@ -15,16 +15,19 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
+import com.swmansion.rnscreens.Screen;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
     private AnimationsManager mAnimationsManager = null;
     private volatile boolean mInitialized = false;
-    private ReactApplicationContext mContext = null;
+    private ReactApplicationContext mContext;
     private WeakReference<NativeViewHierarchyManager> mWeakNativeViewHierarchyManage = new WeakReference<>(null);
 
     ReaLayoutAnimator(ReactApplicationContext context, NativeViewHierarchyManager nativeViewHierarchyManager) {
@@ -37,6 +40,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
             mInitialized = true;
             ReanimatedModule reanimatedModule = mContext.getNativeModule(ReanimatedModule.class);
             mAnimationsManager = reanimatedModule.getNodesManager().getAnimationsManager();
+            mAnimationsManager.setReanimatedNativeHierarchyManager((ReanimatedNativeHierarchyManager) mWeakNativeViewHierarchyManage.get());
         }
     }
 
@@ -65,9 +69,6 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     public void applyLayoutUpdate(View view, int x, int y, int width, int height) {
         UiThreadUtil.assertOnUiThread();
         maybeInit();
-
-        final int reactTag = view.getId();
-
         // Determine which animation to use : if view is initially invisible, use create animation,
         // otherwise use update animation. This approach is easier than maintaining a list of tags
         // for recently created views.
@@ -124,7 +125,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
-    private HashMap<Integer, HashMap<Integer, View>> toBeRemoved = new HashMap();
+    private HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap();
     private HashMap<Integer, Runnable> cleanerCallback = new HashMap();
     private LayoutAnimationController mReaLayoutAnimator = null;
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
@@ -149,15 +150,32 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         super(viewManagers, manager);
     }
 
+    public synchronized void updateLayout(int parentTag, int tag, int x, int y, int width, int height) {
+        super.updateLayout(parentTag, tag, x, y, width, height);
+        View viewToUpdate = this.resolveView(tag);
+        ViewManager parentViewManager = this.resolveViewManager(parentTag);
+        IViewManagerWithChildren parentViewManagerWithChildren = (IViewManagerWithChildren)parentViewManager;
+        if(parentViewManagerWithChildren != null
+                && viewToUpdate instanceof Screen
+                && ((Screen)viewToUpdate).getActivityState() != Screen.ActivityState.INACTIVE
+        ) {
+            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, x, y, width, height);
+        }
+    }
+
     @Override
     public synchronized void manageChildren(int tag, @Nullable int[] indicesToRemove, @Nullable ViewAtIndex[] viewsToAdd, @Nullable int[] tagsToDelete) {
         ViewGroup viewGroup = (ViewGroup) resolveView(tag);
         ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
         if (toBeRemoved.containsKey(tag)) {
-                HashMap<Integer, View> childrenToBeRemoved = toBeRemoved.get(tag);
+                ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
+                HashSet<Integer> tagsToRemove = new HashSet<Integer>();
+                for (View childToRemove : childrenToBeRemoved) {
+                    tagsToRemove.add(childToRemove.getId());
+                }
                 while (viewGroupManager.getChildCount(viewGroup) != 0) {
                 View child = viewGroupManager.getChildAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
-                if (childrenToBeRemoved.containsKey(child.getId())) {
+                if (tagsToRemove.contains(child.getId())) {
                     viewGroupManager.removeViewAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
                 } else {
                     break;
@@ -166,24 +184,24 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         }
         if (tagsToDelete != null) {
             if (!toBeRemoved.containsKey(tag)) {
-                toBeRemoved.put(tag, new HashMap<>());
+                toBeRemoved.put(tag, new ArrayList<>());
             }
-            HashMap<Integer, View> toBeRemovedChildren = toBeRemoved.get(tag);
+            ArrayList<View> toBeRemovedChildren = toBeRemoved.get(tag);
             for (Integer childtag : tagsToDelete) {
                 View view = resolveView(childtag);
-                toBeRemovedChildren.put(view.getId(), view);
+                toBeRemovedChildren.add(view);
                 cleanerCallback.put(view.getId(), new Runnable() {
                     @Override
                     public void run() {
-                        toBeRemovedChildren.remove(view.getId());
-                    }
+                        toBeRemovedChildren.remove(view);
+                    } // It's far from optimal but let's leave it as it is for now
                 });
             }
         }
         super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
         if (toBeRemoved.containsKey(tag)) {
-            HashMap<Integer, View> childrenToBeRemoved = toBeRemoved.get(tag);
-            for (View child : childrenToBeRemoved.values()) {
+            ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
+            for (View child : childrenToBeRemoved) {
                 viewGroupManager.addView(viewGroup, child, viewGroupManager.getChildCount(viewGroup));
             }
         }

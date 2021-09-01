@@ -21,7 +21,10 @@ public:
 
    void scheduleOnUI(std::function<void()> job) override {
      Scheduler::scheduleOnUI(job);
-     scheduler_->cthis()->scheduleOnUI();
+     if (!scheduledOnUI) {
+         scheduledOnUI = true;
+         scheduler_->cthis()->scheduleOnUI();
+     }
    }
 
    ~SchedulerWrapper() {};

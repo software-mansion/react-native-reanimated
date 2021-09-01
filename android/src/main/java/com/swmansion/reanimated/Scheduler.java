@@ -2,7 +2,9 @@ package com.swmansion.reanimated;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -30,11 +32,15 @@ public class Scheduler {
 
   private native HybridData initHybrid();
 
-  private native void triggerUI();
+  public native void triggerUI();
 
   @DoNotStrip
   private void scheduleOnUI() {
-    mContext.runOnUiQueueThread(mUIThreadRunnable);
+    UiThreadUtil.runOnUiThread(new GuardedRunnable(mContext) {
+      public void runGuarded() {
+        mUIThreadRunnable.run();
+      }
+    });
   }
 
   public void deactivate() {
