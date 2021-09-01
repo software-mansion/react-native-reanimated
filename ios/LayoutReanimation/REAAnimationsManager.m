@@ -3,7 +3,6 @@
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
 #import "REAUIManager.h"
-#import <RNScreens/RNSScreen.h>
 #import <React/RCTTextView.h>
 
 @interface REAAnimationsManager ()

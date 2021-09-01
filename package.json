@@ -62,7 +62,8 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "string-hash-64": "^1.0.3"
+    "string-hash-64": "^1.0.3",
+    "react-native-screens": "git+https://github.com/software-mansion/react-native-screens.git#cf8dd9496e21982d04ad3ba984ae76973d5952c6"
   },
   "peerDependencies": {
     "react": "*",
