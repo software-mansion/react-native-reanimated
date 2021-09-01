@@ -11,22 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: Example
-      ANDROID_NDK: /usr/local/lib/android/sdk/ndk-bundle
     concurrency:
       group: android-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Echo android home
-        run: echo $ANDROID_HOME
+      - name: Export Android NDK
+        run: export ANDROID_NDK=$ANDROID_HOME/ndk-bundle
       - name: Echo ndk
         run: echo $ANDROID_NDK
       - name: Accept licenses
         run: |
           /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
-      - name: Echo ndk
-        run: echo $ANDROID_NDK
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
