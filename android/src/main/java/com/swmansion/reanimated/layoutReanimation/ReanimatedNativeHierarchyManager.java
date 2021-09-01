@@ -77,11 +77,6 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     public void applyLayoutUpdate(View view, int x, int y, int width, int height) {
         UiThreadUtil.assertOnUiThread();
         maybeInit();
-
-        final int reactTag = view.getId();
-        if (view instanceof Screen) {
-            Log.v("mleko", "aaa");
-        }
         // Determine which animation to use : if view is initially invisible, use create animation,
         // otherwise use update animation. This approach is easier than maintaining a list of tags
         // for recently created views.
