@@ -17,8 +17,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Export Android NDK
-        run: export ANDROID_NDK=$ANDROID_HOME/ndk-bundle
+      - name: Set Android NDK
+        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
       - name: Echo ndk
         run: echo $ANDROID_NDK
       - name: Accept licenses
