@@ -17,18 +17,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Set Android NDK
+      - name: Set ANDROID_NDK
         run: echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
-      - name: Echo ndk
-        run: echo $ANDROID_NDK
       - name: Accept licenses
-        run: |
-          /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+        run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
           node-version: 14
-          # cache: 'yarn'
       - name: Install root node dependencies
         run: yarn
       - name: Install example app node dependencies
