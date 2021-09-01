@@ -6,6 +6,8 @@ import {
 } from './ConfigHelper';
 import * as reanimated1 from './reanimated1';
 
+// This is useless comment
+
 const Animated = {
   // components
   View: createAnimatedComponent(View),

@@ -15,6 +15,8 @@ import {
   PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
+// This is useless comment
+
 const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },
   { artist: 'John Lennon', song: 'Imagine' },
