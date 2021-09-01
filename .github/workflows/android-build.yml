@@ -13,27 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: Example
-      ANDROID_NDK: $ANDROID_HOME/ndk-bundle
-      ANDROID_NDK_ROOT: $ANDROID_HOME/ndk-bundle
-      ANDROID_NDK_HOME: $ANDROID_NDK_ROOT
     concurrency:
       group: android-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Install NDK
-        uses: maxim-lobanov/setup-android-tools@v1
-        with:
-          packages: |
-            ndk-bundle
-            ndk;21.2.6472646
-            cmake;3.10.2.4988404
+      - name: Set ANDROID_NDK
+        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
+      - name: Accept licenses
+        run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
           node-version: 14
-          cache: 'yarn'
       - name: Install root node dependencies
         run: yarn
       - name: Install example app node dependencies
