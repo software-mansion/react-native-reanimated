@@ -107,6 +107,9 @@
 - (BOOL) dfs:(UIView*)root view:(UIView*)view cands:(NSMutableSet<NSNumber*>*)cands
 {
   NSNumber* tag = view.reactTag;
+  if (tag == nil) {
+    return true;
+  }
   if(![cands containsObject:tag] && _states[tag] != nil) {
     return true;
   }
