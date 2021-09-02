@@ -308,7 +308,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
             }
             if (mParent.containsKey(view.getId())) {
                 ViewGroup parent = (ViewGroup) mParent.get(view.getId());
-                parent.removeView(view);
+                if(parent != null) {
+                    parent.removeView(view);
+                }
             }
             View curView = view;
             mStates.remove(curView.getId());

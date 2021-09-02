@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.3.0-alpha.2",
+  "version": "2.3.0-alpha.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -62,13 +62,13 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "string-hash-64": "^1.0.3",
-    "react-native-screens": "git+https://github.com/software-mansion/react-native-screens.git#cf8dd9496e21982d04ad3ba984ae76973d5952c6"
+    "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "*"
+    "react-native-gesture-handler": "*",
+    "react-native-screens": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.7.5",
