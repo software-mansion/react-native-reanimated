@@ -31,7 +31,6 @@ class ReaUiImplementationProvider extends UIImplementationProvider {
 
 @ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
-
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
     }

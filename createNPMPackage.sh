@@ -20,7 +20,7 @@ do
     fi
     echo "engine=${engine}"
 
-    cd android 
+    cd android
     gradle clean
 
     FOR_HERMES=${for_hermes} gradle :assembleDebug

@@ -62,8 +62,8 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "string-hash-64": "^1.0.3",
-    "react-native-screens": "^3.4.0"
+    "react-native-screens": "^3.6.0",
+    "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
     "react": "*",
@@ -105,8 +105,8 @@
     "prettier": "^2.2.1",
     "react": "17.0.2",
     "react-native": "0.65.1",
-    "react-native-gesture-handler": "^1.6.1",
     "react-native-codegen": "^0.0.7",
+    "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.1.1",
     "typescript": "^4.1.3"
