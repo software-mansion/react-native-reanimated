@@ -29,7 +29,10 @@ export function useAnimatedScrollHandler<TContext extends Context>(
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<TContext> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler(scrollHandlers, dependencies);
+  const { context, doDependenciesDiffer } = useHandler(
+    scrollHandlers,
+    dependencies
+  );
 
   // build event subscription array
   const subscribeForEvents = ['onScroll'];

@@ -47,7 +47,10 @@ export function useAnimatedGestureHandler<
   handlers: GestureHandlers<T, TContext>,
   dependencies?: DependencyList
 ): MutableRefObject<WorkletEventHandler | null> | ((e: T) => void) {
-  const { context, doDependenciesDiffer, useWeb } = useHandler(handlers, dependencies);
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
 
   const handler = (e: T) => {
     'worklet';

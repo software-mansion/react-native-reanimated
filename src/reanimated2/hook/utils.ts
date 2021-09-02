@@ -11,7 +11,11 @@ import { makeRemote } from '../core';
 import { isWeb } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
-import { Context, ContextWithDependencies, DependencyList } from './commonTypes';
+import {
+  Context,
+  ContextWithDependencies,
+  DependencyList,
+} from './commonTypes';
 
 interface Handler<T, TContext extends Context> extends WorkletFunction {
   (event: T, context: TContext): void;
