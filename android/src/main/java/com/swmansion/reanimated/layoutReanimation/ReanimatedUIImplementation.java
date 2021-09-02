@@ -1,22 +1,14 @@
 package com.facebook.react.uimanager;
 
 import androidx.annotation.Nullable;
-
-import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.uimanager.UIImplementation;
-import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.ViewManager;
-import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.swmansion.reanimated.layoutReanimation.ReanimatedNativeHierarchyManager;
-
-import java.util.Arrays;
 import java.util.List;
 
 public class ReanimatedUIImplementation extends UIImplementation {
-    public ReanimatedUIImplementation(ReactApplicationContext reactContext, UIManagerModule.ViewManagerResolver viewManagerResolver, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
+    public ReanimatedUIImplementation(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
         this(reactContext, new ViewManagerRegistry(viewManagerResolver), eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
     }
 
@@ -51,7 +43,6 @@ public class ReanimatedUIImplementation extends UIImplementation {
             @Nullable ReadableArray addChildTags,
             @Nullable ReadableArray addAtIndices,
             @Nullable ReadableArray removeFrom) {
-        int x = 5;
         super.manageChildren(viewTag, moveFrom, moveTo, addChildTags, addAtIndices, removeFrom);
     }
 

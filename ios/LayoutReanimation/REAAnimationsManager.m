@@ -3,6 +3,7 @@
 #import <React/UIView+React.h>
 #import <React/UIView+Private.h>
 #import "REAUIManager.h"
+#import <React/RCTTextView.h>
 
 @interface REAAnimationsManager ()
 
@@ -20,8 +21,6 @@
   NSMutableDictionary<NSNumber*, NSNumber *>* _states;
   NSMutableDictionary<NSNumber*, UIView *>* _viewForTag;
   NSMutableSet<NSNumber*>* _toRemove;
-  NSMutableDictionary<NSNumber*, UIView *>* _viewManager;
-  NSMutableDictionary<NSNumber*, UIView *>* _parentViewManager;
   BOOL _cleaningScheduled;
 }
 
@@ -43,8 +42,6 @@
     _states = [NSMutableDictionary new];
     _viewForTag = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
-    _viewManager = [NSMutableDictionary new];
-    _parentViewManager = [NSMutableDictionary new];
     _cleaningScheduled = false;
   }
   return self;
@@ -58,8 +55,6 @@
   _states = nil;
   _viewForTag = nil;
   _toRemove = nil;
-  _viewManager = nil;
-  _parentViewManager = nil;
   _cleaningScheduled = false;
 }
 
@@ -90,56 +85,47 @@
   });
 }
 
-- (void) findRoot:(UIView*)view discovered:(NSMutableSet<NSNumber*>*)discovered roots:(NSMutableSet<NSNumber*>*)roots
+- (void) findRoot:(UIView*)view roots:(NSMutableSet<NSNumber*>*)roots
 {
-  if([discovered containsObject:view.reactTag]) {
-    return;
+  UIView* currentView = view;
+  NSNumber* lastToRemoveTag = nil;
+  while (currentView != nil) {
+    ViewState state = [_states[currentView.reactTag] intValue];
+    if(state == Disappearing) {
+      return;
+    }
+    if(state == ToRemove) {
+      lastToRemoveTag = currentView.reactTag;
+    }
+    currentView = currentView.superview;
   }
-  if(view.reactTag == nil) {
-    return;
+  if(lastToRemoveTag != nil) {
+    [roots addObject:lastToRemoveTag];
   }
-  [discovered addObject:view.reactTag];
-  UIView* parent = view.superview;
-  if(parent == nil) {
-    return;
-  }
-  ViewState state = [_states[parent.reactTag] intValue];
-  if(state == ToRemove) {
-    [self findRoot:parent discovered:discovered roots:roots];
-  }
-  if(state == Disappearing) {
-    return;
-  }
-  [roots addObject:view.reactTag];
 }
 
-- (BOOL) dfs:(UIView*)view discovered:(NSMutableSet<NSNumber*>*)discovered cands:(NSMutableSet<NSNumber*>*)cands
+- (BOOL) dfs:(UIView*)root view:(UIView*)view cands:(NSMutableSet<NSNumber*>*)cands
 {
   NSNumber* tag = view.reactTag;
-  if(tag == nil) {
+  if (tag == nil) {
     return true;
   }
   if(![cands containsObject:tag] && _states[tag] != nil) {
     return true;
   }
   BOOL cannotStripe = false;
-  if([discovered containsObject:tag]) {
-    return false;
-  }
-  [discovered addObject:tag];
-  for (UIView* child in view.subviews) {
-    cannotStripe |= [self dfs:child discovered:discovered cands:cands];
+  NSArray<UIView*>* toRemoveCopy = [view.reactSubviews copy];
+  for (UIView* child in toRemoveCopy) {
+    if (![view isKindOfClass:[RCTTextView class]]) {
+      cannotStripe |= [self dfs:root view:child cands:cands];
+    }
   }
   if(!cannotStripe) {
-    if(view.superview != nil) {
-      [view.superview removeReactSubview:view];
-      [view removeFromSuperview];
+    if(view.reactSuperview != nil) {
       [_reaUiManager unregisterView: view];
     }
     [_states removeObjectForKey:tag];
     [_viewForTag removeObjectForKey:tag];
-    [_viewManager removeObjectForKey:tag];
-    [_parentViewManager removeObjectForKey:tag];
     [_toRemove removeObject:tag];
   }
   return cannotStripe;
@@ -147,17 +133,14 @@
 
 - (void)removeLeftovers
 {
-  NSMutableSet<NSNumber*>* discovered = [NSMutableSet new];
   NSMutableSet<NSNumber*>* roots = [NSMutableSet new];
-  NSMutableSet<NSNumber*>* toRemoveCopy = [[NSMutableSet alloc] initWithSet:_toRemove copyItems:YES];
-  for(NSNumber* viewTag in toRemoveCopy) {
+  for(NSNumber* viewTag in _toRemove) {
     UIView* view = _viewForTag[viewTag];
-    [self findRoot:view discovered:discovered roots:roots];
+    [self findRoot:view roots:roots];
   }
-  [discovered removeAllObjects];
-  for(NSNumber* viewTag in toRemoveCopy) {
+  for(NSNumber* viewTag in roots) {
     UIView* view = _viewForTag[viewTag];
-    [self dfs:view discovered:discovered cands:_toRemove];
+    [self dfs:view view:view cands:_toRemove];
   }
 }
 
@@ -180,6 +163,9 @@
 
 - (void)notifyAboutProgress:(NSDictionary *)newStyle tag:(NSNumber*)tag
 {
+  if (_states[tag] == nil) {
+    return;
+  }
   ViewState state = [_states[tag] intValue];
   if (state == Inactive) {
     _states[tag] = [NSNumber numberWithInt:Appearing];
@@ -235,7 +221,7 @@
   return preparedData;
 }
 
-- (void) onViewRemoval: (UIView*) view parent:(NSObject*) parent before:(REASnapshot*) before
+- (void) onViewRemoval:(UIView*) view before:(REASnapshot*) before
 {
   NSNumber* tag = view.reactTag;
   ViewState state = [_states[tag] intValue];
@@ -256,14 +242,12 @@
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
 
-- (void) onViewCreate: (UIView*) view parent:(UIView*) parent after:(REASnapshot*) after
+- (void) onViewCreate:(UIView*) view after:(REASnapshot*) after
 {
   NSNumber* tag = view.reactTag;
   if(_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];
     _viewForTag[tag] = view;
-    _viewManager[tag] = view;
-    _parentViewManager[tag] = parent;
   }
   NSMutableDictionary* targetValues = after.values;
   ViewState state = [_states[tag] intValue];
@@ -281,6 +265,9 @@
   NSNumber* tag = view.reactTag;
   NSMutableDictionary* targetValues = after.values;
   NSMutableDictionary* startValues = before.values;
+  if (_states[tag] == nil) {
+    return;
+  }
   ViewState state = [_states[tag] intValue];
   if(state == Disappearing || state == ToRemove || state == Inactive) {
     return;

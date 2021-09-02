@@ -1,8 +1,8 @@
-import React, {useEffect} from 'react';
-import {NavigationContainer, NavigationProp} from '@react-navigation/native';
-import {enableScreens} from 'react-native-screens';
-import {CardStyleInterpolators, createStackNavigator} from '@react-navigation/stack';
-import Animated, {AnimatedLayout, SlideInLeft, SlideInDown, SlideOutDown, FadeIn, FadeOut} from 'react-native-reanimated';
+import React from 'react';
+import { NavigationProp } from '@react-navigation/native';
+import  {enableScreens } from 'react-native-screens';
+import { createStackNavigator } from '@react-navigation/stack';
+import Animated, { SlideInLeft, SlideOutDown } from 'react-native-reanimated';
 import { View, Text, Button } from 'react-native';
 
 enableScreens(true);
@@ -19,7 +19,7 @@ const Screen1 = ({navigation}: {navigation: NavigationProp<any>}) => {
 
 const Screen2 = () => {
   return (
-    <AnimatedLayout style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
       <Animated.View style={{position: 'absolute', height: "100%", width: '100%'}}  >
         <View style={{backgroundColor: 'black', opacity: 0.5, flex: 1}}/>
       </Animated.View>
@@ -28,7 +28,7 @@ const Screen2 = () => {
             screen 2 
           </Animated.Text>
       </Animated.View>
-    </AnimatedLayout>
+    </View>
   );
 };
 

@@ -20,9 +20,6 @@ runOnUI(() => {
         return; // :(
       }
 
-      if (typeof configs[tag][type] !== 'function') {
-        console.error(`${type} animation for a tag: ${tag} it not a function!`);
-      }
       const style = configs[tag][type](yogaValues);
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);

@@ -1,12 +1,9 @@
-import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   makeMutable,
   withTiming,
   withDelay,
-  SlideInDown,
 } from 'react-native-reanimated';
 
 function CustomLayoutTransiton() {
@@ -40,8 +37,6 @@ function CustomLayoutTransiton() {
 }
 
 function Box({ label, state }: { label: string; state: boolean }) {
-  const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);
-  const delay = 300 * ind;
   return (
     <Animated.View
       layout={CustomLayoutTransiton()}
@@ -84,6 +79,3 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
-
-
-

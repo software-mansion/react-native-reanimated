@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
-import { NavigationContainer, NavigationProp } from '@react-navigation/native';
+import React from 'react';
+import { NavigationProp } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
-import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
-import Animated, { AnimatedLayout, SlideInLeft, SlideInDown, SlideOutDown, FadeIn, FadeOut } from 'react-native-reanimated';
+import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, Button } from 'react-native';
 import { ModalNewAPI, Modal, Carousel, MountingUnmounting, SpringLayoutAnimation } from '../src/LayoutReanimation';
 
@@ -63,7 +62,7 @@ const App = () => {
             mode='modal'
             screenOptions={{
                 animationEnabled: false,
-                cardStyle: { backgroundColor: 'transparent' },
+                cardStyle: { backgroundColor: 'white' },
                 headerStyle: {backgroundColor: 'red'},
                 gestureEnabled: true,
                 // cardOverlayEnabled: true,

@@ -222,7 +222,7 @@ declare module 'react-native-reanimated' {
     };
 
     export type LayoutAnimation = {
-      initialValues: StyleProp;
+      initialValues: StyleProps;
       animations: AnimateStyle;
     };
 
@@ -253,7 +253,7 @@ declare module 'react-native-reanimated' {
       bglobalOriginY: number;
     };
     export type LayoutAnimationFunction = (
-      targetValues: LayoutAnimationsTargetValues
+      targetValues: LayoutAnimationsValues
     ) => LayoutAnimation;
 
     export type AnimateProps<P extends object> = {
@@ -567,11 +567,11 @@ declare module 'react-native-reanimated' {
       handler: (e: T) => void,
       eventNames?: string[],
       rebuild?: boolean
-    ): (e: NativeSyntheticEvent<T>) => void
+    ): (e: NativeSyntheticEvent<T>) => void;
     export function useHandler<T, TContext extends Context = {}>(
       handlers: Record<string, Handler<T, TContext>>,
-      deps?: DependencyList,
-    ): { context: TContext, doDependenciesDiffer: boolean, useWeb: boolean };
+      deps?: DependencyList
+    ): { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
       TContext extends Context = {}
@@ -665,6 +665,7 @@ declare module 'react-native-reanimated' {
       [key: string]: any;
     }
 
+    export type EasingFn = (t: number) => number;
     export interface KeyframeProps extends StyleProps {
       easing?: EasingFn;
       [key: string]: any;
@@ -673,7 +674,7 @@ declare module 'react-native-reanimated' {
       constructor(definitions: Map<number, KeyframeProps[]>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
-      withCallback(callback: (finished: boolean) => void);
+      withCallback(callback: (finished: boolean) => void): Keyframe;
     }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
@@ -726,13 +727,12 @@ declare module 'react-native-reanimated' {
       delay(durationMs: number): BounceAnimationBuilder;
       static withCallback(
         callback: (finished: boolean) => void
-      ): BaseBounceAnimationBuilder;
+      ): BounceAnimationBuilder;
+
       withCallback(
         callback: (finished: boolean) => void
-      ): BaseBounceAnimationBuilder;
+      ): BounceAnimationBuilder;
     }
-
-    export interface AnimatedLayout extends React.Component {}
 
     export class SlideInRight extends BaseAnimationBuilder {}
     export class SlideOutRight extends BaseAnimationBuilder {}
@@ -997,7 +997,6 @@ declare module 'react-native-reanimated' {
   export const interpolate: typeof Animated.interpolate;
 
   export const Layout: typeof Animated.Layout;
-  export const AnimatedLayout: typeof Animated.AnimatedLayout;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
@@ -1077,5 +1076,5 @@ declare module 'react-native-reanimated' {
   export const RollInRight: typeof Animated.RollInRight;
   export const RollOutLeft: typeof Animated.RollOutLeft;
   export const RollOutRight: typeof Animated.RollOutRight;
-  export const Keyframe: Keyframe;
+  export const Keyframe: typeof Keyframe;
 }

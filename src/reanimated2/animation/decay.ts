@@ -15,6 +15,13 @@ interface DecayConfig {
   velocity?: number;
 }
 
+interface DefaultDecayConfig {
+  deceleration: number;
+  velocityFactor: number;
+  clamp?: number[];
+  velocity: number;
+}
+
 export interface DecayAnimation extends Animation<DecayAnimation> {
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
@@ -37,10 +44,9 @@ export function withDecay(
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
-    const config: Required<DecayConfig> = {
+    const config: DefaultDecayConfig = {
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
-      clamp: [],
       velocity: 0,
     };
     if (userConfig) {

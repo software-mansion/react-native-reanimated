@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.3.0-alpha.2",
+  "version": "2.3.0-alpha.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -62,7 +62,8 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "string-hash-64": "^1.0.3"
+    "string-hash-64": "^1.0.3",
+    "react-native-screens": "^3.4.0"
   },
   "peerDependencies": {
     "react": "*",
