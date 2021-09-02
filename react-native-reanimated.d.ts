@@ -222,7 +222,7 @@ declare module 'react-native-reanimated' {
     };
 
     export type LayoutAnimation = {
-      initialValues: StyleProp;
+      initialValues: StyleProps;
       animations: AnimateStyle;
     };
 
@@ -253,7 +253,7 @@ declare module 'react-native-reanimated' {
       bglobalOriginY: number;
     };
     export type LayoutAnimationFunction = (
-      targetValues: LayoutAnimationsTargetValues
+      targetValues: LayoutAnimationsValues
     ) => LayoutAnimation;
 
     export type AnimateProps<P extends object> = {
@@ -665,6 +665,7 @@ declare module 'react-native-reanimated' {
       [key: string]: any;
     }
 
+    export type EasingFn = (t: number) => number;
     export interface KeyframeProps extends StyleProps {
       easing?: EasingFn;
       [key: string]: any;
@@ -673,7 +674,7 @@ declare module 'react-native-reanimated' {
       constructor(definitions: Map<number, KeyframeProps[]>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
-      withCallback(callback: (finished: boolean) => void);
+      withCallback(callback: (finished: boolean) => void): Keyframe;
     }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
@@ -726,10 +727,11 @@ declare module 'react-native-reanimated' {
       delay(durationMs: number): BounceAnimationBuilder;
       static withCallback(
         callback: (finished: boolean) => void
-      ): BaseBounceAnimationBuilder;
+      ): ounceAnimationBuilder;
+
       withCallback(
         callback: (finished: boolean) => void
-      ): BaseBounceAnimationBuilder;
+      ): BounceAnimationBuilder;
     }
 
     export class SlideInRight extends BaseAnimationBuilder {}
@@ -1074,5 +1076,5 @@ declare module 'react-native-reanimated' {
   export const RollInRight: typeof Animated.RollInRight;
   export const RollOutLeft: typeof Animated.RollOutLeft;
   export const RollOutRight: typeof Animated.RollOutRight;
-  export const Keyframe: Keyframe;
+  export const Keyframe: typeof Keyframe;
 }
