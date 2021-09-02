@@ -15,7 +15,6 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
 import com.swmansion.reanimated.ReanimatedModule;
-import com.swmansion.rnscreens.Screen;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -154,12 +153,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         super.updateLayout(parentTag, tag, x, y, width, height);
         View viewToUpdate = this.resolveView(tag);
         ViewManager parentViewManager = this.resolveViewManager(parentTag);
-        IViewManagerWithChildren parentViewManagerWithChildren = (IViewManagerWithChildren)parentViewManager;
-        if(parentViewManagerWithChildren != null
-                && viewToUpdate instanceof Screen
-                && ((Screen)viewToUpdate).getActivityState() != Screen.ActivityState.INACTIVE
-        ) {
-            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, x, y, width, height);
+        String parentViewManagerName = parentViewManager.getName();
+        View container = resolveView(parentTag);
+        if (container != null && parentViewManagerName.equals("RNSScreenContainer")) {
+            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, 0, 0, container.getWidth(), container.getHeight());
         }
     }
 
