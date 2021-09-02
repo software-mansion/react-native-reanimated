@@ -727,7 +727,7 @@ declare module 'react-native-reanimated' {
       delay(durationMs: number): BounceAnimationBuilder;
       static withCallback(
         callback: (finished: boolean) => void
-      ): ounceAnimationBuilder;
+      ): BounceAnimationBuilder;
 
       withCallback(
         callback: (finished: boolean) => void
