@@ -31,6 +31,10 @@
           },
           {
             "type": "doc",
+            "id": "version-2.3.0-alpha.3/fundamentals/custom_events"
+          },
+          {
+            "type": "doc",
             "id": "version-2.3.0-alpha.3/fundamentals/layout_animations"
           },
           {
@@ -91,7 +95,19 @@
               },
               {
                 "type": "doc",
+<<<<<<< HEAD
                 "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedProps"
+=======
+                "id": "version-2.3.0-alpha.3/api/useAnimatedProps"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useHandler"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/useEvent"
+>>>>>>> master
               }
             ]
           },
@@ -150,10 +166,6 @@
             "type": "category",
             "label": "Layout Animations",
             "items": [
-              {
-                "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/LayoutAnimations/animatedLayout"
-              },
               {
                 "type": "doc",
                 "id": "version-2.3.0-alpha.3/api/LayoutAnimations/customAnimations"

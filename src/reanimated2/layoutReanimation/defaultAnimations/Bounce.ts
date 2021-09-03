@@ -61,7 +61,7 @@ export class BounceInDown
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -82,7 +82,7 @@ export class BounceInDown
         initialValues: {
           transform: [
             {
-              translateY: targetValues.originY + height,
+              translateY: height,
             },
           ],
         },
@@ -105,7 +105,7 @@ export class BounceInUp
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -124,7 +124,7 @@ export class BounceInUp
           ],
         },
         initialValues: {
-          transform: [{ translateY: targetValues.originY - height }],
+          transform: [{ translateY: -height }],
         },
         callback: callback,
       };
@@ -145,7 +145,7 @@ export class BounceInLeft
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -164,7 +164,7 @@ export class BounceInLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: targetValues.originX - width }],
+          transform: [{ translateX: -width }],
         },
         callback: callback,
       };
@@ -185,7 +185,7 @@ export class BounceInRight
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -204,7 +204,7 @@ export class BounceInRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: targetValues.originX + width }],
+          transform: [{ translateX: width }],
         },
         callback: callback,
       };
@@ -265,7 +265,7 @@ export class BounceOutDown
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -277,7 +277,7 @@ export class BounceOutDown
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originY + height, {
+                  withTiming(height, {
                     duration: duration,
                   })
                 )
@@ -286,7 +286,7 @@ export class BounceOutDown
           ],
         },
         initialValues: {
-          originY: 0,
+          transform: [{ translateY: 0 }],
         },
         callback: callback,
       };
@@ -307,7 +307,7 @@ export class BounceOutUp
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -319,7 +319,7 @@ export class BounceOutUp
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originY - height, {
+                  withTiming(-height, {
                     duration: duration,
                   })
                 )
@@ -349,7 +349,7 @@ export class BounceOutLeft
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -361,7 +361,7 @@ export class BounceOutLeft
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originX - width, {
+                  withTiming(-width, {
                     duration: duration,
                   })
                 )
@@ -391,7 +391,7 @@ export class BounceOutRight
     const duration = this.durationV ? this.durationV : 250;
     const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -403,7 +403,7 @@ export class BounceOutRight
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originX + width, {
+                  withTiming(width, {
                     duration: duration,
                   })
                 )

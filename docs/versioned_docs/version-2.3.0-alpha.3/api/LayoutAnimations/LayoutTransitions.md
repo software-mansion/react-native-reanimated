@@ -21,15 +21,6 @@ To be precise how to animate positions and dimensions of components. What's impo
 ```js
     <AnimatedComponent layout={Layout.duration(3000).otherModifier()} >
 ```
-### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
-```js
-    <AnimatedLayout> // +
-        <View> sth </View>
-        <View> 
-            <AnimatedComponent exiting={animation}>
-        </View>
-    </AnimatedLayout> // +
-```
 
 ## Available modifiers
 The order of Modifiers doesn't matter.
@@ -98,12 +89,12 @@ export function SpringLayoutAnimation(): React.ReactElement {
   return (
     <View style={{marginTop: 30}} >
       <View style={{height: 300}} >
-        <AnimatedLayout style={{flexDirection: state? 'row' : 'column'}} >
+        <View style={{flexDirection: state? 'row' : 'column'}} >
           {state && <Box key="a" label="A" state={state} />}
           <Box key="b" label="B" state={state} />
           {!state && <Box key="a" label="A" state={state} />}
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
     
       <Button onPress={() => {setState(!state)}} title="toggle" />

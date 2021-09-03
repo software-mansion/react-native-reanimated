@@ -108,13 +108,6 @@ Currently, you can define animations using keyframes only for entry and exit ani
 ```js
     <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
 ```
-### 3. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
-```js
-    <AnimatedLayout> // +
-        <Text> sth </Text>
-        <AnimatedComponent exiting={keyframe.duration(3000).delay(200)} />
-    </AnimatedLayout> // +
-```
 
 ## Available modifiers
 The order of modifiers doesn't matter.
@@ -178,7 +171,6 @@ export function KeyframeAnimation(): React.ReactElement {
       <View
         style={{ height: 400, alignItems: 'center', justifyContent: 'center' }}>
         {show && (
-          <AnimatedLayout>
             <Animated.View
               entering={enteringAnimation}
               exiting={exitingAnimation}
@@ -190,7 +182,6 @@ export function KeyframeAnimation(): React.ReactElement {
                 justifyContent: 'center',
               }}
             />
-          </AnimatedLayout>
         )}
       </View>
     </View>

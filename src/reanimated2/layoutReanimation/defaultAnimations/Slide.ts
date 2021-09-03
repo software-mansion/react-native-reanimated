@@ -82,7 +82,7 @@ export class SlideOutRight
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.originX + width, config)
+            animation(Math.max(values.originX + width, width), config)
           ),
         },
         initialValues: {
@@ -113,7 +113,7 @@ export class SlideOutLeft
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.originX - width, config)
+            animation(Math.min(values.originX - width, -width), config)
           ),
         },
         initialValues: {
@@ -200,7 +200,7 @@ export class SlideOutUp
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.originY - height, config)
+            animation(Math.min(values.originY - height, -height), config)
           ),
         },
         initialValues: { originY: values.originY },
@@ -229,7 +229,7 @@ export class SlideOutDown
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.originY + height, config)
+            animation(Math.max(values.originY + height, height), config)
           ),
         },
         initialValues: { originY: values.originY },

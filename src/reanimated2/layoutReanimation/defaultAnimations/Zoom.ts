@@ -80,16 +80,17 @@ export class ZoomInLeft
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originX: delayFunction(delay, animation(values.originX, config)),
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originX: values.originX - width,
+          transform: [{ translateX: -width }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -110,16 +111,17 @@ export class ZoomInRight
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originX: delayFunction(delay, animation(values.originX, config)),
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originX: values.originX + width,
+          transform: [{ translateX: width }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -140,16 +142,17 @@ export class ZoomInUp
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.originY - height,
+          transform: [{ translateY: -height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -170,16 +173,17 @@ export class ZoomInDown
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.originY + height,
+          transform: [{ translateY: height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -204,12 +208,13 @@ export class ZoomInEasyUp
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: -values.height,
+          transform: [{ translateY: -values.height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -234,12 +239,13 @@ export class ZoomInEasyDown
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.height,
+          transform: [{ translateY: values.height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -320,19 +326,17 @@ export class ZoomOutLeft
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(
-            delay,
-            animation(values.originX - width, config)
-          ),
+          transform: [
+            { translateX: delayFunction(delay, animation(-width, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originX: values.originX,
+          transform: [{ translateX: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -353,19 +357,17 @@ export class ZoomOutRight
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(
-            delay,
-            animation(values.originX + width, config)
-          ),
+          transform: [
+            { translateX: delayFunction(delay, animation(width, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originX: values.originX,
+          transform: [{ translateX: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -386,19 +388,17 @@ export class ZoomOutUp
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(
-            delay,
-            animation(values.originY - height, config)
-          ),
+          transform: [
+            { translateY: delayFunction(delay, animation(-height, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -419,19 +419,17 @@ export class ZoomOutDown
     const delay = this.delayV;
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(
-            delay,
-            animation(values.originY + height, config)
-          ),
+          transform: [
+            { translateY: delayFunction(delay, animation(height, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -456,12 +454,18 @@ export class ZoomOutEasyUp
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(-values.height, config)),
+          transform: [
+            {
+              translateY: delayFunction(
+                delay,
+                animation(-values.height, config)
+              ),
+            },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -486,12 +490,18 @@ export class ZoomOutEasyDown
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(values.height, config)),
+          transform: [
+            {
+              translateY: delayFunction(
+                delay,
+                animation(values.height, config)
+              ),
+            },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };

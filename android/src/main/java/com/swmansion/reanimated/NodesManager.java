@@ -116,6 +116,10 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
 
+  public NativeProxy getNativeProxy() {
+    return mNativeProxy;
+  }
+
   private NativeProxy mNativeProxy;
 
   public AnimationsManager getAnimationsManager() {
@@ -135,6 +139,7 @@ public class NodesManager implements EventDispatcherListener {
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
     mNativeProxy = new NativeProxy(reactApplicationContext);
+    mAnimationManager.setScheduler(getNativeProxy().getScheduler());
   }
 
   private final class NativeUpdateOperation {

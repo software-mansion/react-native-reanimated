@@ -77,6 +77,7 @@ class RuntimeManager;
 
 class Scheduler {
   public:
+    Scheduler();
     void scheduleOnJS(std::function<void()> job);
     void setJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker);
     void setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager);
@@ -84,6 +85,7 @@ class Scheduler {
     virtual void triggerUI();
     virtual ~Scheduler();
   protected:
+    std::atomic<bool> scheduledOnUI{};
     Queue<std::function<void()>> uiJobs;
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
     std::weak_ptr<RuntimeManager> runtimeManager;
