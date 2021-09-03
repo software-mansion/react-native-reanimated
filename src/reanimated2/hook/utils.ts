@@ -25,6 +25,12 @@ interface Handlers<T, TContext extends Context> {
   [key: string]: Handler<T, TContext> | undefined;
 }
 
+export interface UseHandlerContext<TContext extends Context> {
+  context: TContext;
+  doDependenciesDiffer: boolean;
+  useWeb: boolean;
+}
+
 export function useEvent<T>(
   handler: (event: T) => void,
   eventNames: string[] = [],
@@ -49,7 +55,7 @@ export function useEvent<T>(
 export function useHandler<T, TContext extends Context>(
   handlers: Handlers<T, TContext>,
   dependencies?: DependencyList
-) {
+): UseHandlerContext<TContext> {
   const initRef = useRef<ContextWithDependencies<TContext> | null>(null);
   if (initRef.current === null) {
     initRef.current = {
@@ -182,7 +188,7 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
       }
     } else if (currentProp?.onFrame !== undefined) {
       return true;
-    } else if (typeof prop === 'object') {
+    } else if (typeof currentProp === 'object') {
       for (const item of Object.values(currentProp)) {
         propsToCheck.push(item);
       }

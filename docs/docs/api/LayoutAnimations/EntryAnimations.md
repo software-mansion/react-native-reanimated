@@ -26,15 +26,6 @@ Different type of entering animations can be customized differently. For the com
 ```js
 <AnimatedComponent entering={AnimationName.duration(3000).otherModifier()} >
 ```
-### 4. Make sure that your animated component is under an AnimatedLayout. If it's not then add AnimatedLayout somewhere above the component.
-```js
-<AnimatedLayout> // +
-    <View> sth </View>
-    <View> 
-        <AnimatedComponent entering={AnimationName}>
-    </View>
-</AnimatedLayout> // +
-```
 
 ## Predefined Animations 
 Below we listed all of the currently available predefined entering animations grouped by their type. Each group contains all of its modifiers and a video presenting what it looks like when applied to a simple button.

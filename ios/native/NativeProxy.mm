@@ -127,6 +127,14 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
 
+  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
+  ((REAUIManager*)uiManager).flushUiOperations = ^void() {
+    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
+    if (scheduler != nullptr) {
+      scheduler->triggerUI();
+    }
+  };
+  
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = displayLink.targetTimestamp * 1000;

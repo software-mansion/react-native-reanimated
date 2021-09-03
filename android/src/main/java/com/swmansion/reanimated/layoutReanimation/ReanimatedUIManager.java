@@ -1,57 +1,17 @@
 package com.facebook.react.uimanager;
 
-import static com.facebook.react.uimanager.common.UIManagerType.FABRIC;
-
-import android.content.ComponentCallbacks2;
-import android.content.res.Configuration;
-import android.util.Log;
-import android.view.View;
-
 import androidx.annotation.Nullable;
-
-import com.facebook.common.logging.FLog;
-import com.facebook.debug.holder.PrinterHolder;
-import com.facebook.debug.tags.ReactDebugOverlayTags;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Dynamic;
-import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.UIManager;
-import com.facebook.react.bridge.UIManagerListener;
-import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.common.ReactConstants;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.uimanager.PixelUtil;
-import com.facebook.react.uimanager.ReactRoot;
-import com.facebook.react.uimanager.ReactRootViewTagGenerator;
-import com.facebook.react.uimanager.ReactShadowNode;
-import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.ReanimatedUIImplementation;
-import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.UIBlock;
-import com.facebook.react.uimanager.UIImplementation;
-import com.facebook.react.uimanager.UIImplementationProvider;
-import com.facebook.react.uimanager.UIManagerHelper;
-import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.UIManagerModuleListener;
-import com.facebook.react.uimanager.ViewManager;
-import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.facebook.react.uimanager.YogaNodePool;
-import com.facebook.react.uimanager.common.ViewUtil;
-import com.facebook.react.uimanager.debug.NotThreadSafeViewHierarchyUpdateDebugListener;
 import com.facebook.react.uimanager.events.EventDispatcher;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.systrace.Systrace;
-import com.facebook.systrace.SystraceMessage;
-
 import java.util.List;
-import java.util.Map;
 
 class ReaUiImplementationProvider extends UIImplementationProvider {
 
@@ -61,7 +21,6 @@ class ReaUiImplementationProvider extends UIImplementationProvider {
             ViewManagerRegistry viewManagerRegistry,
             EventDispatcher eventDispatcher,
             int minTimeLeftInFrameForNonBatchedOperationMs) {
-        Log.d("REAPOW", "Yeah");
         return new ReanimatedUIImplementation(
                 reactContext,
                 viewManagerRegistry,
@@ -73,14 +32,12 @@ class ReaUiImplementationProvider extends UIImplementationProvider {
 @ReactModule(name = UIManagerModule.NAME)
 public class ReanimatedUIManager extends UIManagerModule {
 
-    public ReanimatedUIManager(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, int minTimeLeftInFrameForNonBatchedOperationMs) {
-        super(reactContext, viewManagerResolver, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
-        Log.d("REAPOW", "Yeah1");
-    }
-
     public ReanimatedUIManager(ReactApplicationContext reactContext, List<ViewManager> viewManagersList, int minTimeLeftInFrameForNonBatchedOperationMs) {
         super(reactContext, viewManagersList, new ReaUiImplementationProvider(), minTimeLeftInFrameForNonBatchedOperationMs);
-        Log.d("REAPOW", "Yeah2");
+    }
+
+    public void onBatchComplete() {
+        super.onBatchComplete();
     }
 
     @Override
@@ -134,7 +91,6 @@ public class ReanimatedUIManager extends UIManagerModule {
             @Nullable ReadableArray addChildTags,
             @Nullable ReadableArray addAtIndices,
             @Nullable ReadableArray removeFrom) {
-        int x = 5;
         super.manageChildren(
                 viewTag, moveFrom, moveTo, addChildTags, addAtIndices, removeFrom);
     }

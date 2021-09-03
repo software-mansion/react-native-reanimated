@@ -160,7 +160,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         }
     }
 
-    @Override
+    // @Override
     public synchronized void manageChildren(int tag, @Nullable int[] indicesToRemove, @Nullable ViewAtIndex[] viewsToAdd, @Nullable int[] tagsToDelete) {
         ViewGroup viewGroup = (ViewGroup) resolveView(tag);
         ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
@@ -195,14 +195,16 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
                 });
             }
         }
-        super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
+        int[] mock = new int[]{};
+        super.manageChildren(tag, indicesToRemove, viewsToAdd, mock, mock);
         if (toBeRemoved.containsKey(tag)) {
             ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
             for (View child : childrenToBeRemoved) {
                 viewGroupManager.addView(viewGroup, child, viewGroupManager.getChildCount(viewGroup));
             }
         }
-        super.manageChildren(tag, null, null, tagsToDelete);
+        ViewAtIndex[] mock2 = new ViewAtIndex[]{};
+        super.manageChildren(tag, mock, mock2, tagsToDelete, mock);
     }
 
     public void publicDropView(View view) {

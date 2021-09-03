@@ -29,7 +29,7 @@ export function useAnimatedScrollHandler<TContext extends Context>(
   // case when handlers is a function
   const scrollHandlers: ScrollHandlers<TContext> =
     typeof handlers === 'function' ? { onScroll: handlers } : handlers;
-  const { context, doDependenciesDiffer } = useHandler(
+  const { context, doDependenciesDiffer } = useHandler<ScrollEvent, TContext>(
     scrollHandlers,
     dependencies
   );

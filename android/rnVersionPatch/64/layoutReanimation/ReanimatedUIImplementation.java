@@ -8,7 +8,7 @@ import com.swmansion.reanimated.layoutReanimation.ReanimatedNativeHierarchyManag
 import java.util.List;
 
 public class ReanimatedUIImplementation extends UIImplementation {
-    public ReanimatedUIImplementation(ReactApplicationContext reactContext, ViewManagerResolver viewManagerResolver, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
+    public ReanimatedUIImplementation(ReactApplicationContext reactContext, UIManagerModule.ViewManagerResolver viewManagerResolver, EventDispatcher eventDispatcher, int minTimeLeftInFrameForNonBatchedOperationMs) {
         this(reactContext, new ViewManagerRegistry(viewManagerResolver), eventDispatcher, minTimeLeftInFrameForNonBatchedOperationMs);
     }
 

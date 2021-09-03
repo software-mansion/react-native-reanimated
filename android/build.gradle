@@ -85,13 +85,9 @@ def safeExtGet(prop, fallback) {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'de.undercouch.download'
 
-def CMAKE_TOOLCHAIN_FILE = ""
-if(!System.getenv('IS_TRAVIS')) {
-    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
-}
 
 android {
     buildFeatures {
@@ -111,7 +107,6 @@ android {
                              "-DNATIVE_DEBUG=${debugNativeLibraries}",
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
-                             "${CMAKE_TOOLCHAIN_FILE}",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
@@ -220,6 +215,7 @@ task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
 // Prepare glog sources to be compiled, this task will perform steps that normally should've been
 // executed by automake. This way we can avoid dependencies on make/automake
 task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
+    duplicatesStrategy = 'include'
     from(dependenciesPath ?: tarTree(downloadGlog.dest))
     from("$reactNativeThirdParty/glog/")
     include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
@@ -444,6 +440,7 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    jcenter()
     mavenCentral()
     mavenLocal()
     maven {
@@ -462,7 +459,6 @@ dependencies {
     implementation 'com.facebook.fbjni:fbjni:0.2.2'
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    implementation project(path: ':react-native-screens')
     extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
     extractSO("com.facebook.fbjni:fbjni:0.2.2")
 
