@@ -98,26 +98,24 @@ function internalInterpolate(
 
   const extrapolationConfig = validateType(type);
 
-  if (typeof type === 'object') {
-    if (coef * val < coef * leftEdgeOutput) {
-      return getVal(
-        extrapolationConfig.extrapolateLeft,
-        coef,
-        val,
-        leftEdgeOutput,
-        rightEdgeOutput,
-        x
-      );
-    } else if (coef * val > coef * rightEdgeOutput) {
-      return getVal(
-        extrapolationConfig.extrapolateRight,
-        coef,
-        val,
-        leftEdgeOutput,
-        rightEdgeOutput,
-        x
-      );
-    }
+  if (coef * val < coef * leftEdgeOutput) {
+    return getVal(
+      extrapolationConfig.extrapolateLeft,
+      coef,
+      val,
+      leftEdgeOutput,
+      rightEdgeOutput,
+      x
+    );
+  } else if (coef * val > coef * rightEdgeOutput) {
+    return getVal(
+      extrapolationConfig.extrapolateRight,
+      coef,
+      val,
+      leftEdgeOutput,
+      rightEdgeOutput,
+      x
+    );
   }
 
   return val;
