@@ -127,8 +127,8 @@ function internalInterpolate(
 // e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
 export function interpolate(
   x: number,
-  input: number[],
-  output: number[],
+  input: readonly number[],
+  output: readonly number[],
   type: ExtrapolationType
 ): number {
   'worklet';
