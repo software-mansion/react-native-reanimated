@@ -440,6 +440,7 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    jcenter()
     mavenCentral()
     mavenLocal()
     maven {
