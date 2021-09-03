@@ -3,14 +3,15 @@ import { View, Text, Button, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   withTiming,
   withDelay,
-  layout,
+  EntryExitAnimationFunction,
+  Layout,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
 function AnimatedView() {
   const ref = useRef(null);
-  const entering = (targetValues) => {
+  const entering: EntryExitAnimationFunction = (targetValues) => {
     'worklet';
     const animations = {
       originX: withTiming(targetValues.originX, { duration: 3000 }),
@@ -33,7 +34,7 @@ function AnimatedView() {
     };
   };
 
-  const exiting = (startingValues) => {
+  const exiting: EntryExitAnimationFunction = (startingValues) => {
     'worklet';
     const animations = {
       originX: withTiming(width, { duration: 3000 }),
@@ -54,7 +55,7 @@ function AnimatedView() {
     <Animated.View
       ref={ref}
       style={[styles.animatedView]}
-      {...{ entering, exiting, layout }}>
+      {...{ entering, exiting, layout: Layout }}>
       <Text> kk </Text>
     </Animated.View>
   );
