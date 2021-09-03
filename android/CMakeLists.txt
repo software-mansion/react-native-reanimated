@@ -40,7 +40,6 @@ add_library(
         "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
         "./src/main/Common/cpp/Tools/Scheduler.cpp"
         "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
-        "./src/main/Common/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
 # includes
