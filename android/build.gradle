@@ -67,6 +67,7 @@ def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
 
 buildscript {
     repositories {
+        mavenCentral()
         jcenter()
         google()
         maven {
@@ -74,7 +75,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
+        classpath('com.android.tools.build:gradle:4.2.1')
         classpath("de.undercouch:gradle-download-task:4.0.4")
     }
 }
