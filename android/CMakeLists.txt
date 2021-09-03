@@ -40,6 +40,7 @@ add_library(
         "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
         "./src/main/Common/cpp/Tools/Scheduler.cpp"
         "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
+        "./src/main/Common/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
 # includes
@@ -69,6 +70,7 @@ target_include_directories(
         "./src/main/Common/cpp/headers/NativeModules"
         "./src/main/Common/cpp/headers/SharedItems"
         "./src/main/Common/cpp/headers/Registries"
+        "./src/main/Common/cpp/headers/LayoutAnimations"
         "./src/main/Common/cpp/hidden_headers"
         "./src/main/cpp/headers"
 )
@@ -84,12 +86,6 @@ message(STATUS ${LIBRN_DIR})
 find_library(
         LOG_LIB
         log
-)
-find_library(
-        FBJNI_LIB
-        fbjni
-        PATHS ${LIBRN_DIR}
-        NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
         HERMES_LIB
@@ -116,16 +112,12 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        FBJNI_LIBRARY fbjni
-        PATHS ${libfbjni_link_DIRS}
-        NO_CMAKE_FIND_ROOT_PATH
-)
-find_library(
         GLOG_LIB 
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+find_package(fbjni REQUIRED CONFIG)
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -138,7 +130,7 @@ if(${FOR_HERMES})
             ${LOG_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
-            ${FBJNI_LIB}
+            fbjni::fbjni
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
@@ -149,7 +141,7 @@ else()
             ${LOG_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
-            ${FBJNI_LIB}
+            fbjni::fbjni
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
