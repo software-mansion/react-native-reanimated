@@ -1,7 +1,14 @@
-export enum Extrapolatation {
+// @ts-ignore JS file
+import interpolateNode from '../reanimated1/derived/interpolate';
+
+export enum Extrapolation {
   IDENTITY = 'identity',
   CLAMP = 'clamp',
   EXTEND = 'extend',
+}
+
+export interface InterpolatedNode {
+  __nodeId: number;
 }
 
 interface InterpolationNarrowedInput {
@@ -12,14 +19,19 @@ interface InterpolationNarrowedInput {
 }
 
 export interface ExtrapolationConfig {
-  extrapolateLeft?: Extrapolatation;
-  extrapolateRight?: Extrapolatation;
+  extrapolateLeft?: Extrapolation;
+  extrapolateRight?: Extrapolation;
 }
 
-export type ExtrapolationType = ExtrapolationConfig | Extrapolatation | string;
+export type ExtrapolationType = ExtrapolationConfig | Extrapolation | string;
+
+function isNode(x: number | InterpolatedNode): x is InterpolatedNode {
+  'worklet';
+  return (x as InterpolatedNode).__nodeId !== undefined;
+}
 
 function getVal(
-  type: Extrapolatation,
+  type: Extrapolation,
   coef: number,
   val: number,
   leftEdgeOutput: number,
@@ -29,26 +41,26 @@ function getVal(
   'worklet';
 
   switch (type) {
-    case Extrapolatation.IDENTITY:
+    case Extrapolation.IDENTITY:
       return x;
-    case Extrapolatation.CLAMP:
+    case Extrapolation.CLAMP:
       if (coef * val < coef * leftEdgeOutput) {
         return leftEdgeOutput;
       }
       return rightEdgeOutput;
-    case Extrapolatation.EXTEND:
+    case Extrapolation.EXTEND:
     default:
       return val;
   }
 }
 
-function isExtrapolate(value: string): boolean {
+function isExtrapolate(value: string): value is Extrapolation {
   'worklet';
 
   return (
-    value === Extrapolatation.EXTEND ||
-    value === Extrapolatation.CLAMP ||
-    value === Extrapolatation.IDENTITY
+    value === Extrapolation.EXTEND ||
+    value === Extrapolation.CLAMP ||
+    value === Extrapolation.IDENTITY
   );
 }
 
@@ -58,8 +70,8 @@ function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
   'worklet';
   // initialize extrapolationConfig with default extrapolation
   const extrapolationConfig: Required<ExtrapolationConfig> = {
-    extrapolateLeft: Extrapolatation.EXTEND,
-    extrapolateRight: Extrapolatation.EXTEND,
+    extrapolateLeft: Extrapolation.EXTEND,
+    extrapolateRight: Extrapolation.EXTEND,
   };
 
   if (typeof type === 'string') {
@@ -69,8 +81,8 @@ function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }
-    extrapolationConfig.extrapolateLeft = type as Extrapolatation;
-    extrapolationConfig.extrapolateRight = type as Extrapolatation;
+    extrapolationConfig.extrapolateLeft = type;
+    extrapolationConfig.extrapolateRight = type;
     return extrapolationConfig;
   }
 
@@ -82,7 +94,7 @@ function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
 function internalInterpolate(
   x: number,
   narrowedInput: InterpolationNarrowedInput,
-  type: ExtrapolationType
+  extrapolationConfig: Required<ExtrapolationConfig>
 ) {
   'worklet';
   const {
@@ -95,8 +107,6 @@ function internalInterpolate(
   const progress = (x - leftEdgeInput) / (rightEdgeInput - leftEdgeInput);
   const val = leftEdgeOutput + progress * (rightEdgeOutput - leftEdgeOutput);
   const coef = rightEdgeOutput >= leftEdgeOutput ? 1 : -1;
-
-  const extrapolationConfig = validateType(type);
 
   if (coef * val < coef * leftEdgeOutput) {
     return getVal(
@@ -124,7 +134,7 @@ function internalInterpolate(
 // TODO: support default values in worklets:
 // e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
 export function interpolate(
-  x: number,
+  x: number | InterpolatedNode,
   input: readonly number[],
   output: readonly number[],
   type: ExtrapolationType
@@ -135,6 +145,21 @@ export function interpolate(
       'Interpolation input and output should contain at least two values.'
     );
   }
+
+  const extrapolationConfig = validateType(type);
+
+  if (isNode(x)) {
+    console.warn(
+      `interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`
+    );
+    return interpolateNode(x, {
+      inputRange: input,
+      outputRange: output,
+      extrapolateLeft: extrapolationConfig.extrapolateLeft,
+      extrapolateRight: extrapolationConfig.extrapolateRight,
+    });
+  }
+
   const length = input.length;
   const narrowedInput: InterpolationNarrowedInput = {
     leftEdgeInput: input[0],
@@ -161,5 +186,5 @@ export function interpolate(
     }
   }
 
-  return internalInterpolate(x, narrowedInput, type);
+  return internalInterpolate(x, narrowedInput, extrapolationConfig);
 }
