@@ -8,7 +8,9 @@
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
 
-#if __has_include(<hermes/hermes.h>)
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#import <reacthermes/HermesExecutorFactory.h>
+#elif __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
 #else
 #import <jsi/JSCRuntime.h>
@@ -111,7 +113,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
 
 
-#if __has_include(<hermes/hermes.h>)
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+#elif __has_include(<hermes/hermes.h>)
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
