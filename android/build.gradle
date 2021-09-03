@@ -448,6 +448,7 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
