@@ -1,6 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  useDerivedValue,
+  useSharedValue,
+} from 'react-native-reanimated';
 import PagerView, { PageScrollState } from 'react-native-pager-view';
 
 import { AnimatedText } from './AnimatedText';
@@ -19,7 +22,7 @@ const SLIDES = [
   { color: 'yellow', key: 3 },
   { color: 'green', key: 4 },
   { color: 'pink', key: 5 },
-]
+];
 
 export function PagerExample(): React.ReactElement {
   const scrollPosition = useSharedValue(0);
@@ -50,7 +53,10 @@ export function PagerExample(): React.ReactElement {
     <View style={styles.container}>
       <Pagination numberOfSlides={SLIDES.length} position={scrollPosition} />
       <View style={styles.pagerDetails}>
-        <AnimatedText style={styles.pagerDetailsText} text={stringifiedCurrentPage} />
+        <AnimatedText
+          style={styles.pagerDetailsText}
+          text={stringifiedCurrentPage}
+        />
         <AnimatedText style={styles.pagerDetailsText} text={scrollState} />
       </View>
       <AnimatedPagerView
@@ -59,14 +65,15 @@ export function PagerExample(): React.ReactElement {
         onPageScrollStateChanged={scrollStateHandler}
         onPageSelected={selectedPageHandler}
         orientation="horizontal"
-        style={styles.pager}
-      >
-        {SLIDES.map((slide) => <View
-          key={slide.key}
-          collapsable={false}
-          style={[styles.slide, { backgroundColor: slide.color }]}>
-          <Text style={styles.slideText}>{slide.key}</Text>
-        </View>)}
+        style={styles.pager}>
+        {SLIDES.map((slide) => (
+          <View
+            key={slide.key}
+            collapsable={false}
+            style={[styles.slide, { backgroundColor: slide.color }]}>
+            <Text style={styles.slideText}>{slide.key}</Text>
+          </View>
+        ))}
       </AnimatedPagerView>
     </View>
   );

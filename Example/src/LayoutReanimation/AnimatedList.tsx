@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { Button, View, Text, ScrollView, TextInput } from 'react-native';
+import {
+  Button,
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  StyleSheet,
+} from 'react-native';
 import Animated, {
   Layout,
   LightSpeedInLeft,
@@ -11,7 +18,7 @@ interface EventParticipant {
   id: string;
 }
 
-const styles = {
+const styles = StyleSheet.create({
   participantView: {
     borderBottomColor: 'black',
     width: '100%',
@@ -44,7 +51,7 @@ const styles = {
     flexDirection: 'row',
     alignItems: 'center',
   },
-};
+});
 
 function Participant({
   name,

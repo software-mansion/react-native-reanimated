@@ -1,149 +1,216 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import interpolateNode, {
-  Extrapolate,
-} from '../reanimated1/derived/interpolate';
+// @ts-ignore JS file
+import interpolateNode from '../reanimated1/derived/interpolate';
 
-function getVal(config) {
+export enum Extrapolation {
+  IDENTITY = 'identity',
+  CLAMP = 'clamp',
+  EXTEND = 'extend',
+}
+
+export interface InterpolatedNode {
+  __nodeId: number;
+}
+
+interface InterpolationNarrowedInput {
+  leftEdgeInput: number;
+  rightEdgeInput: number;
+  leftEdgeOutput: number;
+  rightEdgeOutput: number;
+}
+
+export interface ExtrapolationConfig {
+  extrapolateLeft?: Extrapolation | string;
+  extrapolateRight?: Extrapolation | string;
+}
+
+interface RequiredExtrapolationConfig {
+  extrapolateLeft: Extrapolation;
+  extrapolateRight: Extrapolation;
+}
+
+export type ExtrapolationType =
+  | ExtrapolationConfig
+  | Extrapolation
+  | string
+  | undefined;
+
+function isNode(x: number | InterpolatedNode): x is InterpolatedNode {
+  'worklet';
+  return (x as InterpolatedNode).__nodeId !== undefined;
+}
+
+function getVal(
+  type: Extrapolation,
+  coef: number,
+  val: number,
+  leftEdgeOutput: number,
+  rightEdgeOutput: number,
+  x: number
+): number {
   'worklet';
 
-  const { type, coef, val, ll, rr, x } = config;
-
   switch (type) {
-    case Extrapolate.IDENTITY:
+    case Extrapolation.IDENTITY:
       return x;
-    case Extrapolate.CLAMP:
-      if (coef * val < coef * ll) {
-        return ll;
+    case Extrapolation.CLAMP:
+      if (coef * val < coef * leftEdgeOutput) {
+        return leftEdgeOutput;
       }
-      return rr;
-    case Extrapolate.EXTEND:
+      return rightEdgeOutput;
+    case Extrapolation.EXTEND:
     default:
       return val;
   }
 }
 
-function isExtrapolate(value) {
+function isExtrapolate(value: string): value is Extrapolation {
   'worklet';
 
   return (
-    value === Extrapolate.EXTEND ||
-    value === Extrapolate.CLAMP ||
-    value === Extrapolate.IDENTITY
+    value === Extrapolation.EXTEND ||
+    value === Extrapolation.CLAMP ||
+    value === Extrapolation.IDENTITY
   );
 }
 
-function validateType(type) {
+// validates extrapolations type
+// if type is correct, converts it to ExtrapolationConfig
+function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   'worklet';
+  // initialize extrapolationConfig with default extrapolation
+  const extrapolationConfig: RequiredExtrapolationConfig = {
+    extrapolateLeft: Extrapolation.EXTEND,
+    extrapolateRight: Extrapolation.EXTEND,
+  };
 
-  const EXTRAPOLATE_ERROR_MSG = `Reanimated: config object is not valid, please provide valid config, for example:
-    interpolate(value, [inputRange], [outputRange], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'extend',
-  })`;
+  if (!type) {
+    return extrapolationConfig;
+  }
 
-  const EXTRAPOLATE_ERROR = (
-    extrapolate
-  ) => `Reanimated: not supported value for "${extrapolate}" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-    interpolate(value, [inputRange], [outputRange], {
-      ${extrapolate}: 'clamp',
-  })`;
+  if (typeof type === 'string') {
+    if (!isExtrapolate(type)) {
+      throw new Error(
+        `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+        interpolate(value, [inputRange], [outputRange], "clamp")`
+      );
+    }
+    extrapolationConfig.extrapolateLeft = type;
+    extrapolationConfig.extrapolateRight = type;
+    return extrapolationConfig;
+  }
 
-  type = type ?? 'extend';
-
-  // eslint-disable-next-line no-prototype-builtins
-  const hasExtrapolateLeft = type.hasOwnProperty('extrapolateLeft');
-  // eslint-disable-next-line no-prototype-builtins
-  const hasExtrapolateRight = type.hasOwnProperty('extrapolateRight');
-
+  // otherwise type is extrapolation config object
   if (
-    typeof type === 'object' &&
-    ((Object.keys(type).length === 2 &&
-      !(hasExtrapolateLeft && hasExtrapolateRight)) ||
-      (Object.keys(type).length === 1 &&
-        !(hasExtrapolateLeft || hasExtrapolateRight)) ||
-      Object.keys(type).length > 2)
+    (type.extrapolateLeft && !isExtrapolate(type.extrapolateLeft)) ||
+    (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
-    throw new Error(EXTRAPOLATE_ERROR_MSG);
-  }
-
-  if (typeof type === 'object') {
-    if (hasExtrapolateLeft && !isExtrapolate(type.extrapolateLeft)) {
-      throw new Error(EXTRAPOLATE_ERROR('extrapolateLeft'));
-    }
-
-    if (hasExtrapolateRight && !isExtrapolate(type.extrapolateRight)) {
-      throw new Error(EXTRAPOLATE_ERROR('extrapolateRight'));
-    }
-  }
-
-  if (typeof type === 'string' && !isExtrapolate(type)) {
     throw new Error(
-      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity"]\n Valid example:
-       interpolate(value, [inputRange], [outputRange], "clamp")`
+      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.IDENTITY
+      }})`
     );
   }
+
+  Object.assign(extrapolationConfig, type);
+  return extrapolationConfig;
 }
 
-// TODO: support default values in worklets:
-// e.g. function interpolate(x, input, output, type = Extrapolate.CLAMP)
-function internalInterpolate(x, l, r, ll, rr, type) {
+function internalInterpolate(
+  x: number,
+  narrowedInput: InterpolationNarrowedInput,
+  extrapolationConfig: RequiredExtrapolationConfig
+) {
   'worklet';
-  if (r - l === 0) return ll;
-  const progress = (x - l) / (r - l);
-  const val = ll + progress * (rr - ll);
-  const coef = rr >= ll ? 1 : -1;
+  const {
+    leftEdgeInput,
+    rightEdgeInput,
+    leftEdgeOutput,
+    rightEdgeOutput,
+  } = narrowedInput;
+  if (rightEdgeInput - leftEdgeInput === 0) return leftEdgeOutput;
+  const progress = (x - leftEdgeInput) / (rightEdgeInput - leftEdgeInput);
+  const val = leftEdgeOutput + progress * (rightEdgeOutput - leftEdgeOutput);
+  const coef = rightEdgeOutput >= leftEdgeOutput ? 1 : -1;
 
-  const config = { type, coef, val, ll, rr, x };
-
-  if (global.__DEV__) {
-    validateType(type);
-  }
-
-  if (typeof type === 'object') {
-    if (coef * val < coef * ll) {
-      return getVal(Object.assign(config, { type: type.extrapolateLeft }));
-    } else if (coef * val > coef * ll) {
-      return getVal(Object.assign(config, { type: type.extrapolateRight }));
-    }
-  }
-
-  if (coef * val < coef * ll || coef * val > coef * rr) {
-    return getVal(config);
+  if (coef * val < coef * leftEdgeOutput) {
+    return getVal(
+      extrapolationConfig.extrapolateLeft,
+      coef,
+      val,
+      leftEdgeOutput,
+      rightEdgeOutput,
+      x
+    );
+  } else if (coef * val > coef * rightEdgeOutput) {
+    return getVal(
+      extrapolationConfig.extrapolateRight,
+      coef,
+      val,
+      leftEdgeOutput,
+      rightEdgeOutput,
+      x
+    );
   }
 
   return val;
 }
 
-export function interpolate(x, input, output, type) {
+// TODO: support default values in worklets:
+// e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
+export function interpolate(
+  x: number | InterpolatedNode,
+  input: readonly number[],
+  output: readonly number[],
+  type: ExtrapolationType
+): number {
   'worklet';
-  if (x && x.__nodeID) {
+  if (input.length < 2 || output.length < 2) {
+    throw Error(
+      'Interpolation input and output should contain at least two values.'
+    );
+  }
+
+  const extrapolationConfig = validateType(type);
+
+  if (isNode(x)) {
     console.warn(
       `interpolate() was renamed to interpolateNode() in Reanimated 2. Please use interpolateNode() instead`
     );
-    // we can't use rest parameters in worklets at the moment
-    // eslint-disable-next-line prefer-spread, prefer-rest-params
-    return interpolateNode.apply(undefined, arguments);
+    return interpolateNode(x, {
+      inputRange: input,
+      outputRange: output,
+      extrapolateLeft: extrapolationConfig.extrapolateLeft,
+      extrapolateRight: extrapolationConfig.extrapolateRight,
+    });
   }
 
   const length = input.length;
-  let narrowedInput = [];
-  if (x < input[0]) {
-    narrowedInput = [input[0], input[1], output[0], output[1]];
-  } else if (x > input[length - 1]) {
-    narrowedInput = [
-      input[length - 2],
-      input[length - 1],
-      output[length - 2],
-      output[length - 1],
-    ];
-  } else {
-    for (let i = 1; i < length; ++i) {
-      if (x <= input[i]) {
-        narrowedInput = [input[i - 1], input[i], output[i - 1], output[i]];
-        break;
+  const narrowedInput: InterpolationNarrowedInput = {
+    leftEdgeInput: input[0],
+    rightEdgeInput: input[1],
+    leftEdgeOutput: output[0],
+    rightEdgeOutput: output[1],
+  };
+  if (length > 2) {
+    if (x > input[length - 1]) {
+      narrowedInput.leftEdgeInput = input[length - 2];
+      narrowedInput.rightEdgeInput = input[length - 1];
+      narrowedInput.leftEdgeOutput = output[length - 2];
+      narrowedInput.rightEdgeOutput = output[length - 1];
+    } else {
+      for (let i = 1; i < length; ++i) {
+        if (x <= input[i]) {
+          narrowedInput.leftEdgeInput = input[i - 1];
+          narrowedInput.rightEdgeInput = input[i];
+          narrowedInput.leftEdgeOutput = output[i - 1];
+          narrowedInput.rightEdgeOutput = output[i];
+          break;
+        }
       }
     }
   }
-  return internalInterpolate.apply({}, [x].concat(narrowedInput).concat(type));
+
+  return internalInterpolate(x, narrowedInput, extrapolationConfig);
 }

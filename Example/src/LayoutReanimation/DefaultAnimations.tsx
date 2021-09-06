@@ -111,7 +111,9 @@ const AnimatedBlock = ({
       ) : null}
       {!show ? (
         <Animated.View
-          entering={'entering' in animatedStyle ? null : FadeIn.delay(350)}>
+          entering={
+            'entering' in animatedStyle ? undefined : FadeIn.delay(350)
+          }>
           <TouchableOpacity
             style={styles.animatedBlockPlaceholder}
             onPress={() => setShow(!show)}>
