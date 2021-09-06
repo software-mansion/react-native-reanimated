@@ -1,0 +1,21 @@
+name: Test docs build
+
+on:
+  pull_request:
+    branches: 
+      - master
+    paths:
+      - 'docs/**'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v1
+
+      - name: Install dependencies and check build
+        run: >-
+          cd docs
+          && yarn
+          && yarn build

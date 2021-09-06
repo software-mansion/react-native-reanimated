@@ -95,10 +95,7 @@
               },
               {
                 "type": "doc",
-<<<<<<< HEAD
                 "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedProps"
-=======
-                "id": "version-2.3.0-alpha.3/api/useAnimatedProps"
               },
               {
                 "type": "doc",
@@ -107,7 +104,6 @@
               {
                 "type": "doc",
                 "id": "version-2.3.0-alpha.3/api/useEvent"
->>>>>>> master
               }
             ]
           },
