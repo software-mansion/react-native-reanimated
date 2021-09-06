@@ -1,7 +1,7 @@
 #import "REAEventDispatcher.h"
-#import <React/RCTDefines.h>
-#import <React/RCTBridge+Private.h>
 #import <RNReanimated/REAModule.h>
+#import <React/RCTBridge+Private.h>
+#import <React/RCTDefines.h>
 
 @implementation REAEventDispatcher
 
@@ -11,7 +11,7 @@
   [super sendEvent:event];
 }
 
-+ (NSString*)moduleName
++ (NSString *)moduleName
 {
   return NSStringFromClass([RCTEventDispatcher class]);
 }

@@ -1,9 +1,9 @@
 #include <fbjni/fbjni.h>
 
-#include "NativeProxy.h"
 #include "AndroidScheduler.h"
-#include "Logger.h"
 #include "LayoutAnimations.h"
+#include "Logger.h"
+#include "NativeProxy.h"
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
   return facebook::jni::initialize(vm, [] {
