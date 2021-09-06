@@ -7,51 +7,51 @@
         "items": [
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/about"
+            "id": "version-2.3.0-alpha.3/fundamentals/about"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/installation"
+            "id": "version-2.3.0-alpha.3/fundamentals/installation"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/worklets"
+            "id": "version-2.3.0-alpha.3/fundamentals/worklets"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/shared-values"
+            "id": "version-2.3.0-alpha.3/fundamentals/shared-values"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/animations"
+            "id": "version-2.3.0-alpha.3/fundamentals/animations"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/events"
+            "id": "version-2.3.0-alpha.3/fundamentals/events"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/custom_events"
+            "id": "version-2.3.0-alpha.3/fundamentals/custom_events"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/layout_animations"
+            "id": "version-2.3.0-alpha.3/fundamentals/layout_animations"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/architecture"
+            "id": "version-2.3.0-alpha.3/fundamentals/architecture"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/migration"
+            "id": "version-2.3.0-alpha.3/fundamentals/migration"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/web-support"
+            "id": "version-2.3.0-alpha.3/fundamentals/web-support"
           },
           {
             "type": "doc",
-            "id": "version-2.3.0-alpha.3/troubleshooting"
+            "id": "version-2.3.0-alpha.3/fundamentals/troubleshooting"
           }
         ]
       },
@@ -67,34 +67,37 @@
             "items": [
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useSharedValue"
+                "id": "version-2.3.0-alpha.3/api/hooks/useSharedValue"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useAnimatedStyle"
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedStyle"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useDerivedValue"
+                "id": "version-2.3.0-alpha.3/api/hooks/useDerivedValue"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useAnimatedScrollHandler"
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedScrollHandler"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useAnimatedGestureHandler"
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedGestureHandler"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useAnimatedRef"
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedRef"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/useAnimatedReaction"
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedReaction"
               },
               {
                 "type": "doc",
+<<<<<<< HEAD
+                "id": "version-2.3.0-alpha.3/api/hooks/useAnimatedProps"
+=======
                 "id": "version-2.3.0-alpha.3/api/useAnimatedProps"
               },
               {
@@ -104,6 +107,7 @@
               {
                 "type": "doc",
                 "id": "version-2.3.0-alpha.3/api/useEvent"
+>>>>>>> master
               }
             ]
           },
@@ -114,31 +118,31 @@
             "items": [
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withTiming"
+                "id": "version-2.3.0-alpha.3/api/animations/withTiming"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withSpring"
+                "id": "version-2.3.0-alpha.3/api/animations/withSpring"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withDecay"
+                "id": "version-2.3.0-alpha.3/api/animations/withDecay"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/cancelAnimation"
+                "id": "version-2.3.0-alpha.3/api/animations/cancelAnimation"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withDelay"
+                "id": "version-2.3.0-alpha.3/api/animations/withDelay"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withSequence"
+                "id": "version-2.3.0-alpha.3/api/animations/withSequence"
               },
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/withRepeat"
+                "id": "version-2.3.0-alpha.3/api/animations/withRepeat"
               }
             ]
           },
@@ -191,7 +195,15 @@
             "items": [
               {
                 "type": "doc",
-                "id": "version-2.3.0-alpha.3/api/runOnJS"
+                "id": "version-2.3.0-alpha.3/api/miscellaneous/runOnJS"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/miscellaneous/runOnUI"
+              },
+              {
+                "type": "doc",
+                "id": "version-2.3.0-alpha.3/api/miscellaneous/interpolate"
               }
             ]
           }
