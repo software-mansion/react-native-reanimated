@@ -1,4 +1,3 @@
-#include "ShareableValue.h"
 #include <cxxabi.h>
 #include "FrozenObject.h"
 #include "MutableValue.h"
@@ -9,7 +8,7 @@
 #include "SharedParent.h"
 
 namespace reanimated {
-
+class ShareableValue;
 const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED = "__alreadyConverted";
 const char *CALL_ASYNC = "__callAsync";

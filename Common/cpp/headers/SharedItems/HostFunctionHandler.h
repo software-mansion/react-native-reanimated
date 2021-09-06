@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 
+using namespace facebook;
+
 namespace reanimated {
 
 struct HostFunctionHandler : jsi::HostObject {
