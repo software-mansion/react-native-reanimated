@@ -19,11 +19,20 @@ interface InterpolationNarrowedInput {
 }
 
 export interface ExtrapolationConfig {
-  extrapolateLeft?: Extrapolation;
-  extrapolateRight?: Extrapolation;
+  extrapolateLeft?: Extrapolation | string;
+  extrapolateRight?: Extrapolation | string;
 }
 
-export type ExtrapolationType = ExtrapolationConfig | Extrapolation | string;
+interface RequiredExtrapolationConfig {
+  extrapolateLeft: Extrapolation;
+  extrapolateRight: Extrapolation;
+}
+
+export type ExtrapolationType =
+  | ExtrapolationConfig
+  | Extrapolation
+  | string
+  | undefined;
 
 function isNode(x: number | InterpolatedNode): x is InterpolatedNode {
   'worklet';
@@ -66,13 +75,17 @@ function isExtrapolate(value: string): value is Extrapolation {
 
 // validates extrapolations type
 // if type is correct, converts it to ExtrapolationConfig
-function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
+function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   'worklet';
   // initialize extrapolationConfig with default extrapolation
-  const extrapolationConfig: Required<ExtrapolationConfig> = {
+  const extrapolationConfig: RequiredExtrapolationConfig = {
     extrapolateLeft: Extrapolation.EXTEND,
     extrapolateRight: Extrapolation.EXTEND,
   };
+
+  if (!type) {
+    return extrapolationConfig;
+  }
 
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
@@ -87,6 +100,20 @@ function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
   }
 
   // otherwise type is extrapolation config object
+  if (
+    (type.extrapolateLeft && !isExtrapolate(type.extrapolateLeft)) ||
+    (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
+  ) {
+    throw new Error(
+      `Reanimated: not supported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      interpolate(value, [inputRange], [outputRange], {
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.IDENTITY
+      }})`
+    );
+  }
+  console.log(type);
+
   Object.assign(extrapolationConfig, type);
   return extrapolationConfig;
 }
@@ -94,7 +121,7 @@ function validateType(type: ExtrapolationType): Required<ExtrapolationConfig> {
 function internalInterpolate(
   x: number,
   narrowedInput: InterpolationNarrowedInput,
-  extrapolationConfig: Required<ExtrapolationConfig>
+  extrapolationConfig: RequiredExtrapolationConfig
 ) {
   'worklet';
   const {
