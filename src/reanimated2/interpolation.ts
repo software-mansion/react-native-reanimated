@@ -112,7 +112,6 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
       }})`
     );
   }
-  console.log(type);
 
   Object.assign(extrapolationConfig, type);
   return extrapolationConfig;
