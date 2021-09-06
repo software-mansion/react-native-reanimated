@@ -7,12 +7,11 @@
 
 #pragma once
 
+#include <ReactCommon/CallInvoker.h>
+#include <jsi/jsi.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
-
-#include <jsi/jsi.h>
-
-#include <ReactCommon/CallInvoker.h>
 
 namespace facebook {
 namespace react {

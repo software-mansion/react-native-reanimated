@@ -1,6 +1,9 @@
 #import <Foundation/Foundation.h>
 #import <React/RCTUIManager.h>
+#include <string>
 #import <string>
+#include <utility>
+#include <vector>
 #import <vector>
 
 namespace reanimated {

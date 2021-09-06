@@ -3,6 +3,7 @@
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
 #include <stdio.h>
+#include <memory>
 #include "Scheduler.h"
 
 namespace reanimated {

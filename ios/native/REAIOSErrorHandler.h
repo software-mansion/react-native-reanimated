@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <string>
 #include "ErrorHandler.h"
 #include "Scheduler.h"
 

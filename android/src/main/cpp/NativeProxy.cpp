@@ -77,8 +77,8 @@ void NativeProxy::installJSIBindings() {
                            jsi::Runtime &rt) {
     // doNoUse -> NodesManager passes here a timestamp from choreographer which
     // is useless for us as we use diffrent timer to better handle events. The
-    // lambda is translated to NodeManager.OnAnimationFrame and treated just like
-    // reanimated 1 frame callbacks which make use of the timestamp.
+    // lambda is translated to NodeManager.OnAnimationFrame and treated just
+    // like reanimated 1 frame callbacks which make use of the timestamp.
     auto wrappedOnRender = [getCurrentTime, &rt, onRender](double doNotUse) {
       jsi::Object global = rt.global();
       jsi::String frameTimestampName =
