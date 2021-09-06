@@ -20,7 +20,7 @@ If you just want to play with Reanimated 2, we made a clean repo that has all th
 [Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git clone:
 
 ```bash
-> git clone git@github.com:software-mansion-labs/reanimated-2-playground.git
+git clone git@github.com:software-mansion-labs/reanimated-2-playground.git
 ```
 
 Continue with the instruction below if you'd like to install Reanimated v2 on an existing or new React Native project.
@@ -36,7 +36,7 @@ Please note that Reanimated 2 doesn't support remote debugging, only Flipper can
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
 ```bash
-> yarn add react-native-reanimated@next
+yarn add react-native-reanimated@next
 ```
 
 ### Reanimated 2 in Expo
