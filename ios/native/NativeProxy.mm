@@ -9,9 +9,11 @@
 #import <React/RCTUIManager.h>
 #import "LayoutAnimationsProxy.h"
 #import "REAAnimationsManager.h"
-#import "REAReactBatchObserver.h"
+#import "REAUIManager.h"
 
-#if __has_include(<hermes/hermes.h>)
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#import <reacthermes/HermesExecutorFactory.h>
+#elif __has_include(<hermes/hermes.h>)
 #import <hermes/hermes.h>
 #else
 #import <jsi/JSCRuntime.h>
@@ -113,8 +115,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       return val;
   };
 
-
-#if __has_include(<hermes/hermes.h>)
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+#elif __has_include(<hermes/hermes.h>)
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
@@ -124,12 +127,22 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<REAIOSErrorHandler>(scheduler);
   std::shared_ptr<NativeReanimatedModule> module;
 
+  __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
+  ((REAUIManager*)uiManager).flushUiOperations = ^void() {
+    std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
+    if (scheduler != nullptr) {
+      scheduler->triggerUI();
+    }
+  };
+  
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = displayLink.targetTimestamp * 1000;
-      rt.global().setProperty(rt, "_frameTimestamp", frameTimestamp);
+      jsi::Object global = rt.global();
+      jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
+      global.setProperty(rt, frameTimestampName, frameTimestamp);
       onRender(frameTimestamp);
-      rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
+      global.setProperty(rt, frameTimestampName, jsi::Value::undefined());
     }];
   };
 
@@ -138,7 +151,10 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   };
   
   // Layout Animations start
-  __weak REAAnimationsManager *animationsManager = reanimatedModule.reactBatchObserver.animationsManager;
+  REAUIManager* reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
+  RCTUIManager* reaUiManager = reaUiManagerNoCast;
+  REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
+  [reaUiManagerNoCast setUp:animationsManager];
   
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
     if (animationsManager) {
@@ -212,9 +228,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
 
     eventAsString = "{ NativeMap:"  + eventAsString + "}";
-    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", CACurrentMediaTime() * 1000);
+    jsi::Object global = module->runtime->global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);
     module->onEvent(eventNameString, eventAsString);
-    module->runtime->global().setProperty(*module->runtime, "_eventTimestamp", jsi::Value::undefined());
+    global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
   }];
 
   return module;

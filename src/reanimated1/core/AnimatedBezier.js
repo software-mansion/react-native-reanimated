@@ -1,6 +1,6 @@
 import { val } from '../val';
 import AnimatedNode from './AnimatedNode';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
 var NEWTON_ITERATIONS = 4;

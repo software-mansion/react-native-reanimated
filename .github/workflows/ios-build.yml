@@ -1,0 +1,35 @@
+name: Test iOS build
+on:
+  pull_request:
+    branches: 
+      - master
+    paths:
+      - 'ios/**'
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      WORKING_DIRECTORY: Example
+    concurrency:
+      group: ios-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+      - name: Install node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Install pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: pod install
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx react-native run-ios

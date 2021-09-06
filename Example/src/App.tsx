@@ -1,31 +1,111 @@
-import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import React from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  Platform,
+  UIManager,
+  ScrollView,
+} from 'react-native';
+import { RectButton } from 'react-native-gesture-handler';
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { SpringLayoutAnimation, MountingUnmounting, SwipeableList, Menu, Modal, Carousel, ModalNewAPI } from './LayoutReanimation';
+import {
+  Carousel,
+  CustomLayoutAnimationScreen,
+  DefaultAnimations,
+  Modal,
+  ModalNewAPI,
+  MountingUnmounting,
+  SpringLayoutAnimation,
+  SwipeableList,
+} from './LayoutReanimation';
 
-import Reanimated1 from '../reanimated1/App';
-
-import ExtrapolationExample from './ExtrapolationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import WobbleExample from './WobbleExample';
-import DragAndSnapExample from './DragAndSnapExample';
-import ScrollEventExample from './ScrollEventExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import MeasureExample from './MeasureExample';
-import SwipeableListExample from './SwipeableListExample';
-import ScrollableViewExample from './ScrollableViewExample';
-import ScrollToExample from './ScrollToExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import ChatHeadsExample from './ChatHeadsExample';
+import { PagerExample } from './CustomHandler';
+import DragAndSnapExample from './DragAndSnapExample';
+import ExtrapolationExample from './ExtrapolationExample';
+import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
 import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
+import MeasureExample from './MeasureExample';
+import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+// @ts-ignore JS file
+import Reanimated1 from '../reanimated1/App';
+import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';
+import ScrollToExample from './ScrollToExample';
+import ScrollableViewExample from './ScrollableViewExample';
+import SwipeableListExample from './SwipeableListExample';
+import WobbleExample from './WobbleExample';
+import AnimatedListExample from './LayoutReanimation/AnimatedList';
+
 LogBox.ignoreLogs(['Calling `getNode()`']);
+
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  DefaultAnimations: {
+    screen: DefaultAnimations,
+    title: '🆕 Default layout animations',
+  },
+  KeyframeAnimation: {
+    screen: KeyframeAnimation,
+    title: '🆕 Keyframe animation',
+  },
+  ParticipantList: {
+    screen: AnimatedListExample,
+    title: '🆕 Participant List',
+  },
+  OlympicAnimation: {
+    screen: OlympicAnimation,
+    title: '🆕 Olympic animation',
+  },
+  CustomLayoutAnimation: {
+    screen: CustomLayoutAnimationScreen,
+    title: '🆕 Custom layout animation',
+  },
+  ModalNewAPI: {
+    title: '🆕 ModalNewAPI',
+    screen: ModalNewAPI,
+  },
+  SpringLayoutAnimation: {
+    title: '🆕 Spring Layout Animation',
+    screen: SpringLayoutAnimation,
+  },
+  MountingUnmounting: {
+    title: '🆕 Mounting Unmounting',
+    screen: MountingUnmounting,
+  },
+  SwipeableList: {
+    title: '🆕 Swipeable list',
+    screen: SwipeableList,
+  },
+  Modal: {
+    title: '🆕 Modal',
+    screen: Modal,
+  },
+  Carousel: {
+    title: '🆕 Carousel',
+    screen: Carousel,
+  },
+  PagerExample: {
+    screen: PagerExample,
+    title: '🆕 Custom Handler Example - Pager',
+  },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
@@ -82,35 +162,6 @@ const SCREENS: Screens = {
     screen: ScrollExample,
     title: 'Scroll Example',
   },
-
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  }, 
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Menu: {
-    title: '🆕 Menu',
-    screen: Menu,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  Carousel: {
-    title: '🆕 Carousel',
-    screen: Carousel,
-  }
 };
 
 type RootStackParams = { Home: undefined } & { [key: string]: undefined };
@@ -180,7 +231,7 @@ function LaunchReanimated1({
 const Stack = createStackNavigator();
 
 const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
-  <Stack.Navigator>
+  <Stack.Navigator detachInactiveScreens={false}>
     <Stack.Screen
       name="Home"
       options={{ title: '🎬 Reanimated 2.x Examples' }}

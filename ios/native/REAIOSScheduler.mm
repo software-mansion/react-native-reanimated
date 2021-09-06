@@ -25,12 +25,14 @@ void REAIOSScheduler::scheduleOnUI(std::function<void()> job) {
     if (runtimeManager.lock()) triggerUI();
     return;
   }
+  
+  if (!this->scheduledOnUI) {
+    __block std::weak_ptr<RuntimeManager> blockRuntimeManager = runtimeManager;
 
-  __block std::weak_ptr<RuntimeManager> blockRuntimeManager = runtimeManager;
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    if (blockRuntimeManager.lock()) triggerUI();
-  });
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (blockRuntimeManager.lock()) triggerUI();
+    });
+  }
 }
 
 REAIOSScheduler::~REAIOSScheduler(){

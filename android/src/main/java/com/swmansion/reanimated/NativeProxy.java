@@ -89,6 +89,10 @@ public class NativeProxy {
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
 
+  public Scheduler getScheduler() {
+    return mScheduler;
+  }
+
   @DoNotStrip
   private void requestRender(AnimationFrameCallback callback) {
     mNodesManager.postOnAnimation(callback);
@@ -136,7 +140,6 @@ public class NativeProxy {
     AnimationsManager animationsManager = mContext.get()
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
-            .getReactBatchObserver()
             .getAnimationsManager();
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);

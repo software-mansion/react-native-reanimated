@@ -1,5 +1,5 @@
 import AnimatedNode from './AnimatedNode';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 import { val } from '../val';
 
 class AnimatedAlways extends AnimatedNode {

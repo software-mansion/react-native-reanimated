@@ -3,8 +3,7 @@
 #include <jsi/jsi.h>
 #include "JNIHelper.h"
 
-namespace reanimated
-{
+namespace reanimated {
 
 using namespace facebook::jni;
 using namespace facebook;
@@ -14,15 +13,18 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/layoutReanimation/LayoutAnimations;";
   static jni::local_ref<jhybriddata> initHybrid(
-        jni::alias_ref<jhybridobject> jThis);
+      jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  void startAnimationForTag(int tag, alias_ref<JString> type, alias_ref<JMap<jstring, jstring>> values);
+  void startAnimationForTag(
+      int tag,
+      alias_ref<JString> type,
+      alias_ref<JMap<jstring, jstring>> values);
   void removeConfigForTag(int tag);
 
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
 
-  void notifyAboutProgress(jsi::Value & progress, int tag);
+  void notifyAboutProgress(jsi::Value &progress, int tag);
   void notifyAboutEnd(int tag, int cancelled);
 
  private:
@@ -30,7 +32,8 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;
   std::weak_ptr<jsi::Runtime> weakUIRuntime;
 
-  explicit LayoutAnimations(jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
+  explicit LayoutAnimations(
+      jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
 };
 
-};
+}; // namespace reanimated

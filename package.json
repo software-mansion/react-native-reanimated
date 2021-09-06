@@ -1,20 +1,28 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.2.0",
+  "version": "2.3.0-alpha.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "yarn run format && yarn run lint-check && yarn run test:unit",
     "test:unit": "jest",
-    "format": "prettier --write --list-different './src/**/*.js'",
+    "format": "prettier --write --list-different './src/'",
+    "precommit": "yarn lint-java && yarn clang-format",
     "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "lint-check-cpp": "./scripts/cpplint.sh",
+    "lint-java": "node ./scripts/lint-java.js",
+    "clang-format": "yarn clang-format-ios && yarn clang-format-android && yarn clang-format-common",
+    "clang-format-ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
+    "clang-format-android": "find android/src/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
+    "clang-format-common": "find Common/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
-    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc-and-mv",
+    "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:remove.ts && yarn type:generate:remove.tsx",
     "type:generate:clean": "rm -rf lib/ && mkdir lib/",
-    "type:generate:cp-js-src": "cp -RL src/ lib/ && find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
-    "type:generate:tsc-and-mv": "yarn tsc && mv lib/reanimated2/src/reanimated2/* lib/reanimated2 && rm -r lib/reanimated2/src/"
+    "type:generate:cp-js-src": "cp -RL src/ lib/",
+    "type:generate:tsc": "yarn tsc",
+    "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
+    "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete"
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
@@ -57,9 +65,11 @@
   "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
-    "fbjs": "^3.0.0",
+    "invariant": "^2.2.4",
+    "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "string-hash-64": "^1.0.3"
+    "string-hash-64": "^1.0.3",
+    "react-native-screens": "^3.4.0"
   },
   "peerDependencies": {
     "react": "*",
@@ -85,9 +95,10 @@
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "babel-eslint": "^10.0.3",
-    "babel-jest": "^24.9.0",
+    "babel-jest": "^26.6.3",
     "babel-plugin-module-resolver": "^4.1.0",
-    "eslint": "^6.5.1",
+    "clang-format": "^1.5.0",
+    "eslint": "^7.31.0",
     "eslint-config-prettier": "^6.4.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-import-resolver-babel-module": "^5.2.0",
@@ -96,19 +107,20 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.2.5",
-    "jest": "^24.9.0",
+    "jest": "^26.6.3",
     "lint-staged": "^10.2.11",
     "prettier": "^2.2.1",
-    "react": "17.0.1",
-    "react-native": "0.64.1",
+    "react": "17.0.2",
+    "react-native": "0.65.1",
     "react-native-gesture-handler": "^1.6.1",
-    "react-test-renderer": "17.0.1",
+    "react-native-codegen": "^0.0.7",
+    "react-test-renderer": "17.0.2",
     "release-it": "^13.1.1",
     "typescript": "^4.1.3"
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/",
+      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts",
       "prettier --write"
     ]
   },

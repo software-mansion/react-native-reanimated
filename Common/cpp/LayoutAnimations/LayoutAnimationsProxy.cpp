@@ -1,20 +1,27 @@
 #include "LayoutAnimationsProxy.h"
-#include "MutableValue.h"
-#include "ValueWrapper.h"
-#include "ShareableValue.h"
 #include "FrozenObject.h"
+#include "MutableValue.h"
+#include "ShareableValue.h"
+#include "ValueWrapper.h"
 
 namespace reanimated {
 
 const long long idOffset = 1e9;
 
-LayoutAnimationsProxy::LayoutAnimationsProxy(std::function<void(int, jsi::Object newProps)> _notifyAboutProgress, std::function<void(int, bool)> _notifyAboutEnd): notifyAboutProgress(std::move(_notifyAboutProgress)), notifyAboutEnd(std::move(_notifyAboutEnd)) {
-}
+LayoutAnimationsProxy::LayoutAnimationsProxy(
+    std::function<void(int, jsi::Object newProps)> _notifyAboutProgress,
+    std::function<void(int, bool)> _notifyAboutEnd)
+    : notifyAboutProgress(std::move(_notifyAboutProgress)),
+      notifyAboutEnd(std::move(_notifyAboutEnd)) {}
 
-void LayoutAnimationsProxy::startObserving(int tag, std::shared_ptr<MutableValue> sv, jsi::Runtime &rt) {
+void LayoutAnimationsProxy::startObserving(
+    int tag,
+    std::shared_ptr<MutableValue> sv,
+    jsi::Runtime &rt) {
   observedValues[tag] = sv;
-  sv->addListener(tag + idOffset, [sv, tag, this, &rt](){
-    std::shared_ptr<FrozenObject> newValue = ValueWrapper::asFrozenObject(sv->value->valueContainer);
+  sv->addListener(tag + idOffset, [sv, tag, this, &rt]() {
+    std::shared_ptr<FrozenObject> newValue =
+        ValueWrapper::asFrozenObject(sv->value->valueContainer);
     this->notifyAboutProgress(tag, newValue->shallowClone(rt));
   });
 }
@@ -33,4 +40,4 @@ void LayoutAnimationsProxy::notifyAboutCancellation(int tag) {
   this->notifyAboutEnd(tag, false);
 }
 
-}
+} // namespace reanimated

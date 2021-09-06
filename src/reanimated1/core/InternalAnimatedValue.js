@@ -1,7 +1,7 @@
 import AnimatedNode from './AnimatedNode';
 import { val } from '../val';
 import ReanimatedModule from '../../ReanimatedModule';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 
 function sanitizeValue(value) {
   return value === null || value === undefined || typeof value === 'string'

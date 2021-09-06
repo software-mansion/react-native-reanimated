@@ -1,7 +1,7 @@
 import AnimatedNode, { getCallID, setCallID } from './AnimatedNode';
 import { adapt } from './AnimatedBlock';
 import { val } from '../val';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'invariant';
 
 class AnimatedCallFunc extends AnimatedNode {
   _previousCallID;

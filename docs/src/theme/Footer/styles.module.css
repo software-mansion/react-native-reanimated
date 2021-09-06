@@ -9,11 +9,11 @@
 SWM - commented out to remove opacity in component
 */
 
-/* .footerLogoLink {
+.footerLogoLink {
   opacity: 0.5;
   transition: opacity var(--ifm-transition-fast) var(--ifm-transition-timing-default);
 }
 
 .footerLogoLink:hover {
   opacity: 1;
-} */
+}
