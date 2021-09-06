@@ -1,7 +1,6 @@
 #include "Scheduler.h"
 
-namespace reanimated
-{
+namespace reanimated {
 
 void Scheduler::scheduleOnUI(std::function<void()> job) {
   uiJobs.push(std::move(job));
@@ -19,11 +18,13 @@ void Scheduler::triggerUI() {
   }
 }
 
-void Scheduler::setJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
+void Scheduler::setJSCallInvoker(
+    std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
   jsCallInvoker_ = jsCallInvoker;
 }
 
-void Scheduler::setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager) {
+void Scheduler::setRuntimeManager(
+    std::shared_ptr<RuntimeManager> runtimeManager) {
   this->runtimeManager = runtimeManager;
 }
 
@@ -33,4 +34,4 @@ Scheduler::Scheduler() {
   this->scheduledOnUI = false;
 }
 
-}
+} // namespace reanimated
