@@ -671,7 +671,7 @@ declare module 'react-native-reanimated' {
       [key: string]: any;
     }
     export class Keyframe {
-      constructor(definitions: Map<number, KeyframeProps[]>);
+      constructor(definitions: Record<string, KeyframeProps>);
       duration(durationMs: number): Keyframe;
       delay(delayMs: number): Keyframe;
       withCallback(callback: (finished: boolean) => void): Keyframe;
@@ -896,7 +896,6 @@ declare module 'react-native-reanimated' {
       | 'slide-right'
       | 'slide-left';
   }
-
   export class Transition extends Component {
     static In: ComponentClass<TransitionInOutProps>;
     static Out: ComponentClass<TransitionInOutProps>;
@@ -1076,5 +1075,8 @@ declare module 'react-native-reanimated' {
   export const RollInRight: typeof Animated.RollInRight;
   export const RollOutLeft: typeof Animated.RollOutLeft;
   export const RollOutRight: typeof Animated.RollOutRight;
-  export const Keyframe: typeof Keyframe;
+  export const Keyframe: typeof Animated.Keyframe;
+
+  export type EntryExitAnimationFunction = Animated.EntryExitAnimationFunction;
+  export type LayoutAnimationFunction = Animated.LayoutAnimationFunction;
 }

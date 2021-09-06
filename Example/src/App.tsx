@@ -7,8 +7,9 @@ import {
   LogBox,
   Platform,
   UIManager,
+  ScrollView,
 } from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import { RectButton } from 'react-native-gesture-handler';
 import {
   createStackNavigator,
   StackNavigationProp,
@@ -36,6 +37,7 @@ import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+// @ts-ignore JS file
 import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollExample from './AnimatedScrollExample';

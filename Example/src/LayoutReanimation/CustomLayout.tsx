@@ -4,9 +4,10 @@ import Animated, {
   makeMutable,
   withTiming,
   withDelay,
+  LayoutAnimationFunction,
 } from 'react-native-reanimated';
 
-function CustomLayoutTransiton() {
+function CustomLayoutTransiton(): LayoutAnimationFunction {
   const isEven = makeMutable(1);
   return (values) => {
     'worklet';

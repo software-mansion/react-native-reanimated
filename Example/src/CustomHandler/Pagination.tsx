@@ -6,9 +6,12 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-function PaginationElement({ position, slideIndex }: {
-  position: Animated.SharedValue<number>,
-  slideIndex: number
+function PaginationElement({
+  position,
+  slideIndex,
+}: {
+  position: Animated.SharedValue<number>;
+  slideIndex: number;
 }): React.ReactElement {
   const inputRange = [slideIndex - 1, slideIndex, slideIndex + 1];
   const dotAnimatedStyle = useAnimatedStyle(() => {
@@ -16,7 +19,7 @@ function PaginationElement({ position, slideIndex }: {
       position.value,
       inputRange,
       [4, 40, 4],
-      Extrapolate.CLAMP,
+      Extrapolate.CLAMP
     );
 
     return { width };
@@ -26,7 +29,7 @@ function PaginationElement({ position, slideIndex }: {
       position.value,
       inputRange,
       [0.4, 1, 0.4],
-      Extrapolate.CLAMP,
+      Extrapolate.CLAMP
     );
 
     return { opacity };
@@ -40,21 +43,26 @@ function PaginationElement({ position, slideIndex }: {
   );
 }
 
-export function Pagination({ numberOfSlides, position }: {
-  numberOfSlides: number,
-  position: Animated.SharedValue<number>
+export function Pagination({
+  numberOfSlides,
+  position,
+}: {
+  numberOfSlides: number;
+  position: Animated.SharedValue<number>;
 }): React.ReactElement {
   return (
     <View style={styles.pagination}>
-      {Array(numberOfSlides).fill(1).map((_, slideIndex) => {
-        return (
-          <PaginationElement
-            key={slideIndex}
-            position={position}
-            slideIndex={slideIndex}
-          />
-        );
-      })}
+      {Array(numberOfSlides)
+        .fill(1)
+        .map((_, slideIndex) => {
+          return (
+            <PaginationElement
+              key={slideIndex}
+              position={position}
+              slideIndex={slideIndex}
+            />
+          );
+        })}
     </View>
   );
 }
