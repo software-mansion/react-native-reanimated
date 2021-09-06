@@ -18,6 +18,7 @@ export class SlideInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -28,6 +29,7 @@ export class SlideInRight
         initialValues: {
           originX: values.originX + width,
         },
+        callback: callback,
       };
     };
   };
@@ -44,6 +46,7 @@ export class SlideInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -54,6 +57,7 @@ export class SlideInLeft
         initialValues: {
           originX: values.originX - width,
         },
+        callback: callback,
       };
     };
   };
@@ -70,6 +74,7 @@ export class SlideOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -77,12 +82,13 @@ export class SlideOutRight
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.originX + width, config)
+            animation(Math.max(values.originX + width, width), config)
           ),
         },
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -99,6 +105,7 @@ export class SlideOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -106,12 +113,13 @@ export class SlideOutLeft
         animations: {
           originX: delayFunction(
             delay,
-            animation(values.originX - width, config)
+            animation(Math.min(values.originX - width, -width), config)
           ),
         },
         initialValues: {
           originX: values.originX,
         },
+        callback: callback,
       };
     };
   };
@@ -128,6 +136,7 @@ export class SlideInUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -138,6 +147,7 @@ export class SlideInUp
         initialValues: {
           originY: height,
         },
+        callback: callback,
       };
     };
   };
@@ -154,6 +164,7 @@ export class SlideInDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -164,6 +175,7 @@ export class SlideInDown
         initialValues: {
           originY: values.originY - height,
         },
+        callback: callback,
       };
     };
   };
@@ -180,6 +192,7 @@ export class SlideOutUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -187,10 +200,11 @@ export class SlideOutUp
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.originY - height, config)
+            animation(Math.min(values.originY - height, -height), config)
           ),
         },
-        initialValues: {},
+        initialValues: { originY: values.originY },
+        callback: callback,
       };
     };
   };
@@ -207,6 +221,7 @@ export class SlideOutDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
     return (values) => {
       'worklet';
@@ -214,10 +229,11 @@ export class SlideOutDown
         animations: {
           originY: delayFunction(
             delay,
-            animation(values.originY + height, config)
+            animation(Math.max(values.originY + height, height), config)
           ),
         },
-        initialValues: {},
+        initialValues: { originY: values.originY },
+        callback: callback,
       };
     };
   };

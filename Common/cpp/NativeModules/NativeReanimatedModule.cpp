@@ -63,7 +63,7 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
                                                std::shared_ptr<ErrorHandler> errorHandler,
                                                std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                                                std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
-                                               PlatformDepMethodsHolder platformDepMethodsHolder) : 
+                                               PlatformDepMethodsHolder platformDepMethodsHolder) :
                                                   NativeReanimatedModuleSpec(jsInvoker),
                                                   RuntimeManager(rt, errorHandler, scheduler, RuntimeType::UI),
                                                   mapperRegistry(std::make_shared<MapperRegistry>()),
@@ -76,9 +76,9 @@ NativeReanimatedModule::NativeReanimatedModule(std::shared_ptr<CallInvoker> jsIn
     frameCallbacks.push_back(callback);
     maybeRequestRender();
   };
-  
+
   this->layoutAnimationsProxy = layoutAnimationsProxy;
-  
+
   RuntimeDecorator::decorateUIRuntime(*runtime,
                                       platformDepMethodsHolder.updaterFunction,
                                       requestAnimationFrame,
@@ -119,9 +119,7 @@ jsi::Value NativeReanimatedModule::startMapper(
                                                const jsi::Value &inputs,
                                                const jsi::Value &outputs,
                                                const jsi::Value &updater,
-                                               const jsi::Value &tag,
-                                               const jsi::Value &name
-                                               )
+                                               const jsi::Value &viewDescriptors)
 {
   static unsigned long MAPPER_ID = 1;
 
@@ -129,31 +127,29 @@ jsi::Value NativeReanimatedModule::startMapper(
   auto mapperShareable = ShareableValue::adapt(rt, worklet, this);
   auto inputMutables = extractMutablesFromArray(rt, inputs.asObject(rt).asArray(rt), this);
   auto outputMutables = extractMutablesFromArray(rt, outputs.asObject(rt).asArray(rt), this);
-  
+
   int optimalizationLvl = 0;
   auto optimalization = updater.asObject(rt).getProperty(rt, "__optimalization");
   if(optimalization.isNumber()) {
     optimalizationLvl = optimalization.asNumber();
   }
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
-  const int tagInt = tag.asNumber();
-  const std::string nameStr = name.asString(rt).utf8(rt);
+  auto viewDescriptorsSV = ShareableValue::adapt(rt, viewDescriptors, this);
 
   scheduler->scheduleOnUI([=] {
     auto mapperFunction = mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(*runtime);
     std::shared_ptr<jsi::Function> mapperFunctionPointer = std::make_shared<jsi::Function>(std::move(mapperFunction));
-    
+
     std::shared_ptr<Mapper> mapperPointer = std::make_shared<Mapper>(
                                                                      this,
                                                                      newMapperId,
                                                                      mapperFunctionPointer,
                                                                      inputMutables,
-                                                                     outputMutables,
-                                                                     updaterSV,
-                                                                     tagInt,
-                                                                     nameStr,
-                                                                     optimalizationLvl
+                                                                     outputMutables
                                                                      );
+    if(optimalizationLvl > 0) {
+      mapperPointer->enableFastMode(optimalizationLvl, updaterSV, viewDescriptorsSV);
+    }
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
   });
@@ -278,11 +274,6 @@ void NativeReanimatedModule::onRender(double timestampMs)
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
-}
-
-NativeReanimatedModule::~NativeReanimatedModule()
-{
-  StoreUser::clearStore();
 }
 
 } // namespace reanimated

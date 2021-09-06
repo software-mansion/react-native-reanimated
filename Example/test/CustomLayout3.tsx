@@ -1,8 +1,6 @@
-import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   makeMutable,
   withTiming,
   withDelay,
@@ -46,23 +44,22 @@ function Box({ label, state }: { label: string; state: boolean }) {
     <Animated.View
       layout={CustomLayoutTransiton()}
       entering={SlideInDown.delay(delay).duration(3000)}
-      style={[styles.box, { flexDirection: state ? 'row': 'row-reverse' }]}>
+      style={[styles.box, { flexDirection: state ? 'row' : 'row-reverse' }]}>
       <Text> {label} </Text>
     </Animated.View>
   );
 }
 
-export function CustomLayoutAnimationScreen3(): React.ReactElement {
+export default function CustomLayoutAnimationScreen3(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>
       <View style={{ height: 300 }}>
-        <AnimatedLayout
-          style={{ flexDirection: 'row', borderWidth: 1 }}>
+        <View style={{ flexDirection: 'row', borderWidth: 1 }}>
           <Box key="a" label="A" state={state} />
           <Box key="b" label="B" state={state} />
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
 
       <Button
@@ -85,6 +82,3 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
-
-
-

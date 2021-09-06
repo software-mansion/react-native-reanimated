@@ -1,5 +1,5 @@
 import { Dimensions } from 'react-native';
-import { withSequence, withTiming } from '../../animations';
+import { withSequence, withTiming } from '../../animation';
 import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import {
   EntryExitAnimationBuild,
@@ -20,23 +20,24 @@ export class LightSpeedInRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
           opacity: delayFunction(
             delay,
             withTiming(1, { duration: duration * 1.5 })
           ),
           transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
             {
               skewX: delayFunction(
                 delay,
                 withSequence(
                   withTiming('10deg', { duration: duration }),
-                  withTiming('-5deg', { duraiton: duration / 5 }),
+                  withTiming('-5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -44,10 +45,10 @@ export class LightSpeedInRight
           ],
         },
         initialValues: {
-          originX: values.originX + width,
           opacity: 0,
-          transform: [{ skewX: '-45deg' }],
+          transform: [{ translateX: width }, { skewX: '-45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -65,23 +66,26 @@ export class LightSpeedInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
           opacity: delayFunction(
             delay,
             withTiming(1, { duration: duration * 1.5 })
           ),
           transform: [
             {
+              translateX: delayFunction(delay, animation(0, config)),
+            },
+            {
               skewX: delayFunction(
                 delay,
                 withSequence(
                   withTiming('-10deg', { duration: duration }),
-                  withTiming('5deg', { duraiton: duration / 5 }),
+                  withTiming('5deg', { duration: duration / 5 }),
                   withTiming('0deg', { duration: duration / 5 })
                 )
               ),
@@ -89,10 +93,10 @@ export class LightSpeedInLeft
           ],
         },
         initialValues: {
-          originX: values.originX - width,
           opacity: 0,
-          transform: [{ skewX: '45deg' }],
+          transform: [{ translateX: -width }, { skewX: '45deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -109,27 +113,27 @@ export class LightSpeedOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX + width, config)
-          ),
           opacity: delayFunction(delay, animation(0, config)),
           transform: [
+            {
+              translateX: delayFunction(delay, animation(width, config)),
+            },
             {
               skewX: delayFunction(delay, animation('-45deg', config)),
             },
           ],
         },
         initialValues: {
-          originX: values.originX,
           opacity: 1,
-          transform: [{ skewX: '0deg' }],
+          transform: [{ translateX: 0 }, { skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -146,27 +150,27 @@ export class LightSpeedOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX - width, config)
-          ),
           opacity: delayFunction(delay, animation(0, config)),
           transform: [
+            {
+              translateX: delayFunction(delay, animation(-width, config)),
+            },
             {
               skewX: delayFunction(delay, animation('45deg', config)),
             },
           ],
         },
         initialValues: {
-          originX: values.originX,
           opacity: 1,
-          transform: [{ skewX: '0deg' }],
+          transform: [{ translateX: 0 }, { skewX: '0deg' }],
         },
+        callback: callback,
       };
     };
   };

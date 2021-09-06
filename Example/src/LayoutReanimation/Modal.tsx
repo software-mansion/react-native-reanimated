@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, AnimatedLayout, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 function AnimatedView() {
 
@@ -51,16 +51,14 @@ function AnimatedView() {
     }
 
     return (
-        <AnimatedLayout>
-            <Animated.View {...{entering, exiting}} style={[styles.animatedView, style]} >
-                <Text> kk </Text>
-            </Animated.View>
-        </AnimatedLayout>
+        <Animated.View {...{entering, exiting}} style={[styles.animatedView, style]} >
+            <Text> kk </Text>
+        </Animated.View>
     );
 }
 
 export function Modal(): React.ReactElement {
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(true);
     return (
         <View style={{flexDirection: 'column-reverse'}}>
             <Button title="toggle" onPress={() => {setShow((last) => !last)}}/>

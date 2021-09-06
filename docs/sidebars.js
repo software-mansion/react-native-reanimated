@@ -10,6 +10,7 @@ module.exports = {
         'shared-values',
         'animations',
         'events',
+        'custom_events',
         'layout_animations',
         'architecture',
         'migration',
@@ -31,6 +32,8 @@ module.exports = {
             'api/useAnimatedRef',
             'api/useAnimatedReaction',
             'api/useAnimatedProps',
+            'api/useHandler',
+            'api/useEvent',
           ],
           Animations: [
             'api/withTiming',
@@ -46,10 +49,10 @@ module.exports = {
             'api/nativeMethods/scrollTo',
           ],
           'Layout Animations': [
-            'api/LayoutAnimations/animatedLayout',
             'api/LayoutAnimations/customAnimations',
             'api/LayoutAnimations/entryAnimations',
             'api/LayoutAnimations/exitAnimations',
+            'api/LayoutAnimations/keyframeAnimations',
             'api/LayoutAnimations/layoutTransitions',
           ],
           Miscellaneous: ['api/runOnJS'],
@@ -59,7 +62,16 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['testing'],
+      items: ['guide/testing'],
+    },
+    {
+      type: 'category',
+      label: 'Tutorials',
+      items: ['tutorials/LayoutAnimations/layoutAnimations'],
+    },
+    {
+      type: 'doc',
+      id: 'community',
     },
   ],
 };

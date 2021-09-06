@@ -104,6 +104,7 @@ void NativeProxy::installJSIBindings()
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::jsc::makeJSCRuntime();
 #endif
+  runtime_->global().setProperty(*runtime_, "_WORKLET_RUNTIME", static_cast<double>(reinterpret_cast<std::uintptr_t>(animatedRuntime.get())));
 
   std::shared_ptr<ErrorHandler> errorHandler = std::make_shared<AndroidErrorHandler>(scheduler_);
 

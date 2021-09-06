@@ -12,8 +12,11 @@ void Scheduler::scheduleOnJS(std::function<void()> job) {
 }
 
 void Scheduler::triggerUI() {
-  auto job = uiJobs.pop();
-  job();
+  scheduledOnUI = false;
+  while (uiJobs.getSize()) {
+    auto job = uiJobs.pop();
+    job();
+  }
 }
 
 void Scheduler::setJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
@@ -25,5 +28,9 @@ void Scheduler::setRuntimeManager(std::shared_ptr<RuntimeManager> runtimeManager
 }
 
 Scheduler::~Scheduler() {}
+
+Scheduler::Scheduler() {
+  this->scheduledOnUI = false;
+}
 
 }

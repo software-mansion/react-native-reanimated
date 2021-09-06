@@ -67,14 +67,14 @@ def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
 
 buildscript {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
+        classpath('com.android.tools.build:gradle:4.2.1')
         classpath("de.undercouch:gradle-download-task:4.0.4")
     }
 }
@@ -85,21 +85,20 @@ def safeExtGet(prop, fallback) {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'de.undercouch.download'
 
-def CMAKE_TOOLCHAIN_FILE = ""
-if(!System.getenv('IS_TRAVIS')) {
-    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
-}
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+    buildFeatures {
+        prefab true
+    }
+    compileSdkVersion safeExtGet('compileSdkVersion', 30)
+    buildToolsVersion safeExtGet('buildToolsVersion', '30.0.2')
     defaultConfig {
 
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 29)
+        targetSdkVersion safeExtGet('targetSdkVersion', 30)
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -108,7 +107,6 @@ android {
                              "-DNATIVE_DEBUG=${debugNativeLibraries}",
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
-                             "${CMAKE_TOOLCHAIN_FILE}",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
@@ -131,7 +129,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = ["**/libc++_shared.so"]
+        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libc++_shared.so", "**/libfbjni.so"]
     }
 
     tasks.withType(JavaCompile) {
@@ -142,10 +140,6 @@ android {
     configurations {
         extractHeaders
         extractSO
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -221,6 +215,7 @@ task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
 // Prepare glog sources to be compiled, this task will perform steps that normally should've been
 // executed by automake. This way we can avoid dependencies on make/automake
 task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
+    duplicatesStrategy = 'include'
     from(dependenciesPath ?: tarTree(downloadGlog.dest))
     from("$reactNativeThirdParty/glog/")
     include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
@@ -445,6 +440,8 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    jcenter()
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -455,15 +452,15 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    jcenter()
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation 'com.facebook.fbjni:fbjni:0.2.2'
+    implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:0.0.2:headers")
-    extractSO("com.facebook.fbjni:fbjni:0.0.2")
+    extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
+    extractSO("com.facebook.fbjni:fbjni:0.2.2")
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile

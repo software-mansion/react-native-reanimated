@@ -25,7 +25,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec, public Runtime
 {
   friend ShareableValue;
   friend MutableValue;
-  
+
 public:
   NativeReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker,
                          std::shared_ptr<Scheduler> scheduler,
@@ -34,8 +34,6 @@ public:
                          std::function<jsi::Value(jsi::Runtime &, const int, const jsi::String &)> propObtainer,
                          std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
                          PlatformDepMethodsHolder platformDepMethodsHolder);
-
-  virtual ~NativeReanimatedModule();
 
   void installCoreFunctions(jsi::Runtime &rt, const jsi::Value &valueSetter) override;
 
@@ -48,8 +46,7 @@ public:
                          const jsi::Value &inputs,
                          const jsi::Value &outputs,
                          const jsi::Value &updater,
-                         const jsi::Value &tag,
-                         const jsi::Value &name) override;
+                         const jsi::Value &viewDescriptors) override;
   void stopMapper(jsi::Runtime &rt, const jsi::Value &mapperId) override;
 
   jsi::Value registerEventHandler(jsi::Runtime &rt, const jsi::Value &eventHash, const jsi::Value &worklet) override;

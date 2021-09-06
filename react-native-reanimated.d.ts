@@ -222,8 +222,8 @@ declare module 'react-native-reanimated' {
     };
 
     export type LayoutAnimation = {
-      initialValues: StyleProp
-      animations: AnimateStyle
+      initialValues: StyleProps;
+      animations: AnimateStyle;
     };
 
     export type EntryExitAnimationsValues = {
@@ -234,7 +234,9 @@ declare module 'react-native-reanimated' {
       globalOriginX: number;
       globalOriginY: number;
     };
-    export type EntryExitAnimationFunction = (targetValues: EntryExitAnimationsValues) => LayoutAnimation;
+    export type EntryExitAnimationFunction = (
+      targetValues: EntryExitAnimationsValues
+    ) => LayoutAnimation;
 
     export type LayoutAnimationsValues = {
       originX: number;
@@ -250,17 +252,29 @@ declare module 'react-native-reanimated' {
       bglobalOriginX: number;
       bglobalOriginY: number;
     };
-    export type LayoutAnimationFunction = (targetValues: LayoutAnimationsTargetValues) => LayoutAnimation;
+    export type LayoutAnimationFunction = (
+      targetValues: LayoutAnimationsValues
+    ) => LayoutAnimation;
 
     export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
-    } & { 
+    } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?: Layout | LayoutAnimationFunction;
-      entering?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
-      exiting?: BaseAnimationBuilder | ZoomRotateAnimationBuilder | BounceAnimationBuilder | EntryExitAnimationFunction;
+      entering?:
+        | BaseAnimationBuilder
+        | ZoomRotateAnimationBuilder
+        | BounceAnimationBuilder
+        | EntryExitAnimationFunction
+        | Keyframe;
+      exiting?:
+        | BaseAnimationBuilder
+        | ZoomRotateAnimationBuilder
+        | BounceAnimationBuilder
+        | EntryExitAnimationFunction
+        | Keyframe;
     };
 
     type CodeProps = {
@@ -286,7 +300,7 @@ declare module 'react-native-reanimated' {
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
-    }
+    };
     export function createAnimatedComponent<P extends object>(
       component: ComponentClass<P>,
       options?: Options<P>
@@ -549,6 +563,15 @@ declare module 'react-native-reanimated' {
       deps?: DependencyList | null,
       adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
     ): Partial<T>;
+    export function useEvent<T extends {}>(
+      handler: (e: T) => void,
+      eventNames?: string[],
+      rebuild?: boolean
+    ): (e: NativeSyntheticEvent<T>) => void;
+    export function useHandler<T, TContext extends Context = {}>(
+      handlers: Record<string, Handler<T, TContext>>,
+      deps?: DependencyList
+    ): { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
     export function useAnimatedGestureHandler<
       T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
       TContext extends Context = {}
@@ -636,6 +659,23 @@ declare module 'react-native-reanimated' {
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
 
+    export interface StyleProps extends ViewStyle, TextStyle {
+      originX?: number;
+      originY?: number;
+      [key: string]: any;
+    }
+
+    export type EasingFn = (t: number) => number;
+    export interface KeyframeProps extends StyleProps {
+      easing?: EasingFn;
+      [key: string]: any;
+    }
+    export class Keyframe {
+      constructor(definitions: Map<number, KeyframeProps[]>);
+      duration(durationMs: number): Keyframe;
+      delay(delayMs: number): Keyframe;
+      withCallback(callback: (finished: boolean) => void): Keyframe;
+    }
     export class BaseAnimationBuilder {
       static duration(durationMs: number): BaseAnimationBuilder;
       duration(durationMs: number): BaseAnimationBuilder;
@@ -651,108 +691,127 @@ declare module 'react-native-reanimated' {
       mass(mass: number): BaseAnimationBuilder;
       static stiffness(stiffnessFactor: number): BaseAnimationBuilder;
       stiffness(stiffnessFactor: number): BaseAnimationBuilder;
-      static overshootClamping(overshootClampingFactor: number): BaseAnimationBuilder;
+      static overshootClamping(
+        overshootClampingFactor: number
+      ): BaseAnimationBuilder;
       overshootClamping(overshootClampingFactor: number): BaseAnimationBuilder;
-      static restDisplacementThreshold(restDisplacementThresholdFactor: number): BaseAnimationBuilder;
-      restDisplacementThreshold(restDisplacementThresholdFactor: number): BaseAnimationBuilder;
-      static restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
-      restSpeedThreshold(restSpeedThresholdFactor: number): BaseAnimationBuilder;
+      static restDisplacementThreshold(
+        restDisplacementThresholdFactor: number
+      ): BaseAnimationBuilder;
+      restDisplacementThreshold(
+        restDisplacementThresholdFactor: number
+      ): BaseAnimationBuilder;
+      static restSpeedThreshold(
+        restSpeedThresholdFactor: number
+      ): BaseAnimationBuilder;
+      restSpeedThreshold(
+        restSpeedThresholdFactor: number
+      ): BaseAnimationBuilder;
+      static withCallback(
+        callback: (finished: boolean) => void
+      ): BaseAnimationBuilder;
+      withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
     }
 
-    export class Layout extends BaseAnimationBuilder {};
+    export class Layout extends BaseAnimationBuilder {}
 
     export class ZoomRotateAnimationBuilder extends BaseAnimationBuilder {
       static rotate(degree: number | string): BaseAnimationBuilder;
       rotate(degree: number | string): BaseAnimationBuilder;
-    };
+    }
 
     export class BounceAnimationBuilder {
       static duration(durationMs: number): BounceAnimationBuilder;
       duration(durationMs: number): BounceAnimationBuilder;
       static delay(durationMs: number): BounceAnimationBuilder;
       delay(durationMs: number): BounceAnimationBuilder;
-    };
-    
-    export interface AnimatedLayout extends React.Component {};
+      static withCallback(
+        callback: (finished: boolean) => void
+      ): BounceAnimationBuilder;
 
-    export class SlideInRight extends BaseAnimationBuilder {};
-    export class SlideOutRight extends BaseAnimationBuilder {}; 
-    export class SlideInUp extends BaseAnimationBuilder {};
-    export class SlideInDown extends BaseAnimationBuilder {};
-    export class SlideOutUp extends BaseAnimationBuilder {};
-    export class SlideOutDown extends BaseAnimationBuilder {};
-    export class FadeIn extends BaseAnimationBuilder {};
-    export class FadeInRight extends BaseAnimationBuilder {}; 
-    export class FadeInLeft extends BaseAnimationBuilder {};
-    export class FadeInUp extends BaseAnimationBuilder {};
-    export class FadeInDown extends BaseAnimationBuilder {};
-    export class FadeOut extends BaseAnimationBuilder {};
-    export class FadeOutRight extends BaseAnimationBuilder {}; 
-    export class FadeOutLeft extends BaseAnimationBuilder {};
-    export class FadeOutUp extends BaseAnimationBuilder {};
-    export class FadeOutDown extends BaseAnimationBuilder {};
-    export class SlideOutLeft extends BaseAnimationBuilder {};
-    export class SlideInLeft extends BaseAnimationBuilder {};
-    export class ZoomIn extends BaseAnimationBuilder {};
-    export class ZoomInRotate extends ZoomRotateAnimationBuilder {}; 
-    export class ZoomInRight extends BaseAnimationBuilder {};
-    export class ZoomInLeft extends BaseAnimationBuilder {};
-    export class ZoomInUp extends BaseAnimationBuilder {};
-    export class ZoomInDown extends BaseAnimationBuilder {};
-    export class ZoomInEasyUp extends BaseAnimationBuilder {};
-    export class ZoomInEasyDown extends BaseAnimationBuilder {};
-    export class ZoomOut extends BaseAnimationBuilder {};
-    export class ZoomOutRotate extends ZoomRotateAnimationBuilder {}; 
-    export class ZoomOutRight extends BaseAnimationBuilder {};
-    export class ZoomOutLeft extends BaseAnimationBuilder {};
-    export class ZoomOutUp extends BaseAnimationBuilder {};
-    export class ZoomOutDown extends BaseAnimationBuilder {};
-    export class ZoomOutEasyUp extends BaseAnimationBuilder {};
-    export class ZoomOutEasyDown extends BaseAnimationBuilder {};
-    export class StretchInX extends BaseAnimationBuilder {};
-    export class StretchInY extends BaseAnimationBuilder {};
-    export class StretchOutX extends BaseAnimationBuilder {};
-    export class StretchOutY extends BaseAnimationBuilder {};
-    export class FlipInXUp extends BaseAnimationBuilder {};
-    export class FlipInYLeft extends BaseAnimationBuilder {};
-    export class FlipInXDown extends BaseAnimationBuilder {};
-    export class FlipInYRight extends BaseAnimationBuilder {};
-    export class FlipInEasyX extends BaseAnimationBuilder {};
-    export class FlipInEasyY extends BaseAnimationBuilder {};
-    export class FlipOutXUp extends BaseAnimationBuilder {};
-    export class FlipOutYLeft extends BaseAnimationBuilder {};
-    export class FlipOutXDown extends BaseAnimationBuilder {};
-    export class FlipOutYRight extends BaseAnimationBuilder {};
-    export class FlipOutEasyX extends BaseAnimationBuilder {};
-    export class FlipOutEasyY extends BaseAnimationBuilder {};
-    export class BounceIn extends BounceAnimationBuilder {};
-    export class BounceInDown extends BounceAnimationBuilder {};
-    export class BounceInUp extends BounceAnimationBuilder {};
-    export class BounceInLeft extends BounceAnimationBuilder {};
-    export class BounceInRight extends BounceAnimationBuilder {};
-    export class BounceOut extends BounceAnimationBuilder {};
-    export class BounceOutDown extends BounceAnimationBuilder {};
-    export class BounceOutUp extends BounceAnimationBuilder {};
-    export class BounceOutLeft extends BounceAnimationBuilder {};
-    export class BounceOutRight extends BounceAnimationBuilder {};
-    export class LightSpeedInRight extends BaseAnimationBuilder {};
-    export class LightSpeedInLeft extends BaseAnimationBuilder {};
-    export class LightSpeedOutRight extends BaseAnimationBuilder {};
-    export class LightSpeedOutLeft extends BaseAnimationBuilder {};
-    export class PinwheelIn extends BaseAnimationBuilder {};
-    export class PinwheelOut extends BaseAnimationBuilder {};
-    export class RotateInDownLeft extends BaseAnimationBuilder {};
-    export class RotateInDownRight extends BaseAnimationBuilder {};
-    export class RotateInUpRight extends BaseAnimationBuilder {};
-    export class RotateInUpLeft extends BaseAnimationBuilder {};
-    export class RotateOutDownRight extends BaseAnimationBuilder {};
-    export class RotateOutDownLeft extends BaseAnimationBuilder {};
-    export class RotateOutUpLeft extends BaseAnimationBuilder {};
-    export class RotateOutUpRight extends BaseAnimationBuilder {};
-    export class RollInleft extends BaseAnimationBuilder {};
-    export class RollInRight extends BaseAnimationBuilder {};
-    export class RollOutLeft extends BaseAnimationBuilder {};
-    export class RollOutRight extends BaseAnimationBuilder {};
+      withCallback(
+        callback: (finished: boolean) => void
+      ): BounceAnimationBuilder;
+    }
+
+    export class SlideInRight extends BaseAnimationBuilder {}
+    export class SlideOutRight extends BaseAnimationBuilder {}
+    export class SlideInUp extends BaseAnimationBuilder {}
+    export class SlideInDown extends BaseAnimationBuilder {}
+    export class SlideOutUp extends BaseAnimationBuilder {}
+    export class SlideOutDown extends BaseAnimationBuilder {}
+    export class FadeIn extends BaseAnimationBuilder {}
+    export class FadeInRight extends BaseAnimationBuilder {}
+    export class FadeInLeft extends BaseAnimationBuilder {}
+    export class FadeInUp extends BaseAnimationBuilder {}
+    export class FadeInDown extends BaseAnimationBuilder {}
+    export class FadeOut extends BaseAnimationBuilder {}
+    export class FadeOutRight extends BaseAnimationBuilder {}
+    export class FadeOutLeft extends BaseAnimationBuilder {}
+    export class FadeOutUp extends BaseAnimationBuilder {}
+    export class FadeOutDown extends BaseAnimationBuilder {}
+    export class SlideOutLeft extends BaseAnimationBuilder {}
+    export class SlideInLeft extends BaseAnimationBuilder {}
+    export class ZoomIn extends BaseAnimationBuilder {}
+    export class ZoomInRotate extends ZoomRotateAnimationBuilder {}
+    export class ZoomInRight extends BaseAnimationBuilder {}
+    export class ZoomInLeft extends BaseAnimationBuilder {}
+    export class ZoomInUp extends BaseAnimationBuilder {}
+    export class ZoomInDown extends BaseAnimationBuilder {}
+    export class ZoomInEasyUp extends BaseAnimationBuilder {}
+    export class ZoomInEasyDown extends BaseAnimationBuilder {}
+    export class ZoomOut extends BaseAnimationBuilder {}
+    export class ZoomOutRotate extends ZoomRotateAnimationBuilder {}
+    export class ZoomOutRight extends BaseAnimationBuilder {}
+    export class ZoomOutLeft extends BaseAnimationBuilder {}
+    export class ZoomOutUp extends BaseAnimationBuilder {}
+    export class ZoomOutDown extends BaseAnimationBuilder {}
+    export class ZoomOutEasyUp extends BaseAnimationBuilder {}
+    export class ZoomOutEasyDown extends BaseAnimationBuilder {}
+    export class StretchInX extends BaseAnimationBuilder {}
+    export class StretchInY extends BaseAnimationBuilder {}
+    export class StretchOutX extends BaseAnimationBuilder {}
+    export class StretchOutY extends BaseAnimationBuilder {}
+    export class FlipInXUp extends BaseAnimationBuilder {}
+    export class FlipInYLeft extends BaseAnimationBuilder {}
+    export class FlipInXDown extends BaseAnimationBuilder {}
+    export class FlipInYRight extends BaseAnimationBuilder {}
+    export class FlipInEasyX extends BaseAnimationBuilder {}
+    export class FlipInEasyY extends BaseAnimationBuilder {}
+    export class FlipOutXUp extends BaseAnimationBuilder {}
+    export class FlipOutYLeft extends BaseAnimationBuilder {}
+    export class FlipOutXDown extends BaseAnimationBuilder {}
+    export class FlipOutYRight extends BaseAnimationBuilder {}
+    export class FlipOutEasyX extends BaseAnimationBuilder {}
+    export class FlipOutEasyY extends BaseAnimationBuilder {}
+    export class BounceIn extends BounceAnimationBuilder {}
+    export class BounceInDown extends BounceAnimationBuilder {}
+    export class BounceInUp extends BounceAnimationBuilder {}
+    export class BounceInLeft extends BounceAnimationBuilder {}
+    export class BounceInRight extends BounceAnimationBuilder {}
+    export class BounceOut extends BounceAnimationBuilder {}
+    export class BounceOutDown extends BounceAnimationBuilder {}
+    export class BounceOutUp extends BounceAnimationBuilder {}
+    export class BounceOutLeft extends BounceAnimationBuilder {}
+    export class BounceOutRight extends BounceAnimationBuilder {}
+    export class LightSpeedInRight extends BaseAnimationBuilder {}
+    export class LightSpeedInLeft extends BaseAnimationBuilder {}
+    export class LightSpeedOutRight extends BaseAnimationBuilder {}
+    export class LightSpeedOutLeft extends BaseAnimationBuilder {}
+    export class PinwheelIn extends BaseAnimationBuilder {}
+    export class PinwheelOut extends BaseAnimationBuilder {}
+    export class RotateInDownLeft extends BaseAnimationBuilder {}
+    export class RotateInDownRight extends BaseAnimationBuilder {}
+    export class RotateInUpRight extends BaseAnimationBuilder {}
+    export class RotateInUpLeft extends BaseAnimationBuilder {}
+    export class RotateOutDownRight extends BaseAnimationBuilder {}
+    export class RotateOutDownLeft extends BaseAnimationBuilder {}
+    export class RotateOutUpLeft extends BaseAnimationBuilder {}
+    export class RotateOutUpRight extends BaseAnimationBuilder {}
+    export class RollInleft extends BaseAnimationBuilder {}
+    export class RollInRight extends BaseAnimationBuilder {}
+    export class RollOutLeft extends BaseAnimationBuilder {}
+    export class RollOutRight extends BaseAnimationBuilder {}
   }
 
   export default Animated;
@@ -920,6 +979,8 @@ declare module 'react-native-reanimated' {
   export const useWorkletCallback: typeof Animated.useWorkletCallback;
   export const createWorklet: typeof Animated.createWorklet;
   export const interpolateColor: typeof Animated.interpolateColor;
+  export const useEvent: typeof Animated.useEvent;
+  export const useHandler: typeof Animated.useHandler;
   export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
   export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
@@ -936,7 +997,6 @@ declare module 'react-native-reanimated' {
   export const interpolate: typeof Animated.interpolate;
 
   export const Layout: typeof Animated.Layout;
-  export const AnimatedLayout: typeof Animated.AnimatedLayout;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
@@ -1016,4 +1076,5 @@ declare module 'react-native-reanimated' {
   export const RollInRight: typeof Animated.RollInRight;
   export const RollOutLeft: typeof Animated.RollOutLeft;
   export const RollOutRight: typeof Animated.RollOutRight;
+  export const Keyframe: typeof Keyframe;
 }

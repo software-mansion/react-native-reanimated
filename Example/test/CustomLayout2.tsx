@@ -1,8 +1,6 @@
-import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   makeMutable,
   withTiming,
   withDelay,
@@ -52,17 +50,21 @@ function Box({ label, state }: { label: string; state: boolean }) {
   );
 }
 
-export function CustomLayoutAnimationScreen2(): React.ReactElement {
+export default function CustomLayoutAnimationScreen2(): React.ReactElement {
   const [state, setState] = useState(true);
   return (
     <View style={{ marginTop: 30 }}>
-      <View style={{ height: 300 }}>
-        <AnimatedLayout
-          style={{ flexDirection: state ? 'row' : 'column', borderWidth: 1 }}>
+      <View style={{ height: 300, borderWidth: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: state ? 'row' : 'column',
+            borderWidth: 1,
+          }}>
           <Box key="a" label="A" state={state} />
           <Box key="b" label="B" state={state} />
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
 
       <Button
@@ -85,6 +87,3 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
-
-
-

@@ -3,7 +3,7 @@ import {
   EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
 import { BaseBounceAnimationBuilder } from '../animationBuilder/BaseBounceAnimationBuilder';
-import { withSequence, withTiming } from '../../animations';
+import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -19,6 +19,7 @@ export class BounceIn
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -41,6 +42,7 @@ export class BounceIn
         initialValues: {
           transform: [{ scale: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -57,8 +59,9 @@ export class BounceInDown
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -70,7 +73,7 @@ export class BounceInDown
                   withTiming(-20, { duration: duration }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(5, { duration: (duration * 100) / 250 })
+                  withTiming(0, { duration: (duration * 100) / 250 })
                 )
               ),
             },
@@ -79,10 +82,11 @@ export class BounceInDown
         initialValues: {
           transform: [
             {
-              translateY: targetValues.originY + height,
+              translateY: height,
             },
           ],
         },
+        callback: callback,
       };
     };
   };
@@ -99,8 +103,9 @@ export class BounceInUp
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -119,8 +124,9 @@ export class BounceInUp
           ],
         },
         initialValues: {
-          transform: [{ translateY: targetValues.originY - height }],
+          transform: [{ translateY: -height }],
         },
+        callback: callback,
       };
     };
   };
@@ -137,8 +143,9 @@ export class BounceInLeft
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -157,8 +164,9 @@ export class BounceInLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: targetValues.originX - width }],
+          transform: [{ translateX: -width }],
         },
+        callback: callback,
       };
     };
   };
@@ -175,8 +183,9 @@ export class BounceInRight
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -195,8 +204,9 @@ export class BounceInRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: targetValues.originX + width }],
+          transform: [{ translateX: width }],
         },
+        callback: callback,
       };
     };
   };
@@ -213,6 +223,7 @@ export class BounceOut
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
     return () => {
       'worklet';
@@ -235,6 +246,7 @@ export class BounceOut
         initialValues: {
           transform: [{ scale: 1 }],
         },
+        callback: callback,
       };
     };
   };
@@ -251,8 +263,9 @@ export class BounceOutDown
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -264,7 +277,7 @@ export class BounceOutDown
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originY + height, {
+                  withTiming(height, {
                     duration: duration,
                   })
                 )
@@ -273,8 +286,9 @@ export class BounceOutDown
           ],
         },
         initialValues: {
-          originY: 0,
+          transform: [{ translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -291,8 +305,9 @@ export class BounceOutUp
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -304,7 +319,7 @@ export class BounceOutUp
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originY - height, {
+                  withTiming(-height, {
                     duration: duration,
                   })
                 )
@@ -315,6 +330,7 @@ export class BounceOutUp
         initialValues: {
           transform: [{ translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -331,8 +347,9 @@ export class BounceOutLeft
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -344,7 +361,7 @@ export class BounceOutLeft
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originX - width, {
+                  withTiming(-width, {
                     duration: duration,
                   })
                 )
@@ -355,6 +372,7 @@ export class BounceOutLeft
         initialValues: {
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -371,8 +389,9 @@ export class BounceOutRight
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
+    const callback = this.callbackV;
 
-    return (targetValues) => {
+    return () => {
       'worklet';
       return {
         animations: {
@@ -384,7 +403,7 @@ export class BounceOutRight
                   withTiming(-10, { duration: (duration * 100) / 250 }),
                   withTiming(10, { duration: (duration * 100) / 250 }),
                   withTiming(-20, { duration: (duration * 100) / 250 }),
-                  withTiming(targetValues.originX + width, {
+                  withTiming(width, {
                     duration: duration,
                   })
                 )
@@ -395,6 +414,7 @@ export class BounceOutRight
         initialValues: {
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };

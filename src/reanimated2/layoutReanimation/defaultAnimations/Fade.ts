@@ -14,6 +14,7 @@ export class FadeIn
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return (_) => {
@@ -25,6 +26,7 @@ export class FadeIn
         initialValues: {
           opacity: 0,
         },
+        callback: callback,
       };
     };
   };
@@ -40,6 +42,7 @@ export class FadeInRight
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -55,6 +58,7 @@ export class FadeInRight
           opacity: 0,
           transform: [{ translateX: 25 }],
         },
+        callback: callback,
       };
     };
   };
@@ -70,6 +74,7 @@ export class FadeInLeft
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -85,6 +90,7 @@ export class FadeInLeft
           opacity: 0,
           transform: [{ translateX: -25 }],
         },
+        callback: callback,
       };
     };
   };
@@ -100,6 +106,7 @@ export class FadeInUp
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -115,6 +122,7 @@ export class FadeInUp
           opacity: 0,
           transform: [{ translateY: -25 }],
         },
+        callback: callback,
       };
     };
   };
@@ -130,6 +138,7 @@ export class FadeInDown
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -145,6 +154,7 @@ export class FadeInDown
           opacity: 0,
           transform: [{ translateY: 25 }],
         },
+        callback: callback,
       };
     };
   };
@@ -160,6 +170,7 @@ export class FadeOut
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return (_) => {
@@ -171,6 +182,7 @@ export class FadeOut
         initialValues: {
           opacity: 1,
         },
+        callback: callback,
       };
     };
   };
@@ -186,6 +198,7 @@ export class FadeOutRight
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -201,6 +214,7 @@ export class FadeOutRight
           opacity: 1,
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -216,6 +230,7 @@ export class FadeOutLeft
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -231,6 +246,7 @@ export class FadeOutLeft
           opacity: 1,
           transform: [{ translateX: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -246,6 +262,7 @@ export class FadeOutUp
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -261,6 +278,7 @@ export class FadeOutUp
           opacity: 1,
           transform: [{ translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };
@@ -276,6 +294,7 @@ export class FadeOutDown
   build: EntryExitAnimationBuild = () => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
+    const callback = this.callbackV;
     const delay = this.delayV;
 
     return () => {
@@ -291,6 +310,7 @@ export class FadeOutDown
           opacity: 1,
           transform: [{ translateY: 0 }],
         },
+        callback: callback,
       };
     };
   };

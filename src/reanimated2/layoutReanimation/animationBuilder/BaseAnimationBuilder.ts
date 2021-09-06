@@ -1,13 +1,12 @@
-import { withDelay, withTiming, withSpring } from '../../animations';
+import { withDelay, withTiming, withSpring } from '../../animation';
 import {
   EntryExitAnimationFunction,
   AnimationFunction,
   BaseBuilderAnimationConfig,
-  LayoutAnimationAndConfig,
   EntryExitAnimationBuild,
+  LayoutAnimationAndConfig,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
-
 export class BaseAnimationBuilder {
   durationV?: number;
   easingV?: EasingFn;
@@ -20,6 +19,7 @@ export class BaseAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
+  callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
   build: EntryExitAnimationBuild = () => {
@@ -137,6 +137,18 @@ export class BaseAnimationBuilder {
 
   restSpeedThreshold(restSpeedThreshold: number): BaseAnimationBuilder {
     this.restSpeedThresholdV = restSpeedThreshold;
+    return this;
+  }
+
+  static withCallback(
+    callback: (finished: boolean) => void
+  ): BaseAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.withCallback(callback);
+  }
+
+  withCallback(callback: (finsihed: boolean) => void): BaseAnimationBuilder {
+    this.callbackV = callback;
     return this;
   }
 

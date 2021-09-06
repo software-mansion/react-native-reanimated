@@ -1,3 +1,3 @@
-export * from './AnimatedRoot';
+import './LayoutAnimationRepository';
 export * from './animationBuilder';
 export * from './defaultAnimations';

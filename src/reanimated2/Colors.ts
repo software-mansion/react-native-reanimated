@@ -37,18 +37,18 @@ function call(...args: unknown[]): string {
 // matchers use RegExp objects which needs to be created separately on JS and on
 // the UI thread. We keep separate cache of Regexes for UI and JS using the below
 // objects, then pick the right cache in getMatchers() method.
-const jsCachedMatchers = {};
-const uiCachedMatchers = !isConfigured() ? null : makeRemote({});
+const jsCachedMatchers: Matchers = {};
+const uiCachedMatchers: Matchers = !isConfigured() ? {} : makeRemote({});
 type Matchers = {
-  rgb: RegExp;
-  rgba: RegExp;
-  hsl: RegExp;
-  hsla: RegExp;
-  hex3: RegExp;
-  hex4: RegExp;
-  hex5: RegExp;
-  hex6: RegExp;
-  hex8: RegExp;
+  rgb?: RegExp;
+  rgba?: RegExp;
+  hsl?: RegExp;
+  hsla?: RegExp;
+  hex3?: RegExp;
+  hex4?: RegExp;
+  hex5?: RegExp;
+  hex6?: RegExp;
+  hex8?: RegExp;
 };
 function getMatchers(): Matchers {
   'worklet';
@@ -329,10 +329,10 @@ function normalizeColor(color: unknown): number | null {
 
   const matchers = getMatchers();
 
-  let match: RegExpExecArray | null;
+  let match: RegExpExecArray | null | undefined;
 
   // Ordered based on occurrences on Facebook codebase
-  if ((match = matchers.hex6.exec(color))) {
+  if ((match = matchers?.hex6?.exec(color))) {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
@@ -340,7 +340,7 @@ function normalizeColor(color: unknown): number | null {
     return names[color];
   }
 
-  if ((match = matchers.rgb.exec(color))) {
+  if ((match = matchers?.rgb?.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -351,7 +351,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers.rgba.exec(color))) {
+  if ((match = matchers?.rgba?.exec(color))) {
     return (
       // b
       ((parse255(match[1]) << 24) | // r
@@ -362,7 +362,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers.hex3.exec(color))) {
+  if ((match = matchers?.hex3?.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -378,11 +378,11 @@ function normalizeColor(color: unknown): number | null {
   }
 
   // https://drafts.csswg.org/css-color-4/#hex-notation
-  if ((match = matchers.hex8.exec(color))) {
+  if ((match = matchers?.hex8?.exec(color))) {
     return Number.parseInt(match[1], 16) >>> 0;
   }
 
-  if ((match = matchers.hex4.exec(color))) {
+  if ((match = matchers?.hex4?.exec(color))) {
     return (
       Number.parseInt(
         match[1] +
@@ -398,7 +398,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers.hsl.exec(color))) {
+  if ((match = matchers?.hsl?.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -410,7 +410,7 @@ function normalizeColor(color: unknown): number | null {
     );
   }
 
-  if ((match = matchers.hsla.exec(color))) {
+  if ((match = matchers?.hsla?.exec(color))) {
     return (
       (hslToRgb(
         parse360(match[1]), // h
@@ -634,9 +634,9 @@ export function processColor(color: unknown): number | null | undefined {
   return normalizedColor;
 }
 
-export function convertToHSVA(
-  color: unknown
-): [number, number, number, number] {
+export type ParsedColorArray = [number, number, number, number];
+
+export function convertToHSVA(color: unknown): ParsedColorArray {
   'worklet';
   const processedColor = processColorInitially(color)!; // argb;
   const a = (processedColor >>> 24) / 255;
@@ -647,7 +647,7 @@ export function convertToHSVA(
   return [h, s, v, a];
 }
 
-export function toRGBA(HSVA: [number, number, number, number]): string {
+export function toRGBA(HSVA: ParsedColorArray): string {
   'worklet';
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
@@ -707,7 +707,8 @@ const getInterpolateCacheRGBA = (
   for (let i = 0; i < colors.length; ++i) {
     const color = colors[i];
     const proocessedColor = processColor(color);
-    if (proocessedColor) {
+    // explicit check in case if processedColor is 0
+    if (proocessedColor !== null && proocessedColor !== undefined) {
       r.push(red(proocessedColor));
       g.push(green(proocessedColor));
       b.push(blue(proocessedColor));

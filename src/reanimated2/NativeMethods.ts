@@ -2,6 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { findNodeHandle } from 'react-native';
+import { isChromeDebugger } from './PlatformChecker';
 
 export function getTag(view) {
   return findNodeHandle(view);
@@ -18,7 +19,7 @@ export function getTag(view) {
  */
 export function measure(animatedRef) {
   'worklet';
-  if (!_WORKLET) {
+  if (!_WORKLET && !isChromeDebugger()) {
     throw new Error('(measure) method cannot be used on RN side!');
   }
   const viewTag = animatedRef();
@@ -31,7 +32,7 @@ export function measure(animatedRef) {
 
 export function scrollTo(animatedRef, x, y, animated) {
   'worklet';
-  if (!_WORKLET) {
+  if (!_WORKLET && !isChromeDebugger()) {
     return;
   }
   const viewTag = animatedRef();

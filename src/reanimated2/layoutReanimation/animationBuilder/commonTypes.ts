@@ -1,14 +1,15 @@
-import { ViewStyle, TextStyle } from 'react-native';
 import { EasingFn } from '../../Easing';
+import { StyleProps } from '../../commonTypes';
 
-export type StyleProps =
-  | ViewStyle
-  | TextStyle
-  | { originX?: number; originY?: number };
+export interface KeyframeProps extends StyleProps {
+  easing?: EasingFn;
+  [key: string]: any;
+}
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
+  callback?: (finished: boolean) => void;
 };
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock

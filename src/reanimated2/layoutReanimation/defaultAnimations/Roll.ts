@@ -18,20 +18,21 @@ export class RollInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
           transform: [
+            { translateX: delayFunction(delay, animation(0), config) },
             { rotate: delayFunction(delay, animation('0deg', config)) },
           ],
         },
         initialValues: {
-          originX: values.originX - width,
-          transform: [{ rotate: '-180deg' }],
+          transform: [{ translateX: -width }, { rotate: '-180deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -48,20 +49,21 @@ export class RollInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
           transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
             { rotate: delayFunction(delay, animation('0deg', config)) },
           ],
         },
         initialValues: {
-          originX: values.originX + width,
-          transform: [{ rotate: '180deg' }],
+          transform: [{ translateX: width }, { rotate: '180deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -78,23 +80,21 @@ export class RollOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX - width, config)
-          ),
           transform: [
+            { translateX: delayFunction(delay, animation(-width, config)) },
             { rotate: delayFunction(delay, animation('-180deg', config)) },
           ],
         },
         initialValues: {
-          originX: values.originX,
-          transform: [{ rotate: '0deg' }],
+          transform: [{ translateX: 0 }, { rotate: '0deg' }],
         },
+        callback: callback,
       };
     };
   };
@@ -111,23 +111,21 @@ export class RollOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
+    const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.originX + width, config)
-          ),
           transform: [
+            { translateX: delayFunction(delay, animation(width, config)) },
             { rotate: delayFunction(delay, animation('180deg', config)) },
           ],
         },
         initialValues: {
-          originX: values.originX,
-          transform: [{ rotate: '0deg' }],
+          transform: [{ translateX: 0 }, { rotate: '0deg' }],
         },
+        callback: callback,
       };
     };
   };

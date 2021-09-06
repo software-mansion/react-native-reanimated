@@ -34,6 +34,15 @@ const globals = new Set([
   'Date',
   'Array',
   'ArrayBuffer',
+  'Int8Array',
+  'Int16Array',
+  'Int32Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Uint16Array',
+  'Uint32Array',
+  'Float32Array',
+  'Float64Array',
   'Date',
   'HermesInternal',
   'JSON',
@@ -121,6 +130,7 @@ const blacklistedFunctions = new Set([
   'apply',
   'call',
   '__callAsync',
+  'includes',
 ]);
 
 const possibleOptFunction = new Set(['interpolate']);
@@ -275,7 +285,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName, options = {}) {
+function processWorkletFunction(t, fun, fileName) {
   if (!t.isFunctionParent(fun)) {
     return;
   }
@@ -284,6 +294,7 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
   const closure = new Map();
   const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
+  const options = {};
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -302,7 +313,13 @@ function processWorkletFunction(t, fun, fileName, options = {}) {
     babelrc: false,
     configFile: false,
   });
-
+  if (
+    fun.parent &&
+    fun.parent.callee &&
+    fun.parent.callee.name === 'useAnimatedStyle'
+  ) {
+    options.optFlags = isPossibleOptimization(transformed.ast);
+  }
   traverse(transformed.ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name;
@@ -498,12 +515,7 @@ function processIfWorkletNode(t, fun, fileName) {
               directive.value.value === 'worklet'
           )
         ) {
-          const flags = isPossibleOptimization(fun);
-          if (flags) {
-            processWorkletFunction(t, fun, fileName, { optFlags: flags });
-          } else {
-            processWorkletFunction(t, fun, fileName);
-          }
+          processWorkletFunction(t, fun, fileName);
         }
       }
     },
@@ -547,7 +559,7 @@ const STATEMENTLESS_FLAG = 0b00000010;
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
   let isSteatements = false;
-  fun.scope.path.traverse({
+  traverse(fun, {
     CallExpression(path) {
       if (!possibleOptFunction.has(path.node.callee.name)) {
         isFunctionCall = true;
