@@ -26,12 +26,12 @@ An array of Floats that contains points that indicate the range of the output va
 
 #### `extrapolation type` [Object | String]
 
-Can be either object or string. If the object is passed it should specify extrapolation explicit for the right and left sides. If extrapolation for the side is not provided, it defaults to `Extrapolate.EXTEND`. Example extrapolation type object:
+Can be either object or string. If the object is passed it should specify extrapolation explicit for the right and left sides. If extrapolation for the side is not provided, it defaults to `Extrapolation.EXTEND`. Example extrapolation type object:
 
 ```js
 const extrapolation = {
-    extrapolateLeft: Extrapolate.CLAMP,
-    extrapolateRight: Extrapolate.IDENTITYY
+    extrapolateLeft: Extrapolation.CLAMP,
+    extrapolateRight: Extrapolation.IDENTITYY
 }
 ```
 
@@ -39,9 +39,9 @@ If the string is provided, the provided extrapolation type is applied to both si
 
 :::info
 Available extrapolation types:
-* `Extrapolate.CLAMP` - clamps value to the edge of the output range.
-* `Extrapolate.IDENTITY` - returns value that is being interpolate
-* `Extrapolate.EXTEND` - approximates value even outside the range
+* `Extrapolation.CLAMP` - clamps value to the edge of the output range.
+* `Extrapolation.IDENTITY` - returns value that is being interpolate
+* `Extrapolation.EXTEND` - approximates value even outside the range
 
 Available extrapolation string values:
 * `clamp`

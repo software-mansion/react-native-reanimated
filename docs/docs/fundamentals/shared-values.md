@@ -90,7 +90,7 @@ The reactiveness layer has been designed to be fully transparent from the develo
 It is based on the concept of Shared Values being captured by reactive worklets (called internally "mapper worklets").
 
 Currently, there are two ways how you can create a reactive worklet.
-This can be done either by using [`useAnimatedStyle`](api/useAnimatedStyle) or [`useDerivedValue`](api/useDerivedValue) hooks.
+This can be done either by using [`useAnimatedStyle`](../api/hooks/useAnimatedStyle) or [`useDerivedValue`](../api/hooks/useDerivedValue) hooks.
 When a Shared Value is captured by a worklet provided to these hooks, the worklet will re-run upon the Shared Value change.
 Under the hood, Reanimated engine builds a graph of dependencies between Shared Values and reactive worklets that allows us to only execute the code that needs to update and to make sure updates are done in the correct order.
 For example, when we have a Shared Value `x`, a derived value `y` that uses `x`, and an animated style that uses both `x` and `y`, we only re-run the derived value worklet when `x` updates.
@@ -138,7 +138,7 @@ This is what you will observe:
 
 Animations in Reanimated 2 are first-class citizens, and the library comes bundled with a number of utility methods that help you run and customize animations (refer to the section about [animations](animations) to learn about the APIs in Reanimated 2 for controlling animations).
 One of the ways for animation to be launched is by starting an animated transition of a Shared Value.
-This can be done by wrapping target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring)):
+This can be done by wrapping target value with one of the animation utility methods from reanimated library (e.g. [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring)):
 
 ```js
 import { withTiming } from 'react-native-reanimated';
@@ -182,7 +182,7 @@ As a result, the updates to the view's translation will be smooth:
 
 ![](/docs/shared-values/sv-spring.gif)
 
-If you want to learn how to customize animations or get notified when the animation is finished check the API of animation method you want to use, e.g., [`withTiming`](api/withTiming) or [`withSpring`](api/withSpring).
+If you want to learn how to customize animations or get notified when the animation is finished check the API of animation method you want to use, e.g., [`withTiming`](../api/animations/withTiming) or [`withSpring`](../api/animations/withSpring).
 
 ### Animation progress
 
@@ -206,7 +206,7 @@ This behavior is demonstrated on the clip below where we just do more frequent t
 ### Cancelling animations
 
 There are cases in which we want to stop the currently running animation without starting a new one.
-In reanimated, this can be done using [`cancelAnimation`](api/cancelAnimation) method:
+In reanimated, this can be done using [`cancelAnimation`](../api/animations/cancelAnimation) method:
 
 ```js
 import { cancelAnimation } from 'react-native-reanimated';

@@ -25,7 +25,7 @@ new Promise((resolve, reject) => {
 
 #### animatedRef
 
-The product of [`useAnimatedRef`](../useAnimatedRef) which is a Reanimated's extension of a standard React's ref(delivers view tag on the UI thread).
+The product of [`useAnimatedRef`](../hooks/useAnimatedRef) which is a Reanimated's extension of a standard React's ref(delivers view tag on the UI thread).
 
 ### Returns
 
