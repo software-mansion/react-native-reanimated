@@ -113,7 +113,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <View collapsable={false} style={{flex:1}}>
+      <View collapsable={false} style={{ flex: 1 }}>
         <Stack.Navigator detachInactiveScreens={false}>
           <Stack.Screen
             name="Home"
