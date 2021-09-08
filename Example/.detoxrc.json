@@ -6,12 +6,13 @@
     "ios": {
       "type": "ios.app",
       "binaryPath": "./ios/build/Build/Products/Debug-iphonesimulator/ReanimatedExample.app",
-      "build": "export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -project ios/example.xcodeproj -UseNewBuildSystem=NO -scheme example -configuration Release -sdk iphonesimulator -derivedDataPath ios/build -quiet"
+      "build": "export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -project ios/ReanimatedExample.xcodeproj -UseNewBuildSystem=NO -scheme ReanimatedExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build -quiet"
     },
     "android": {
       "type": "android.apk",
-      "binaryPath": "./android/app/build/outputs/apk/release/app-release.apk",
-      "build": "cd android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release && cd .."
+      "testBinaryPath": "./android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      "binaryPath": "./android/app/build/outputs/apk/debug/app-debug.apk",
+      "build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res && cd android && ./gradlew :app:assembleDebug :app:assembleAndroidTest && cd .."
     }
   },
   "devices": {
