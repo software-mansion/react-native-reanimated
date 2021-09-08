@@ -217,8 +217,7 @@ public class NodesManager implements EventDispatcherListener {
       mTryRunBatchUpdatesSynchronously = false;
       final Semaphore semaphore = new Semaphore(0);
       mContext.runOnNativeModulesQueueThread(
-              // FIXME replace `mContext` with `mContext.getExceptionHandler()` after RN 0.59 support is dropped
-              new GuardedRunnable(mContext) {
+              new GuardedRunnable(mContext.getExceptionHandler()) {
                 @Override
                 public void runGuarded() {
                   boolean queueWasEmpty = UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);

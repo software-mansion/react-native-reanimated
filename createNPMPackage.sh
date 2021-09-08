@@ -41,9 +41,9 @@ do
     fi
     cd ../..
 
-    gradle clean
+    ./gradlew clean
 
-    FOR_HERMES=${for_hermes} gradle :assembleDebug
+    FOR_HERMES=${for_hermes} ./gradlew :assembleDebug
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
