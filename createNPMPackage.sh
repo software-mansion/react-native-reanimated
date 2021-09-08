@@ -78,5 +78,7 @@ mv android android-npm
 mv android-temp android
 
 rm -rf ./lib
+rm -rf ./rnVersionPatch/backup/*
+touch ./rnVersionPatch/backup/.gitkeep
 
 echo "Done!"
