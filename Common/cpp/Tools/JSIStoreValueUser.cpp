@@ -1,3 +1,4 @@
+#include <AndroidScheduler.h>
 #include "JSIStoreValueUser.h"
 
 namespace reanimated {
@@ -25,11 +26,13 @@ StoreUser::~StoreUser() {
   int id = identifier;
   std::shared_ptr<Scheduler> strongScheduler = scheduler.lock();
   if (strongScheduler != nullptr) {
-    strongScheduler->scheduleOnUI([id]() {
+    jni::ThreadScope::WithClassLoader([&] {
+      strongScheduler->scheduleOnUI([id]() {
       const std::lock_guard<std::recursive_mutex> lock(storeMutex);
       if (StoreUser::store.count(id) > 0) {
         StoreUser::store.erase(id);
       }
+    });
     });
   }
 }
