@@ -5,6 +5,7 @@ on:
       - master
     paths:
       - 'ios/**'
+      - 'Common/**'
   push:
     branches:
       - master
