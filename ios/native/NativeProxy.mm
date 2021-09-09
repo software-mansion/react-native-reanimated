@@ -114,7 +114,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
-  std::shared_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
+  std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #elif __has_include(<hermes/hermes.h>)
   std::unique_ptr<jsi::Runtime> animatedRuntime = facebook::hermes::makeHermesRuntime();
 #else
