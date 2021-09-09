@@ -5,6 +5,7 @@ on:
       - master
     paths:
       - 'android/**'
+      - 'common/**'
   push:
     branches:
       - master
