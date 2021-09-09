@@ -1,3 +1,6 @@
+#ifdef ONANDROID
+#include <AndroidScheduler.h>
+#endif
 #include <AndroidScheduler.h>
 #include "JSIStoreValueUser.h"
 
@@ -26,14 +29,23 @@ StoreUser::~StoreUser() {
   int id = identifier;
   std::shared_ptr<Scheduler> strongScheduler = scheduler.lock();
   if (strongScheduler != nullptr) {
+    #ifdef ONANDROID
     jni::ThreadScope::WithClassLoader([&] {
       strongScheduler->scheduleOnUI([id]() {
+        const std::lock_guard<std::recursive_mutex> lock(storeMutex);
+        if (StoreUser::store.count(id) > 0) {
+          StoreUser::store.erase(id);
+        }
+      });
+    });
+    #else 
+    strongScheduler->scheduleOnUI([id]() {
       const std::lock_guard<std::recursive_mutex> lock(storeMutex);
       if (StoreUser::store.count(id) > 0) {
         StoreUser::store.erase(id);
       }
     });
-    });
+    #endif
   }
 }
 

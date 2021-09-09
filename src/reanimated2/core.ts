@@ -39,7 +39,7 @@ export const isConfigured = (throwError = false) => {
 export const isConfiguredCheck = () => {
   if (!isConfigured(true)) {
     throw new Error(
-      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation'
+      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation'
     );
   }
 };
