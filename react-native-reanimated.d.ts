@@ -605,6 +605,15 @@ declare module 'react-native-reanimated' {
       pageY: number;
     };
 
+    export function convertCoords<T extends Component>(
+      ref: RefObject<T>,
+      x: number,
+      y: number
+    ): {
+      x: number;
+      y: number;
+    };
+
     export function scrollTo(
       ref: RefObject<ReactNativeScrollView | ScrollView>,
       x: number,
@@ -985,6 +994,7 @@ declare module 'react-native-reanimated' {
   export const useAnimatedRef: typeof Animated.useAnimatedRef;
   export const defineAnimation: typeof Animated.defineAnimation;
   export const measure: typeof Animated.measure;
+  export const convertCoords: typeof Animated.convertCoords;
   export const scrollTo: typeof Animated.scrollTo;
   export const withTiming: typeof Animated.withTiming;
   export const withSpring: typeof Animated.withSpring;
