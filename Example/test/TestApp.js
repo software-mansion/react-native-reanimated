@@ -19,6 +19,7 @@ import AdaptersTest from './AdaptersTest';
 import CustomLayout2 from './CustomLayout2';
 import CustomLayout3 from './CustomLayout3';
 import ModalInNavigation from './ModalInNavigation';
+import ModalInNavigationNativeStack from './ModalInNavigationNativeStack';
 import WithNavigation from './WithNavigation';
 import WithNavigationNested from './WithNavigationNested';
 import TestRemovalOrder from './TestRemovalOrder';
@@ -79,6 +80,10 @@ const SCREENS = {
     screen: ModalInNavigation,
     title: '🆕 Modal In Navigation',
   },
+  ModalInNavigationNativeStack: {
+    screen: ModalInNavigationNativeStack,
+    title: '🆕 Modal In Navigation - native stack',
+  },
   WithNavigation: {
     screen: WithNavigation,
     title: '🆕 Layout Animations - with navigation ',
@@ -113,7 +118,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <View collapsable={false} style={{flex:1}}>
+      <View collapsable={false} style={{ flex: 1 }}>
         <Stack.Navigator detachInactiveScreens={false}>
           <Stack.Screen
             name="Home"
