@@ -5,8 +5,8 @@
   "apps": {
     "ios": {
       "type": "ios.app",
-      "binaryPath": "./ios/build/Build/Products/Debug-iphonesimulator/ReanimatedExample.app",
-      "build": "export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -project ios/ReanimatedExample.xcodeproj -UseNewBuildSystem=NO -scheme ReanimatedExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build -quiet"
+      "binaryPath": "./ios/build/Build/Products/Release-iphonesimulator/ReanimatedExample.app",
+      "build": "xcodebuild -workspace ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build"
     },
     "android": {
       "type": "android.apk",

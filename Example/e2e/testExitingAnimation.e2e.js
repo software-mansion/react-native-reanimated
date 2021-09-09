@@ -1,13 +1,4 @@
-import {
-  device,
-  element,
-  by,
-  expect,
-  waitFor,
-  beforeAll,
-  beforeEach,
-  describe,
-} from 'detox';
+import { device, element, waitFor, by } from 'detox';
 
 describe('Layout Animations', () => {
   beforeAll(async () => {
@@ -18,7 +9,7 @@ describe('Layout Animations', () => {
     await device.reloadReactNative();
   });
 
-  it('should removes components', async () => {
+  it('should remove components', async () => {
     await element(by.text('test exiting animations')).tap();
     await element(by.id('buttonB')).tap();
     await expect(element(by.id('componentB'))).not.toBeVisible();
