@@ -40,14 +40,9 @@ const Screen2 = () => {
 const App = () => {
   return (
     <Stack.Navigator
-      detachInactiveScreens={true}
-      mode="modal"
       screenOptions={{
-        animationEnabled: false,
-        cardStyle: { backgroundColor: 'transparent' },
         headerStyle: { backgroundColor: 'red' },
         gestureEnabled: true,
-        // cardOverlayEnabled: true,
       }}>
       <Stack.Screen name="Screen1" component={Screen1} />
       <Stack.Screen name="Screen2" component={Screen2} />
