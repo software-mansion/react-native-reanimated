@@ -1,4 +1,4 @@
-import { WorkletFunction } from './commonTypes';
+import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
 import { ReanimatedConsole } from './core';
 declare global {
   const _WORKLET: boolean;
@@ -10,6 +10,11 @@ declare global {
   const _startObservingProgress: (
     tag: number,
     flag: { value: boolean; _value: boolean }
+  ) => void;
+  const _updateProps: (
+    tag: number,
+    name: string,
+    updates: StyleProps | AnimatedStyle
   ) => void;
   namespace NodeJS {
     interface Global {

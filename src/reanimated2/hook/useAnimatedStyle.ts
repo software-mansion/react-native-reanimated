@@ -38,7 +38,6 @@ import {
   BasicWorkletFunction,
   NestedObjectValues,
   SharedValue,
-  WorkletFunction,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -270,7 +269,7 @@ function jestStyleUpdater(
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: WorkletFunction[] = []
+  adapters: AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
