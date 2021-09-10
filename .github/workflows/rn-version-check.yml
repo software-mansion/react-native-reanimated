@@ -44,10 +44,13 @@ jobs:
       - name: Clone repository reanimated-rn-version-tester
         uses: actions/checkout@master
         with:
-          name: piaskowyk/reanimated-rn-version-tester
+          name: jmysliv/reanimated-rn-version-tester
           path: ${{ env.WORKING_DIRECTORY }}
       - name: Replace reanimated package
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: cp ../react-native-reanimated-*.tgz . && ./replace.sh
+        run: cp ../react-native-reanimated-*.tgz . && ./setup.sh && ./replace.sh
+      - name: Testing reanimated with different rn versions
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: ./testVersions.sh
 
       
