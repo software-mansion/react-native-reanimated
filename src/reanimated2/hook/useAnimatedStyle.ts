@@ -11,7 +11,7 @@ import {
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun, Timestamp } from '../animation';
-import NativeReanimated from '../NativeReanimated';
+import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -440,7 +440,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
   initial.value = initialUpdaterRun(updater);
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
 import { ReanimatedConsole } from './core';
+import { NativeReanimated } from './NativeReanimated';
 declare global {
   const _WORKLET: boolean;
   const _frameTimestamp: number;
@@ -22,6 +23,7 @@ declare global {
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
       _WORKLET: boolean;
+      __reanimatedModuleProxy: NativeReanimated;
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
         registerConfig(tag: number, config: Record<string, unknown>): void;

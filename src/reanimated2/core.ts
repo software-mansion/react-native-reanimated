@@ -1,5 +1,5 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
-import NativeReanimated from './NativeReanimated';
+import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
 import {
@@ -14,6 +14,7 @@ import {
   Timestamp,
 } from './animation/commonTypes';
 import { Descriptor } from './hook/commonTypes';
+import JSReanimated from './js-reanimated/JSReanimated';
 
 global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
@@ -58,7 +59,7 @@ export const checkPluginState: (throwError: boolean) => boolean = (
 export const isConfigured: (throwError?: boolean) => boolean = (
   throwError = false
 ) => {
-  return checkPluginState(throwError) && !NativeReanimated.useOnlyV1;
+  return checkPluginState(throwError) && !NativeReanimatedModule.useOnlyV1;
 };
 
 export const isConfiguredCheck: () => void = () => {
@@ -112,12 +113,12 @@ global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
 };
 
 function pushFrame(frame: (timestamp: Timestamp) => void): void {
-  NativeReanimated.pushFrame(frame);
+  (NativeReanimatedModule as JSReanimated).pushFrame(frame);
 }
 
 export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
-  if (NativeReanimated.native) {
+  if (NativeReanimatedModule.native) {
     requestAnimationFrame(frame);
   } else {
     pushFrame(frame);
@@ -137,25 +138,29 @@ export function runOnUI<A extends any[], R>(
 
 export function makeShareable<T>(value: T): T {
   isConfiguredCheck();
-  return NativeReanimated.makeShareable(value);
+  return NativeReanimatedModule.makeShareable(value);
 }
 
 export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    return NativeReanimated.getViewProp(viewTag, propName, (result: T) => {
-      if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
-        reject(result);
-      } else {
-        resolve(result);
+    return NativeReanimatedModule.getViewProp(
+      viewTag,
+      propName,
+      (result: T) => {
+        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          reject(result);
+        } else {
+          resolve(result);
+        }
       }
-    });
+    );
   });
 }
 
 let _getTimestamp: () => number;
 if (nativeShouldBeMock()) {
   _getTimestamp = () => {
-    return NativeReanimated.getTimestamp();
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
   };
 } else {
   _getTimestamp = () => {
@@ -173,7 +178,7 @@ if (nativeShouldBeMock()) {
 export function getTimestamp(): number {
   'worklet';
   if (Platform.OS === 'web') {
-    return NativeReanimated.getTimestamp();
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
   }
   return _getTimestamp();
 }
@@ -297,12 +302,12 @@ function workletValueSetterJS(
 
 export function makeMutable<T>(value: T): SharedValue<T> {
   isConfiguredCheck();
-  return NativeReanimated.makeMutable(value);
+  return NativeReanimatedModule.makeMutable(value);
 }
 
 export function makeRemote<T>(object = {}): T {
   isConfiguredCheck();
-  return NativeReanimated.makeRemote(object);
+  return NativeReanimatedModule.makeRemote(object);
 }
 
 export function startMapper(
@@ -315,7 +320,7 @@ export function startMapper(
   viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
 ): number {
   isConfiguredCheck();
-  return NativeReanimated.startMapper(
+  return NativeReanimatedModule.startMapper(
     mapper,
     inputs,
     outputs,
@@ -325,7 +330,7 @@ export function startMapper(
 }
 
 export function stopMapper(mapperId: number): void {
-  NativeReanimated.stopMapper(mapperId);
+  NativeReanimatedModule.stopMapper(mapperId);
 }
 
 export interface RunOnJSFunction<A extends any[], R> {
@@ -349,9 +354,9 @@ export function runOnJS<A extends any[], R>(
   }
 }
 
-if (!NativeReanimated.useOnlyV1) {
-  NativeReanimated.installCoreFunctions(
-    NativeReanimated.native ? workletValueSetter : workletValueSetterJS
+if (!NativeReanimatedModule.useOnlyV1) {
+  NativeReanimatedModule.installCoreFunctions(
+    NativeReanimatedModule.native ? workletValueSetter : workletValueSetterJS
   );
 
   const capturableConsole = console;

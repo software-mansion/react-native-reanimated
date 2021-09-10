@@ -1,5 +1,5 @@
 import { NativeEvent } from './commonTypes';
-import NativeModule from './NativeReanimated';
+import NativeReanimatedModule from './NativeReanimated';
 
 function jsListener<T extends NativeEvent<T>>(
   eventName: string,
@@ -25,7 +25,7 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
     this.viewTag = undefined;
     this.registrations = [];
 
-    if (!NativeModule.native) {
+    if (!NativeReanimatedModule.native) {
       this.listeners = eventNames.reduce(
         (acc: Record<string, (event: T) => void>, eventName: string) => {
           acc[eventName] = jsListener(eventName, worklet);
@@ -44,11 +44,14 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
     this.viewTag = viewTag;
     this.registrations = this.eventNames.map((eventName) =>
-      NativeModule.registerEventHandler(viewTag + eventName, this.worklet)
+      NativeReanimatedModule.registerEventHandler(
+        viewTag + eventName,
+        this.worklet
+      )
     );
     if (this.registrations.length === 0 && fallbackEventName) {
       this.registrations.push(
-        NativeModule.registerEventHandler(
+        NativeReanimatedModule.registerEventHandler(
           viewTag + fallbackEventName,
           this.worklet
         )
@@ -57,7 +60,9 @@ export default class WorkletEventHandler<T extends NativeEvent<T>> {
   }
 
   unregisterFromEvents(): void {
-    this.registrations.forEach((id) => NativeModule.unregisterEventHandler(id));
+    this.registrations.forEach((id) =>
+      NativeReanimatedModule.unregisterEventHandler(id)
+    );
     this.registrations = [];
   }
 }
