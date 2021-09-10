@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: macos-latest
     env:
-      WORKING_DIRECTORY: Example
+      WORKING_DIRECTORY: reanimated-rn-version-tester
     concurrency:
       group: ios-${{ github.ref }}
       cancel-in-progress: true
@@ -44,8 +44,7 @@ jobs:
       - name: Clone repository reanimated-rn-version-tester
         uses: actions/checkout@master
         with:
-          name: jmysliv/reanimated-rn-version-tester
-          path: ${{ env.WORKING_DIRECTORY }}
+          repository: jmysliv/reanimated-rn-version-tester
       - name: Replace reanimated package
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: cp ../react-native-reanimated-*.tgz . && ./setup.sh && ./replace.sh
