@@ -46,15 +46,10 @@ jobs:
         with:
           repository: jmysliv/reanimated-rn-version-tester
           path: tester
-      - name: testing path
-        run: ls
-      - name: testing tester path
+      - name: Install dependencies and pods
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: ls && ls ..
-      - name: Replace reanimated package
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: cp ../react-native-reanimated-*.tgz . && ./setup.sh && ./replace.sh
-      - name: Testing reanimated with different rn versions
+        run: cp ../react-native-reanimated-*.tgz . && ./setup.sh
+      - name: Test reanimated with different rn versions
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: ./testVersions.sh
 
