@@ -11,7 +11,7 @@ comes to gesture based interactions.
 
 ## Installation
 
-Check out [installation](https://docs.swmansion.com/react-native-reanimated/docs/installation) section of our docs for the detailed installation instructions.
+Check out [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation) section of our docs for the detailed installation instructions.
 
 ## Documentation
 
