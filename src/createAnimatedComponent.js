@@ -150,7 +150,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     _detachStyles() {
       if (Platform.OS === 'web') {
         for (const style of this._styles) {
-          if (style.viewsRef) {
+          if (style?.viewsRef) {
             style.viewsRef.remove(this);
           }
         }
