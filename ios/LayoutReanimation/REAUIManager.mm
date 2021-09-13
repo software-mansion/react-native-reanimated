@@ -42,6 +42,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     _blockSetter = true;
     
     self.bridge = bridge;
+    [super setValue:bridge forKey:@"_bridge"];
     [self setValue:[bridge.uiManager valueForKey:@"_shadowViewRegistry"] forKey:@"_shadowViewRegistry"];
     [self setValue:[bridge.uiManager valueForKey:@"_viewRegistry"] forKey:@"_viewRegistry"];
     [self setValue:[bridge.uiManager valueForKey:@"_nativeIDRegistry"] forKey:@"_nativeIDRegistry"];
