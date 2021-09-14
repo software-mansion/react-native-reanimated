@@ -73,7 +73,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         // for recently created views.
         if (view.getWidth() == 0 || view.getHeight() == 0) {
             view.layout(x, y, x + width, y + height);
-            mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view,mWeakNativeViewHierarchyManage.get()));
+            if(view.getId() != -1) {
+                mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view,mWeakNativeViewHierarchyManage.get()));
+            }
         } else {
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
             view.layout(x, y, x + width, y + height);
@@ -106,7 +108,11 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     }
 
     private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-        ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
+        int tag = view.getId();
+        if(tag == -1) {
+            return;
+        }
+        ViewManager vm = nativeViewHierarchyManager.resolveViewManager(tag);
         if (vm != null) {
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
             mAnimationsManager.onViewRemoval(view, (ViewGroup) view.getParent(), before, () -> {
