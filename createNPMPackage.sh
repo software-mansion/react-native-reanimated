@@ -65,6 +65,16 @@ do
   done
 done
 
+rm -rf libSo
+mkdir libSo
+cd libSo
+mkdir fbjni
+cd fbjni
+wget https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar
+unzip fbjni-0.2.2.aar 
+rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
+cd ../..
+
 yarn add react-native@0.65.1 --dev
 
 mv android android-temp
@@ -77,8 +87,9 @@ npm pack
 mv android android-npm
 mv android-temp android
 
+rm -rf ./libSo
 rm -rf ./lib
-rm -rf ./rnVersionPatch/backup/*
-touch ./rnVersionPatch/backup/.gitkeep
+rm -rf ./android/rnVersionPatch/backup/*
+touch ./android/rnVersionPatch/backup/.gitkeep
 
 echo "Done!"

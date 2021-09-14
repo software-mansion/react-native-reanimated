@@ -7,7 +7,6 @@ def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').to
 
 import java.nio.file.Paths
 
-import de.undercouch.gradle.tasks.download.Download
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.apache.tools.ant.filters.ReplaceTokens
 
@@ -19,6 +18,7 @@ def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_V
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
 def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_VERSION = reactProperties.getProperty("VERSION_NAME").split("\\.")[1].toInteger()
+def FBJNI_VERSION = '0.2.2'
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -58,12 +58,6 @@ def follyReplaceContent = '''
   } while (r == -1 && errno == EINTR);
   return r;
 '''
-
-def boost_file = new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz")
-def double_conversion_file = new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz")
-def folly_file = new File(downloadsDir, "folly-${FOLLY_VERSION}.tar.gz")
-def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
-
 
 buildscript {
     repositories {
@@ -128,7 +122,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libc++_shared.so", "**/libfbjni.so"]
+        excludes = ["**/libc++_shared.so", "**/libfbjni.so"]
     }
 
     tasks.withType(JavaCompile) {
@@ -462,11 +456,11 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation 'com.facebook.fbjni:fbjni:0.2.2'
+    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
-    extractSO("com.facebook.fbjni:fbjni:0.2.2")
+    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
