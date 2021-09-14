@@ -31,6 +31,16 @@ do
   done
 done
 
+rm -rf libSo
+mkdir libSo
+cd libSo
+mkdir fbjni
+cd fbjni
+wget https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar
+unzip fbjni-0.2.2.aar 
+rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
+cd ../..
+
 yarn add react-native@0.64.1 --dev
 
 mv android android-temp
@@ -44,5 +54,6 @@ mv android android-npm
 mv android-temp android
 
 rm -rf ./lib
+rm -rf ./libSo
 
 echo "Done!"
