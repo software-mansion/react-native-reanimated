@@ -31,7 +31,6 @@
     "react": "17.0.2",
     "react-dom": "^16.13.1",
     "react-native": "0.65.1",
-    "react-native-collapsible-tab-view": "^4.2.1",
     "react-native-gesture-handler": "^1.10.1",
     "react-native-pager-view": "^5.4.1",
     "react-native-safe-area-context": "^3.1.9",
