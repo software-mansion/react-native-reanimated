@@ -73,6 +73,7 @@ cd fbjni
 wget https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar
 unzip fbjni-0.2.2.aar 
 rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
+rm $(find . -name '*libc++_shared.so')
 cd ../..
 
 yarn add react-native@0.65.1 --dev
