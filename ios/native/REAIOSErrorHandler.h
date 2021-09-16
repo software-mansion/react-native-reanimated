@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include "ErrorHandler.h"
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

@@ -9,7 +9,7 @@
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

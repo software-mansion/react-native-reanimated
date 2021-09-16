@@ -1,7 +1,5 @@
 #import "REAModule.h"
-
 #import "REANodesManager.h"
-#import "Transitioning/REATransitionManager.h"
 #import "native/NativeProxy.h"
 
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
@@ -10,7 +8,7 @@ RCTBridge *_bridge_reanimated = nil;
 
 @implementation REAModule {
   NSMutableArray<AnimatedOperation> *_operations;
-  REATransitionManager *_transitionManager;
+  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
 }
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -18,7 +16,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)invalidate
 {
   _bridge_reanimated = nil;
-  _transitionManager = nil;
   [_nodesManager invalidate];
   [self.bridge.uiManager.observerCoordinator removeObserver:self];
 }
@@ -34,109 +31,25 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
+    if (self.bridge) {
+      _surfacePresenter = self.bridge.surfacePresenter;
+        _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
+      [self.bridge.uiManager.observerCoordinator addObserver:self];
+    } else {
+      // _surfacePresenter set in setSurfacePresenter:
+        _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
+    }
 
-  _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
+    [_surfacePresenter addObserver:self];
+    [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+
   _operations = [NSMutableArray new];
-
-  _transitionManager = [[REATransitionManager alloc] initWithUIManager:self.bridge.uiManager];
-
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
 #pragma mark-- Transitioning API
 
-RCT_EXPORT_METHOD(animateNextTransition : (nonnull NSNumber *)rootTag config : (NSDictionary *)config)
-{
-  [_transitionManager animateNextTransitionInRoot:rootTag withConfig:config];
-}
 
-#pragma mark-- API
-
-RCT_EXPORT_METHOD(createNode : (nonnull NSNumber *)nodeID config : (NSDictionary<NSString *, id> *)config)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager createNode:nodeID config:config];
-  }];
-}
-
-RCT_EXPORT_METHOD(dropNode : (nonnull NSNumber *)nodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager dropNode:nodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(getValue : (nonnull NSNumber *)nodeID callback : (RCTResponseSenderBlock)callback)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager getValue:nodeID callback:(RCTResponseSenderBlock)callback];
-  }];
-}
-
-RCT_EXPORT_METHOD(connectNodes : (nonnull NSNumber *)parentID childTag : (nonnull NSNumber *)childID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager connectNodes:parentID childID:childID];
-  }];
-}
-
-RCT_EXPORT_METHOD(disconnectNodes : (nonnull NSNumber *)parentID childTag : (nonnull NSNumber *)childID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager disconnectNodes:parentID childID:childID];
-  }];
-}
-
-RCT_EXPORT_METHOD(connectNodeToView : (nonnull NSNumber *)nodeID viewTag : (nonnull NSNumber *)viewTag)
-{
-  NSString *viewName = [self.bridge.uiManager viewNameForReactTag:viewTag];
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager connectNodeToView:nodeID viewTag:viewTag viewName:viewName];
-  }];
-}
-
-RCT_EXPORT_METHOD(disconnectNodeFromView : (nonnull NSNumber *)nodeID viewTag : (nonnull NSNumber *)viewTag)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager disconnectNodeFromView:nodeID viewTag:viewTag];
-  }];
-}
-
-RCT_EXPORT_METHOD(attachEvent
-                  : (nonnull NSNumber *)viewTag eventName
-                  : (nonnull NSString *)eventName eventNodeID
-                  : (nonnull NSNumber *)eventNodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager attachEvent:viewTag eventName:eventName eventNodeID:eventNodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(detachEvent
-                  : (nonnull NSNumber *)viewTag eventName
-                  : (nonnull NSString *)eventName eventNodeID
-                  : (nonnull NSNumber *)eventNodeID)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager detachEvent:viewTag eventName:eventName eventNodeID:eventNodeID];
-  }];
-}
-
-RCT_EXPORT_METHOD(configureProps
-                  : (nonnull NSArray<NSString *> *)nativeProps uiProps
-                  : (nonnull NSArray<NSString *> *)uiProps)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];
-  }];
-}
-
-RCT_EXPORT_METHOD(setValue : (nonnull NSNumber *)nodeID newValue : (nonnull NSNumber *)newValue)
-{
-  [self addOperationBlock:^(REANodesManager *nodesManager) {
-    [nodesManager setValueForNodeID:nodeID value:newValue];
-  }];
-}
 
 RCT_EXPORT_METHOD(triggerRender)
 {
@@ -150,6 +63,45 @@ RCT_EXPORT_METHOD(triggerRender)
 - (void)addOperationBlock:(AnimatedOperation)operation
 {
   [_operations addObject:operation];
+}
+
+#pragma mark - RCTSurfacePresenterObserver
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+    
+  RCTExecuteOnUIManagerQueue(^{
+      if (_operations.count == 0) {
+        return;
+      }
+      NSArray<AnimatedOperation> *operations = _operations;
+      _operations = [NSMutableArray new];
+      REANodesManager *nodesManager = _nodesManager;
+
+    RCTExecuteOnMainQueue(^{
+        for (AnimatedOperation operation in operations) {
+          operation(nodesManager);
+        }
+        [nodesManager operationsBatchDidComplete];
+     
+    });
+  });
+}
+
+- (void)didMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  RCTAssertMainQueue();
+  RCTExecuteOnUIManagerQueue(^{
+    /*NSArray<AnimatedOperation> *operations = self->_operations;
+    self->_operations = [NSMutableArray new];*/
+
+    RCTExecuteOnMainQueue(^{
+      /*for (AnimatedOperation operation in operations) {
+        operation(self->_nodesManager);
+      }*/
+    });
+  });
 }
 
 #pragma mark - RCTUIManagerObserver

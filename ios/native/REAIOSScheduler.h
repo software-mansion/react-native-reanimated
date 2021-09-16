@@ -4,7 +4,7 @@
 #import <ReactCommon/CallInvoker.h>
 #include <stdio.h>
 #include <memory>
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

@@ -5,7 +5,7 @@
 #include "ErrorHandler.h"
 #include "JSIStoreValueUser.h"
 #include "RuntimeDecorator.h"
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 #include "ShareableValue.h"
 #include "WorkletsCache.h"
 

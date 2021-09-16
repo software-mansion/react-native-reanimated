@@ -17,11 +17,12 @@ if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
 
-
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=' + rnVersion
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
-folly_version = '2020.01.13.00'
+folly_version = '2021.06.28.00'
 boost_compiler_flags = '-Wno-documentation'
+
+
 
 Pod::Spec.new do |s|
   s.name         = "RNReanimated"
@@ -47,15 +48,10 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
-  s.pod_target_xcconfig    = {
-    "USE_HEADERMAP" => "YES",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
-  }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
-  s.xcconfig               = {
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
-                               "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags  }
+  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)\" \"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Private/React-Core\"" }
+  s.xcconfig               = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\"",
+                               "OTHER_CFLAGS" => "$(inherited) -DRN_FABRIC_ENABLED" + " " + folly_flags  }
 
   s.requires_arc = true
 
@@ -65,6 +61,7 @@ Pod::Spec.new do |s|
   s.dependency 'RCTRequired'
   s.dependency 'RCTTypeSafety'
   s.dependency 'React-Core'
+  s.dependency "RCT-Folly/Fabric", folly_version
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
   s.dependency 'React-RCTActionSheet'
@@ -85,6 +82,7 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
+  s.dependency "React-Fabric"
 
   if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
@@ -92,7 +90,6 @@ Pod::Spec.new do |s|
     s.dependency 'React-callinvoker'
   end
 
-  s.dependency "#{folly_prefix}Folly"
 
 end
 

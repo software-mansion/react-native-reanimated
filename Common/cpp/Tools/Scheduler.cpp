@@ -1,4 +1,4 @@
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

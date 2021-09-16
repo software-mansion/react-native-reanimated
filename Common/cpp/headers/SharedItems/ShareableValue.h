@@ -8,7 +8,7 @@
 #include "JSIStoreValueUser.h"
 #include "LayoutAnimationsProxy.h"
 #include "RuntimeManager.h"
-#include "Scheduler.h"
+#include <RNReanimated/Scheduler.h>
 #include "SharedParent.h"
 #include "ValueWrapper.h"
 #include "WorkletsCache.h"

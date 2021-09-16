@@ -7,8 +7,7 @@
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
 #import "REAIOSScheduler.h"
-#include "Scheduler.h"
-#import <RNScreens/RNSScreen.h>
+#include <RNReanimated/Scheduler.h>
 
 @interface RCTUIManager(REA)
 - (void)_manageChildren:(NSNumber *)containerTag
@@ -326,9 +325,9 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   [view.reactSuperview removeReactSubview:view];
   id<RCTComponent> parentView = viewRegistry[tag];
   [parentView removeReactSubview:view];
-  if ([view isKindOfClass:[RNSScreenView class]]) {
+  /*if ([view isKindOfClass:[RNSScreenView class]]) {
     [parentView didUpdateReactSubviews];
-  }
+  }*/
   [viewRegistry removeObjectForKey:view.reactTag];
 }
 

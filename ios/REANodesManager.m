@@ -3,25 +3,6 @@
 #import <React/RCTConvert.h>
 
 #import <React/RCTShadowView.h>
-#import "Nodes/REAAlwaysNode.h"
-#import "Nodes/REABezierNode.h"
-#import "Nodes/REABlockNode.h"
-#import "Nodes/REACallFuncNode.h"
-#import "Nodes/REAClockNodes.h"
-#import "Nodes/REAConcatNode.h"
-#import "Nodes/REACondNode.h"
-#import "Nodes/READebugNode.h"
-#import "Nodes/REAEventNode.h"
-#import "Nodes/REAFunctionNode.h"
-#import "Nodes/REAJSCallNode.h"
-#import "Nodes/REANode.h"
-#import "Nodes/REAOperatorNode.h"
-#import "Nodes/REAParamNode.h"
-#import "Nodes/REAPropsNode.h"
-#import "Nodes/REASetNode.h"
-#import "Nodes/REAStyleNode.h"
-#import "Nodes/REATransformNode.h"
-#import "Nodes/REAValueNode.h"
 #import "REAModule.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
@@ -87,11 +68,9 @@
 @end
 
 @implementation REANodesManager {
-  NSMutableDictionary<REANodeID, REANode *> *_nodes;
-  NSMapTable<NSString *, REANode *> *_eventMapping;
+    __weak RCTBridge *_bridge;
   NSMutableArray<id<RCTEvent>> *_eventQueue;
   CADisplayLink *_displayLink;
-  REAUpdateContext *_updateContext;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
@@ -99,17 +78,18 @@
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
+  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
 }
 
-- (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
+- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
+                                bridge:(RCTBridge *)bridge
+                                surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   if ((self = [super init])) {
+      _bridge = bridge;
+    _surfacePresenter = surfacePresenter;
     _reanimatedModule = reanimatedModule;
-    _uiManager = uiManager;
-    _nodes = [NSMutableDictionary new];
-    _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
-    _updateContext = [REAUpdateContext new];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
@@ -139,11 +119,6 @@
     _wantRunUpdates = YES;
     [self performOperations];
   }
-}
-
-- (REANode *)findNodeByID:(REANodeID)nodeID
-{
-  return _nodes[nodeID];
 }
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb
@@ -188,13 +163,6 @@
 {
   _currentAnimationTimestamp = _displayLink.timestamp;
 
-  // We process all enqueued events first
-  for (NSUInteger i = 0; i < _eventQueue.count; i++) {
-    id<RCTEvent> event = _eventQueue[i];
-    [self processEvent:event];
-  }
-  [_eventQueue removeAllObjects];
-
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
@@ -221,9 +189,6 @@
 
 - (void)performOperations
 {
-  if (_wantRunUpdates) {
-    [REANode runPropUpdates:_updateContext];
-  }
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
@@ -281,149 +246,12 @@
   }];
 }
 
-- (void)getValue:(REANodeID)nodeID callback:(RCTResponseSenderBlock)callback
-{
-  id val = _nodes[nodeID].value;
-  if (val) {
-    callback(@[ val ]);
-  } else {
-    // NULL is not an object and it's not possible to pass it as callback's argument
-    callback(@[ [NSNull null] ]);
-  }
-}
 
 #pragma mark-- Graph
-
-- (void)createNode:(REANodeID)nodeID config:(NSDictionary<NSString *, id> *)config
-{
-  static NSDictionary *map;
-  static dispatch_once_t mapToken;
-  dispatch_once(&mapToken, ^{
-    map = @{
-      @"props" : [REAPropsNode class],
-      @"style" : [REAStyleNode class],
-      @"transform" : [REATransformNode class],
-      @"value" : [REAValueNode class],
-      @"block" : [REABlockNode class],
-      @"cond" : [REACondNode class],
-      @"op" : [REAOperatorNode class],
-      @"set" : [REASetNode class],
-      @"debug" : [READebugNode class],
-      @"clock" : [REAClockNode class],
-      @"clockStart" : [REAClockStartNode class],
-      @"clockStop" : [REAClockStopNode class],
-      @"clockTest" : [REAClockTestNode class],
-      @"call" : [REAJSCallNode class],
-      @"bezier" : [REABezierNode class],
-      @"event" : [REAEventNode class],
-      @"always" : [REAAlwaysNode class],
-      @"concat" : [REAConcatNode class],
-      @"param" : [REAParamNode class],
-      @"func" : [REAFunctionNode class],
-      @"callfunc" : [REACallFuncNode class]
-      //            @"listener": nil,
-    };
-  });
-
-  NSString *nodeType = [RCTConvert NSString:config[@"type"]];
-
-  Class nodeClass = map[nodeType];
-  if (!nodeClass) {
-    RCTLogError(@"Animated node type %@ not supported natively", nodeType);
-    return;
-  }
-
-  REANode *node = [[nodeClass alloc] initWithID:nodeID config:config];
-  node.nodesManager = self;
-  node.updateContext = _updateContext;
-  _nodes[nodeID] = node;
-}
-
-- (void)dropNode:(REANodeID)nodeID
-{
-  REANode *node = _nodes[nodeID];
-  if (node) {
-    [node onDrop];
-    [_nodes removeObjectForKey:nodeID];
-  }
-}
-
-- (void)connectNodes:(nonnull NSNumber *)parentID childID:(nonnull REANodeID)childID
-{
-  RCTAssertParam(parentID);
-  RCTAssertParam(childID);
-
-  REANode *parentNode = _nodes[parentID];
-  REANode *childNode = _nodes[childID];
-
-  RCTAssertParam(childNode);
-
-  [parentNode addChild:childNode];
-}
-
-- (void)disconnectNodes:(REANodeID)parentID childID:(REANodeID)childID
-{
-  RCTAssertParam(parentID);
-  RCTAssertParam(childID);
-
-  REANode *parentNode = _nodes[parentID];
-  REANode *childNode = _nodes[childID];
-
-  RCTAssertParam(childNode);
-
-  [parentNode removeChild:childNode];
-}
-
-- (void)connectNodeToView:(REANodeID)nodeID viewTag:(NSNumber *)viewTag viewName:(NSString *)viewName
-{
-  RCTAssertParam(nodeID);
-  REANode *node = _nodes[nodeID];
-  RCTAssertParam(node);
-
-  if ([node isKindOfClass:[REAPropsNode class]]) {
-    [(REAPropsNode *)node connectToView:viewTag viewName:viewName];
-  }
-}
-
-- (void)disconnectNodeFromView:(REANodeID)nodeID viewTag:(NSNumber *)viewTag
-{
-  RCTAssertParam(nodeID);
-  REANode *node = _nodes[nodeID];
-  RCTAssertParam(node);
-
-  if ([node isKindOfClass:[REAPropsNode class]]) {
-    [(REAPropsNode *)node disconnectFromView:viewTag];
-  }
-}
-
-- (void)attachEvent:(NSNumber *)viewTag eventName:(NSString *)eventName eventNodeID:(REANodeID)eventNodeID
-{
-  RCTAssertParam(eventNodeID);
-  REANode *eventNode = _nodes[eventNodeID];
-  RCTAssert([eventNode isKindOfClass:[REAEventNode class]], @"Event node is of an invalid type");
-
-  NSString *key = [NSString stringWithFormat:@"%@%@", viewTag, RCTNormalizeInputEventName(eventName)];
-  RCTAssert([_eventMapping objectForKey:key] == nil, @"Event handler already set for the given view and event type");
-  [_eventMapping setObject:eventNode forKey:key];
-}
-
-- (void)detachEvent:(NSNumber *)viewTag eventName:(NSString *)eventName eventNodeID:(REANodeID)eventNodeID
-{
-  NSString *key = [NSString stringWithFormat:@"%@%@", viewTag, RCTNormalizeInputEventName(eventName)];
-  [_eventMapping removeObjectForKey:key];
-}
-
-- (void)processEvent:(id<RCTEvent>)event
-{
-  NSString *key = [NSString stringWithFormat:@"%@%@", event.viewTag, RCTNormalizeInputEventName(event.eventName)];
-  REAEventNode *eventNode = [_eventMapping objectForKey:key];
-  [eventNode processEvent:event];
-}
 
 - (void)processDirectEvent:(id<RCTEvent>)event
 {
   _processingDirectEvent = YES;
-  [self processEvent:event];
   [self performOperations];
   _processingDirectEvent = NO;
 }
@@ -469,20 +297,6 @@
       }
     });
   }
-
-  REANode *eventNode = [_eventMapping objectForKey:key];
-
-  if (eventNode != nil) {
-    if ([self isDirectEvent:event]) {
-      // Bypass the event queue/animation frames and process scroll events
-      // immediately to avoid getting out of sync with the scroll position
-      [self processDirectEvent:event];
-    } else {
-      // enqueue node to be processed
-      [_eventQueue addObject:event];
-      [self startUpdatingOnAnimationFrame];
-    }
-  }
 }
 
 - (void)configureProps:(NSSet<NSString *> *)nativeProps uiProps:(NSSet<NSString *> *)uiProps
@@ -491,15 +305,6 @@
   _nativeProps = nativeProps;
 }
 
-- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
-{
-  RCTAssertParam(nodeID);
-
-  REANode *node = _nodes[nodeID];
-
-  REAValueNode *valueNode = (REAValueNode *)node;
-  [valueNode setValue:newValue];
-}
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
@@ -523,11 +328,18 @@
   [props enumerateKeysAndObjectsUsingBlock:addBlock];
 
   if (uiProps.count > 0) {
+      if (_bridge.surfacePresenter) {
+        [_bridge.surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag
+        props:uiProps];
+      } else {
+        [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag
+        props:uiProps];
+      }
     [self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
   }
-  if (nativeProps.count > 0) {
+  /*if (nativeProps.count > 0) {
     [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
-  }
+  }*/
   if (jsProps.count > 0) {
     [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
                                         body:@{@"viewTag" : viewTag, @"props" : jsProps}];
