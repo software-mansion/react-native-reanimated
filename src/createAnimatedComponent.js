@@ -20,6 +20,7 @@ import {
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
+import { initialUpdaterRun } from './reanimated2/animation';
 
 const NODE_MAPPING = new Map();
 
@@ -456,7 +457,10 @@ export default function createAnimatedComponent(Component, options = {}) {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              return style.initial.value;
+              return {
+                ...style.initial.value,
+                ...initialUpdaterRun(style.initial.updater),
+              };
             } else {
               return style;
             }
