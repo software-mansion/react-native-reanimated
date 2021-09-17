@@ -52,6 +52,14 @@ exports[`babel plugin doesn't transform functions without 'worklet' directive 1`
 }"
 `;
 
+exports[`babel plugin doesn't workletize standard callbacks 1`] = `
+"var foo = something.onEnd(function (_event, success) {
+  if (success) {
+    console.log('success!');
+  }
+});"
+`;
+
 exports[`babel plugin transforms  1`] = `
 "var _interopRequireWildcard = require(\\"@babel/runtime/helpers/interopRequireWildcard\\");
 
@@ -89,4 +97,23 @@ function Box() {
     title: \\"Move\\"
   }));
 }"
+`;
+
+exports[`babel plugin workletizes gesture object callbacks 1`] = `
+"var singleTap = Gesture.Tap().onEnd(function () {
+  var _f = function _f(_event, success) {
+    if (success) {
+      console.log('single tap!');
+    }
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function _f(_event,success){if(success){console.log('single tap!');}}\\";
+  _f.__workletHash = 11668513436405;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:44)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}());"
 `;

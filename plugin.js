@@ -135,6 +135,28 @@ const blacklistedFunctions = new Set([
 
 const possibleOptFunction = new Set(['interpolate']);
 
+const gestureHandlerGestureObjects = new Set([
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts#L15
+  'Tap',
+  'Pan',
+  'Pinch',
+  'Rotation',
+  'Fling',
+  'LongPress',
+  'ForceTouch',
+  'Race',
+  'Simultaneous',
+  'Exclusive',
+]);
+
+const gestureHandlerCallbacks = new Set([
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gesture.ts#L35
+  'onBegan',
+  'onStart',
+  'onUpdate',
+  'onEnd',
+]);
+
 class ClosureGenerator {
   constructor() {
     this.trie = [{}, false];
@@ -520,6 +542,40 @@ function processIfWorkletNode(t, fun, fileName) {
       }
     },
   });
+
+  // React Native Gesture Handler auto-workletization
+  // detects `Gesture.Tap().onEnd(fun)` etc. but skips `something.onEnd(fun)`.
+
+  /*
+  CallExpression(
+    callee: MemberExpression(
+      object: CallExpression(
+        callee: MemberExpression(
+          object: Identifier('Gesture')
+          property: Identifier('Tap')
+        )
+      )
+      property: Identifier('onEnd')
+    )
+    arguments: [fun]
+  )
+  */
+
+  if (
+    t.isCallExpression(fun.parent) &&
+    t.isMemberExpression(fun.parent.callee) &&
+    t.isIdentifier(fun.parent.callee.property) &&
+    gestureHandlerCallbacks.has(fun.parent.callee.property.name) &&
+    t.isCallExpression(fun.parent.callee.object) &&
+    t.isIdentifier(fun.parent.callee.object.callee.object) &&
+    fun.parent.callee.object.callee.object.name === 'Gesture' &&
+    t.isIdentifier(fun.parent.callee.object.callee.property) &&
+    gestureHandlerGestureObjects.has(
+      fun.parent.callee.object.callee.property.name
+    )
+  ) {
+    processWorkletFunction(t, fun, fileName);
+  }
 }
 
 function processWorklets(t, path, fileName) {

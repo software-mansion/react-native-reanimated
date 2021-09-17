@@ -141,4 +141,28 @@ describe('babel plugin', () => {
     expect(closureBindings).toEqual([]);
     expect(code).toMatchSnapshot();
   });
+
+  it('workletizes gesture object callbacks', () => {
+    const input = `
+      const singleTap = Gesture.Tap().onEnd((_event, success) => {
+        if (success) {
+          console.log('single tap!');
+        }
+      });
+    `;
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't workletize standard callbacks", () => {
+    const input = `
+      const foo = something.onEnd((_event, success) => {
+        if (success) {
+          console.log('success!');
+        }
+      });
+    `;
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });
