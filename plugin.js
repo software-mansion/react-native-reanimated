@@ -542,7 +542,9 @@ function processIfWorkletNode(t, fun, fileName) {
       }
     },
   });
+}
 
+function processIfGestureHandlerCallbackFunctionNode(t, fun, fileName) {
   // React Native Gesture Handler auto-workletization
   // detects `Gesture.Tap().onEnd(fun)` etc. but skips `something.onEnd(fun)`.
 
@@ -653,7 +655,9 @@ module.exports = function ({ types: t }) {
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(path, state) {
-          processIfWorkletNode(t, path, state.file.opts.filename);
+          const fileName = state.file.opts.filename;
+          processIfWorkletNode(t, path, fileName);
+          processIfGestureHandlerCallbackFunctionNode(t, path, fileName);
         },
       },
     },
