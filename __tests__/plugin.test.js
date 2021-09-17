@@ -144,6 +144,8 @@ describe('babel plugin', () => {
 
   it('workletizes gesture object callbacks', () => {
     const input = `
+      import { Gesture } from 'react-native-gesture-handler';
+
       const singleTap = Gesture.Tap().onEnd((_event, success) => {
         if (success) {
           console.log('single tap!');

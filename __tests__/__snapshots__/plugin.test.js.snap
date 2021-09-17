@@ -100,7 +100,9 @@ function Box() {
 `;
 
 exports[`babel plugin workletizes gesture object callbacks 1`] = `
-"var singleTap = Gesture.Tap().onEnd(function () {
+"var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
+
+var singleTap = _reactNativeGestureHandler.Gesture.Tap().onEnd(function () {
   var _f = function _f(_event, success) {
     if (success) {
       console.log('single tap!');
@@ -110,7 +112,7 @@ exports[`babel plugin workletizes gesture object callbacks 1`] = `
   _f._closure = {};
   _f.asString = \\"function _f(_event,success){if(success){console.log('single tap!');}}\\";
   _f.__workletHash = 11668513436405;
-  _f.__location = \\"${ process.cwd() }/jest tests fixture (2:44)\\";
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (4:44)\\";
 
   global.__reanimatedWorkletInit(_f);
 
