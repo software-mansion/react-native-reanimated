@@ -208,6 +208,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
                     @Override
                     public void run() {
                         toBeRemovedChildren.remove(view);
+                        viewGroupManager.removeView(viewGroup, view);
                     } // It's far from optimal but let's leave it as it is for now
                 });
             }
