@@ -27,8 +27,6 @@ export type EntryExitAnimationFunction = (
   targetValues: EntryExitAnimationsValues
 ) => LayoutAnimation;
 
-export type EntryExitAnimationBuild = () => EntryExitAnimationFunction;
-
 export interface LayoutAnimationsValues {
   originX: number;
   originY: number;
@@ -47,8 +45,6 @@ export interface LayoutAnimationsValues {
 export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
-
-export type LayoutAnimationBuild = () => LayoutAnimationFunction;
 
 export interface ILayoutAnimationBuilder {
   build: () => LayoutAnimationFunction;
@@ -80,5 +76,5 @@ export interface BounceBuilderAnimationConfig {
 }
 
 export interface IEntryExitAnimationBuilder {
-  build: EntryExitAnimationBuild;
+  build: () => EntryExitAnimationFunction;
 }

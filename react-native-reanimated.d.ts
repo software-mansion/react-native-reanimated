@@ -256,13 +256,21 @@ declare module 'react-native-reanimated' {
       targetValues: LayoutAnimationsValues
     ) => LayoutAnimation;
 
+    export interface ILayoutAnimationBuilder {
+      build: () => LayoutAnimationFunction;
+    }
+
+    export interface IEntryExitAnimationBuilder {
+      build: () => EntryExitAnimationFunction;
+    }
+
     export type AnimateProps<P extends object> = {
       [K in keyof P]: K extends 'style'
         ? StyleProp<AnimateStyle<P[K]>>
         : P[K] | AnimatedNode<P[K]>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
-      layout?: Layout | LayoutAnimationFunction;
+      layout?: BaseAnimationBuilder | LayoutAnimationFunction;
       entering?:
         | BaseAnimationBuilder
         | ZoomRotateAnimationBuilder
@@ -714,6 +722,7 @@ declare module 'react-native-reanimated' {
     }
 
     export class Layout extends BaseAnimationBuilder {}
+    export class FadingLayout extends BaseAnimationBuilder {}
 
     export class ZoomRotateAnimationBuilder extends BaseAnimationBuilder {
       static rotate(degree: number | string): BaseAnimationBuilder;
@@ -996,6 +1005,7 @@ declare module 'react-native-reanimated' {
   export const interpolate: typeof Animated.interpolate;
 
   export const Layout: typeof Animated.Layout;
+  export const FadingLayout: typeof Animated.FadingLayout;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
@@ -1079,4 +1089,6 @@ declare module 'react-native-reanimated' {
 
   export type EntryExitAnimationFunction = Animated.EntryExitAnimationFunction;
   export type LayoutAnimationFunction = Animated.LayoutAnimationFunction;
+  export type IEntryExitAnimationBuilder = Animated.IEntryExitAnimationBuilder;
+  export type ILayoutAnimationBuilder = Animated.ILayoutAnimationBuilder;
 }

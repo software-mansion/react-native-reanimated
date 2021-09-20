@@ -3,8 +3,8 @@ import {
   EntryExitAnimationFunction,
   AnimationFunction,
   BaseBuilderAnimationConfig,
-  EntryExitAnimationBuild,
   LayoutAnimationAndConfig,
+  LayoutAnimationFunction,
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 export class BaseAnimationBuilder {
@@ -22,7 +22,7 @@ export class BaseAnimationBuilder {
   callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
     throw Error('Unimplemented method in child class.');
   };
 
@@ -152,7 +152,7 @@ export class BaseAnimationBuilder {
     return this;
   }
 
-  static build(): EntryExitAnimationFunction {
+  static build(): EntryExitAnimationFunction | LayoutAnimationFunction {
     const instance = this.createInstance();
     return instance.build();
   }
