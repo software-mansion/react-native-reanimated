@@ -142,26 +142,29 @@ describe('babel plugin', () => {
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes gesture object callbacks', () => {
+  it('implicitly workletizes possibly chained gesture object callback functions', () => {
     const input = `
       import { Gesture } from 'react-native-gesture-handler';
 
-      const singleTap = Gesture.Tap().onEnd((_event, success) => {
-        if (success) {
-          console.log('single tap!');
-        }
-      });
+      const foo = Gesture.Tap()
+        .onStart(() => {
+          console.log('onStart');
+        })
+        .onUpdate((_event) => {
+          console.log('onUpdate');
+        })
+        .onEnd((_event, _success) => {
+          console.log('onEnd');
+        });
     `;
     const { code } = runPlugin(input);
     expect(code).toMatchSnapshot();
   });
 
-  it("doesn't workletize standard callbacks", () => {
+  it("doesn't implicitly workletize standard callback functions", () => {
     const input = `
-      const foo = something.onEnd((_event, success) => {
-        if (success) {
-          console.log('success!');
-        }
+      const foo = Something.Tap().onEnd((_event, _success) => {
+        console.log('onEnd');
       });
     `;
     const { code } = runPlugin(input);

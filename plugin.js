@@ -545,9 +545,11 @@ function processIfWorkletNode(t, fun, fileName) {
 }
 
 function processIfGestureHandlerCallbackFunctionNode(t, fun, fileName) {
-  // React Native Gesture Handler auto-workletization
-  // detects `Gesture.Tap().onEnd(fun)` etc. but skips `something.onEnd(fun)`.
+  // Auto-workletizes React Native Gesture Handler callback functions.
+  // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
+  // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
 
+  // Example #1: `Gesture.Tap().onEnd(<fun>)`
   /*
   CallExpression(
     callee: MemberExpression(
@@ -563,21 +565,95 @@ function processIfGestureHandlerCallbackFunctionNode(t, fun, fileName) {
   )
   */
 
+  // Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
+  /*
+  CallExpression(
+    callee: MemberExpression(
+      object: CallExpression(
+        callee: MemberExpression(
+          object: CallExpression(
+            callee: MemberExpression(
+              object: CallExpression(
+                callee: MemberExpression(
+                  object: Identifier('Gesture')
+                  property: Identifier('Tap')
+                )
+              )
+              property: Identifier('onStart')
+            )
+            arguments: [fun1]
+          )
+          property: Identifier('onUpdate')
+        )
+        arguments: [fun2]
+      )
+      property: Identifier('onEnd')
+    )
+    arguments: [fun3]
+  )
+  */
+
   if (
     t.isCallExpression(fun.parent) &&
-    t.isMemberExpression(fun.parent.callee) &&
-    t.isIdentifier(fun.parent.callee.property) &&
-    gestureHandlerCallbacks.has(fun.parent.callee.property.name) &&
-    t.isCallExpression(fun.parent.callee.object) &&
-    t.isIdentifier(fun.parent.callee.object.callee.object) &&
-    fun.parent.callee.object.callee.object.name === 'Gesture' &&
-    t.isIdentifier(fun.parent.callee.object.callee.property) &&
-    gestureHandlerGestureObjects.has(
-      fun.parent.callee.object.callee.property.name
-    )
+    isGestureObjectEventCallbackMethod(t, fun.parent.callee)
   ) {
     processWorkletFunction(t, fun, fileName);
   }
+}
+
+function isGestureObjectEventCallbackMethod(t, node) {
+  // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
+  // where `[*]` represents any number of `.onBar(...)` or similar method calls.
+  /*
+  node: MemberExpression(
+    object: CallExpression(
+      callee: MemberExpression(
+        object: Identifier('Gesture')
+        property: Identifier('Tap')
+      )
+    )
+    property: Identifier('onEnd')
+  )
+  */
+  if (
+    t.isMemberExpression(node) &&
+    t.isIdentifier(node.property) &&
+    gestureHandlerCallbacks.has(node.property.name)
+  ) {
+    // direct call
+    if (isGestureObject(t, node.object)) {
+      return true;
+    }
+
+    // method chaining
+    if (
+      t.isCallExpression(node.object) &&
+      isGestureObjectEventCallbackMethod(t, node.object.callee)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isGestureObject(t, node) {
+  // Checks if node matches `Gesture.Tap()` or similar.
+  /*
+  node: CallExpression(
+    callee: MemberExpression(
+      object: Identifier('Gesture')
+      property: Identifier('Tap')
+    )
+  )
+  */
+  return (
+    t.isCallExpression(node) &&
+    t.isMemberExpression(node.callee) &&
+    t.isIdentifier(node.callee.object) &&
+    node.callee.object.name === 'Gesture' &&
+    t.isIdentifier(node.callee.property) &&
+    gestureHandlerGestureObjects.has(node.callee.property.name)
+  );
 }
 
 function processWorklets(t, path, fileName) {
