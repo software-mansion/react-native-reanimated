@@ -290,6 +290,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       
     }
 
+    [_animationsManager removeLeftovers];
     // Clean up
     [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
   };
