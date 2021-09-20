@@ -1,10 +1,7 @@
-import { Platform } from 'react-native';
-import { AnimationObject } from './animation';
-import { PrimitiveValue } from './animation/commonTypes';
-import { SharedValue } from './commonTypes';
-import { Descriptor } from './hook/commonTypes';
-import reanimatedJS from './js-reanimated';
-import { nativeShouldBeMock } from './PlatformChecker';
+import { AnimationObject } from '../animation';
+import { PrimitiveValue } from '../animation/commonTypes';
+import { SharedValue } from '../commonTypes';
+import { Descriptor } from '../hook/commonTypes';
 
 const InnerNativeModule = global.__reanimatedModuleProxy;
 export class NativeReanimated {
@@ -79,17 +76,3 @@ export class NativeReanimated {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 }
-
-let exportedModule;
-if (nativeShouldBeMock()) {
-  exportedModule = reanimatedJS;
-} else {
-  exportedModule = new NativeReanimated();
-  if (exportedModule.useOnlyV1 && Platform.OS === 'android') {
-    console.warn(
-      `If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation`
-    );
-  }
-}
-
-export default exportedModule as NativeReanimated;

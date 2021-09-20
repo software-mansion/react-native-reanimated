@@ -1,6 +1,7 @@
 import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
 import { ReanimatedConsole } from './core';
-import { NativeReanimated } from './NativeReanimated';
+import { MeasuredDimensions } from './NativeMethods';
+import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
   const _WORKLET: boolean;
   const _frameTimestamp: number;
@@ -16,6 +17,13 @@ declare global {
     tag: number,
     name: string,
     updates: StyleProps | AnimatedStyle
+  ) => void;
+  const _measure: (viewTag: number) => MeasuredDimensions;
+  const _scrollTo: (
+    viewTag: number,
+    x: number,
+    y: number,
+    animated: boolean
   ) => void;
   namespace NodeJS {
     interface Global {

@@ -1,7 +1,7 @@
 import MapperRegistry from './MapperRegistry';
 import MutableValue from './MutableValue';
 import Mapper from './Mapper';
-import { NativeReanimated } from '../NativeReanimated';
+import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import {
   AnimationObject,
   PrimitiveValue,
