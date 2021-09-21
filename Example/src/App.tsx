@@ -287,18 +287,18 @@ import Animated, { useAnimatedStyle, withTiming, useSharedValue } from 'react-na
 
 export default function S() {
   const x = useSharedValue(1);
-  const style = useAnimatedStyle(() => {
+  /*const style = useAnimatedStyle(() => {
     return {
       opacity: withTiming(x.value, {duration: 1000}),
     }
-  }, []);
+  }, []);*/
 
   return (
-    <Animated.View style={style}>
+    <View>
       <Text> rdgwrgw4g </Text>
       <Button onPress={() => {
-        x.value = Math.random() * 0.5 + 0.5;
+        
       }} title="click me"/>
-    </Animated.View>
+    </View>
   );
 }

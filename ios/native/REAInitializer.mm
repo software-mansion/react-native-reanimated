@@ -31,15 +31,15 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
       if (!bridge) {
         return;
       }
+    if (runtimeInstallerToWrap) {
+        runtimeInstallerToWrap(runtime);
+    }
 
     auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
     runtime.global().setProperty(runtime,
                                  jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
                                  jsi::Object::createFromHostObject(runtime, reanimatedModule));
         
-        if (runtimeInstallerToWrap) {
-            runtimeInstallerToWrap(runtime);
-        }
     };
     return runtimeInstaller;
 }

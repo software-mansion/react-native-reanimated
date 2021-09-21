@@ -2,10 +2,6 @@ import React from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
-import AnimatedEvent from './reanimated1/core/AnimatedEvent';
-import AnimatedNode from './reanimated1/core/AnimatedNode';
-import AnimatedValue from './reanimated1/core/AnimatedValue';
-import { createOrReusePropsNode } from './reanimated1/core/AnimatedProps';
 import WorkletEventHandler from './reanimated2/WorkletEventHandler';
 import setAndForwardRef from './setAndForwardRef';
 import './reanimated2/layoutReanimation/LayoutAnimationRepository';
@@ -13,7 +9,7 @@ import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
-import { makeMutable, runOnUI } from './reanimated2/core';
+import { makeMutable, makeRemote, runOnUI } from './reanimated2/core';
 import {
   DefaultEntering,
   DefaultExiting,
@@ -21,8 +17,7 @@ import {
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 
-const NODE_MAPPING = new Map();
-
+NODE_MAPPING = new Map();
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
@@ -31,19 +26,6 @@ function listener(data) {
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.
-}
-
-function hasAnimatedNodes(value) {
-  if (value instanceof AnimatedNode) {
-    return true;
-  }
-  if (Array.isArray(value)) {
-    return value.some((item) => hasAnimatedNodes(item));
-  }
-  if (value && typeof value === 'object') {
-    return Object.keys(value).some((key) => hasAnimatedNodes(value[key]));
-  }
-  return false;
 }
 
 function flattenArray(array) {
@@ -120,9 +102,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       const viewTag = findNodeHandle(options.setNativeProps ? this : node);
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          prop.attachEvent(node, key);
-        } else if (
+        if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -132,13 +112,10 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _detachNativeEvents() {
-      const node = this._getEventViewRef();
 
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          prop.detachEvent(node, key);
-        } else if (
+        if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -169,14 +146,11 @@ export default function createAnimatedComponent(Component, options = {}) {
     _reattachNativeEvents(prevProps) {
       const node = this._getEventViewRef();
       const attached = new Set();
-      const nextEvts = new Set();
       let viewTag;
 
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          nextEvts.add(prop.__nodeID);
-        } else if (
+        if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
@@ -187,15 +161,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       }
       for (const key in prevProps) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent) {
-          if (!nextEvts.has(prop.__nodeID)) {
-            // event was in prev props but not in current props, we detach
-            prop.detachEvent(node, key);
-          } else {
-            // event was in prev and is still in current props
-            attached.add(prop.__nodeID);
-          }
-        } else if (
+        if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
@@ -206,10 +172,7 @@ export default function createAnimatedComponent(Component, options = {}) {
 
       for (const key in this.props) {
         const prop = this.props[key];
-        if (prop instanceof AnimatedEvent && !attached.has(prop.__nodeID)) {
-          // not yet attached
-          prop.attachEvent(node, key);
-        } else if (
+        if (
           prop?.current &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
@@ -437,11 +400,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         const value = inputStyle[key];
         if (!hasAnimatedNodes(value)) {
           style[key] = value;
-        } else if (value instanceof AnimatedValue) {
-          // if any style in animated component is set directly to the `Value` we set those styles to the first value of `Value` node in order
-          // to avoid flash of default styles when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          style[key] = value._startingValue;
-        }
+        } 
       }
       return style;
     }
@@ -469,12 +428,6 @@ export default function createAnimatedComponent(Component, options = {}) {
             props[key] = value.initial.value[key];
             value.viewsRef.add(this);
           });
-        } else if (value instanceof AnimatedEvent) {
-          // we cannot filter out event listeners completely as some components
-          // rely on having a callback registered in order to generate events
-          // alltogether. Therefore we provide a dummy callback here to allow
-          // native event dispatcher to hijack events.
-          props[key] = dummyListener;
         } else if (
           value?.current &&
           value.current instanceof WorkletEventHandler
@@ -488,15 +441,7 @@ export default function createAnimatedComponent(Component, options = {}) {
           } else {
             props[key] = dummyListener;
           }
-        } else if (!(value instanceof AnimatedNode)) {
-          if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
-            props[key] = value;
-          }
-        } else if (value instanceof AnimatedValue) {
-          // if any prop in animated component is set directly to the `Value` we set those props to the first value of `Value` node in order
-          // to avoid default values for a short moment when `Value` is being asynchrounously sent via bridge and initialized in the native side.
-          props[key] = value._startingValue;
-        }
+        } 
       }
       return props;
     }

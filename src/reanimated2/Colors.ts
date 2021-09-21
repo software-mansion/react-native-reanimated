@@ -11,7 +11,11 @@ import { Platform } from 'react-native';
 import { makeRemote, makeShareable, isConfigured } from './core';
 import { interpolate } from './interpolation';
 // @ts-ignore JS file
-import { Extrapolate } from '../reanimated1/derived';
+export const Extrapolate = {
+  EXTEND: 'extend',
+  CLAMP: 'clamp',
+  IDENTITY: 'identity',
+};
 
 interface RBG {
   r: number;

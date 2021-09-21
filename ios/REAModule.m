@@ -17,7 +17,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   _bridge_reanimated = nil;
   [_nodesManager invalidate];
-  [self.bridge.uiManager.observerCoordinator removeObserver:self];
 }
 
 - (dispatch_queue_t)methodQueue
@@ -34,7 +33,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (self.bridge) {
       _surfacePresenter = self.bridge.surfacePresenter;
         _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
-      [self.bridge.uiManager.observerCoordinator addObserver:self];
     } else {
       // _surfacePresenter set in setSurfacePresenter:
         _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
@@ -124,6 +122,16 @@ RCT_EXPORT_METHOD(triggerRender)
     [nodesManager operationsBatchDidComplete];
   }];
 }
+
+RCT_EXPORT_METHOD(configureProps
+                  : (nonnull NSArray<NSString *> *)nativeProps uiProps
+                  : (nonnull NSArray<NSString *> *)uiProps)
+{
+  [self addOperationBlock:^(REANodesManager *nodesManager) {
+    [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];
+  }];
+}
+
 
 #pragma mark-- Events
 
