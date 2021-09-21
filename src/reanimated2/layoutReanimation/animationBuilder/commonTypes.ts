@@ -40,6 +40,8 @@ export interface LayoutAnimationsValues {
   bheight: number;
   bglobalOriginX: number;
   bglobalOriginY: number;
+  windowWidth: number;
+  windowHeight: number;
 }
 
 export type LayoutAnimationFunction = (

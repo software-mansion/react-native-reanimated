@@ -4,10 +4,11 @@ import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   BaseAnimationBuilder,
   BounceOut,
-  FadingLayout,
+  FadingTransition,
+  JumpingTransition,
   Layout,
   LightSpeedInRight,
-  SequencedLayout,
+  SequencedTransition,
 } from 'react-native-reanimated';
 import { Picker } from '@react-native-community/picker';
 
@@ -30,18 +31,22 @@ type PokemonData = {
 
 function getLayoutTranistion(transition: string): BaseAnimationBuilder {
   switch (transition) {
-    case 'FadingLayout':
-      return FadingLayout.delay(1000);
-    case 'SequencedLayout':
-      return SequencedLayout.delay(1000);
+    case 'FadingTransition':
+      return FadingTransition.delay(1000);
+    case 'SequencedTransition':
+      return SequencedTransition.delay(1000);
+    case 'ReverseSequenced':
+      return SequencedTransition.reverse().delay(1000);
+    case 'JumpingTransition':
+      return JumpingTransition.delay(1000).duration(1000);
     default:
-      return Layout.delay(1000);
+      return Layout.delay(1000).springify();
   }
 }
 export function WaterfallGrid({
   columns = 3,
   pokemons = 100,
-  transition = 'LinearLayout',
+  transition = 'LinearTransition',
 }: Props) {
   const [poks, setPoks] = useState<Array<PokemonData>>([]);
   const [dims, setDims] = useState({ width: 0, height: 0 });
@@ -130,7 +135,7 @@ export function WaterfallGrid({
 }
 export function WaterfallGridExample() {
   const [selectedTransition, setSelectedTransition] = useState<string>(
-    'SequencedLayout'
+    'SequencedTransition'
   );
   return (
     <View style={{ flex: 1 }}>
@@ -144,14 +149,19 @@ export function WaterfallGridExample() {
         <Picker
           mode="dropdown"
           selectedValue={selectedTransition}
-          style={{ height: 50, width: 200 }}
+          style={{ height: 50, width: 250 }}
           itemStyle={{ height: 50 }}
           onValueChange={(itemValue) => {
             setSelectedTransition(itemValue as string);
           }}>
-          <Picker.Item label="LinearLayout" value="LinearLayout" />
-          <Picker.Item label="SequencedLayout" value="SequencedLayout" />
-          <Picker.Item label="FadingLayout" value="FadingLayout" />
+          <Picker.Item label="LinearTransition" value="LinearTransition" />
+          <Picker.Item
+            label="SequencedTransition"
+            value="SequencedTransition"
+          />
+          <Picker.Item label="ReverseSequenced" value="ReverseSequenced" />
+          <Picker.Item label="FadingTransition" value="FadingTransition" />
+          <Picker.Item label="JumpingTransition" value="JumpingTransition" />
         </Picker>
       </View>
       <WaterfallGrid

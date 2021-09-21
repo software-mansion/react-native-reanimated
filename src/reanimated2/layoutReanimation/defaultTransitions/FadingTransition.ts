@@ -5,11 +5,11 @@ import {
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 
-export class FadingLayout
+export class FadingTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder {
-  static createInstance(): FadingLayout {
-    return new FadingLayout();
+  static createInstance(): FadingTransition {
+    return new FadingTransition();
   }
 
   build = (): LayoutAnimationFunction => {

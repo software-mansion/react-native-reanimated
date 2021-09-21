@@ -4,11 +4,11 @@ import {
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 
-export class LinearLayout
+export class LinearTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder {
-  static createInstance(): LinearLayout {
-    return new LinearLayout();
+  static createInstance(): LinearTransition {
+    return new LinearTransition();
   }
 
   build = (): LayoutAnimationFunction => {
@@ -38,4 +38,4 @@ export class LinearLayout
   };
 }
 
-export const Layout = LinearLayout;
+export const Layout = LinearTransition;

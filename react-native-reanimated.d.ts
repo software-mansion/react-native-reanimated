@@ -739,8 +739,13 @@ declare module 'react-native-reanimated' {
     }
 
     export class Layout extends ComplexAnimationBuilder {}
-    export class FadingLayout extends BaseAnimationBuilder {}
-    export class SequencedLayout extends BaseAnimationBuilder {}
+    export class FadingTransition extends BaseAnimationBuilder {}
+    export class SequencedTransition extends BaseAnimationBuilder {
+      static reverse(): SequencedTransition;
+      reverse(): SequencedTransition;
+    }
+
+    export class JumpingTransition extends BaseAnimationBuilder {}
 
     export class SlideInRight extends ComplexAnimationBuilder {}
     export class SlideOutRight extends ComplexAnimationBuilder {}
@@ -1004,8 +1009,9 @@ declare module 'react-native-reanimated' {
   export const interpolate: typeof Animated.interpolate;
 
   export const Layout: typeof Animated.Layout;
-  export const FadingLayout: typeof Animated.FadingLayout;
-  export const SequencedLayout: typeof Animated.SequencedLayout;
+  export const FadingTransition: typeof Animated.FadingTransition;
+  export const SequencedTransition: typeof Animated.SequencedTransition;
+  export const JumpingTransition: typeof Animated.JumpingTransition;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
