@@ -135,6 +135,73 @@ const blacklistedFunctions = new Set([
 
 const possibleOptFunction = new Set(['interpolate']);
 
+const gestureHandlerGestureObjects = new Set([
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
+  'Tap',
+  'Pan',
+  'Pinch',
+  'Rotation',
+  'Fling',
+  'LongPress',
+  'ForceTouch',
+  'Native',
+  'Race',
+  'Simultaneous',
+  'Exclusive',
+]);
+
+const gestureHandlerBuilderMethods = new Set([
+  // BaseGesture
+  'withRef',
+  'onBegan',
+  'onStart',
+  'onEnd',
+  'enabled',
+  'shouldCancelWhenOutside',
+  'hitSlop',
+  'simultaneousWithExternalGesture',
+  'requireExternalGestureToFail',
+
+  // ContinousBaseGesture
+  'onUpdate',
+
+  // TapGesture
+  'minPointers',
+  'numberOfTaps',
+  'maxDistance',
+  'maxDuration',
+  'maxDelay',
+  'maxDeltaX',
+  'maxDeltaY',
+
+  // PanGesture
+  'activeOffsetY',
+  'activeOffsetX',
+  'failOffsetY',
+  'failOffsetX',
+  'minPointers',
+  'minDistance',
+  'averageTouches',
+  'enableTrackpadTwoFingerGesture',
+
+  // FlingGesture
+  'numberOfPointers',
+  'direction',
+
+  // LongPress
+  'minDuration',
+  'maxDistance',
+
+  // ForceTouchGesture:
+  'minForce',
+  'maxForce',
+  'feedbackOnActivation',
+
+  // NativeGesture
+  'shouldActivateOnStart',
+  'disallowInterruption',
+]);
+
 class ClosureGenerator {
   constructor() {
     this.trie = [{}, false];
@@ -522,6 +589,118 @@ function processIfWorkletNode(t, fun, fileName) {
   });
 }
 
+function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
+  // Auto-workletizes React Native Gesture Handler callback functions.
+  // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
+  // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
+
+  // Example #1: `Gesture.Tap().onEnd(<fun>)`
+  /*
+  CallExpression(
+    callee: MemberExpression(
+      object: CallExpression(
+        callee: MemberExpression(
+          object: Identifier('Gesture')
+          property: Identifier('Tap')
+        )
+      )
+      property: Identifier('onEnd')
+    )
+    arguments: [fun]
+  )
+  */
+
+  // Example #2: `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`
+  /*
+  CallExpression(
+    callee: MemberExpression(
+      object: CallExpression(
+        callee: MemberExpression(
+          object: CallExpression(
+            callee: MemberExpression(
+              object: CallExpression(
+                callee: MemberExpression(
+                  object: Identifier('Gesture')
+                  property: Identifier('Tap')
+                )
+              )
+              property: Identifier('onStart')
+            )
+            arguments: [fun1]
+          )
+          property: Identifier('onUpdate')
+        )
+        arguments: [fun2]
+      )
+      property: Identifier('onEnd')
+    )
+    arguments: [fun3]
+  )
+  */
+
+  if (
+    t.isCallExpression(fun.parent) &&
+    isGestureObjectEventCallbackMethod(t, fun.parent.callee)
+  ) {
+    processWorkletFunction(t, fun, fileName);
+  }
+}
+
+function isGestureObjectEventCallbackMethod(t, node) {
+  // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
+  // where `[*]` represents any number of `.onBar(...)` or similar method calls.
+  /*
+  node: MemberExpression(
+    object: CallExpression(
+      callee: MemberExpression(
+        object: Identifier('Gesture')
+        property: Identifier('Tap')
+      )
+    )
+    property: Identifier('onEnd')
+  )
+  */
+  if (
+    t.isMemberExpression(node) &&
+    t.isIdentifier(node.property) &&
+    gestureHandlerBuilderMethods.has(node.property.name)
+  ) {
+    // direct call
+    if (isGestureObject(t, node.object)) {
+      return true;
+    }
+
+    // method chaining
+    if (
+      t.isCallExpression(node.object) &&
+      isGestureObjectEventCallbackMethod(t, node.object.callee)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isGestureObject(t, node) {
+  // Checks if node matches `Gesture.Tap()` or similar.
+  /*
+  node: CallExpression(
+    callee: MemberExpression(
+      object: Identifier('Gesture')
+      property: Identifier('Tap')
+    )
+  )
+  */
+  return (
+    t.isCallExpression(node) &&
+    t.isMemberExpression(node.callee) &&
+    t.isIdentifier(node.callee.object) &&
+    node.callee.object.name === 'Gesture' &&
+    t.isIdentifier(node.callee.property) &&
+    gestureHandlerGestureObjects.has(node.callee.property.name)
+  );
+}
+
 function processWorklets(t, path, fileName) {
   const name =
     path.node.callee.type === 'MemberExpression'
@@ -597,7 +776,9 @@ module.exports = function ({ types: t }) {
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression': {
         enter(path, state) {
-          processIfWorkletNode(t, path, state.file.opts.filename);
+          const fileName = state.file.opts.filename;
+          processIfWorkletNode(t, path, fileName);
+          processIfGestureHandlerEventCallbackFunctionNode(t, path, fileName);
         },
       },
     },
