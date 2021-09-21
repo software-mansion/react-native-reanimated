@@ -1,21 +1,21 @@
 import { Dimensions } from 'react-native';
 import { withSequence, withTiming } from '../../animation';
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 import {
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
 const { width } = Dimensions.get('window');
 
 export class LightSpeedInRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): LightSpeedInRight {
     return new LightSpeedInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -55,13 +55,13 @@ export class LightSpeedInRight
 }
 
 export class LightSpeedInLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): LightSpeedInLeft {
     return new LightSpeedInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -103,13 +103,13 @@ export class LightSpeedInLeft
 }
 
 export class LightSpeedOutRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): LightSpeedOutRight {
     return new LightSpeedOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -140,13 +140,13 @@ export class LightSpeedOutRight
 }
 
 export class LightSpeedOutLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): LightSpeedOutLeft {
     return new LightSpeedOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;

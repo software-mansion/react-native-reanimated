@@ -1,17 +1,17 @@
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 import {
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
 export class RotateInDownLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateInDownLeft {
     return new RotateInDownLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -43,13 +43,13 @@ export class RotateInDownLeft
 }
 
 export class RotateInDownRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateInDownRight {
     return new RotateInDownRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -81,13 +81,13 @@ export class RotateInDownRight
 }
 
 export class RotateInUpLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateInUpLeft {
     return new RotateInUpLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -119,13 +119,13 @@ export class RotateInUpLeft
 }
 
 export class RotateInUpRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateInUpRight {
     return new RotateInUpRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -157,13 +157,13 @@ export class RotateInUpRight
 }
 
 export class RotateOutDownLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateOutDownLeft {
     return new RotateOutDownLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -201,13 +201,13 @@ export class RotateOutDownLeft
 }
 
 export class RotateOutDownRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateOutDownRight {
     return new RotateOutDownRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -245,13 +245,13 @@ export class RotateOutDownRight
 }
 
 export class RotateOutUpLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateOutUpLeft {
     return new RotateOutUpLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -289,13 +289,13 @@ export class RotateOutUpLeft
 }
 
 export class RotateOutUpRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): RotateOutUpRight {
     return new RotateOutUpRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;

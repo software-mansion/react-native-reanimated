@@ -2,7 +2,7 @@ import { Easing, EasingFn } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import {
   AnimationFunction,
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
 } from './commonTypes';
@@ -188,7 +188,7 @@ export class Keyframe implements IEntryExitAnimationBuilder {
         };
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delay = this.delayV;
     const delayFunction = this.getDelayFunction();
     const { keyframes, initialValues } = this.parseDefinitions();

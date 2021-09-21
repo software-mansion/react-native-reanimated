@@ -71,10 +71,6 @@ export type LayoutAnimationAndConfig = [
   BaseBuilderAnimationConfig
 ];
 
-export interface BounceBuilderAnimationConfig {
-  duration?: number;
-}
-
 export interface IEntryExitAnimationBuilder {
   build: () => EntryExitAnimationFunction;
 }

@@ -1,20 +1,20 @@
 import {
   IEntryExitAnimationBuilder,
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 const { width, height } = Dimensions.get('window');
 
 export class SlideInRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideInRight {
     return new SlideInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -36,13 +36,13 @@ export class SlideInRight
 }
 
 export class SlideInLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideInLeft {
     return new SlideInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -64,13 +64,13 @@ export class SlideInLeft
 }
 
 export class SlideOutRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideOutRight {
     return new SlideOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -95,13 +95,13 @@ export class SlideOutRight
 }
 
 export class SlideOutLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideOutLeft {
     return new SlideOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -126,13 +126,13 @@ export class SlideOutLeft
 }
 
 export class SlideInUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideInUp {
     return new SlideInUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -154,13 +154,13 @@ export class SlideInUp
 }
 
 export class SlideInDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideInDown {
     return new SlideInDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -182,13 +182,13 @@ export class SlideInDown
 }
 
 export class SlideOutUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideOutUp {
     return new SlideOutUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
@@ -211,13 +211,13 @@ export class SlideOutUp
 }
 
 export class SlideOutDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): SlideOutDown {
     return new SlideOutDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;

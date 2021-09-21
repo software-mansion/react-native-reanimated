@@ -1,21 +1,21 @@
 import {
+  EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
-  EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
-import { BaseBounceAnimationBuilder } from '../animationBuilder/BaseBounceAnimationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
 const { width, height } = Dimensions.get('window');
 
 export class BounceIn
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceIn {
     return new BounceIn();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -49,13 +49,13 @@ export class BounceIn
 }
 
 export class BounceInDown
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInDown {
     return new BounceInDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -93,13 +93,13 @@ export class BounceInDown
 }
 
 export class BounceInUp
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInUp {
     return new BounceInUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -133,13 +133,13 @@ export class BounceInUp
 }
 
 export class BounceInLeft
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInLeft {
     return new BounceInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -173,13 +173,13 @@ export class BounceInLeft
 }
 
 export class BounceInRight
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInRight {
     return new BounceInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -213,13 +213,13 @@ export class BounceInRight
 }
 
 export class BounceOut
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOut {
     return new BounceOut();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -253,13 +253,13 @@ export class BounceOut
 }
 
 export class BounceOutDown
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutDown {
     return new BounceOutDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -295,13 +295,13 @@ export class BounceOutDown
 }
 
 export class BounceOutUp
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutUp {
     return new BounceOutUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -337,13 +337,13 @@ export class BounceOutUp
 }
 
 export class BounceOutLeft
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;
@@ -379,13 +379,13 @@ export class BounceOutLeft
 }
 
 export class BounceOutRight
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
     const duration = this.durationV ? this.durationV : 250;

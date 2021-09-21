@@ -2,9 +2,12 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, LayoutChangeEvent, Image } from 'react-native';
 import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
+  BaseAnimationBuilder,
   BounceOut,
   FadingLayout,
+  Layout,
   LightSpeedInRight,
+  SequencedLayout,
 } from 'react-native-reanimated';
 import { Picker } from '@react-native-community/picker';
 
@@ -12,6 +15,7 @@ const AnimatedImage = Animated.createAnimatedComponent(Image);
 type Props = {
   columns: number;
   pokemons: number;
+  transition: string;
 };
 function getRandomColor() {
   const randomColor = Math.floor(Math.random() * 16777215).toString(16);
@@ -23,7 +27,22 @@ type PokemonData = {
   key: number;
   color: string;
 };
-export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
+
+function getLayoutTranistion(transition: string): BaseAnimationBuilder {
+  switch (transition) {
+    case 'FadingLayout':
+      return FadingLayout.delay(1000);
+    case 'SequencedLayout':
+      return SequencedLayout.delay(1000);
+    default:
+      return Layout.delay(1000);
+  }
+}
+export function WaterfallGrid({
+  columns = 3,
+  pokemons = 100,
+  transition = 'LinearLayout',
+}: Props) {
   const [poks, setPoks] = useState<Array<PokemonData>>([]);
   const [dims, setDims] = useState({ width: 0, height: 0 });
   const handleOnLayout = useCallback(
@@ -60,6 +79,7 @@ export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
     if (poks.length === 0) {
       return [[], 0];
     }
+    const layoutTransition = getLayoutTranistion(transition);
     const cardsResult: Array<JSX.Element> = [];
     const heights = new Array(columns).fill(0);
     for (const pok of poks) {
@@ -70,7 +90,7 @@ export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
         <Animated.View
           entering={LightSpeedInRight.delay(cur * 200 * 2).springify()}
           exiting={BounceOut}
-          layout={FadingLayout.delay(1000)}
+          layout={layoutTransition}
           key={pok.address}
           style={{
             width: width,
@@ -87,7 +107,7 @@ export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
               setPoks(poks.filter((it) => it.key !== pok.key));
             }}>
             <AnimatedImage
-              layout={FadingLayout.delay(1000)}
+              layout={layoutTransition}
               source={{ uri: pok.address }}
               style={{ width: width, height: width }}
             />
@@ -96,7 +116,7 @@ export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
       );
     }
     return [cardsResult, Math.max(...heights) + margin / 2];
-  }, [poks, columns]);
+  }, [poks, columns, transition]);
   return (
     <View onLayout={handleOnLayout} style={{ flex: 1 }}>
       {cardsMemo.length === 0 && <Text> Loading </Text>}
@@ -110,7 +130,7 @@ export function WaterfallGrid({ columns = 3, pokemons = 100 }: Props) {
 }
 export function WaterfallGridExample() {
   const [selectedTransition, setSelectedTransition] = useState<string>(
-    'LinearLayout'
+    'SequencedLayout'
   );
   return (
     <View style={{ flex: 1 }}>
@@ -118,7 +138,6 @@ export function WaterfallGridExample() {
         style={{
           flexDirection: 'row',
           justifyContent: 'center',
-          //   alignItems: 'top',
           height: 60,
           padding: 10,
         }}>
@@ -127,15 +146,20 @@ export function WaterfallGridExample() {
           selectedValue={selectedTransition}
           style={{ height: 50, width: 200 }}
           itemStyle={{ height: 50 }}
-          onValueChange={(itemValue) =>
-            setSelectedTransition(itemValue as string)
-          }>
+          onValueChange={(itemValue) => {
+            setSelectedTransition(itemValue as string);
+          }}>
           <Picker.Item label="LinearLayout" value="LinearLayout" />
-          <Picker.Item label="CurveLayout" value="CurveLayout" />
+          <Picker.Item label="SequencedLayout" value="SequencedLayout" />
           <Picker.Item label="FadingLayout" value="FadingLayout" />
         </Picker>
       </View>
-      <WaterfallGrid columns={3} pokemons={33} />
+      <WaterfallGrid
+        key={selectedTransition}
+        columns={3}
+        pokemons={10}
+        transition={selectedTransition}
+      />
     </View>
   );
 }

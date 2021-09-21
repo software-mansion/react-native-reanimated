@@ -1,5 +1,5 @@
 export { BaseAnimationBuilder } from './BaseAnimationBuilder';
-export { BaseBounceAnimationBuilder } from './BaseBounceAnimationBuilder';
+export { ComplexAnimationBuilder } from './ComplexAnimationBuilder';
 export { Keyframe } from './Keyframe';
 export {
   LayoutAnimation,
@@ -12,6 +12,5 @@ export {
   BaseLayoutAnimationConfig,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
-  BounceBuilderAnimationConfig,
   IEntryExitAnimationBuilder,
 } from './commonTypes';

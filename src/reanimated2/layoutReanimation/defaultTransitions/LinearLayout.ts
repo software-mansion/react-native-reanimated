@@ -1,11 +1,11 @@
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder/ComplexAnimationBuilder';
 import {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 
 export class LinearLayout
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder {
   static createInstance(): LinearLayout {
     return new LinearLayout();
