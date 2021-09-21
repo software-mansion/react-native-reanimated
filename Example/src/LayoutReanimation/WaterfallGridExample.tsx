@@ -4,6 +4,7 @@ import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   BaseAnimationBuilder,
   BounceOut,
+  CurvedTransition,
   FadingTransition,
   JumpingTransition,
   Layout,
@@ -39,8 +40,10 @@ function getLayoutTranistion(transition: string): BaseAnimationBuilder {
       return SequencedTransition.reverse().delay(1000);
     case 'JumpingTransition':
       return JumpingTransition.delay(1000).duration(1000);
+    case 'CurvedTransition':
+      return CurvedTransition.delay(1000);
     default:
-      return Layout.delay(1000).springify();
+      return Layout.delay(2000).springify();
   }
 }
 export function WaterfallGrid({
@@ -162,6 +165,7 @@ export function WaterfallGridExample() {
           <Picker.Item label="ReverseSequenced" value="ReverseSequenced" />
           <Picker.Item label="FadingTransition" value="FadingTransition" />
           <Picker.Item label="JumpingTransition" value="JumpingTransition" />
+          <Picker.Item label="CurvedTransition" value="CurvedTransition" />
         </Picker>
       </View>
       <WaterfallGrid

@@ -744,8 +744,26 @@ declare module 'react-native-reanimated' {
       static reverse(): SequencedTransition;
       reverse(): SequencedTransition;
     }
-
     export class JumpingTransition extends BaseAnimationBuilder {}
+    export class CurvedTransition extends BaseAnimationBuilder {
+      static delay(durationMs: number): BaseAnimationBuilder;
+      delay(durationMs: number): BaseAnimationBuilder;
+      static easingX(easing: EasingFn): CurvedTransition;
+
+      easingX(easing: EasingFn): CurvedTransition;
+
+      static easingY(easing: EasingFn): CurvedTransition;
+
+      easingY(easing: EasingFn): CurvedTransition;
+
+      static easingWidth(easing: EasingFn): CurvedTransition;
+
+      easingWidth(easing: EasingFn): CurvedTransition;
+
+      static easingHeight(easing: EasingFn): CurvedTransition;
+
+      easingHeight(easing: EasingFn): CurvedTransition;
+    }
 
     export class SlideInRight extends ComplexAnimationBuilder {}
     export class SlideOutRight extends ComplexAnimationBuilder {}
@@ -1012,6 +1030,7 @@ declare module 'react-native-reanimated' {
   export const FadingTransition: typeof Animated.FadingTransition;
   export const SequencedTransition: typeof Animated.SequencedTransition;
   export const JumpingTransition: typeof Animated.JumpingTransition;
+  export const CurvedTransition: typeof Animated.CurvedTransition;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
