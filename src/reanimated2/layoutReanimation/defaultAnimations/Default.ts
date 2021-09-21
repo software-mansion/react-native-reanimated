@@ -11,7 +11,7 @@ export const DefaultLayout: LayoutAnimationFunction = (values) => {
       originY: values.originY,
       width: values.width,
       height: values.height,
-     },
+    },
     animations: {},
   };
 };
