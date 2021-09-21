@@ -3,10 +3,15 @@ import {
   EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
 
-export const DefaultLayout: LayoutAnimationFunction = (_) => {
+export const DefaultLayout: LayoutAnimationFunction = (values) => {
   'worklet';
   return {
-    initialValues: {},
+    initialValues: {
+      originX: values.originX,
+      originY: values.originY,
+      width: values.width,
+      height: values.height,
+    },
     animations: {},
   };
 };
