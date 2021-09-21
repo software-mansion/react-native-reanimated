@@ -30,7 +30,7 @@
     "expo-asset": "^8.2.0",
     "react": "17.0.2",
     "react-dom": "^16.13.1",
-    "react-native": "0.65.1",
+    "react-native": "facebook/react-native#6025611bd0ae615bc6e9ca5f2ca9cfe9803e21b6",
     "react-native-gesture-handler": "^1.10.1",
     "react-native-pager-view": "^5.4.1",
     "react-native-safe-area-context": "^3.1.9",

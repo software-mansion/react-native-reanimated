@@ -335,7 +335,7 @@
         [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag
         props:uiProps];
       }
-    [self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
+    //[self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
   }
   /*if (nativeProps.count > 0) {
     [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
