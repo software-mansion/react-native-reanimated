@@ -136,7 +136,7 @@ const blacklistedFunctions = new Set([
 const possibleOptFunction = new Set(['interpolate']);
 
 const gestureHandlerGestureObjects = new Set([
-  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts#L15
+  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gestureObjects.ts
   'Tap',
   'Pan',
   'Pinch',
@@ -144,17 +144,62 @@ const gestureHandlerGestureObjects = new Set([
   'Fling',
   'LongPress',
   'ForceTouch',
+  'Native',
   'Race',
   'Simultaneous',
   'Exclusive',
 ]);
 
-const gestureHandlerCallbacks = new Set([
-  // from https://github.com/software-mansion/react-native-gesture-handler/blob/new-api/src/handlers/gestures/gesture.ts#L35
+const gestureHandlerBuilderMethods = new Set([
+  // BaseGesture
+  'withRef',
   'onBegan',
   'onStart',
-  'onUpdate',
   'onEnd',
+  'enabled',
+  'shouldCancelWhenOutside',
+  'hitSlop',
+  'simultaneousWithExternalGesture',
+  'requireExternalGestureToFail',
+
+  // ContinousBaseGesture
+  'onUpdate',
+
+  // TapGesture
+  'minPointers',
+  'numberOfTaps',
+  'maxDistance',
+  'maxDuration',
+  'maxDelay',
+  'maxDeltaX',
+  'maxDeltaY',
+
+  // PanGesture
+  'activeOffsetY',
+  'activeOffsetX',
+  'failOffsetY',
+  'failOffsetX',
+  'minPointers',
+  'minDistance',
+  'averageTouches',
+  'enableTrackpadTwoFingerGesture',
+
+  // FlingGesture
+  'numberOfPointers',
+  'direction',
+
+  // LongPress
+  'minDuration',
+  'maxDistance',
+
+  // ForceTouchGesture:
+  'minForce',
+  'maxForce',
+  'feedbackOnActivation',
+
+  // NativeGesture
+  'shouldActivateOnStart',
+  'disallowInterruption',
 ]);
 
 class ClosureGenerator {
@@ -544,7 +589,7 @@ function processIfWorkletNode(t, fun, fileName) {
   });
 }
 
-function processIfGestureHandlerCallbackFunctionNode(t, fun, fileName) {
+function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
   // Auto-workletizes React Native Gesture Handler callback functions.
   // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
   // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.
@@ -618,7 +663,7 @@ function isGestureObjectEventCallbackMethod(t, node) {
   if (
     t.isMemberExpression(node) &&
     t.isIdentifier(node.property) &&
-    gestureHandlerCallbacks.has(node.property.name)
+    gestureHandlerBuilderMethods.has(node.property.name)
   ) {
     // direct call
     if (isGestureObject(t, node.object)) {
@@ -733,7 +778,7 @@ module.exports = function ({ types: t }) {
         enter(path, state) {
           const fileName = state.file.opts.filename;
           processIfWorkletNode(t, path, fileName);
-          processIfGestureHandlerCallbackFunctionNode(t, path, fileName);
+          processIfGestureHandlerEventCallbackFunctionNode(t, path, fileName);
         },
       },
     },

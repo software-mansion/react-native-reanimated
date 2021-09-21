@@ -147,11 +147,12 @@ describe('babel plugin', () => {
       import { Gesture } from 'react-native-gesture-handler';
 
       const foo = Gesture.Tap()
-        .onStart(() => {
-          console.log('onStart');
+        .numberOfTaps(2)
+        .onBegan(() => {
+          console.log('onBegan');
         })
-        .onUpdate((_event) => {
-          console.log('onUpdate');
+        .onStart((_event) => {
+          console.log('onStart');
         })
         .onEnd((_event, _success) => {
           console.log('onEnd');
