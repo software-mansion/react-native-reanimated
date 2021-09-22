@@ -17,7 +17,8 @@ import {
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 
-NODE_MAPPING = new Map();
+const NODE_MAPPING = new Map();
+
 function listener(data) {
   const component = NODE_MAPPING.get(data.viewTag);
   component && component._updateFromNative(data.props);
@@ -62,7 +63,6 @@ export default function createAnimatedComponent(Component, options = {}) {
 
     constructor(props) {
       super(props);
-      this._attachProps(this.props);
       if (isJest()) {
         this.animatedStyle = { value: {} };
       }
@@ -203,28 +203,6 @@ export default function createAnimatedComponent(Component, options = {}) {
       }
     };
 
-    _attachProps(nextProps) {
-      const oldPropsAnimated = this._propsAnimated;
-
-      this._propsAnimated = createOrReusePropsNode(
-        nextProps,
-        this._animatedPropsCallback,
-        oldPropsAnimated
-      );
-      // If prop node has been reused we don't need to call into "__detach"
-      if (oldPropsAnimated !== this._propsAnimated) {
-        // When you call detach, it removes the element from the parent list
-        // of children. If it goes to 0, then the parent also detaches itself
-        // and so on.
-        // An optimization is to attach the new elements and THEN detach the old
-        // ones instead of detaching and THEN attaching.
-        // This way the intermediate state isn't to go to 0 and trigger
-        // this expensive recursive detaching to then re-attach everything on
-        // the very next operation.
-        oldPropsAnimated && oldPropsAnimated.__detach();
-      }
-    }
-
     _updateFromNative(props) {
       if (options.setNativeProps) {
         options.setNativeProps(this._component, props);
@@ -326,8 +304,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     componentDidUpdate(prevProps) {
-      this._attachProps(this.props);
-      this._reattachNativeEvents(prevProps);
+      //this._reattachNativeEvents(prevProps);
 
       this._propsAnimated && this._propsAnimated.setNativeView(this._component);
       this._attachAnimatedStyles();
@@ -398,9 +375,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       const style = {};
       for (const key in inputStyle) {
         const value = inputStyle[key];
-        if (!hasAnimatedNodes(value)) {
-          style[key] = value;
-        } 
+          style[key] = value; 
       }
       return style;
     }
@@ -441,7 +416,9 @@ export default function createAnimatedComponent(Component, options = {}) {
           } else {
             props[key] = dummyListener;
           }
-        } 
+        } else {
+          props[key] = value;
+        }
       }
       return props;
     }
@@ -451,6 +428,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
       }
+
 
       const platformProps = Platform.select({
         web: {},

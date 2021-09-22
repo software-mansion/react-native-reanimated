@@ -1,5 +1,5 @@
 import { Image, ScrollView, Text, View } from 'react-native';
-//mport createAnimatedComponent from './createAnimatedComponent';
+import createAnimatedComponent from './createAnimatedComponent';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
@@ -7,11 +7,11 @@ import {
 
 const Animated = {
   // components
-  /*View: createAnimatedComponent(View),
+  View: createAnimatedComponent(View),
   Text: createAnimatedComponent(Text),
   Image: createAnimatedComponent(Image),
   ScrollView: createAnimatedComponent(ScrollView),
-  createAnimatedComponent,*/
+  createAnimatedComponent,
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,

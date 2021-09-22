@@ -281,24 +281,33 @@ export const styles = StyleSheet.create({
 
 export default App;*/
 
-import React from 'react';
-import { View, Text, Button } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
+import React, { useState } from 'react';
+import { View, Text, Button, TouchableOpacity} from 'react-native';
+import Animated, { useAnimatedStyle, withTiming, useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function S() {
   const x = useSharedValue(1);
-  /*const style = useAnimatedStyle(() => {
+  const style = useAnimatedStyle(() => {
     return {
-      opacity: withTiming(x.value, {duration: 1000}),
+      transform: [{rotate: `${x.value}deg`}]
     }
-  }, []);*/
+  }, []);
+  const [text, setText] = useState('');
 
   return (
     <View>
-      <Text> rdgwrgw4g </Text>
-      <Button onPress={() => {
-        
-      }} title="click me"/>
+      <Text> uuu </Text>
+      <Animated.View style={style}>
+        <Text> {text} </Text>
+        <TouchableOpacity onPress={() => { setText(text+'a');} }>
+          <Text>click 2</Text>
+        </TouchableOpacity>
+        <Button onPress={() => {
+          x.value = withSpring(Math.random() * 180);
+          setText(text+'a');
+          console.log("dsfwsfwe")
+        }} title="click me"/>
+      </Animated.View>
     </View>
   );
 }
