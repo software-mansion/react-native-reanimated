@@ -47,6 +47,15 @@ export class BaseAnimationBuilder {
     return this;
   }
 
+  // 300ms is the default animation duration. If any animation has different default has to override this method.
+  static getDuration(): number {
+    return 300;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 300;
+  }
+
   getDelayFunction(): AnimationFunction {
     const delay = this.delayV;
     return delay

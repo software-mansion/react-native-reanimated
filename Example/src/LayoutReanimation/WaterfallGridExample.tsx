@@ -5,10 +5,13 @@ import Animated, {
   BaseAnimationBuilder,
   BounceOut,
   CurvedTransition,
+  EntryExitTransition,
   FadingTransition,
   JumpingTransition,
   Layout,
+  LightSpeedInLeft,
   LightSpeedInRight,
+  PinwheelOut,
   SequencedTransition,
 } from 'react-native-reanimated';
 import { Picker } from '@react-native-community/picker';
@@ -42,6 +45,10 @@ function getLayoutTranistion(transition: string): BaseAnimationBuilder {
       return JumpingTransition.delay(1000).duration(1000);
     case 'CurvedTransition':
       return CurvedTransition.delay(1000);
+    case 'EntryExit':
+      return EntryExitTransition.delay(1000)
+        .entering(LightSpeedInLeft.duration(1000))
+        .exiting(PinwheelOut.duration(1000));
     default:
       return Layout.delay(2000).springify();
   }
@@ -166,6 +173,7 @@ export function WaterfallGridExample() {
           <Picker.Item label="FadingTransition" value="FadingTransition" />
           <Picker.Item label="JumpingTransition" value="JumpingTransition" />
           <Picker.Item label="CurvedTransition" value="CurvedTransition" />
+          <Picker.Item label="EntryExit" value="EntryExit" />
         </Picker>
       </View>
       <WaterfallGrid

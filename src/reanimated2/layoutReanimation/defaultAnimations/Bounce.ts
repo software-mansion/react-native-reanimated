@@ -15,10 +15,18 @@ export class BounceIn
     return new BounceIn();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -30,10 +38,10 @@ export class BounceIn
               scale: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(1.2, { duration: duration }),
-                  withTiming(0.9, { duration: (duration * 100) / 250 }),
-                  withTiming(1.1, { duration: (duration * 100) / 250 }),
-                  withTiming(1, { duration: (duration * 100) / 250 })
+                  withTiming(1.2, { duration: duration * 0.55 }),
+                  withTiming(0.9, { duration: duration * 0.15 }),
+                  withTiming(1.1, { duration: duration * 0.15 }),
+                  withTiming(1, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -55,10 +63,18 @@ export class BounceInDown
     return new BounceInDown();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -70,10 +86,10 @@ export class BounceInDown
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-20, { duration: duration }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(-20, { duration: duration * 0.55 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -99,10 +115,18 @@ export class BounceInUp
     return new BounceInUp();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -114,10 +138,10 @@ export class BounceInUp
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(20, { duration: duration }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(20, { duration: duration * 0.55 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -139,10 +163,18 @@ export class BounceInLeft
     return new BounceInLeft();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -154,10 +186,10 @@ export class BounceInLeft
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(20, { duration: duration }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(20, { duration: duration * 0.55 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -179,10 +211,18 @@ export class BounceInRight
     return new BounceInRight();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -194,10 +234,10 @@ export class BounceInRight
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-20, { duration: duration }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(-20, { duration: duration * 0.55 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -219,10 +259,18 @@ export class BounceOut
     return new BounceOut();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -234,10 +282,10 @@ export class BounceOut
               scale: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(1.1, { duration: (duration * 100) / 250 }),
-                  withTiming(0.9, { duration: (duration * 100) / 250 }),
-                  withTiming(1.2, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: duration })
+                  withTiming(1.1, { duration: duration * 0.15 }),
+                  withTiming(0.9, { duration: duration * 0.15 }),
+                  withTiming(1.2, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.55 })
                 )
               ),
             },
@@ -259,10 +307,18 @@ export class BounceOutDown
     return new BounceOutDown();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -274,11 +330,11 @@ export class BounceOutDown
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-20, { duration: (duration * 100) / 250 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-20, { duration: duration * 0.15 }),
                   withTiming(height, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -301,10 +357,18 @@ export class BounceOutUp
     return new BounceOutUp();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -316,11 +380,11 @@ export class BounceOutUp
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(20, { duration: (duration * 100) / 250 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(20, { duration: duration * 0.15 }),
                   withTiming(-height, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -343,10 +407,18 @@ export class BounceOutLeft
     return new BounceOutLeft();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -358,11 +430,11 @@ export class BounceOutLeft
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(20, { duration: (duration * 100) / 250 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(20, { duration: duration * 0.15 }),
                   withTiming(-width, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -385,10 +457,18 @@ export class BounceOutRight
     return new BounceOutRight();
   }
 
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -400,11 +480,11 @@ export class BounceOutRight
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-20, { duration: (duration * 100) / 250 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-20, { duration: duration * 0.15 }),
                   withTiming(width, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),

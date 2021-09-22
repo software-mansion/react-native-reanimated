@@ -251,6 +251,8 @@ declare module 'react-native-reanimated' {
       bheight: number;
       bglobalOriginX: number;
       bglobalOriginY: number;
+      windowWidth: number;
+      windowHeight: number;
     };
     export type LayoutAnimationFunction = (
       targetValues: LayoutAnimationsValues
@@ -272,16 +274,16 @@ declare module 'react-native-reanimated' {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
         | BaseAnimationBuilder
-        | ComplexAnimationBuilder
-        | LayoutAnimationFunction;
+        | LayoutAnimationFunction
+        | typeof BaseAnimationBuilder;
       entering?:
         | BaseAnimationBuilder
-        | ComplexAnimationBuilder
+        | typeof BaseAnimationBuilder
         | EntryExitAnimationFunction
         | Keyframe;
       exiting?:
         | BaseAnimationBuilder
-        | ComplexAnimationBuilder
+        | typeof BaseAnimationBuilder
         | EntryExitAnimationFunction
         | Keyframe;
     };
@@ -746,8 +748,8 @@ declare module 'react-native-reanimated' {
     }
     export class JumpingTransition extends BaseAnimationBuilder {}
     export class CurvedTransition extends BaseAnimationBuilder {
-      static delay(durationMs: number): BaseAnimationBuilder;
-      delay(durationMs: number): BaseAnimationBuilder;
+      static delay(durationMs: number): CurvedTransition;
+      delay(durationMs: number): CurvedTransition;
       static easingX(easing: EasingFn): CurvedTransition;
 
       easingX(easing: EasingFn): CurvedTransition;
@@ -764,7 +766,22 @@ declare module 'react-native-reanimated' {
 
       easingHeight(easing: EasingFn): CurvedTransition;
     }
-
+    export class EntryExitTransition extends BaseAnimationBuilder {
+      static delay(durationMs: number): EntryExitTransition;
+      delay(durationMs: number): EntryExitTransition;
+      static entering(
+        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+      ): EntryExitTransition;
+      entering(
+        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+      ): EntryExitTransition;
+      static exiting(
+        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+      ): EntryExitTransition;
+      exiting(
+        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+      ): EntryExitTransition;
+    }
     export class SlideInRight extends ComplexAnimationBuilder {}
     export class SlideOutRight extends ComplexAnimationBuilder {}
     export class SlideInUp extends ComplexAnimationBuilder {}
@@ -1031,6 +1048,7 @@ declare module 'react-native-reanimated' {
   export const SequencedTransition: typeof Animated.SequencedTransition;
   export const JumpingTransition: typeof Animated.JumpingTransition;
   export const CurvedTransition: typeof Animated.CurvedTransition;
+  export const EntryExitTransition: typeof Animated.EntryExitTransition;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;

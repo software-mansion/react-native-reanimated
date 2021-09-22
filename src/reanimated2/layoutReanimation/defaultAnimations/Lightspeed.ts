@@ -19,26 +19,23 @@ export class LightSpeedInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(
-            delay,
-            withTiming(1, { duration: duration * 1.5 })
-          ),
+          opacity: delayFunction(delay, withTiming(1, { duration: duration })),
           transform: [
             { translateX: delayFunction(delay, animation(0, config)) },
             {
               skewX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming('10deg', { duration: duration }),
-                  withTiming('-5deg', { duration: duration / 5 }),
-                  withTiming('0deg', { duration: duration / 5 })
+                  withTiming('10deg', { duration: duration * 0.7 }),
+                  withTiming('-5deg', { duration: duration * 0.15 }),
+                  withTiming('0deg', { duration: duration * 0.15 })
                 )
               ),
             },
@@ -65,17 +62,14 @@ export class LightSpeedInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(
-            delay,
-            withTiming(1, { duration: duration * 1.5 })
-          ),
+          opacity: delayFunction(delay, withTiming(1, { duration: duration })),
           transform: [
             {
               translateX: delayFunction(delay, animation(0, config)),
@@ -84,9 +78,9 @@ export class LightSpeedInLeft
               skewX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming('-10deg', { duration: duration }),
-                  withTiming('5deg', { duration: duration / 5 }),
-                  withTiming('0deg', { duration: duration / 5 })
+                  withTiming('-10deg', { duration: duration * 0.7 }),
+                  withTiming('5deg', { duration: duration * 0.15 }),
+                  withTiming('0deg', { duration: duration * 0.15 })
                 )
               ),
             },
