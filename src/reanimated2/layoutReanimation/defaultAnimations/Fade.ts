@@ -1,21 +1,21 @@
 import {
   IEntryExitAnimationBuilder,
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
 } from '../animationBuilder/commonTypes';
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class FadeIn
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeIn {
     return new FadeIn();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return (_) => {
       'worklet';
@@ -33,17 +33,17 @@ export class FadeIn
 }
 
 export class FadeInRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInRight {
     return new FadeInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -65,17 +65,17 @@ export class FadeInRight
 }
 
 export class FadeInLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInLeft {
     return new FadeInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -97,17 +97,17 @@ export class FadeInLeft
 }
 
 export class FadeInUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInUp {
     return new FadeInUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -129,17 +129,17 @@ export class FadeInUp
 }
 
 export class FadeInDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeInDown {
     return new FadeInDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -161,17 +161,17 @@ export class FadeInDown
 }
 
 export class FadeOut
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOut {
     return new FadeOut();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return (_) => {
       'worklet';
@@ -189,17 +189,17 @@ export class FadeOut
 }
 
 export class FadeOutRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutRight {
     return new FadeOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -221,17 +221,17 @@ export class FadeOutRight
 }
 
 export class FadeOutLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutLeft {
     return new FadeOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -253,17 +253,17 @@ export class FadeOutLeft
 }
 
 export class FadeOutUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutUp {
     return new FadeOutUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -285,17 +285,17 @@ export class FadeOutUp
 }
 
 export class FadeOutDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): FadeOutDown {
     return new FadeOutDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';

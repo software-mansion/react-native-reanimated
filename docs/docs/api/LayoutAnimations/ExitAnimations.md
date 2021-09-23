@@ -22,7 +22,7 @@ Reanimated listen on changes in tree of views and if detect that some of compone
     <AnimatedComponent exiting={AnimationName} >
 ```
 ### 3. Customize the animation
-Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particulr animation type.
+Different type of entering animations can be customized differently. For the complete list of option please refer to the paragraph specific to the particular animation type.
 ```js
     <AnimatedComponent exiting={AnimationName.duration(3000).otherModifier()} >
 ```
@@ -55,6 +55,7 @@ Simple animation based on changing of opacity.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317304-c1824380-c2de-11eb-8aed-4c83cfe2f2cc.mov" controls="controls" muted="muted"></video>
@@ -74,6 +75,7 @@ Animation based on smoothly shaking of component.
 * `duration` (in ms) default: 250
 * `delay` (in ms) default: 0
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317374-d52daa00-c2de-11eb-9fc5-320dfaf50440.mov" controls="controls" muted="muted"></video>
@@ -102,6 +104,7 @@ Animation based on smoothly shaking of component.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317439-e971a700-c2de-11eb-89d7-1a934922b7fd.mov" controls="controls" muted="muted"></video>
@@ -126,6 +129,7 @@ Animation based on changing width or height of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317500-fbebe080-c2de-11eb-9901-693aa4ad0ba0.mov" controls="controls" muted="muted"></video>
@@ -156,6 +160,7 @@ Animation based on changing scale of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317554-0efeb080-c2df-11eb-88cf-6ec47778dccb.mov" controls="controls" muted="muted"></video>
 
@@ -181,6 +186,7 @@ Animation based on horizontal or vertical moving of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317603-22118080-c2df-11eb-9083-b5ba3f043dbc.mov" controls="controls" muted="muted"></video>
@@ -205,6 +211,7 @@ Animation based on horizontal moving of object with changing of opacity and skew
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058070-2e40e880-e0aa-11eb-98eb-326a34f23f39.mov" controls="controls" muted="muted"></video>
@@ -228,6 +235,7 @@ Animation based on rotation with scale and opacity change.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058201-57617900-e0aa-11eb-951f-46ac27787d3e.mov" controls="controls" muted="muted"></video>
@@ -252,6 +260,7 @@ Animation based on horizontal moving of object with rotation.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058307-6e07d000-e0aa-11eb-8379-4536c0806aee.mov" controls="controls" muted="muted"></video>
@@ -278,6 +287,7 @@ Animation based on rotation of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the exit animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058418-8841ae00-e0aa-11eb-9ac1-39df437512c4.mov" controls="controls" muted="muted"></video>

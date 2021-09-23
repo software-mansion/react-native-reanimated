@@ -1,24 +1,32 @@
 import {
+  EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
-  EntryExitAnimationBuild,
 } from '../animationBuilder/commonTypes';
-import { BaseBounceAnimationBuilder } from '../animationBuilder/BaseBounceAnimationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
+import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 
 const { width, height } = Dimensions.get('window');
 
 export class BounceIn
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceIn {
     return new BounceIn();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -30,10 +38,10 @@ export class BounceIn
               scale: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(1.2, { duration: duration }),
-                  withTiming(0.9, { duration: (duration * 100) / 250 }),
-                  withTiming(1.1, { duration: (duration * 100) / 250 }),
-                  withTiming(1, { duration: (duration * 100) / 250 })
+                  withTiming(1.2, { duration: duration * 0.55 }),
+                  withTiming(0.9, { duration: duration * 0.15 }),
+                  withTiming(1.1, { duration: duration * 0.15 }),
+                  withTiming(1, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -49,16 +57,24 @@ export class BounceIn
 }
 
 export class BounceInDown
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInDown {
     return new BounceInDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -70,10 +86,10 @@ export class BounceInDown
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-20, { duration: duration }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(-20, { duration: duration * 0.55 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -93,16 +109,24 @@ export class BounceInDown
 }
 
 export class BounceInUp
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInUp {
     return new BounceInUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -114,10 +138,10 @@ export class BounceInUp
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(20, { duration: duration }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(20, { duration: duration * 0.55 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -133,16 +157,24 @@ export class BounceInUp
 }
 
 export class BounceInLeft
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInLeft {
     return new BounceInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -154,10 +186,10 @@ export class BounceInLeft
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(20, { duration: duration }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(20, { duration: duration * 0.55 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -173,16 +205,24 @@ export class BounceInLeft
 }
 
 export class BounceInRight
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceInRight {
     return new BounceInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -194,10 +234,10 @@ export class BounceInRight
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-20, { duration: duration }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: (duration * 100) / 250 })
+                  withTiming(-20, { duration: duration * 0.55 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.15 })
                 )
               ),
             },
@@ -213,16 +253,24 @@ export class BounceInRight
 }
 
 export class BounceOut
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOut {
     return new BounceOut();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -234,10 +282,10 @@ export class BounceOut
               scale: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(1.1, { duration: (duration * 100) / 250 }),
-                  withTiming(0.9, { duration: (duration * 100) / 250 }),
-                  withTiming(1.2, { duration: (duration * 100) / 250 }),
-                  withTiming(0, { duration: duration })
+                  withTiming(1.1, { duration: duration * 0.15 }),
+                  withTiming(0.9, { duration: duration * 0.15 }),
+                  withTiming(1.2, { duration: duration * 0.15 }),
+                  withTiming(0, { duration: duration * 0.55 })
                 )
               ),
             },
@@ -253,16 +301,24 @@ export class BounceOut
 }
 
 export class BounceOutDown
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutDown {
     return new BounceOutDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -274,11 +330,11 @@ export class BounceOutDown
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-20, { duration: (duration * 100) / 250 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-20, { duration: duration * 0.15 }),
                   withTiming(height, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -295,16 +351,24 @@ export class BounceOutDown
 }
 
 export class BounceOutUp
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutUp {
     return new BounceOutUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -316,11 +380,11 @@ export class BounceOutUp
               translateY: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(20, { duration: (duration * 100) / 250 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(20, { duration: duration * 0.15 }),
                   withTiming(-height, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -337,16 +401,24 @@ export class BounceOutUp
 }
 
 export class BounceOutLeft
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -358,11 +430,11 @@ export class BounceOutLeft
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(20, { duration: (duration * 100) / 250 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(20, { duration: duration * 0.15 }),
                   withTiming(-width, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),
@@ -379,16 +451,24 @@ export class BounceOutLeft
 }
 
 export class BounceOutRight
-  extends BaseBounceAnimationBuilder
+  extends BaseAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  static getDuration(): number {
+    return 600;
+  }
+
+  getDuration(): number {
+    return this.durationV ?? 600;
+  }
+
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
-    const duration = this.durationV ? this.durationV : 250;
+    const delay = this.getDelay();
+    const duration = this.getDuration();
     const callback = this.callbackV;
 
     return () => {
@@ -400,11 +480,11 @@ export class BounceOutRight
               translateX: delayFunction(
                 delay,
                 withSequence(
-                  withTiming(-10, { duration: (duration * 100) / 250 }),
-                  withTiming(10, { duration: (duration * 100) / 250 }),
-                  withTiming(-20, { duration: (duration * 100) / 250 }),
+                  withTiming(-10, { duration: duration * 0.15 }),
+                  withTiming(10, { duration: duration * 0.15 }),
+                  withTiming(-20, { duration: duration * 0.15 }),
                   withTiming(width, {
-                    duration: duration,
+                    duration: duration * 0.55,
                   })
                 )
               ),

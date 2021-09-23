@@ -44,7 +44,9 @@ export function withDelay(
         animation.current = nextAnimation.current;
         return finished;
       } else if (previousAnimation) {
-        const finished = previousAnimation.onFrame(previousAnimation, now);
+        const finished =
+          previousAnimation.finished ||
+          previousAnimation.onFrame(previousAnimation, now);
         animation.current = previousAnimation.current;
         if (finished) {
           animation.previousAnimation = null;

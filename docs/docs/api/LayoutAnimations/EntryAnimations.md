@@ -55,6 +55,7 @@ Simple animation based on changing of opacity.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317260-b3ccbe00-c2de-11eb-8434-8998b12dfa3c.mov" controls="controls" muted="muted"></video>
@@ -74,6 +75,7 @@ Animation based on smoothly shaking of component.
 * `duration` (in ms) default: 250
 * `delay` (in ms) default: 0
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317341-cc3cd880-c2de-11eb-9d72-4065c740667e.mov" controls="controls" muted="muted"></video>
@@ -102,6 +104,7 @@ Animation based on smoothly shaking of component.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317406-deb71200-c2de-11eb-8dee-c658a4e1e47a.mov" controls="controls" muted="muted"></video>
@@ -126,6 +129,7 @@ Animation based on changing width or height of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317473-f42c3c00-c2de-11eb-8772-b366c2ddde7f.mov" controls="controls" muted="muted"></video>
@@ -156,6 +160,7 @@ Animation based on changing scale of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317529-04441b80-c2df-11eb-9627-c56e986e44c1.mov" controls="controls" muted="muted"></video>
@@ -182,7 +187,7 @@ Animation based on horizontal or vertical moving of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
-
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 #### Example
 <video src="https://user-images.githubusercontent.com/36106620/120317587-1a51dc00-c2df-11eb-937a-c53a237afca2.mov" controls="controls" muted="muted"></video>
 
@@ -206,6 +211,7 @@ Animation based on horizontal moving of object with changing of opacity and skew
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125057634-c094bc80-e0a9-11eb-98d9-0c8eed1e63b0.mov" controls="controls" muted="muted"></video>
@@ -229,6 +235,7 @@ Animation based on rotation with scale and opacity change.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058126-40228b80-e0aa-11eb-8396-7f373af7fcbe.mov" controls="controls" muted="muted"></video>
@@ -253,6 +260,7 @@ Animation based on horizontal moving of object with rotation.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058243-60524a80-e0aa-11eb-94c8-79728688e2f3.mov" controls="controls" muted="muted"></video>
@@ -279,6 +287,7 @@ Animation based on rotation of object.
 * `restDisplacementThreshold` default: 0.001
 * `restSpeedThreshold` default: 0.001
 * `withCallback` callback that will fire after the entry animation ends
+* `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/125058359-79f39200-e0aa-11eb-8c78-c31e461e3748.mov" controls="controls" muted="muted"></video>
