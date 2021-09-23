@@ -120,6 +120,7 @@ function CreateAnimatedFlatList() {
         renderItem={renderItem}
       />
       <AnimatedFlatList
+        // @ts-expect-error
         style={{ flex: 1, red: false }}
         data={[]}
         renderItem={() => null}
@@ -209,6 +210,7 @@ function AnimatedStyleTest() {
 // useAnimatedStyle with arrays (invalid return)
 function AnimatedStyleArrayTest() {
   const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be an array.
   const animatedStyle = useAnimatedStyle(() => {
     return [styles.box, { width: width.value }];
   });
@@ -218,6 +220,7 @@ function AnimatedStyleArrayTest() {
 // useAnimatedStyle with null (invalid return)
 function AnimatedStyleNullTest() {
   const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be "false".
   const animatedStyle = useAnimatedStyle(() => false);
   return <Animated.View style={[styles.box, animatedStyle]} />;
 }
@@ -225,6 +228,7 @@ function AnimatedStyleNullTest() {
 // useAnimatedStyle with number (invalid return)
 function AnimatedStyleNumberTest() {
   const width = useSharedValue(50);
+  // @ts-expect-error since the animated style cannot be a number.
   const animatedStyle = useAnimatedStyle(() => 5);
   return <Animated.View style={[styles.box, animatedStyle]} />;
 }
@@ -235,6 +239,7 @@ function DerivedValueTest() {
   const width = useDerivedValue(() => {
     return progress.value * 250;
   });
+  // @ts-expect-error width is readonly
   width.value = 100;
   return (
     <Button title="Random" onPress={() => (progress.value = Math.random())} />
@@ -261,6 +266,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
+  // @ts-expect-error
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [
@@ -270,6 +276,7 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
+  // @ts-expect-error
   const style3 = useAnimatedStyle(() => {
     return {
       color: {},
