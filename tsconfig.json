@@ -13,7 +13,7 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "lib": ["es6"],
+    "lib": ["es6", "dom"],
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,

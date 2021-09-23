@@ -1,35 +1,47 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import MapperRegistry from './MapperRegistry';
 import MutableValue from './MutableValue';
 import Mapper from './Mapper';
+import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
+import {
+  AnimationObject,
+  PrimitiveValue,
+  Timestamp,
+} from '../animation/commonTypes';
+import { Descriptor } from '../hook/commonTypes';
 
-export default class JSReanimated {
-  native = false;
-  _valueSetter = undefined;
+export default class JSReanimated extends NativeReanimated {
+  _valueSetter?: (
+    value:
+      | (() => AnimationObject)
+      | AnimationObject
+      | PrimitiveValue
+      | Descriptor
+  ) => void = undefined;
+
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
-  _frames = [];
-  timeProvider = {};
+  _frames: ((timestamp: Timestamp) => void)[] = [];
+  timeProvider: { now: () => number };
 
   constructor() {
+    super(false);
     if (process.env.JEST_WORKER_ID) {
-      this.timeProvider.now = () => Date.now();
+      this.timeProvider = { now: () => Date.now() };
     } else {
-      this.timeProvider.now = () => window.performance.now();
+      this.timeProvider = { now: () => window.performance.now() };
     }
   }
 
-  pushFrame(frame) {
+  pushFrame(frame: (timestamp: Timestamp) => void): void {
     this._frames.push(frame);
     this.maybeRequestRender();
   }
 
-  getTimestamp() {
+  getTimestamp(): number {
     return this.timeProvider.now();
   }
 
-  maybeRequestRender() {
+  maybeRequestRender(): void {
     if (!this._renderRequested) {
       this._renderRequested = true;
 
@@ -41,7 +53,7 @@ export default class JSReanimated {
     }
   }
 
-  _onRender(timestampMs) {
+  _onRender(timestampMs: number): void {
     this._mapperRegistry.execute();
 
     const frames = [...this._frames];
@@ -56,38 +68,51 @@ export default class JSReanimated {
     }
   }
 
-  installCoreFunctions(valueSetter) {
+  installCoreFunctions(
+    valueSetter: (
+      value:
+        | (() => AnimationObject)
+        | AnimationObject
+        | PrimitiveValue
+        | Descriptor
+    ) => void
+  ): void {
     this._valueSetter = valueSetter;
   }
 
-  makeShareable(value) {
+  makeShareable<T>(value: T): T {
     return value;
   }
 
-  makeMutable(value) {
+  makeMutable<T>(value: T): MutableValue {
     return new MutableValue(value, this._valueSetter);
   }
 
-  makeRemote(object) {
-    return object;
+  makeRemote<T>(object = {}): T {
+    return object as T;
   }
 
-  startMapper(mapper, inputs = [], outputs = []) {
+  startMapper(
+    mapper: () => void,
+    inputs: any[] = [],
+    outputs: any[] = []
+  ): number {
     const instance = new Mapper(this, mapper, inputs, outputs);
     const mapperId = this._mapperRegistry.startMapper(instance);
     this.maybeRequestRender();
     return mapperId;
   }
 
-  stopMapper(mapperId) {
+  stopMapper(mapperId: number): void {
     this._mapperRegistry.stopMapper(mapperId);
   }
 
-  registerEventHandler(_eventHash, _eventHandler) {
+  registerEventHandler<T>(_: string, __: (event: T) => void): string {
     // noop
+    return '';
   }
 
-  unregisterEventHandler(_registrationId) {
+  unregisterEventHandler(_: string): void {
     // noop
   }
 }
