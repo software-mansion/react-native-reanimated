@@ -1,6 +1,8 @@
 #import "REAInitializer.h"
 #import "REAUIManager.h"
 
+#import <React-Fabric/react/renderer/uimanager/UIManager.h> // ReanimatedListener
+
 @interface RCTEventDispatcher(Reanimated)
 
 - (void)setBridge:(RCTBridge*)bridge;
@@ -34,6 +36,10 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     if (runtimeInstallerToWrap) {
         runtimeInstallerToWrap(runtime);
     }
+        
+    facebook::react::ReanimatedListener::handleEvent = [](RawEvent& rawEvent){
+        std::cerr << "[Reanimated] " << rawEvent.type << std::endl;
+    };
 
     auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
     runtime.global().setProperty(runtime,

@@ -281,33 +281,57 @@ export const styles = StyleSheet.create({
 
 export default App;*/
 
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Button, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
-import { View, Text, Button, TouchableOpacity} from 'react-native';
-import Animated, { useAnimatedStyle, withTiming, useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function S() {
   const x = useSharedValue(1);
   const style = useAnimatedStyle(() => {
     return {
-      transform: [{rotate: `${x.value}deg`}]
-    }
+      transform: [{ rotate: `${x.value}deg` }],
+    };
   }, []);
   const [text, setText] = useState('');
 
+  const scrollView = React.useMemo(() => {
+    return (
+      <ScrollView style={{ flex: 1, width: '100%' }}>
+        {[...Array(100)].map((x, i) => (
+          <Text style={{ fontSize: 50, textAlign: 'center' }}>{i}</Text>
+        ))}
+      </ScrollView>
+    );
+  }, []);
+
   return (
-    <View>
-      <Text> uuu </Text>
-      <Animated.View style={style}>
-        <Text> {text} </Text>
-        <TouchableOpacity onPress={() => { setText(text+'a');} }>
-          <Text>click 2</Text>
-        </TouchableOpacity>
-        <Button onPress={() => {
-          x.value = withSpring(Math.random() * 180);
-          setText(text+'a');
-          console.log("dsfwsfwe")
-        }} title="click me"/>
-      </Animated.View>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text> uuu </Text>
+        <Animated.View style={style}>
+          <Text> {text} </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setText(text + 'a');
+            }}>
+            <Text>click 2</Text>
+          </TouchableOpacity>
+          <Button
+            onPress={() => {
+              x.value = withSpring(Math.random() * 180);
+              setText(text + 'a');
+              console.log('dsfwsfwe');
+            }}
+            title="click me"
+          />
+        </Animated.View>
+      </View>
+      {scrollView}
     </View>
   );
 }
