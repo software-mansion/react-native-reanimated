@@ -106,13 +106,13 @@ export default function createAnimatedComponent(Component, options = {}) {
           prop?.current &&
           prop.current instanceof WorkletEventHandler
         ) {
+          console.log("registers ", viewTag, key);
           prop.current.registerForEvents(viewTag, key);
         }
       }
     }
 
     _detachNativeEvents() {
-
       for (const key in this.props) {
         const prop = this.props[key];
         if (
@@ -407,6 +407,7 @@ export default function createAnimatedComponent(Component, options = {}) {
           value?.current &&
           value.current instanceof WorkletEventHandler
         ) {
+          console.log('eventHAndler uuuuu');
           if (value.current.eventNames.length > 0) {
             value.current.eventNames.forEach((eventName) => {
               props[eventName] = value.current.listeners

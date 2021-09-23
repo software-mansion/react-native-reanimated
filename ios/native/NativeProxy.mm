@@ -19,6 +19,10 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
+#import <React-Fabric/react/renderer/uimanager/UIManager.h> // ReanimatedListener
+
+#import <iostream>
+
 namespace reanimated {
 
 using namespace facebook;
@@ -234,6 +238,23 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     //module->onEvent(eventNameString, eventAsString);
     //global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
   }];
+    
+    facebook::react::ReanimatedListener::handleEvent = [module](RawEvent& rawEvent){
+        std::cerr << "[Reanimated] " << rawEvent.type << std::endl;
+        int tag = rawEvent.eventTarget->getTag();
+        std::string eventType = rawEvent.type;
+        if (eventType.rfind("top", 0) == 0) {
+            eventType = "on" + eventType.substr(3);
+        }
+        std::string eventName = std::to_string(tag) + eventType;
+        std::cerr << "eventName " << eventName << std::endl;
+        
+        jsi::Object global = module->runtime->global();
+        jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+        global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);
+        module->onEvent(eventName, rawEvent.payloadFactory(*module->runtime));
+        global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
+    };
 
   return module;
 }

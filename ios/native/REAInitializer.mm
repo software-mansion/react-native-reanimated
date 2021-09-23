@@ -36,10 +36,6 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     if (runtimeInstallerToWrap) {
         runtimeInstallerToWrap(runtime);
     }
-        
-    facebook::react::ReanimatedListener::handleEvent = [](RawEvent& rawEvent){
-        std::cerr << "[Reanimated] " << rawEvent.type << std::endl;
-    };
 
     auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
     runtime.global().setProperty(runtime,

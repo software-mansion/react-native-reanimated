@@ -281,14 +281,32 @@ export const styles = StyleSheet.create({
 
 export default App;*/
 
+
+
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
+  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
 import { Button, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
+
+const SuperScrollView = React.memo(() => {
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    console.log(event);
+    console.log("dziala!");
+  });
+
+  return (
+    <Animated.ScrollView scrollEventThrottle={16} onScroll={scrollHandler} style={{ flex: 1, width: '100%' }}>
+      {[...Array(100)].map((x, i) => (
+        <Text key={i} style={{ fontSize: 50, textAlign: 'center' }}>{i}</Text>
+      ))}
+    </Animated.ScrollView>
+  );
+});
 
 export default function S() {
   const x = useSharedValue(1);
@@ -298,16 +316,6 @@ export default function S() {
     };
   }, []);
   const [text, setText] = useState('');
-
-  const scrollView = React.useMemo(() => {
-    return (
-      <ScrollView style={{ flex: 1, width: '100%' }}>
-        {[...Array(100)].map((x, i) => (
-          <Text style={{ fontSize: 50, textAlign: 'center' }}>{i}</Text>
-        ))}
-      </ScrollView>
-    );
-  }, []);
 
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -331,7 +339,7 @@ export default function S() {
           />
         </Animated.View>
       </View>
-      {scrollView}
+      <SuperScrollView/>
     </View>
   );
 }

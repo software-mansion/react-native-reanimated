@@ -67,7 +67,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &callback) override;
 
   void onRender(double timestampMs);
-  void onEvent(std::string eventName, std::string eventAsString);
+  void onEvent(std::string eventName, jsi::Value && eventAsString);
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
