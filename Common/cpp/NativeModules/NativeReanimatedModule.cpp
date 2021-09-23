@@ -84,6 +84,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
+      platformDepMethodsHolder.setGestureStateFunction,
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
     this->renderRequested = false;

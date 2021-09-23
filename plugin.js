@@ -69,6 +69,7 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  '_setGestureState',
   '_getCurrentTime',
   '_eventTimestamp',
   '_frameTimestamp',

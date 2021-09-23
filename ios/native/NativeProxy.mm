@@ -10,6 +10,7 @@
 #import "LayoutAnimationsProxy.h"
 #import "REAAnimationsManager.h"
 #import "REAUIManager.h"
+#import "RNCustomGestureHandler.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
@@ -106,6 +107,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
+  };
+
+  id<RNCustomGestureHandler> externalCustomGestureHandler = [bridge moduleForName:@"RNGestureHandlerModule"];
+  auto setGestureStateFunction = [externalCustomGestureHandler](int handlerTag, int newState) {
+    setGestureState(externalCustomGestureHandler, handlerTag, newState);
   };
 
   auto propObtainer = [reanimatedModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
@@ -210,6 +216,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     scrollToFunction,
     measuringFunction,
     getCurrentTime,
+    setGestureStateFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(jsInvoker,

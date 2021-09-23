@@ -1,4 +1,4 @@
-/* global _WORKLET _measure _scrollTo */
+/* global _WORKLET _measure _scrollTo _setGestureState */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { findNodeHandle } from 'react-native';
@@ -37,4 +37,12 @@ export function scrollTo(animatedRef, x, y, animated) {
   }
   const viewTag = animatedRef();
   _scrollTo(viewTag, x, y, animated);
+}
+
+export function setGestureState(handlerTag: number, newState: number) {
+  'worklet';
+  if (!_WORKLET && !isChromeDebugger()) {
+    return;
+  }
+  _setGestureState(handlerTag, newState);
 }

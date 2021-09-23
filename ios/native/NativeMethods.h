@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #import <vector>
+#import "RNCustomGestureHandler.h"
 
 namespace reanimated {
 
@@ -17,5 +18,9 @@ void scrollTo(
     double x,
     double y,
     bool animated);
+void setGestureState(
+    id<RNCustomGestureHandler> externalCustomGestureHandler,
+    int handlerTag,
+    int newState);
 
 } // namespace reanimated

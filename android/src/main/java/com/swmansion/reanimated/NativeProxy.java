@@ -1,6 +1,8 @@
 package com.swmansion.reanimated;
 
 import android.os.SystemClock;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
@@ -12,6 +14,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.swmansion.gesturehandler.react.CustomGestureHandler;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
@@ -74,6 +77,7 @@ public class NativeProxy {
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
+  private final CustomGestureHandler customGestureHandler;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
@@ -82,6 +86,14 @@ public class NativeProxy {
     mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
+
+    CustomGestureHandler tempCustomHandler;
+    try {
+      tempCustomHandler = context.getNativeModule(CustomGestureHandler.class);
+    } catch (ClassCastException e) {
+      tempCustomHandler = null;
+    }
+    customGestureHandler = tempCustomHandler;
   }
 
   private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, LayoutAnimations LayoutAnimations);
@@ -111,6 +123,13 @@ public class NativeProxy {
   @DoNotStrip
   private void scrollTo(int viewTag, double x, double y, boolean animated) {
     mNodesManager.scrollTo(viewTag, x, y, animated);
+  }
+
+  @DoNotStrip
+  private void setGestureState(int handlerTag, int newState) {
+    if (customGestureHandler != null) {
+      customGestureHandler.setGestureState(handlerTag, newState);
+    }
   }
 
   @DoNotStrip
