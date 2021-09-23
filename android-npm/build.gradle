@@ -13,21 +13,15 @@ def engine = "jsc"
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
     public static String buildDir = "../../../android/app/build"
-    public static String engine = "jsc"
-    public static String reactVersion = "64"
 
     @TaskAction
     def run() {
-        ant.unzip(
-            src: "./react-native-reanimated-${reactVersion}-${engine}.aar",
-            dest: "./tmp"
-        )
         for(def abiVersion in ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]) {
             ant.sequential {
                 copy(
-                    tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
-                    file: "./tmp/jni/${abiVersion}/libfbjni.so",
-                    overwrite: true
+                        tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
+                        file: "../libSo/fbjni/jni/${abiVersion}/libfbjni.so",
+                        overwrite: true
                 )
             }
         }
@@ -71,25 +65,22 @@ rootProject.getSubprojects().forEach({project ->
         if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
             def projectProperties = project.getProperties()
             if(!projectProperties.get("reanimated")
-                || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+                    || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
             ) {
                 def flavorString = getCurrentFlavor()
                 replaceSoTask.appName = project.getProperties().path
                 replaceSoTask.buildDir = project.getProperties().buildDir
-                replaceSoTask.engine = engine
-                replaceSoTask.reactVersion = minor
                 def appName = project.getProperties().path
-                project.getProperties().android.packagingOptions.pickFirst("lib/**/libfbjni.so")
 
                 replaceSoTaskDebug.dependsOn(
-                    project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
-                    project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
+                        project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
+                        project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
                 )
                 project.getTasks().getByPath("${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
 
                 replaceSoTaskRelease.dependsOn(
-                    project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
-                    project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
+                        project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
+                        project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
                 )
                 project.getTasks().getByPath("${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
             }
