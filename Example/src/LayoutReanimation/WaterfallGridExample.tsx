@@ -4,8 +4,8 @@ import { ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   BaseAnimationBuilder,
   BounceOut,
+  combineTransition,
   CurvedTransition,
-  EntryExitTransition,
   FadingTransition,
   JumpingTransition,
   Layout,
@@ -46,9 +46,10 @@ function getLayoutTranistion(transition: string): BaseAnimationBuilder {
     case 'CurvedTransition':
       return CurvedTransition.delay(1000);
     case 'EntryExit':
-      return EntryExitTransition.delay(1000)
-        .entering(LightSpeedInLeft.duration(1000))
-        .exiting(PinwheelOut.duration(1000));
+      return combineTransition(
+        PinwheelOut.duration(1000),
+        LightSpeedInLeft.duration(1000)
+      ).delay(1000);
     default:
       return Layout.delay(1000).springify();
   }

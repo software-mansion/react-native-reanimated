@@ -115,5 +115,15 @@ Entry/Exit transition, lets you specify different animations for exiting from th
 * `entering` animation that will be used for component entering ( default: `FadeIn`)
 * `exiting`  animation that will be used for component exiting ( default: `FadeOut`)
 
+#### Combine Transition
+To make usage of that transition simplier we have prepared function `combineTransition` that will make your code look cleaner and shorter.
+
+##### Usage
+```js
+    // you can change ExitingAnimation and EnteringAnimation for any predefined animation you would like
+    // you can apply modifier (i.ex. delay()) on the object that this function returns
+    combineTransition(ExitingAnimation, EnteringAnimation).modifier()
+```
+
 #### Example
 <video src="https://user-images.githubusercontent.com/48885911/134480769-4be2c194-4392-483f-a9db-f48bac5e546c.mov" controls="controls" muted="muted"></video>

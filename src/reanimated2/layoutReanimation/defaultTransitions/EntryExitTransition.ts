@@ -204,3 +204,10 @@ export class EntryExitTransition
     };
   };
 }
+
+export function combineTransition(
+  exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
+  entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
+): EntryExitTransition {
+  return EntryExitTransition.entering(entering).exiting(exiting);
+}

@@ -784,6 +784,10 @@ declare module 'react-native-reanimated' {
         animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
       ): EntryExitTransition;
     }
+    export function combineTransition(
+      exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
+      entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
+    ): EntryExitTransition;
     export class SlideInRight extends ComplexAnimationBuilder {}
     export class SlideOutRight extends ComplexAnimationBuilder {}
     export class SlideInUp extends ComplexAnimationBuilder {}
@@ -1051,6 +1055,7 @@ declare module 'react-native-reanimated' {
   export const JumpingTransition: typeof Animated.JumpingTransition;
   export const CurvedTransition: typeof Animated.CurvedTransition;
   export const EntryExitTransition: typeof Animated.EntryExitTransition;
+  export const combineTransition: typeof Animated.combineTransition;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
   export const SlideInRight: typeof Animated.SlideInRight;
   export const SlideOutRight: typeof Animated.SlideOutRight;
