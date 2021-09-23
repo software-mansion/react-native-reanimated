@@ -17,7 +17,7 @@ export class RollInLeft
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {
@@ -48,7 +48,7 @@ export class RollInRight
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {
@@ -79,7 +79,7 @@ export class RollOutLeft
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {
@@ -110,7 +110,7 @@ export class RollOutRight
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {

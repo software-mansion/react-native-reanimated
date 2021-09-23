@@ -27,7 +27,7 @@ export class SequencedTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const sequenceDuration = (this.durationV ?? 500) / 2;
     const config = { duration: sequenceDuration };
     const reverse = this.reversed;

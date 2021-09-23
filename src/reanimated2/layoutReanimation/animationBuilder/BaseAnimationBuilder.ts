@@ -8,6 +8,7 @@ import {
 export class BaseAnimationBuilder {
   durationV?: number;
   delayV?: number;
+  randomizeDelay = false;
   callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
@@ -56,9 +57,26 @@ export class BaseAnimationBuilder {
     return this.durationV ?? 300;
   }
 
+  static randomDelay(): BaseAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.randomDelay();
+  }
+
+  randomDelay(): BaseAnimationBuilder {
+    this.randomizeDelay = true;
+    return this;
+  }
+
+  // when randomizeDelay is set to true, randomize delay between 0 and provided value (or 1000ms if delay is not provided)
+  getDelay(): number {
+    return this.randomizeDelay
+      ? Math.random() * (this.delayV ?? 1000)
+      : this.delayV ?? 0;
+  }
+
   getDelayFunction(): AnimationFunction {
-    const delay = this.delayV;
-    return delay
+    const isDelayProvided = this.randomizeDelay || this.delayV;
+    return isDelayProvided
       ? withDelay
       : (_, animation) => {
           'worklet';

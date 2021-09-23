@@ -15,7 +15,7 @@ export class JumpingTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = (this.durationV ?? 300) / 2;
     const config = { duration: duration * 2 };
 

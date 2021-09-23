@@ -15,7 +15,7 @@ export class LinearTransition
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return (values) => {
       'worklet';

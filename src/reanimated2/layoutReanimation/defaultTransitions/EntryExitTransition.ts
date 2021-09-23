@@ -54,7 +54,7 @@ export class EntryExitTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
-    const delay = this.delayV ?? 0;
+    const delay = this.getDelay();
     const enteringAnimation = this.enteringV.build();
     const exitingAnimation = this.exitingV.build();
     const exitingDuration = this.exitingV.getDuration();

@@ -25,7 +25,7 @@ export class BounceIn
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -73,7 +73,7 @@ export class BounceInDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -125,7 +125,7 @@ export class BounceInUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -173,7 +173,7 @@ export class BounceInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -221,7 +221,7 @@ export class BounceInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -269,7 +269,7 @@ export class BounceOut
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -317,7 +317,7 @@ export class BounceOutDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -367,7 +367,7 @@ export class BounceOutUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -417,7 +417,7 @@ export class BounceOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 
@@ -467,7 +467,7 @@ export class BounceOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
 

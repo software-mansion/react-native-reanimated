@@ -15,7 +15,7 @@ export class FadingTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
-    const delay = this.delayV ?? 0;
+    const delay = this.getDelay();
     const duration = this.durationV ?? 500;
 
     return (values) => {

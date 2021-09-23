@@ -15,7 +15,7 @@ export class FadeIn
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return (_) => {
       'worklet';
@@ -43,7 +43,7 @@ export class FadeInRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -75,7 +75,7 @@ export class FadeInLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -107,7 +107,7 @@ export class FadeInUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -139,7 +139,7 @@ export class FadeInDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -171,7 +171,7 @@ export class FadeOut
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return (_) => {
       'worklet';
@@ -199,7 +199,7 @@ export class FadeOutRight
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -231,7 +231,7 @@ export class FadeOutLeft
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -263,7 +263,7 @@ export class FadeOutUp
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';
@@ -295,7 +295,7 @@ export class FadeOutDown
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
-    const delay = this.delayV;
+    const delay = this.getDelay();
 
     return () => {
       'worklet';

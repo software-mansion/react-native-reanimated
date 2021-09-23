@@ -696,6 +696,8 @@ declare module 'react-native-reanimated' {
         callback: (finished: boolean) => void
       ): BaseAnimationBuilder;
       withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
+      static randomDelay(): BaseAnimationBuilder;
+      randomDelay(): BaseAnimationBuilder;
       build: () => LayoutAnimationFunction | EntryExitAnimationFunction;
     }
 

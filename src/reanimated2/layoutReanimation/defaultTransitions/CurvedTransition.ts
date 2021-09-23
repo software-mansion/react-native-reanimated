@@ -60,7 +60,7 @@ export class CurvedTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
-    const delay = this.delayV ?? 0;
+    const delay = this.getDelay();
     const duration = this.durationV ?? 300;
     const easing = {
       easingX: this.easingXV,

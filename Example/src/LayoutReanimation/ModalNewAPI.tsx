@@ -4,7 +4,7 @@ import Animated, {
   withTiming,
   withDelay,
   EntryExitAnimationFunction,
-  FadingTransition,
+  Layout,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
@@ -55,7 +55,7 @@ function AnimatedView() {
     <Animated.View
       ref={ref}
       style={[styles.animatedView]}
-      {...{ entering, exiting, layout: FadingTransition }}>
+      {...{ entering, exiting, layout: Layout }}>
       <Text> kk </Text>
     </Animated.View>
   );

@@ -48,7 +48,8 @@ function getLayoutTranistion(transition: string): BaseAnimationBuilder {
     case 'EntryExit':
       return EntryExitTransition.delay(1000)
         .entering(LightSpeedInLeft.duration(1000))
-        .exiting(PinwheelOut.duration(1000));
+        .exiting(PinwheelOut.duration(1000))
+        .randomDelay();
     default:
       return Layout.delay(2000).springify();
   }
