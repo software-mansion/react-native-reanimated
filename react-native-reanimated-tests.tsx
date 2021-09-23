@@ -45,6 +45,7 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
+  // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -119,7 +120,6 @@ function CreateAnimatedFlatList() {
         renderItem={renderItem}
       />
       <AnimatedFlatList
-        // @ts-expect-error
         style={{ flex: 1, red: false }}
         data={[]}
         renderItem={() => null}
@@ -209,7 +209,6 @@ function AnimatedStyleTest() {
 // useAnimatedStyle with arrays (invalid return)
 function AnimatedStyleArrayTest() {
   const width = useSharedValue(50);
-  // @ts-expect-error since the animated style cannot be an array.
   const animatedStyle = useAnimatedStyle(() => {
     return [styles.box, { width: width.value }];
   });
@@ -219,7 +218,6 @@ function AnimatedStyleArrayTest() {
 // useAnimatedStyle with null (invalid return)
 function AnimatedStyleNullTest() {
   const width = useSharedValue(50);
-  // @ts-expect-error since the animated style cannot be "false".
   const animatedStyle = useAnimatedStyle(() => false);
   return <Animated.View style={[styles.box, animatedStyle]} />;
 }
@@ -227,7 +225,6 @@ function AnimatedStyleNullTest() {
 // useAnimatedStyle with number (invalid return)
 function AnimatedStyleNumberTest() {
   const width = useSharedValue(50);
-  // @ts-expect-error since the animated style cannot be a number.
   const animatedStyle = useAnimatedStyle(() => 5);
   return <Animated.View style={[styles.box, animatedStyle]} />;
 }
@@ -238,7 +235,6 @@ function DerivedValueTest() {
   const width = useDerivedValue(() => {
     return progress.value * 250;
   });
-  // @ts-expect-error width is readonly
   width.value = 100;
   return (
     <Button title="Random" onPress={() => (progress.value = Math.random())} />
@@ -253,32 +249,30 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
-      color: "red",
+      color: 'red',
       backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
         },
         {
-          rotate: `${Math.PI}rad`
-        }
+          rotate: `${Math.PI}rad`,
+        },
       ],
     };
   });
-  // @ts-expect-error
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          rotate: Math.PI
-        }
+          rotate: Math.PI,
+        },
       ],
     };
   });
-  // @ts-expect-error
   const style3 = useAnimatedStyle(() => {
     return {
-      color: {}
+      color: {},
     };
   });
   return (
@@ -324,16 +318,16 @@ function AnimatedGestureHandlerTest() {
 
 function AnimatedPinchGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<
-    PinchGestureHandlerGestureEvent
-  >({
-    onActive: (event) => {
-      x.value = event.scale;
-    },
-    onEnd: () => {
-      x.value = withTiming(1);
-    },
-  });
+  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>(
+    {
+      onActive: (event) => {
+        x.value = event.scale;
+      },
+      onEnd: () => {
+        x.value = withTiming(1);
+      },
+    }
+  );
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -739,22 +733,26 @@ function updatePropsTest() {
 // test partial animated props
 function testPartialAnimatedProps() {
   const ap = useAnimatedProps<ImageProps>(() => ({
-    height: 100
+    height: 100,
   }));
   const aps = useAnimatedProps<ImageProps>(() => ({
-    source: { uri: 'whatever' }
+    source: { uri: 'whatever' },
   }));
 
   // @ts-expect-error it should fail because `source` is a required prop
   const test1 = <AnimatedImage />;
   // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
   // @ts-expect-error it should fail because `source` is a required prop, even though animatedProps sets it
-  const test2 = <AnimatedImage animatedProps={aps} />
+  const test2 = <AnimatedImage animatedProps={aps} />;
   // should pass because source is set
-  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />
+  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />;
   // should pass because source is set and `animatedProps` doesn't change that
-  const test4 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  const test4 = (
+    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  );
   // TODO: Should this test fail? Setting it twice might not be intentional...
   // should pass because source is set normally and in `animatedProps`
-  const test5 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
+  const test5 = (
+    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
+  );
 }
