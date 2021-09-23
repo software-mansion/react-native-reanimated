@@ -5,6 +5,10 @@
 #import <React/RCTShadowView.h>
 #import "REAModule.h"
 
+#import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedListener
+
+using namespace facebook::react;
+
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
 // Objective-C it stays private
@@ -337,9 +341,10 @@
       }
     //[self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
   }
-  /*if (nativeProps.count > 0) {
-    [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
-  }*/
+  if (nativeProps.count > 0) {
+      std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
+      // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
+  }
   if (jsProps.count > 0) {
     [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
                                         body:@{@"viewTag" : viewTag, @"props" : jsProps}];
