@@ -48,10 +48,9 @@ function getLayoutTranistion(transition: string): BaseAnimationBuilder {
     case 'EntryExit':
       return EntryExitTransition.delay(1000)
         .entering(LightSpeedInLeft.duration(1000))
-        .exiting(PinwheelOut.duration(1000))
-        .randomDelay();
+        .exiting(PinwheelOut.duration(1000));
     default:
-      return Layout.delay(2000).springify();
+      return Layout.delay(1000).springify();
   }
 }
 export function WaterfallGrid({

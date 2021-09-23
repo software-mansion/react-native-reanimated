@@ -5,19 +5,15 @@ import {
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { AnimationObject, withSequence, withTiming } from '../../animation';
-import { FadeIn, FadeOutLeft } from '../defaultAnimations/Fade';
+import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 import { StyleProps, TransformProperty } from '../../commonTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
   implements ILayoutAnimationBuilder {
-  enteringV:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder = FadeIn.duration(1000);
+  enteringV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeIn;
 
-  exitingV:
-    | BaseAnimationBuilder
-    | typeof BaseAnimationBuilder = FadeOutLeft.duration(2000);
+  exitingV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeOut;
 
   static createInstance(): EntryExitTransition {
     return new EntryExitTransition();
