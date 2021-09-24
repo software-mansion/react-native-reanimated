@@ -1,8 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { useRef } from 'react';
 import { makeMutable } from './core';
-import { SharedValue } from './hook/commonTypes';
+import { SharedValue } from './commonTypes';
+import { Descriptor } from './hook/commonTypes';
 
 export interface ViewRefSet<T> {
   items: Set<T>;
@@ -25,9 +24,9 @@ export interface ViewDescriptorsSet {
 }
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
-  const ref = useRef(null);
+  const ref = useRef<ViewDescriptorsSet | null>(null);
   if (ref.current === null) {
-    const data = {
+    const data: ViewDescriptorsSet = {
       batchToRemove: new Set(),
       tags: new Set(),
       waitForInsertSync: false,
@@ -87,18 +86,18 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   return ref.current;
 }
 
-export function makeViewsRefSet(): ViewRefSet {
-  const ref = useRef(null);
+export function makeViewsRefSet<T>(): ViewRefSet<T> {
+  const ref = useRef<ViewRefSet<T> | null>(null);
   if (ref.current === null) {
-    const data = {
+    const data: ViewRefSet<T> = {
       items: new Set(),
 
-      add: (item) => {
+      add: (item: T) => {
         if (data.items.has(item)) return;
         data.items.add(item);
       },
 
-      remove: (item) => {
+      remove: (item: T) => {
         data.items.delete(item);
       },
     };

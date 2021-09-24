@@ -1,5 +1,7 @@
-import { WorkletFunction } from './commonTypes';
+import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
 import { ReanimatedConsole } from './core';
+import { MeasuredDimensions } from './NativeMethods';
+import { NativeReanimated } from './NativeReanimated/NativeReanimated';
 declare global {
   const _WORKLET: boolean;
   const _frameTimestamp: number;
@@ -11,12 +13,25 @@ declare global {
     tag: number,
     flag: { value: boolean; _value: boolean }
   ) => void;
+  const _updateProps: (
+    tag: number,
+    name: string,
+    updates: StyleProps | AnimatedStyle
+  ) => void;
+  const _measure: (viewTag: number) => MeasuredDimensions;
+  const _scrollTo: (
+    viewTag: number,
+    x: number,
+    y: number,
+    animated: boolean
+  ) => void;
   namespace NodeJS {
     interface Global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
       _WORKLET: boolean;
+      __reanimatedModuleProxy: NativeReanimated;
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
         registerConfig(tag: number, config: Record<string, unknown>): void;

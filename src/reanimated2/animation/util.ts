@@ -11,7 +11,7 @@ import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
 
 import { AnimatedStyle, SharedValue } from '../commonTypes';
 import { DelayAnimation } from './delay';
-import NativeReanimated from '../NativeReanimated';
+import NativeReanimatedModule from '../NativeReanimated';
 import { RepeatAnimation } from './repeat';
 import { SequenceAnimation } from './sequence';
 import { StyleLayoutAnimation } from './styleAnimation';
@@ -212,7 +212,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || !NativeReanimated.native) {
+  if (_WORKLET || !NativeReanimatedModule.native) {
     return create();
   }
   // @ts-ignore: eslint-disable-line

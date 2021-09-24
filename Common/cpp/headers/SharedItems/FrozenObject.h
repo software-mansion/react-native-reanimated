@@ -18,6 +18,7 @@ class FrozenObject : public jsi::HostObject {
 
  private:
   std::unordered_map<std::string, std::shared_ptr<ShareableValue>> map;
+  std::vector<std::string> namesOrder;
 
  public:
   FrozenObject(

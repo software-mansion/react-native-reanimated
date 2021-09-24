@@ -11,7 +11,7 @@ import {
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun, Timestamp } from '../animation';
-import NativeReanimated from '../NativeReanimated';
+import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -38,7 +38,6 @@ import {
   BasicWorkletFunction,
   NestedObjectValues,
   SharedValue,
-  WorkletFunction,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -270,7 +269,7 @@ function jestStyleUpdater(
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: WorkletFunction[] = []
+  adapters: AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
@@ -441,7 +440,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
   initial.value = initialUpdaterRun(updater);
   useEffect(() => {
