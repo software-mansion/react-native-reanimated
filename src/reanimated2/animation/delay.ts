@@ -64,7 +64,11 @@ export function withDelay(
       animation.startTime = now;
       animation.started = false;
       animation.current = value;
-      animation.previousAnimation = previousAnimation;
+      if (previousAnimation === animation) {
+        animation.previousAnimation = previousAnimation.previousAnimation;
+      } else {
+        animation.previousAnimation = previousAnimation;
+      }
     }
 
     const callback = (finished?: boolean): void => {
