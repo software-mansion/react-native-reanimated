@@ -26,7 +26,7 @@ runOnUI(() => {
       let currentAnimation = style.animations;
       if (type === 'entering') {
         enteringAnimationForTag[tag] = style;
-      } else if (type === 'layout') {
+      } else if (type === 'layout' && enteringAnimationForTag[tag] !== null) {
         const entryAniamtion = enteringAnimationForTag[tag].animations;
         const layoutAnimation = style.animations;
         currentAnimation = {};
@@ -36,6 +36,7 @@ runOnUI(() => {
         for (const key in layoutAnimation) {
           currentAnimation[key] = layoutAnimation[key];
         }
+        enteringAnimationForTag[tag] = null;
       }
 
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
@@ -50,6 +51,9 @@ runOnUI(() => {
           _stopObservingProgress(tag, finished);
         }
         style.callback && style.callback(finished);
+        if (type === 'entering') {
+          enteringAnimationForTag[tag] = null;
+        }
       };
       configs[tag].sv.value = animation;
       _startObservingProgress(tag, sv);
