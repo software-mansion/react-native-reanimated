@@ -56,6 +56,7 @@ interface AnimatedState {
 interface AnimationRef {
   initial: {
     value: AnimatedStyle;
+    updater: () => AnimatedStyle;
   };
   remoteState: AnimatedState;
   sharableViewDescriptors: SharedValue<Descriptor[]>;
@@ -427,6 +428,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     initRef.current = {
       initial: {
         value: initialStyle,
+        updater: updater,
       },
       remoteState: makeRemote({ last: initialStyle }),
       sharableViewDescriptors: makeMutable([]),
@@ -442,7 +444,6 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
   const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
   const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
     let upadterFn = updater;
