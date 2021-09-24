@@ -6,35 +6,35 @@ runOnUI(() => {
   'worklet';
 
   const configs: Record<string, any> = {};
-  const enteringAniamtionForTag: Record<string, any> = {};
+  const enteringAnimationForTag: Record<string, any> = {};
 
   global.LayoutAnimationRepository = {
     configs,
     registerConfig(tag, config) {
       configs[tag] = config;
-      enteringAniamtionForTag[tag] = null;
+      enteringAnimationForTag[tag] = null;
     },
     removeConfig(tag) {
       delete configs[tag];
-      delete enteringAniamtionForTag[tag];
+      delete enteringAnimationForTag[tag];
     },
     startAnimationForTag(tag, type, yogaValues) {
       if (configs[tag] == null) {
         return; // :(
       }
       const style = configs[tag][type](yogaValues);
-      let currentAniamtion = style.animations;
+      let currentAnimation = style.animations;
       if (type === 'entering') {
-        enteringAniamtionForTag[tag] = style;
+        enteringAnimationForTag[tag] = style;
       } else if (type === 'layout') {
-        const entryAniamtion = enteringAniamtionForTag[tag].animations;
+        const entryAniamtion = enteringAnimationForTag[tag].animations;
         const layoutAnimation = style.animations;
-        currentAniamtion = {};
+        currentAnimation = {};
         for (const key in entryAniamtion) {
-          currentAniamtion[key] = entryAniamtion[key];
+          currentAnimation[key] = entryAniamtion[key];
         }
         for (const key in layoutAnimation) {
-          currentAniamtion[key] = layoutAnimation[key];
+          currentAnimation[key] = layoutAnimation[key];
         }
       }
 
@@ -43,7 +43,7 @@ runOnUI(() => {
       _startObservingProgress(tag, sv);
       sv._value = Object.assign({}, style.initialValues, sv._value);
       _stopObservingProgress(tag, false);
-      const animation = withStyleAnimation(currentAniamtion);
+      const animation = withStyleAnimation(currentAnimation);
 
       animation.callback = (finished?: boolean) => {
         if (finished) {
