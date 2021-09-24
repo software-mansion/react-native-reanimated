@@ -173,7 +173,7 @@ export class SlideInDown
           originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
-          originY: values.originY - height,
+          originY: values.originY + height,
         },
         callback: callback,
       };
