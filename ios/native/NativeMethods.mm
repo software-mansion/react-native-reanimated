@@ -43,9 +43,9 @@ void scrollTo(int scrollViewTag, RCTUIManager *uiManager, double x, double y, bo
   [scrollView scrollToOffset:(CGPoint){(CGFloat)x, (CGFloat)y} animated:animated];
 }
 
-void setGestureState(id<RNCustomGestureHandler> externalCustomGestureHandler, int handlerTag, int newState) {
-  if (externalCustomGestureHandler != nil) {
-    [externalCustomGestureHandler setGestureState:newState forHandler:handlerTag];
+void setGestureState(id<RNGestureHandlerStateManager> gestureHandlerStateManager, int handlerTag, int newState) {
+  if (gestureHandlerStateManager != nil) {
+    [gestureHandlerStateManager setGestureState:newState forHandler:handlerTag];
   }
 }
 

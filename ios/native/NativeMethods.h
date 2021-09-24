@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 #import <vector>
-#import "RNCustomGestureHandler.h"
+#import "RNGestureHandlerStateManager.h"
 
 namespace reanimated {
 
@@ -19,7 +19,7 @@ void scrollTo(
     double y,
     bool animated);
 void setGestureState(
-    id<RNCustomGestureHandler> externalCustomGestureHandler,
+    id<RNGestureHandlerStateManager> gestureHandlerStateManager,
     int handlerTag,
     int newState);
 
