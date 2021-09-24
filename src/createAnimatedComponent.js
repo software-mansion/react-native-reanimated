@@ -78,6 +78,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     _invokeAnimatedPropsCallbackOnMount = false;
     _styles = null;
     _viewTag = -1;
+    _isFirstRender = true;
 
     constructor(props) {
       super(props);
@@ -457,10 +458,14 @@ export default function createAnimatedComponent(Component, options = {}) {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              return {
-                ...style.initial.value,
-                ...initialUpdaterRun(style.initial.updater),
-              };
+              if (this._isFirstRender) {
+                return {
+                  ...style.initial.value,
+                  ...initialUpdaterRun(style.initial.updater),
+                };
+              } else {
+                return style.initial.value;
+              }
             } else {
               return style;
             }
@@ -509,6 +514,10 @@ export default function createAnimatedComponent(Component, options = {}) {
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
+      }
+
+      if (this._isFirstRender) {
+        this._isFirstRender = false;
       }
 
       const platformProps = Platform.select({
