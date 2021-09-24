@@ -41,7 +41,7 @@ runOnUI(() => {
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
-      sv._value = Object.assign({}, style.initialValues, sv._value);
+      sv._value = Object.assign({}, sv._value, style.initialValues);
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(currentAnimation);
 
