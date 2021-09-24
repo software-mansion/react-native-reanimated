@@ -7,6 +7,10 @@
 #include "SharedParent.h"
 #include "WorkletsCache.h"
 
+#include <react/renderer/uimanager/primitives.h> // ShadowNodeWrapper
+
+using namespace facebook::react;
+
 namespace reanimated {
 
 class HostFunctionWrapper;
@@ -36,6 +40,8 @@ class ValueWrapper {
   static inline std::vector<std::shared_ptr<ShareableValue>> &asFrozenArray(
       const std::unique_ptr<ValueWrapper> &valueContainer);
   static inline const std::shared_ptr<MutableValue> &asMutableValue(
+      const std::unique_ptr<ValueWrapper> &valueContainer);
+  static inline const std::shared_ptr<ShadowNodeWrapper> &asShadowNodeWrapper(
       const std::unique_ptr<ValueWrapper> &valueContainer);
 
   static const HostFunctionWrapper *asHostFunctionWrapper(
@@ -102,6 +108,13 @@ class MutableValueWrapper : public ValueWrapper {
   std::shared_ptr<MutableValue> value;
 };
 
+class ShadowNodeWrapperWrapper : public ValueWrapper {
+ public:
+    ShadowNodeWrapperWrapper(const std::shared_ptr<ShadowNodeWrapper> &_value)
+      : ValueWrapper(ValueType::ShadowNodeWrapperType), value(_value){};
+  std::shared_ptr<ShadowNodeWrapper> value;
+};
+
 inline bool ValueWrapper::asBoolean(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<BooleanValueWrapper *>(valueContainer.get())->value;
@@ -141,6 +154,11 @@ inline std::vector<std::shared_ptr<ShareableValue>>
 inline const std::shared_ptr<MutableValue> &ValueWrapper::asMutableValue(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<MutableValueWrapper *>(valueContainer.get())->value;
+};
+
+inline const std::shared_ptr<ShadowNodeWrapper> &ValueWrapper::asShadowNodeWrapper(
+    const std::unique_ptr<ValueWrapper> &valueContainer) {
+  return static_cast<ShadowNodeWrapperWrapper *>(valueContainer.get())->value;
 };
 
 inline const HostFunctionWrapper *ValueWrapper::asHostFunctionWrapper(

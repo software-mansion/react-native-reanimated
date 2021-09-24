@@ -88,9 +88,9 @@ const ScrollViewExample = React.memo(() => {
 export default function App() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <UIPropsExample />
+      {/* <UIPropsExample /> */}
       <NativePropsExample />
-      <ScrollViewExample />
+      {/* <ScrollViewExample /> */}
     </View>
   );
 }

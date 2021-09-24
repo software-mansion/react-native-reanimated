@@ -38,6 +38,7 @@ void Mapper::execute(jsi::Runtime &rt) {
           rt,
           (int)jsViewDescriptor.getProperty(rt, "tag").asNumber(),
           jsViewDescriptor.getProperty(rt, "name"),
+          jsViewDescriptor.getProperty(rt, "shareableNode"),
           newStyle);
     }
   }

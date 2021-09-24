@@ -48,6 +48,7 @@ if (shouldBeUseWeb()) {
       _updateProps(
         viewDescriptor.tag,
         viewDescriptor.name || 'RCTView',
+        viewDescriptor.shareableNode,
         updates
       );
     });

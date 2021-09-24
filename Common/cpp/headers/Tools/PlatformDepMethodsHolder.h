@@ -11,6 +11,7 @@ using UpdaterFunction = std::function<void(
     jsi::Runtime &rt,
     int viewTag,
     const jsi::Value &viewName,
+    const jsi::Value &shadowNode,
     const jsi::Object &object)>;
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;

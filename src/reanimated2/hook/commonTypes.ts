@@ -9,4 +9,5 @@ export interface ContextWithDependencies<TContext extends Context> {
 export interface Descriptor {
   tag: number;
   name: string;
+  shareableNode: any; // ShadowNodeWrapper
 }

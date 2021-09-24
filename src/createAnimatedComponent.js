@@ -223,10 +223,11 @@ export default function createAnimatedComponent(Component, options = {}) {
     _attachAnimatedStyles() {
       const styles = flattenArray(this.props.style);
       this._styles = styles;
-      let viewTag, viewName;
+      let viewTag, viewName, shareableNode;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
         viewName = null;
+        shareableNode = null; // TODO: web
       } else {
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(this);
@@ -250,12 +251,13 @@ export default function createAnimatedComponent(Component, options = {}) {
         ) {
           adaptViewConfig(hostInstance.viewConfig);
         }
+        shareableNode = hostInstance._internalInstanceHandle.stateNode.node; // ShadowNodeWrapper
       }
       this._viewTag = viewTag;
 
       styles.forEach((style) => {
         if (style?.viewDescriptors) {
-          style.viewDescriptors.add({ tag: viewTag, name: viewName });
+          style.viewDescriptors.add({ tag: viewTag, name: viewName, shareableNode });
           if (isJest()) {
             /**
              * We need to connect Jest's TestObject instance whose contains just props object

@@ -158,6 +158,11 @@ void ShareableValue::adapt(
       valueContainer =
           std::make_unique<RemoteObjectWrapper>(std::make_shared<RemoteObject>(
               rt, object, runtimeManager, runtimeManager->scheduler));
+    } else if (object.isHostObject<ShadowNodeWrapper>(rt)) {
+      type = ValueType::ShadowNodeWrapperType;
+      valueContainer = std::make_unique<ShadowNodeWrapperWrapper>(
+          object.getHostObject<ShadowNodeWrapper>(rt));
+      adaptCache(rt, value);
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::FrozenObjectType;
@@ -277,6 +282,10 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     }
     case ValueType::MutableValueType: {
       auto &mutableObject = ValueWrapper::asMutableValue(valueContainer);
+      return createHost(rt, mutableObject);
+    }
+    case ValueType::ShadowNodeWrapperType: {
+      auto &mutableObject = ValueWrapper::asShadowNodeWrapper(valueContainer);
       return createHost(rt, mutableObject);
     }
     case ValueType::HostFunctionType: {
