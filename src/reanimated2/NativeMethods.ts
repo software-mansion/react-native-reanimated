@@ -4,8 +4,8 @@ import { findNodeHandle } from 'react-native';
 import { RefObjectFunction } from './hook/useAnimatedRef';
 import { isChromeDebugger } from './PlatformChecker';
 
-export function getTag<P = any>(
-  view: null | number | React.ComponentType<P>
+export function getTag(
+  view: null | number | React.Component<any, any> | React.ComponentClass<any>
 ): null | number {
   return findNodeHandle(view);
 }

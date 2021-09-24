@@ -38,12 +38,12 @@ declare module 'react-native-reanimated' {
   } from 'react-native-gesture-handler';
   namespace Animated {
     type Nullable<T> = T | null | undefined;
-
     class AnimatedNode<T> {
       constructor(
         nodeConfig: object,
         inputNodes?: ReadonlyArray<AnimatedNode<any>>
       );
+
       isNativelyInitialized(): boolean;
       /**
        * ' __value' is not available at runtime on AnimatedNode<T>. It is
@@ -52,7 +52,6 @@ declare module 'react-native-reanimated' {
        */
       ' __value': T;
     }
-
     class AnimatedClock extends AnimatedNode<number> {
       constructor();
     }
@@ -82,6 +81,11 @@ declare module 'react-native-reanimated' {
 
       interpolate(config: InterpolationConfig): AnimatedNode<number>;
     }
+    export interface AnimationState {
+      finished: AnimatedValue<number>;
+      position: AnimatedValue<number>;
+      time: AnimatedValue<number>;
+    }
 
     export type SharedValue<T> = { value: T };
     export type DerivedValue<T> = Readonly<SharedValue<T>>;
@@ -101,11 +105,54 @@ declare module 'react-native-reanimated' {
       ...others: Adaptable<number>[]
     ) => AnimatedNode<T>;
 
-    export interface AnimationState {
-      finished: AnimatedValue<number>;
-      position: AnimatedValue<number>;
-      time: AnimatedValue<number>;
-    }
+    export type TransformStyleTypes = TransformsStyle['transform'] extends
+      | readonly (infer T)[]
+      | undefined
+      ? T
+      : never;
+    export type AdaptTransforms<T> = {
+      [P in keyof T]: Adaptable<T[P]>;
+    };
+    export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
+
+    export type AnimateStyle<S> = {
+      [K in keyof S]: K extends 'transform'
+        ? AnimatedTransform
+        : S[K] extends ReadonlyArray<any>
+        ? ReadonlyArray<AnimateStyle<S[K][0]>>
+        : S[K] extends object
+        ? AnimateStyle<S[K]>
+        : S[K] extends ColorValue | undefined
+        ? S[K] | number
+        :
+            | S[K]
+            | AnimatedNode<
+                // allow `number` where `string` normally is to support colors
+                S[K] extends ColorValue | undefined ? S[K] | number : S[K]
+              >;
+    };
+
+    export type AnimateProps<P extends object> = {
+      [K in keyof P]: K extends 'style'
+        ? StyleProp<AnimateStyle<P[K]>>
+        : P[K] | AnimatedNode<P[K]>;
+    } & {
+      animatedProps?: Partial<AnimateProps<P>>;
+      layout?:
+        | BaseAnimationBuilder
+        | LayoutAnimationFunction
+        | typeof BaseAnimationBuilder;
+      entering?:
+        | BaseAnimationBuilder
+        | typeof BaseAnimationBuilder
+        | EntryExitAnimationFunction
+        | Keyframe;
+      exiting?:
+        | BaseAnimationBuilder
+        | typeof BaseAnimationBuilder
+        | EntryExitAnimationFunction
+        | Keyframe;
+    };
 
     export interface PhysicsAnimationState extends AnimationState {
       velocity: AnimatedValue<number>;
@@ -115,12 +162,6 @@ declare module 'react-native-reanimated' {
 
     export interface DecayConfig {
       deceleration: Adaptable<number>;
-    }
-    export interface WithDecayConfig {
-      deceleration?: number;
-      velocity?: number;
-      clamp?: [number, number];
-      velocityFactor?: number;
     }
     export interface BackwardCompatibleWrapper {
       start: (callback?: (data: { finished: boolean }) => any) => void;
@@ -151,17 +192,6 @@ declare module 'react-native-reanimated' {
       restDisplacementThreshold: Adaptable<number>;
       toValue: Adaptable<number>;
     }
-
-    export interface WithSpringConfig {
-      damping?: number;
-      mass?: number;
-      stiffness?: number;
-      overshootClamping?: boolean;
-      restSpeedThreshold?: number;
-      restDisplacementThreshold?: number;
-      velocity?: number;
-    }
-
     interface SpringConfigWithOrigamiTensionAndFriction {
       tension: Adaptable<number>;
       mass: Adaptable<number>;
@@ -193,100 +223,6 @@ declare module 'react-native-reanimated' {
     };
 
     export const SpringUtils: SpringUtils;
-
-    export type TransformStyleTypes = TransformsStyle['transform'] extends
-      | readonly (infer T)[]
-      | undefined
-      ? T
-      : never;
-    export type AdaptTransforms<T> = {
-      [P in keyof T]: Adaptable<T[P]>;
-    };
-    export type AnimatedTransform = AdaptTransforms<TransformStyleTypes>[];
-
-    export type AnimateStyle<S> = {
-      [K in keyof S]: K extends 'transform'
-        ? AnimatedTransform
-        : S[K] extends ReadonlyArray<any>
-        ? ReadonlyArray<AnimateStyle<S[K][0]>>
-        : S[K] extends object
-        ? AnimateStyle<S[K]>
-        : S[K] extends ColorValue | undefined
-        ? S[K] | number
-        :
-            | S[K]
-            | AnimatedNode<
-                // allow `number` where `string` normally is to support colors
-                S[K] extends ColorValue | undefined ? S[K] | number : S[K]
-              >;
-    };
-
-    export type LayoutAnimation = {
-      initialValues: StyleProps;
-      animations: AnimateStyle;
-    };
-
-    export type EntryExitAnimationsValues = {
-      originX: number;
-      originY: number;
-      width: number;
-      height: number;
-      globalOriginX: number;
-      globalOriginY: number;
-    };
-    export type EntryExitAnimationFunction = (
-      targetValues: EntryExitAnimationsValues
-    ) => LayoutAnimation;
-
-    export type LayoutAnimationsValues = {
-      originX: number;
-      originY: number;
-      width: number;
-      height: number;
-      globalOriginX: number;
-      globalOriginY: number;
-      boriginX: number;
-      boriginY: number;
-      bwidth: number;
-      bheight: number;
-      bglobalOriginX: number;
-      bglobalOriginY: number;
-      windowWidth: number;
-      windowHeight: number;
-    };
-    export type LayoutAnimationFunction = (
-      targetValues: LayoutAnimationsValues
-    ) => LayoutAnimation;
-
-    export interface ILayoutAnimationBuilder {
-      build: () => LayoutAnimationFunction;
-    }
-
-    export interface IEntryExitAnimationBuilder {
-      build: () => EntryExitAnimationFunction;
-    }
-
-    export type AnimateProps<P extends object> = {
-      [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<P[K]>>
-        : P[K] | AnimatedNode<P[K]>;
-    } & {
-      animatedProps?: Partial<AnimateProps<P>>;
-      layout?:
-        | BaseAnimationBuilder
-        | LayoutAnimationFunction
-        | typeof BaseAnimationBuilder;
-      entering?:
-        | BaseAnimationBuilder
-        | typeof BaseAnimationBuilder
-        | EntryExitAnimationFunction
-        | Keyframe;
-      exiting?:
-        | BaseAnimationBuilder
-        | typeof BaseAnimationBuilder
-        | EntryExitAnimationFunction
-        | Keyframe;
-    };
 
     type CodeProps = {
       exec?: AnimatedNode<number>;
@@ -438,14 +374,6 @@ declare module 'react-native-reanimated' {
     export const max: BinaryOperator;
     export const min: BinaryOperator;
 
-    // reanimated2 derived operations
-    export function interpolate(
-      x: number,
-      inputRange: Array<number>,
-      outputRange: Array<number>,
-      type?: ExtrapolateParameter
-    ): number;
-
     // animations
     export function decay(
       clock: AnimatedClock,
@@ -476,38 +404,6 @@ declare module 'react-native-reanimated' {
       config: DecayConfig
     ): BackwardCompatibleWrapper;
 
-    // reanimated2 animations
-    export interface WithTimingConfig {
-      duration?: number;
-      easing?: EasingFunction;
-    }
-    export function withTiming(
-      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
-      userConfig?: WithTimingConfig,
-      callback?: (isFinished: boolean) => void
-    ): number;
-    export function withSpring(
-      toValue: number | Exclude<ColorValue, OpaqueColorValue>, // string as a color value like `"rgba(20,20,20,0)"`
-      userConfig?: WithSpringConfig,
-      callback?: (isFinished: boolean) => void
-    ): number;
-    export function withDecay(
-      userConfig: WithDecayConfig,
-      callback?: (isFinished: boolean) => void
-    ): number;
-    export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
-    export function withDelay(
-      delayMS: number,
-      delayedAnimation: number
-    ): number;
-    export function withRepeat(
-      animation: number,
-      numberOfReps?: number,
-      reverse?: boolean,
-      callback?: (isFinished: boolean) => void
-    ): number;
-    export function withSequence(...animations: [number, ...number[]]): number;
-
     // hooks
     export function useCode(
       exec: () =>
@@ -519,357 +415,491 @@ declare module 'react-native-reanimated' {
       initialValue: T
     ): AnimatedValue<T>;
 
-    // reanimated2 functions
-    export function runOnUI<A extends any[], R>(
-      fn: (...args: A) => R
-    ): (...args: Parameters<typeof fn>) => void;
-    export function runOnJS<A extends any[], R>(
-      fn: (...args: A) => R
-    ): (...args: Parameters<typeof fn>) => void;
-
-    type PropsAdapterFunction = (props: Record<string, unknown>) => void;
-    export function createAnimatedPropAdapter(
-      adapter: PropsAdapterFunction,
-      nativeProps?: string[]
-    ): PropsAdapterFunction;
-
-    export function processColor(color: number | string): number;
-    export function createWorklet<A extends any[], R>(
-      fn: (...args: A) => R
-    ): (...args: Parameters<typeof fn>) => R;
-
-    export function interpolateColor(
-      value: number,
-      inputRange: readonly number[],
-      outputRange: readonly (string | number)[],
-      colorSpace?: 'RGB' | 'HSV'
-    ): string | number;
-
-    export function makeMutable<T>(initialValue: T): SharedValue<T>;
-
-    type DependencyList = ReadonlyArray<any>;
-
-    // reanimated2 hooks
-    export function useSharedValue<T>(initialValue: T): SharedValue<T>;
-
-    export function useDerivedValue<T>(
-      processor: () => T,
-      deps?: DependencyList
-    ): DerivedValue<T>;
-
-    export function useAnimatedReaction<D>(
-      prepare: () => D,
-      react: (prepareResult: D, preparePreviousResult: D | null) => void,
-      deps?: DependencyList
-    ): void;
-
-    export type AnimatedStyleProp<T extends object> =
-      | AnimateStyle<T>
-      | RegisteredStyle<AnimateStyle<T>>;
-    export function useAnimatedStyle<
-      T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
-    >(updater: () => T, deps?: DependencyList | null): T;
-    export function useAnimatedProps<T extends {}>(
-      updater: () => Partial<T>,
-      deps?: DependencyList | null,
-      adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
-    ): Partial<T>;
-    export function useEvent<T extends {}>(
-      handler: (e: T) => void,
-      eventNames?: string[],
-      rebuild?: boolean
-    ): (e: NativeSyntheticEvent<T>) => void;
-    export function useHandler<T, TContext extends Context = {}>(
-      handlers: Record<string, Handler<T, TContext>>,
-      deps?: DependencyList
-    ): { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
-    export function useAnimatedGestureHandler<
-      T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
-      TContext extends Context = {}
-    >(
-      handlers: GestureHandlers<T['nativeEvent'], TContext>,
-      deps?: DependencyList
-    ): OnGestureEvent<T>;
-    export function useAnimatedScrollHandler<TContext extends Context = {}>(
-      handler: ScrollHandler<TContext>,
-      deps?: DependencyList
-    ): OnScroll;
-    export function useAnimatedScrollHandler<TContext extends Context = {}>(
-      handlers: ScrollHandlers<TContext>,
-      deps?: DependencyList
-    ): OnScroll;
-    export function useWorkletCallback<A extends any[], R>(
-      fn: (...args: A) => R,
-      deps?: DependencyList
-    ): (...args: Parameters<typeof fn>) => R;
-
-    export function useAnimatedRef<T extends Component>(): RefObject<T>;
-    export function defineAnimation<T>(starting: any, factory: () => T): number;
-    export function measure<T extends Component>(
-      ref: RefObject<T>
-    ): {
-      width: number;
-      height: number;
-      x: number;
-      y: number;
-      pageX: number;
-      pageY: number;
-    };
-
-    export function scrollTo(
-      ref: RefObject<ReactNativeScrollView | ScrollView>,
-      x: number,
-      y: number,
-      animated: boolean
-    ): void;
-
-    // gesture-handler
-    type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
-      event: T
-    ) => void;
-
-    type Context = Record<string, unknown>;
-
-    type Handler<T, TContext extends Context> = (
-      event: T,
-      context: TContext
-    ) => void;
-
-    export interface GestureHandlers<T, TContext extends Context> {
-      onStart?: Handler<T, TContext>;
-      onActive?: Handler<T, TContext>;
-      onEnd?: Handler<T, TContext>;
-      onFail?: Handler<T, TContext>;
-      onCancel?: Handler<T, TContext>;
-      onFinish?: (
-        event: T,
-        context: TContext,
-        isCanceledOrFailed: boolean
-      ) => void;
-    }
-
-    // scroll view
-    type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
-
-    type ScrollHandler<TContext extends Context> = (
-      event: NativeScrollEvent,
-      context: TContext
-    ) => void;
-
-    export interface ScrollHandlers<TContext extends Context> {
-      onScroll?: ScrollHandler<TContext>;
-      onBeginDrag?: ScrollHandler<TContext>;
-      onEndDrag?: ScrollHandler<TContext>;
-      onMomentumBegin?: ScrollHandler<TContext>;
-      onMomentumEnd?: ScrollHandler<TContext>;
-    }
-
     // configuration
     export function addWhitelistedNativeProps(props: {
       [key: string]: true;
     }): void;
     export function addWhitelistedUIProps(props: { [key: string]: true }): void;
-
-    export interface StyleProps extends ViewStyle, TextStyle {
-      originX?: number;
-      originY?: number;
-      [key: string]: any;
-    }
-
-    export type EasingFn = (t: number) => number;
-    export interface KeyframeProps extends StyleProps {
-      easing?: EasingFn;
-      [key: string]: any;
-    }
-    export class Keyframe {
-      constructor(definitions: Record<string, KeyframeProps>);
-      duration(durationMs: number): Keyframe;
-      delay(delayMs: number): Keyframe;
-      withCallback(callback: (finished: boolean) => void): Keyframe;
-    }
-    export class BaseAnimationBuilder {
-      static duration(durationMs: number): BaseAnimationBuilder;
-      duration(durationMs: number): BaseAnimationBuilder;
-      static delay(durationMs: number): BaseAnimationBuilder;
-      delay(durationMs: number): BaseAnimationBuilder;
-      static withCallback(
-        callback: (finished: boolean) => void
-      ): BaseAnimationBuilder;
-      withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
-      static randomDelay(): BaseAnimationBuilder;
-      randomDelay(): BaseAnimationBuilder;
-      build: () => LayoutAnimationFunction | EntryExitAnimationFunction;
-    }
-
-    export class ComplexAnimationBuilder extends BaseAnimationBuilder {
-      static duration(durationMs: number): ComplexAnimationBuilder;
-      duration(durationMs: number): ComplexAnimationBuilder;
-      static delay(durationMs: number): ComplexAnimationBuilder;
-      delay(durationMs: number): ComplexAnimationBuilder;
-      static withCallback(
-        callback: (finished: boolean) => void
-      ): ComplexAnimationBuilder;
-      withCallback(
-        callback: (finished: boolean) => void
-      ): ComplexAnimationBuilder;
-      static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
-      easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
-      static springify(): ComplexAnimationBuilder;
-      springify(): ComplexAnimationBuilder;
-      static damping(dampingFactor: number): ComplexAnimationBuilder;
-      damping(dampingFactor: number): ComplexAnimationBuilder;
-      static mass(mass: number): ComplexAnimationBuilder;
-      mass(mass: number): ComplexAnimationBuilder;
-      static stiffness(stiffnessFactor: number): ComplexAnimationBuilder;
-      stiffness(stiffnessFactor: number): ComplexAnimationBuilder;
-      static overshootClamping(
-        overshootClampingFactor: number
-      ): ComplexAnimationBuilder;
-      overshootClamping(
-        overshootClampingFactor: number
-      ): ComplexAnimationBuilder;
-      static restDisplacementThreshold(
-        restDisplacementThresholdFactor: number
-      ): ComplexAnimationBuilder;
-      restDisplacementThreshold(
-        restDisplacementThresholdFactor: number
-      ): ComplexAnimationBuilder;
-      static restSpeedThreshold(
-        restSpeedThresholdFactor: number
-      ): ComplexAnimationBuilder;
-      restSpeedThreshold(
-        restSpeedThresholdFactor: number
-      ): ComplexAnimationBuilder;
-    }
-
-    export class Layout extends ComplexAnimationBuilder {}
-    export class FadingTransition extends BaseAnimationBuilder {}
-    export class SequencedTransition extends BaseAnimationBuilder {
-      static reverse(): SequencedTransition;
-      reverse(): SequencedTransition;
-    }
-    export class JumpingTransition extends BaseAnimationBuilder {}
-    export class CurvedTransition extends BaseAnimationBuilder {
-      static delay(durationMs: number): CurvedTransition;
-      delay(durationMs: number): CurvedTransition;
-      static easingX(easing: EasingFn): CurvedTransition;
-
-      easingX(easing: EasingFn): CurvedTransition;
-
-      static easingY(easing: EasingFn): CurvedTransition;
-
-      easingY(easing: EasingFn): CurvedTransition;
-
-      static easingWidth(easing: EasingFn): CurvedTransition;
-
-      easingWidth(easing: EasingFn): CurvedTransition;
-
-      static easingHeight(easing: EasingFn): CurvedTransition;
-
-      easingHeight(easing: EasingFn): CurvedTransition;
-    }
-    export class EntryExitTransition extends BaseAnimationBuilder {
-      static delay(durationMs: number): EntryExitTransition;
-      delay(durationMs: number): EntryExitTransition;
-      static entering(
-        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
-      ): EntryExitTransition;
-      entering(
-        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
-      ): EntryExitTransition;
-      static exiting(
-        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
-      ): EntryExitTransition;
-      exiting(
-        animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
-      ): EntryExitTransition;
-    }
-    export function combineTransition(
-      exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
-      entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
-    ): EntryExitTransition;
-    export class SlideInRight extends ComplexAnimationBuilder {}
-    export class SlideOutRight extends ComplexAnimationBuilder {}
-    export class SlideInUp extends ComplexAnimationBuilder {}
-    export class SlideInDown extends ComplexAnimationBuilder {}
-    export class SlideOutUp extends ComplexAnimationBuilder {}
-    export class SlideOutDown extends ComplexAnimationBuilder {}
-    export class FadeIn extends ComplexAnimationBuilder {}
-    export class FadeInRight extends ComplexAnimationBuilder {}
-    export class FadeInLeft extends ComplexAnimationBuilder {}
-    export class FadeInUp extends ComplexAnimationBuilder {}
-    export class FadeInDown extends ComplexAnimationBuilder {}
-    export class FadeOut extends ComplexAnimationBuilder {}
-    export class FadeOutRight extends ComplexAnimationBuilder {}
-    export class FadeOutLeft extends ComplexAnimationBuilder {}
-    export class FadeOutUp extends ComplexAnimationBuilder {}
-    export class FadeOutDown extends ComplexAnimationBuilder {}
-    export class SlideOutLeft extends ComplexAnimationBuilder {}
-    export class SlideInLeft extends ComplexAnimationBuilder {}
-    export class ZoomIn extends ComplexAnimationBuilder {}
-    export class ZoomInRotate extends ComplexAnimationBuilder {}
-    export class ZoomInRight extends ComplexAnimationBuilder {}
-    export class ZoomInLeft extends ComplexAnimationBuilder {}
-    export class ZoomInUp extends ComplexAnimationBuilder {}
-    export class ZoomInDown extends ComplexAnimationBuilder {}
-    export class ZoomInEasyUp extends ComplexAnimationBuilder {}
-    export class ZoomInEasyDown extends ComplexAnimationBuilder {}
-    export class ZoomOut extends ComplexAnimationBuilder {}
-    export class ZoomOutRotate extends ComplexAnimationBuilder {}
-    export class ZoomOutRight extends ComplexAnimationBuilder {}
-    export class ZoomOutLeft extends ComplexAnimationBuilder {}
-    export class ZoomOutUp extends ComplexAnimationBuilder {}
-    export class ZoomOutDown extends ComplexAnimationBuilder {}
-    export class ZoomOutEasyUp extends ComplexAnimationBuilder {}
-    export class ZoomOutEasyDown extends ComplexAnimationBuilder {}
-    export class StretchInX extends ComplexAnimationBuilder {}
-    export class StretchInY extends ComplexAnimationBuilder {}
-    export class StretchOutX extends ComplexAnimationBuilder {}
-    export class StretchOutY extends ComplexAnimationBuilder {}
-    export class FlipInXUp extends ComplexAnimationBuilder {}
-    export class FlipInYLeft extends ComplexAnimationBuilder {}
-    export class FlipInXDown extends ComplexAnimationBuilder {}
-    export class FlipInYRight extends ComplexAnimationBuilder {}
-    export class FlipInEasyX extends ComplexAnimationBuilder {}
-    export class FlipInEasyY extends ComplexAnimationBuilder {}
-    export class FlipOutXUp extends ComplexAnimationBuilder {}
-    export class FlipOutYLeft extends ComplexAnimationBuilder {}
-    export class FlipOutXDown extends ComplexAnimationBuilder {}
-    export class FlipOutYRight extends ComplexAnimationBuilder {}
-    export class FlipOutEasyX extends ComplexAnimationBuilder {}
-    export class FlipOutEasyY extends ComplexAnimationBuilder {}
-    export class BounceIn extends BaseAnimationBuilder {}
-    export class BounceInDown extends BaseAnimationBuilder {}
-    export class BounceInUp extends BaseAnimationBuilder {}
-    export class BounceInLeft extends BaseAnimationBuilder {}
-    export class BounceInRight extends BaseAnimationBuilder {}
-    export class BounceOut extends BaseAnimationBuilder {}
-    export class BounceOutDown extends BaseAnimationBuilder {}
-    export class BounceOutUp extends BaseAnimationBuilder {}
-    export class BounceOutLeft extends BaseAnimationBuilder {}
-    export class BounceOutRight extends BaseAnimationBuilder {}
-    export class LightSpeedInRight extends ComplexAnimationBuilder {}
-    export class LightSpeedInLeft extends ComplexAnimationBuilder {}
-    export class LightSpeedOutRight extends ComplexAnimationBuilder {}
-    export class LightSpeedOutLeft extends ComplexAnimationBuilder {}
-    export class PinwheelIn extends ComplexAnimationBuilder {}
-    export class PinwheelOut extends ComplexAnimationBuilder {}
-    export class RotateInDownLeft extends ComplexAnimationBuilder {}
-    export class RotateInDownRight extends ComplexAnimationBuilder {}
-    export class RotateInUpRight extends ComplexAnimationBuilder {}
-    export class RotateInUpLeft extends ComplexAnimationBuilder {}
-    export class RotateOutDownRight extends ComplexAnimationBuilder {}
-    export class RotateOutDownLeft extends ComplexAnimationBuilder {}
-    export class RotateOutUpLeft extends ComplexAnimationBuilder {}
-    export class RotateOutUpRight extends ComplexAnimationBuilder {}
-    export class RollInleft extends ComplexAnimationBuilder {}
-    export class RollInRight extends ComplexAnimationBuilder {}
-    export class RollOutLeft extends ComplexAnimationBuilder {}
-    export class RollOutRight extends ComplexAnimationBuilder {}
   }
 
   export default Animated;
 
+  export type SharedValue<T> = Animated.SharedValue<T>;
+  export type AnimateStyle<S> = Animated.AnimateStyle<S>;
+  export type DerivedValue<T> = Animated.DerivedValue<T>;
+  export type Mapping = Animated.Mapping;
+  export type Adaptable<T> = Animated.Adaptable<T>;
+  export type TransformStyleTypes = Animated.TransformStyleTypes;
+  export type AdaptTransforms<T> = Animated.AdaptTransforms<T>;
+  export type AnimatedTransform = Animated.AnimatedTransform;
+  export type AnimateProps<P extends object> = Animated.AnimateProps<P>;
+
+  export type LayoutAnimation = {
+    initialValues: StyleProps;
+    animations: AnimateStyle;
+  };
+
+  export type EntryExitAnimationsValues = {
+    originX: number;
+    originY: number;
+    width: number;
+    height: number;
+    globalOriginX: number;
+    globalOriginY: number;
+  };
+  export type EntryExitAnimationFunction = (
+    targetValues: EntryExitAnimationsValues
+  ) => LayoutAnimation;
+
+  export type LayoutAnimationsValues = {
+    originX: number;
+    originY: number;
+    width: number;
+    height: number;
+    globalOriginX: number;
+    globalOriginY: number;
+    boriginX: number;
+    boriginY: number;
+    bwidth: number;
+    bheight: number;
+    bglobalOriginX: number;
+    bglobalOriginY: number;
+    windowWidth: number;
+    windowHeight: number;
+  };
+  export type LayoutAnimationFunction = (
+    targetValues: LayoutAnimationsValues
+  ) => LayoutAnimation;
+
+  export interface ILayoutAnimationBuilder {
+    build: () => LayoutAnimationFunction;
+  }
+
+  export interface IEntryExitAnimationBuilder {
+    build: () => EntryExitAnimationFunction;
+  }
+
+  export type PrimitiveValue = number | string;
+
+  // reanimated2 derived operations
+  export enum Extrapolation {
+    IDENTITY = 'identity',
+    CLAMP = 'clamp',
+    EXTEND = 'extend',
+  }
+  export interface InterpolatedNode {
+    __nodeId: number;
+  }
+  export interface ExtrapolationConfig {
+    extrapolateLeft?: Extrapolation | string;
+    extrapolateRight?: Extrapolation | string;
+  }
+
+  export type ExtrapolationType =
+    | ExtrapolationConfig
+    | Extrapolation
+    | string
+    | undefined;
+
+  export function interpolate(
+    x: number,
+    input: readonly number[],
+    output: readonly number[],
+    type?: ExtrapolationType
+  ): number;
+
+  // reanimated2 animations
+  export type AnimationCallback = (
+    finished?: boolean,
+    current?: PrimitiveValue
+  ) => void;
+  export interface WithTimingConfig {
+    duration?: number;
+    easing?: EasingFunction;
+  }
+  export interface WithDecayConfig {
+    deceleration?: number;
+    velocity?: number;
+    clamp?: [number, number];
+    velocityFactor?: number;
+  }
+  export interface WithSpringConfig {
+    damping?: number;
+    mass?: number;
+    stiffness?: number;
+    overshootClamping?: boolean;
+    restSpeedThreshold?: number;
+    restDisplacementThreshold?: number;
+    velocity?: number;
+  }
+  export function withTiming(
+    toValue: PrimitiveValue,
+    userConfig?: WithTimingConfig,
+    callback?: AnimationCallback
+  ): number;
+  export function withSpring(
+    toValue: PrimitiveValue,
+    userConfig?: WithSpringConfig,
+    callback?: AnimationCallback
+  ): number;
+  export function withDecay(
+    userConfig: WithDecayConfig,
+    callback?: AnimationCallback
+  ): number;
+  export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
+  export function withDelay(delayMS: number, delayedAnimation: number): number;
+  export function withRepeat(
+    animation: number,
+    numberOfReps?: number,
+    reverse?: boolean,
+    callback?: AnimationCallback
+  ): number;
+  export function withSequence(...animations: [number, ...number[]]): number;
+
+  // reanimated2 functions
+  export function runOnUI<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  export function runOnJS<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+
+  type PropsAdapterFunction = (props: Record<string, unknown>) => void;
+  export function createAnimatedPropAdapter(
+    adapter: PropsAdapterFunction,
+    nativeProps?: string[]
+  ): PropsAdapterFunction;
+
+  export function processColor(color: number | string): number;
+  export function createWorklet<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => R;
+
+  export function interpolateColor(
+    value: number,
+    inputRange: readonly number[],
+    outputRange: readonly (string | number)[],
+    colorSpace?: 'RGB' | 'HSV'
+  ): string | number;
+
+  export function makeMutable<T>(initialValue: T): SharedValue<T>;
+
+  type DependencyList = ReadonlyArray<any>;
+
+  // reanimated2 hooks
+  export function useSharedValue<T>(initialValue: T): SharedValue<T>;
+
+  export function useDerivedValue<T>(
+    processor: () => T,
+    deps?: DependencyList
+  ): DerivedValue<T>;
+
+  export function useAnimatedReaction<D>(
+    prepare: () => D,
+    react: (prepareResult: D, preparePreviousResult: D | null) => void,
+    deps?: DependencyList
+  ): void;
+
+  export type AnimatedStyleProp<T> =
+    | AnimateStyle<T>
+    | RegisteredStyle<AnimateStyle<T>>;
+  export function useAnimatedStyle<
+    T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+  >(updater: () => T, deps?: DependencyList | null): T;
+  export function useAnimatedProps<T extends {}>(
+    updater: () => Partial<T>,
+    deps?: DependencyList | null,
+    adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+  ): Partial<T>;
+  export function useEvent<T extends {}>(
+    handler: (e: T) => void,
+    eventNames?: string[],
+    rebuild?: boolean
+  ): (e: NativeSyntheticEvent<T>) => void;
+  export function useHandler<T, TContext extends Context = {}>(
+    handlers: Record<string, Handler<T, TContext>>,
+    deps?: DependencyList
+  ): { context: TContext; doDependenciesDiffer: boolean; useWeb: boolean };
+  export function useAnimatedGestureHandler<
+    T extends GestureHandlerGestureEvent = PanGestureHandlerGestureEvent,
+    TContext extends Context = {}
+  >(
+    handlers: GestureHandlers<T['nativeEvent'], TContext>,
+    deps?: DependencyList
+  ): OnGestureEvent<T>;
+  export function useAnimatedScrollHandler<TContext extends Context = {}>(
+    handlers: ScrollHandlers<TContext> | ScrollHandler<TContext>,
+    deps?: DependencyList
+  ): OnScroll;
+  export function useWorkletCallback<A extends any[], R>(
+    fn: (...args: A) => R,
+    deps?: DependencyList
+  ): (...args: Parameters<typeof fn>) => R;
+
+  export function useAnimatedRef<T extends Component>(): RefObject<T>;
+  export function defineAnimation<T>(starting: any, factory: () => T): number;
+  export function measure<T extends Component>(
+    ref: RefObject<T>
+  ): {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    pageX: number;
+    pageY: number;
+  };
+
+  export function scrollTo(
+    ref: RefObject<ReactNativeScrollView | ScrollView>,
+    x: number,
+    y: number,
+    animated: boolean
+  ): void;
+
+  // gesture-handler
+  type OnGestureEvent<T extends GestureHandlerGestureEvent> = (
+    event: T
+  ) => void;
+
+  type Context = Record<string, unknown>;
+
+  type Handler<T, TContext extends Context> = (
+    event: T,
+    context: TContext
+  ) => void;
+
+  export interface GestureHandlers<T, TContext extends Context> {
+    onStart?: Handler<T, TContext>;
+    onActive?: Handler<T, TContext>;
+    onEnd?: Handler<T, TContext>;
+    onFail?: Handler<T, TContext>;
+    onCancel?: Handler<T, TContext>;
+    onFinish?: (
+      event: T,
+      context: TContext,
+      isCanceledOrFailed: boolean
+    ) => void;
+  }
+
+  // scroll view
+  type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+  type ScrollHandler<TContext extends Context> = (
+    event: NativeScrollEvent,
+    context: TContext
+  ) => void;
+
+  export interface ScrollHandlers<TContext extends Context> {
+    onScroll?: ScrollHandler<TContext>;
+    onBeginDrag?: ScrollHandler<TContext>;
+    onEndDrag?: ScrollHandler<TContext>;
+    onMomentumBegin?: ScrollHandler<TContext>;
+    onMomentumEnd?: ScrollHandler<TContext>;
+  }
+  export interface StyleProps extends ViewStyle, TextStyle {
+    originX?: number;
+    originY?: number;
+    [key: string]: any;
+  }
+  export type EasingFn = (t: number) => number;
+  export interface KeyframeProps extends StyleProps {
+    easing?: EasingFn;
+    [key: string]: any;
+  }
+  export class Keyframe {
+    constructor(definitions: Record<string, KeyframeProps>);
+    duration(durationMs: number): Keyframe;
+    delay(delayMs: number): Keyframe;
+    withCallback(callback: (finished: boolean) => void): Keyframe;
+  }
+  export class BaseAnimationBuilder {
+    static duration(durationMs: number): BaseAnimationBuilder;
+    duration(durationMs: number): BaseAnimationBuilder;
+    static delay(durationMs: number): BaseAnimationBuilder;
+    delay(durationMs: number): BaseAnimationBuilder;
+    static withCallback(
+      callback: (finished: boolean) => void
+    ): BaseAnimationBuilder;
+
+    withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
+    static randomDelay(): BaseAnimationBuilder;
+    randomDelay(): BaseAnimationBuilder;
+    build: () => LayoutAnimationFunction | EntryExitAnimationFunction;
+  }
+
+  export class ComplexAnimationBuilder extends BaseAnimationBuilder {
+    static duration(durationMs: number): ComplexAnimationBuilder;
+    duration(durationMs: number): ComplexAnimationBuilder;
+    static delay(durationMs: number): ComplexAnimationBuilder;
+    delay(durationMs: number): ComplexAnimationBuilder;
+    static withCallback(
+      callback: (finished: boolean) => void
+    ): ComplexAnimationBuilder;
+
+    withCallback(
+      callback: (finished: boolean) => void
+    ): ComplexAnimationBuilder;
+
+    static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
+    easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
+    static springify(): ComplexAnimationBuilder;
+    springify(): ComplexAnimationBuilder;
+    static damping(dampingFactor: number): ComplexAnimationBuilder;
+    damping(dampingFactor: number): ComplexAnimationBuilder;
+    static mass(mass: number): ComplexAnimationBuilder;
+    mass(mass: number): ComplexAnimationBuilder;
+    static stiffness(stiffnessFactor: number): ComplexAnimationBuilder;
+    stiffness(stiffnessFactor: number): ComplexAnimationBuilder;
+    static overshootClamping(
+      overshootClampingFactor: number
+    ): ComplexAnimationBuilder;
+
+    overshootClamping(overshootClampingFactor: number): ComplexAnimationBuilder;
+
+    static restDisplacementThreshold(
+      restDisplacementThresholdFactor: number
+    ): ComplexAnimationBuilder;
+
+    restDisplacementThreshold(
+      restDisplacementThresholdFactor: number
+    ): ComplexAnimationBuilder;
+
+    static restSpeedThreshold(
+      restSpeedThresholdFactor: number
+    ): ComplexAnimationBuilder;
+
+    restSpeedThreshold(
+      restSpeedThresholdFactor: number
+    ): ComplexAnimationBuilder;
+  }
+
+  export class Layout extends ComplexAnimationBuilder {}
+  export class FadingTransition extends BaseAnimationBuilder {}
+  export class SequencedTransition extends BaseAnimationBuilder {
+    static reverse(): SequencedTransition;
+    reverse(): SequencedTransition;
+  }
+  export class JumpingTransition extends BaseAnimationBuilder {}
+  export class CurvedTransition extends BaseAnimationBuilder {
+    static delay(durationMs: number): CurvedTransition;
+    delay(durationMs: number): CurvedTransition;
+    static easingX(easing: EasingFn): CurvedTransition;
+
+    easingX(easing: EasingFn): CurvedTransition;
+
+    static easingY(easing: EasingFn): CurvedTransition;
+
+    easingY(easing: EasingFn): CurvedTransition;
+
+    static easingWidth(easing: EasingFn): CurvedTransition;
+
+    easingWidth(easing: EasingFn): CurvedTransition;
+
+    static easingHeight(easing: EasingFn): CurvedTransition;
+
+    easingHeight(easing: EasingFn): CurvedTransition;
+  }
+  export class EntryExitTransition extends BaseAnimationBuilder {
+    static delay(durationMs: number): EntryExitTransition;
+    delay(durationMs: number): EntryExitTransition;
+    static entering(
+      animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+    ): EntryExitTransition;
+
+    entering(
+      animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+    ): EntryExitTransition;
+
+    static exiting(
+      animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+    ): EntryExitTransition;
+
+    exiting(
+      animation: BaseAnimationBuilder | typeof BaseAnimationBuilder
+    ): EntryExitTransition;
+  }
+  export function combineTransition(
+    exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
+    entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
+  ): EntryExitTransition;
+  export class SlideInRight extends ComplexAnimationBuilder {}
+  export class SlideOutRight extends ComplexAnimationBuilder {}
+  export class SlideInUp extends ComplexAnimationBuilder {}
+  export class SlideInDown extends ComplexAnimationBuilder {}
+  export class SlideOutUp extends ComplexAnimationBuilder {}
+  export class SlideOutDown extends ComplexAnimationBuilder {}
+  export class FadeIn extends ComplexAnimationBuilder {}
+  export class FadeInRight extends ComplexAnimationBuilder {}
+  export class FadeInLeft extends ComplexAnimationBuilder {}
+  export class FadeInUp extends ComplexAnimationBuilder {}
+  export class FadeInDown extends ComplexAnimationBuilder {}
+  export class FadeOut extends ComplexAnimationBuilder {}
+  export class FadeOutRight extends ComplexAnimationBuilder {}
+  export class FadeOutLeft extends ComplexAnimationBuilder {}
+  export class FadeOutUp extends ComplexAnimationBuilder {}
+  export class FadeOutDown extends ComplexAnimationBuilder {}
+  export class SlideOutLeft extends ComplexAnimationBuilder {}
+  export class SlideInLeft extends ComplexAnimationBuilder {}
+  export class ZoomIn extends ComplexAnimationBuilder {}
+  export class ZoomInRotate extends ComplexAnimationBuilder {}
+  export class ZoomInRight extends ComplexAnimationBuilder {}
+  export class ZoomInLeft extends ComplexAnimationBuilder {}
+  export class ZoomInUp extends ComplexAnimationBuilder {}
+  export class ZoomInDown extends ComplexAnimationBuilder {}
+  export class ZoomInEasyUp extends ComplexAnimationBuilder {}
+  export class ZoomInEasyDown extends ComplexAnimationBuilder {}
+  export class ZoomOut extends ComplexAnimationBuilder {}
+  export class ZoomOutRotate extends ComplexAnimationBuilder {}
+  export class ZoomOutRight extends ComplexAnimationBuilder {}
+  export class ZoomOutLeft extends ComplexAnimationBuilder {}
+  export class ZoomOutUp extends ComplexAnimationBuilder {}
+  export class ZoomOutDown extends ComplexAnimationBuilder {}
+  export class ZoomOutEasyUp extends ComplexAnimationBuilder {}
+  export class ZoomOutEasyDown extends ComplexAnimationBuilder {}
+  export class StretchInX extends ComplexAnimationBuilder {}
+  export class StretchInY extends ComplexAnimationBuilder {}
+  export class StretchOutX extends ComplexAnimationBuilder {}
+  export class StretchOutY extends ComplexAnimationBuilder {}
+  export class FlipInXUp extends ComplexAnimationBuilder {}
+  export class FlipInYLeft extends ComplexAnimationBuilder {}
+  export class FlipInXDown extends ComplexAnimationBuilder {}
+  export class FlipInYRight extends ComplexAnimationBuilder {}
+  export class FlipInEasyX extends ComplexAnimationBuilder {}
+  export class FlipInEasyY extends ComplexAnimationBuilder {}
+  export class FlipOutXUp extends ComplexAnimationBuilder {}
+  export class FlipOutYLeft extends ComplexAnimationBuilder {}
+  export class FlipOutXDown extends ComplexAnimationBuilder {}
+  export class FlipOutYRight extends ComplexAnimationBuilder {}
+  export class FlipOutEasyX extends ComplexAnimationBuilder {}
+  export class FlipOutEasyY extends ComplexAnimationBuilder {}
+  export class BounceIn extends BaseAnimationBuilder {}
+  export class BounceInDown extends BaseAnimationBuilder {}
+  export class BounceInUp extends BaseAnimationBuilder {}
+  export class BounceInLeft extends BaseAnimationBuilder {}
+  export class BounceInRight extends BaseAnimationBuilder {}
+  export class BounceOut extends BaseAnimationBuilder {}
+  export class BounceOutDown extends BaseAnimationBuilder {}
+  export class BounceOutUp extends BaseAnimationBuilder {}
+  export class BounceOutLeft extends BaseAnimationBuilder {}
+  export class BounceOutRight extends BaseAnimationBuilder {}
+  export class LightSpeedInRight extends ComplexAnimationBuilder {}
+  export class LightSpeedInLeft extends ComplexAnimationBuilder {}
+  export class LightSpeedOutRight extends ComplexAnimationBuilder {}
+  export class LightSpeedOutLeft extends ComplexAnimationBuilder {}
+  export class PinwheelIn extends ComplexAnimationBuilder {}
+  export class PinwheelOut extends ComplexAnimationBuilder {}
+  export class RotateInDownLeft extends ComplexAnimationBuilder {}
+  export class RotateInDownRight extends ComplexAnimationBuilder {}
+  export class RotateInUpRight extends ComplexAnimationBuilder {}
+  export class RotateInUpLeft extends ComplexAnimationBuilder {}
+  export class RotateOutDownRight extends ComplexAnimationBuilder {}
+  export class RotateOutDownLeft extends ComplexAnimationBuilder {}
+  export class RotateOutUpLeft extends ComplexAnimationBuilder {}
+  export class RotateOutUpRight extends ComplexAnimationBuilder {}
+  export class RollInLeft extends ComplexAnimationBuilder {}
+  export class RollInRight extends ComplexAnimationBuilder {}
+  export class RollOutLeft extends ComplexAnimationBuilder {}
+  export class RollOutRight extends ComplexAnimationBuilder {}
   interface EasingNodeStatic {
     linear: Animated.EasingNodeFunction;
     ease: Animated.EasingNodeFunction;
@@ -1018,128 +1048,6 @@ declare module 'react-native-reanimated' {
   export const timing: typeof Animated.timing;
   export const spring: typeof Animated.spring;
   export const SpringUtils: typeof Animated.SpringUtils;
-  export const runOnUI: typeof Animated.runOnUI;
-  export const runOnJS: typeof Animated.runOnJS;
-  export const createAnimatedPropAdapter: typeof Animated.createAnimatedPropAdapter;
-  export const processColor: typeof Animated.processColor;
-  export const makeMutable: typeof Animated.makeMutable;
   export const useValue: typeof Animated.useValue;
-  export const useSharedValue: typeof Animated.useSharedValue;
-  export const useAnimatedStyle: typeof Animated.useAnimatedStyle;
-  export const useAnimatedReaction: typeof Animated.useAnimatedReaction;
-  export const useAnimatedProps: typeof Animated.useAnimatedProps;
-  export const useDerivedValue: typeof Animated.useDerivedValue;
-  export const useWorkletCallback: typeof Animated.useWorkletCallback;
-  export const createWorklet: typeof Animated.createWorklet;
-  export const interpolateColor: typeof Animated.interpolateColor;
-  export const useEvent: typeof Animated.useEvent;
-  export const useHandler: typeof Animated.useHandler;
-  export const useAnimatedGestureHandler: typeof Animated.useAnimatedGestureHandler;
-  export const useAnimatedScrollHandler: typeof Animated.useAnimatedScrollHandler;
-  export const useAnimatedRef: typeof Animated.useAnimatedRef;
-  export const defineAnimation: typeof Animated.defineAnimation;
-  export const measure: typeof Animated.measure;
-  export const scrollTo: typeof Animated.scrollTo;
-  export const withTiming: typeof Animated.withTiming;
-  export const withSpring: typeof Animated.withSpring;
-  export const withDecay: typeof Animated.withDecay;
-  export const cancelAnimation: typeof Animated.cancelAnimation;
-  export const withDelay: typeof Animated.withDelay;
-  export const withRepeat: typeof Animated.withRepeat;
-  export const withSequence: typeof Animated.withSequence;
-  export const interpolate: typeof Animated.interpolate;
-
-  export const Layout: typeof Animated.Layout;
-  export const FadingTransition: typeof Animated.FadingTransition;
-  export const SequencedTransition: typeof Animated.SequencedTransition;
-  export const JumpingTransition: typeof Animated.JumpingTransition;
-  export const CurvedTransition: typeof Animated.CurvedTransition;
-  export const EntryExitTransition: typeof Animated.EntryExitTransition;
-  export const combineTransition: typeof Animated.combineTransition;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
-  export const SlideInRight: typeof Animated.SlideInRight;
-  export const SlideOutRight: typeof Animated.SlideOutRight;
-  export const SlideInUp: typeof Animated.SlideInUp;
-  export const SlideInDown: typeof Animated.SlideInDown;
-  export const SlideOutUp: typeof Animated.SlideOutUp;
-  export const SlideOutDown: typeof Animated.SlideOutDown;
-  export const FadeIn: typeof Animated.FadeIn;
-  export const FadeInRight: typeof Animated.FadeInRight;
-  export const FadeInLeft: typeof Animated.FadeInLeft;
-  export const FadeInUp: typeof Animated.FadeInUp;
-  export const FadeInDown: typeof Animated.FadeInDown;
-  export const FadeOut: typeof Animated.FadeOut;
-  export const FadeOutRight: typeof Animated.FadeOutRight;
-  export const FadeOutLeft: typeof Animated.FadeOutLeft;
-  export const FadeOutUp: typeof Animated.FadeOutUp;
-  export const FadeOutDown: typeof Animated.FadeOutDown;
-  export const SlideOutLeft: typeof Animated.SlideOutLeft;
-  export const SlideInLeft: typeof Animated.SlideInLeft;
-  export const ZoomIn: typeof Animated.ZoomIn;
-  export const ZoomInRotate: typeof Animated.ZoomInRotate;
-  export const ZoomInRight: typeof Animated.ZoomInRight;
-  export const ZoomInLeft: typeof Animated.ZoomInLeft;
-  export const ZoomInUp: typeof Animated.ZoomInUp;
-  export const ZoomInDown: typeof Animated.ZoomInDown;
-  export const ZoomInEasyUp: typeof Animated.ZoomInEasyUp;
-  export const ZoomInEasyDown: typeof Animated.ZoomInEasyDown;
-  export const ZoomOut: typeof Animated.ZoomOut;
-  export const ZoomOutRotate: typeof Animated.ZoomOutRotate;
-  export const ZoomOutRight: typeof Animated.ZoomOutRight;
-  export const ZoomOutLeft: typeof Animated.ZoomOutLeft;
-  export const ZoomOutUp: typeof Animated.ZoomOutUp;
-  export const ZoomOutDown: typeof Animated.ZoomOutDown;
-  export const ZoomOutEasyUp: typeof Animated.ZoomOutEasyUp;
-  export const ZoomOutEasyDown: typeof Animated.ZoomOutEasyDown;
-  export const StretchInX: typeof Animated.StretchInX;
-  export const StretchInY: typeof Animated.StretchInY;
-  export const StretchOutX: typeof Animated.StretchOutX;
-  export const StretchOutY: typeof Animated.StretchOutY;
-  export const FlipInXUp: typeof Animated.FlipInXUp;
-  export const FlipInYLeft: typeof Animated.FlipInYLeft;
-  export const FlipInXDown: typeof Animated.FlipInXDown;
-  export const FlipInYRight: typeof Animated.FlipInYRight;
-  export const FlipInEasyX: typeof Animated.FlipInEasyX;
-  export const FlipInEasyY: typeof Animated.FlipInEasyY;
-  export const FlipOutXUp: typeof Animated.FlipOutXUp;
-  export const FlipOutYLeft: typeof Animated.FlipOutYLeft;
-  export const FlipOutXDown: typeof Animated.FlipOutXDown;
-  export const FlipOutYRight: typeof Animated.FlipOutYRight;
-  export const FlipOutEasyX: typeof Animated.FlipOutEasyX;
-  export const FlipOutEasyY: typeof Animated.FlipOutEasyY;
-  export const BounceIn: typeof Animated.BounceIn;
-  export const BounceInDown: typeof Animated.BounceInDown;
-  export const BounceInUp: typeof Animated.BounceInUp;
-  export const BounceInLeft: typeof Animated.BounceInLeft;
-  export const BounceInRight: typeof Animated.BounceInRight;
-  export const BounceOut: typeof Animated.BounceOut;
-  export const BounceOutDown: typeof Animated.BounceOutDown;
-  export const BounceOutUp: typeof Animated.BounceOutUp;
-  export const BounceOutLeft: typeof Animated.BounceOutLeft;
-  export const BounceOutRight: typeof Animated.BounceOutRight;
-  export const LightSpeedInRight: typeof Animated.LightSpeedInRight;
-  export const LightSpeedInLeft: typeof Animated.LightSpeedInLeft;
-  export const LightSpeedOutRight: typeof Animated.LightSpeedOutRight;
-  export const LightSpeedOutLeft: typeof Animated.LightSpeedOutLeft;
-  export const PinwheelIn: typeof Animated.PinwheelIn;
-  export const PinwheelOut: typeof Animated.PinwheelOut;
-  export const RotateInDownLeft: typeof Animated.RotateInDownLeft;
-  export const RotateInDownRight: typeof Animated.RotateInDownRight;
-  export const RotateInUpLeft: typeof Animated.RotateInUpLeft;
-  export const RotateInUpRight: typeof Animated.RotateInUpRight;
-  export const RotateOutDownLeft: typeof Animated.RotateOutDownLeft;
-  export const RotateOutDownRight: typeof Animated.RotateOutDownRight;
-  export const RotateOutUpRight: typeof Animated.RotateOutUpRight;
-  export const RotateOutUpLeft: typeof Animated.RotateOutUpLeft;
-  export const RollInLeft: typeof Animated.RollInleft;
-  export const RollInRight: typeof Animated.RollInRight;
-  export const RollOutLeft: typeof Animated.RollOutLeft;
-  export const RollOutRight: typeof Animated.RollOutRight;
-  export const Keyframe: typeof Animated.Keyframe;
-
-  export type EntryExitAnimationFunction = Animated.EntryExitAnimationFunction;
-  export type LayoutAnimationFunction = Animated.LayoutAnimationFunction;
-  export type IEntryExitAnimationBuilder = Animated.IEntryExitAnimationBuilder;
-  export type ILayoutAnimationBuilder = Animated.ILayoutAnimationBuilder;
-  export type BaseAnimationBuilder = Animated.BaseAnimationBuilder;
 }
