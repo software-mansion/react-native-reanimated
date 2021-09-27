@@ -30,7 +30,7 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
-function resolvePath<T>(
+export function resolvePath<T>(
   obj: NestedObject<T>,
   path: PrimitiveValue[] | PrimitiveValue
 ): NestedObjectValues<T> | undefined {
@@ -47,11 +47,11 @@ function resolvePath<T>(
 }
 
 // set value at given path
-function setPath<T>(
+export function setPath<T>(
   obj: NestedObject<T>,
   path: PrimitiveValue[] | PrimitiveValue,
   value: NestedObjectValues<T>
-) {
+): void {
   'worklet';
   const keys: PrimitiveValue[] = Array.isArray(path) ? path : [path];
   let currObj: NestedObjectValues<T> = obj;

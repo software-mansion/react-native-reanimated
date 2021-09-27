@@ -7,7 +7,7 @@ export default class Mapper {
 
   dirty = true;
 
-  constructor(module, mapper, inputs = [], outputs = []) {
+  constructor(module, mapper, inputs: any[] = [], outputs: any[] = []) {
     this.id = Mapper.MAPPER_ID++;
     this.inputs = this.extractMutablesFromArray(inputs);
     this.outputs = this.extractMutablesFromArray(outputs);

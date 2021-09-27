@@ -45,6 +45,7 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
+  // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
@@ -253,15 +254,15 @@ function AnimatedScrollHandlerTest() {
   });
   const stylez = useAnimatedStyle(() => {
     return {
-      color: "red",
+      color: 'red',
       backgroundColor: 0x00ff00,
       transform: [
         {
           translateY: translationY.value,
         },
         {
-          rotate: `${Math.PI}rad`
-        }
+          rotate: `${Math.PI}rad`,
+        },
       ],
     };
   });
@@ -270,15 +271,15 @@ function AnimatedScrollHandlerTest() {
     return {
       transform: [
         {
-          rotate: Math.PI
-        }
+          rotate: Math.PI,
+        },
       ],
     };
   });
   // @ts-expect-error
   const style3 = useAnimatedStyle(() => {
     return {
-      color: {}
+      color: {},
     };
   });
   return (
@@ -324,16 +325,16 @@ function AnimatedGestureHandlerTest() {
 
 function AnimatedPinchGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<
-    PinchGestureHandlerGestureEvent
-  >({
-    onActive: (event) => {
-      x.value = event.scale;
-    },
-    onEnd: () => {
-      x.value = withTiming(1);
-    },
-  });
+  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>(
+    {
+      onActive: (event) => {
+        x.value = event.scale;
+      },
+      onEnd: () => {
+        x.value = withTiming(1);
+      },
+    }
+  );
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -739,22 +740,26 @@ function updatePropsTest() {
 // test partial animated props
 function testPartialAnimatedProps() {
   const ap = useAnimatedProps<ImageProps>(() => ({
-    height: 100
+    height: 100,
   }));
   const aps = useAnimatedProps<ImageProps>(() => ({
-    source: { uri: 'whatever' }
+    source: { uri: 'whatever' },
   }));
 
   // @ts-expect-error it should fail because `source` is a required prop
   const test1 = <AnimatedImage />;
   // TODO: Figure out a way to let this error pass, if `source` is set in `animatedProps` that should be okay even if it is not set in normal props!!
   // @ts-expect-error it should fail because `source` is a required prop, even though animatedProps sets it
-  const test2 = <AnimatedImage animatedProps={aps} />
+  const test2 = <AnimatedImage animatedProps={aps} />;
   // should pass because source is set
-  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />
+  const test3 = <AnimatedImage source={{ uri: 'whatever' }} />;
   // should pass because source is set and `animatedProps` doesn't change that
-  const test4 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  const test4 = (
+    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={ap} />
+  );
   // TODO: Should this test fail? Setting it twice might not be intentional...
   // should pass because source is set normally and in `animatedProps`
-  const test5 = <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
+  const test5 = (
+    <AnimatedImage source={{ uri: 'whatever' }} animatedProps={aps} />
+  );
 }

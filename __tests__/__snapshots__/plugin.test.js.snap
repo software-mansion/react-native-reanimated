@@ -46,10 +46,61 @@ exports[`babel plugin doesn't capture globals 1`] = `
 }();"
 `;
 
+exports[`babel plugin doesn't implicitly workletize standard callback functions 1`] = `
+"var foo = Something.Tap().onEnd(function (_event, _success) {
+  console.log('onEnd');
+});"
+`;
+
 exports[`babel plugin doesn't transform functions without 'worklet' directive 1`] = `
 "function f(x) {
   return x + 2;
 }"
+`;
+
+exports[`babel plugin implicitly workletizes possibly chained gesture object callback functions 1`] = `
+"var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
+
+var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegan(function () {
+  var _f = function _f() {
+    console.log('onBegan');
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function _f(){console.log('onBegan');}\\";
+  _f.__workletHash = 10358176266034;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (6:17)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}()).onStart(function () {
+  var _f = function _f(_event) {
+    console.log('onStart');
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function _f(_event){console.log('onStart');}\\";
+  _f.__workletHash = 16334902412526;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (9:17)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}()).onEnd(function () {
+  var _f = function _f(_event, _success) {
+    console.log('onEnd');
+  };
+
+  _f._closure = {};
+  _f.asString = \\"function _f(_event,_success){console.log('onEnd');}\\";
+  _f.__workletHash = 4053780716017;
+  _f.__location = \\"${ process.cwd() }/jest tests fixture (12:15)\\";
+
+  global.__reanimatedWorkletInit(_f);
+
+  return _f;
+}());"
 `;
 
 exports[`babel plugin transforms  1`] = `

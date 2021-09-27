@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
     private AnimationsManager mAnimationsManager = null;
@@ -73,7 +74,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         // for recently created views.
         if (view.getWidth() == 0 || view.getHeight() == 0) {
             view.layout(x, y, x + width, y + height);
-            mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view,mWeakNativeViewHierarchyManage.get()));
+            if(view.getId() != -1) {
+                mAnimationsManager.onViewCreate(view, (ViewGroup) view.getParent(), new Snapshot(view,mWeakNativeViewHierarchyManage.get()));
+            }
         } else {
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
             view.layout(x, y, x + width, y + height);
@@ -106,7 +109,11 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     }
 
     private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-        ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
+        int tag = view.getId();
+        if(tag == -1) {
+            return;
+        }
+        ViewManager vm = nativeViewHierarchyManager.resolveViewManager(tag);
         if (vm != null) {
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
             mAnimationsManager.onViewRemoval(view, (ViewGroup) view.getParent(), before, () -> {
@@ -127,6 +134,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     private HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap();
     private HashMap<Integer, Runnable> cleanerCallback = new HashMap();
     private LayoutAnimationController mReaLayoutAnimator = null;
+    private HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = null;
+
     public ReanimatedNativeHierarchyManager(ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
         super(viewManagers);
         Class clazz = this.getClass().getSuperclass();
@@ -138,6 +147,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
             modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
             field.set(this, mReaLayoutAnimator);
+
+            Field pendingTagsField = clazz.getDeclaredField("mPendingDeletionsForTag");
+            pendingTagsField.setAccessible(true);
+            Field pendingTagsFieldModifiers = Field.class.getDeclaredField("accessFlags");
+            pendingTagsFieldModifiers.setAccessible(true);
+            pendingTagsFieldModifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            mPendingDeletionsForTag = new HashMap<Integer, Set<Integer>>();
+            pendingTagsField.set(this, mPendingDeletionsForTag);
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
@@ -191,10 +208,18 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
                     @Override
                     public void run() {
                         toBeRemovedChildren.remove(view);
+                        viewGroupManager.removeView(viewGroup, view);
                     } // It's far from optimal but let's leave it as it is for now
                 });
             }
         }
+
+        // mPendingDeletionsForTag is modify by React
+        Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
+        if (pendingTags != null) {
+            pendingTags.clear();
+        }
+
         super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
         if (toBeRemoved.containsKey(tag)) {
             ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
