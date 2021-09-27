@@ -649,6 +649,15 @@ declare module 'react-native-reanimated' {
     pageY: number;
   };
 
+  export function getRelativeCoords(
+    ref: RefObject<Component>,
+    x: number,
+    y: number
+  ): {
+    x: number;
+    y: number;
+  };
+
   export function scrollTo(
     ref: RefObject<ReactNativeScrollView | ScrollView>,
     x: number,
