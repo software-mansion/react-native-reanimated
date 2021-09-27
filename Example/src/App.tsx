@@ -41,6 +41,7 @@ const UIPropsExample = React.memo(() => {
 });
 
 const NativePropsExample = React.memo(() => {
+  const [state, setState] = React.useState(0);
   const fontSize = useSharedValue(14);
   const style = useAnimatedStyle(() => {
     return { fontSize: fontSize.value };
@@ -59,7 +60,7 @@ const NativePropsExample = React.memo(() => {
         }}
         title="click me"
       />
-      <Animated.Text style={style}>lorem ipsum</Animated.Text>
+      <Animated.Text style={style} onPress={() => setState(Math.random())}>lorem ipsum</Animated.Text>
       <Text>sit dolor amet</Text>
     </View>
   );
