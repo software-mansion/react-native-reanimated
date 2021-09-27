@@ -1,7 +1,7 @@
 ---
-id: convertCoords
-title: convertCoords
-sidebar_label: convertCoords
+id: getRelativeCoords
+title: getRelativeCoords
+sidebar_label: getRelativeCoords
 ---
 
 Determines the location on the screen, relative to the given view. It might be useful, when there are only absolute coordinates available and you need coordinates relative to the parent.
@@ -34,11 +34,16 @@ const Comp = () => {
   const aref = useAnimatedRef();
   // ...
 
-  useDerivedValue(() => {
-    const coords = convertCoords(aref, x, y);
-    // ...
+  const gestureHandler = useAnimatedGestureHandler({
+    onEnd: (event) => {
+      getRelativeCoords(aref, event.absoluteX, event.absoluteY)
+    },
   });
 
-  return <View ref={aref} />;
+  return <View ref={aref}>
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View style={[styles.box]} />
+    </PanGestureHandler>
+  </View>;
 };
 ```

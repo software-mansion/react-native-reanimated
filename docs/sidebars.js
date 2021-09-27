@@ -59,7 +59,7 @@ module.exports = {
             'api/miscellaneous/runOnJS',
             'api/miscellaneous/runOnUI',
             'api/miscellaneous/interpolate',
-            'api/miscellaneous/convertCoords',
+            'api/miscellaneous/getRelativeCoords',
           ],
         },
       ],

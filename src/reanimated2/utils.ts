@@ -1,13 +1,14 @@
-import { RefObject } from 'react';
+import { Component } from 'react';
 import { measure } from '.';
+import { RefObjectFunction } from './hook/useAnimatedRef';
 
 export interface ComponentCoords {
   x: number;
   y: number;
 }
 
-export function convertCoords<T>(
-  parentRef: RefObject<T>,
+export function getRelativeCoords(
+  parentRef: RefObjectFunction<Component>,
   x: number,
   y: number
 ): ComponentCoords {

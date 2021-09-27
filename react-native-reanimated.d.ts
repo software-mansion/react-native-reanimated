@@ -649,8 +649,8 @@ declare module 'react-native-reanimated' {
     pageY: number;
   };
 
-  export function convertCoords<T extends Component>(
-    ref: RefObject<T>,
+  export function getRelativeCoords(
+    ref: RefObject<Component>,
     x: number,
     y: number
   ): {
