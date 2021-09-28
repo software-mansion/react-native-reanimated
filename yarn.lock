@@ -3736,10 +3736,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-native@^0.64.2":
-  version "0.64.2"
-  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.64.2.tgz#2e344aeec0b4eb21fb9eaa0ed8973245c5601d56"
-  integrity sha512-w2y04h+GVLY+OMlFSmq4adPuS51XtEp1yUr83OvXf+moMQ4zDG1Q07HhyvYDXdc+BSS9ANHySBqVCz0hFxli9Q==
+"@types/react-native@^0.65.1":
+  version "0.65.1"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.65.1.tgz#7342158e10ea5088c225bb669dd4ef15aad0a2f7"
+  integrity sha512-pyRmTnvjYORIXuL8+ZhoI8gqamTE/8Lo9bU/1Ife3VOTgeFzY9rHnx3Tna7OOixBW5Exh2PcHSkJXma4FENC0g==
   dependencies:
     "@types/react" "*"
 
@@ -8810,9 +8810,9 @@ rc@^1.2.8:
     strip-json-comments "~2.0.1"
 
 react-devtools-core@^4.6.0:
-  version "4.13.4"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.13.4.tgz#9d763715f537df666cefe0414e8732bd9695d4d7"
-  integrity sha512-su/lI4LdiK5P1YgZpbm8K1iNQX6s0Lq5fJLa1ZcnpewvrqP5V14svHrbPmrU5ptMUSiwjZ3/CBmc/JCZOuuiHQ==
+  version "4.18.0"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.18.0.tgz#06b2375dcea7858c957d1779cc2339d2a0af200a"
+  integrity sha512-Kg/LhDkdt9J0ned1D1RfeuSdX4cKW83/valJLYswGdsYc0g2msmD0kfYozsaRacjDoZwcKlxGOES1wrkET5O6Q==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"

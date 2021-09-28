@@ -21,9 +21,9 @@ file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
 file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
 file(GLOB sources_android  "./src/main/cpp/*.cpp")
 
-if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+#if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
     set (JSI_PATH_FOR_RN_LESS_64 ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp)
-endif()
+#endif()
 
 add_library(
         ${PACKAGE_NAME}

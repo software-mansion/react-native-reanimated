@@ -92,7 +92,7 @@
     "@types/babel__generator": "^7.6.2",
     "@types/babel__traverse": "^7.0.15",
     "@types/jest": "^26.0.15",
-    "@types/react-native": "^0.64.2",
+    "@types/react-native": "^0.65.1",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "babel-eslint": "^10.0.3",

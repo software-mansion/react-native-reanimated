@@ -78,6 +78,11 @@ project.ext.react = [
 ]
 def enableHermes = project.ext.react.get("enableHermes", false);
 
+/**
+ * Architectures to build native code for in debug.
+ */
+def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
+
 apply from: "../../node_modules/react-native/react.gradle"
 
 /**
@@ -123,6 +128,11 @@ android {
         debug {
             packagingOptions {
                 doNotStrip "**/**/*.so"
+            }
+            if (nativeArchitectures) {
+                ndk {
+                    abiFilters nativeArchitectures.split(',')
+                }
             }
         }
         release {
