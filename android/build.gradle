@@ -123,6 +123,7 @@ android {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
         excludes = ["**/libc++_shared.so", "**/libfbjni.so"]
+        pickFirst "lib/**/libreanimated.so"
     }
 
     tasks.withType(JavaCompile) {
