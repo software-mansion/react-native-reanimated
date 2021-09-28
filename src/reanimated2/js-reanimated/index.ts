@@ -1,9 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import JSReanimated from './JSReanimated';
 import { shouldBeUseWeb } from '../PlatformChecker';
+import { AnimatedStyle, StyleProps } from '../commonTypes';
 
 const reanimatedJS = new JSReanimated();
+
+interface JSReanimatedComponent {
+  previousStyle: StyleProps;
+  setNativeProps: (style: StyleProps) => void;
+  props: Record<string, string | number>;
+  _touchableNode: any;
+}
 
 if (shouldBeUseWeb()) {
   global._frameTimestamp = null;
@@ -30,10 +36,13 @@ if (shouldBeUseWeb()) {
   };
 }
 
-export const _updatePropsJS = (updates, viewRef) => {
+export const _updatePropsJS = (
+  updates: StyleProps | AnimatedStyle,
+  viewRef: { _component?: JSReanimatedComponent }
+): void => {
   if (viewRef?._component) {
     const [rawStyles] = Object.keys(updates).reduce(
-      (acc, key) => {
+      (acc: [StyleProps, AnimatedStyle], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;
         acc[index][key] = value;
@@ -50,7 +59,7 @@ export const _updatePropsJS = (updates, viewRef) => {
           return;
         }
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-        viewRef._component._touchableNode.setAttribute(
+        viewRef._component?._touchableNode.setAttribute(
           dashedKey,
           rawStyles[key]
         );
@@ -61,7 +70,10 @@ export const _updatePropsJS = (updates, viewRef) => {
   }
 };
 
-const setNativeProps = (component, style) => {
+const setNativeProps = (
+  component: JSReanimatedComponent,
+  style: StyleProps
+): void => {
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
