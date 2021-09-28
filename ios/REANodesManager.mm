@@ -6,6 +6,7 @@
 #import "REAModule.h"
 
 #import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedListener
+#import <react/renderer/core/ShadowNode.h> // ShadowNode::Shared, ShadowTreeCommitTransaction
 
 using namespace facebook::react;
 
@@ -313,6 +314,7 @@ using namespace facebook::react;
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
+     withShadowNode:(nonnull void *)shadowNodePtr
 {
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
@@ -343,6 +345,22 @@ using namespace facebook::react;
   }
   if (nativeProps.count > 0) {
       std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
+      ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+      
+      const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
+      const ShadowNodeFamily &family = shadowNode->getFamily();
+      SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
+      
+      shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+        auto transaction = [&](RootShadowNode const &oldRootShadowNode) {
+            LayoutableShadowNode::AncestorList ancestors = family.getAncestors(oldRootShadowNode);
+            const ShadowNode &sourceShadowNode = ancestors.back().first;
+            return std::make_shared<RootShadowNode>(oldRootShadowNode, ShadowNodeFragment{});
+        };
+        ShadowTree::CommitOptions commitOptions{false, [](){ return false; }};
+        shadowTree.commit(transaction, commitOptions);
+      });
+    
       // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }
   if (jsProps.count > 0) {
