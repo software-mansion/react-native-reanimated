@@ -94,5 +94,7 @@ Pod::Spec.new do |s|
 
   s.dependency "#{folly_prefix}Folly"
 
+  s.dependency "RNScreens"
+
 end
 
