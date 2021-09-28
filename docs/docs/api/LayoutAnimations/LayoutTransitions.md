@@ -50,7 +50,8 @@ Linear transition, animates both position and dimension in the same way.
 * `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134476174-f7e2f5d6-4247-4f7e-8b84-7f41fca988b9.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/48885911/134476174-f7e2f5d6-4247-4f7e-8b84-7f41fca988b9.mov" controls="controls" muted="muted" height="600" />
+
 
 ### Sequenced Transition
 
@@ -63,7 +64,7 @@ Sequenced transition, animates firstly x-position and width, then later y-positi
 * `reverse` reverse order of the animation ( first animates y-dimension and height)
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134477204-168feed8-1846-4d43-8158-cdb16db180e2.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/48885911/134477204-168feed8-1846-4d43-8158-cdb16db180e2.mov" controls="controls" muted="muted" height="600" />
 
 ### Fading Transition
 
@@ -75,7 +76,7 @@ Fading transition, animates the opacity of component, so it will disappear with 
 * `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134477879-e697aa03-b94d-4a65-b076-5ec3800310e3.mov" controls="controls" muted="muted"></video>
+ <video src="https://user-images.githubusercontent.com/48885911/134477879-e697aa03-b94d-4a65-b076-5ec3800310e3.mov" controls="controls" muted="muted" height="600" />
 
 ### Jumping Transition
 
@@ -87,7 +88,7 @@ Jumping transition, component "jumps" to the new position.
 * `randomDelay` randomize delay of the animation between 0 and provided delay ( or 1000ms if delay not provided )
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134478585-71c601ae-137f-44e4-a58f-4bb6b60f6bdf.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/48885911/134478585-71c601ae-137f-44e4-a58f-4bb6b60f6bdf.mov" controls="controls" muted="muted" height="600" />
 
 ### Curved Transition
 
@@ -103,7 +104,7 @@ Curved transition, enables to animate each position and dimension with different
 * `easingHeight` provides Easing for height ( default: `Easing.out(Easing.exp)`)
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134479266-5c7342f5-7453-4389-a6c5-5070e3673822.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/48885911/134479266-5c7342f5-7453-4389-a6c5-5070e3673822.mov" controls="controls" muted="muted" height="600" />
 
 ### Entry/Exit Transition
 
@@ -126,4 +127,4 @@ To make usage of that transition simplier we have prepared function `combineTran
 ```
 
 #### Example
-<video src="https://user-images.githubusercontent.com/48885911/134480769-4be2c194-4392-483f-a9db-f48bac5e546c.mov" controls="controls" muted="muted"></video>
+<video src="https://user-images.githubusercontent.com/48885911/134480769-4be2c194-4392-483f-a9db-f48bac5e546c.mov" controls="controls" muted="muted" height="600" />
