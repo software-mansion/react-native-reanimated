@@ -2,6 +2,8 @@
  * imported from react-native
  */
 
+import { MutableRefObject, RefObject } from 'react';
+
 /**
  * This is a helper function for when a component needs to be able to forward a ref
  * to a child component, but still needs to have access to that component as part of
@@ -33,8 +35,18 @@
  *   module.exports = MyViewWithRef;
  */
 
-function setAndForwardRef({ getForwardedRef, setLocalRef }) {
-  return function forwardRef(ref) {
+export type ForwardedRef<T> = () =>
+  | MutableRefObject<RefObject<T>>
+  | ((ref: RefObject<T>) => void);
+
+function setAndForwardRef<T>({
+  getForwardedRef,
+  setLocalRef,
+}: {
+  getForwardedRef: ForwardedRef<T>;
+  setLocalRef: (ref: RefObject<T>) => void;
+}): (ref: RefObject<T>) => void {
+  return function forwardRef(ref: RefObject<T>) {
     const forwardedRef = getForwardedRef();
 
     setLocalRef(ref);
