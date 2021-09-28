@@ -76,7 +76,7 @@ rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
 rm $(find . -name '*libc++_shared.so')
 cd ../..
 
-yarn add react-native@0.65.1 --dev
+yarn add react-native@0.66.0-rc.4 --dev
 
 mv android android-temp
 mv android-npm android
