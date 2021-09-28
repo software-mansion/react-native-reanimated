@@ -75,7 +75,8 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "*"
+    "react-native-gesture-handler": "*",
+    "react-native-screens": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.7.5",
