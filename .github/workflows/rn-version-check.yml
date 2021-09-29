@@ -25,6 +25,9 @@ jobs:
           node-version: 14
           cache: 'yarn'
 
+      - name: Set up Node
+        run: npm install -g react-native-cli
+
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
@@ -41,14 +44,17 @@ jobs:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
           ./createNPMPackage.sh
+
       - name: Clone repository reanimated-rn-version-tester
         uses: actions/checkout@master
         with:
           repository: jmysliv/reanimated-rn-version-tester
           path: tester
+
       - name: Install dependencies and pods
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: cp ../react-native-reanimated-*.tgz . && ./setup.sh
+        
       - name: Test reanimated with different rn versions
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: ./testVersions.sh
