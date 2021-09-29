@@ -59,6 +59,9 @@ export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
 }
 
+export interface NativeEvent<T> {
+  nativeEvent: T;
+}
 export interface ComplexWorkletFunction<A extends any[], R>
   extends WorkletFunction {
   (...args: A): R;

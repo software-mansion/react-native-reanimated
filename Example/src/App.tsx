@@ -46,6 +46,7 @@ import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,6 +62,10 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  DefaultTransistions: {
+    screen: WaterfallGridExample,
+    title: '🆕 Default layout transitions',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,

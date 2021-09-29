@@ -78,6 +78,11 @@ project.ext.react = [
 ]
 def enableHermes = project.ext.react.get("enableHermes", false);
 
+/**
+ * Architectures to build native code for in debug.
+ */
+def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
+
 apply from: "../../node_modules/react-native/react.gradle"
 
 /**
@@ -106,6 +111,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        testBuildType System.getProperty('testBuildType', 'debug')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     splits {
         abi {
@@ -121,6 +128,11 @@ android {
         debug {
             packagingOptions {
                 doNotStrip "**/**/*.so"
+            }
+            if (nativeArchitectures) {
+                ndk {
+                    abiFilters nativeArchitectures.split(',')
+                }
             }
         }
         release {
@@ -154,6 +166,10 @@ android {
         pickFirst 'lib/**/libfolly_json.so'
         pickFirst 'lib/**/jscexecutor.so'
     }
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
@@ -164,9 +180,12 @@ dependencies {
     implementation project(':react-native-reanimated')
     implementation project(':react-native-gesture-handler')
     implementation project(':react-native-pager-view')
+    implementation project(':react-native-community-picker')
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+    androidTestImplementation('com.wix:detox:+')
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {

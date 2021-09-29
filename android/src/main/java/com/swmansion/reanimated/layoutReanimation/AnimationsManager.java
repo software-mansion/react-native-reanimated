@@ -18,6 +18,7 @@ import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerModule;
+import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
 
 import java.lang.ref.WeakReference;
@@ -289,16 +290,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
             return true;
         }
         boolean cannotStripe = false;
-        if (view instanceof ViewGroup) {
+        if (view instanceof ViewGroup && mViewManager.get(view.getId()) instanceof ViewGroupManager) {
             ViewGroup vg = (ViewGroup) view;
+            ViewGroupManager vgm = (ViewGroupManager) mViewManager.get(vg.getId());
             ArrayList<View> children = new ArrayList<>();
-            for (int i = 0; i < vg.getChildCount(); ++i) {
-                children.add(vg.getChildAt(i));
+            for (int i = 0; i < vgm.getChildCount(vg); ++i) {
+                children.add(vgm.getChildAt(vg, i));
             }
             for (View child : children) {
                 cannotStripe = cannotStripe || dfs(root, child, cands);
             }
         }
+
         if (!cannotStripe) {
             View parentView = (View)view.getParent();
             if (mCallbacks.containsKey(view.getId())) {
@@ -308,7 +311,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
             }
             if (mParent.containsKey(view.getId())) {
                 ViewGroup parent = (ViewGroup) mParent.get(view.getId());
-                if(parent != null) {
+                if(parent != null ) {
                     parent.removeView(view);
                 }
             }

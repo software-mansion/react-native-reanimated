@@ -1,28 +1,26 @@
-import { Component, RefObject, useRef } from 'react';
+import { Component, useRef } from 'react';
 import { getTag } from '../NativeMethods';
 import { useSharedValue } from './useSharedValue';
 
-interface RefObjectFunction<T> {
+export interface RefObjectFunction<T> {
   current: T | null;
-  (component: T): number;
+  (component?: T): number;
 }
 
-export function useAnimatedRef<T extends Component>(): RefObject<T> {
+export function useAnimatedRef<T extends Component>(): RefObjectFunction<T> {
   const tag = useSharedValue<number | null>(-1);
-  const ref = useRef<RefObject<T>>();
+  const ref = useRef<RefObjectFunction<T>>();
 
   if (!ref.current) {
-    const fun: RefObjectFunction<T> = <RefObjectFunction<T>>(
-      function (component) {
-        'worklet';
-        // enters when ref is set by attaching to a component
-        if (component) {
-          tag.value = getTag(component);
-          fun.current = component;
-        }
-        return tag.value;
+    const fun: RefObjectFunction<T> = <RefObjectFunction<T>>((component) => {
+      'worklet';
+      // enters when ref is set by attaching to a component
+      if (component) {
+        tag.value = getTag(component);
+        fun.current = component;
       }
-    );
+      return tag.value;
+    });
 
     Object.defineProperty(fun, 'current', {
       value: null,

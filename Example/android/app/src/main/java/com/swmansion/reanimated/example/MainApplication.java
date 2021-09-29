@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.ReactApplication;
 import com.facebook.react.uimanager.UIImplementationProvider;
+import com.reactnativecommunity.picker.RNCPickerPackage;
 import com.swmansion.rnscreens.RNScreensPackage;
 import com.th3rdwave.safeareacontext.SafeAreaContextPackage;
 import com.facebook.react.ReactInstanceManager;
@@ -46,7 +47,8 @@ public class MainApplication extends Application implements ReactApplication {
           new RNGestureHandlerPackage(),
           new SafeAreaContextPackage(),
           new RNScreensPackage(),
-          new PagerViewPackage()
+          new PagerViewPackage(),
+          new RNCPickerPackage()
       );
     }
 

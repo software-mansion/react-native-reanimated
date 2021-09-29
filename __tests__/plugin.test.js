@@ -141,4 +141,34 @@ describe('babel plugin', () => {
     expect(closureBindings).toEqual([]);
     expect(code).toMatchSnapshot();
   });
+
+  it('implicitly workletizes possibly chained gesture object callback functions', () => {
+    const input = `
+      import { Gesture } from 'react-native-gesture-handler';
+
+      const foo = Gesture.Tap()
+        .numberOfTaps(2)
+        .onBegan(() => {
+          console.log('onBegan');
+        })
+        .onStart((_event) => {
+          console.log('onStart');
+        })
+        .onEnd((_event, _success) => {
+          console.log('onEnd');
+        });
+    `;
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
+  it("doesn't implicitly workletize standard callback functions", () => {
+    const input = `
+      const foo = Something.Tap().onEnd((_event, _success) => {
+        console.log('onEnd');
+      });
+    `;
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
 });
