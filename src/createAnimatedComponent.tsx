@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, ComponentType, Ref } from 'react';
 import { findNodeHandle, Platform, StyleSheet } from 'react-native';
 import ReanimatedEventEmitter from './ReanimatedEventEmitter';
 
@@ -21,6 +21,16 @@ import {
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
 import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
+import {
+  BaseAnimationBuilder,
+  EntryExitAnimationFunction,
+  LayoutAnimationFunction,
+} from './reanimated2/layoutReanimation';
+import { SharedValue, StyleProps } from './reanimated2/commonTypes';
+import {
+  ViewDescriptorsSet,
+  ViewRefSet,
+} from './reanimated2/ViewDescriptorsSet';
 
 const NODE_MAPPING = new Map();
 
@@ -34,7 +44,7 @@ function dummyListener() {
   // event is used.
 }
 
-function hasAnimatedNodes(value) {
+function hasAnimatedNodes(value: any): boolean {
   if (value instanceof AnimatedNode) {
     return true;
   }
@@ -47,13 +57,14 @@ function hasAnimatedNodes(value) {
   return false;
 }
 
-function flattenArray(array) {
+type NestedArray<T> = T | NestedArray<T>[];
+function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
     return [array];
   }
-  const resultArr = [];
+  const resultArr: T[] = [];
 
-  const _flattenArray = (arr) => {
+  const _flattenArray = (arr: NestedArray<T>[]): void => {
     arr.forEach((item) => {
       if (Array.isArray(item)) {
         _flattenArray(item);
@@ -66,7 +77,63 @@ function flattenArray(array) {
   return resultArr;
 }
 
-export default function createAnimatedComponent(Component, options = {}) {
+interface AnimatedProps extends Record<string, unknown> {
+  viewDescriptors?: ViewDescriptorsSet;
+  viewsRef?: ViewRefSet<unknown>;
+  initial?: SharedValue<StyleProps>;
+}
+
+export type AnimatedComponentProps<P extends Record<string, unknown>> = {
+  [K in keyof P]: P[K];
+} & {
+  forwardedRef?: Ref<Component>;
+  style?: NestedArray<StyleProps>;
+  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  animatedStyle?: StyleProps;
+  layout?:
+    | BaseAnimationBuilder
+    | LayoutAnimationFunction
+    | typeof BaseAnimationBuilder;
+  entering?:
+    | BaseAnimationBuilder
+    | typeof BaseAnimationBuilder
+    | EntryExitAnimationFunction
+    | Keyframe;
+  exiting?:
+    | BaseAnimationBuilder
+    | typeof BaseAnimationBuilder
+    | EntryExitAnimationFunction
+    | Keyframe;
+};
+
+type Options<P> = {
+  setNativeProps: (ref: any, props: P) => void;
+};
+
+interface ComponentRef extends Component {
+  setNativeProps?: (props: Record<string, unknown>) => void;
+  getScrollableNode?: () => ComponentRef;
+}
+
+const has = <K extends string>(
+  key: K,
+  x: unknown
+): x is { [key in K]: unknown } => {
+  if (typeof x === 'function' || typeof x === 'object') {
+    return key in x;
+  }
+  return false;
+};
+
+interface InitialComponentProps extends Record<string, unknown> {
+  ref?: Ref<Component>;
+  collapsable?: unknown | boolean;
+}
+
+export default function createAnimatedComponent(
+  Component: ComponentType<InitialComponentProps>,
+  options?: Options<InitialComponentProps>
+): ComponentType<AnimatedComponentProps<InitialComponentProps>> {
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
@@ -74,11 +141,18 @@ export default function createAnimatedComponent(Component, options = {}) {
       'use a class component instead.'
   );
 
-  class AnimatedComponent extends React.Component {
+  class AnimatedComponent extends React.Component<
+    AnimatedComponentProps<InitialComponentProps>
+  > {
     _invokeAnimatedPropsCallbackOnMount = false;
     _styles = null;
     _viewTag = -1;
     _isFirstRender = true;
+    animatedStyle: { value: StyleProps };
+    sv: SharedValue<null | Record<string, unknown>>;
+    _propsAnimated: any;
+    _component: ComponentRef;
+    static displayName: string;
 
     constructor(props) {
       super(props);
@@ -119,13 +193,13 @@ export default function createAnimatedComponent(Component, options = {}) {
 
     _attachNativeEvents() {
       const node = this._getEventViewRef();
-      const viewTag = findNodeHandle(options.setNativeProps ? this : node);
+      const viewTag = findNodeHandle(options?.setNativeProps ? this : node);
       for (const key in this.props) {
         const prop = this.props[key];
         if (prop instanceof AnimatedEvent) {
           prop.attachEvent(node, key);
         } else if (
-          prop?.current &&
+          has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
           prop.current.registerForEvents(viewTag, key);
@@ -141,7 +215,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         if (prop instanceof AnimatedEvent) {
           prop.detachEvent(node, key);
         } else if (
-          prop?.current &&
+          has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
           prop.current.unregisterFromEvents();
@@ -179,7 +253,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         if (prop instanceof AnimatedEvent) {
           nextEvts.add(prop.__nodeID);
         } else if (
-          prop?.current &&
+          has('current', prop) &&
           prop.current instanceof WorkletEventHandler
         ) {
           if (viewTag === undefined) {
@@ -198,7 +272,7 @@ export default function createAnimatedComponent(Component, options = {}) {
             attached.add(prop.__nodeID);
           }
         } else if (
-          prop?.current &&
+          has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
@@ -212,7 +286,7 @@ export default function createAnimatedComponent(Component, options = {}) {
           // not yet attached
           prop.attachEvent(node, key);
         } else if (
-          prop?.current &&
+          has('current', prop) &&
           prop.current instanceof WorkletEventHandler &&
           prop.current.reattachNeeded
         ) {
@@ -265,7 +339,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _updateFromNative(props) {
-      if (options.setNativeProps) {
+      if (options?.setNativeProps) {
         options.setNativeProps(this._component, props);
       } else {
         // eslint-disable-next-line no-unused-expressions
@@ -282,7 +356,7 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _attachAnimatedStyles() {
-      const styles = flattenArray(this.props.style);
+      const styles = flattenArray<StyleProps>(this.props.style);
       this._styles = styles;
       let viewTag, viewName;
       if (Platform.OS === 'web') {
@@ -372,7 +446,7 @@ export default function createAnimatedComponent(Component, options = {}) {
       this._attachAnimatedStyles();
     }
 
-    _setComponentRef = setAndForwardRef({
+    _setComponentRef = setAndForwardRef<Component>({
       getForwardedRef: () => this.props.forwardedRef,
       setLocalRef: (ref) => {
         // TODO update config
@@ -389,16 +463,16 @@ export default function createAnimatedComponent(Component, options = {}) {
             ? this.props.exiting
             : DefaultExiting;
 
-          if (layout.build) {
+          if (has('build', layout)) {
             layout = layout.build();
           }
 
-          if (entering.build) {
-            entering = entering.build();
+          if (has('build', entering)) {
+            entering = entering.build() as EntryExitAnimationFunction;
           }
 
-          if (exiting.build) {
-            exiting = exiting.build();
+          if (has('build', exiting)) {
+            exiting = exiting.build() as EntryExitAnimationFunction;
           }
 
           const config = {
@@ -415,20 +489,6 @@ export default function createAnimatedComponent(Component, options = {}) {
 
         if (ref !== this._component) {
           this._component = ref;
-        }
-
-        // TODO: Delete this after React Native also deletes this deprecation helper.
-        if (ref != null && ref.getNode == null) {
-          ref.getNode = () => {
-            console.warn(
-              '%s: Calling %s on the ref of an Animated component ' +
-                'is no longer necessary. You can now directly use the ref ' +
-                'instead. This method will be removed in a future release.',
-              ref.constructor.name ?? '<<anonymous>>',
-              'getNode()'
-            );
-            return ref;
-          };
         }
       },
     });
@@ -448,20 +508,23 @@ export default function createAnimatedComponent(Component, options = {}) {
       return style;
     }
 
-    _filterNonAnimatedProps(inputProps) {
+    _filterNonAnimatedProps(
+      inputProps: AnimatedComponentProps<InitialComponentProps>
+    ): Record<string, unknown> {
       const props = {};
       for (const key in inputProps) {
         const value = inputProps[key];
         if (key === 'style') {
-          const styles = flattenArray(value);
-          const processedStyle = styles.map((style) => {
+          const styleProp = inputProps.style;
+          const styles = flattenArray<StyleProps>(styleProp);
+          const processedStyle: StyleProps = styles.map((style) => {
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
               if (this._isFirstRender) {
                 return {
                   ...style.initial.value,
-                  ...initialUpdaterRun(style.initial.updater),
+                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
                 };
               } else {
                 return style.initial.value;
@@ -474,9 +537,10 @@ export default function createAnimatedComponent(Component, options = {}) {
             StyleSheet.flatten(processedStyle)
           );
         } else if (key === 'animatedProps') {
-          Object.keys(value.initial.value).forEach((key) => {
-            props[key] = value.initial.value[key];
-            value.viewsRef.add(this);
+          const animatedProp = inputProps.animatedProps;
+          Object.keys(animatedProp.initial.value).forEach((key) => {
+            props[key] = animatedProp.initial.value[key];
+            animatedProp.viewsRef.add(this);
           });
         } else if (value instanceof AnimatedEvent) {
           // we cannot filter out event listeners completely as some components
@@ -485,12 +549,12 @@ export default function createAnimatedComponent(Component, options = {}) {
           // native event dispatcher to hijack events.
           props[key] = dummyListener;
         } else if (
-          value?.current &&
+          has('current', value) &&
           value.current instanceof WorkletEventHandler
         ) {
           if (value.current.eventNames.length > 0) {
             value.current.eventNames.forEach((eventName) => {
-              props[eventName] = value.current.listeners
+              props[eventName] = has('listeners', value.current)
                 ? value.current.listeners[eventName]
                 : dummyListener;
             });
@@ -534,11 +598,11 @@ export default function createAnimatedComponent(Component, options = {}) {
     Component.displayName || Component.name || 'Component'
   })`;
 
-  return React.forwardRef(function AnimatedComponentWrapper(props, ref) {
+  return React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
-        {...(ref == null ? null : { forwardedRef: ref })}
+        {...(ref === null ? null : { forwardedRef: ref })}
       />
     );
   });

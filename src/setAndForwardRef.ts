@@ -2,7 +2,7 @@
  * imported from react-native
  */
 
-import { MutableRefObject, RefObject } from 'react';
+import { MutableRefObject } from 'react';
 
 /**
  * This is a helper function for when a component needs to be able to forward a ref
@@ -35,18 +35,16 @@ import { MutableRefObject, RefObject } from 'react';
  *   module.exports = MyViewWithRef;
  */
 
-export type ForwardedRef<T> = () =>
-  | MutableRefObject<RefObject<T>>
-  | ((ref: RefObject<T>) => void);
+export type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
 
 function setAndForwardRef<T>({
   getForwardedRef,
   setLocalRef,
 }: {
   getForwardedRef: ForwardedRef<T>;
-  setLocalRef: (ref: RefObject<T>) => void;
-}): (ref: RefObject<T>) => void {
-  return function forwardRef(ref: RefObject<T>) {
+  setLocalRef: (ref: T) => void;
+}): (ref: T) => void {
+  return function forwardRef(ref: T) {
     const forwardedRef = getForwardedRef();
 
     setLocalRef(ref);
