@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { measure } from '.';
+import { measure } from './NativeMethods';
 import { RefObjectFunction } from './hook/useAnimatedRef';
 
 export interface ComponentCoords {
