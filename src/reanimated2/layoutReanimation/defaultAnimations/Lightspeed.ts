@@ -28,7 +28,12 @@ export class LightSpeedInRight
         animations: {
           opacity: delayFunction(delay, withTiming(1, { duration: duration })),
           transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(0, { ...config, duration: duration * 0.7 })
+              ),
+            },
             {
               skewX: delayFunction(
                 delay,
@@ -72,7 +77,10 @@ export class LightSpeedInLeft
           opacity: delayFunction(delay, withTiming(1, { duration: duration })),
           transform: [
             {
-              translateX: delayFunction(delay, animation(0, config)),
+              translateX: delayFunction(
+                delay,
+                animation(0, { ...config, duration: duration * 0.7 })
+              ),
             },
             {
               skewX: delayFunction(
