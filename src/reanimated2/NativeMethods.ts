@@ -39,7 +39,7 @@ export function scrollTo(animatedRef, x, y, animated) {
   _scrollTo(viewTag, x, y, animated);
 }
 
-export function setGestureState(handlerTag: number, newState: number) {
+export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
   if (!_WORKLET && !isChromeDebugger()) {
     return;

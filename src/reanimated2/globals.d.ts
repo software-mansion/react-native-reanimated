@@ -11,11 +11,13 @@ declare global {
     tag: number,
     flag: { value: boolean; _value: boolean }
   ) => void;
+  const _setGestureState: (handlerTag: number, newState: number) => void;
   namespace NodeJS {
     interface Global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
+      _setGestureState: () => void;
       _WORKLET: boolean;
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
