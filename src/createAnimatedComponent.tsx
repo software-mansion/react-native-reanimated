@@ -108,9 +108,7 @@ interface AnimatedProps extends Record<string, unknown> {
   initial?: SharedValue<StyleProps>;
 }
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = {
-  [K in keyof P]: P[K];
-} & {
+export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
@@ -200,8 +198,8 @@ export default function createAnimatedComponent(
         this._animatedPropsCallback();
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this._propsAnimated &&
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this._propsAnimated.setNativeView(this._component!);
       this._attachNativeEvents();
       this._attachPropUpdater();
@@ -478,8 +476,8 @@ export default function createAnimatedComponent(
       this._attachProps(this.props);
       this._reattachNativeEvents(prevProps);
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this._propsAnimated &&
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this._propsAnimated.setNativeView(this._component!);
       this._attachAnimatedStyles();
     }
