@@ -3,6 +3,7 @@ import MutableValue from './MutableValue';
 import Mapper from './Mapper';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp } from '../animation/commonTypes';
+import { NestedObjectValues } from '../commonTypes';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
@@ -66,7 +67,8 @@ export default class JSReanimated extends NativeReanimated {
   }
 
   makeMutable<T>(value: T): MutableValue<T> {
-    return new MutableValue(value, this._valueSetter as <T>(value: T) => void);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return new MutableValue(value, this._valueSetter!);
   }
 
   makeRemote<T>(object = {}): T {
@@ -75,8 +77,8 @@ export default class JSReanimated extends NativeReanimated {
 
   startMapper(
     mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = []
+    inputs: NestedObjectValues<MutableValue<unknown>>[] = [],
+    outputs: NestedObjectValues<MutableValue<unknown>>[] = []
   ): number {
     const instance = new Mapper(this, mapper, inputs, outputs);
     const mapperId = this._mapperRegistry.startMapper(instance);

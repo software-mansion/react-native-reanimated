@@ -138,7 +138,7 @@ const PROCESSED_VIEW_NAMES = new Set();
 
 interface ViewConfig {
   uiViewClassName: string;
-  validAttributes: Record<string, any>;
+  validAttributes: Record<string, unknown>;
 }
 /**
  * updates UI props whitelist for given view host instance

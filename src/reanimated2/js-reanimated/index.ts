@@ -8,7 +8,9 @@ interface JSReanimatedComponent {
   previousStyle: StyleProps;
   setNativeProps: (style: StyleProps) => void;
   props: Record<string, string | number>;
-  _touchableNode: any;
+  _touchableNode: {
+    setAttribute: (key: string, props: unknown) => void;
+  };
 }
 
 if (shouldBeUseWeb()) {
@@ -40,7 +42,8 @@ export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle,
   viewRef: { _component?: JSReanimatedComponent }
 ): void => {
-  if (viewRef?._component) {
+  if (viewRef._component) {
+    const component = viewRef._component;
     const [rawStyles] = Object.keys(updates).reduce(
       (acc: [StyleProps, AnimatedStyle], key) => {
         const value = updates[key];
@@ -51,18 +54,15 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    if (typeof viewRef._component.setNativeProps === 'function') {
-      setNativeProps(viewRef._component, rawStyles);
-    } else if (Object.keys(viewRef._component.props).length > 0) {
-      Object.keys(viewRef._component.props).forEach((key) => {
+    if (typeof component.setNativeProps === 'function') {
+      setNativeProps(component, rawStyles);
+    } else if (Object.keys(component.props).length > 0) {
+      Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;
         }
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-        viewRef._component?._touchableNode.setAttribute(
-          dashedKey,
-          rawStyles[key]
-        );
+        component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
       console.warn('It is not possible to manipulate component');

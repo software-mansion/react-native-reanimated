@@ -16,7 +16,10 @@ export default {
   ): Promise<void> {
     // noop
   },
-  async createNode(_nodeID: number, _config: any): Promise<void> {
+  async createNode(
+    _nodeID: number,
+    _config: Record<string, unknown>
+  ): Promise<void> {
     // noop
   },
   async dropNode(_nodeID: number): Promise<void> {

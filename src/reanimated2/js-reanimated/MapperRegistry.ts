@@ -40,7 +40,7 @@ export default class MapperRegistry<T> {
   updateOrder(): void {
     const nodes = [...this.mappers.values()].map((mapper) => new Node(mapper));
 
-    const mappersById: { [key: number]: Mapper<T> } = {};
+    const mappersById: Record<number, Mapper<T>> = {};
     this.mappers.forEach((mapper) => {
       mappersById[mapper.id] = mapper;
     });
@@ -77,7 +77,7 @@ export default class MapperRegistry<T> {
       }
     }
 
-    const post: { [key: number]: number } = {};
+    const post: Record<number, number> = {};
     let postCounter = 1;
     const dfs = (node: Node<T>) => {
       const index = nodes.indexOf(node);
