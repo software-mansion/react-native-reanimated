@@ -215,9 +215,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         }
 
         // mPendingDeletionsForTag is modify by React
-        Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
-        if (pendingTags != null) {
-            pendingTags.clear();
+        if (mPendingDeletionsForTag != null) {
+            Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
+            if (pendingTags != null) {
+                pendingTags.clear();
+            }
         }
 
         super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
