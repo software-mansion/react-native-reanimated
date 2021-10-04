@@ -28,6 +28,16 @@ void MapperRegistry::execute(jsi::Runtime &rt) {
   }
 }
 
+void MapperRegistry::executeWithoutChecking(jsi::Runtime &rt) {
+  if (updatedSinceLastExecute) {
+    updateOrder();
+    updatedSinceLastExecute = false;
+  }
+  for (auto &mapper : sortedMappers) {
+      mapper->execute(rt);
+  }
+}
+
 bool MapperRegistry::needRunOnRender() {
   return updatedSinceLastExecute; // TODO: also run if input nodes are dirty
 }

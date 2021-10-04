@@ -1,4 +1,4 @@
-/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
+/* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole, _executeMapper */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
@@ -129,6 +129,13 @@ global._WORKLET = false;
 global._log = function (s: string) {
   console.log(s);
 };
+
+export function executeMappers(): void {
+  runOnUI(() => {
+    'worklet';
+    _executeMapper();
+  })();
+}
 
 export function runOnUI<A extends any[], R>(
   worklet: ComplexWorkletFunction<A, R>

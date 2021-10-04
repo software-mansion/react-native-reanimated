@@ -19,8 +19,9 @@ class MapperRegistry {
  public:
   void startMapper(std::shared_ptr<Mapper> mapper);
   void stopMapper(unsigned long id);
-
   void execute(jsi::Runtime &rt);
+  void executeWithoutChecking(jsi::Runtime &rt);
+
 
   bool needRunOnRender();
 };

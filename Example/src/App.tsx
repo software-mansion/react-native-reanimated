@@ -47,6 +47,7 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import Repro from './repro';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -66,6 +67,10 @@ const SCREENS: Screens = {
   DefaultTransistions: {
     screen: WaterfallGridExample,
     title: '🆕 Default layout transitions',
+  },
+  Repro: {
+    screen: Repro,
+    title: '🆕 Issue reproduction',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,

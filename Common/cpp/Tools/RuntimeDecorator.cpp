@@ -4,6 +4,7 @@
 #include "LayoutAnimationsProxy.h"
 #include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
+#include "MapperRegistry.h"
 
 namespace reanimated {
 
@@ -17,11 +18,23 @@ void RuntimeDecorator::registerRuntime(
 
 void RuntimeDecorator::decorateRuntime(
     jsi::Runtime &rt,
-    const std::string &label) {
+    const std::string &label,
+    std::shared_ptr<MapperRegistry> mapperRegistry) {
   // This property will be used to find out if a runtime is a custom worklet
   // runtime (e.g. UI, VisionCamera frame processor, ...)
   rt.global().setProperty(rt, "_WORKLET", jsi::Value(true));
   // This property will be used for debugging
+  rt.global().setProperty(rt, "_executeMapper", jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_executeMapper"),
+          1,
+          [mapperRegistry](jsi::Runtime &rt,
+              const jsi::Value &thisValue,
+              const jsi::Value *args,
+              size_t count) -> jsi::Value {
+            mapperRegistry->executeWithoutChecking(rt);
+            return jsi::Value::undefined();
+          }));
   rt.global().setProperty(
       rt, "_LABEL", jsi::String::createFromAscii(rt, label));
 
@@ -88,8 +101,9 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
     const MeasuringFunction measure,
     const TimeProviderFunction getCurrentTime,
-    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
-  RuntimeDecorator::decorateRuntime(rt, "UI");
+    std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy,
+    std::shared_ptr<MapperRegistry> mapperRegistry) {
+  RuntimeDecorator::decorateRuntime(rt, "UI", mapperRegistry);
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
   auto clb = [updater](
