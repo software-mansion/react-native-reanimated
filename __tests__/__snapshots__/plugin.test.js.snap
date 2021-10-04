@@ -29,6 +29,39 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin workletizes hook wrapped object methods automatically 1`] = `
+"var panGesture = useAnimatedGestureHandler({
+  onStart: function () {
+    var _f = function _f(event) {
+      return 123;
+    };
+
+    _f._closure = {};
+    _f.asString = \\"function _f(event){return 123;}\\";
+    _f.__workletHash = 1465592788118;
+    _f.__location = \\"${ process.cwd() }/jest tests fixture (3:8)\\";
+
+    global.__reanimatedWorkletInit(_f);
+
+    return _f;
+  }(),
+  onEnd: function () {
+    var _f = function _f(event) {
+      return 456;
+    };
+
+    _f._closure = {};
+    _f.asString = \\"function _f(event){return 456;}\\";
+    _f.__workletHash = 3483790849969;
+    _f.__location = \\"${ process.cwd() }/jest tests fixture (6:8)\\";
+
+    global.__reanimatedWorkletInit(_f);
+
+    return _f;
+  }()
+});"
+`;
+
 exports[`babel plugin doesn't capture globals 1`] = `
 "var f = function () {
   var _f = function _f() {

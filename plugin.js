@@ -352,10 +352,14 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName) {
-  if (!t.isFunctionParent(fun)) {
+function processWorkletFunction(t, fun2, fileName) {
+  const isObjectMethod = t.isObjectMethod(fun2.parentPath);
+  
+  if (!t.isFunctionParent(fun2) && !isObjectMethod) {
     return;
   }
+  const fun = isObjectMethod ? fun2.parentPath : fun2;
+
   const functionName = fun.node.id ? fun.node.id.name : '_f';
 
   const closure = new Map();
@@ -365,7 +369,11 @@ function processWorkletFunction(t, fun, fileName) {
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  const code = '\n(' + fun.toString() + '\n)';
+
+  const code = isObjectMethod
+    ? '\n(function ' + fun.toString() + '\n)'
+    : '\n(' + fun.toString() + '\n)';
+
   const transformed = transformSync(code, {
     filename: fileName,
     presets: ['@babel/preset-typescript'],
@@ -547,7 +555,13 @@ function processWorkletFunction(t, fun, fileName) {
     t.blockStatement(steatmentas)
   );
 
-  const replacement = t.callExpression(newFun, []);
+  const replacement = isObjectMethod
+    ? t.objectProperty(
+        t.identifier(fun.node.key.name),
+        t.callExpression(newFun, [])
+      )
+    : t.callExpression(newFun, []);
+
   // we check if function needs to be assigned to variable declaration.
   // This is needed if function definition directly in a scope. Some other ways
   // where function definition can be used is for example with variable declaration:

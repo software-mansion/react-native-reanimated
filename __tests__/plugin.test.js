@@ -119,6 +119,22 @@ describe('babel plugin', () => {
     expect(code).toContain('global.__reanimatedWorkletInit');
   });
 
+  it('workletizes hook wrapped object methods automatically', () => {
+    const input = `
+      const panGesture = useAnimatedGestureHandler({
+        onStart(event) {
+          return 123;
+        },
+        onEnd(event) {
+          return 456;
+        },
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatchSnapshot();
+  });
+
   it("doesn't capture globals", () => {
     const input = `
       function f() {
