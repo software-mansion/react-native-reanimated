@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IViewManagerWithChildren;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
@@ -113,13 +114,18 @@ class ReaLayoutAnimator extends LayoutAnimationController {
         if(tag == -1) {
             return;
         }
-        ViewManager vm = nativeViewHierarchyManager.resolveViewManager(tag);
-        if (vm != null) {
+        ViewManager vm = null;
+        try {
+            vm = nativeViewHierarchyManager.resolveViewManager(tag);
             Snapshot before = new Snapshot(view,mWeakNativeViewHierarchyManage.get());
             mAnimationsManager.onViewRemoval(view, (ViewGroup) view.getParent(), before, () -> {
                 ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager = (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
                 reanimatedNativeHierarchyManager.publicDropView(view);
             });
+        }
+        catch (IllegalViewOperationException e) {
+            // (IllegalViewOperationException) == (vm == null)
+            // do nothing
         }
         if (vm instanceof ViewGroupManager) {
             ViewGroupManager vgm = (ViewGroupManager) vm;
@@ -182,12 +188,12 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         ViewGroup viewGroup = (ViewGroup) resolveView(tag);
         ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
         if (toBeRemoved.containsKey(tag)) {
-                ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
-                HashSet<Integer> tagsToRemove = new HashSet<Integer>();
-                for (View childToRemove : childrenToBeRemoved) {
-                    tagsToRemove.add(childToRemove.getId());
-                }
-                while (viewGroupManager.getChildCount(viewGroup) != 0) {
+            ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
+            HashSet<Integer> tagsToRemove = new HashSet<Integer>();
+            for (View childToRemove : childrenToBeRemoved) {
+                tagsToRemove.add(childToRemove.getId());
+            }
+            while (viewGroupManager.getChildCount(viewGroup) != 0) {
                 View child = viewGroupManager.getChildAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
                 if (tagsToRemove.contains(child.getId())) {
                     viewGroupManager.removeViewAt(viewGroup, viewGroupManager.getChildCount(viewGroup)-1);
