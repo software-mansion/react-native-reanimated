@@ -29,8 +29,6 @@ add_library(
         ${sources_registries}
         ${sources_android}
         ${source_tools}
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp
         "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
         "./src/main/Common/cpp/Tools/Mapper.cpp"
         "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
@@ -108,7 +106,13 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_library(
-        GLOG_LIB 
+        JSI_LIB
+        jsi
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
+        GLOG_LIB
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
@@ -124,6 +128,7 @@ if(${FOR_HERMES})
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
             fbjni::fbjni
@@ -135,6 +140,7 @@ else()
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             fbjni::fbjni
