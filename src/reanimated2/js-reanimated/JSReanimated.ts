@@ -2,21 +2,11 @@ import MapperRegistry from './MapperRegistry';
 import MutableValue from './MutableValue';
 import Mapper from './Mapper';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import {
-  AnimationObject,
-  PrimitiveValue,
-  Timestamp,
-} from '../animation/commonTypes';
-import { Descriptor } from '../hook/commonTypes';
+import { Timestamp } from '../animation/commonTypes';
+import { NestedObjectValues } from '../commonTypes';
 
 export default class JSReanimated extends NativeReanimated {
-  _valueSetter?: (
-    value:
-      | (() => AnimationObject)
-      | AnimationObject
-      | PrimitiveValue
-      | Descriptor
-  ) => void = undefined;
+  _valueSetter?: <T>(value: T) => void = undefined;
 
   _renderRequested = false;
   _mapperRegistry = new MapperRegistry(this);
@@ -68,15 +58,7 @@ export default class JSReanimated extends NativeReanimated {
     }
   }
 
-  installCoreFunctions(
-    valueSetter: (
-      value:
-        | (() => AnimationObject)
-        | AnimationObject
-        | PrimitiveValue
-        | Descriptor
-    ) => void
-  ): void {
+  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
     this._valueSetter = valueSetter;
   }
 
@@ -84,8 +66,9 @@ export default class JSReanimated extends NativeReanimated {
     return value;
   }
 
-  makeMutable<T>(value: T): MutableValue {
-    return new MutableValue(value, this._valueSetter);
+  makeMutable<T>(value: T): MutableValue<T> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return new MutableValue(value, this._valueSetter!);
   }
 
   makeRemote<T>(object = {}): T {
@@ -94,8 +77,8 @@ export default class JSReanimated extends NativeReanimated {
 
   startMapper(
     mapper: () => void,
-    inputs: any[] = [],
-    outputs: any[] = []
+    inputs: NestedObjectValues<MutableValue<unknown>>[] = [],
+    outputs: NestedObjectValues<MutableValue<unknown>>[] = []
   ): number {
     const instance = new Mapper(this, mapper, inputs, outputs);
     const mapperId = this._mapperRegistry.startMapper(instance);

@@ -1,9 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import JSReanimated from './JSReanimated';
 import { shouldBeUseWeb } from '../PlatformChecker';
+import { AnimatedStyle, StyleProps } from '../commonTypes';
 
 const reanimatedJS = new JSReanimated();
+
+interface JSReanimatedComponent {
+  previousStyle: StyleProps;
+  setNativeProps: (style: StyleProps) => void;
+  props: Record<string, string | number>;
+  _touchableNode: {
+    setAttribute: (key: string, props: unknown) => void;
+  };
+}
 
 if (shouldBeUseWeb()) {
   global._frameTimestamp = null;
@@ -30,10 +38,14 @@ if (shouldBeUseWeb()) {
   };
 }
 
-export const _updatePropsJS = (updates, viewRef) => {
-  if (viewRef?._component) {
+export const _updatePropsJS = (
+  updates: StyleProps | AnimatedStyle,
+  viewRef: { _component?: JSReanimatedComponent }
+): void => {
+  if (viewRef._component) {
+    const component = viewRef._component;
     const [rawStyles] = Object.keys(updates).reduce(
-      (acc, key) => {
+      (acc: [StyleProps, AnimatedStyle], key) => {
         const value = updates[key];
         const index = typeof value === 'function' ? 1 : 0;
         acc[index][key] = value;
@@ -42,18 +54,15 @@ export const _updatePropsJS = (updates, viewRef) => {
       [{}, {}]
     );
 
-    if (typeof viewRef._component.setNativeProps === 'function') {
-      setNativeProps(viewRef._component, rawStyles);
-    } else if (Object.keys(viewRef._component.props).length > 0) {
-      Object.keys(viewRef._component.props).forEach((key) => {
+    if (typeof component.setNativeProps === 'function') {
+      setNativeProps(component, rawStyles);
+    } else if (Object.keys(component.props).length > 0) {
+      Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;
         }
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-        viewRef._component._touchableNode.setAttribute(
-          dashedKey,
-          rawStyles[key]
-        );
+        component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
     } else {
       console.warn('It is not possible to manipulate component');
@@ -61,7 +70,10 @@ export const _updatePropsJS = (updates, viewRef) => {
   }
 };
 
-const setNativeProps = (component, style) => {
+const setNativeProps = (
+  component: JSReanimatedComponent,
+  style: StyleProps
+): void => {
   const previousStyle = component.previousStyle ? component.previousStyle : {};
   const currentStyle = { ...previousStyle, ...style };
   component.previousStyle = currentStyle;
