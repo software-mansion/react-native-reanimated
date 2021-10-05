@@ -354,7 +354,7 @@ function buildWorkletString(t, fun, closureVariables, name) {
 
 function processWorkletFunction(t, fun2, fileName) {
   const isObjectMethod = t.isObjectMethod(fun2.parentPath);
-  
+
   if (!t.isFunctionParent(fun2) && !isObjectMethod) {
     return;
   }
@@ -366,6 +366,15 @@ function processWorkletFunction(t, fun2, fileName) {
   const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
   const options = {};
+
+  // remove 'worklet'; directive before calling .toString()
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
+    },
+  });
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -444,13 +453,6 @@ function processWorkletFunction(t, fun2, fileName) {
     },
   });
 
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
-  });
   const variables = Array.from(closure.values());
 
   const privateFunctionId = t.identifier('_f');
@@ -466,7 +468,7 @@ function processWorkletFunction(t, fun2, fileName) {
     transformed.ast,
     variables,
     functionName
-  ).replace("'worklet';", '');
+  );
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
