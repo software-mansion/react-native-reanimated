@@ -150,56 +150,11 @@ const gestureHandlerGestureObjects = new Set([
   'Exclusive',
 ]);
 
-const gestureHandlerBuilderMethods = new Set([
-  // BaseGesture
-  'withRef',
+const gestureHandlerCallbackMethods = new Set([
   'onBegan',
   'onStart',
   'onEnd',
-  'enabled',
-  'shouldCancelWhenOutside',
-  'hitSlop',
-  'simultaneousWithExternalGesture',
-  'requireExternalGestureToFail',
-
-  // ContinousBaseGesture
   'onUpdate',
-
-  // TapGesture
-  'minPointers',
-  'numberOfTaps',
-  'maxDistance',
-  'maxDuration',
-  'maxDelay',
-  'maxDeltaX',
-  'maxDeltaY',
-
-  // PanGesture
-  'activeOffsetY',
-  'activeOffsetX',
-  'failOffsetY',
-  'failOffsetX',
-  'minPointers',
-  'minDistance',
-  'averageTouches',
-  'enableTrackpadTwoFingerGesture',
-
-  // FlingGesture
-  'numberOfPointers',
-  'direction',
-
-  // LongPress
-  'minDuration',
-  'maxDistance',
-
-  // ForceTouchGesture:
-  'minForce',
-  'maxForce',
-  'feedbackOnActivation',
-
-  // NativeGesture
-  'shouldActivateOnStart',
-  'disallowInterruption',
 ]);
 
 class ClosureGenerator {
@@ -648,36 +603,33 @@ function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
 
 function isGestureObjectEventCallbackMethod(t, node) {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
-  // where `[*]` represents any number of `.onBar(...)` or similar method calls.
-  /*
-  node: MemberExpression(
-    object: CallExpression(
-      callee: MemberExpression(
-        object: Identifier('Gesture')
-        property: Identifier('Tap')
-      )
-    )
-    property: Identifier('onEnd')
-  )
-  */
-  if (
+  // where `[*]` represents any number of method calls.
+  return (
     t.isMemberExpression(node) &&
     t.isIdentifier(node.property) &&
-    gestureHandlerBuilderMethods.has(node.property.name)
-  ) {
-    // direct call
-    if (isGestureObject(t, node.object)) {
-      return true;
-    }
+    gestureHandlerCallbackMethods.has(node.property.name) &&
+    containsGestureObject(t, node.object)
+  );
+}
 
-    // method chaining
-    if (
-      t.isCallExpression(node.object) &&
-      isGestureObjectEventCallbackMethod(t, node.object.callee)
-    ) {
-      return true;
-    }
+function containsGestureObject(t, node) {
+  // Checks if node matches the pattern `Gesture.Foo()[*]`
+  // where `[*]` represents any number of chained method calls, like `.something(42)`.
+
+  // direct call
+  if (isGestureObject(t, node)) {
+    return true;
   }
+
+  // method chaining
+  if (
+    t.isCallExpression(node) &&
+    t.isMemberExpression(node.callee) &&
+    containsGestureObject(t, node.callee.object)
+  ) {
+    return true;
+  }
+
   return false;
 }
 
