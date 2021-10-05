@@ -172,7 +172,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         ViewManager parentViewManager = this.resolveViewManager(parentTag);
         String parentViewManagerName = parentViewManager.getName();
         View container = resolveView(parentTag);
-        if (container != null && parentViewManagerName.equals("RNSScreenContainer")) {
+        if (container != null && parentViewManagerName.equals("RNSScreenContainer") && this.mReaLayoutAnimator != null) {
             this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, 0, 0, container.getWidth(), container.getHeight());
         }
     }
@@ -215,9 +215,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         }
 
         // mPendingDeletionsForTag is modify by React
-        Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
-        if (pendingTags != null) {
-            pendingTags.clear();
+        if (mPendingDeletionsForTag != null) {
+            Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
+            if (pendingTags != null) {
+                pendingTags.clear();
+            }
         }
 
         super.manageChildren(tag, indicesToRemove, viewsToAdd, null);
