@@ -352,15 +352,28 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun2, fileName) {
-  const isObjectMethod = t.isObjectMethod(fun2.parentPath);
+function makeWorkletName(t, fun) {
+  if (t.isObjectMethod(fun)) {
+    return fun.node.key.name;
+  }
+  if (t.isFunctionDeclaration(fun)) {
+    return fun.node.id.name;
+  }
+  if (t.isFunctionExpression(fun) && t.isIdentifier(fun.node.id)) {
+    return fun.node.id.name;
+  }
+  return '_f'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+}
 
-  if (!t.isFunctionParent(fun2) && !isObjectMethod) {
+function makeWorklet(t, fun, fileName) {
+  // Returns a new FunctionExpression which is a workletized version of provided
+  // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
+
+  if (!t.isFunctionParent(fun)) {
     return;
   }
-  const fun = isObjectMethod ? fun2.parentPath : fun2;
 
-  const functionName = fun.node.id ? fun.node.id.name : '_f';
+  const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
   const outputs = new Set();
@@ -379,9 +392,8 @@ function processWorkletFunction(t, fun2, fileName) {
   // We use copy because some of the plugins don't update bindings and
   // some even break them
 
-  const code = isObjectMethod
-    ? '\n(function ' + fun.toString() + '\n)'
-    : '\n(' + fun.toString() + '\n)';
+  const code =
+    '\n(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
 
   const transformed = transformSync(code, {
     filename: fileName,
@@ -557,12 +569,16 @@ function processWorkletFunction(t, fun2, fileName) {
     t.blockStatement(steatmentas)
   );
 
-  const replacement = isObjectMethod
-    ? t.objectProperty(
-        t.identifier(fun.node.key.name),
-        t.callExpression(newFun, [])
-      )
-    : t.callExpression(newFun, []);
+  return newFun;
+}
+
+function processWorkletFunction(t, fun, fileName) {
+  // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
+  // with a workletized version of itself.
+
+  const newFun = makeWorklet(t, fun, fileName);
+
+  const replacement = t.callExpression(newFun, []);
 
   // we check if function needs to be assigned to variable declaration.
   // This is needed if function definition directly in a scope. Some other ways
@@ -578,6 +594,19 @@ function processWorkletFunction(t, fun2, fileName) {
         ])
       : replacement
   );
+}
+
+function processWorkletObjectMethod(t, path, fileName) {
+  // Replaces ObjectMethod with a workletized version of itself.
+
+  const newFun = makeWorklet(t, path, fileName);
+
+  const replacement = t.objectProperty(
+    t.identifier(path.node.key.name),
+    t.callExpression(newFun, [])
+  );
+
+  path.replaceWith(replacement);
 }
 
 function processIfWorkletNode(t, fun, fileName) {
@@ -726,17 +755,14 @@ function processWorklets(t, path, fileName) {
     objectHooks.has(name) &&
     path.get('arguments.0').type === 'ObjectExpression'
   ) {
-    const objectPath = path.get('arguments.0.properties.0');
-    if (!objectPath) {
-      // edge case empty object
-      return;
-    }
-    for (let i = 0; i < objectPath.container.length; i++) {
-      processWorkletFunction(
-        t,
-        objectPath.getSibling(i).get('value'),
-        fileName
-      );
+    const properties = path.get('arguments.0.properties');
+    for (const property of properties) {
+      if (t.isObjectMethod(property)) {
+        processWorkletObjectMethod(t, property, fileName);
+      } else {
+        const value = property.get('value');
+        processWorkletFunction(t, value, fileName);
+      }
     }
   } else {
     const indexes = functionArgsToWorkletize.get(name);

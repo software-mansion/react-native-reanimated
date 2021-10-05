@@ -321,8 +321,8 @@ exports[`babel plugin workletizes object hook wrapped ObjectMethod automatically
     };
 
     _f._closure = {};
-    _f.asString = \\"function _f(event){console.log(event);}\\";
-    _f.__workletHash = 2164830539996;
+    _f.asString = \\"function onStart(event){console.log(event);}\\";
+    _f.__workletHash = 338158776260;
     _f.__location = \\"${ process.cwd() }/jest tests fixture (3:8)\\";
 
     global.__reanimatedWorkletInit(_f);
