@@ -14,7 +14,7 @@
     "test": "jest",
     "link-web": "npm link react-native-reanimated",
     "web": "expo start --web || expo start --web --web-only",
-    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
     "ts-check": "yarn tsc",
     "e2e:android": "node ./scripts/generateIndex.js --test && yarn detox build --configuration android && yarn detox test --configuration android",
     "e2e:ios": "node ./scripts/generateIndex.js --test && yarn detox build --configuration ios && yarn detox test --configuration ios",
