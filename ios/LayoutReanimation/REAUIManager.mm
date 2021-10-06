@@ -1,11 +1,11 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
 #import "RCTComponentData.h"
-#import "RCTUIManagerObserverCoordinator.h"
-#import "RCTRootShadowView.h"
-#import "RCTRootViewInternal.h"
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
+#import "RCTRootShadowView.h"
+#import "RCTRootViewInternal.h"
+#import "RCTUIManagerObserverCoordinator.h"
 #import "REAIOSScheduler.h"
 #include "Scheduler.h"
 
@@ -13,7 +13,7 @@
 #import <RNScreens/RNSScreen.h>
 #endif
 
-@interface RCTUIManager(REA)
+@interface RCTUIManager (REA)
 - (void)_manageChildren:(NSNumber *)containerTag
         moveFromIndices:(NSArray<NSNumber *> *)moveFromIndices
           moveToIndices:(NSArray<NSNumber *> *)moveToIndices
@@ -29,19 +29,19 @@
 @implementation REAUIManager
 
 BOOL blockSetter = false;
-NSMutableDictionary<NSNumber*, NSMutableSet<id<RCTComponent>>*>* _toBeRemovedRegister;
-NSMutableDictionary<NSNumber*, NSNumber*>* _parentMapper;
-REAAnimationsManager* _animationsManager;
+NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> *_toBeRemovedRegister;
+NSMutableDictionary<NSNumber *, NSNumber *> *_parentMapper;
+REAAnimationsManager *_animationsManager;
 std::weak_ptr<reanimated::Scheduler> _scheduler;
 
-+ (NSString*)moduleName
++ (NSString *)moduleName
 {
   return NSStringFromClass([RCTUIManager class]);
 }
 
 - (void)setBridge:(RCTBridge *)bridge
 {
-  if(!_blockSetter) {
+  if (!_blockSetter) {
     _blockSetter = true;
 
     self.bridge = bridge;
@@ -49,8 +49,10 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     [self setValue:[bridge.uiManager valueForKey:@"_shadowViewRegistry"] forKey:@"_shadowViewRegistry"];
     [self setValue:[bridge.uiManager valueForKey:@"_viewRegistry"] forKey:@"_viewRegistry"];
     [self setValue:[bridge.uiManager valueForKey:@"_nativeIDRegistry"] forKey:@"_nativeIDRegistry"];
-    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"] forKey:@"_shadowViewsWithUpdatedProps"];
-    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"] forKey:@"_shadowViewsWithUpdatedChildren"];
+    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedProps"]
+            forKey:@"_shadowViewsWithUpdatedProps"];
+    [self setValue:[bridge.uiManager valueForKey:@"_shadowViewsWithUpdatedChildren"]
+            forKey:@"_shadowViewsWithUpdatedChildren"];
     [self setValue:[bridge.uiManager valueForKey:@"_pendingUIBlocks"] forKey:@"_pendingUIBlocks"];
     [self setValue:[bridge.uiManager valueForKey:@"_rootViewTags"] forKey:@"_rootViewTags"];
     [self setValue:[bridge.uiManager valueForKey:@"_observerCoordinator"] forKey:@"_observerCoordinator"];
@@ -71,16 +73,16 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   id<RCTComponent> container;
   NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
-  if(isUIViewRegistry) {
+  if (isUIViewRegistry) {
     container = registry[containerTag];
-    for(id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
+    for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
       [container removeReactSubview:toRemoveChild];
     }
 
     permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
-    if(permanentlyRemovedChildren != nil) {
-      for(id<RCTComponent> permanentlyRemovedChild in permanentlyRemovedChildren) {
-        if(_toBeRemovedRegister[containerTag] == nil) {
+    if (permanentlyRemovedChildren != nil) {
+      for (id<RCTComponent> permanentlyRemovedChild in permanentlyRemovedChildren) {
+        if (_toBeRemovedRegister[containerTag] == nil) {
           _toBeRemovedRegister[containerTag] = [[NSMutableSet<id<RCTComponent>> alloc] init];
         }
         [_toBeRemovedRegister[containerTag] addObject:permanentlyRemovedChild];
@@ -96,11 +98,11 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
          removeAtIndices:removeAtIndices
                 registry:registry];
 
-  if(isUIViewRegistry) {
+  if (isUIViewRegistry) {
     NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
-    for(id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
+    for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
       NSInteger lastIndex = [container reactSubviews].count - 1;
-      if(lastIndex < 0) {
+      if (lastIndex < 0) {
         lastIndex = 0;
       }
       [container insertReactSubview:toRemoveChild atIndex:lastIndex];
@@ -108,18 +110,18 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     }
 
     for (UIView *removedChild in permanentlyRemovedChildren) {
-      [self callAnimationForTree: removedChild parentTag:containerTag];
+      [self callAnimationForTree:removedChild parentTag:containerTag];
     }
   }
 }
 
-- (void) callAnimationForTree:(UIView*) view parentTag:(NSNumber*) parentTag
+- (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
 {
-  REASnapshot* snapshot = [[REASnapshot alloc] init:view];
+  REASnapshot *snapshot = [[REASnapshot alloc] init:view];
   _parentMapper[view.reactTag] = parentTag;
   [_animationsManager onViewRemoval:view before:snapshot];
 
-  for(UIView* subView in view.reactSubviews) {
+  for (UIView *subView in view.reactSubviews) {
     [self callAnimationForTree:subView parentTag:view.reactTag];
   }
 }
@@ -153,11 +155,12 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     for (RCTShadowView *shadowView in affectedShadowViews) {
       reactTags[index] = shadowView.reactTag;
       RCTLayoutMetrics layoutMetrics = shadowView.layoutMetrics;
-      frameDataArray[index++] = (RCTFrameData){layoutMetrics.frame,
-                                               layoutMetrics.layoutDirection,
-                                               shadowView.isNewView,
-                                               shadowView.superview.isNewView,
-                                               layoutMetrics.displayType};
+      frameDataArray[index++] = (RCTFrameData){
+          layoutMetrics.frame,
+          layoutMetrics.layoutDirection,
+          shadowView.isNewView,
+          shadowView.superview.isNewView,
+          layoutMetrics.displayType};
     }
   }
 
@@ -183,7 +186,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       CGSize contentSize = shadowView.layoutMetrics.frame.size;
 
       RCTExecuteOnMainQueue(^{
-        NSMutableDictionary<NSNumber *, UIView *>* viewRegistry = [self valueForKey:@"_viewRegistry"];
+        NSMutableDictionary<NSNumber *, UIView *> *viewRegistry = [self valueForKey:@"_viewRegistry"];
         UIView *view = viewRegistry[reactTag];
         RCTAssert(view != nil, @"view (for ID %@) not found", reactTag);
 
@@ -236,7 +239,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         view.hidden = isHidden;
       }
 
-      REASnapshot* snapshotBefore = [[REASnapshot alloc] init:view];
+      REASnapshot *snapshotBefore = [[REASnapshot alloc] init:view];
       if (creatingLayoutAnimation) {
         // Animate view creation
         [view reactSetFrame:frame];
@@ -282,15 +285,13 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         completion(YES);
       }
 
-      if(isNew) {
-        REASnapshot* snapshot = [[REASnapshot alloc] init:view];
+      if (isNew) {
+        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
         [_animationsManager onViewCreate:view after:snapshot];
-      }
-      else {
-        REASnapshot* snapshotAfter = [[REASnapshot alloc] init:view];
+      } else {
+        REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
         [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
       }
-
     }
 
     [_animationsManager removeLeftovers];
@@ -301,30 +302,30 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 
 - (Class)class
 {
-    return [RCTUIManager class];
+  return [RCTUIManager class];
 }
 
 + (Class)class
 {
-    return [RCTUIManager class];
+  return [RCTUIManager class];
 }
 
-- (void)setUp:(REAAnimationsManager*) animationsManager
+- (void)setUp:(REAAnimationsManager *)animationsManager
 {
   _animationsManager = animationsManager;
-  _toBeRemovedRegister = [[NSMutableDictionary<NSNumber*, NSMutableSet<id<RCTComponent>>*> alloc] init];
-  _parentMapper = [[NSMutableDictionary<NSNumber*, NSNumber*> alloc] init];
+  _toBeRemovedRegister = [[NSMutableDictionary<NSNumber *, NSMutableSet<id<RCTComponent>> *> alloc] init];
+  _parentMapper = [[NSMutableDictionary<NSNumber *, NSNumber *> alloc] init];
 }
 
-- (void)unregisterView:(id<RCTComponent>) view
+- (void)unregisterView:(id<RCTComponent>)view
 {
-  NSNumber* tag = _parentMapper[view.reactTag];
-  if(tag == nil) {
+  NSNumber *tag = _parentMapper[view.reactTag];
+  if (tag == nil) {
     return;
   }
 
   [_toBeRemovedRegister[tag] removeObject:view];
-  if(_toBeRemovedRegister[tag].count == 0) {
+  if (_toBeRemovedRegister[tag].count == 0) {
     [_toBeRemovedRegister removeObjectForKey:tag];
   }
   NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
