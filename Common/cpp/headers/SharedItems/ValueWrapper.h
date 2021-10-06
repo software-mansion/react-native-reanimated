@@ -1,7 +1,9 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <string>
+#include <vector>
 #include "HostFunctionHandler.h"
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"

@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <string>
+#include <utility>
 
 using namespace facebook;
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"

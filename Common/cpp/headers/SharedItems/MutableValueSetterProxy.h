@@ -1,6 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
+#include <utility>
 #include "SharedParent.h"
 
 using namespace facebook;

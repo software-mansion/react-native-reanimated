@@ -1,6 +1,8 @@
 #pragma once
+
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <memory>
 #include "JNIHelper.h"
 
 namespace reanimated {

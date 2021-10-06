@@ -3,6 +3,7 @@
 #include <fbjni/fbjni.h>
 #include <jni.h>
 #include <memory>
+#include <string>
 #include "AndroidScheduler.h"
 #include "ErrorHandler.h"
 #include "Logger.h"

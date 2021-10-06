@@ -7,13 +7,17 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
+
 #include <memory>
+#include <string>
 #include <unordered_map>
-#include "NativeReanimatedModule.h"
+#include <utility>
+#include <vector>
 
 #include "AndroidScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
+#include "NativeReanimatedModule.h"
 #include "Scheduler.h"
 
 namespace reanimated {
