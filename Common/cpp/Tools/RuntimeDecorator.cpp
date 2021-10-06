@@ -128,7 +128,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    int viewTag = (int)args[0].asNumber();
+    int viewTag = static_cast<int>(args[0].asNumber());
     double x = args[1].asNumber();
     double y = args[2].asNumber();
     bool animated = args[3].getBool();
@@ -144,7 +144,7 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   const size_t count) -> jsi::Value {
-    int viewTag = (int)args[0].asNumber();
+    int viewTag = static_cast<int>(args[0].asNumber());
     auto result = measure(viewTag);
     jsi::Object resultObject(rt);
     for (auto &i : result) {
