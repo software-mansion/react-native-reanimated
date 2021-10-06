@@ -13,11 +13,10 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED = "__alreadyConverted";
 const char *CALL_ASYNC = "__callAsync";
 const char *PRIMAL_FUNCTION = "__primalFunction";
-std::string CALLBACK_ERROR_SUFFIX = R"(
-
-Possible solutions are:
-a) If you want to synchronously execute this method, mark it as a Worklet
-b) If you want to execute this method on the JS thread, wrap it using runOnJS )";
+const char *CALLBACK_ERROR_SUFFIX =
+    "\n\nPossible solutions are:\n"
+    "a) If you want to synchronously execute this method, mark it as a Worklet\n"
+    "b) If you want to execute this method on the JS thread, wrap it using runOnJS";
 
 void addHiddenProperty(
     jsi::Runtime &rt,
