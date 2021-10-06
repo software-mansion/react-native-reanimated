@@ -453,7 +453,7 @@ function makeWorklet(t, fun, fileName) {
       closureGenerator.addPath(name, path);
     },
     AssignmentExpression(path) {
-      // test for <somethin>.value = <something> expressions
+      // test for <something>.value = <something> expressions
       const left = path.node.left;
       if (
         t.isMemberExpression(left) &&
@@ -491,7 +491,7 @@ function makeWorklet(t, fun, fileName) {
     }
   }
 
-  const steatmentas = [
+  const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
     ]),
@@ -534,7 +534,7 @@ function makeWorklet(t, fun, fileName) {
   ];
 
   if (options && options.optFlags) {
-    steatmentas.push(
+    statements.push(
       t.expressionStatement(
         t.assignmentExpression(
           '=',
@@ -549,7 +549,7 @@ function makeWorklet(t, fun, fileName) {
     );
   }
 
-  steatmentas.push(
+  statements.push(
     t.expressionStatement(
       t.callExpression(
         t.memberExpression(
@@ -561,13 +561,9 @@ function makeWorklet(t, fun, fileName) {
       )
     )
   );
-  steatmentas.push(t.returnStatement(privateFunctionId));
+  statements.push(t.returnStatement(privateFunctionId));
 
-  const newFun = t.functionExpression(
-    fun.id,
-    [],
-    t.blockStatement(steatmentas)
-  );
+  const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
 
   return newFun;
 }
@@ -584,7 +580,7 @@ function processWorkletFunction(t, fun, fileName) {
   // This is needed if function definition directly in a scope. Some other ways
   // where function definition can be used is for example with variable declaration:
   // const ggg = function foo() { }
-  // ^ in such a case we don't need to definte variable for the function
+  // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
     t.isScopable(fun.parent) || t.isExportNamedDeclaration(fun.parent);
   fun.replaceWith(
@@ -779,7 +775,7 @@ const STATEMENTLESS_FLAG = 0b00000010;
 
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
-  let isSteatements = false;
+  let isStatement = false;
   traverse(fun, {
     CallExpression(path) {
       if (!possibleOptFunction.has(path.node.callee.name)) {
@@ -787,14 +783,14 @@ function isPossibleOptimization(fun) {
       }
     },
     IfStatement() {
-      isSteatements = true;
+      isStatement = true;
     },
   });
   let flags = 0;
   if (!isFunctionCall) {
     flags = flags | FUNCTIONLESS_FLAG;
   }
-  if (!isSteatements) {
+  if (!isStatement) {
     flags = flags | STATEMENTLESS_FLAG;
   }
   return flags;
