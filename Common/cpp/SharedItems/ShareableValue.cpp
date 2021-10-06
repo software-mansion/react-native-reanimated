@@ -344,7 +344,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                 hostFunction->getPureFunction().get()->call(
                     *hostRuntime,
                     static_cast<const jsi::Value *>(args),
-                    static_cast<size_t> params.size());
+                    static_cast<size_t>(params.size()));
 
             delete[] args;
             // ToDo use returned value to return promise
@@ -455,7 +455,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               returnedValue = funPtr->call(
                   rt,
                   static_cast<const jsi::Value *>(args),
-                  static_cast<size_t> params.size());
+                  static_cast<size_t>(params.size()));
 
             } catch (std::exception &e) {
               std::string str = e.what();

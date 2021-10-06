@@ -50,7 +50,7 @@ void EventHandlerRegistry::processEvent(
   }
 
   auto eventObject = jsi::Value::createFromJsonUtf8(
-      rt, static_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+      rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
 
   eventObject.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
