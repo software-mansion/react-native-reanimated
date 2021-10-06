@@ -75,7 +75,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toMatchSnapshot();
+    expect(code).not.toContain('__reanimatedWorkletInit');
   });
 
   it('removes comments from worklets', () => {
@@ -183,7 +183,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -197,7 +197,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -211,7 +211,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -225,7 +225,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -243,7 +243,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -259,7 +259,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -275,7 +275,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).not.toContain('\\"worklet\\";');
     expect(code).toMatchSnapshot();
   });
@@ -290,7 +290,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
@@ -304,7 +304,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
@@ -318,7 +318,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
@@ -334,11 +334,11 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes object hook wrapped unnamed ArrowFunctionExpression automatically', () => {
+  it('workletizes object hook wrapped unnamed FunctionExpression automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: function (event) {
@@ -348,11 +348,11 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
-  it('workletizes object hook wrapped named ArrowFunctionExpression automatically', () => {
+  it('workletizes object hook wrapped named FunctionExpression automatically', () => {
     const input = `
       useAnimatedGestureHandler({
         onStart: function onStart(event) {
@@ -362,7 +362,7 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
   });
 
@@ -376,8 +376,29 @@ describe('babel plugin', () => {
     `;
 
     const { code } = runPlugin(input);
-    expect(code).toContain('__workletHash');
+    expect(code).toContain('__reanimatedWorkletInit');
     expect(code).toMatchSnapshot();
+  });
+
+  it('supports empty object in hooks', () => {
+    const input = `
+      useAnimatedGestureHandler({});
+    `;
+
+    runPlugin(input);
+  });
+
+  it('transforms each object property in hooks', () => {
+    const input = `
+      useAnimatedGestureHandler({
+        onStart: () => {},
+        onUpdate: () => {},
+        onEnd: () => {},
+      });
+    `;
+
+    const { code } = runPlugin(input);
+    expect(code).toMatch(/^(.*)(__reanimatedWorkletInit(.*)){3}$/s);
   });
 
   // React Native Gesture Handler

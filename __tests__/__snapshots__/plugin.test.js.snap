@@ -46,12 +46,6 @@ exports[`babel plugin doesn't capture globals 1`] = `
 }();"
 `;
 
-exports[`babel plugin doesn't transform functions without 'worklet' directive 1`] = `
-"function f(x) {
-  return x + 2;
-}"
-`;
-
 exports[`babel plugin doesn't transform standard callback functions 1`] = `
 "var foo = Something.Tap().onEnd(function (_event, _success) {
   console.log('onEnd');
@@ -332,7 +326,7 @@ exports[`babel plugin workletizes object hook wrapped ObjectMethod automatically
 });"
 `;
 
-exports[`babel plugin workletizes object hook wrapped named ArrowFunctionExpression automatically 1`] = `
+exports[`babel plugin workletizes object hook wrapped named FunctionExpression automatically 1`] = `
 "useAnimatedGestureHandler({
   onStart: function () {
     var _f = function _f(event) {
@@ -351,7 +345,7 @@ exports[`babel plugin workletizes object hook wrapped named ArrowFunctionExpress
 });"
 `;
 
-exports[`babel plugin workletizes object hook wrapped unnamed ArrowFunctionExpression automatically 1`] = `
+exports[`babel plugin workletizes object hook wrapped unnamed FunctionExpression automatically 1`] = `
 "useAnimatedGestureHandler({
   onStart: function () {
     var _f = function _f(event) {
