@@ -32,7 +32,7 @@ StoreUser::~StoreUser() {
   std::shared_ptr<Scheduler> strongScheduler = scheduler.lock();
   if (strongScheduler != nullptr) {
     std::shared_ptr<StaticStoreUser> sud = storeUserData;
-    #ifdef ONANDROID
+#ifdef ONANDROID
     jni::ThreadScope::WithClassLoader([&] {
       strongScheduler->scheduleOnUI([id, sud]() {
         const std::lock_guard<std::recursive_mutex> lock(sud->storeMutex);
@@ -41,14 +41,14 @@ StoreUser::~StoreUser() {
         }
       });
     });
-    #else 
+#else
     strongScheduler->scheduleOnUI([id, sud]() {
-        const std::lock_guard<std::recursive_mutex> lock(sud->storeMutex);
-        if (sud->store.count(id) > 0) {
-          sud->store.erase(id);
-        }
+      const std::lock_guard<std::recursive_mutex> lock(sud->storeMutex);
+      if (sud->store.count(id) > 0) {
+        sud->store.erase(id);
+      }
     });
-    #endif
+#endif
   }
 }
 
