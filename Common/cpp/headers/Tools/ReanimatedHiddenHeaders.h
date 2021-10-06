@@ -1,6 +1,4 @@
-
-#ifndef COMMON_CPP_HEADERS_TOOLS_REANIMATEDHIDDENHEADERS_H_
-#define COMMON_CPP_HEADERS_TOOLS_REANIMATEDHIDDENHEADERS_H_
+#pragma once
 
 #if defined(ONANDROID)
 #include "Logger.h"
@@ -11,5 +9,3 @@
 #include "Common/cpp/hidden_headers/LoggerInterface.h"
 #include "Common/cpp/hidden_headers/SpeedChecker.h"
 #endif
-
-#endif // COMMON_CPP_HEADERS_TOOLS_REANIMATEDHIDDENHEADERS_H_
