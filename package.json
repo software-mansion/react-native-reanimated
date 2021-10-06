@@ -127,10 +127,10 @@
       "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts",
       "prettier --write"
     ],
-    "**/*.cpp": "yarn lint:cpp",
+    "**/*.{h,cpp}": "yarn lint:cpp",
     "android/src/**/*.java": "yarn format:java",
     "android/src/**/*.{h,cpp}": "yarn format:android",
-    "ios/**/*.{h,m,cpp}": "yarn format:ios",
+    "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
     "Common/**/*.{h,cpp}": "yarn format:common"
   },
   "release-it": {
