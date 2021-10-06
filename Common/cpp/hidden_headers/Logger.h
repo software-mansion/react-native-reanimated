@@ -13,7 +13,7 @@ class Logger {
       throw std::runtime_error("no logger specified");
     }
     instance->log(value);
-  };
+  }
 
  private:
   static std::unique_ptr<LoggerInterface> instance;

@@ -26,7 +26,7 @@ class SchedulerWrapper : public Scheduler {
     }
   }
 
-  ~SchedulerWrapper(){};
+  ~SchedulerWrapper() {}
 };
 
 AndroidScheduler::AndroidScheduler(
