@@ -26,7 +26,7 @@ class StoreUser {
   std::shared_ptr<StaticStoreUser> storeUserData;
 
  public:
-  StoreUser(std::shared_ptr<Scheduler> s, RuntimeManager &runtimeManager);
+  StoreUser(std::shared_ptr<Scheduler> s, const RuntimeManager &runtimeManager);
 
   std::weak_ptr<jsi::Value> getWeakRef(jsi::Runtime &rt);
   void removeRefs();

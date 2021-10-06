@@ -21,7 +21,7 @@ std::weak_ptr<jsi::Value> StoreUser::getWeakRef(jsi::Runtime &rt) {
 
 StoreUser::StoreUser(
     std::shared_ptr<Scheduler> s,
-    RuntimeManager &runtimeManager)
+    const RuntimeManager &runtimeManager)
     : scheduler(s) {
   storeUserData = runtimeManager.storeUserData;
   identifier = storeUserData->ctr++;

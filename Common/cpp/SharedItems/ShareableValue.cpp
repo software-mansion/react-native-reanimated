@@ -21,7 +21,7 @@ const char *CALLBACK_ERROR_SUFFIX =
 void addHiddenProperty(
     jsi::Runtime &rt,
     jsi::Value &&value,
-    jsi::Object &obj,
+    const jsi::Object &obj,
     const char *name) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function defineProperty =
@@ -33,7 +33,7 @@ void addHiddenProperty(
   defineProperty.call(rt, obj, internalPropName, paramForDefineProperty);
 }
 
-void freeze(jsi::Runtime &rt, jsi::Object &obj) {
+void freeze(jsi::Runtime &rt, const jsi::Object &obj) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
   freeze.call(rt, obj);
