@@ -172,8 +172,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
         ViewManager parentViewManager = this.resolveViewManager(parentTag);
         String parentViewManagerName = parentViewManager.getName();
         View container = resolveView(parentTag);
-        if (container != null && parentViewManagerName.equals("RNSScreenContainer") && this.mReaLayoutAnimator != null) {
-            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, 0, 0, container.getWidth(), container.getHeight());
+        if (container != null 
+            && (parentViewManagerName.equals("RNSScreenContainer") || parentViewManagerName.equals("RNSScreenStack")) 
+            && this.mReaLayoutAnimator != null
+        ) {
+            this.mReaLayoutAnimator.applyLayoutUpdate(viewToUpdate, (int)container.getX(), (int)container.getY(), container.getWidth(), container.getHeight());
         }
     }
 
