@@ -114,7 +114,7 @@ void MapperRegistry::updateOrder() { // Topological sorting
     }
   }
 
-  while (nodes.size() > 0 and nodes.begin()->first == 0) {
+  while (nodes.size() > 0 && nodes.begin()->first == 0) {
     auto entry = *nodes.begin();
     nodes.erase(entry);
 

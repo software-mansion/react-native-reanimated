@@ -62,7 +62,7 @@ void EventHandlerRegistry::processEvent(
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto it = eventMappings.find(eventName);
-  return (it != eventMappings.end()) and (!(it->second).empty());
+  return (it != eventMappings.end()) && (!(it->second).empty());
 }
 
 } // namespace reanimated
