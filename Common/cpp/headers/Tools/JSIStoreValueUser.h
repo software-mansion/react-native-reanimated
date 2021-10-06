@@ -1,5 +1,5 @@
-#ifndef JSIStoreValueUser_h
-#define JSIStoreValueUser_h
+#ifndef COMMON_CPP_HEADERS_TOOLS_JSISTOREVALUEUSER_H_
+#define COMMON_CPP_HEADERS_TOOLS_JSISTOREVALUEUSER_H_
 
 #include <jsi/jsi.h>
 #include <stdio.h>
@@ -37,4 +37,4 @@ class StoreUser {
 
 } // namespace reanimated
 
-#endif /* JSIStoreValueUser_h */
+#endif // COMMON_CPP_HEADERS_TOOLS_JSISTOREVALUEUSER_H_
