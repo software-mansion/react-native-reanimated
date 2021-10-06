@@ -39,7 +39,7 @@ void MapperRegistry::updateOrder() { // Topological sorting
     std::shared_ptr<Mapper> mapper;
     std::shared_ptr<MutableValue> mutableValue;
 
-    NodeID(std::shared_ptr<Mapper> mapper) {
+    explicit NodeID(std::shared_ptr<Mapper> mapper) {
       if (mapper == nullptr) {
         throw std::runtime_error(
             "Graph couldn't be sorted (Mapper cannot be nullptr)");
@@ -47,7 +47,7 @@ void MapperRegistry::updateOrder() { // Topological sorting
       this->mapper = mapper;
     }
 
-    NodeID(std::shared_ptr<MutableValue> mutableValue) {
+    explicit NodeID(std::shared_ptr<MutableValue> mutableValue) {
       if (mutableValue == nullptr) {
         throw std::runtime_error(
             "Graph couldn't be sorted (Mutable cannot be nullptr)");
@@ -97,7 +97,7 @@ void MapperRegistry::updateOrder() { // Topological sorting
     for (auto sharedValue : mapper->inputs) {
       auto sharedValueID = NodeID(sharedValue);
       mappersThatUseSharedValue[sharedValue].push_back(mapper);
-      if (deg.count(sharedValue) == 0) {
+      if (deg.count(sharedValueID) == 0) {
         deg[sharedValueID] = 0;
       }
     }
@@ -123,7 +123,7 @@ void MapperRegistry::updateOrder() { // Topological sorting
 
     if (id.isMutable()) {
       for (auto id : mappersThatUseSharedValue[id.mutableValue]) {
-        toUpdate.push_back(id);
+        toUpdate.push_back(NodeID(id));
       }
     } else {
       for (auto sharedValue : id.mapper->outputs) {

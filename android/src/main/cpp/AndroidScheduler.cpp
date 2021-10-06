@@ -15,7 +15,8 @@ class SchedulerWrapper : public Scheduler {
   jni::global_ref<AndroidScheduler::javaobject> scheduler_;
 
  public:
-  SchedulerWrapper(jni::global_ref<AndroidScheduler::javaobject> scheduler)
+  explicit SchedulerWrapper(
+      jni::global_ref<AndroidScheduler::javaobject> scheduler)
       : scheduler_(scheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {

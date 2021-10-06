@@ -40,7 +40,7 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  private:
   friend HybridBase;
 
-  AnimationFrameCallback(std::function<void(double)> callback)
+  explicit AnimationFrameCallback(std::function<void(double)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
@@ -70,7 +70,7 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  EventHandler(std::function<void(std::string, std::string)> handler)
+  explicit EventHandler(std::function<void(std::string, std::string)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<void(std::string, std::string)> handler_;
