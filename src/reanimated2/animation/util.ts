@@ -193,7 +193,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     timestamp: Timestamp
   ): boolean => {
     let finished = true;
-    animation.current.forEach((v, i) => {
+    (animation.current as Array<number>).forEach((v, i) => {
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
       animation.current[i] = animation[i].current;
