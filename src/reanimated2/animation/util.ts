@@ -167,6 +167,41 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  const arrayOnStart = (
+    animation: Animation<AnimationObject>,
+    value: Array<number>,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    value.forEach((v, i) => {
+      animation[i] = Object.assign({}, animationCopy);
+      animation[i].current = v;
+      animation[i].toValue = animation.toValue[i];
+      animation[i].onStart(
+        animation[i],
+        v,
+        timestamp,
+        previousAnimation ? previousAnimation[i] : undefined
+      );
+    });
+
+    animation.current = value;
+  };
+
+  const arrayOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    animation.current.forEach((v, i) => {
+      // @ts-ignore: disable-next-line
+      finished &= animation[i].onFrame(animation[i], timestamp);
+      animation.current[i] = animation[i].current;
+    });
+
+    return finished;
+  };
+
   animation.onStart = (
     animation: Animation<AnimationObject>,
     value: number,
@@ -176,6 +211,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
+      return;
+    } else if (Array.isArray(value)) {
+      arrayOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = arrayOnFrame;
       return;
     } else if (typeof value === 'string') {
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
