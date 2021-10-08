@@ -339,9 +339,4 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   [viewRegistry removeObjectForKey:view.reactTag];
 }
 
-- (void)batchDidComplete
-{
-  [super batchDidComplete];
-}
-
 @end
