@@ -341,7 +341,6 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 
 - (void)batchDidComplete
 {
-  self.flushUiOperations();
   [super batchDidComplete];
 }
 
