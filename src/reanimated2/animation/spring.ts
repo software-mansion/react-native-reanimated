@@ -131,7 +131,7 @@ export function withSpring(
           animation.velocity = 0;
           animation.current = toValue;
         }
-        // clear lastTimestamp to avoid next spring animation from using stale value
+        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
         animation.lastTimestamp = 0;
         return true;
       }
