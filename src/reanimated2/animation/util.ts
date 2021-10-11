@@ -3,7 +3,7 @@ import {
   AnimationObject,
   HigherOrderAnimation,
   NextAnimation,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
 } from './commonTypes';
 /* global _WORKLET */
@@ -32,7 +32,7 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: PrimitiveValue): RecognizedPrefixSuffix {
+function recognizePrefixSuffix(value: AnimatableValue): RecognizedPrefixSuffix {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(
@@ -68,7 +68,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
   const prefNumberSuffOnStart = (
     animation: Animation<AnimationObject>,
-    value: PrimitiveValue,
+    value: AnimatableValue,
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
@@ -78,7 +78,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.__suffix = suffix;
     animation.strippedCurrent = strippedValue;
     const { strippedValue: strippedToValue } = recognizePrefixSuffix(
-      animation.toValue as PrimitiveValue
+      animation.toValue as AnimatableValue
     );
     animation.current = strippedValue;
     animation.startValue = strippedValue;
@@ -235,7 +235,7 @@ type AnimationToDecoration<
   ? NextAnimation<RepeatAnimation>
   : T extends SequenceAnimation
   ? NextAnimation<SequenceAnimation>
-  : PrimitiveValue | T;
+  : AnimatableValue | T;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
@@ -266,7 +266,7 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
 
 // TODO it should work only if there was no animation before.
 export function withStartValue(
-  startValue: PrimitiveValue,
+  startValue: AnimatableValue,
   animation: NextAnimation<AnimationObject>
 ): Animation<AnimationObject> {
   'worklet';

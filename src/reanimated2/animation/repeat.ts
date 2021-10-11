@@ -3,7 +3,7 @@ import {
   Animation,
   AnimationCallback,
   NextAnimation,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
   HigherOrderAnimation,
 } from './commonTypes';
@@ -12,8 +12,8 @@ export interface RepeatAnimation
   extends Animation<RepeatAnimation>,
     HigherOrderAnimation {
   reps: number;
-  startValue: PrimitiveValue;
-  toValue?: PrimitiveValue;
+  startValue: AnimatableValue;
+  toValue?: AnimatableValue;
   previousAnimation?: RepeatAnimation;
 }
 
@@ -81,7 +81,7 @@ export function withRepeat(
 
     function onStart(
       animation: RepeatAnimation,
-      value: PrimitiveValue,
+      value: AnimatableValue,
       now: Timestamp,
       previousAnimation: RepeatAnimation
     ): void {

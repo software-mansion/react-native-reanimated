@@ -4,7 +4,7 @@ import {
   NextAnimation,
   Timestamp,
   HigherOrderAnimation,
-  PrimitiveValue,
+  AnimatableValue,
 } from './commonTypes';
 
 export interface DelayAnimation
@@ -13,7 +13,7 @@ export interface DelayAnimation
   startTime: Timestamp;
   started: boolean;
   previousAnimation: DelayAnimation | null;
-  current: PrimitiveValue;
+  current: AnimatableValue;
 }
 
 export function withDelay(
@@ -57,7 +57,7 @@ export function withDelay(
 
     function onStart(
       animation: DelayAnimation,
-      value: PrimitiveValue,
+      value: AnimatableValue,
       now: Timestamp,
       previousAnimation: DelayAnimation
     ): void {
