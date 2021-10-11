@@ -19,7 +19,8 @@
     "forceConsistentCasingInFileNames": true,
   },
   "include": [
-    "lib/reanimated2/**/*.ts",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
     "react-native-reanimated.d.ts",
     "react-native-reanimated-tests.tsx"
   ]
