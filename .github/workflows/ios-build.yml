@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: 14
           cache: 'yarn'
+      - name: Install Reanimated node dependencies
+        run: yarn
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
