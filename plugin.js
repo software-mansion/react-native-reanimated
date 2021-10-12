@@ -369,10 +369,6 @@ function makeWorklet(t, fun, fileName) {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  if (!t.isFunctionParent(fun)) {
-    return;
-  }
-
   const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
@@ -572,6 +568,10 @@ function processWorkletFunction(t, fun, fileName) {
   // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
   // with a workletized version of itself.
 
+  if (!t.isFunctionParent(fun)) {
+    return;
+  }
+
   const newFun = makeWorklet(t, fun, fileName);
 
   const replacement = t.callExpression(newFun, []);
@@ -594,6 +594,10 @@ function processWorkletFunction(t, fun, fileName) {
 
 function processWorkletObjectMethod(t, path, fileName) {
   // Replaces ObjectMethod with a workletized version of itself.
+
+  if (!t.isFunctionParent(path)) {
+    return;
+  }
 
   const newFun = makeWorklet(t, path, fileName);
 
