@@ -2,7 +2,9 @@
 
 #include <unistd.h>
 #include <memory>
+#include <string>
 #include <vector>
+
 #include "ErrorHandler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"

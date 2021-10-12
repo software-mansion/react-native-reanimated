@@ -6,7 +6,7 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.66.0-rc.4" "0.65.1" "0.64.1" "0.63.3")
+versions=("0.66.0" "0.65.1" "0.64.1" "0.63.3")
 version_name=("66" "65" "64" "63")
 
 for index in {0..3}
@@ -76,7 +76,7 @@ rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
 rm $(find . -name '*libc++_shared.so')
 cd ../..
 
-yarn add react-native@0.66.0-rc.4 --dev
+yarn add react-native@0.66.0 --dev
 
 mv android android-temp
 mv android-npm android

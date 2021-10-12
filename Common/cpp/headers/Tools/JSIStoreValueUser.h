@@ -1,5 +1,4 @@
-#ifndef JSIStoreValueUser_h
-#define JSIStoreValueUser_h
+#pragma once
 
 #include <jsi/jsi.h>
 #include <stdio.h>
@@ -27,7 +26,7 @@ class StoreUser {
   std::shared_ptr<StaticStoreUser> storeUserData;
 
  public:
-  StoreUser(std::shared_ptr<Scheduler> s, RuntimeManager &runtimeManager);
+  StoreUser(std::shared_ptr<Scheduler> s, const RuntimeManager &runtimeManager);
 
   std::weak_ptr<jsi::Value> getWeakRef(jsi::Runtime &rt);
   void removeRefs();
@@ -36,5 +35,3 @@ class StoreUser {
 };
 
 } // namespace reanimated
-
-#endif /* JSIStoreValueUser_h */
