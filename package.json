@@ -4,17 +4,18 @@
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "yarn run format && yarn run lint-check && yarn run test:unit",
+    "test": "yarn run format:js && yarn run lint:js && yarn run test:unit",
     "test:unit": "jest",
-    "format": "prettier --write --list-different './src/'",
-    "precommit": "yarn lint-java && yarn clang-format",
-    "lint-check": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
-    "lint-check-cpp": "./scripts/cpplint.sh",
-    "lint-java": "node ./scripts/lint-java.js",
-    "clang-format": "yarn clang-format-ios && yarn clang-format-android && yarn clang-format-common",
-    "clang-format-ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
-    "clang-format-android": "find android/src/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
-    "clang-format-common": "find Common/ -iname *.h -o -iname *.m -o -iname *.cpp | xargs clang-format -i",
+    "lint": "yarn lint:js && yarn lint:cpp && yarn lint:java",
+    "lint:js": "eslint --ext '.js,.ts,.tsx' src/ && yarn prettier --check src/",
+    "lint:java": "./android/gradlew -p android spotlessCheck -q",
+    "lint:cpp": "./scripts/cpplint.sh",
+    "format": "yarn format:js && yarn format:java && yarn format:ios && yarn format:android && yarn format:common",
+    "format:js": "prettier --write --list-different './src/'",
+    "format:java": "node ./scripts/format-java.js",
+    "format:ios": "find ios/ -iname *.h -o -iname *.m -o -iname *.mm -o -iname *.cpp | xargs clang-format -i",
+    "format:android": "find android/src/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
+    "format:common": "find Common/ -iname *.h -o -iname *.cpp | xargs clang-format -i",
     "release": "npm login && release-it",
     "type:check": "yarn tsc --noEmit",
     "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:remove.ts && yarn type:generate:remove.tsx",
@@ -22,7 +23,8 @@
     "type:generate:cp-js-src": "cp -RL src/ lib/",
     "type:generate:tsc": "yarn tsc",
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
-    "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete"
+    "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
+    "prepare": "husky install"
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
@@ -108,28 +110,28 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "husky": "^4.2.5",
+    "husky": "^7.0.0",
     "jest": "^26.6.3",
-    "lint-staged": "^10.2.11",
+    "lint-staged": "^11.2.0",
     "prettier": "^2.2.1",
     "react": "17.0.2",
     "react-native": "0.66.0",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",
-    "release-it": "^13.1.1",
+    "release-it": "^13.7.2",
     "typescript": "^4.1.3"
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
       "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts",
       "prettier --write"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    ],
+    "**/*.{h,cpp}": "yarn lint:cpp",
+    "android/src/**/*.java": "yarn format:java",
+    "android/src/**/*.{h,cpp}": "yarn format:android",
+    "ios/**/*.{h,m,mm,cpp}": "yarn format:ios",
+    "Common/**/*.{h,cpp}": "yarn format:common"
   },
   "release-it": {
     "hooks": {

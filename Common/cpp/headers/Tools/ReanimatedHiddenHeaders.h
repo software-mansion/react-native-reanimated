@@ -1,6 +1,4 @@
-
-#ifndef REANIMATEDEXAMPLE_REANIMATEDHIDDEN_H
-#define REANIMATEDEXAMPLE_REANIMATEDHIDDEN_H
+#pragma once
 
 #if defined(ONANDROID)
 #include "Logger.h"
@@ -11,5 +9,3 @@
 #include "Common/cpp/hidden_headers/LoggerInterface.h"
 #include "Common/cpp/hidden_headers/SpeedChecker.h"
 #endif
-
-#endif // REANIMATEDEXAMPLE_REANIMATEDHIDDEN_H

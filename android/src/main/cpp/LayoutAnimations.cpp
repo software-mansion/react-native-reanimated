@@ -61,7 +61,9 @@ void LayoutAnimations::removeConfigForTag(int tag) {
   }
 }
 
-void LayoutAnimations::notifyAboutProgress(jsi::Value &progress, int tag) {
+void LayoutAnimations::notifyAboutProgress(
+    const jsi::Value &progress,
+    int tag) {
   if (auto rt = this->weakUIRuntime.lock()) {
     static const auto method =
         javaPart_->getClass()
