@@ -3,6 +3,7 @@
 #include <fbjni/fbjni.h>
 #include <jni.h>
 #include <memory>
+#include <string>
 #include "AndroidScheduler.h"
 #include "ErrorHandler.h"
 #include "Logger.h"
@@ -19,7 +20,7 @@ class AndroidErrorHandler : public JavaClass<AndroidErrorHandler>,
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/AndroidErrorHandler;";
-  AndroidErrorHandler(std::shared_ptr<Scheduler> scheduler);
+  explicit AndroidErrorHandler(std::shared_ptr<Scheduler> scheduler);
   std::shared_ptr<Scheduler> getScheduler() override;
   std::shared_ptr<ErrorWrapper> getError() override;
   void setError(std::string message) override;

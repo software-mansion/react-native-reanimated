@@ -1,6 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "RuntimeManager.h"
 #include "SharedParent.h"
 #include "WorkletsCache.h"

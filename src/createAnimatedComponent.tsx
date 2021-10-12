@@ -255,7 +255,9 @@ export default function createAnimatedComponent(
         }
       } else if (this._viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
-          style?.viewDescriptors.remove(this._viewTag);
+          if (style?.viewDescriptors) {
+            style.viewDescriptors.remove(this._viewTag);
+          }
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);

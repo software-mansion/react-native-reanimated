@@ -1,6 +1,8 @@
 #pragma once
+
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <memory>
 #include "JNIHelper.h"
 
 namespace reanimated {
@@ -24,7 +26,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
 
-  void notifyAboutProgress(jsi::Value &progress, int tag);
+  void notifyAboutProgress(const jsi::Value &progress, int tag);
   void notifyAboutEnd(int tag, int cancelled);
 
  private:
