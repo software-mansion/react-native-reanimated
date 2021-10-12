@@ -5,6 +5,7 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
@@ -118,8 +119,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     if (tag == -1) {
       return;
     }
-    ViewManager vm = nativeViewHierarchyManager.resolveViewManager(tag);
-    if (vm != null) {
+    ViewManager vm = null;
+    try {
+      vm = nativeViewHierarchyManager.resolveViewManager(tag);
       Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
       mAnimationsManager.onViewRemoval(
           view,
@@ -130,6 +132,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
                 (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
             reanimatedNativeHierarchyManager.publicDropView(view);
           });
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      // do nothing
     }
     if (vm instanceof ViewGroupManager) {
       ViewGroupManager vgm = (ViewGroupManager) vm;
