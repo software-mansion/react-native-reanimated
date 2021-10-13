@@ -3,7 +3,7 @@ import ReanimatedModule from './ReanimatedModule';
 /**
  * Styles allowed to be direcly updated in UI thread
  */
-let UI_THREAD_PROPS_WHITELIST = {
+let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   opacity: true,
   transform: true,
   /* colors */
@@ -28,7 +28,7 @@ let UI_THREAD_PROPS_WHITELIST = {
 /**
  * Whitelist of view props that can be updated in native thread via UIManagerModule
  */
-let NATIVE_THREAD_PROPS_WHITELIST = {
+let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   borderBottomWidth: true,
   borderEndWidth: true,
   borderLeftWidth: true,
@@ -106,14 +106,16 @@ let NATIVE_THREAD_PROPS_WHITELIST = {
   placeholderTextColor: true,
 };
 
-function configureProps() {
+function configureProps(): void {
   ReanimatedModule.configureProps(
     Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
     Object.keys(UI_THREAD_PROPS_WHITELIST)
   );
 }
 
-export function addWhitelistedNativeProps(props) {
+export function addWhitelistedNativeProps(
+  props: Record<string, boolean>
+): void {
   const oldSize = Object.keys(NATIVE_THREAD_PROPS_WHITELIST).length;
   NATIVE_THREAD_PROPS_WHITELIST = {
     ...NATIVE_THREAD_PROPS_WHITELIST,
@@ -124,7 +126,7 @@ export function addWhitelistedNativeProps(props) {
   }
 }
 
-export function addWhitelistedUIProps(props) {
+export function addWhitelistedUIProps(props: Record<string, boolean>): void {
   const oldSize = Object.keys(UI_THREAD_PROPS_WHITELIST).length;
   UI_THREAD_PROPS_WHITELIST = { ...UI_THREAD_PROPS_WHITELIST, ...props };
   if (oldSize !== Object.keys(UI_THREAD_PROPS_WHITELIST).length) {
@@ -133,17 +135,23 @@ export function addWhitelistedUIProps(props) {
 }
 
 const PROCESSED_VIEW_NAMES = new Set();
+
+interface ViewConfig {
+  uiViewClassName: string;
+  validAttributes: Record<string, unknown>;
+}
 /**
  * updates UI props whitelist for given view host instance
  * this will work just once for every view name
  */
-export function adaptViewConfig(viewConfig) {
+
+export function adaptViewConfig(viewConfig: ViewConfig): void {
   const viewName = viewConfig.uiViewClassName;
   const props = viewConfig.validAttributes;
 
   // update whitelist of UI props for this view name only once
   if (!PROCESSED_VIEW_NAMES.has(viewName)) {
-    const propsToAdd = {};
+    const propsToAdd: Record<string, boolean> = {};
     Object.keys(props).forEach((key) => {
       // we don't want to add native props as they affect layout
       // we also skip props which repeat here

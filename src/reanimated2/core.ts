@@ -31,6 +31,12 @@ export type ReanimatedConsole = Pick<
   Console,
   'debug' | 'log' | 'warn' | 'info' | 'error'
 >;
+
+export type WorkletValue =
+  | (() => AnimationObject)
+  | AnimationObject
+  | PrimitiveValue
+  | Descriptor;
 interface WorkletValueSetterContext {
   _animation?: AnimationObject | null;
   _value?: PrimitiveValue | Descriptor;
@@ -183,9 +189,9 @@ export function getTimestamp(): number {
   return _getTimestamp();
 }
 
-function workletValueSetter(
+function workletValueSetter<T extends WorkletValue>(
   this: WorkletValueSetterContext,
-  value: (() => AnimationObject) | AnimationObject | PrimitiveValue | Descriptor
+  value: T
 ): void {
   'worklet';
   const previousAnimation = this._animation;
@@ -200,7 +206,9 @@ function workletValueSetter(
       (value as AnimationObject).onFrame !== undefined)
   ) {
     const animation: AnimationObject =
-      typeof value === 'function' ? value() : (value as AnimationObject);
+      typeof value === 'function'
+        ? (value as () => AnimationObject)()
+        : (value as AnimationObject);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
@@ -250,9 +258,9 @@ function workletValueSetter(
 
 // We cannot use pushFrame
 // so we use own implementation for js
-function workletValueSetterJS(
+function workletValueSetterJS<T extends WorkletValue>(
   this: WorkletValueSetterContext,
-  value: (() => AnimationObject) | AnimationObject | PrimitiveValue | Descriptor
+  value: T
 ): void {
   const previousAnimation = this._animation;
   if (previousAnimation) {
@@ -267,7 +275,9 @@ function workletValueSetterJS(
   ) {
     // animated set
     const animation: AnimationObject =
-      typeof value === 'function' ? value() : (value as AnimationObject);
+      typeof value === 'function'
+        ? (value as () => AnimationObject)()
+        : (value as AnimationObject);
     let initializeAnimation: ((timestamp: number) => void) | null = (
       timestamp: number
     ) => {
@@ -356,7 +366,9 @@ export function runOnJS<A extends any[], R>(
 
 if (!NativeReanimatedModule.useOnlyV1) {
   NativeReanimatedModule.installCoreFunctions(
-    NativeReanimatedModule.native ? workletValueSetter : workletValueSetterJS
+    NativeReanimatedModule.native
+      ? (workletValueSetter as <T>(value: T) => void)
+      : (workletValueSetterJS as <T>(value: T) => void)
   );
 
   const capturableConsole = console;

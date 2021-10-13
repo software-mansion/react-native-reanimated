@@ -70,12 +70,17 @@ buildscript {
     dependencies {
         classpath('com.android.tools.build:gradle:4.2.2')
         classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
 
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+if (project == rootProject) {
+    apply from: 'spotless.gradle'
 }
 
 apply plugin: 'com.android.library'

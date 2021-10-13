@@ -32,6 +32,9 @@ declare global {
       _log: (s: string) => void;
       _WORKLET: boolean;
       __reanimatedModuleProxy: NativeReanimated;
+      _frameTimestamp: number | null;
+      _measure: () => MeasuredDimensions;
+      _scrollTo: () => void;
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
         registerConfig(tag: number, config: Record<string, unknown>): void;

@@ -13,16 +13,15 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED = "__alreadyConverted";
 const char *CALL_ASYNC = "__callAsync";
 const char *PRIMAL_FUNCTION = "__primalFunction";
-std::string CALLBACK_ERROR_SUFFIX = R"(
-
-Possible solutions are:
-a) If you want to synchronously execute this method, mark it as a Worklet
-b) If you want to execute this method on the JS thread, wrap it using runOnJS )";
+const char *CALLBACK_ERROR_SUFFIX =
+    "\n\nPossible solutions are:\n"
+    "a) If you want to synchronously execute this method, mark it as a Worklet\n"
+    "b) If you want to execute this method on the JS thread, wrap it using runOnJS";
 
 void addHiddenProperty(
     jsi::Runtime &rt,
     jsi::Value &&value,
-    jsi::Object &obj,
+    const jsi::Object &obj,
     const char *name) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function defineProperty =
@@ -34,7 +33,7 @@ void addHiddenProperty(
   defineProperty.call(rt, obj, internalPropName, paramForDefineProperty);
 }
 
-void freeze(jsi::Runtime &rt, jsi::Object &obj) {
+void freeze(jsi::Runtime &rt, const jsi::Object &obj) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
   freeze.call(rt, obj);
@@ -344,7 +343,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
                 hostFunction->getPureFunction().get()->call(
                     *hostRuntime,
                     static_cast<const jsi::Value *>(args),
-                    (size_t)params.size());
+                    static_cast<size_t>(params.size()));
 
             delete[] args;
             // ToDo use returned value to return promise
@@ -455,8 +454,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
               returnedValue = funPtr->call(
                   rt,
                   static_cast<const jsi::Value *>(args),
-                  (size_t)params.size());
-
+                  static_cast<size_t>(params.size()));
             } catch (std::exception &e) {
               std::string str = e.what();
               runtimeManager->errorHandler->setError(str);

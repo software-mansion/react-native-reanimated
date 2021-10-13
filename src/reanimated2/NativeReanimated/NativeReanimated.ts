@@ -1,5 +1,3 @@
-import { AnimationObject } from '../animation';
-import { PrimitiveValue } from '../animation/commonTypes';
 import { SharedValue } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
@@ -13,15 +11,7 @@ export class NativeReanimated {
     this.useOnlyV1 = InnerNativeModule === null;
   }
 
-  installCoreFunctions(
-    valueSetter: (
-      value:
-        | (() => AnimationObject)
-        | AnimationObject
-        | PrimitiveValue
-        | Descriptor
-    ) => void
-  ): void {
+  installCoreFunctions(valueSetter: <T>(value: T) => void): void {
     return InnerNativeModule.installCoreFunctions(valueSetter);
   }
 

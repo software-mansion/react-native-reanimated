@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 #include <stdio.h>
+#include <memory>
+#include <vector>
 #include "NativeReanimatedModule.h"
 #include "ShareableValue.h"
 

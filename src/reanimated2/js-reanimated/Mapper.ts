@@ -1,13 +1,22 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
+import { NestedObjectValues } from '../commonTypes';
+import JSReanimated from './JSReanimated';
 import MutableValue from './MutableValue';
 
-export default class Mapper {
+export default class Mapper<T> {
   static MAPPER_ID = 1;
+  id: number;
+  inputs: MutableValue<T>[];
+  outputs: MutableValue<T>[];
+  mapper: () => void;
 
   dirty = true;
 
-  constructor(module, mapper, inputs: any[] = [], outputs: any[] = []) {
+  constructor(
+    module: JSReanimated,
+    mapper: () => void,
+    inputs: NestedObjectValues<MutableValue<T>>[] = [],
+    outputs: NestedObjectValues<MutableValue<T>>[] = []
+  ) {
     this.id = Mapper.MAPPER_ID++;
     this.inputs = this.extractMutablesFromArray(inputs);
     this.outputs = this.extractMutablesFromArray(outputs);
@@ -23,15 +32,17 @@ export default class Mapper {
     });
   }
 
-  execute() {
+  execute(): void {
     this.dirty = false;
     this.mapper();
   }
 
-  extractMutablesFromArray(array) {
-    const res = [];
+  extractMutablesFromArray<T>(
+    array: NestedObjectValues<MutableValue<T>>
+  ): MutableValue<T>[] {
+    const res: MutableValue<T>[] = [];
 
-    function extractMutables(value) {
+    function extractMutables(value: NestedObjectValues<MutableValue<T>>) {
       if (value instanceof MutableValue) {
         res.push(value);
       } else if (Array.isArray(value)) {
