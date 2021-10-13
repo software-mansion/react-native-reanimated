@@ -21,6 +21,17 @@ file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
 file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
 file(GLOB sources_android  "./src/main/cpp/*.cpp")
 
+if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+        set (
+                INCLUDE_JSI_CPP 
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+        )
+        set (
+                INCLUDE_JSIDYNAMIC_CPP 
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+        )
+endif()
+
 add_library(
         ${PACKAGE_NAME}
         SHARED
@@ -29,8 +40,8 @@ add_library(
         ${sources_registries}
         ${sources_android}
         ${source_tools}
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp
+        ${INCLUDE_JSI_CPP}
+        ${INCLUDE_JSIDYNAMIC_CPP}
         "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
         "./src/main/Common/cpp/Tools/Mapper.cpp"
         "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
@@ -76,8 +87,6 @@ target_include_directories(
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
-message(STATUS "{LIBRN_DIR}: ")
-message(STATUS ${LIBRN_DIR})
 
 find_library(
         LOG_LIB
@@ -107,13 +116,26 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+
 find_library(
-        GLOG_LIB 
+        GLOG_LIB
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
 find_package(fbjni REQUIRED CONFIG)
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+        set (JSI_LIB "")
+else()
+        find_library(
+                JSI_LIB
+                jsi
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+endif()
+
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
@@ -124,6 +146,7 @@ if(${FOR_HERMES})
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
             fbjni::fbjni
@@ -135,6 +158,7 @@ else()
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
             fbjni::fbjni
