@@ -116,16 +116,17 @@ class MutableValueWrapper : public ValueWrapper {
 
 class DirectHostFunctionWrapper : public ValueWrapper {
  public:
-  DirectHostFunctionWrapper(
+  explicit DirectHostFunctionWrapper(
       const std::shared_ptr<jsi::HostFunctionType> &_value)
-      : ValueWrapper(ValueType::DirectHostFunctionType), value(_value){};
+      : ValueWrapper(ValueType::DirectHostFunctionType), value(_value) {}
   std::shared_ptr<jsi::HostFunctionType> value;
 };
 
 class DirectHostObjectWrapper : public ValueWrapper {
  public:
-  DirectHostObjectWrapper(const std::shared_ptr<jsi::HostObject> &_value)
-      : ValueWrapper(ValueType::DirectHostObjectType), value(_value){};
+  explicit DirectHostObjectWrapper(
+      const std::shared_ptr<jsi::HostObject> &_value)
+      : ValueWrapper(ValueType::DirectHostObjectType), value(_value) {}
   std::shared_ptr<jsi::HostObject> value;
 };
 
@@ -179,11 +180,11 @@ inline const DirectHostFunctionWrapper *
 ValueWrapper::asDirectHostFunctionWrapper(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<DirectHostFunctionWrapper *>(valueContainer.get());
-};
+}
 
 inline const DirectHostObjectWrapper *ValueWrapper::asDirectHostObjectWrapper(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<DirectHostObjectWrapper *>(valueContainer.get());
-};
+}
 
 } // namespace reanimated
