@@ -17,6 +17,10 @@ enum class ValueType {
   WorkletFunctionType, // function that gets run on the UI thread
   FrozenObjectType, // frozen object, can only be set and never modified
   FrozenArrayType, // frozen array, can only be set and never modified
+  DirectHostObjectType, /* Shared jsi host object stored as underlying cpp
+                           object */
+  DirectHostFunctionType, /* Shared jsi host function stored as underlying cpp
+                             object */
 };
 
 class ShareableValue;

@@ -13,6 +13,8 @@ const char *HIDDEN_HOST_OBJECT_PROP = "__reanimatedHostObjectRef";
 const char *ALREADY_CONVERTED = "__alreadyConverted";
 const char *CALL_ASYNC = "__callAsync";
 const char *PRIMAL_FUNCTION = "__primalFunction";
+const char *ShareableValue::HOST_SHAREABLE = "__hostShareable";
+
 const char *CALLBACK_ERROR_SUFFIX =
     "\n\nPossible solutions are:\n"
     "a) If you want to synchronously execute this method, mark it as a Worklet\n"
@@ -37,6 +39,10 @@ void freeze(jsi::Runtime &rt, const jsi::Object &obj) {
   jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
   jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
   freeze.call(rt, obj);
+}
+
+void ShareableValue::markAsHostShareable(jsi::Runtime &rt, jsi::Object &obj) {
+  reanimated::addHiddenProperty(rt, true, obj, HOST_SHAREABLE);
 }
 
 void ShareableValue::adaptCache(jsi::Runtime &rt, const jsi::Value &value) {
@@ -98,6 +104,9 @@ void ShareableValue::adapt(
         std::make_unique<StringValueWrapper>(value.asString(rt).utf8(rt));
   } else if (value.isObject()) {
     auto object = value.asObject(rt);
+    // Get the marker for host object/function that are shareable
+    jsi::Value shareableHostElement = object.getProperty(rt, HOST_SHAREABLE);
+
     if (object.isFunction(rt)) {
       if (object.getProperty(rt, "__worklet").isUndefined()) {
         // not a worklet, we treat this as a host function
@@ -111,6 +120,15 @@ void ShareableValue::adapt(
           std::shared_ptr<HostFunctionHandler> handler =
               handlerAsObject.getHostObject<HostFunctionHandler>(rt);
           valueContainer = std::make_unique<HostFunctionWrapper>(handler);
+        } else if (
+            object.asFunction(rt).isHostFunction(rt) &&
+            !shareableHostElement.isUndefined()) {
+          // Handle host functions installed through JSI. We can extract the
+          // host function and store it for retrieval later
+          auto hostfunc = object.asFunction(rt).getHostFunction(rt);
+          type = ValueType::DirectHostFunctionType;
+          valueContainer = std::make_unique<DirectHostFunctionWrapper>(
+              std::make_shared<jsi::HostFunctionType>(hostfunc));
         } else {
           valueContainer = std::make_unique<HostFunctionWrapper>(
               std::make_shared<HostFunctionHandler>(
@@ -157,6 +175,14 @@ void ShareableValue::adapt(
       valueContainer =
           std::make_unique<RemoteObjectWrapper>(std::make_shared<RemoteObject>(
               rt, object, runtimeManager, runtimeManager->scheduler));
+    } else if (object.isHostObject(rt) && !shareableHostElement.isUndefined()) {
+      // Handle host objects installed through JSI. We can store the underlying
+      // object for later retrieval.
+      type = ValueType::DirectHostObjectType;
+      std::shared_ptr<jsi::HostObject> hostObject = object.getHostObject(rt);
+      valueContainer = std::make_unique<DirectHostObjectWrapper>(
+          std::shared_ptr<jsi::HostObject>(hostObject));
+      adaptCache(rt, value);
     } else {
       // create frozen object based on a copy of a given object
       type = ValueType::FrozenObjectType;
@@ -277,6 +303,19 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::MutableValueType: {
       auto &mutableObject = ValueWrapper::asMutableValue(valueContainer);
       return createHost(rt, mutableObject);
+    }
+    case ValueType::DirectHostObjectType: {
+      auto directHostObjectWrapper =
+          ValueWrapper::asDirectHostObjectWrapper(valueContainer);
+      auto hostObject = directHostObjectWrapper->value;
+      return createHost(rt, hostObject);
+    }
+    case ValueType::DirectHostFunctionType: {
+      auto directFunctionWrapper =
+          ValueWrapper::asDirectHostFunctionWrapper(valueContainer);
+      jsi::HostFunctionType func = *directFunctionWrapper->value;
+      return jsi::Function::createFromHostFunction(
+          rt, jsi::PropNameID::forAscii(rt, "directHostFunction"), 0, func);
     }
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper =

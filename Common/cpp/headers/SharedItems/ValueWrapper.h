@@ -12,6 +12,8 @@
 namespace reanimated {
 
 class HostFunctionWrapper;
+class DirectHostFunctionWrapper;
+class DirectHostObjectWrapper;
 
 class ValueWrapper {
  public:
@@ -41,6 +43,12 @@ class ValueWrapper {
       const std::unique_ptr<ValueWrapper> &valueContainer);
 
   static const HostFunctionWrapper *asHostFunctionWrapper(
+      const std::unique_ptr<ValueWrapper> &valueContainer);
+
+  static const DirectHostFunctionWrapper *asDirectHostFunctionWrapper(
+      const std::unique_ptr<ValueWrapper> &valueContainer);
+
+  static const DirectHostObjectWrapper *asDirectHostObjectWrapper(
       const std::unique_ptr<ValueWrapper> &valueContainer);
 
  protected:
@@ -106,6 +114,21 @@ class MutableValueWrapper : public ValueWrapper {
   std::shared_ptr<MutableValue> value;
 };
 
+class DirectHostFunctionWrapper : public ValueWrapper {
+ public:
+  DirectHostFunctionWrapper(
+      const std::shared_ptr<jsi::HostFunctionType> &_value)
+      : ValueWrapper(ValueType::DirectHostFunctionType), value(_value){};
+  std::shared_ptr<jsi::HostFunctionType> value;
+};
+
+class DirectHostObjectWrapper : public ValueWrapper {
+ public:
+  DirectHostObjectWrapper(const std::shared_ptr<jsi::HostObject> &_value)
+      : ValueWrapper(ValueType::DirectHostObjectType), value(_value){};
+  std::shared_ptr<jsi::HostObject> value;
+};
+
 inline bool ValueWrapper::asBoolean(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<BooleanValueWrapper *>(valueContainer.get())->value;
@@ -151,5 +174,16 @@ inline const HostFunctionWrapper *ValueWrapper::asHostFunctionWrapper(
     const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<HostFunctionWrapper *>(valueContainer.get());
 }
+
+inline const DirectHostFunctionWrapper *
+ValueWrapper::asDirectHostFunctionWrapper(
+    const std::unique_ptr<ValueWrapper> &valueContainer) {
+  return static_cast<DirectHostFunctionWrapper *>(valueContainer.get());
+};
+
+inline const DirectHostObjectWrapper *ValueWrapper::asDirectHostObjectWrapper(
+    const std::unique_ptr<ValueWrapper> &valueContainer) {
+  return static_cast<DirectHostObjectWrapper *>(valueContainer.get());
+};
 
 } // namespace reanimated

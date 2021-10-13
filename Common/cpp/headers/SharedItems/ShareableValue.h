@@ -49,12 +49,15 @@ class ShareableValue : public std::enable_shared_from_this<ShareableValue>,
 
  public:
   ValueType type = ValueType::UndefinedType;
+  static void markAsHostShareable(jsi::Runtime &rt, jsi::Object &object);
   static std::shared_ptr<ShareableValue> adapt(
       jsi::Runtime &rt,
       const jsi::Value &value,
       RuntimeManager *runtimeManager,
       ValueType objectType = ValueType::UndefinedType);
   jsi::Value getValue(jsi::Runtime &rt);
+
+  static const char *HOST_SHAREABLE;
 };
 
 } // namespace reanimated
