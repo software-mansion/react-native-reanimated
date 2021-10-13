@@ -3,7 +3,7 @@ import {
   Timestamp,
   HigherOrderAnimation,
   AnimationCallback,
-  PrimitiveValue,
+  AnimatableValue,
   AnimationObject,
   Animation,
 } from './commonTypes';
@@ -32,10 +32,10 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
 // if path cannot be resolved returns undefined
 export function resolvePath<T>(
   obj: NestedObject<T>,
-  path: PrimitiveValue[] | PrimitiveValue
+  path: AnimatableValue[] | AnimatableValue
 ): NestedObjectValues<T> | undefined {
   'worklet';
-  const keys: PrimitiveValue[] = Array.isArray(path) ? path : [path];
+  const keys: AnimatableValue[] = Array.isArray(path) ? path : [path];
   return keys.reduce<NestedObjectValues<T> | undefined>((acc, current) => {
     if (Array.isArray(acc) && typeof current === 'number') {
       return acc[current];
@@ -49,11 +49,11 @@ export function resolvePath<T>(
 // set value at given path
 export function setPath<T>(
   obj: NestedObject<T>,
-  path: PrimitiveValue[] | PrimitiveValue,
+  path: AnimatableValue[] | AnimatableValue,
   value: NestedObjectValues<T>
 ): void {
   'worklet';
-  const keys: PrimitiveValue[] = Array.isArray(path) ? path : [path];
+  const keys: AnimatableValue[] = Array.isArray(path) ? path : [path];
   let currObj: NestedObjectValues<T> = obj;
   for (let i = 0; i < keys.length - 1; i++) {
     // creates entry if there isn't one
@@ -76,7 +76,7 @@ export function setPath<T>(
 
 interface NestedObjectEntry<T> {
   value: NestedObjectValues<T>;
-  path: PrimitiveValue[];
+  path: AnimatableValue[];
 }
 
 export function withStyleAnimation(
@@ -148,13 +148,13 @@ export function withStyleAnimation(
       previousAnimation: StyleLayoutAnimation
     ): void => {
       const entriesToCheck: NestedObjectEntry<
-        AnimationObject | PrimitiveValue
+        AnimationObject | AnimatableValue
       >[] = [{ value: styleAnimations, path: [] }];
       while (entriesToCheck.length > 0) {
         const currentEntry: NestedObjectEntry<
-          AnimationObject | PrimitiveValue
+          AnimationObject | AnimatableValue
         > = entriesToCheck.pop() as NestedObjectEntry<
-          AnimationObject | PrimitiveValue
+          AnimationObject | AnimatableValue
         >;
         if (Array.isArray(currentEntry.value)) {
           for (let index = 0; index < currentEntry.value.length; index++) {
@@ -189,7 +189,7 @@ export function withStyleAnimation(
             !currentEntry.value.onStart
           ) {
             currentAnimation = withTiming(
-              currentEntry.value as PrimitiveValue,
+              currentEntry.value as AnimatableValue,
               { duration: 0 }
             );
             setPath(
