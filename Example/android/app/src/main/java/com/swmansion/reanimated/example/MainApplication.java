@@ -17,6 +17,7 @@ import com.horcrux.svg.SvgPackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
 import com.swmansion.reanimated.ReanimatedJSIModulePackage;
 import com.swmansion.reanimated.ReanimatedPackage;
+import com.swmansion.rnscreens.RNScreensPackage;
 
 import org.reactnative.maskedview.RNCMaskedViewPackage;
 
@@ -41,6 +42,7 @@ public class MainApplication extends Application implements ReactApplication {
           new SvgPackage(),
           new ReanimatedPackage(),
           new RNGestureHandlerPackage(),
+          new RNScreensPackage(),
           new SafeAreaContextPackage()
       );
     }

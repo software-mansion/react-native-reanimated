@@ -4,8 +4,9 @@ buildscript {
     ext {
         buildToolsVersion = "29.0.3"
         minSdkVersion = 21
-        compileSdkVersion = 29
-        targetSdkVersion = 29
+        compileSdkVersion = 30
+        targetSdkVersion = 30
+        ndkVersion = "21.4.7075529"
     }
     repositories {
         jcenter()
@@ -13,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
+        classpath('com.android.tools.build:gradle:4.2.2')
         classpath 'de.undercouch:gradle-download-task:4.0.0'
 
         // NOTE: Do not place your application dependencies here; they belong
