@@ -39,21 +39,24 @@ export function resolvePath<T>(
   return keys.reduce<NestedObjectValues<T> | undefined>((acc, current) => {
     if (Array.isArray(acc) && typeof current === 'number') {
       return acc[current];
-    } else if (typeof acc === 'object' && current in acc) {
-      return (acc as { [key: string]: NestedObjectValues<T> })[current];
+    } else if (typeof acc === 'object' && (current as number | string) in acc) {
+      return (acc as { [key: string]: NestedObjectValues<T> })[
+        current as number | string
+      ];
     }
     return undefined;
   }, obj);
 }
 
 // set value at given path
+type Path = Array<string | number> | string | number;
 export function setPath<T>(
   obj: NestedObject<T>,
-  path: AnimatableValue[] | AnimatableValue,
+  path: Path,
   value: NestedObjectValues<T>
 ): void {
   'worklet';
-  const keys: AnimatableValue[] = Array.isArray(path) ? path : [path];
+  const keys: Path = Array.isArray(path) ? path : [path];
   let currObj: NestedObjectValues<T> = obj;
   for (let i = 0; i < keys.length - 1; i++) {
     // creates entry if there isn't one
@@ -76,7 +79,7 @@ export function setPath<T>(
 
 interface NestedObjectEntry<T> {
   value: NestedObjectValues<T>;
-  path: AnimatableValue[];
+  path: (string | number)[];
 }
 
 export function withStyleAnimation(

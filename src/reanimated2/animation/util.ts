@@ -32,7 +32,7 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: AnimatableValue): RecognizedPrefixSuffix {
+function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(
@@ -68,7 +68,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
   const prefNumberSuffOnStart = (
     animation: Animation<AnimationObject>,
-    value: AnimatableValue,
+    value: string | number,
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
@@ -78,7 +78,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.__suffix = suffix;
     animation.strippedCurrent = strippedValue;
     const { strippedValue: strippedToValue } = recognizePrefixSuffix(
-      animation.toValue as AnimatableValue
+      animation.toValue as string | number
     );
     animation.current = strippedValue;
     animation.startValue = strippedValue;
@@ -176,7 +176,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     value.forEach((v, i) => {
       animation[i] = Object.assign({}, animationCopy);
       animation[i].current = v;
-      animation[i].toValue = animation.toValue[i];
+      animation[i].toValue = (animation.toValue as Array<number>)[i];
       animation[i].onStart(
         animation[i],
         v,
@@ -196,7 +196,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     (animation.current as Array<number>).forEach((v, i) => {
       // @ts-ignore: disable-next-line
       finished &= animation[i].onFrame(animation[i], timestamp);
-      animation.current[i] = animation[i].current;
+      (animation.current as Array<number>)[i] = animation[i].current;
     });
 
     return finished;
