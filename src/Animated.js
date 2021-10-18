@@ -26,7 +26,7 @@ export default Animated;
 
 // I think we can ignore this message as long as Gesture Handler doesn't
 // try to load the Reanimated module. I figured it should be here instead of
-// there because this prevents the message from being displayed for all
+// RNGH because this prevents the message from being displayed for all
 // versions of RNGH.
 LogBox.ignoreLogs([
   'RCTBridge required dispatch_sync to load RNGestureHandlerModule. This may lead to deadlocks',

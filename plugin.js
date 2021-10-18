@@ -155,7 +155,7 @@ const gestureHandlerGestureObjects = new Set([
 const gestureHandlerBuilderMethods = new Set([
   // BaseGesture
   'withRef',
-  'onBegan',
+  'onBegin',
   'onStart',
   'onEnd',
   'enabled',
