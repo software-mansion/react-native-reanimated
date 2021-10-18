@@ -42,6 +42,8 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
   @Override
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
+    NodesManager nodesManager = getNodesManager();
+    nodesManager.initWithContext(reactCtx);
     UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
     reactCtx.addLifecycleEventListener(this);
     uiManager.addUIManagerListener(this);

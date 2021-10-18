@@ -19,7 +19,6 @@ import com.facebook.soloader.SoLoader;
 import com.horcrux.svg.SvgPackage;
 import com.reactnativepagerview.PagerViewPackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
-import com.swmansion.reanimated.ReanimatedJSIModulePackage;
 import com.swmansion.reanimated.ReanimatedPackage;
 
 import org.reactnative.maskedview.RNCMaskedViewPackage;
@@ -55,12 +54,6 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected String getJSMainModuleName() {
       return "index";
-    }
-
-    @Nullable
-    @Override
-    protected JSIModulePackage getJSIModulePackage() {
-      return new ReanimatedJSIModulePackage();
     }
   };
 
