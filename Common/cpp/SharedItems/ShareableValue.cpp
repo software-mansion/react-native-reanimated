@@ -313,9 +313,11 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case ValueType::DirectHostFunctionType: {
       auto directFunctionWrapper =
           ValueWrapper::asDirectHostFunctionWrapper(valueContainer);
-      jsi::HostFunctionType func = *directFunctionWrapper->value;
       return jsi::Function::createFromHostFunction(
-          rt, jsi::PropNameID::forAscii(rt, "directHostFunction"), 0, func);
+          rt,
+          jsi::PropNameID::forAscii(rt, "directHostFunction"),
+          0,
+          *directFunctionWrapper->value);
     }
     case ValueType::HostFunctionType: {
       auto hostFunctionWrapper =
