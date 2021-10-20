@@ -83,11 +83,11 @@ rootProject.getSubprojects().forEach({project ->
 })
 
 def minorCopy = Integer.parseInt(minor)
-def folder = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+def aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
 
-while (!folder.exists()) {
+while (!aar.exists()) {
     minorCopy -= 1
-    folder = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
 }
 
-artifacts.add("default", folder)
+artifacts.add("default", aar)
