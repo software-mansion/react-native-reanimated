@@ -155,6 +155,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     String type = "entering";
     HashMap<String, Object> targetValues = after.toMap();
     HashMap<String, Object> startValues = before.toMap();
+    if (mStates == null) return;
     ViewState state = mStates.get(view.getId());
     if (state == null
         || state == ViewState.Disappearing
