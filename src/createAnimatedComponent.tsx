@@ -493,7 +493,7 @@ export default function createAnimatedComponent(
         // TODO update config
         const tag = findNodeHandle(ref);
         if (
-          (this.props.layout || this.props.entering || this.props.exiting) &&
+          (this.props.layout || this.props.entering || this.props.exiting || this.props.sharedElementTransition) &&
           tag != null
         ) {
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
@@ -503,6 +503,8 @@ export default function createAnimatedComponent(
           let exiting = this.props.exiting
             ? this.props.exiting
             : DefaultExiting;
+
+          let sharedElementTransition = this.props.sharedElementTransition ? this.props.sharedElementTransition : DefaultLayout;
 
           if (has('build', layout)) {
             layout = layout.build();
@@ -516,12 +518,21 @@ export default function createAnimatedComponent(
             exiting = exiting.build() as EntryExitAnimationFunction;
           }
 
+          if (has('build', sharedElementTransition)) {
+            sharedElementTransition = sharedElementTransition.build();
+          }
+
           const config = {
             layout,
             entering,
             exiting,
+            sharedElementTransition,
             sv: this.sv,
           };
+          // console.log("sharedElementTransition", sharedElementTransition)
+          // if(sharedElementTransition) {
+          //   console.log(tag)
+          // }
           runOnUI(() => {
             'worklet';
             global.LayoutAnimationRepository.registerConfig(tag, config);

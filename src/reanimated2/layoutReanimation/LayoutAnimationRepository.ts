@@ -22,6 +22,7 @@ runOnUI(() => {
       if (configs[tag] == null) {
         return; // :(
       }
+      console.log("startAnimationForTag", tag, configs[tag])
       const style = configs[tag][type](yogaValues);
       let currentAnimation = style.animations;
       if (type === 'entering') {
