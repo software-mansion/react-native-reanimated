@@ -9,6 +9,7 @@ const { transformSync } = require('@babel/core');
 const functionArgsToWorkletize = new Map([
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
+  ['useLayoutAnimation', [0]],
   ['createAnimatedPropAdapter', [0]],
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],

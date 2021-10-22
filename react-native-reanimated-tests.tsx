@@ -45,6 +45,7 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
+  useLayoutAnimation,
   // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
@@ -619,6 +620,22 @@ function UseWorkletCallbackTest() {
   })();
 
   return <Animated.View style={styles.container} />;
+}
+
+// useLayoutAnimation
+function UseLayoutAnimationTest() {
+  const layoutAnimation = useLayoutAnimation((targetValues) => {
+    return {
+      animations: {
+        opacity: withTiming(0)
+      },
+      initialValues: {
+        opacity: 1
+      }
+    }
+  }, []);
+
+  return <Animated.View style={styles.container} layout={layoutAnimation} />;
 }
 
 // createWorklet

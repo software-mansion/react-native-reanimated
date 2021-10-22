@@ -4,6 +4,7 @@ export {
   useEvent,
   useHandler,
   useWorkletCallback,
+  useLayoutAnimation
 } from './Hooks';
 export { useSharedValue } from './useSharedValue';
 export { useAnimatedStyle, AnimatedStyleResult } from './useAnimatedStyle';

@@ -615,14 +615,18 @@ declare module 'react-native-reanimated' {
   export type AnimatedStyleProp<T> =
     | AnimateStyle<T>
     | RegisteredStyle<AnimateStyle<T>>;
-  export function useAnimatedStyle<
-    T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
-  >(updater: () => T, deps?: DependencyList | null): T;
+    export function useAnimatedStyle<
+      T extends AnimatedStyleProp<ViewStyle | ImageStyle | TextStyle>
+    >(updater: () => T, deps?: DependencyList | null): T;
   export function useAnimatedProps<T extends {}>(
     updater: () => Partial<T>,
     deps?: DependencyList | null,
     adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
   ): Partial<T>;
+  export function useLayoutAnimation(
+    animationFunction: EntryExitAnimationFunction,
+    deps: DependencyList
+  ): EntryExitAnimationFunction;
   export function useEvent<T extends {}>(
     handler: (e: T) => void,
     eventNames?: string[],
