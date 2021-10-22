@@ -86,9 +86,8 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker)
+std::shared_ptr<NativeReanimatedModule> createReanimatedModule(RCTBridge *bridge, std::shared_ptr<CallInvoker> jsInvoker)
 {
-  RCTBridge *bridge = _bridge_reanimated;
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   auto propUpdater = [reanimatedModule](

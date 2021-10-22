@@ -35,16 +35,15 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
   [eventDispatcher setBridge:bridge];
 #endif
   [bridge updateModuleWithInstance:eventDispatcher];
-  _bridge_reanimated = bridge;
   const auto runtimeInstaller = [bridge, runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
 #if RNVERSION >= 63
-    auto reanimatedModule = reanimated::createReanimatedModule(bridge.jsCallInvoker);
+    auto reanimatedModule = reanimated::createReanimatedModule(bridge, bridge.jsCallInvoker);
 #else
     auto callInvoker = std::make_shared<react::BridgeJSCallInvoker>(bridge.reactInstance);
-    auto reanimatedModule = reanimated::createReanimatedModule(callInvoker);
+    auto reanimatedModule = reanimated::createReanimatedModule(bridge, callInvoker);
 #endif
     runtime.global().setProperty(
         runtime,
