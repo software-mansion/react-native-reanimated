@@ -300,34 +300,14 @@
 
 - (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
-  NSNumber *tag = view.reactTag;
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *startValues = before.values;
-//  if (_states[tag] == nil) {
-//    return;
-//  }
-//  ViewState state = [_states[tag] intValue];
-//  if (state == Disappearing || state == ToRemove || state == Inactive) {
-//    return;
-//  }
-//  if (state == Appearing) {
-//    BOOL doNotStartLayout = true;
-//    for (NSString *key in [[self class] layoutKeys]) {
-//      if ([((NSNumber *)startValues[key]) doubleValue] != [((NSNumber *)targetValues[key]) doubleValue]) {
-//        doNotStartLayout = false;
-//      }
-//    }
-//    if (doNotStartLayout) {
-//      return;
-//    }
-//  }
-//  _states[view.reactTag] = [NSNumber numberWithInt:Layout];
-  NSDictionary *preparedStartValues = [self prepareDataForAnimatingWorklet:startValues];
-  NSDictionary *preparedTargetValues = [self prepareDataForAnimatingWorklet:targetValues];
+  //  NSDictionary *preparedStartValues = [self prepareDataForAnimatingWorkletWithScreens:startValues];
+  //  NSDictionary *preparedTargetValues = [self prepareDataForAnimatingWorkletWithScreens:targetValues];
   NSMutableDictionary *preparedValues = [NSMutableDictionary new];
-  [preparedValues addEntriesFromDictionary:preparedTargetValues];
-  for (NSString *key in preparedStartValues.allKeys) {
-    preparedValues[[NSString stringWithFormat:@"%@%@", @"b", key]] = preparedStartValues[key];
+  [preparedValues addEntriesFromDictionary:targetValues];
+  for (NSString *key in startValues.allKeys) {
+    preparedValues[[NSString stringWithFormat:@"b%@", key]] = startValues[key];
   }
   _startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }

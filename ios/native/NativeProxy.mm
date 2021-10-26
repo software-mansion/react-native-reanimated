@@ -23,18 +23,21 @@
 
 #import <RNScreens/RNSSharedElementAnimator.h>
 
-@interface ScreensTransitionDelegate : NSObject<RNSSharedElementTransitionsDelegate>
+@interface ScreensTransitionDelegate : NSObject <RNSSharedElementTransitionsDelegate>
 @property REAAnimationsManager *animationsManager;
 @end
 
 @implementation ScreensTransitionDelegate
 - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
-                                           fromView:(UIView *)fromView
+                                         fromView:(UIView *)fromView
+                                fromViewConverter:fromViewConverter
                                            toView:(UIView *)toView
+                                  toViewConverter:toViewConverter
+                                        swapViews:(BOOL)swapViews
 {
-  NSLog(@"mleko XDDDDDDD");
-  REASnapshot *before = [[REASnapshot alloc] init:fromView];
-  REASnapshot *after = [[REASnapshot alloc] init:toView];
+  REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:fromViewConverter];
+
+  REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
   [_animationsManager onViewTransition:fromView before:before after:after];
 }
 @end
@@ -265,12 +268,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     module->onEvent(eventNameString, eventAsString);
     global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
   }];
-  
-  ScreensTransitionDelegate * delegate = [ScreensTransitionDelegate new];
-  [delegate setBridge:bridge];
+
+  ScreensTransitionDelegate *delegate = [ScreensTransitionDelegate new];
   [delegate setAnimationsManager:animationsManager];
   [RNSSharedElementAnimator setDelegate:delegate];
-  
+
   return module;
 }
 

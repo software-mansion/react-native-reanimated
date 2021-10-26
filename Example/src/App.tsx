@@ -52,52 +52,7 @@ type SimpleStackParams = {
 
 type NativeIDs = {
   viewNativeID: string;
-  imageNativeID: string;
-  textNativeID: string;
-  navigation: NativeStackNavigationProp<SimpleStackParams, 'First'>;
 };
-
-function Element({viewNativeID, imageNativeID, textNativeID, navigation}: NativeIDs) {
-  const width = 200;
-  const height = 120;
-
-  // const reaProgress = useReanimatedTransitionProgress();
-  // // const sv = useDerivedValue(
-  // //   () =>
-  // //     (reaProgress.progress.value < 0.5
-  // //       ? reaProgress.progress.value * 50
-  // //       : (1 - reaProgress.progress.value) * 50) + 50,
-  // // );
-  // const reaStyle = useAnimatedStyle(() => {
-  //   const backgroundColor = interpolateColor(
-  //     reaProgress.progress.value,
-  //     [0, 0.5, 1],
-  //     ['red', 'blue', 'red']
-  //   );
-
-  //   return {
-  //     width: '100%',
-  //     height: reaProgress.goingForward.value === 1 ? (120 + reaProgress.progress.value * 170) : (290 - reaProgress.progress.value * 170),
-  //     backgroundColor,
-  //   };
-  // });
-
-  return (
-    <Animated.View
-      style={{width: '100%', height: 100, backgroundColor: 'red'}}//reaStyle} 
-      nativeID={viewNativeID}
-      sharedElementTransition={LinearTransition}
-       >
-      {/* <Image
-        resizeMethod="scale"
-        source={{uri: picURI}}
-        style={{width, height}} 
-        nativeID={imageNativeID}
-         />
-      <Text nativeID={textNativeID} style={{fontSize: 20, color: 'red'}}>Text</Text> */}
-    </Animated.View>
-  )
-}
 
 function First({
   navigation,
@@ -106,8 +61,24 @@ function First({
 }) {
 
   return (
-    <Animated.ScrollView style={{flex: 1}} sharedElementTransition={LinearTransition}>
-      <Element viewNativeID={sharedElements[0].fromID} imageNativeID={sharedElements[1].fromID} textNativeID={sharedElements[2].fromID} navigation={navigation} />
+    <Animated.ScrollView style={{flex: 1}} >
+      <View style={{width: '100%', height: 100, backgroundColor: 'blue'}}/>
+      <Animated.View
+      style={{width: '100%', height: 100, backgroundColor: 'red'}} 
+      nativeID={sharedElements[0].fromID}
+      sharedElementTransition={LinearTransition}
+       />
+      <Animated.Text style={{fontSize: 30}}
+        nativeID={sharedElements[1].fromID} sharedElementTransition={LinearTransition} >
+          TEST
+      </Animated.Text>
+      <Animated.Image
+        resizeMethod="scale"
+        source={{uri: picURI}}
+        style={{width: 200, height: 100}} 
+        nativeID={sharedElements[2].fromID}
+        sharedElementTransition={LinearTransition}
+         />
       <Button  onPress={() => navigation.navigate('Second')}  title="Click"/>
     </Animated.ScrollView>
   );
@@ -124,34 +95,16 @@ function Second({
     });
   }, [navigation]);
 
-  // const reaProgress = useReanimatedTransitionProgress();
-  // // const sv = useDerivedValue(
-  // //   () =>
-  // //     (reaProgress.progress.value < 0.5
-  // //       ? reaProgress.progress.value * 50
-  // //       : (1 - reaProgress.progress.value) * 50) + 50,
-  // // );
-  // const reaStyle = useAnimatedStyle(() => {
-  //   const backgroundColor = interpolateColor(
-  //     reaProgress.progress.value,
-  //     [0, 0.5, 1],
-  //     ['red', 'blue', 'red']
-  //   );
-
-  //   return {
-  //     width: '100%',
-  //     height: reaProgress.goingForward.value === 1 ? (120 + reaProgress.progress.value * 170) : (290 - reaProgress.progress.value * 170),
-  //     backgroundColor,
-  //   };
-  // });
-
   return (
-    <View style={{flex: 1}}>
-      <Animated.View style={{width: '100%', height: 200, backgroundColor: 'red'}} //reaStyle} 
-        nativeID={sharedElements[0].toID}>
-        {/* <Image source={{uri: picURI}}  style={{width, height}} nativeID={sharedElements[1].toID}/>
-        <Text style={{fontSize: 20, color: 'red'}} nativeID={sharedElements[2].toID}>Text</Text> */}
-      </Animated.View>
+    <View style={{flex: 1, justifyContent: 'center'}}>
+      <Animated.View style={{width: '100%', height: 200, backgroundColor: 'green'}}
+        nativeID={sharedElements[0].toID} sharedElementTransition={LinearTransition}/>
+      <Animated.Text style={{fontSize: 20}}
+        nativeID={sharedElements[1].toID} sharedElementTransition={LinearTransition}>
+          TEST
+          </Animated.Text>
+      <Animated.Image source={{uri: picURI}}  style={{width, height}} nativeID={sharedElements[2].toID}
+      sharedElementTransition={LinearTransition}/>
       <Button
         title="Tap me for first screen"
         onPress={() => navigation.navigate('First')}

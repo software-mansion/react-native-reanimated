@@ -493,7 +493,10 @@ export default function createAnimatedComponent(
         // TODO update config
         const tag = findNodeHandle(ref);
         if (
-          (this.props.layout || this.props.entering || this.props.exiting || this.props.sharedElementTransition) &&
+          (this.props.layout ||
+            this.props.entering ||
+            this.props.exiting ||
+            this.props.sharedElementTransition) &&
           tag != null
         ) {
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
@@ -504,7 +507,9 @@ export default function createAnimatedComponent(
             ? this.props.exiting
             : DefaultExiting;
 
-          let sharedElementTransition = this.props.sharedElementTransition ? this.props.sharedElementTransition : DefaultLayout;
+          let sharedElementTransition = this.props.sharedElementTransition
+            ? this.props.sharedElementTransition
+            : DefaultLayout;
 
           if (has('build', layout)) {
             layout = layout.build();
