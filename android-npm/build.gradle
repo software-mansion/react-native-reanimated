@@ -107,3 +107,5 @@ while (!aar.exists()) {
 }
 
 artifacts.add("default", aar)
+
+apply from: './expo/linking.gradle'
