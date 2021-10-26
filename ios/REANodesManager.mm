@@ -334,39 +334,27 @@ using namespace facebook::react;
     ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
 
     const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
-    // const ShadowNodeFamily &family = shadowNode->getFamily();
+    const ShadowNodeFamily &family = shadowNode->getFamily();
     SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
 
     shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
         ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
-            // LayoutableShadowNode::AncestorList ancestors = family.getAncestors(oldRootShadowNode);
-            // const ShadowNode &sourceShadowNode = ancestors.back().first;
-            
-            ShadowNode::Shared flex = oldRootShadowNode.getChildren()[0]->getChildren()[0]->getChildren()[0];
-            ShadowNode::Shared left = flex->getChildren()[1];
-            // ShadowNode::Shared right = flex->getChildren()[2];
-            Props::Shared leftProps = left->getProps();
-            // Props::Shared rightProps = right->getProps();
-            
             std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
                 [&](ShadowNode const &oldShadowNode) {
-                    NSNumber *number = [[_operationsInBatch objectForKey:@4] objectForKey:@"width"];
+                    NSNumber *number = [[_operationsInBatch objectForKey:@6] objectForKey:@"width"];
                     float width = [number floatValue];
                     folly::dynamic propsDynamic = folly::dynamic::object("width", width);
                     
-                    auto newProps = left->getComponentDescriptor().cloneProps(
+                    auto newProps = oldShadowNode.getComponentDescriptor().cloneProps(
                            PropsParserContext{surfaceId, *uiManager->getContextContainer().get()},
-                           leftProps,
+                           oldShadowNode.getProps(),
                            RawProps(propsDynamic));
 
                     ShadowNodeFragment fragment{ newProps };
-                    return oldShadowNode.clone(fragment); // TODO: apply new props
+                    return oldShadowNode.clone(fragment);
                 };
-            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(left->getFamily(), callback);
+            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(family, callback);
             return std::static_pointer_cast<RootShadowNode>(newRoot);
-            
-            // ShadowNodeFragment fragment{};
-            // return std::make_shared<RootShadowNode>(oldRootShadowNode, fragment);
         };
         
         ShadowTree::CommitOptions commitOptions{false, [](){ return false; }};
