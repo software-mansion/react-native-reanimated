@@ -122,18 +122,21 @@ export default function App() {
           {
             height: state % 2 ? 125 : 175,
             backgroundColor: state % 2 ? 'blue' : 'lime',
+            alignItems: state % 2 ? 'center' : 'flex-start',
+            justifyContent: state % 2 ? 'flex-start' : 'flex-end',
           },
-          style,
+          style
         ]}>
+        <View style={{ width: 10, height: 10, backgroundColor: 'black' }} />
       </Animated.View>
       <View
         style={{
           height: state % 2 ? 150 : 200,
           width: 50,
           backgroundColor: state % 2 ? 'red' : 'yellow',
-          flex: 1,
           alignItems: state % 2 ? 'center' : 'flex-start',
           justifyContent: state % 2 ? 'flex-start' : 'flex-end',
+          flex: 1,
         }}
         onTouchStart={() => setState((s) => s + 1)}>
         <View style={{ width: 10, height: 10, backgroundColor: 'black' }} />
