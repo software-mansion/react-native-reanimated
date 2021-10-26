@@ -3,6 +3,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { Button, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
@@ -87,11 +88,56 @@ const ScrollViewExample = React.memo(() => {
 });
 
 export default function App() {
+  const [state, setState] = useState(0);
+  const width = useSharedValue(0);
+
+  const style = useAnimatedStyle(() => {
+    return { width: 100 + 120 * width.value };
+  }, []);
+
+  const handleTouch = () => {
+    width.value = withTiming(1 - width.value, { duration: 2000 });
+  };
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      {/* <UIPropsExample /> */}
-      <NativePropsExample />
-      {/* <ScrollViewExample /> */}
-    </View>
+    <Animated.View
+      style={{
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: state % 2 ? 100 : 50,
+        height: 1000,
+      }}>
+      <View
+        style={{
+          height: 100,
+          width: 50,
+          backgroundColor: 'black',
+        }}
+        onTouchStart={() => setState((s) => s + 1)}
+      />
+      <Animated.View
+        onTouchStart={handleTouch}
+        style={[
+          {
+            height: state % 2 ? 125 : 175,
+            backgroundColor: state % 2 ? 'blue' : 'lime',
+          },
+          style,
+        ]}>
+      </Animated.View>
+      <View
+        style={{
+          height: state % 2 ? 150 : 200,
+          width: 50,
+          backgroundColor: state % 2 ? 'red' : 'yellow',
+          flex: 1,
+          alignItems: state % 2 ? 'center' : 'flex-start',
+          justifyContent: state % 2 ? 'flex-start' : 'flex-end',
+        }}
+        onTouchStart={() => setState((s) => s + 1)}>
+        <View style={{ width: 10, height: 10, backgroundColor: 'black' }} />
+      </View>
+    </Animated.View>
   );
 }

@@ -79,7 +79,7 @@ using namespace facebook::react;
   BOOL _wantRunUpdates;
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
-  NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
+  NSMutableDictionary<NSNumber*, NSMutableDictionary*> *_operationsInBatch;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
@@ -97,7 +97,7 @@ using namespace facebook::react;
     _eventQueue = [NSMutableArray new];
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
-    _operationsInBatch = [NSMutableArray new];
+    _operationsInBatch = [NSMutableDictionary new];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -195,45 +195,29 @@ using namespace facebook::react;
 - (void)performOperations
 {
   if (_operationsInBatch.count != 0) {
-    NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
-    _operationsInBatch = [NSMutableArray new];
+    NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue = _operationsInBatch;
+    _operationsInBatch = [NSMutableDictionary new];
 
-    BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
-    _tryRunBatchUpdatesSynchronously = NO;
-
-    __weak typeof(self) weakSelf = self;
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    RCTExecuteOnUIManagerQueue(^{
-      __typeof__(self) strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
-      }
-      BOOL canUpdateSynchronously = trySynchronously && ![strongSelf.uiManager hasEnqueuedUICommands];
-
-      if (!canUpdateSynchronously) {
-        dispatch_semaphore_signal(semaphore);
-      }
-
-      for (int i = 0; i < copiedOperationsQueue.count; i++) {
-        copiedOperationsQueue[i](strongSelf.uiManager);
-      }
-
-      if (canUpdateSynchronously) {
-        [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
-        dispatch_semaphore_signal(semaphore);
-      }
-      // In case canUpdateSynchronously=true we still have to send uiManagerWillPerformMounting event
-      // to observers because some components (e.g. TextInput) update their UIViews only on that event.
-      [strongSelf.uiManager setNeedsLayout];
-    });
-    if (trySynchronously) {
-      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    }
-
-    if (_mounting) {
-      _mounting();
-      _mounting = nil;
-    }
+    // ReanimatedListener::runtimeScheduler->executeNowOnTheSameThread([copiedOperationsQueue](jsi::Runtime &rt) {
+    //     jsi::Array arr(rt, [copiedOperationsQueue count]);
+        
+    //     int i = 0;
+    //     for (NSNumber *tag in copiedOperationsQueue.allKeys) {
+    //         jsi::Object obj(rt);
+    //         obj.setProperty(rt, "tag", jsi::Value(rt, tag.intValue));
+    //         jsi::Object diffObject(rt);
+    //         NSMutableDictionary *diff = copiedOperationsQueue[tag];
+    //         for (NSString *prop in diff.allKeys) {
+    //             NSNumber *value = diff[prop];
+    //             diffObject.setProperty(rt, prop.UTF8String, jsi::Value(rt, value.intValue));
+    //             // TODO: transform
+    //         }
+    //         obj.setProperty(rt, "diff", diffObject);
+    //         arr.setValueAtIndex(rt, i++, obj);
+    //     }
+        
+    //     rt.global().getPropertyAsFunction(rt, "newUpdateProps").call(rt, jsi::Value(rt, arr));
+    // });
   }
   _wantRunUpdates = NO;
 }
@@ -243,12 +227,12 @@ using namespace facebook::react;
                             nativeProps:(NSMutableDictionary *)nativeProps
                        trySynchronously:(BOOL)trySync
 {
-  if (trySync) {
-    _tryRunBatchUpdatesSynchronously = YES;
-  }
-  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
-    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
-  }];
+//  if (trySync) {
+//    _tryRunBatchUpdatesSynchronously = YES;
+//  }
+//  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
+//    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
+//  }];
 }
 
 
@@ -344,24 +328,52 @@ using namespace facebook::react;
     //[self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
   }
   if (nativeProps.count > 0) {
-      std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
-      ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+      _operationsInBatch[viewTag] = nativeProps;
       
-      const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
-      const ShadowNodeFamily &family = shadowNode->getFamily();
-      SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
-      
-      shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-        auto transaction = [&](RootShadowNode const &oldRootShadowNode) {
-            LayoutableShadowNode::AncestorList ancestors = family.getAncestors(oldRootShadowNode);
-            const ShadowNode &sourceShadowNode = ancestors.back().first;
-            return std::make_shared<RootShadowNode>(oldRootShadowNode, ShadowNodeFragment{});
+    std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
+    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+
+    const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
+    // const ShadowNodeFamily &family = shadowNode->getFamily();
+    SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
+
+    shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+        ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
+            // LayoutableShadowNode::AncestorList ancestors = family.getAncestors(oldRootShadowNode);
+            // const ShadowNode &sourceShadowNode = ancestors.back().first;
+            
+            ShadowNode::Shared flex = oldRootShadowNode.getChildren()[0]->getChildren()[0]->getChildren()[0];
+            ShadowNode::Shared left = flex->getChildren()[1];
+            // ShadowNode::Shared right = flex->getChildren()[2];
+            Props::Shared leftProps = left->getProps();
+            // Props::Shared rightProps = right->getProps();
+            
+            std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
+                [&](ShadowNode const &oldShadowNode) {
+                    NSNumber *number = [[_operationsInBatch objectForKey:@4] objectForKey:@"width"];
+                    float width = [number floatValue];
+                    folly::dynamic propsDynamic = folly::dynamic::object("width", width);
+                    
+                    auto newProps = left->getComponentDescriptor().cloneProps(
+                           PropsParserContext{surfaceId, *uiManager->getContextContainer().get()},
+                           leftProps,
+                           RawProps(propsDynamic));
+
+                    ShadowNodeFragment fragment{ newProps };
+                    return oldShadowNode.clone(fragment); // TODO: apply new props
+                };
+            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(left->getFamily(), callback);
+            return std::static_pointer_cast<RootShadowNode>(newRoot);
+            
+            // ShadowNodeFragment fragment{};
+            // return std::make_shared<RootShadowNode>(oldRootShadowNode, fragment);
         };
+        
         ShadowTree::CommitOptions commitOptions{false, [](){ return false; }};
         shadowTree.commit(transaction, commitOptions);
-      });
-    
-      // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
+    });
+
+    // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }
   if (jsProps.count > 0) {
     [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
