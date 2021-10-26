@@ -249,12 +249,15 @@
       }
 
       if (canUpdateSynchronously) {
+        [strongSelf.uiManager setNeedsLayout];
         [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
       }
       // In case canUpdateSynchronously=true we still have to send uiManagerWillPerformMounting event
       // to observers because some components (e.g. TextInput) update their UIViews only on that event.
-      [strongSelf.uiManager setNeedsLayout];
+      if (!canUpdateSynchronously) {
+        [strongSelf.uiManager setNeedsLayout];
+      }
     });
     if (trySynchronously) {
       dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
