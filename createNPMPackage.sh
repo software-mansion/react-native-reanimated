@@ -6,10 +6,10 @@ ROOT=$(pwd)
 
 unset CI
 
-versions=("0.67.0-rc.2" "0.66.0" "0.65.1" "0.64.1")
-version_name=("67" "66" "65" "64")
+versions=("0.67.0-rc.2" "0.66.0" "0.65.1" "0.64.1" "0.63.3")
+version_name=("67" "66" "65" "64" "63")
 
-for index in {0..3}
+for index in {0..4}
 do
   yarn add react-native@"${versions[$index]}"
   for for_hermes in "True" "False"
