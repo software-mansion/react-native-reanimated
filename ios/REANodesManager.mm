@@ -331,6 +331,11 @@ using namespace facebook::react;
   if (nativeProps.count > 0) {
       _operationsInBatch[viewTag] = nativeProps;
       
+    if (!shadowNodePtr) {
+        // TODO: improve passing ShadowNode pointers
+        return;
+    }
+      
     std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
     ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
     std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
