@@ -24,6 +24,7 @@ import {
   MountingUnmounting,
   SpringLayoutAnimation,
   SwipeableList,
+  NativeModals,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -102,6 +103,10 @@ const SCREENS: Screens = {
   Modal: {
     title: '🆕 Modal',
     screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕  Native modals (RN and Screens)',
+    screen: NativeModals,
   },
   Carousel: {
     title: '🆕 Carousel',
