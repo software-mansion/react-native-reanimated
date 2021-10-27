@@ -44,6 +44,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   if (!_blockSetter) {
     _blockSetter = true;
 
+    _registeredViews = [NSMutableSet new];
     self.bridge = bridge;
     [super setValue:bridge forKey:@"_bridge"];
     [self setValue:[bridge.uiManager valueForKey:@"_shadowViewRegistry"] forKey:@"_shadowViewRegistry"];

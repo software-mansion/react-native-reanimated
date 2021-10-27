@@ -23,6 +23,7 @@
 #import "Nodes/REATransformNode.h"
 #import "Nodes/REAValueNode.h"
 #import "REAModule.h"
+#import "REAUIManager.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -96,6 +97,7 @@
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
+  NSMutableArray<NSNumber *> *_tagsInBatch;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
@@ -113,6 +115,7 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
+    _tagsInBatch = [NSNumber new];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -227,6 +230,8 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
+    NSMutableArray<NSNumber *> *copiedTagsInBatch = _tagsInBatch;
+    _tagsInBatch = [NSMutableArray new];
 
     BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
     _tryRunBatchUpdatesSynchronously = NO;
@@ -244,20 +249,25 @@
         dispatch_semaphore_signal(semaphore);
       }
 
+      BOOL needLayoutBefore = false;
+      NSMutableSet *registeredViews = ((REAUIManager *)strongSelf.uiManager).registeredViews;
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
+        if (!needLayoutBefore && ![registeredViews containsObject:copiedTagsInBatch[i]]) {
+          needLayoutBefore = true;
+        }
         copiedOperationsQueue[i](strongSelf.uiManager);
       }
 
       if (canUpdateSynchronously) {
-        [strongSelf.uiManager setNeedsLayout];
+        if (needLayoutBefore) {
+          [strongSelf.uiManager setNeedsLayout];
+        }
         [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
       }
       // In case canUpdateSynchronously=true we still have to send uiManagerWillPerformMounting event
       // to observers because some components (e.g. TextInput) update their UIViews only on that event.
-      if (!canUpdateSynchronously) {
-        [strongSelf.uiManager setNeedsLayout];
-      }
+      [strongSelf.uiManager setNeedsLayout];
     });
     if (trySynchronously) {
       dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
@@ -282,6 +292,7 @@
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
+  [_tagsInBatch addObject:reactTag];
 }
 
 - (void)getValue:(REANodeID)nodeID callback:(RCTResponseSenderBlock)callback
