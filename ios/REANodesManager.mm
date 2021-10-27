@@ -333,6 +333,7 @@ using namespace facebook::react;
       
     std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
     ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+    std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
 
     const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
     const ShadowNodeFamily &family = shadowNode->getFamily();
@@ -346,19 +347,21 @@ using namespace facebook::react;
                     NSMutableDictionary *props = [_operationsInBatch objectForKey:[NSNumber numberWithInt:tag]];
                     folly::dynamic propsDynamic = convertIdToFollyDynamic(props);
                     
-                    auto newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-                           PropsParserContext{surfaceId, *uiManager->getContextContainer().get()},
+                    PropsParserContext propsParserContext{surfaceId, *contextContainer};
+                    Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
+                           propsParserContext,
                            oldShadowNode.getProps(),
                            RawProps(propsDynamic));
 
-                    ShadowNodeFragment fragment{ newProps };
+                    ShadowNodeFragment fragment{ /* .props = */ newProps };
                     return oldShadowNode.clone(fragment);
                 };
+            
             ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(family, callback);
             return std::static_pointer_cast<RootShadowNode>(newRoot);
         };
         
-        ShadowTree::CommitOptions commitOptions{false, [](){ return false; }};
+        ShadowTree::CommitOptions commitOptions{};
         shadowTree.commit(transaction, commitOptions);
     });
 
