@@ -335,13 +335,15 @@ using namespace facebook::react;
 
     const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
     const ShadowNodeFamily &family = shadowNode->getFamily();
+    Tag tag = shadowNode->getTag(); // DEPRECATED
     SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
 
     shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
         ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
             std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
                 [&](ShadowNode const &oldShadowNode) {
-                    NSNumber *number = [[_operationsInBatch objectForKey:@6] objectForKey:@"width"];
+                    NSMutableDictionary *props = [_operationsInBatch objectForKey:[NSNumber numberWithInt:tag]];
+                    NSNumber *number = [props objectForKey:@"width"];
                     float width = [number floatValue];
                     folly::dynamic propsDynamic = folly::dynamic::object("width", width);
                     

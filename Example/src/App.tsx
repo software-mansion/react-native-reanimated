@@ -91,8 +91,12 @@ export default function App() {
   const [state, setState] = useState(0);
   const width = useSharedValue(0);
 
-  const style = useAnimatedStyle(() => {
-    return { width: 100 + 120 * width.value };
+  const style1 = useAnimatedStyle(() => {
+    return { width: 100 + 100 * width.value };
+  }, []);
+
+  const style2 = useAnimatedStyle(() => {
+    return { width: 50 + 50 * width.value };
   }, []);
 
   const handleTouch = () => {
@@ -125,7 +129,7 @@ export default function App() {
             alignItems: state % 2 ? 'center' : 'flex-start',
             justifyContent: state % 2 ? 'flex-start' : 'flex-end',
           },
-          style
+          style1
         ]}>
         <View style={{ width: 10, height: 10, backgroundColor: 'black' }} />
       </Animated.View>
@@ -150,7 +154,7 @@ export default function App() {
             alignItems: state % 2 ? 'center' : 'flex-start',
             justifyContent: state % 2 ? 'flex-start' : 'flex-end',
           },
-          style
+          style2
         ]}>
         <View style={{ width: 10, height: 10, backgroundColor: 'black' }} />
       </Animated.View>
