@@ -1,6 +1,7 @@
 #import "REANodesManager.h"
 
 #import <React/RCTConvert.h>
+#import <React/RCTFollyConvert.h>
 
 #import <React/RCTShadowView.h>
 #import "REAModule.h"
@@ -343,9 +344,7 @@ using namespace facebook::react;
             std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
                 [&](ShadowNode const &oldShadowNode) {
                     NSMutableDictionary *props = [_operationsInBatch objectForKey:[NSNumber numberWithInt:tag]];
-                    NSNumber *number = [props objectForKey:@"width"];
-                    float width = [number floatValue];
-                    folly::dynamic propsDynamic = folly::dynamic::object("width", width);
+                    folly::dynamic propsDynamic = convertIdToFollyDynamic(props);
                     
                     auto newProps = oldShadowNode.getComponentDescriptor().cloneProps(
                            PropsParserContext{surfaceId, *uiManager->getContextContainer().get()},

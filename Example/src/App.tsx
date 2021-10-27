@@ -92,11 +92,11 @@ export default function App() {
   const width = useSharedValue(0);
 
   const style1 = useAnimatedStyle(() => {
-    return { width: 100 + 100 * width.value };
+    return { width: 100 + 100 * width.value, height: 50 + width.value * 100 };
   }, []);
 
   const style2 = useAnimatedStyle(() => {
-    return { width: 50 + 50 * width.value };
+    return { width: 50 + 50 * width.value, height: 50 + width.value * 100 };
   }, []);
 
   const handleTouch = () => {
@@ -109,8 +109,6 @@ export default function App() {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: state % 2 ? 100 : 50,
-        height: 1000,
       }}>
       <View
         style={{
