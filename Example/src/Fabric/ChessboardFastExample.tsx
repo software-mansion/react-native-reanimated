@@ -8,7 +8,11 @@ import { Button, View } from 'react-native';
 
 import React from 'react';
 
-export default function ChessboardFastExample() {
+const colors = ['white', 'black'];
+
+export default function ChessboardSlowExample() {
+  const [state, setState] = React.useState(0);
+
   const x = useSharedValue(0);
 
   const size = useDerivedValue(() => 8 * (10 + x.value * 35));
@@ -21,20 +25,27 @@ export default function ChessboardFastExample() {
     []
   );
 
-  const handlePress = () => {
-    x.value = withTiming(1 - x.value);
+  const handleAnimate = () => {
+    x.value = withTiming(1 - x.value, { duration: 3000 });
+  };
+
+  const handleToggle = () => {
+    setState((state) => 1 - state);
   };
 
   return (
-    <View style={{ marginTop: 100 }}>
-      <Button onPress={handlePress} title="Toggle" />
-      <Animated.View style={style}>
+    <>
+      <View style={{ marginTop: 100, marginBottom: 20 }}>
+        <Button onPress={handleAnimate} title="Animate" />
+        <Button onPress={handleToggle} title="Toggle" />
+      </View>
+      <Animated.View style={[{ borderWidth: 10, borderColor: 'lime' }, style]}>
         {[...Array(8).keys()].map((i) => (
           <View style={{ flexDirection: 'row', flex: 1 }} key={i}>
             {[...Array(8).keys()].map((j) => (
               <View
                 style={{
-                  backgroundColor: (i + j) % 2 ? 'black' : 'white',
+                  backgroundColor: colors[(i + j + state) % 2],
                   flex: 1,
                 }}
                 key={j}
@@ -43,6 +54,6 @@ export default function ChessboardFastExample() {
           </View>
         ))}
       </Animated.View>
-    </View>
+    </>
   );
 }

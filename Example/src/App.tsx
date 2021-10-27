@@ -6,4 +6,4 @@ import ParentAndChildExample from './Fabric/ParentAndChildExample';
 import ScrollViewExample from './Fabric/ScrollViewExample';
 import UIPropsExample from './Fabric/UIPropsExample';
 
-export default ParentAndChildExample;
+export default ChessboardFastExample;
