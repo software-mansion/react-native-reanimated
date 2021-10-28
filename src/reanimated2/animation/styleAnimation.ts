@@ -137,7 +137,7 @@ export function withStyleAnimation(
             stillGoing = true;
           }
 
-          if (ColorProperties.indexOf(currentEntry.path[0] as string) !== -1) {
+          if (ColorProperties.includes(currentEntry.path[0] as string)) {
             currentStyleAnimation.current = processColor(
               currentStyleAnimation.current
             );

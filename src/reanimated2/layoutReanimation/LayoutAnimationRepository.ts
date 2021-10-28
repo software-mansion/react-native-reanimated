@@ -47,7 +47,7 @@ runOnUI(() => {
 
       const backupColor: Record<string, string> = {};
       for (const key in style.initialValues) {
-        if (ColorProperties.indexOf(key) !== -1) {
+        if (ColorProperties.includes(key)) {
           const value = style.initialValues[key];
           backupColor[key] = value;
           style.initialValues[key] = processColor(value);
