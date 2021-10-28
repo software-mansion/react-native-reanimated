@@ -31,7 +31,7 @@ abstract class replaceSoTask extends DefaultTask {
 def getCurrentFlavor() {
     Gradle gradle = getGradle()
     String taskRequestName = gradle.getStartParameter().getTaskRequests().toString()
-    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w+)(Release|Debug)")
+    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
     Matcher matcher = pattern.matcher(taskRequestName)
 
     if(matcher.find()) {
