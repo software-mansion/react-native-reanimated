@@ -1,6 +1,8 @@
 /* global _stopObservingProgress, _startObservingProgress */
 import { runOnUI } from '../core';
 import { withStyleAnimation } from '../animation/styleAnimation';
+import { ColorProperties } from '../UpdateProps';
+import { processColor } from '../Colors';
 
 runOnUI(() => {
   'worklet';
@@ -42,7 +44,17 @@ runOnUI(() => {
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
       _stopObservingProgress(tag, false);
       _startObservingProgress(tag, sv);
-      sv._value = Object.assign({}, sv._value, style.initialValues);
+
+      const backupColor: Record<string, string> = {};
+      for (const key in style.initialValues) {
+        if (ColorProperties.includes(key)) {
+          const value = style.initialValues[key];
+          backupColor[key] = value;
+          style.initialValues[key] = processColor(value);
+        }
+      }
+
+      sv.value = Object.assign({}, sv._value, style.initialValues);
       _stopObservingProgress(tag, false);
       const animation = withStyleAnimation(currentAnimation);
 
@@ -55,6 +67,11 @@ runOnUI(() => {
           enteringAnimationForTag[tag] = null;
         }
       };
+
+      if (backupColor) {
+        configs[tag].sv._value = { ...configs[tag].sv.value, ...backupColor };
+      }
+
       configs[tag].sv.value = animation;
       _startObservingProgress(tag, sv);
     },

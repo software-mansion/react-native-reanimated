@@ -14,6 +14,8 @@ import {
   StyleProps,
 } from '../commonTypes';
 import { withTiming } from './timing';
+import { ColorProperties } from '../UpdateProps';
+import { processColor } from '../Colors';
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: StyleProps;
@@ -134,6 +136,13 @@ export function withStyleAnimation(
           } else {
             stillGoing = true;
           }
+
+          if (ColorProperties.includes(currentEntry.path[0] as string)) {
+            currentStyleAnimation.current = processColor(
+              currentStyleAnimation.current
+            );
+          }
+
           setPath(
             animation.current,
             currentEntry.path,
