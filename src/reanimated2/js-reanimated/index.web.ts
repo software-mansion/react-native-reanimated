@@ -18,8 +18,15 @@ export const _updatePropsJS = (_viewTag, _viewName, updates, viewRef) => {
       [{}, {}]
     );
 
-    viewRef.current._component.setNativeProps({ style: rawStyles });
+    setNativeProps(viewRef._component, rawStyles);
   }
+};
+
+const setNativeProps = (component, style) => {
+  const previousStyle = component.previousStyle ? component.previousStyle : {};
+  const currentStyle = { ...previousStyle, ...style };
+  component.previousStyle = currentStyle;
+  component.setNativeProps({ style: currentStyle });
 };
 
 global._setGlobalConsole = (_val) => {

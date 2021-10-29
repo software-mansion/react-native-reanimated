@@ -31,14 +31,14 @@ abstract class replaceSoTask extends DefaultTask {
 def getCurrentFlavor() {
     Gradle gradle = getGradle()
     String taskRequestName = gradle.getStartParameter().getTaskRequests().toString()
-    Pattern pattern = Pattern.compile("(assemble|install|generate)(\\w+)(Release|Debug)")
+    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
     Matcher matcher = pattern.matcher(taskRequestName)
 
     if(matcher.find()) {
         return matcher.group(2)
     }
 
-    return ""
+    return "NOT-FOUND"
 }
 
 def replaceSoTaskDebug
@@ -58,8 +58,9 @@ rootProject.getSubprojects().forEach({project ->
 
         if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
             def projectProperties = project.getProperties()
-            if(!projectProperties.get("reanimated")
-                    || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+            final NOTFOUND = "NOT-FOUND"
+            if(!NOTFOUND.equals(getCurrentFlavor()) && (!projectProperties.get("reanimated")
+                    || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions")))
             ) {
                 def flavorString = getCurrentFlavor()
                 replaceSoTask.appName = project.getProperties().path
@@ -82,4 +83,15 @@ rootProject.getSubprojects().forEach({project ->
     }
 })
 
-artifacts.add("default", file("react-native-reanimated-${minor}-${engine}.aar"))
+def minorCopy = Integer.parseInt(minor)
+def aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+
+while (!aar.exists()) {
+    minorCopy -= 1
+    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+    if (minorCopy < 63) {
+      throw new GradleException('No aar for react-native-reanimated found.')
+    }
+}
+
+artifacts.add("default", aar)
