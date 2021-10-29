@@ -204,36 +204,44 @@ using namespace facebook::react;
     std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
     SurfaceId surfaceId = 1;
     PropsParserContext propsParserContext{surfaceId, *contextContainer};
-      
-    for (id key in copiedOperationsQueue) {
-      Tag tag = [key intValue];
-      NSMutableDictionary* props = [copiedOperationsQueue objectForKey:key];
-        
-      ShadowNode::Shared shadowNode = ReanimatedListener::newestShadowNodesRegistry->getByTag(tag);
-      const ShadowNodeFamily &family = shadowNode->getFamily();
-      react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
 
-      shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-          ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
-              std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
-                  [&](ShadowNode const &oldShadowNode) {
-                      Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-                             propsParserContext,
-                             oldShadowNode.getProps(),
-                             RawProps(convertIdToFollyDynamic(props)));
+    shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+        ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
+            // TODO: don't clone root here
+            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
+                oldRootShadowNode.getChildren()[0]->getFamily(),
+                [&](ShadowNode const &oldShadowNode) {
+                    return oldShadowNode.clone(ShadowNodeFragment{});
+                });
 
-                      ShadowNodeFragment fragment{ /* .props = */ newProps };
-                      return oldShadowNode.clone(fragment);
-                  };
+            for (id key in copiedOperationsQueue) {
+                Tag tag = [key intValue]; // TODO: use ShadowNode::Shared instead of Tag
+                NSMutableDictionary* props = [copiedOperationsQueue objectForKey:key];
 
-              ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(family, callback);
-              return std::static_pointer_cast<RootShadowNode>(newRoot);
-          };
+                ShadowNode::Shared shadowNode = ReanimatedListener::newestShadowNodesRegistry->getByTag(tag);
+                const ShadowNodeFamily &family = shadowNode->getFamily();
+                react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
 
-          ShadowTree::CommitOptions commitOptions{};
-          shadowTree.commit(transaction, commitOptions);
-      });
-    }
+                std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
+                    [&](ShadowNode const &oldShadowNode) {
+                        Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
+                        propsParserContext,
+                        oldShadowNode.getProps(),
+                        RawProps(convertIdToFollyDynamic(props)));
+
+                        ShadowNodeFragment fragment{ /* .props = */ newProps };
+                        return oldShadowNode.clone(fragment);
+                    };
+
+                newRoot = newRoot->cloneTree(family, callback);
+            }
+
+            return std::static_pointer_cast<RootShadowNode>(newRoot);
+        };
+
+        ShadowTree::CommitOptions commitOptions{};
+        shadowTree.commit(transaction, commitOptions);
+    });
   }
   _wantRunUpdates = NO;
 }
