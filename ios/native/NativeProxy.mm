@@ -99,16 +99,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   auto propUpdater = [reanimatedModule](
     jsi::Runtime &rt,
-    int viewTag,
+    int viewTag, // equal to shadowNode->getTag()
     const jsi::Value& viewName,
     const jsi::Value& shadowNodeValue,
     const jsi::Object &props
   ) -> void {
     NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str() encoding:[NSString defaultCStringEncoding]];
     ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-    void *shadowNodePtr = &shadowNode;
+    ReanimatedListener::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
-    [reanimatedModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] withName:nsViewName withShadowNode:shadowNodePtr];
+    [reanimatedModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] withName:nsViewName];
   };
 
   auto measuringFunction = [](int viewTag) -> std::vector<std::pair<std::string, double>> {

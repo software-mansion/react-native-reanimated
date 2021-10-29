@@ -42,8 +42,7 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
-           withName:(nonnull NSString *)viewName
-     withShadowNode:(nonnull void *)shadowNodePtr;
+           withName:(nonnull NSString *)viewName;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 

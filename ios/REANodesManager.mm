@@ -198,27 +198,42 @@ using namespace facebook::react;
   if (_operationsInBatch.count != 0) {
     NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableDictionary new];
+      
+    std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
+    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+    std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
+    SurfaceId surfaceId = 1;
+    PropsParserContext propsParserContext{surfaceId, *contextContainer};
+      
+    for (id key in copiedOperationsQueue) {
+      Tag tag = [key intValue];
+      NSMutableDictionary* props = [copiedOperationsQueue objectForKey:key];
+        
+      ShadowNode::Shared shadowNode = ReanimatedListener::newestShadowNodesRegistry->getByTag(tag);
+      const ShadowNodeFamily &family = shadowNode->getFamily();
+      react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
 
-    // ReanimatedListener::runtimeScheduler->executeNowOnTheSameThread([copiedOperationsQueue](jsi::Runtime &rt) {
-    //     jsi::Array arr(rt, [copiedOperationsQueue count]);
-        
-    //     int i = 0;
-    //     for (NSNumber *tag in copiedOperationsQueue.allKeys) {
-    //         jsi::Object obj(rt);
-    //         obj.setProperty(rt, "tag", jsi::Value(rt, tag.intValue));
-    //         jsi::Object diffObject(rt);
-    //         NSMutableDictionary *diff = copiedOperationsQueue[tag];
-    //         for (NSString *prop in diff.allKeys) {
-    //             NSNumber *value = diff[prop];
-    //             diffObject.setProperty(rt, prop.UTF8String, jsi::Value(rt, value.intValue));
-    //             // TODO: transform
-    //         }
-    //         obj.setProperty(rt, "diff", diffObject);
-    //         arr.setValueAtIndex(rt, i++, obj);
-    //     }
-        
-    //     rt.global().getPropertyAsFunction(rt, "newUpdateProps").call(rt, jsi::Value(rt, arr));
-    // });
+      shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+          ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
+              std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
+                  [&](ShadowNode const &oldShadowNode) {
+                      Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
+                             propsParserContext,
+                             oldShadowNode.getProps(),
+                             RawProps(convertIdToFollyDynamic(props)));
+
+                      ShadowNodeFragment fragment{ /* .props = */ newProps };
+                      return oldShadowNode.clone(fragment);
+                  };
+
+              ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(family, callback);
+              return std::static_pointer_cast<RootShadowNode>(newRoot);
+          };
+
+          ShadowTree::CommitOptions commitOptions{};
+          shadowTree.commit(transaction, commitOptions);
+      });
+    }
   }
   _wantRunUpdates = NO;
 }
@@ -299,7 +314,6 @@ using namespace facebook::react;
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
-     withShadowNode:(nonnull void *)shadowNodePtr
 {
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
@@ -329,47 +343,7 @@ using namespace facebook::react;
     //[self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
   }
   if (nativeProps.count > 0) {
-      _operationsInBatch[viewTag] = nativeProps;
-      
-    if (!shadowNodePtr) {
-        // TODO: improve passing ShadowNode pointers
-        return;
-    }
-      
-    std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
-    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
-    std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
-
-    const ShadowNode *shadowNode = reinterpret_cast<ShadowNode::Shared *>(shadowNodePtr)->get();
-    const ShadowNodeFamily &family = shadowNode->getFamily();
-    Tag tag = shadowNode->getTag(); // DEPRECATED
-    SurfaceId surfaceId = shadowNode->getFamily().getSurfaceId();
-
-    shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-        ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
-            std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
-                [&](ShadowNode const &oldShadowNode) {
-                    NSMutableDictionary *props = [_operationsInBatch objectForKey:[NSNumber numberWithInt:tag]];
-                    folly::dynamic propsDynamic = convertIdToFollyDynamic(props);
-                    
-                    PropsParserContext propsParserContext{surfaceId, *contextContainer};
-                    Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-                           propsParserContext,
-                           oldShadowNode.getProps(),
-                           RawProps(propsDynamic));
-
-                    ShadowNodeFragment fragment{ /* .props = */ newProps };
-                    return oldShadowNode.clone(fragment);
-                };
-            
-            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(family, callback);
-            return std::static_pointer_cast<RootShadowNode>(newRoot);
-        };
-        
-        ShadowTree::CommitOptions commitOptions{};
-        shadowTree.commit(transaction, commitOptions);
-    });
-
+    _operationsInBatch[viewTag] = nativeProps;
     // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }
   if (jsProps.count > 0) {
