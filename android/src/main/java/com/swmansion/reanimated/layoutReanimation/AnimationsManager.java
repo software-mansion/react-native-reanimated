@@ -46,6 +46,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private HashMap<Integer, Runnable> mCallbacks;
   private boolean mCleaningScheduled = false;
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
+  private boolean isCatalystInstanceDestroyed = false;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -80,9 +81,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mParentViewManager = new HashMap<>();
     mParent = new HashMap();
     mCallbacks = new HashMap<>();
+    isCatalystInstanceDestroyed = false;
   }
 
   public void onCatalystInstanceDestroy() {
+    isCatalystInstanceDestroyed = true;
     mNativeMethodsHolder = null;
     mContext = null;
     mUIImplementation = null;
@@ -98,7 +101,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
-    // TODO fix removal
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Integer tag = view.getId();
     String type = "exiting";
     HashMap<String, Object> startValues = before.toMap();
@@ -123,6 +128,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewCreate(View view, ViewGroup parent, Snapshot after) {
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Scheduler strongScheduler = mScheduler.get();
     if (strongScheduler != null) {
       strongScheduler.triggerUI();
@@ -151,6 +159,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewUpdate(View view, Snapshot before, Snapshot after) {
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Integer tag = view.getId();
     String type = "entering";
     HashMap<String, Object> targetValues = after.toMap();
