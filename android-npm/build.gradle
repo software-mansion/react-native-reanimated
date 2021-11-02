@@ -34,7 +34,7 @@ def getCurrentFlavor() {
     Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
     Matcher matcher = pattern.matcher(taskRequestName)
 
-    if(matcher.find()) {
+    if (matcher.find()) {
         return matcher.group(2)
     }
 
@@ -43,7 +43,7 @@ def getCurrentFlavor() {
 
 def replaceSoTaskDebug
 def replaceSoTaskRelease
-if(Integer.parseInt(minor) < 65) {
+if (Integer.parseInt(minor) < 65) {
     tasks.register("replaceSoTaskDebug", replaceSoTask)
     tasks.register("replaceSoTaskRelease", replaceSoTask)
     replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
@@ -52,14 +52,14 @@ if(Integer.parseInt(minor) < 65) {
 
 rootProject.getSubprojects().forEach({project ->
     if (project.plugins.hasPlugin("com.android.application")) {
-        if(project.ext.react.enableHermes) {
+        if (project.ext.react.enableHermes) {
             engine = "hermes"
         }
 
-        if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
+        if (project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
             def projectProperties = project.getProperties()
             final NOTFOUND = "NOT-FOUND"
-            if(!NOTFOUND.equals(getCurrentFlavor()) && (!projectProperties.get("reanimated")
+            if (!NOTFOUND.equals(getCurrentFlavor()) && (!projectProperties.get("reanimated")
                     || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions")))
             ) {
                 def flavorString = getCurrentFlavor()
