@@ -3,6 +3,7 @@
 #import "RCTComponentData.h"
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
+#import "RCTModalHostView.h"
 #import "RCTRootShadowView.h"
 #import "RCTRootViewInternal.h"
 #import "RCTUIManagerObserverCoordinator.h"
@@ -11,6 +12,7 @@
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSScreenStack.h>
 #endif
 
 @interface RCTUIManager (REA)
@@ -72,14 +74,15 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 {
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   id<RCTComponent> container;
-  NSArray<id<RCTComponent>> *permanentlyRemovedChildren;
+  NSMutableArray<id<RCTComponent>> *permanentlyRemovedChildren;
   if (isUIViewRegistry) {
     container = registry[containerTag];
     for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
       [container removeReactSubview:toRemoveChild];
     }
 
-    permanentlyRemovedChildren = [super _childrenToRemoveFromContainer:container atIndices:removeAtIndices];
+    permanentlyRemovedChildren = (NSMutableArray *)[super _childrenToRemoveFromContainer:container
+                                                                               atIndices:removeAtIndices];
     if (permanentlyRemovedChildren != nil) {
       for (id<RCTComponent> permanentlyRemovedChild in permanentlyRemovedChildren) {
         if (_toBeRemovedRegister[containerTag] == nil) {
@@ -105,8 +108,21 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       if (lastIndex < 0) {
         lastIndex = 0;
       }
-      [container insertReactSubview:toRemoveChild atIndex:lastIndex];
-      viewRegistry[toRemoveChild.reactTag] = toRemoveChild;
+      if ([toRemoveChild isKindOfClass:[RCTModalHostView class]]
+#if __has_include(<RNScreens/RNSScreen.h>)
+          ||
+          ([toRemoveChild isKindOfClass:[RNSScreenView class]] && [container isKindOfClass:[RNSScreenStackView class]])
+#endif
+      ) {
+        // we don't want layout animations when removing modals or Screens of native-stack since it brings buggy
+        // behavior
+        [_toBeRemovedRegister[container.reactTag] removeObject:toRemoveChild];
+        [permanentlyRemovedChildren removeObject:toRemoveChild];
+
+      } else {
+        [container insertReactSubview:toRemoveChild atIndex:lastIndex];
+        viewRegistry[toRemoveChild.reactTag] = toRemoveChild;
+      }
     }
 
     for (UIView *removedChild in permanentlyRemovedChildren) {
