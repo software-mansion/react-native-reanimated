@@ -82,4 +82,15 @@ rootProject.getSubprojects().forEach({project ->
     }
 })
 
-artifacts.add("default", file("react-native-reanimated-${minor}-${engine}.aar"))
+def minorCopy = Integer.parseInt(minor)
+def aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+
+while (!aar.exists()) {
+    minorCopy -= 1
+    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+    if (minorCopy < 63) {
+      throw new GradleException('No aar for react-native-reanimated found.')
+    }
+}
+
+artifacts.add("default", aar)
