@@ -3,6 +3,8 @@
 #import <React/RCTTextView.h>
 #import <React/UIView+Private.h>
 #import <React/UIView+React.h>
+#import "REAModule.h"
+#import "REANodesManager.h"
 #import "REAUIManager.h"
 
 @interface REAAnimationsManager ()
@@ -251,6 +253,9 @@
   _reaUiManager.flushUiOperations();
   NSNumber *tag = view.reactTag;
   [_reaUiManager.registeredViews addObject:tag];
+  REAModule *reanimatedModule = [_reaUiManager.bridge moduleForClass:[REAModule class]];
+  [((REANodesManager *)(reanimatedModule.nodesManager)) flushUpdateBufferForTag:tag];
+
   if (_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];
     _viewForTag[tag] = view;

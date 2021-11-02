@@ -47,6 +47,17 @@
 
 @end
 
+@interface ComponentUpdate : NSObject
+
+@property (nonnull) NSDictionary *props;
+@property (nonnull) NSNumber *viewTag;
+@property (nonnull) NSString *viewName;
+
+@end
+
+@implementation ComponentUpdate
+@end
+
 @implementation RCTUIManager (SyncUpdates)
 
 - (BOOL)hasEnqueuedUICommands
@@ -101,6 +112,7 @@
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
+  NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
@@ -116,6 +128,7 @@
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
     _tagsInBatch = [NSNumber new];
+    _componentUpdateBuffer = [NSMutableDictionary new];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -260,7 +273,7 @@
 
       if (canUpdateSynchronously) {
         if (needLayoutBefore) {
-          [strongSelf.uiManager setNeedsLayout];
+          //          [strongSelf.uiManager setNeedsLayout];
         }
         [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
@@ -519,6 +532,17 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
+  BOOL isMount = [((REAUIManager *)_uiManager).registeredViews containsObject:viewTag];
+  if (!isMount) {
+    // todo: dorobić merge słowników jeśli już był jakiś update zapisany
+    ComponentUpdate *backupData = [ComponentUpdate new];
+    backupData.props = props;
+    backupData.viewTag = viewTag;
+    backupData.viewName = viewName;
+    _componentUpdateBuffer[viewTag] = backupData;
+    return;
+  }
+
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
@@ -564,6 +588,16 @@
   }
 
   return result;
+}
+
+- (void)flushUpdateBufferForTag:(nonnull NSNumber *)viewTag;
+{
+  ComponentUpdate *componentUpdate = _componentUpdateBuffer[viewTag];
+  if (componentUpdate == Nil) {
+    return;
+  }
+  [self updateProps:componentUpdate.props ofViewWithTag:componentUpdate.viewTag withName:componentUpdate.viewName];
+  [_componentUpdateBuffer removeObjectForKey:viewTag];
 }
 
 @end
