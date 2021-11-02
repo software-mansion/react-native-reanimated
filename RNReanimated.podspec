@@ -75,7 +75,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-RCTBlob'
   s.dependency 'React-RCTSettings'
   s.dependency 'React-RCTText'
-  s.dependency 'React-RCTVibration'
   s.dependency 'React-RCTImage'
   s.dependency 'React-Core/RCTWebSocket'
   s.dependency 'React-cxxreact'
