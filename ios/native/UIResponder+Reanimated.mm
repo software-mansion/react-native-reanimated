@@ -1,10 +1,10 @@
 #import "UIResponder+Reanimated.h"
 #import "REAInitializer.h"
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#if !TARGET_OS_TV && __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
 typedef HermesExecutorFactory ExecutorFactory;
-#elif __has_include(<React/HermesExecutorFactory.h>)
+#elif !TARGET_OS_TV && __has_include(<React/HermesExecutorFactory.h>)
 #import <React/HermesExecutorFactory.h>
 typedef HermesExecutorFactory ExecutorFactory;
 #else
