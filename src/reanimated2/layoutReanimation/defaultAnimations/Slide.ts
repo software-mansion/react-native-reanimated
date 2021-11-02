@@ -145,7 +145,7 @@ export class SlideInUp
           originY: delayFunction(delay, animation(values.originY, config)),
         },
         initialValues: {
-          originY: height,
+          originY: -height,
         },
         callback: callback,
       };
