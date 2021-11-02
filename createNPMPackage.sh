@@ -60,8 +60,8 @@ do
 
     cd $ROOT
 
-    rm -rf android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
-    cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+    rm -rf android/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+    cp android/build/outputs/aar/*.aar android/react-native-reanimated-"${version_name[$index]}-${engine}".aar
   done
 done
 
@@ -78,15 +78,9 @@ cd ../..
 
 yarn add react-native@0.67.0-rc.4 --dev
 
-mv android android-temp
-mv android-npm android
-
 yarn run type:generate
 
 npm pack
-
-mv android android-npm
-mv android-temp android
 
 rm -rf ./libSo
 rm -rf ./lib
