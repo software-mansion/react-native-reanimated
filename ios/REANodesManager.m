@@ -49,7 +49,7 @@
 
 @interface ComponentUpdate : NSObject
 
-@property (nonnull) NSDictionary *props;
+@property (nonnull) NSMutableDictionary *props;
 @property (nonnull) NSNumber *viewTag;
 @property (nonnull) NSString *viewName;
 
@@ -521,12 +521,21 @@
            withName:(nonnull NSString *)viewName
 {
   if (![_mountedViews containsObject:viewTag]) {
-    // todo: dorobić merge słowników jeśli już był jakiś update zapisany
-    ComponentUpdate *backupData = [ComponentUpdate new];
-    backupData.props = props;
-    backupData.viewTag = viewTag;
-    backupData.viewName = viewName;
-    _componentUpdateBuffer[viewTag] = backupData;
+    ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+    if (lastSnapshot == nil) {
+      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
+      propsSnapshot.props = [props mutableCopy];
+      ;
+      propsSnapshot.viewTag = viewTag;
+      propsSnapshot.viewName = viewName;
+      _componentUpdateBuffer[viewTag] = propsSnapshot;
+    } else {
+      NSMutableDictionary *lastProps = lastSnapshot.props;
+      for (NSString *key in props) {
+        [lastProps setValue:props[key] forKey:key];
+      }
+    }
+
     return;
   }
 
