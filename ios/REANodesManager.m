@@ -23,7 +23,6 @@
 #import "Nodes/REATransformNode.h"
 #import "Nodes/REAValueNode.h"
 #import "REAModule.h"
-#import "REAUIManager.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in

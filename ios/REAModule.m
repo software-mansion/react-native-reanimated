@@ -181,19 +181,22 @@ RCT_EXPORT_METHOD(triggerRender)
   }
   NSMutableDictionary<NSNumber *, UIView *> *viewRegistry = [uiManager valueForKey:@"_viewRegistry"];
   for (NSNumber *rootViewTag in rootViewTags) {
-    [self flushUpdateBuferDfs:viewRegistry[rootViewTag]];
+    [self viewTreeDfs:viewRegistry[rootViewTag]];
   }
 }
 
-- (void)flushUpdateBuferDfs:(UIView *)view
+- (void)viewTreeDfs:(UIView *)view
 {
   if (view.reactTag == Nil) {
     return;
   }
-  [_nodesManager.mountedViews addObject:view.reactTag];
-  [_nodesManager flushUpdateBufferForTag:view.reactTag];
+  NSNumber *tag = view.reactTag;
+  if (![_nodesManager.mountedViews containsObject:tag]) {
+    [_nodesManager.mountedViews addObject:view.reactTag];
+    [_nodesManager flushUpdateBufferForTag:view.reactTag];
+  }
   for (UIView *child in view.reactSubviews) {
-    [self flushUpdateBuferDfs:child];
+    [self viewTreeDfs:child];
   }
 }
 
