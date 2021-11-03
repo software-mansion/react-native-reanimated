@@ -108,7 +108,6 @@
   BOOL _processingDirectEvent;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
-  NSMutableArray<NSNumber *> *_tagsInBatch;
   BOOL _tryRunBatchUpdatesSynchronously;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
@@ -127,8 +126,8 @@
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
-    _tagsInBatch = [NSNumber new];
     _componentUpdateBuffer = [NSMutableDictionary new];
+    _mountedViews = [NSMutableSet new];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -243,8 +242,6 @@
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableArray new];
-    NSMutableArray<NSNumber *> *copiedTagsInBatch = _tagsInBatch;
-    _tagsInBatch = [NSMutableArray new];
 
     BOOL trySynchronously = _tryRunBatchUpdatesSynchronously;
     _tryRunBatchUpdatesSynchronously = NO;
@@ -262,19 +259,11 @@
         dispatch_semaphore_signal(semaphore);
       }
 
-      BOOL needLayoutBefore = false;
-      NSMutableSet *registeredViews = ((REAUIManager *)strongSelf.uiManager).registeredViews;
       for (int i = 0; i < copiedOperationsQueue.count; i++) {
-        if (!needLayoutBefore && ![registeredViews containsObject:copiedTagsInBatch[i]]) {
-          needLayoutBefore = true;
-        }
         copiedOperationsQueue[i](strongSelf.uiManager);
       }
 
       if (canUpdateSynchronously) {
-        if (needLayoutBefore) {
-          //          [strongSelf.uiManager setNeedsLayout];
-        }
         [strongSelf.uiManager runSyncUIUpdatesWithObserver:self];
         dispatch_semaphore_signal(semaphore);
       }
@@ -305,7 +294,6 @@
   [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
     [uiManager updateView:reactTag viewName:viewName props:nativeProps];
   }];
-  [_tagsInBatch addObject:reactTag];
 }
 
 - (void)getValue:(REANodeID)nodeID callback:(RCTResponseSenderBlock)callback
@@ -532,8 +520,7 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  BOOL isMount = [((REAUIManager *)_uiManager).registeredViews containsObject:viewTag];
-  if (!isMount) {
+  if (![_mountedViews containsObject:viewTag]) {
     // todo: dorobić merge słowników jeśli już był jakiś update zapisany
     ComponentUpdate *backupData = [ComponentUpdate new];
     backupData.props = props;
@@ -596,7 +583,17 @@
   if (componentUpdate == Nil) {
     return;
   }
-  [self updateProps:componentUpdate.props ofViewWithTag:componentUpdate.viewTag withName:componentUpdate.viewName];
+  __weak typeof(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^void() {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    [strongSelf updateProps:componentUpdate.props
+              ofViewWithTag:componentUpdate.viewTag
+                   withName:componentUpdate.viewName];
+    [strongSelf performOperations];
+  });
   [_componentUpdateBuffer removeObjectForKey:viewTag];
 }
 

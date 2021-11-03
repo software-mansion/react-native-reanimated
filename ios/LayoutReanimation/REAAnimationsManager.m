@@ -229,7 +229,6 @@
 - (void)onViewRemoval:(UIView *)view before:(REASnapshot *)before
 {
   NSNumber *tag = view.reactTag;
-  [_reaUiManager.registeredViews removeObject:tag];
   ViewState state = [_states[tag] intValue];
   if (state == Disappearing || state == ToRemove || tag == nil) {
     return;
@@ -252,10 +251,6 @@
 {
   _reaUiManager.flushUiOperations();
   NSNumber *tag = view.reactTag;
-  [_reaUiManager.registeredViews addObject:tag];
-  REAModule *reanimatedModule = [_reaUiManager.bridge moduleForClass:[REAModule class]];
-  [((REANodesManager *)(reanimatedModule.nodesManager)) flushUpdateBufferForTag:tag];
-
   if (_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];
     _viewForTag[tag] = view;

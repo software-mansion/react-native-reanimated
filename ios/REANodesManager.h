@@ -18,6 +18,7 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 
 @property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
+@property NSMutableSet<NSNumber *> *_Nullable mountedViews;
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(nonnull RCTUIManager *)uiManager;
 

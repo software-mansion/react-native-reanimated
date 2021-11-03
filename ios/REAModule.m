@@ -173,6 +173,30 @@ RCT_EXPORT_METHOD(triggerRender)
   }];
 }
 
+- (void)uiManagerDidPerformMounting:(RCTUIManager *)uiManager
+{
+  NSMutableSet<NSNumber *> *rootViewTags = [uiManager valueForKey:@"_rootViewTags"];
+  if (rootViewTags.count == 0) {
+    return;
+  }
+  NSMutableDictionary<NSNumber *, UIView *> *viewRegistry = [uiManager valueForKey:@"_viewRegistry"];
+  for (NSNumber *rootViewTag in rootViewTags) {
+    [self flushUpdateBuferDfs:viewRegistry[rootViewTag]];
+  }
+}
+
+- (void)flushUpdateBuferDfs:(UIView *)view
+{
+  if (view.reactTag == Nil) {
+    return;
+  }
+  [_nodesManager.mountedViews addObject:view.reactTag];
+  [_nodesManager flushUpdateBufferForTag:view.reactTag];
+  for (UIView *child in view.reactSubviews) {
+    [self flushUpdateBuferDfs:child];
+  }
+}
+
 #pragma mark-- Events
 
 - (NSArray<NSString *> *)supportedEvents
