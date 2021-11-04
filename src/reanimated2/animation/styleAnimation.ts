@@ -140,7 +140,7 @@ export function withStyleAnimation(
           if (ColorProperties.includes(currentEntry.path[0] as string)) {
             currentStyleAnimation.current = processColor(
               currentStyleAnimation.current
-            );
+            ) as number;
           }
 
           setPath(
