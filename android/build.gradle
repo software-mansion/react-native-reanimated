@@ -1,17 +1,133 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.apache.tools.ant.filters.ReplaceTokens
+import java.util.regex.Pattern
+import java.util.regex.Matcher
+import java.nio.file.Paths
+import groovy.json.JsonSlurper
+
+// TODO: kkafar: handle property passed via local.properties or gradle.properties
+def CLIENT_SIDE_BUILD = System.getenv("CLIENT_SIDE_BUILD") == "True" ?: false
+
+def buildFromSource = !CLIENT_SIDE_BUILD
+
+def reactNative
+if (CLIENT_SIDE_BUILD) {
+    reactNative = file("$projectDir/../../react-native")
+} else {
+    reactNative = file("$projectDir/../node_modules/react-native")
+}
+
+// start -----------------
+
+abstract class replaceSoTask extends DefaultTask {
+    public static String appName = ":app"
+    public static String buildDir = "../../../android/app/build"
+
+    @TaskAction
+    def run() {
+        for (def abiVersion in ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]) {
+            ant.sequential {
+                copy(
+                    tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
+                    file: "../libSo/fbjni/jni/${abiVersion}/libfbjni.so",
+                    overwrite: true
+                )
+            }
+        }
+    }
+}
+
+def aar
+if (CLIENT_SIDE_BUILD) {
+    def reactNativeManifest = file("$reactNative/package.json")
+    def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
+    def reactNativeVersion = reactNativeManifestAsJson.version as String
+    def (major, minor, patch) = reactNativeVersion.tokenize('.')
+    def engine = "jsc"
+
+    def replaceSoTaskDebug
+    def replaceSoTaskRelease
+    if (Integer.parseInt(minor) < 65) {
+        tasks.register("replaceSoTaskDebug", replaceSoTask)
+        tasks.register("replaceSoTaskRelease", replaceSoTask)
+        replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
+        replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
+    }
+
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            if(project.ext.react.enableHermes) {
+                engine = "hermes"
+            }
+
+            if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
+                def projectProperties = project.getProperties()
+                if(!projectProperties.get("reanimated")
+                        || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
+                ) {
+                    def flavorString = getCurrentFlavor()
+                    replaceSoTask.appName = project.getProperties().path
+                    replaceSoTask.buildDir = project.getProperties().buildDir
+                    def appName = project.getProperties().path
+
+                    replaceSoTaskDebug.dependsOn(
+                        project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
+                        project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
+                    )
+                    project.getTasks().getByPath("${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
+
+                    replaceSoTaskRelease.dependsOn(
+                        project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
+                        project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
+                    )
+                    project.getTasks().getByPath("${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
+                }
+            }
+        }
+    })
+
+    def minorCopy = Integer.parseInt(minor)
+    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+
+    while (!aar.exists()) {
+        minorCopy -= 1
+        aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+        if (minorCopy < 63) {
+            println "No aar for react-native-reanimated found. Attempting to build from source."
+            buildFromSource = true
+            break
+        }
+        if (aar.exists()) {
+            println "\n\n\n"
+            println "****************************************************************************************"
+            println "\n\n\n"
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version " . minor . " found."
+            println "Falling back to AAR for react-native version " . minorCopy
+            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
+            println "Please post a pull request to implement support for react-native version " . minor . " to the reanimated repo."
+            println "Thanks!"
+            println "\n\n\n"
+            println "****************************************************************************************"
+
+            artifacts.add("default", aar)
+        }
+    }
+}
+
+// end --------------------
+
+if (!buidFromSource) return
+
 def localProps = new Properties()
+
 def localPropertiesFile = file("local.properties")
 if (localPropertiesFile.exists()) {
     localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
 }
+
 def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
-
-import java.nio.file.Paths
-
-import org.apache.tools.ant.taskdefs.condition.Os
-import org.apache.tools.ant.filters.ReplaceTokens
-
 def reactProperties = new Properties()
-file("$projectDir/../node_modules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+file("$reactNative/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
 def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
@@ -27,15 +143,14 @@ def FBJNI_VERSION = '0.2.2'
 def downloadsDir = new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
-def reactNative = new File("$projectDir/../node_modules/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def HOME = System.getProperty("user.home")
 
-def _stackProtectorFlag = true;
-def FOR_HERMES = "";
+def _stackProtectorFlag = true
+def FOR_HERMES = ""
 if(findProject(':app')) {
-    FOR_HERMES = project(':app').ext.react.enableHermes;
+    FOR_HERMES = project(':app').ext.react.enableHermes
 }
 else {
     FOR_HERMES = System.getenv("FOR_HERMES") == "True";
@@ -73,11 +188,6 @@ buildscript {
         classpath("de.undercouch:gradle-download-task:4.1.2")
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
-}
-
-
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
 if (project == rootProject) {
@@ -332,6 +442,10 @@ def findNdkBuildFullPath() {
     return null
 }
 
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
 def getNdkBuildFullPath() {
     def ndkBuildFullPath = findNdkBuildFullPath()
     if (ndkBuildFullPath == null) {
@@ -349,6 +463,19 @@ def getNdkBuildFullPath() {
                 null)
     }
     return ndkBuildFullPath
+}
+
+def getCurrentFlavor() {
+    Gradle gradle = getGradle()
+    String taskRequestName = gradle.getStartParameter().getTaskRequests().toString()
+    Pattern pattern = Pattern.compile("(assemble|bundle|install|generate)(\\w*)(Release|Debug)")
+    Matcher matcher = pattern.matcher(taskRequestName)
+
+    if (matcher.find()) {
+        return matcher.group(2)
+    }
+
+    return "NOT-FOUND"
 }
 
 task prepareHermes() {
@@ -496,3 +623,10 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+if (CLIENT_SIDE_BUILD) {
+    aar = file("$buildDir/outputs/mockFileName")
+    if (aar == null) {
+        throw GradleScriptException("TODO: EXCEPTION MESSAGE")
+    }
+    artifacts.add("default", aar)
+}
