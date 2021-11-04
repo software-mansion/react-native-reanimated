@@ -302,8 +302,6 @@
 {
   NSMutableDictionary *targetValues = after.values;
   NSMutableDictionary *startValues = before.values;
-  //  NSDictionary *preparedStartValues = [self prepareDataForAnimatingWorkletWithScreens:startValues];
-  //  NSDictionary *preparedTargetValues = [self prepareDataForAnimatingWorkletWithScreens:targetValues];
   NSMutableDictionary *preparedValues = [NSMutableDictionary new];
   [preparedValues addEntriesFromDictionary:targetValues];
   for (NSString *key in startValues.allKeys) {

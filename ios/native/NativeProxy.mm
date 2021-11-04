@@ -21,6 +21,7 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
+#import <RNScreens/RNSScreen.h>
 #import <RNScreens/RNSSharedElementAnimator.h>
 
 @interface ScreensTransitionDelegate : NSObject <RNSSharedElementTransitionsDelegate>
@@ -30,13 +31,11 @@
 @implementation ScreensTransitionDelegate
 - (void)reanimatedMockTransitionWithConverterView:(UIView *)converter
                                          fromView:(UIView *)fromView
-                                fromViewConverter:fromViewConverter
+                                fromViewConverter:(UIView *)startingViewConverter
                                            toView:(UIView *)toView
-                                  toViewConverter:toViewConverter
-                                        swapViews:(BOOL)swapViews
+                                  toViewConverter:(UIView *)toViewConverter
 {
-  REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:fromViewConverter];
-
+  REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
   REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
   [_animationsManager onViewTransition:fromView before:before after:after];
 }
@@ -107,7 +106,9 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(RCTBridge *bridge, std::shared_ptr<CallInvoker> jsInvoker)
+std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+    RCTBridge *bridge,
+    std::shared_ptr<CallInvoker> jsInvoker)
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
