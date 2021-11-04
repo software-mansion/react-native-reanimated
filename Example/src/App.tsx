@@ -1,5 +1,6 @@
 import ChessboardFastExample from './Fabric/ChessboardFastExample';
 import ChessboardSlowExample from './Fabric/ChessboardSlowExample';
+import ColorExample from './Fabric/ColorExample';
 import ConditionalExample from './Fabric/ConditionalExample';
 import DifferentSubtreesExample from './Fabric/DifferentSubtreesExample';
 import FlexExample from './Fabric/FlexExample';
@@ -10,4 +11,4 @@ import ScrollViewExample from './Fabric/ScrollViewExample';
 import TernaryExample from './Fabric/TernaryExample';
 import UIPropsExample from './Fabric/UIPropsExample';
 
-export default DifferentSubtreesExample;
+export default ColorExample;

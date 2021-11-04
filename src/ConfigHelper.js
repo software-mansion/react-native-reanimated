@@ -6,15 +6,6 @@ import ReanimatedModule from './ReanimatedModule';
 let UI_THREAD_PROPS_WHITELIST = {
   opacity: true,
   transform: true,
-  /* colors */
-  backgroundColor: true,
-  borderRightColor: true,
-  borderBottomColor: true,
-  borderColor: true,
-  borderEndColor: true,
-  borderLeftColor: true,
-  borderStartColor: true,
-  borderTopColor: true,
   /* ios styles */
   shadowOpacity: true,
   shadowRadius: true,
@@ -29,6 +20,14 @@ let UI_THREAD_PROPS_WHITELIST = {
  * Whitelist of view props that can be updated in native thread via UIManagerModule
  */
 let NATIVE_THREAD_PROPS_WHITELIST = {
+  backgroundColor: true,
+  borderRightColor: true,
+  borderBottomColor: true,
+  borderColor: true,
+  borderEndColor: true,
+  borderLeftColor: true,
+  borderStartColor: true,
+  borderTopColor: true,
   borderBottomWidth: true,
   borderEndWidth: true,
   borderLeftWidth: true,
