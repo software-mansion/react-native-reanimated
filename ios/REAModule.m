@@ -195,7 +195,8 @@ RCT_EXPORT_METHOD(triggerRender)
     [_nodesManager.mountedViews addObject:view.reactTag];
     [_nodesManager flushUpdateBufferForTag:view.reactTag];
   }
-  for (UIView *child in view.reactSubviews) {
+  NSArray<UIView *> *reactSubviewsCopy = [view.reactSubviews copy];
+  for (UIView *child in reactSubviewsCopy) {
     [self viewTreeDfs:child];
   }
 }
