@@ -92,6 +92,12 @@ function onlyAnimatedStyles(styles: StyleProps[]) {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
+function isSameAnimatedStyle(style1: StyleProps, style2: StyleProps): boolean {
+  // We cannot use equality check to compare useAnimatedStyle outputs directly.
+  // Instead, we can compare its viewsRefs.
+  return style1.viewsRef === style2.viewsRef;
+}
+
 const has = <K extends string>(
   key: K,
   x: unknown
@@ -430,13 +436,19 @@ export default function createAnimatedComponent(
 
       // remove old styles
       if (prevStyles) {
+        // in most of the cases, views have only a single animated style and it remains unchanged
         const hasOneSameStyle =
           styles.length === 1 &&
           prevStyles.length === 1 &&
-          styles[0] === prevStyles[0]; // optimization
+          isSameAnimatedStyle(styles[0], prevStyles[0]);
+
         if (!hasOneSameStyle) {
+          // otherwise, remove each style that is not present in new styles
           for (const prevStyle of prevStyles) {
-            if (!styles.includes(prevStyle)) {
+            const isPresent = styles.some((style) =>
+              isSameAnimatedStyle(style, prevStyle)
+            );
+            if (!isPresent) {
               prevStyle.viewDescriptors.remove(viewTag);
             }
           }
