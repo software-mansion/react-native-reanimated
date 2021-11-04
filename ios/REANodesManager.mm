@@ -234,6 +234,9 @@ using namespace facebook::react;
                     };
 
                 newRoot = newRoot->cloneTree(family, callback);
+                if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
+                    break; // cancel transaction by returning null RootShadowNode
+                }
             }
 
             return std::static_pointer_cast<RootShadowNode>(newRoot);
