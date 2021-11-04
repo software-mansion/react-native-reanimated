@@ -48,6 +48,16 @@ function flattenArray(array) {
   return resultArr;
 }
 
+function onlyAnimatedStyles(styles) {
+  return styles.filter((style) => style?.viewDescriptors);
+}
+
+function isSameAnimatedStyle(style1, style2) {
+  // We cannot use equality check to compare useAnimatedStyle outputs directly.
+  // Instead, we can compare its viewsRefs.
+  return style1.viewsRef === style2.viewsRef;
+}
+
 export default function createAnimatedComponent(Component, options = {}) {
   invariant(
     typeof Component !== 'function' ||
@@ -133,9 +143,7 @@ export default function createAnimatedComponent(Component, options = {}) {
         }
       } else if (this._viewTag !== -1) {
         for (const style of this._styles) {
-          if (style?.viewDescriptors) {
-            style.viewDescriptors.remove(this._viewTag);
-          }
+          style.viewDescriptors.remove(this._viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
@@ -221,8 +229,15 @@ export default function createAnimatedComponent(Component, options = {}) {
     }
 
     _attachAnimatedStyles() {
-      const styles = flattenArray(this.props.style);
+      const styles = this.props.style
+        ? onlyAnimatedStyles(flattenArray(this.props.style))
+        : [];
+      const prevStyles = this._styles;
       this._styles = styles;
+
+      const prevAnimatedProps = this._animatedProps;
+      this._animatedProps = this.props.animatedProps;
+
       let viewTag, viewName, shareableNode;
       if (Platform.OS === 'web') {
         viewTag = findNodeHandle(this);
@@ -244,35 +259,62 @@ export default function createAnimatedComponent(Component, options = {}) {
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (
-          hostInstance &&
-          this._hasReanimated2Props(styles) &&
-          hostInstance.viewConfig
-        ) {
+        const hasReanimated2Props =
+          this.props.animatedProps?.viewDescriptors || styles.length;
+        if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
         shareableNode = hostInstance._internalInstanceHandle.stateNode.node; // ShadowNodeWrapper
       }
       this._viewTag = viewTag;
 
-      styles.forEach((style) => {
-        if (style?.viewDescriptors) {
-          style.viewDescriptors.add({ tag: viewTag, name: viewName, shareableNode });
-          if (isJest()) {
-            /**
-             * We need to connect Jest's TestObject instance whose contains just props object
-             * with the updateProps() function where we update the properties of the component.
-             * We can't update props object directly because TestObject contains a copy of props - look at render function:
-             * const props = this._filterNonAnimatedProps(this.props);
-             */
-            this.animatedStyle.value = {
-              ...this.animatedStyle.value,
-              ...style.initial.value,
-            };
-            style.animatedStyle.current = this.animatedStyle;
+      // remove old styles
+      if (prevStyles) {
+        // in most of the cases, views have only a single animated style and it remains unchanged
+        const hasOneSameStyle =
+          styles.length === 1 &&
+          prevStyles.length === 1 &&
+          isSameAnimatedStyle(styles[0], prevStyles[0]);
+
+        if (!hasOneSameStyle) {
+          // otherwise, remove each style that is not present in new styles
+          for (const prevStyle of prevStyles) {
+            const isPresent = styles.some((style) =>
+              isSameAnimatedStyle(style, prevStyle)
+            );
+            if (!isPresent) {
+              prevStyle.viewDescriptors.remove(viewTag);
+            }
           }
         }
+      }
+
+      styles.forEach((style) => {
+        style.viewDescriptors.add({
+          tag: viewTag,
+          name: viewName,
+          shareableNode,
+        });
+        if (isJest()) {
+          /**
+           * We need to connect Jest's TestObject instance whose contains just props object
+           * with the updateProps() function where we update the properties of the component.
+           * We can't update props object directly because TestObject contains a copy of props - look at render function:
+           * const props = this._filterNonAnimatedProps(this.props);
+           */
+          this.animatedStyle.value = {
+            ...this.animatedStyle.value,
+            ...style.initial.value,
+          };
+          style.animatedStyle.current = this.animatedStyle;
+        }
       });
+
+      // detach old animatedProps
+      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
+        prevAnimatedProps.viewDescriptors.remove(viewTag);
+      }
+
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
@@ -280,21 +322,6 @@ export default function createAnimatedComponent(Component, options = {}) {
           name: viewName,
         });
       }
-    }
-
-    _hasReanimated2Props(flattenStyles) {
-      if (this.props.animatedProps?.viewDescriptors) {
-        return true;
-      }
-      if (this.props.style) {
-        for (const style of flattenStyles) {
-          // eslint-disable-next-line no-prototype-builtins
-          if (style?.hasOwnProperty('viewDescriptors')) {
-            return true;
-          }
-        }
-      }
-      return false;
     }
 
     _detachPropUpdater() {
