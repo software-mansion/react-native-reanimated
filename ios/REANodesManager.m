@@ -111,6 +111,7 @@
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
@@ -126,7 +127,7 @@
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
     _componentUpdateBuffer = [NSMutableDictionary new];
-    _mountedViews = [NSMutableSet new];
+    _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -519,7 +520,7 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  if (![_mountedViews containsObject:viewTag]) {
+  if (_viewRegistry[viewTag].superview == nil) {
     ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
@@ -585,24 +586,34 @@
   return result;
 }
 
-- (void)flushUpdateBufferForTag:(nonnull NSNumber *)viewTag;
+- (void)tryToFlushUpdateBuffer
 {
-  ComponentUpdate *componentUpdate = _componentUpdateBuffer[viewTag];
-  if (componentUpdate == Nil) {
+  if (_componentUpdateBuffer.count == 0) {
     return;
   }
-  __weak typeof(self) weakSelf = self;
-  RCTExecuteOnMainQueue(^void() {
-    __typeof__(self) strongSelf = weakSelf;
-    if (strongSelf == nil) {
+
+  NSMutableArray *flushedTags = [NSMutableArray new];
+  for (NSNumber *tag in _componentUpdateBuffer) {
+    ComponentUpdate *componentUpdate = _componentUpdateBuffer[tag];
+    if (componentUpdate == Nil) {
       return;
     }
-    [strongSelf updateProps:componentUpdate.props
-              ofViewWithTag:componentUpdate.viewTag
-                   withName:componentUpdate.viewName];
-    [strongSelf performOperations];
-  });
-  [_componentUpdateBuffer removeObjectForKey:viewTag];
+    __weak typeof(self) weakSelf = self;
+    RCTExecuteOnMainQueue(^void() {
+      __typeof__(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
+      [strongSelf updateProps:componentUpdate.props
+                ofViewWithTag:componentUpdate.viewTag
+                     withName:componentUpdate.viewName];
+      [strongSelf performOperations];
+    });
+    [flushedTags addObject:tag];
+  }
+  if (flushedTags.count > 0) {
+    [_componentUpdateBuffer removeObjectsForKeys:flushedTags];
+  }
 }
 
 @end

@@ -175,30 +175,7 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (void)uiManagerDidPerformMounting:(RCTUIManager *)uiManager
 {
-  NSMutableSet<NSNumber *> *rootViewTags = [uiManager valueForKey:@"_rootViewTags"];
-  if (rootViewTags.count == 0) {
-    return;
-  }
-  NSMutableDictionary<NSNumber *, UIView *> *viewRegistry = [uiManager valueForKey:@"_viewRegistry"];
-  for (NSNumber *rootViewTag in rootViewTags) {
-    [self viewTreeDfs:viewRegistry[rootViewTag]];
-  }
-}
-
-- (void)viewTreeDfs:(UIView *)view
-{
-  if (view.reactTag == Nil) {
-    return;
-  }
-  NSNumber *tag = view.reactTag;
-  if (![_nodesManager.mountedViews containsObject:tag]) {
-    [_nodesManager.mountedViews addObject:view.reactTag];
-    [_nodesManager flushUpdateBufferForTag:view.reactTag];
-  }
-  NSArray<UIView *> *reactSubviewsCopy = [view.reactSubviews copy];
-  for (UIView *child in reactSubviewsCopy) {
-    [self viewTreeDfs:child];
-  }
+  [_nodesManager tryToFlushUpdateBuffer];
 }
 
 #pragma mark-- Events
