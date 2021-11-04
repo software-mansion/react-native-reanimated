@@ -56,11 +56,8 @@ export default function TernaryExample() {
             style={[
               { width: 20, height: 20, backgroundColor: 'black' },
               style2,
-            ]}>
-            <View collapsable={false}>
-              <View collapsable={false}></View>
-            </View>
-          </Animated.View>
+            ]}
+          />
         </Animated.View>
       ) : (
         <Animated.View
