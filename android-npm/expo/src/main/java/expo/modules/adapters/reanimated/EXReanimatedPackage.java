@@ -38,7 +38,7 @@ public class EXReanimatedPackage implements Package {
       }
 
       @Override
-      public void onBeforeCreateReactInstanceManager(boolean useDeveloperSupport) {
+      public void onWillCreateReactInstanceManager(boolean useDeveloperSupport) {
 
       }
 
