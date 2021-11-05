@@ -5,19 +5,10 @@ import java.util.regex.Matcher
 import java.nio.file.Paths
 import groovy.json.JsonSlurper
 
-// TODO: kkafar: handle property passed via local.properties or gradle.properties
-def CLIENT_SIDE_BUILD = System.getenv("CLIENT_SIDE_BUILD") == "True" ?: false
-
+def CLIENT_SIDE_BUILD = detectBuildType()
 def buildFromSource = !CLIENT_SIDE_BUILD
 
-def reactNative
-if (CLIENT_SIDE_BUILD) {
-    reactNative = file("$projectDir/../../react-native")
-} else {
-    reactNative = file("$projectDir/../node_modules/react-native")
-}
-
-// start -----------------
+def reactNative = getReactNativeDir(CLIENT_SIDE_BUILD)
 
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
@@ -39,6 +30,7 @@ abstract class replaceSoTask extends DefaultTask {
 
 def aar
 if (CLIENT_SIDE_BUILD) {
+    configurations.maybeCreate("default")
     def reactNativeManifest = file("$reactNative/package.json")
     def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
     def reactNativeVersion = reactNativeManifestAsJson.version as String
@@ -56,13 +48,13 @@ if (CLIENT_SIDE_BUILD) {
 
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
-            if(project.ext.react.enableHermes) {
+            if (project.ext.react.enableHermes) {
                 engine = "hermes"
             }
 
-            if(project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
+            if (project.getProperties().get("android") && Integer.parseInt(minor) < 65) {
                 def projectProperties = project.getProperties()
-                if(!projectProperties.get("reanimated")
+                if (!projectProperties.get("reanimated")
                         || (projectProperties.get("reanimated") && projectProperties.get("reanimated").get("enablePackagingOptions"))
                 ) {
                     def flavorString = getCurrentFlavor()
@@ -114,9 +106,7 @@ if (CLIENT_SIDE_BUILD) {
     }
 }
 
-// end --------------------
-
-if (!buidFromSource) return
+if (!buildFromSource) return
 
 def localProps = new Properties()
 
@@ -184,8 +174,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.2.2')
-        classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath "com.android.tools.build:gradle:4.2.2"
+        classpath "de.undercouch:gradle-download-task:4.1.2"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
@@ -478,6 +468,26 @@ def getCurrentFlavor() {
     return "NOT-FOUND"
 }
 
+def detectBuildType() {
+    if (hasProperty("clientSideBuild")) {
+        return property("clientSideBuild") == "true"
+    }
+    def buildType = System.getenv("CLIENT_SIDE_BUILD")
+    if (buildType == null) {
+        return "$rootDir" != "$projectDir"
+    } else {
+        return buildType == "True"
+    }
+}
+
+def getReactNativeDir(boolean clientSideBuild) {
+    if (clientSideBuild) {
+        return file("$projectDir/../../react-native")
+    } else {
+        return file("$projectDir/../node_modules/react-native")
+    }
+}
+
 task prepareHermes() {
     def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
     if (!hermesPackagePath) {
@@ -624,7 +634,7 @@ tasks.whenTaskAdded { task ->
 }
 
 if (CLIENT_SIDE_BUILD) {
-    aar = file("$buildDir/outputs/mockFileName")
+    aar = file("$buildDir/outputs/android-debug.aar")
     if (aar == null) {
         throw GradleScriptException("TODO: EXCEPTION MESSAGE")
     }
