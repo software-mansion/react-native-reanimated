@@ -156,6 +156,7 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
+  [_nodesManager tryToFlushUpdateBuffer];
   if (_operations.count == 0) {
     return;
   }
@@ -171,11 +172,6 @@ RCT_EXPORT_METHOD(triggerRender)
     }
     [nodesManager operationsBatchDidComplete];
   }];
-}
-
-- (void)uiManagerDidPerformMounting:(RCTUIManager *)uiManager
-{
-  [_nodesManager tryToFlushUpdateBuffer];
 }
 
 #pragma mark-- Events
