@@ -169,9 +169,13 @@ RCT_EXPORT_METHOD(triggerRender)
     for (AnimatedOperation operation in operations) {
       operation(nodesManager);
     }
-    [nodesManager tryToFlushUpdateBuffer];
     [nodesManager operationsBatchDidComplete];
   }];
+}
+
+- (void)uiManagerDidPerformMounting:(RCTUIManager *)uiManager
+{
+  [_nodesManager tryToFlushUpdateBuffer];
 }
 
 #pragma mark-- Events
