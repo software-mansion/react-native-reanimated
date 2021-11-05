@@ -592,28 +592,25 @@
     return;
   }
 
-  NSMutableArray *flushedTags = [NSMutableArray new];
-  for (NSNumber *tag in _componentUpdateBuffer) {
-    ComponentUpdate *componentUpdate = _componentUpdateBuffer[tag];
-    if (componentUpdate == Nil) {
+  __weak typeof(self) weakSelf = self;
+  RCTExecuteOnMainQueue(^void() {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
       return;
     }
-    __weak typeof(self) weakSelf = self;
-    RCTExecuteOnMainQueue(^void() {
-      __typeof__(self) strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
+    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+    for (NSNumber *tag in componentUpdateBuffer) {
+      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+      if (componentUpdate == Nil) {
+        continue;
       }
       [strongSelf updateProps:componentUpdate.props
                 ofViewWithTag:componentUpdate.viewTag
                      withName:componentUpdate.viewName];
-      [strongSelf performOperations];
-    });
-    [flushedTags addObject:tag];
-  }
-  if (flushedTags.count > 0) {
-    [_componentUpdateBuffer removeObjectsForKeys:flushedTags];
-  }
+    }
+    [strongSelf performOperations];
+  });
 }
 
 @end
