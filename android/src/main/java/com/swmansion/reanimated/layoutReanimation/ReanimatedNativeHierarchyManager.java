@@ -100,14 +100,32 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    */
   public void deleteView(final View view, final LayoutAnimationListener listener) {
     UiThreadUtil.assertOnUiThread();
+    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
+    ViewManager viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
+    // we don't want layout animations in native-stack since it is currently buggy there
+    // so we check if it is a (grand)child of ScreenStack
+    if (viewManager instanceof ViewManager
+        && viewManager.getName().equals("RNSScreen")
+        && view.getParent() != null
+        && view.getParent().getParent() instanceof View) {
+      // we check grandparent of Screen since the parent is a ScreenStackFragment
+      ViewManager screenParentViewManager =
+          nativeViewHierarchyManager.resolveViewManager(
+              ((View) view.getParent().getParent()).getId());
+      if (screenParentViewManager != null) {
+        String parentName = screenParentViewManager.getName();
+        if (parentName.equals("RNSScreenStack")) {
+          super.deleteView(view, listener);
+          return;
+        }
+      }
+    }
     maybeInit();
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
-    ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
+    if (viewManager instanceof ViewGroupManager) {
+      ViewGroupManager vgm = (ViewGroupManager) viewManager;
       for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
         dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
       }
@@ -206,6 +224,13 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       @Nullable int[] tagsToDelete) {
     ViewGroup viewGroup = (ViewGroup) resolveView(tag);
     ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+
+    // we don't want layout animations in native-stack since it is currently buggy there
+    if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      return;
+    }
+
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
       HashSet<Integer> tagsToRemove = new HashSet<Integer>();
