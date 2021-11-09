@@ -4,7 +4,7 @@ import {
   Animation,
   AnimationCallback,
   Timestamp,
-  PrimitiveValue,
+  AnimatableValue,
 } from './commonTypes';
 
 interface TimingConfig {
@@ -15,11 +15,11 @@ interface TimingConfig {
 export interface TimingAnimation extends Animation<TimingAnimation> {
   type: string;
   easing: EasingFn;
-  startValue: PrimitiveValue;
+  startValue: AnimatableValue;
   startTime: Timestamp;
   progress: number;
-  toValue: PrimitiveValue;
-  current: PrimitiveValue;
+  toValue: AnimatableValue;
+  current: AnimatableValue;
 }
 
 export interface InnerTimingAnimation
@@ -29,7 +29,7 @@ export interface InnerTimingAnimation
 }
 
 export function withTiming(
-  toValue: PrimitiveValue,
+  toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
 ): Animation<TimingAnimation> {

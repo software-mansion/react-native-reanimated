@@ -28,4 +28,4 @@ jobs:
       - name: Check types
         run: yarn tsc --noEmit
       - name: Lint
-        run: yarn lint-check
+        run: yarn lint:js

@@ -3,7 +3,7 @@ import {
   AnimationObject,
   HigherOrderAnimation,
   NextAnimation,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
 } from './commonTypes';
 /* global _WORKLET */
@@ -32,7 +32,7 @@ interface RecognizedPrefixSuffix {
   strippedValue: number;
 }
 
-function recognizePrefixSuffix(value: PrimitiveValue): RecognizedPrefixSuffix {
+function recognizePrefixSuffix(value: string | number): RecognizedPrefixSuffix {
   'worklet';
   if (typeof value === 'string') {
     const match = value.match(
@@ -68,7 +68,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
   const prefNumberSuffOnStart = (
     animation: Animation<AnimationObject>,
-    value: PrimitiveValue,
+    value: string | number,
     timestamp: number,
     previousAnimation: Animation<AnimationObject>
   ) => {
@@ -78,7 +78,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation.__suffix = suffix;
     animation.strippedCurrent = strippedValue;
     const { strippedValue: strippedToValue } = recognizePrefixSuffix(
-      animation.toValue as PrimitiveValue
+      animation.toValue as string | number
     );
     animation.current = strippedValue;
     animation.startValue = strippedValue;
@@ -167,6 +167,41 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     return finished;
   };
 
+  const arrayOnStart = (
+    animation: Animation<AnimationObject>,
+    value: Array<number>,
+    timestamp: Timestamp,
+    previousAnimation: Animation<AnimationObject>
+  ): void => {
+    value.forEach((v, i) => {
+      animation[i] = Object.assign({}, animationCopy);
+      animation[i].current = v;
+      animation[i].toValue = (animation.toValue as Array<number>)[i];
+      animation[i].onStart(
+        animation[i],
+        v,
+        timestamp,
+        previousAnimation ? previousAnimation[i] : undefined
+      );
+    });
+
+    animation.current = value;
+  };
+
+  const arrayOnFrame = (
+    animation: Animation<AnimationObject>,
+    timestamp: Timestamp
+  ): boolean => {
+    let finished = true;
+    (animation.current as Array<number>).forEach((v, i) => {
+      // @ts-ignore: disable-next-line
+      finished &= animation[i].onFrame(animation[i], timestamp);
+      (animation.current as Array<number>)[i] = animation[i].current;
+    });
+
+    return finished;
+  };
+
   animation.onStart = (
     animation: Animation<AnimationObject>,
     value: number,
@@ -176,6 +211,10 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     if (isColor(value)) {
       colorOnStart(animation, value, timestamp, previousAnimation);
       animation.onFrame = colorOnFrame;
+      return;
+    } else if (Array.isArray(value)) {
+      arrayOnStart(animation, value, timestamp, previousAnimation);
+      animation.onFrame = arrayOnFrame;
       return;
     } else if (typeof value === 'string') {
       prefNumberSuffOnStart(animation, value, timestamp, previousAnimation);
@@ -196,7 +235,7 @@ type AnimationToDecoration<
   ? NextAnimation<RepeatAnimation>
   : T extends SequenceAnimation
   ? NextAnimation<SequenceAnimation>
-  : PrimitiveValue | T;
+  : AnimatableValue | T;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation
@@ -227,7 +266,7 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
 
 // TODO it should work only if there was no animation before.
 export function withStartValue(
-  startValue: PrimitiveValue,
+  startValue: AnimatableValue,
   animation: NextAnimation<AnimationObject>
 ): Animation<AnimationObject> {
   'worklet';

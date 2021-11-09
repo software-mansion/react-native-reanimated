@@ -31,7 +31,7 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimationObject, PrimitiveValue } from '../animation/commonTypes';
+import { AnimationObject } from '../animation/commonTypes';
 import {
   AdapterWorkletFunction,
   AnimatedStyle,
@@ -122,7 +122,7 @@ function prepareAnimation(
 function runAnimations(
   animation: AnimatedStyle,
   timestamp: Timestamp,
-  key: PrimitiveValue,
+  key: number | string,
   result: AnimatedStyle,
   animationsActive: SharedValue<boolean>
 ): boolean {

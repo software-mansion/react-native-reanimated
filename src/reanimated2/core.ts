@@ -10,7 +10,7 @@ import {
 } from './commonTypes';
 import {
   AnimationObject,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
 } from './animation/commonTypes';
 import { Descriptor } from './hook/commonTypes';
@@ -35,13 +35,13 @@ export type ReanimatedConsole = Pick<
 export type WorkletValue =
   | (() => AnimationObject)
   | AnimationObject
-  | PrimitiveValue
+  | AnimatableValue
   | Descriptor;
 interface WorkletValueSetterContext {
   _animation?: AnimationObject | null;
-  _value?: PrimitiveValue | Descriptor;
-  value?: PrimitiveValue;
-  _setValue?: (val: PrimitiveValue | Descriptor) => void;
+  _value?: AnimatableValue | Descriptor;
+  value?: AnimatableValue;
+  _setValue?: (val: AnimatableValue | Descriptor) => void;
 }
 
 const testWorklet: BasicWorkletFunction<void> = () => {
@@ -252,7 +252,7 @@ function workletValueSetter<T extends WorkletValue>(
     if (this._value === value) {
       return;
     }
-    this._value = value as Descriptor | PrimitiveValue;
+    this._value = value as Descriptor | AnimatableValue;
   }
 }
 
@@ -294,7 +294,7 @@ function workletValueSetterJS<T extends WorkletValue>(
       }
       const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
-      this._setValue && this._setValue(animation.current as PrimitiveValue);
+      this._setValue && this._setValue(animation.current as AnimatableValue);
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -306,7 +306,7 @@ function workletValueSetterJS<T extends WorkletValue>(
 
     requestFrame(step);
   } else {
-    this._setValue && this._setValue(value as PrimitiveValue | Descriptor);
+    this._setValue && this._setValue(value as AnimatableValue | Descriptor);
   }
 }
 

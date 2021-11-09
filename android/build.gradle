@@ -32,6 +32,7 @@ def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/thi
 
 def HOME = System.getProperty("user.home")
 
+def _stackProtectorFlag = true;
 def FOR_HERMES = "";
 if(findProject(':app')) {
     FOR_HERMES = project(':app').ext.react.enableHermes;
@@ -70,12 +71,17 @@ buildscript {
     dependencies {
         classpath('com.android.tools.build:gradle:4.2.2')
         classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
 
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+if (project == rootProject) {
+    apply from: 'spotless.gradle'
 }
 
 apply plugin: 'com.android.library'
@@ -103,6 +109,7 @@ android {
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+                _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
 
@@ -122,7 +129,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = ["**/libc++_shared.so", "**/libfbjni.so"]
+        excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libjsi.so"]
     }
 
     tasks.withType(JavaCompile) {
@@ -312,7 +319,7 @@ def findNdkBuildFullPath() {
             return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
         }
     }
-    
+
     def Properties properties = new Properties()
     if (rootProject.file("local.properties").exists()) {
         properties.load(project.rootProject.file("local.properties").newDataInputStream())

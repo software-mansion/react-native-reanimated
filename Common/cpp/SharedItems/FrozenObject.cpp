@@ -27,9 +27,7 @@ jsi::Object FrozenObject::shallowClone(jsi::Runtime &rt) {
   for (auto propName : namesOrder) {
     auto value = map[propName];
     object.setProperty(
-        rt,
-        jsi::String::createFromUtf8(rt, propName),
-        value->getValue(rt));
+        rt, jsi::String::createFromUtf8(rt, propName), value->getValue(rt));
   }
   return object;
 }

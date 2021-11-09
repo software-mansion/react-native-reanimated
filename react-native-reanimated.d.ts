@@ -36,6 +36,18 @@ declare module 'react-native-reanimated' {
     GestureHandlerGestureEvent,
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
+
+  export {
+    Animation,
+    TimingAnimation,
+    SpringAnimation,
+    DecayAnimation,
+    DelayAnimation,
+    RepeatAnimation,
+    SequenceAnimation,
+    StyleLayoutAnimation,
+  } from './src/reanimated2/animation/index';
+
   namespace Animated {
     type Nullable<T> = T | null | undefined;
     class AnimatedNode<T> {
@@ -479,7 +491,7 @@ declare module 'react-native-reanimated' {
     build: () => EntryExitAnimationFunction;
   }
 
-  export type PrimitiveValue = number | string;
+  export type AnimatableValue = number | string | Array<number>;
 
   // reanimated2 derived operations
   export enum Extrapolation {
@@ -511,7 +523,7 @@ declare module 'react-native-reanimated' {
   // reanimated2 animations
   export type AnimationCallback = (
     finished?: boolean,
-    current?: PrimitiveValue
+    current?: AnimatableValue
   ) => void;
   export interface WithTimingConfig {
     duration?: number;
@@ -533,12 +545,12 @@ declare module 'react-native-reanimated' {
     velocity?: number;
   }
   export function withTiming(
-    toValue: PrimitiveValue,
+    toValue: AnimatableValue,
     userConfig?: WithTimingConfig,
     callback?: AnimationCallback
   ): number;
   export function withSpring(
-    toValue: PrimitiveValue,
+    toValue: AnimatableValue,
     userConfig?: WithSpringConfig,
     callback?: AnimationCallback
   ): number;

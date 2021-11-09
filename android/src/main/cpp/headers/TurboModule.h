@@ -39,7 +39,7 @@ class JSI_EXPORT TurboModule : public facebook::jsi::HostObject {
   TurboModule(const std::string &name, std::shared_ptr<CallInvoker> jsInvoker);
   virtual ~TurboModule();
 
-  virtual facebook::jsi::Value get(
+  facebook::jsi::Value get(
       facebook::jsi::Runtime &runtime,
       const facebook::jsi::PropNameID &propName) override;
 
