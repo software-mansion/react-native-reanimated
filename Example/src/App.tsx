@@ -12,5 +12,6 @@ import ParentAndChildExample from './Fabric/ParentAndChildExample';
 import ScrollViewExample from './Fabric/ScrollViewExample';
 import TernaryExample from './Fabric/TernaryExample';
 import UIPropsExample from './Fabric/UIPropsExample';
+import WorkletExample from './Fabric/WorkletExample';
 
-export default LayoutTransitionExample;
+export default WorkletExample;
