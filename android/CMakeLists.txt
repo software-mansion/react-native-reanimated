@@ -9,40 +9,31 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
+set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-#set (NODE_MODULES_DIR "../node_modules")
-#set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
-#set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
-#
-## reanimated shared
-#
-#file(GLOB sources_tools  "./src/main/Common/cpp/Tools/*.cpp")
-#file(GLOB sources_native_modules  "./src/main/Common/cpp/NativeModules/*.cpp")
-#file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
-#file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
-#file(GLOB sources_android  "./src/main/cpp/*.cpp")
-
-message(DEBUG "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
-message(DEBUG "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
+message(WARNING "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 if(${CLIENT_SIDE_BUILD})
-    set (NODE_MODULES_DIR  "../../node_modules")
-    message(DEBUG "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
+    set (NODE_MODULES_DIR  "${CMAKE_SOURCE_DIR}/../../")
+    set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
 else()
     set (NODE_MODULES_DIR "../node_modules")
-    message(DEBUG "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
+    set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
+
+message(WARNING  "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
 
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
 # reanimated shared
 
-file(GLOB sources_tools  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/Tools/*.cpp")
-file(GLOB sources_native_modules  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/NativeModules/*.cpp")
-file(GLOB sources_shared_items  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/SharedItems/*.cpp")
-file(GLOB sources_registries  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/Registries/*.cpp")
-file(GLOB sources_android  "${CMAKE_SOURCE_DIR}/src/main/cpp/*.cpp")
+file(GLOB sources_tools  "${COMMON_SRC_DIR}/cpp/Tools/*.cpp")
+file(GLOB sources_native_modules  "${COMMON_SRC_DIR}/cpp/NativeModules/*.cpp")
+file(GLOB sources_shared_items  "${COMMON_SRC_DIR}/cpp/SharedItems/*.cpp")
+file(GLOB sources_registries  "${COMMON_SRC_DIR}/cpp/Registries/*.cpp")
+file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
@@ -66,13 +57,12 @@ add_library(
         ${source_tools}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
-        "./src/main/Common/cpp/Tools/Mapper.cpp"
-        "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
-        "./src/main/Common/cpp/Tools/Scheduler.cpp"
-        "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
-        "./src/main/Common/cpp/Tools/FeaturesConfig.cpp"
-        "./src/main/Common/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/JSIStoreValueUser.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Mapper.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/RuntimeDecorator.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Scheduler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
 # includes
@@ -97,14 +87,14 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
         "${NODE_MODULES_DIR}/hermes-engine/android/include/"
-        "./src/main/Common/cpp/headers/Tools"
-        "./src/main/Common/cpp/headers/SpecTools"
-        "./src/main/Common/cpp/headers/NativeModules"
-        "./src/main/Common/cpp/headers/SharedItems"
-        "./src/main/Common/cpp/headers/Registries"
-        "./src/main/Common/cpp/headers/LayoutAnimations"
-        "./src/main/Common/cpp/hidden_headers"
-        "./src/main/cpp/headers"
+        "${COMMON_SRC_DIR}/cpp/headers/Tools"
+        "${COMMON_SRC_DIR}/cpp/headers/SpecTools"
+        "${COMMON_SRC_DIR}/cpp/headers/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/headers/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/headers/Registries"
+        "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/hidden_headers"
+        "${SRC_DIR}/main/cpp/headers"
 )
 
 # find libraries
