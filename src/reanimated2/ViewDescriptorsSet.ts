@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { makeMutable } from './core';
 import { SharedValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
-import { Platform } from 'react-native'
+import { Platform } from 'react-native';
 
 export interface ViewRefSet<T> {
   items: Set<T>;
