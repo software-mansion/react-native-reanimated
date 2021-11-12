@@ -9,17 +9,41 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
-set (NODE_MODULES_DIR "../node_modules")
+
+#set (NODE_MODULES_DIR "../node_modules")
+#set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
+#set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
+#
+## reanimated shared
+#
+#file(GLOB sources_tools  "./src/main/Common/cpp/Tools/*.cpp")
+#file(GLOB sources_native_modules  "./src/main/Common/cpp/NativeModules/*.cpp")
+#file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
+#file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
+#file(GLOB sources_android  "./src/main/cpp/*.cpp")
+
+message(DEBUG "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
+message(DEBUG "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+
+if(${CLIENT_SIDE_BUILD})
+    set (NODE_MODULES_DIR  "../../node_modules")
+    message(DEBUG "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
+else()
+    set (NODE_MODULES_DIR "../node_modules")
+    message(DEBUG "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
+endif()
+
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
 # reanimated shared
 
-file(GLOB sources_tools  "./src/main/Common/cpp/Tools/*.cpp")
-file(GLOB sources_native_modules  "./src/main/Common/cpp/NativeModules/*.cpp")
-file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
-file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
-file(GLOB sources_android  "./src/main/cpp/*.cpp")
+file(GLOB sources_tools  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/Tools/*.cpp")
+file(GLOB sources_native_modules  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/NativeModules/*.cpp")
+file(GLOB sources_shared_items  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/SharedItems/*.cpp")
+file(GLOB sources_registries  "${CMAKE_SOURCE_DIR}/src/main/Common/cpp/Registries/*.cpp")
+file(GLOB sources_android  "${CMAKE_SOURCE_DIR}/src/main/cpp/*.cpp")
+
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (

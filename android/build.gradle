@@ -109,7 +109,6 @@ if (CLIENT_SIDE_BUILD) {
 if (!buildFromSource) return
 
 def localProps = new Properties()
-
 def localPropertiesFile = file("local.properties")
 if (localPropertiesFile.exists()) {
     localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
@@ -207,7 +206,8 @@ android {
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
-                             "-DFOR_HERMES=${FOR_HERMES}"
+                             "-DFOR_HERMES=${FOR_HERMES}",
+                             "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
@@ -469,11 +469,11 @@ def getCurrentFlavor() {
 }
 
 def detectBuildType() {
-    if (hasProperty("clientSideBuild")) {
-        return property("clientSideBuild") == "true"
-    }
     def buildType = System.getenv("CLIENT_SIDE_BUILD")
     if (buildType == null) {
+        if (hasProperty("clientSideBuild")) {
+            return property("clientSideBuild") == "true"
+        }
         return "$rootDir" != "$projectDir"
     } else {
         return buildType == "True"
@@ -566,7 +566,6 @@ task extractSOFiles {
     }
 }
 
-
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
@@ -600,11 +599,11 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
+//    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
-    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+//    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+//    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
@@ -631,6 +630,9 @@ tasks.whenTaskAdded { task ->
         task.dependsOn(extractAARHeaders)
         task.dependsOn(extractSOFiles)
     }
+//    if (task.name.contains('generateJsonModelDebug')) {
+//        task.dependsOn(tasks.getByName(':mergeDebugNativeLibs'))
+//    }
 }
 
 if (CLIENT_SIDE_BUILD) {
