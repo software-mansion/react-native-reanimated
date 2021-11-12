@@ -104,20 +104,17 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     ViewManager viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
     // we don't want layout animations in native-stack since it is currently buggy there
     // so we check if it is a (grand)child of ScreenStack
-    if (viewManager instanceof ViewManager
-        && viewManager.getName().equals("RNSScreen")
+    if (viewManager.getName().equals("RNSScreen")
         && view.getParent() != null
         && view.getParent().getParent() instanceof View) {
       // we check grandparent of Screen since the parent is a ScreenStackFragment
+      View screenParentView = (View) view.getParent().getParent();
       ViewManager screenParentViewManager =
-          nativeViewHierarchyManager.resolveViewManager(
-              ((View) view.getParent().getParent()).getId());
-      if (screenParentViewManager != null) {
-        String parentName = screenParentViewManager.getName();
-        if (parentName.equals("RNSScreenStack")) {
-          super.deleteView(view, listener);
-          return;
-        }
+          nativeViewHierarchyManager.resolveViewManager(screenParentView.getId());
+      String parentName = screenParentViewManager.getName();
+      if (parentName.equals("RNSScreenStack")) {
+        super.deleteView(view, listener);
+        return;
       }
     }
     maybeInit();
