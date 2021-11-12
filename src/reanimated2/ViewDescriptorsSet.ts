@@ -24,7 +24,8 @@ export interface ViewDescriptorsSet {
   ) => void;
 }
 
-const scheduleUpdates: Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
+const scheduleUpdates =
+  Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const ref = useRef<ViewDescriptorsSet | null>(null);
