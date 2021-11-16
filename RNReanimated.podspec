@@ -12,7 +12,7 @@ begin
 rescue
   begin
     # monorepo
-    # /monorepo/package/appName/node_modules/react-native-reanimated/RNReanimated.podspec
+    # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
     # /monorepo/node_modules/react-native/package.json
     reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))["version"]
   rescue
