@@ -122,7 +122,7 @@ export class EntryExitTransition
                             transformProp as keyof TransformProperty
                           ]
                         : 0,
-                      { duration: 0 }
+                      { duration: exitingDuration }
                     ),
                     value[transformProp as keyof TransformProperty]
                   )
@@ -183,19 +183,19 @@ export class EntryExitTransition
         animations: {
           originX: delayFunction(
             delay + exitingDuration,
-            withTiming(values.originX, { duration: 0 })
+            withTiming(values.originX, { duration: exitingDuration })
           ),
           originY: delayFunction(
             delay + exitingDuration,
-            withTiming(values.originY, { duration: 0 })
+            withTiming(values.originY, { duration: exitingDuration })
           ),
           width: delayFunction(
             delay + exitingDuration,
-            withTiming(values.width, { duration: 0 })
+            withTiming(values.width, { duration: exitingDuration })
           ),
           height: delayFunction(
             delay + exitingDuration,
-            withTiming(values.height, { duration: 0 })
+            withTiming(values.height, { duration: exitingDuration })
           ),
           ...animations,
         },
