@@ -238,7 +238,16 @@ jsi::Value NativeReanimatedModule::getViewProp(
 jsi::Value NativeReanimatedModule::setEnableFeatures(
     jsi::Runtime &rt,
     const jsi::Value &config) {
-  FeaturesConfig::setLayoutAnimationEnabled(true);
+  auto propertyNames = config.asObject(rt).getPropertyNames(rt).asArray(rt);
+  for (int i = 0; i < propertyNames.size(rt); ++i) {
+    std::string propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    if (propertyName == "layoutAnimation") {
+      bool flag =
+          config.asObject(rt).getProperty(rt, "layoutAnimation").getBool();
+      FeaturesConfig::setLayoutAnimationEnabled(flag);
+    }
+  }
   return jsi::Value::undefined();
 }
 

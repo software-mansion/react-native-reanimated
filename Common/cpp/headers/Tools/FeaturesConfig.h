@@ -9,7 +9,6 @@ class FeaturesConfig {
   static void setLayoutAnimationEnabled(bool isLayoutAnimationEnabled) {
     _isLayoutAnimationEnabled = isLayoutAnimationEnabled;
   }
-  static void setByKey(std::string propName) {}
 
  private:
   static bool _isLayoutAnimationEnabled;
