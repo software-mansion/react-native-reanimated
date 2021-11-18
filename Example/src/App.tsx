@@ -1,292 +1,90 @@
+// Change Component Transition
+
 import React from 'react';
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-  LogBox,
-  Platform,
-  UIManager,
-  ScrollView,
-} from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import {
-  createStackNavigator,
-  StackNavigationProp,
-} from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
-import {
-  Carousel,
-  CustomLayoutAnimationScreen,
-  DefaultAnimations,
-  Modal,
-  ModalNewAPI,
-  MountingUnmounting,
-  SpringLayoutAnimation,
-  SwipeableList,
-  NativeModals,
-} from './LayoutReanimation';
 
-import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
-import AnimatedTabBarExample from './AnimatedTabBarExample';
-import ChatHeadsExample from './ChatHeadsExample';
-import { PagerExample } from './CustomHandler';
-import DragAndSnapExample from './DragAndSnapExample';
-import ExtrapolationExample from './ExtrapolationExample';
-import { KeyframeAnimation } from './LayoutReanimation/KeyframeAnimation';
-import LightboxExample from './LightboxExample';
-import LiquidSwipe from './LiquidSwipe';
-import MeasureExample from './MeasureExample';
-import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
-// @ts-ignore JS file
-import Reanimated1 from '../reanimated1/App';
-import ScrollEventExample from './ScrollEventExample';
-import ScrollExample from './AnimatedScrollExample';
-import ScrollToExample from './ScrollToExample';
-import ScrollableViewExample from './ScrollableViewExample';
-import SwipeableListExample from './SwipeableListExample';
-import WobbleExample from './WobbleExample';
-import AnimatedListExample from './LayoutReanimation/AnimatedList';
-import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  PinwheelOut,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from 'react-native-reanimated';
+import { Button, Text, View } from 'react-native';
 
-LogBox.ignoreLogs(['Calling `getNode()`']);
-
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
-
-type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
-
-const SCREENS: Screens = {
-  DefaultAnimations: {
-    screen: DefaultAnimations,
-    title: '🆕 Default layout animations',
-  },
-  DefaultTransistions: {
-    screen: WaterfallGridExample,
-    title: '🆕 Default layout transitions',
-  },
-  KeyframeAnimation: {
-    screen: KeyframeAnimation,
-    title: '🆕 Keyframe animation',
-  },
-  ParticipantList: {
-    screen: AnimatedListExample,
-    title: '🆕 Participant List',
-  },
-  OlympicAnimation: {
-    screen: OlympicAnimation,
-    title: '🆕 Olympic animation',
-  },
-  CustomLayoutAnimation: {
-    screen: CustomLayoutAnimationScreen,
-    title: '🆕 Custom layout animation',
-  },
-  ModalNewAPI: {
-    title: '🆕 ModalNewAPI',
-    screen: ModalNewAPI,
-  },
-  SpringLayoutAnimation: {
-    title: '🆕 Spring Layout Animation',
-    screen: SpringLayoutAnimation,
-  },
-  MountingUnmounting: {
-    title: '🆕 Mounting Unmounting',
-    screen: MountingUnmounting,
-  },
-  SwipeableList: {
-    title: '🆕 Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '🆕 Modal',
-    screen: Modal,
-  },
-  NativeModals: {
-    title: '🆕  Native modals (RN and Screens)',
-    screen: NativeModals,
-  },
-  Carousel: {
-    title: '🆕 Carousel',
-    screen: Carousel,
-  },
-  PagerExample: {
-    screen: PagerExample,
-    title: '🆕 Custom Handler Example - Pager',
-  },
-  AnimatedStyleUpdate: {
-    screen: AnimatedStyleUpdateExample,
-    title: 'Animated Style Update',
-  },
-  WobbleExample: {
-    screen: WobbleExample,
-    title: 'Animation Modifiers (Wobble Effect)',
-  },
-  DragAndSnapExample: {
-    screen: DragAndSnapExample,
-    title: 'Drag and Snap',
-  },
-  MeasureExample: {
-    screen: MeasureExample,
-    title: 'Synchronous Measure',
-  },
-  ScrollEventExample: {
-    screen: ScrollEventExample,
-    title: 'Scroll Events',
-  },
-  ChatHeadsExample: {
-    screen: ChatHeadsExample,
-    title: 'Chat Heads',
-  },
-  ScrollableToExample: {
-    screen: ScrollToExample,
-    title: 'scrollTo',
-  },
-  SwipeableListExample: {
-    screen: SwipeableListExample,
-    title: '(advanced) Swipeable List',
-  },
-  LightboxExample: {
-    screen: LightboxExample,
-    title: '(advanced) Lightbox',
-  },
-  ScrollableViewExample: {
-    screen: ScrollableViewExample,
-    title: '(advanced) ScrollView imitation',
-  },
-  AnimatedTabBarExample: {
-    screen: AnimatedTabBarExample,
-    title: '(advanced) Tab Bar Example',
-  },
-  LiquidSwipe: {
-    screen: LiquidSwipe,
-    title: 'Liquid Swipe Example',
-  },
-  ExtrapolationExample: {
-    screen: ExtrapolationExample,
-    title: 'Extrapolation Example',
-  },
-  ScrollExample: {
-    screen: ScrollExample,
-    title: 'Scroll Example',
-  },
-};
-
-type RootStackParams = { Home: undefined } & { [key: string]: undefined };
-type MainScreenProps = {
-  navigation: StackNavigationProp<RootStackParams, 'Home'>;
-  setUseRea2: (useRea2: boolean) => void;
-};
-
-function MainScreen({ navigation, setUseRea2 }: MainScreenProps) {
-  const data = Object.keys(SCREENS).map((key) => ({ key }));
-  return (
-    <FlatList
-      style={styles.list}
-      data={data}
-      ItemSeparatorComponent={ItemSeparator}
-      renderItem={(props) => (
-        <MainScreenItem
-          {...props}
-          screens={SCREENS}
-          onPressItem={({ key }) => navigation.navigate(key)}
-        />
-      )}
-      renderScrollComponent={(props) => <ScrollView {...props} />}
-      ListFooterComponent={() => <LaunchReanimated1 setUseRea2={setUseRea2} />}
-    />
-  );
-}
-
-export function ItemSeparator(): React.ReactElement {
-  return <View style={styles.separator} />;
-}
-
-type Item = { key: string };
-type MainScreenItemProps = {
-  item: Item;
-  onPressItem: ({ key }: Item) => void;
-  screens: Screens;
-};
-export function MainScreenItem({
-  item,
-  onPressItem,
-  screens,
-}: MainScreenItemProps): React.ReactElement {
-  const { key } = item;
-  return (
-    <RectButton style={styles.button} onPress={() => onPressItem(item)}>
-      <Text style={styles.buttonText}>{screens[key].title || key}</Text>
-    </RectButton>
-  );
-}
-
-function LaunchReanimated1({
-  setUseRea2,
-}: {
-  setUseRea2: (useRea2: boolean) => void;
+function Mleko({
+  newEntering = null,
+  oldExiting = null,
+  children,
+  // deps = [children], // MAGIC: by default, we want to animate change each time children are updated
+  // to customize this, please pass an array of dependencies
+  // TODO: default value for deps, should be null or []?
 }) {
+  const [current, setCurrent] = React.useState(null);
+  const [flag, setFlag] = React.useState(false);
+
+  React.useEffect(() => {
+    setCurrent(children);
+    // MAGIC: we always want to update children, even if deps didn't change
+    // TODO: don't render twice if no deps have changed
+  });
+
+  React.useEffect(() => {
+    // MAGIC: only animate change when deps changed
+    // this can also be achieved by keeping `key` in state and incrementing it here
+    setFlag((flag) => !flag); // double buffering
+  }); // TODO: deps
+
+  // the magic part here is the use of `key` prop
+  // because of this, the component will not be replaced
+  // instead the component with old key will be unmounted
+  // and the component with the new key will be mounted
+  // as a result, layout animations will fire
+
+  // MAGIC: use of `key` prop
   return (
     <>
-      <ItemSeparator />
-      <RectButton style={styles.button} onPress={() => setUseRea2?.(false)}>
-        <Text style={styles.buttonText}>👵 Reanimated 1.x Examples</Text>
-      </RectButton>
+      <Animated.View key={flag} entering={newEntering} exiting={oldExiting}>
+        {current}
+      </Animated.View>
     </>
   );
 }
 
-const Stack = createStackNavigator();
+export default function App() {
+  const [count, setCount] = React.useState(42);
+  const [color, setColor] = React.useState('red');
 
-const Reanimated2 = (setUseRea2: (useRea2: boolean) => void) => (
-  <Stack.Navigator detachInactiveScreens={false}>
-    <Stack.Screen
-      name="Home"
-      options={{ title: '🎬 Reanimated 2.x Examples' }}
-      children={(props) => <MainScreen {...props} setUseRea2={setUseRea2} />}
-    />
-    {Object.keys(SCREENS).map((name) => (
-      <Stack.Screen
-        key={name}
-        name={name}
-        getComponent={() => SCREENS[name].screen}
-        options={{ title: SCREENS[name].title || name }}
-      />
-    ))}
-  </Stack.Navigator>
-);
+  const handleIncrement = () => {
+    setCount((count) => count + 1);
+  };
 
-function App(): React.ReactElement {
-  const [useRea2, setUseRea2] = React.useState(true);
+  const handleToggleColor = () => {
+    setColor((c) => (c === 'red' ? 'blue' : 'red'));
+  };
 
   return (
-    <NavigationContainer>
-      {useRea2 ? Reanimated2(setUseRea2) : Reanimated1(setUseRea2)}
-    </NavigationContainer>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: 20 }}>{count}</Text>
+      <Mleko
+        // oldExiting={FadeOut}
+        // newEntering={FadeIn.delay(300)}
+        // oldExiting={SlideOutLeft.duration(1500).delay(500)}
+        // newEntering={SlideInRight.duration(1500)}
+        oldExiting={PinwheelOut}
+        newEntering={SlideInRight}>
+        <Text
+          style={{
+            fontSize: 100,
+            fontWeight: 'bold',
+            color,
+          }}>
+          {count}
+        </Text>
+      </Mleko>
+      <Button onPress={handleIncrement} title="Increment" />
+      <Button onPress={handleToggleColor} title="Toggle color" />
+    </View>
   );
 }
-
-export const styles = StyleSheet.create({
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
-  buttonText: {
-    backgroundColor: 'transparent',
-  },
-  button: {
-    flex: 1,
-    height: 60,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-});
-
-export default App;
