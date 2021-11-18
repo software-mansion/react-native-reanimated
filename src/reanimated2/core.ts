@@ -385,3 +385,36 @@ if (!NativeReanimatedModule.useOnlyV1) {
       _setGlobalConsole(console);
     })();
 }
+
+export type OptionalReanimatedFeatures = {
+  layoutAnimation?: boolean;
+};
+
+let userFeaturesConfig: OptionalReanimatedFeatures = {
+  layoutAnimation: null,
+};
+
+export function setEnableFeatures(
+  option: OptionalReanimatedFeatures,
+  isCallByUser = true
+): void {
+  let filteredOptions = {};
+  if (isCallByUser) {
+    userFeaturesConfig = {
+      ...userFeaturesConfig,
+      ...option,
+    };
+    filteredOptions = option;
+  } else {
+    for (const key in option) {
+      const userFlag = userFeaturesConfig[key];
+      if (userFlag !== false) {
+        filteredOptions[key] = option[key];
+      }
+    }
+  }
+  if (!filteredOptions) {
+    return;
+  }
+  NativeReanimatedModule.setEnableFeatures(filteredOptions);
+}

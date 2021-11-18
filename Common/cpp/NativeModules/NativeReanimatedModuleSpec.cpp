@@ -99,6 +99,16 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getViewProp(
   return jsi::Value::undefined();
 }
 
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_setEnableFeatures(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->setEnableFeatures(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -124,6 +134,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["getViewProp"] =
       MethodMetadata{3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
+  methodMap_["setEnableFeatures"] = MethodMetadata{
+      2, __hostFunction_NativeReanimatedModuleSpec_setEnableFeatures};
 }
 
 } // namespace reanimated

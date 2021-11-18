@@ -17,7 +17,7 @@ import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
-import { makeMutable, runOnUI } from './reanimated2/core';
+import { makeMutable, runOnUI, setEnableFeatures } from './reanimated2/core';
 import {
   DefaultEntering,
   DefaultExiting,
@@ -496,6 +496,7 @@ export default function createAnimatedComponent(
           (this.props.layout || this.props.entering || this.props.exiting) &&
           tag != null
         ) {
+          setEnableFeatures({ layoutAnimation: true }, false);
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering

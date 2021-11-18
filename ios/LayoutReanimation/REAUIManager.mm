@@ -1,5 +1,6 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
+#include "FeaturesConfig.h"
 #import "RCTComponentData.h"
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
@@ -72,6 +73,17 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
+  if (!FeaturesConfig::isLayoutAnimationEnabled()) {
+    [super _manageChildren:containerTag
+           moveFromIndices:moveFromIndices
+             moveToIndices:moveToIndices
+         addChildReactTags:addChildReactTags
+              addAtIndices:addAtIndices
+           removeAtIndices:removeAtIndices
+                  registry:registry];
+    return;
+  }
+
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   id<RCTComponent> container;
   NSMutableArray<id<RCTComponent>> *permanentlyRemovedChildren;
@@ -255,7 +267,11 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         view.hidden = isHidden;
       }
 
-      REASnapshot *snapshotBefore = [[REASnapshot alloc] init:view];
+      REASnapshot *snapshotBefore;
+      if (FeaturesConfig::isLayoutAnimationEnabled()) {
+        snapshotBefore = [[REASnapshot alloc] init:view];
+      }
+
       if (creatingLayoutAnimation) {
         // Animate view creation
         [view reactSetFrame:frame];
@@ -301,12 +317,14 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         completion(YES);
       }
 
-      if (isNew) {
-        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-        [_animationsManager onViewCreate:view after:snapshot];
-      } else {
-        REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
-        [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+      if (FeaturesConfig::isLayoutAnimationEnabled()) {
+        if (isNew) {
+          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+          [_animationsManager onViewCreate:view after:snapshot];
+        } else {
+          REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
+          [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+        }
       }
     }
 
