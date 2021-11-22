@@ -84,6 +84,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
     return;
   }
 
+  // Reanimated changes /start
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   id<RCTComponent> container;
   NSMutableArray<id<RCTComponent>> *permanentlyRemovedChildren;
@@ -104,6 +105,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       }
     }
   }
+  // Reanimated changes /end
 
   [super _manageChildren:containerTag
          moveFromIndices:moveFromIndices
@@ -113,6 +115,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
          removeAtIndices:removeAtIndices
                 registry:registry];
 
+  // Reanimated changes /start
   if (isUIViewRegistry) {
     NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
     for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
@@ -141,6 +144,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       [self callAnimationForTree:removedChild parentTag:containerTag];
     }
   }
+  // Reanimated changes /end
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
@@ -267,10 +271,12 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         view.hidden = isHidden;
       }
 
+      // Reanimated changes /start
       REASnapshot *snapshotBefore;
       if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
         snapshotBefore = [[REASnapshot alloc] init:view];
       }
+      // Reanimated changes /end
 
       if (creatingLayoutAnimation) {
         // Animate view creation
@@ -317,6 +323,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         completion(YES);
       }
 
+      // Reanimated changes /start
       if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
         if (isNew) {
           REASnapshot *snapshot = [[REASnapshot alloc] init:view];
@@ -330,7 +337,9 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
 
     [_animationsManager removeLeftovers];
     // Clean up
+    // uiManager->_layoutAnimationGroup = nil;
     [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
+    // Reanimated changes /end
   };
 }
 
