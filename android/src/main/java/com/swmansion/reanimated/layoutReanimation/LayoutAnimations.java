@@ -30,6 +30,8 @@ public class LayoutAnimations {
 
   public native void removeConfigForTag(int tag);
 
+  public native boolean isLayoutAnimationEnabled();
+
   private void notifyAboutEnd(int tag, int cancelledInt) {
     ReactApplicationContext context = mContext.get();
     if (context != null) {

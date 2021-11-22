@@ -508,4 +508,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       viewToUpdate.layout(x, y, x + width, y + height);
     }
   }
+
+  public boolean isLayoutAnimationEnabled() {
+    return mNativeMethodsHolder.isLayoutAnimationEnabled();
+  }
 }

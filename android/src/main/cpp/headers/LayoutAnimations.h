@@ -23,6 +23,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       alias_ref<JString> type,
       alias_ref<JMap<jstring, jstring>> values);
   void removeConfigForTag(int tag);
+  bool isLayoutAnimationEnabled();
 
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
 

@@ -73,7 +73,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
-  if (!FeaturesConfig::isLayoutAnimationEnabled()) {
+  if (!reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
     [super _manageChildren:containerTag
            moveFromIndices:moveFromIndices
              moveToIndices:moveToIndices
@@ -268,7 +268,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       }
 
       REASnapshot *snapshotBefore;
-      if (FeaturesConfig::isLayoutAnimationEnabled()) {
+      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
         snapshotBefore = [[REASnapshot alloc] init:view];
       }
 
@@ -317,7 +317,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         completion(YES);
       }
 
-      if (FeaturesConfig::isLayoutAnimationEnabled()) {
+      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
         if (isNew) {
           REASnapshot *snapshot = [[REASnapshot alloc] init:view];
           [_animationsManager onViewCreate:view after:snapshot];
