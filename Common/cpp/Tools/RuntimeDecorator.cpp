@@ -88,6 +88,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
     const MeasuringFunction measure,
     const TimeProviderFunction getCurrentTime,
+    const SetGestureStateFunction setGestureState,
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
@@ -207,6 +208,20 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
   rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
+
+  auto clb9 = [setGestureState](
+                  jsi::Runtime &rt,
+                  const jsi::Value &thisValue,
+                  const jsi::Value *args,
+                  size_t count) -> jsi::Value {
+    int handlerTag = static_cast<int>(args[0].asNumber());
+    int newState = static_cast<int>(args[1].asNumber());
+    setGestureState(handlerTag, newState);
+    return jsi::Value::undefined();
+  };
+  jsi::Value setGestureStateFunction = jsi::Function::createFromHostFunction(
+      rt, jsi::PropNameID::forAscii(rt, "_setGestureState"), 2, clb9);
+  rt.global().setProperty(rt, "_setGestureState", setGestureStateFunction);
 }
 
 } // namespace reanimated

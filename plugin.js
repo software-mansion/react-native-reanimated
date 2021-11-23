@@ -69,6 +69,7 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  '_setGestureState',
   '_getCurrentTime',
   '_eventTimestamp',
   '_frameTimestamp',
@@ -145,13 +146,14 @@ const gestureHandlerGestureObjects = new Set([
   'LongPress',
   'ForceTouch',
   'Native',
+  'Custom',
   'Race',
   'Simultaneous',
   'Exclusive',
 ]);
 
-const gestureHandlerCallbackMethods = new Set([
-  'onBegan',
+const gestureHandlerBuilderMethods = new Set([
+  'onBegin',
   'onStart',
   'onEnd',
   'onUpdate',
@@ -652,7 +654,7 @@ function isGestureObjectEventCallbackMethod(t, node) {
   return (
     t.isMemberExpression(node) &&
     t.isIdentifier(node.property) &&
-    gestureHandlerCallbackMethods.has(node.property.name) &&
+    gestureHandlerBuilderMethods.has(node.property.name) &&
     containsGestureObject(t, node.object)
   );
 }

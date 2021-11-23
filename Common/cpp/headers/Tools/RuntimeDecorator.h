@@ -36,6 +36,7 @@ class RuntimeDecorator {
       const ScrollToFunction scrollTo,
       const MeasuringFunction measure,
       const TimeProviderFunction getCurrentTime,
+      const SetGestureStateFunction setGestureState,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
 
   /**

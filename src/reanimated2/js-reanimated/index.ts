@@ -36,6 +36,11 @@ if (shouldBeUseWeb()) {
       "[Reanimated] You can't use 'scrollTo' method with Chrome Debugger or with web version"
     );
   };
+  global._setGestureState = () => {
+    console.warn(
+      "[Reanimated] You can't use 'setGestureState' method with Chrome Debugger or with web version"
+    );
+  };
 }
 
 export const _updatePropsJS = (

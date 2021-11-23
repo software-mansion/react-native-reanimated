@@ -109,6 +109,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::function<void(std::string, std::string)> handler);
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  void setGestureState(int handlerTag, int newState);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 
   explicit NativeProxy(

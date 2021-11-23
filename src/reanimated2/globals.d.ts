@@ -13,6 +13,7 @@ declare global {
     tag: number,
     flag: { value: boolean; _value: boolean }
   ) => void;
+  const _setGestureState: (handlerTag: number, newState: number) => void;
   const _updateProps: (
     tag: number,
     name: string,
@@ -30,6 +31,7 @@ declare global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
       _setGlobalConsole: (console?: ReanimatedConsole) => void;
       _log: (s: string) => void;
+      _setGestureState: () => void;
       _WORKLET: boolean;
       __reanimatedModuleProxy: NativeReanimated;
       _frameTimestamp: number | null;
