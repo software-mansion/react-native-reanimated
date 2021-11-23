@@ -208,7 +208,7 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value _stopObservingProgress = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_stopObservingProgress"), 0, clb8);
   rt.global().setProperty(rt, "_stopObservingProgress", _stopObservingProgress);
-  
+ 
   auto clb9 = [setGestureState](
                   jsi::Runtime &rt,
                   const jsi::Value &thisValue,
