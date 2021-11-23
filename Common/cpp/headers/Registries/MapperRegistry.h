@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 

@@ -24,6 +24,7 @@ import {
   MountingUnmounting,
   SpringLayoutAnimation,
   SwipeableList,
+  NativeModals,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -46,6 +47,7 @@ import ScrollableViewExample from './ScrollableViewExample';
 import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
+import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,6 +63,10 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  DefaultTransistions: {
+    screen: WaterfallGridExample,
+    title: '🆕 Default layout transitions',
   },
   KeyframeAnimation: {
     screen: KeyframeAnimation,
@@ -97,6 +103,10 @@ const SCREENS: Screens = {
   Modal: {
     title: '🆕 Modal',
     screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕  Native modals (RN and Screens)',
+    screen: NativeModals,
   },
   Carousel: {
     title: '🆕 Carousel',

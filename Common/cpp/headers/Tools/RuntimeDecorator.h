@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 #include <stdio.h>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include "LayoutAnimationsProxy.h"
 #include "PlatformDepMethodsHolder.h"

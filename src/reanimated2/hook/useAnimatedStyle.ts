@@ -11,7 +11,7 @@ import {
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun, Timestamp } from '../animation';
-import NativeReanimated from '../NativeReanimated';
+import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -31,14 +31,13 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimationObject, PrimitiveValue } from '../animation/commonTypes';
+import { AnimationObject } from '../animation/commonTypes';
 import {
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
   NestedObjectValues,
   SharedValue,
-  WorkletFunction,
 } from '../commonTypes';
 export interface AnimatedStyleResult {
   viewDescriptors: ViewDescriptorsSet;
@@ -57,6 +56,7 @@ interface AnimatedState {
 interface AnimationRef {
   initial: {
     value: AnimatedStyle;
+    updater: () => AnimatedStyle;
   };
   remoteState: AnimatedState;
   sharableViewDescriptors: SharedValue<Descriptor[]>;
@@ -122,7 +122,7 @@ function prepareAnimation(
 function runAnimations(
   animation: AnimatedStyle,
   timestamp: Timestamp,
-  key: PrimitiveValue,
+  key: number | string,
   result: AnimatedStyle,
   animationsActive: SharedValue<boolean>
 ): boolean {
@@ -270,7 +270,7 @@ function jestStyleUpdater(
   maybeViewRef: ViewRefSet<any> | undefined,
   animationsActive: SharedValue<boolean>,
   animatedStyle: MutableRefObject<AnimatedStyle>,
-  adapters: WorkletFunction[] = []
+  adapters: AdapterWorkletFunction[] = []
 ): void {
   'worklet';
   const animations: AnimatedStyle = state.animations ?? {};
@@ -428,6 +428,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
     initRef.current = {
       initial: {
         value: initialStyle,
+        updater: updater,
       },
       remoteState: makeRemote({ last: initialStyle }),
       sharableViewDescriptors: makeMutable([]),
@@ -441,9 +442,8 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { initial, remoteState, sharableViewDescriptors } = initRef.current!;
-  const maybeViewRef = NativeReanimated.native ? undefined : viewsRef;
+  const maybeViewRef = NativeReanimatedModule.native ? undefined : viewsRef;
 
-  initial.value = initialUpdaterRun(updater);
   useEffect(() => {
     let fun;
     let upadterFn = updater;

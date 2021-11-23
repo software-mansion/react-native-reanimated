@@ -5,15 +5,17 @@ const NOOP = () => {
   // noop
 };
 const ID = (t) => t;
+const IMMEDIATE_CB_INVOCATION = (cb: () => unknown) => cb();
 
 const ReanimatedV2 = {
   useSharedValue: (v) => ({ value: v }),
   useDerivedValue: (a) => ({ value: a() }),
   useAnimatedScrollHandler: () => NOOP,
   useAnimatedGestureHandler: () => NOOP,
-  useAnimatedStyle: (style) => style,
+  useAnimatedStyle: IMMEDIATE_CB_INVOCATION,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedReaction: NOOP,
+  useAnimatedProps: IMMEDIATE_CB_INVOCATION,
 
   withTiming: (toValue, _, cb) => {
     cb && cb(true);

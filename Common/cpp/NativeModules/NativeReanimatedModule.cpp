@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 #include "EventHandlerRegistry.h"
+#include "FeaturesConfig.h"
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
@@ -165,7 +166,7 @@ jsi::Value NativeReanimatedModule::startMapper(
     maybeRequestRender();
   });
 
-  return jsi::Value((double)newMapperId);
+  return jsi::Value(static_cast<double>(newMapperId));
 }
 
 void NativeReanimatedModule::stopMapper(
@@ -197,7 +198,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
     eventHandlerRegistry->registerEventHandler(handler);
   });
 
-  return jsi::Value((double)newRegistrationId);
+  return jsi::Value(static_cast<double>(newRegistrationId));
 }
 
 void NativeReanimatedModule::unregisterEventHandler(
@@ -213,7 +214,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
     const jsi::Value &viewTag,
     const jsi::Value &propName,
     const jsi::Value &callback) {
-  const int viewTagInt = (int)viewTag.asNumber();
+  const int viewTagInt = static_cast<int>(viewTag.asNumber());
   std::string propNameStr = propName.asString(rt).utf8(rt);
   jsi::Function fun = callback.getObject(rt).asFunction(rt);
   std::shared_ptr<jsi::Function> funPtr =
@@ -232,6 +233,13 @@ jsi::Value NativeReanimatedModule::getViewProp(
     });
   });
 
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::enableLayoutAnimations(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
 }
 

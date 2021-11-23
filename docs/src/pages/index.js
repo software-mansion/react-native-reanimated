@@ -204,7 +204,7 @@ function Home() {
                 </div>
                 <p>
                   Or just go to{' '}
-                  <a href="docs/installation">Documentation page</a> to see how
+                  <a href="docs/fundamentals/installation">Documentation page</a> to see how
                   you can run it locally with React Native on both Android and
                   iOS.
                 </p>

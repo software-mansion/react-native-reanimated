@@ -36,7 +36,7 @@ void Mapper::execute(jsi::Runtime &rt) {
           jsViewDescriptorArray.getValueAtIndex(rt, i).getObject(rt);
       (*updateProps)(
           rt,
-          (int)jsViewDescriptor.getProperty(rt, "tag").asNumber(),
+          static_cast<int>(jsViewDescriptor.getProperty(rt, "tag").asNumber()),
           jsViewDescriptor.getProperty(rt, "name"),
           newStyle);
     }

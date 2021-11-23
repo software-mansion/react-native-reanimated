@@ -50,7 +50,7 @@ void EventHandlerRegistry::processEvent(
   }
 
   auto eventObject = jsi::Value::createFromJsonUtf8(
-      rt, (uint8_t *)(&eventJSON[0]), eventJSON.size());
+      rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
 
   eventObject.asObject(rt).setProperty(
       rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
@@ -62,7 +62,7 @@ void EventHandlerRegistry::processEvent(
 bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(std::string eventName) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto it = eventMappings.find(eventName);
-  return (it != eventMappings.end()) and (!(it->second).empty());
+  return (it != eventMappings.end()) && (!(it->second).empty());
 }
 
 } // namespace reanimated

@@ -16,6 +16,7 @@ import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
 import UpdatePropsTest from './UpdatePropsTest';
 import AdaptersTest from './AdaptersTest';
+import TransformsTest from './TransformsTest';
 import CustomLayout2 from './CustomLayout2';
 import CustomLayout3 from './CustomLayout3';
 import ModalInNavigation from './ModalInNavigation';
@@ -67,6 +68,10 @@ const SCREENS = {
   AdaptersTest: {
     screen: AdaptersTest,
     title: '🆕 Adapters',
+  },
+  TransformsTest: {
+    screen: TransformsTest,
+    title: '🆕 Transforms',
   },
   CustomLayout2: {
     screen: CustomLayout2,

@@ -247,6 +247,7 @@
 
 - (void)onViewCreate:(UIView *)view after:(REASnapshot *)after
 {
+  _reaUiManager.flushUiOperations();
   NSNumber *tag = view.reactTag;
   if (_states[tag] == nil) {
     _states[tag] = [NSNumber numberWithInt:Inactive];

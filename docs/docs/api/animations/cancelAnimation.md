@@ -4,7 +4,7 @@ title: cancelAnimation
 sidebar_label: cancelAnimation
 ---
 
-Starts a time-based animation.
+Cancels animation linked with given shared value.
 
 ### Arguments
 

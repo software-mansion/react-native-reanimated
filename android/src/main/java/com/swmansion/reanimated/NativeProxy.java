@@ -4,7 +4,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.JavaScriptExecutor;
@@ -19,11 +18,9 @@ import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 public class NativeProxy {
 
@@ -34,8 +31,7 @@ public class NativeProxy {
   @DoNotStrip
   public static class AnimationFrameCallback implements NodesManager.OnAnimationFrame {
 
-    @DoNotStrip
-    private final HybridData mHybridData;
+    @DoNotStrip private final HybridData mHybridData;
 
     @DoNotStrip
     private AnimationFrameCallback(HybridData hybridData) {
@@ -49,8 +45,7 @@ public class NativeProxy {
   @DoNotStrip
   public static class EventHandler implements RCTEventEmitter {
 
-    @DoNotStrip
-    private final HybridData mHybridData;
+    @DoNotStrip private final HybridData mHybridData;
     private UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
 
     @DoNotStrip
@@ -67,7 +62,8 @@ public class NativeProxy {
     public native void receiveEvent(String eventKey, @Nullable WritableMap event);
 
     @Override
-    public void receiveTouches(String eventName, WritableArray touches, WritableArray changedIndices) {
+    public void receiveTouches(
+        String eventName, WritableArray touches, WritableArray changedIndices) {
       // not interested in processing touch events this way, we process raw events only
     }
   }
@@ -75,16 +71,20 @@ public class NativeProxy {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
+
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
   private final GestureHandlerStateManager gestureHandlerStateManager;
 
   public NativeProxy(ReactApplicationContext context) {
-    CallInvokerHolderImpl holder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
+    CallInvokerHolderImpl holder =
+        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     mScheduler = new Scheduler(context);
-    mHybridData = initHybrid(context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
+    mHybridData =
+        initHybrid(
+            context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
 
@@ -98,7 +98,12 @@ public class NativeProxy {
     gestureHandlerStateManager = tempHandlerStateManager;
   }
 
-  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, Scheduler scheduler, LayoutAnimations LayoutAnimations);
+  private native HybridData initHybrid(
+      long jsContext,
+      CallInvokerHolderImpl jsCallInvokerHolder,
+      Scheduler scheduler,
+      LayoutAnimations LayoutAnimations);
+
   private native void installJSIBindings();
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName);
@@ -119,7 +124,7 @@ public class NativeProxy {
 
   @DoNotStrip
   private String obtainProp(int viewTag, String propName) {
-     return mNodesManager.obtainProp(viewTag, propName);
+    return mNodesManager.obtainProp(viewTag, propName);
   }
 
   @DoNotStrip
@@ -158,32 +163,40 @@ public class NativeProxy {
   public void prepare(LayoutAnimations LayoutAnimations) {
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     installJSIBindings();
-    AnimationsManager animationsManager = mContext.get()
+    AnimationsManager animationsManager =
+        mContext
+            .get()
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
             .getAnimationsManager();
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
-    animationsManager.setNativeMethods(new NativeMethodsHolder() {
-      @Override
-      public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
-        LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-        if (LayoutAnimations != null) {
-          HashMap<String, String> preparedValues = new HashMap<>();
-          for (String key : values.keySet()) {
-            preparedValues.put(key, values.get(key).toString());
+    animationsManager.setNativeMethods(
+        new NativeMethodsHolder() {
+          @Override
+          public void startAnimationForTag(int tag, String type, HashMap<String, Float> values) {
+            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
+            if (LayoutAnimations != null) {
+              HashMap<String, String> preparedValues = new HashMap<>();
+              for (String key : values.keySet()) {
+                preparedValues.put(key, values.get(key).toString());
+              }
+              LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
+            }
           }
-          LayoutAnimations.startAnimationForTag(tag, type, preparedValues);
-        }
-      }
 
-      @Override
-      public void removeConfigForTag(int tag) {
-        LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
-        if (LayoutAnimations != null) {
-          LayoutAnimations.removeConfigForTag(tag);
-        }
-      }
-    });
+          @Override
+          public void removeConfigForTag(int tag) {
+            LayoutAnimations LayoutAnimations = weakLayoutAnimations.get();
+            if (LayoutAnimations != null) {
+              LayoutAnimations.removeConfigForTag(tag);
+            }
+          }
+
+          @Override
+          public boolean isLayoutAnimationEnabled() {
+            return LayoutAnimations.isLayoutAnimationEnabled();
+          }
+        });
   }
 }
