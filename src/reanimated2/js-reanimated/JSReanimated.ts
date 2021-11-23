@@ -98,4 +98,8 @@ export default class JSReanimated extends NativeReanimated {
   unregisterEventHandler(_: string): void {
     // noop
   }
+
+  setEnableFeatures() {
+    console.warn('[Reanimated] setEnableFeatures is not available for WEB yet');
+  }
 }
