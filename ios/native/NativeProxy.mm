@@ -93,6 +93,72 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
+/**
+ * All static helper functions are ObjC++ specific.
+ */
+static jsi::Value convertNSNumberToJSIBoolean(jsi::Runtime &runtime, NSNumber *value)
+{
+  return jsi::Value((bool)[value boolValue]);
+}
+
+static jsi::Value convertNSNumberToJSINumber(jsi::Runtime &runtime, NSNumber *value)
+{
+  return jsi::Value([value doubleValue]);
+}
+
+static jsi::String convertNSStringToJSIString(jsi::Runtime &runtime, NSString *value)
+{
+  return jsi::String::createFromUtf8(runtime, [value UTF8String] ?: "");
+}
+
+static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value);
+static jsi::Object convertNSDictionaryToJSIObject(jsi::Runtime &runtime, NSDictionary *value)
+{
+  jsi::Object result = jsi::Object(runtime);
+  for (NSString *k in value) {
+    result.setProperty(runtime, [k UTF8String], convertObjCObjectToJSIValue(runtime, value[k]));
+  }
+  return result;
+}
+
+static jsi::Array convertNSArrayToJSIArray(jsi::Runtime &runtime, NSArray *value)
+{
+  jsi::Array result = jsi::Array(runtime, value.count);
+  for (size_t i = 0; i < value.count; i++) {
+    result.setValueAtIndex(runtime, i, convertObjCObjectToJSIValue(runtime, value[i]));
+  }
+  return result;
+}
+
+static std::vector<jsi::Value> convertNSArrayToStdVector(jsi::Runtime &runtime, NSArray *value)
+{
+  std::vector<jsi::Value> result;
+  for (size_t i = 0; i < value.count; i++) {
+    result.emplace_back(convertObjCObjectToJSIValue(runtime, value[i]));
+  }
+  return result;
+}
+
+static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value)
+{
+  if ([value isKindOfClass:[NSString class]]) {
+    return convertNSStringToJSIString(runtime, (NSString *)value);
+  } else if ([value isKindOfClass:[NSNumber class]]) {
+    if ([value isKindOfClass:[@YES class]]) {
+      return convertNSNumberToJSIBoolean(runtime, (NSNumber *)value);
+    }
+    return convertNSNumberToJSINumber(runtime, (NSNumber *)value);
+  } else if ([value isKindOfClass:[NSDictionary class]]) {
+    return convertNSDictionaryToJSIObject(runtime, (NSDictionary *)value);
+  } else if ([value isKindOfClass:[NSArray class]]) {
+    return convertNSArrayToJSIArray(runtime, (NSArray *)value);
+  } else if (value == (id)kCFNull) {
+    return jsi::Value::null();
+  }
+  return jsi::Value::undefined();
+}
+// COPIED FROM RCTTurboModule.mm END
+
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker) {
   RCTBridge *bridge = _bridge_reanimated;
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
@@ -236,33 +302,39 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   scheduler->setRuntimeManager(module);
 
-  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
-    //std::string eventNameString([eventName UTF8String]);
-    //std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+  [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventNameNSString, id<RCTEvent> event) {
+    // handles RCTEvents from RNGestureHandler
 
-    //eventAsString = "{ NativeMap:"  + eventAsString + "}";
-    //jsi::Object global = module->runtime->global();
-    //jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-    //global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);
-    //module->onEvent(eventNameString, eventAsString);
-    //global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
+    auto &rt = *module->runtime;
+
+    std::string eventName = [eventNameNSString UTF8String];
+    jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
+
+    jsi::Object global = rt.global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
+    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
+    module->onEvent(eventName, std::move(payload));
+    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
   }];
     
     facebook::react::ReanimatedListener::handleEvent = [module](RawEvent& rawEvent){
-        std::cerr << "[Reanimated] " << rawEvent.type << std::endl;
+        // handles RawEvents from React Native
+
+        auto &rt = *module->runtime;
+
         int tag = rawEvent.eventTarget->getTag();
         std::string eventType = rawEvent.type;
         if (eventType.rfind("top", 0) == 0) {
             eventType = "on" + eventType.substr(3);
         }
         std::string eventName = std::to_string(tag) + eventType;
-        std::cerr << "eventName " << eventName << std::endl;
+        jsi::Value payload = rawEvent.payloadFactory(rt);
         
-        jsi::Object global = module->runtime->global();
-        jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-        global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);
-        module->onEvent(eventName, rawEvent.payloadFactory(*module->runtime));
-        global.setProperty(*module->runtime, eventTimestampName, jsi::Value::undefined());
+        jsi::Object global = rt.global();
+        jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
+        global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
+        module->onEvent(eventName, std::move(payload));
+        global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
     };
 
   return module;
