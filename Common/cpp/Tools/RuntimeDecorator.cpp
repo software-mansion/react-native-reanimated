@@ -214,8 +214,8 @@ void RuntimeDecorator::decorateUIRuntime(
                   const jsi::Value &thisValue,
                   const jsi::Value *args,
                   size_t count) -> jsi::Value {
-    int handlerTag = (int)args[0].asNumber();
-    int newState = (int)args[1].asNumber();
+    int handlerTag = static_cast<int>(args[0].asNumber());
+    int newState = static_cast<int>(args[1].asNumber());
     setGestureState(handlerTag, newState);
     return jsi::Value::undefined();
   };
