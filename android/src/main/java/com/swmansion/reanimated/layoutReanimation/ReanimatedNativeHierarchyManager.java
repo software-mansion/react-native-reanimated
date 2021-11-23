@@ -100,14 +100,45 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    */
   public void deleteView(final View view, final LayoutAnimationListener listener) {
     UiThreadUtil.assertOnUiThread();
+    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
+    ViewManager viewManager;
+    try {
+      viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
+      super.deleteView(view, listener);
+      return;
+    }
+    // we don't want layout animations in native-stack since it is currently buggy there
+    // so we check if it is a (grand)child of ScreenStack
+    if (viewManager.getName().equals("RNSScreen")
+        && view.getParent() != null
+        && view.getParent().getParent() instanceof View) {
+      // we check grandparent of Screen since the parent is a ScreenStackFragment
+      View screenParentView = (View) view.getParent().getParent();
+      ViewManager screenParentViewManager;
+      try {
+        screenParentViewManager =
+            nativeViewHierarchyManager.resolveViewManager(screenParentView.getId());
+      } catch (IllegalViewOperationException e) {
+        // (IllegalViewOperationException) == (vm == null)
+        e.printStackTrace();
+        super.deleteView(view, listener);
+        return;
+      }
+      String parentName = screenParentViewManager.getName();
+      if (parentName.equals("RNSScreenStack")) {
+        super.deleteView(view, listener);
+        return;
+      }
+    }
     maybeInit();
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
-    ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
+    if (viewManager instanceof ViewGroupManager) {
+      ViewGroupManager vgm = (ViewGroupManager) viewManager;
       for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
         dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
       }
@@ -134,7 +165,7 @@ class ReaLayoutAnimator extends LayoutAnimationController {
           });
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
-      // do nothing
+      e.printStackTrace();
     }
     if (vm instanceof ViewGroupManager) {
       ViewGroupManager vgm = (ViewGroupManager) vm;
@@ -186,19 +217,24 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
-    View viewToUpdate = this.resolveView(tag);
-    ViewManager viewManager = this.resolveViewManager(tag);
-    String viewManagerName = viewManager.getName();
-    View container = resolveView(parentTag);
-    if (container != null
-        && viewManagerName.equals("RNSScreen")
-        && this.mReaLayoutAnimator != null) {
-      this.mReaLayoutAnimator.applyLayoutUpdate(
-          viewToUpdate,
-          (int) container.getX(),
-          (int) container.getY(),
-          container.getWidth(),
-          container.getHeight());
+    try {
+      View viewToUpdate = this.resolveView(tag);
+      ViewManager viewManager = this.resolveViewManager(tag);
+      String viewManagerName = viewManager.getName();
+      View container = resolveView(parentTag);
+      if (container != null
+          && viewManagerName.equals("RNSScreen")
+          && this.mReaLayoutAnimator != null) {
+        this.mReaLayoutAnimator.applyLayoutUpdate(
+            viewToUpdate,
+            (int) container.getX(),
+            (int) container.getY(),
+            container.getWidth(),
+            container.getHeight());
+      }
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
     }
   }
 
@@ -208,8 +244,24 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       @Nullable int[] indicesToRemove,
       @Nullable ViewAtIndex[] viewsToAdd,
       @Nullable int[] tagsToDelete) {
-    ViewGroup viewGroup = (ViewGroup) resolveView(tag);
-    ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+    ViewGroup viewGroup;
+    ViewGroupManager viewGroupManager;
+    try {
+      viewGroup = (ViewGroup) resolveView(tag);
+      viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      return;
+    }
+
+    // we don't want layout animations in native-stack since it is currently buggy there
+    if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      return;
+    }
+
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
       HashSet<Integer> tagsToRemove = new HashSet<Integer>();
@@ -232,7 +284,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
       ArrayList<View> toBeRemovedChildren = toBeRemoved.get(tag);
       for (Integer childtag : tagsToDelete) {
-        View view = resolveView(childtag);
+        View view;
+        try {
+          view = resolveView(childtag);
+        } catch (IllegalViewOperationException e) {
+          // (IllegalViewOperationException) == (vm == null)
+          e.printStackTrace();
+          continue;
+        }
         toBeRemovedChildren.add(view);
         cleanerCallback.put(
             view.getId(),
