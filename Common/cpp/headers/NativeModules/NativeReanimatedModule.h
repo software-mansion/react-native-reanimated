@@ -68,7 +68,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
-  jsi::Value setEnableFeatures(jsi::Runtime &rt, const jsi::Value &config)
+  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
 
   void onRender(double timestampMs);

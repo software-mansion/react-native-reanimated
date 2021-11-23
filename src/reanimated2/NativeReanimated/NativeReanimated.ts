@@ -1,6 +1,5 @@
 import { SharedValue } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
-import { OptionalReanimatedFeatures } from '../core';
 
 const InnerNativeModule = global.__reanimatedModuleProxy;
 export class NativeReanimated {
@@ -67,7 +66,7 @@ export class NativeReanimated {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
 
-  setEnableFeatures(option: OptionalReanimatedFeatures): void {
-    InnerNativeModule.setEnableFeatures(option);
+  enableLayoutAnimations(flag: boolean): void {
+    InnerNativeModule.enableLayoutAnimations(flag);
   }
 }

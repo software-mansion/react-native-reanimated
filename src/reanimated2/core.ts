@@ -386,35 +386,31 @@ if (!NativeReanimatedModule.useOnlyV1) {
     })();
 }
 
-export type OptionalReanimatedFeatures = {
-  layoutAnimation?: boolean;
+type FeaturesConfig = {
+  enableLayoutAnimations: boolean;
+  setByUser: boolean;
 };
 
-let userFeaturesConfig: OptionalReanimatedFeatures = {
-  layoutAnimation: null,
+let featuresConfig: FeaturesConfig = {
+  enableLayoutAnimations: false,
+  setByUser: false,
 };
 
-export function setEnableFeatures(
-  option: OptionalReanimatedFeatures,
+export function enableLayoutAnimations(
+  flag: boolean,
   isCallByUser = true
 ): void {
-  let filteredOptions = {};
   if (isCallByUser) {
-    userFeaturesConfig = {
-      ...userFeaturesConfig,
-      ...option,
+    featuresConfig = {
+      enableLayoutAnimations: flag,
+      setByUser: true,
     };
-    filteredOptions = option;
-  } else {
-    for (const key in option) {
-      const userFlag = userFeaturesConfig[key];
-      if (userFlag !== false) {
-        filteredOptions[key] = option[key];
-      }
-    }
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  } else if (
+    !featuresConfig.setByUser &&
+    featuresConfig.enableLayoutAnimations !== flag
+  ) {
+    featuresConfig.enableLayoutAnimations = flag;
+    NativeReanimatedModule.enableLayoutAnimations(flag);
   }
-  if (!filteredOptions) {
-    return;
-  }
-  NativeReanimatedModule.setEnableFeatures(filteredOptions);
 }

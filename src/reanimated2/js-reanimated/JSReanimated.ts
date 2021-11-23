@@ -99,7 +99,9 @@ export default class JSReanimated extends NativeReanimated {
     // noop
   }
 
-  setEnableFeatures() {
-    console.warn('[Reanimated] setEnableFeatures is not available for WEB yet');
+  enableLayoutAnimations() {
+    console.warn(
+      '[Reanimated] enableLayoutAnimations is not available for WEB yet'
+    );
   }
 }

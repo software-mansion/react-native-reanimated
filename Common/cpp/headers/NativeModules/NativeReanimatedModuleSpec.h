@@ -60,7 +60,7 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &callback) = 0;
 
   // other
-  virtual jsi::Value setEnableFeatures(
+  virtual jsi::Value enableLayoutAnimations(
       jsi::Runtime &rt,
       const jsi::Value &config) = 0;
 };
