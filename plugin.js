@@ -654,7 +654,7 @@ function isGestureObjectEventCallbackMethod(t, node) {
   return (
     t.isMemberExpression(node) &&
     t.isIdentifier(node.property) &&
-    gestureHandlerCallbackMethods.has(node.property.name) &&
+    gestureHandlerBuilderMethods.has(node.property.name) &&
     containsGestureObject(t, node.object)
   );
 }
