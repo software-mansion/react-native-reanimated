@@ -520,12 +520,11 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  if (_viewRegistry[viewTag].superview == nil) {
-    ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+  if (_viewRegistry[viewTag].superview == nil || lastSnapshot != nil) {
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
       propsSnapshot.props = [props mutableCopy];
-      ;
       propsSnapshot.viewTag = viewTag;
       propsSnapshot.viewName = viewName;
       _componentUpdateBuffer[viewTag] = propsSnapshot;
