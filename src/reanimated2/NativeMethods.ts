@@ -42,7 +42,7 @@ export function scrollTo(animatedRef, x, y, animated) {
 export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
   if (!_WORKLET && !isChromeDebugger()) {
-    return;
+    console.warn("[Reanimated] You can not use setGestureState in non-worklet function.");
   }
   _setGestureState(handlerTag, newState);
 }
