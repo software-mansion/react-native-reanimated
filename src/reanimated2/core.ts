@@ -385,3 +385,32 @@ if (!NativeReanimatedModule.useOnlyV1) {
       _setGlobalConsole(console);
     })();
 }
+
+type FeaturesConfig = {
+  enableLayoutAnimations: boolean;
+  setByUser: boolean;
+};
+
+let featuresConfig: FeaturesConfig = {
+  enableLayoutAnimations: false,
+  setByUser: false,
+};
+
+export function enableLayoutAnimations(
+  flag: boolean,
+  isCallByUser = true
+): void {
+  if (isCallByUser) {
+    featuresConfig = {
+      enableLayoutAnimations: flag,
+      setByUser: true,
+    };
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  } else if (
+    !featuresConfig.setByUser &&
+    featuresConfig.enableLayoutAnimations !== flag
+  ) {
+    featuresConfig.enableLayoutAnimations = flag;
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  }
+}

@@ -170,6 +170,11 @@ public class NativeProxy {
               LayoutAnimations.removeConfigForTag(tag);
             }
           }
+
+          @Override
+          public boolean isLayoutAnimationEnabled() {
+            return LayoutAnimations.isLayoutAnimationEnabled();
+          }
         });
   }
 }

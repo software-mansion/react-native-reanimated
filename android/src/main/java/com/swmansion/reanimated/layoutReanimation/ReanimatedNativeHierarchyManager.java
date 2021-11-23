@@ -47,6 +47,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   }
 
   public boolean shouldAnimateLayout(View viewToAnimate) {
+    if (!isLayoutAnimationEnabled()) {
+      return super.shouldAnimateLayout(viewToAnimate);
+    }
     // if view parent is null, skip animation: view have been clipped, we don't want animation to
     // resume when view is re-attached to parent, which is the standard android animation behavior.
     // If there's a layout handling animation going on, it should be animated nonetheless since the
@@ -69,6 +72,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    * @param height the new height value for the view
    */
   public void applyLayoutUpdate(View view, int x, int y, int width, int height) {
+    if (!isLayoutAnimationEnabled()) {
+      super.applyLayoutUpdate(view, x, y, width, height);
+      return;
+    }
     UiThreadUtil.assertOnUiThread();
     maybeInit();
     // Determine which animation to use : if view is initially invisible, use create animation,
@@ -99,6 +106,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    *     view.
    */
   public void deleteView(final View view, final LayoutAnimationListener listener) {
+    if (!isLayoutAnimationEnabled()) {
+      super.deleteView(view, listener);
+      return;
+    }
     UiThreadUtil.assertOnUiThread();
     NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
     ViewManager viewManager;
@@ -174,6 +185,11 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
     }
   }
+
+  public boolean isLayoutAnimationEnabled() {
+    maybeInit();
+    return mAnimationsManager.isLayoutAnimationEnabled();
+  }
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
@@ -217,6 +233,9 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
+    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+      return;
+    }
     try {
       View viewToUpdate = this.resolveView(tag);
       ViewManager viewManager = this.resolveViewManager(tag);
@@ -244,6 +263,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       @Nullable int[] indicesToRemove,
       @Nullable ViewAtIndex[] viewsToAdd,
       @Nullable int[] tagsToDelete) {
+    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      return;
+    }
     ViewGroup viewGroup;
     ViewGroupManager viewGroupManager;
     try {
@@ -329,6 +352,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
   @Override
   protected synchronized void dropView(View view) {
+    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+      super.dropView(view);
+      return;
+    }
     if (toBeRemoved.containsKey(view.getId())) {
       toBeRemoved.remove(view.getId());
     }

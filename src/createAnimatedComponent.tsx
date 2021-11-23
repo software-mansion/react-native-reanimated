@@ -17,13 +17,21 @@ import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
-import { makeMutable, runOnUI } from './reanimated2/core';
+import {
+  makeMutable,
+  runOnUI,
+  enableLayoutAnimations,
+} from './reanimated2/core';
 import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
-import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
+import {
+  isJest,
+  isChromeDebugger,
+  shouldBeUseWeb,
+} from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
@@ -520,6 +528,9 @@ export default function createAnimatedComponent(
           (this.props.layout || this.props.entering || this.props.exiting) &&
           tag != null
         ) {
+          if (!shouldBeUseWeb()) {
+            enableLayoutAnimations(true, false);
+          }
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering

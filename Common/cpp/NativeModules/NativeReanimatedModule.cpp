@@ -3,6 +3,7 @@
 #include <memory>
 #include <thread>
 #include "EventHandlerRegistry.h"
+#include "FeaturesConfig.h"
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
@@ -231,6 +232,13 @@ jsi::Value NativeReanimatedModule::getViewProp(
     });
   });
 
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::enableLayoutAnimations(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
 }
 

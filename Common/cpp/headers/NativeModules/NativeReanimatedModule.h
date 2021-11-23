@@ -68,6 +68,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
+      override;
+
   void onRender(double timestampMs);
   void onEvent(std::string eventName, std::string eventAsString);
   bool isAnyHandlerWaitingForEvent(std::string eventName);

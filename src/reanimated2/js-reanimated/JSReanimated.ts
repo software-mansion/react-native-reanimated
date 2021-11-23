@@ -98,4 +98,10 @@ export default class JSReanimated extends NativeReanimated {
   unregisterEventHandler(_: string): void {
     // noop
   }
+
+  enableLayoutAnimations() {
+    console.warn(
+      '[Reanimated] enableLayoutAnimations is not available for WEB yet'
+    );
+  }
 }

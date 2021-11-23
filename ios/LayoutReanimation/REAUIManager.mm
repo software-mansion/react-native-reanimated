@@ -1,5 +1,6 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
+#include "FeaturesConfig.h"
 #import "RCTComponentData.h"
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
@@ -71,6 +72,18 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         removeAtIndices:(NSArray<NSNumber *> *)removeAtIndices
                registry:(NSMutableDictionary<NSNumber *, id<RCTComponent>> *)registry
 {
+  if (!reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
+    [super _manageChildren:containerTag
+           moveFromIndices:moveFromIndices
+             moveToIndices:moveToIndices
+         addChildReactTags:addChildReactTags
+              addAtIndices:addAtIndices
+           removeAtIndices:removeAtIndices
+                  registry:registry];
+    return;
+  }
+
+  // Reanimated changes /start
   BOOL isUIViewRegistry = ((id)registry == (id)[self valueForKey:@"_viewRegistry"]);
   id<RCTComponent> container;
   NSMutableArray<id<RCTComponent>> *permanentlyRemovedChildren;
@@ -91,6 +104,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       }
     }
   }
+  // Reanimated changes /end
 
   [super _manageChildren:containerTag
          moveFromIndices:moveFromIndices
@@ -100,6 +114,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
          removeAtIndices:removeAtIndices
                 registry:registry];
 
+  // Reanimated changes /start
   if (isUIViewRegistry) {
     NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
     for (id<RCTComponent> toRemoveChild in _toBeRemovedRegister[containerTag]) {
@@ -127,6 +142,7 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
       [self callAnimationForTree:removedChild parentTag:containerTag];
     }
   }
+  // Reanimated changes /end
 }
 
 - (void)callAnimationForTree:(UIView *)view parentTag:(NSNumber *)parentTag
@@ -253,7 +269,13 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         view.hidden = isHidden;
       }
 
-      REASnapshot *snapshotBefore = [[REASnapshot alloc] init:view];
+      // Reanimated changes /start
+      REASnapshot *snapshotBefore;
+      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
+        snapshotBefore = [[REASnapshot alloc] init:view];
+      }
+      // Reanimated changes /end
+
       if (creatingLayoutAnimation) {
         // Animate view creation
         [view reactSetFrame:frame];
@@ -299,18 +321,23 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
         completion(YES);
       }
 
-      if (isNew) {
-        REASnapshot *snapshot = [[REASnapshot alloc] init:view];
-        [_animationsManager onViewCreate:view after:snapshot];
-      } else {
-        REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
-        [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+      // Reanimated changes /start
+      if (reanimated::FeaturesConfig::isLayoutAnimationEnabled()) {
+        if (isNew) {
+          REASnapshot *snapshot = [[REASnapshot alloc] init:view];
+          [_animationsManager onViewCreate:view after:snapshot];
+        } else {
+          REASnapshot *snapshotAfter = [[REASnapshot alloc] init:view];
+          [_animationsManager onViewUpdate:view before:snapshotBefore after:snapshotAfter];
+        }
       }
     }
 
     [_animationsManager removeLeftovers];
     // Clean up
+    // uiManager->_layoutAnimationGroup = nil;
     [uiManager setValue:nil forKey:@"_layoutAnimationGroup"];
+    // Reanimated changes /end
   };
 }
 
