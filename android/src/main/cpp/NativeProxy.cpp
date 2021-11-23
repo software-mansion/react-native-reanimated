@@ -117,8 +117,7 @@ void NativeProxy::installJSIBindings() {
     scrollTo(viewTag, x, y, animated);
   };
 
-  auto setGestureStateFunction =
-      [this](int handlerTag, int newState) -> void {
+  auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
 
@@ -267,8 +266,7 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 
 void NativeProxy::setGestureState(int handlerTag, int newState) {
   auto method =
-      javaPart_->getClass()->getMethod<void(int, int)>(
-          "setGestureState");
+      javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
   method(javaPart_.get(), handlerTag, newState);
 }
 

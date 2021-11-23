@@ -1,12 +1,9 @@
 package com.swmansion.reanimated;
 
 import android.os.SystemClock;
-import android.util.Log;
-
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.JavaScriptExecutor;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
@@ -90,8 +87,11 @@ public class NativeProxy {
 
     GestureHandlerStateManager tempHandlerStateManager;
     try {
-      Class<NativeModule> gestureHandlerModuleClass = (Class<NativeModule>) Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
-      tempHandlerStateManager = (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
+      Class<NativeModule> gestureHandlerModuleClass =
+          (Class<NativeModule>)
+              Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
+      tempHandlerStateManager =
+          (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
     } catch (ClassCastException | ClassNotFoundException e) {
       tempHandlerStateManager = null;
     }
