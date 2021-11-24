@@ -18,7 +18,7 @@ std::vector<std::pair<std::string, double>> measure(int viewTag, RCTUIManager *u
     rootView = rootView.superview;
   }
 
-  if (rootView == nil || (![rootView isReactRootView])) {
+  if (rootView == nil) {
     return std::vector<std::pair<std::string, double>>(1, std::make_pair("x", -1234567.0));
   }
 
