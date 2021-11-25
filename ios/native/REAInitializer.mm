@@ -46,6 +46,12 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
     auto reanimatedModule = reanimated::createReanimatedModule(bridge, callInvoker);
 #endif
     runtime.global().setProperty(
+      runtime,
+      "_WORKLET_RUNTIME",
+      static_cast<double>(
+          reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+
+    runtime.global().setProperty(
         runtime,
         jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
         jsi::Object::createFromHostObject(runtime, reanimatedModule));
