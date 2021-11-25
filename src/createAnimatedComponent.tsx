@@ -482,7 +482,7 @@ export default function createAnimatedComponent(
 
       // detach old animatedProps
       if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
-        prevAnimatedProps.viewDescriptors.remove(viewTag);
+        prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
       // attach animatedProps property
