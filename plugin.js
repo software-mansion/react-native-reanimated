@@ -157,6 +157,10 @@ const gestureHandlerBuilderMethods = new Set([
   'onStart',
   'onEnd',
   'onUpdate',
+  'onTouchesDown',
+  'onTouchesMove',
+  'onTouchesUp',
+  'onTouchesCancelled',
 ]);
 
 class ClosureGenerator {
