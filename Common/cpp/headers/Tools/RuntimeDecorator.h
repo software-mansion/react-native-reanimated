@@ -59,10 +59,7 @@ class RuntimeDecorator {
   static void registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType);
 
  private:
-  static std::unordered_map<RuntimePointer, RuntimeType> &runtimeRegistry() {
-    static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;
-    return runtimeRegistry;
-  }
+  static std::unordered_map<RuntimePointer, RuntimeType> &runtimeRegistry();
 };
 
 inline bool RuntimeDecorator::isUIRuntime(jsi::Runtime &rt) {

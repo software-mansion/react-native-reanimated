@@ -7,6 +7,12 @@
 
 namespace reanimated {
 
+std::unordered_map<RuntimePointer, RuntimeType>
+    &RuntimeDecorator::runtimeRegistry() {
+  static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;
+  return runtimeRegistry;
+}
+
 void RuntimeDecorator::registerRuntime(
     jsi::Runtime *runtime,
     RuntimeType runtimeType) {
