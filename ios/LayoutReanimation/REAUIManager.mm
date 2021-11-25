@@ -372,7 +372,10 @@ std::weak_ptr<reanimated::Scheduler> _scheduler;
   NSMutableDictionary<NSNumber *, id<RCTComponent>> *viewRegistry = [self valueForKey:@"_viewRegistry"];
   [view.reactSuperview removeReactSubview:view];
   id<RCTComponent> parentView = viewRegistry[tag];
-  [parentView removeReactSubview:view];
+  @try {
+    [parentView removeReactSubview:view];
+  } @catch (id anException) {
+  }
 #if __has_include(<RNScreens/RNSScreen.h>)
   if ([view isKindOfClass:[RNSScreenView class]]) {
     [parentView didUpdateReactSubviews];
