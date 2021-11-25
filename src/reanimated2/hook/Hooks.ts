@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useCallback } from 'react';
 import { DependencyList } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
 import type {} from '../../'
@@ -15,8 +15,8 @@ export function useWorkletCallback<A extends unknown[], R>(
 }
 
 /**
- * `useLayoutAnimation` just returns the memoized function, so it's just a typed helper with useMemo.
+ * `useLayoutAnimation` just returns the memoized function, so it's just a typed helper with useCallback.
  */
-export const useLayoutAnimation = useMemo
+export const useLayoutAnimation = useCallback
 
 export { useEvent, useHandler } from './utils';
