@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "2.3.0-beta.3",
+  "version": "2.3.0-beta.4",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -115,7 +115,7 @@
     "lint-staged": "^11.2.0",
     "prettier": "^2.2.1",
     "react": "17.0.2",
-    "react-native": "0.67.0-rc.2",
+    "react-native": "0.67.0-rc.3",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",

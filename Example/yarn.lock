@@ -9267,10 +9267,10 @@ react-native-web@^0.14.7:
     prop-types "^15.6.0"
     react-timer-mixin "^0.13.4"
 
-react-native@0.67.0-rc.2:
-  version "0.67.0-rc.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.67.0-rc.2.tgz#a0fd84881d56237b9c1b08b585f25d0b271a0713"
-  integrity sha512-JwVrFd1UvSMQtSO3x2hEr2ToIa/0uJOzJECbDpy6+c3xLh7LCKEq+E9lCPXRc1Cmz9kKZ3RQCsynRmZyCDAu5Q==
+react-native@0.67.0-rc.3:
+  version "0.67.0-rc.3"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.67.0-rc.3.tgz#cc10f3bde2ac0f275d46043f8a4e9e15482cc015"
+  integrity sha512-l+FHxHsqZ5AyYPtgtycH2d3+oXSqwIlREzHYOEmtLxuhZ6etuQUk4MW7IKSavkzAIL6Z84gw2Sf7FlxEgwlXxg==
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^6.0.0"
