@@ -1071,4 +1071,5 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const useValue: typeof Animated.useValue;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
+  export function enableLayoutAnimations(flag: boolean): void;
 }

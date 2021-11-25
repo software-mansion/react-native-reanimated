@@ -1,4 +1,5 @@
 #include "LayoutAnimations.h"
+#include "FeaturesConfig.h"
 #include "Logger.h"
 
 namespace reanimated {
@@ -82,6 +83,10 @@ void LayoutAnimations::notifyAboutEnd(int tag, int cancelled) {
   method(javaPart_.get(), tag, cancelled);
 }
 
+bool LayoutAnimations::isLayoutAnimationEnabled() {
+  return FeaturesConfig::isLayoutAnimationEnabled();
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),
@@ -89,6 +94,9 @@ void LayoutAnimations::registerNatives() {
           "startAnimationForTag", LayoutAnimations::startAnimationForTag),
       makeNativeMethod(
           "removeConfigForTag", LayoutAnimations::removeConfigForTag),
+      makeNativeMethod(
+          "isLayoutAnimationEnabled",
+          LayoutAnimations::isLayoutAnimationEnabled),
   });
 }
 

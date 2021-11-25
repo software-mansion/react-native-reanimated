@@ -12,6 +12,7 @@
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "REAUIManager.h"
+#import "RNGestureHandlerStateManager.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
@@ -132,6 +133,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     scrollTo(viewTag, uiManager, x, y, animated);
   };
 
+  id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
+  auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
+    setGestureState(gestureHandlerStateManager, handlerTag, newState);
+  };
+
   auto propObtainer = [reanimatedModule](
                           jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
     NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
@@ -244,6 +250,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      setGestureStateFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

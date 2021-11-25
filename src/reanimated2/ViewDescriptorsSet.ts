@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { makeMutable } from './core';
 import { SharedValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
+import { Platform } from 'react-native';
 
 export interface ViewRefSet<T> {
   items: Set<T>;
@@ -22,6 +23,9 @@ export interface ViewDescriptorsSet {
     sharableViewDescriptor: SharedValue<Descriptor[]>
   ) => void;
 }
+
+const scheduleUpdates =
+  Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const ref = useRef<ViewDescriptorsSet | null>(null);
@@ -44,7 +48,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
         if (!data.waitForInsertSync) {
           data.waitForInsertSync = true;
 
-          setImmediate(() => {
+          scheduleUpdates(() => {
             data.sharableViewDescriptors.value = data.items;
             data.waitForInsertSync = false;
           });
@@ -57,7 +61,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
         if (!data.waitForRemoveSync) {
           data.waitForRemoveSync = true;
 
-          setImmediate(() => {
+          scheduleUpdates(() => {
             const items = [];
             for (const item of data.items) {
               if (data.batchToRemove.has(item.tag)) {

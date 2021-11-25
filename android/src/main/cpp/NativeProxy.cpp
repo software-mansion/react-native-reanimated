@@ -117,6 +117,10 @@ void NativeProxy::installJSIBindings() {
     scrollTo(viewTag, x, y, animated);
   };
 
+  auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
+    setGestureState(handlerTag, newState);
+  };
+
 #if FOR_HERMES
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::hermes::makeHermesRuntime();
@@ -157,6 +161,7 @@ void NativeProxy::installJSIBindings() {
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      setGestureStateFunction,
   };
 
   auto module = std::make_shared<NativeReanimatedModule>(
@@ -257,6 +262,12 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   result.push_back({"height", elements[5]});
 
   return result;
+}
+
+void NativeProxy::setGestureState(int handlerTag, int newState) {
+  auto method =
+      javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
+  method(javaPart_.get(), handlerTag, newState);
 }
 
 } // namespace reanimated

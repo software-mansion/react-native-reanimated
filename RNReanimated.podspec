@@ -5,10 +5,28 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 reactVersion = '0.0.0'
 
 begin
+  # standard app
+  # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
+  # /appName/node_modules/react-native/package.json
   reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))["version"]
 rescue
-  # Example app
-  reactVersion = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))["version"]
+  begin
+    # monorepo
+    # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
+    # /monorepo/node_modules/react-native/package.json
+    reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))["version"]
+  rescue
+    begin
+      # Example app in reanimated repo
+      # /react-native-reanimated/RNReanimated.podspec
+      # /react-native-reanimated/node_modules/react-native/package.json
+      reactVersion = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))["version"]
+    rescue
+      # should never happen
+      reactVersion = '0.66.0'
+      puts "[RNReanimated] Unable to recognized your `react-native` version! Default `react-native` version: " + reactVersion
+    end
+  end
 end
 
 rnVersion = reactVersion.split('.')[1]
@@ -75,7 +93,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-RCTBlob'
   s.dependency 'React-RCTSettings'
   s.dependency 'React-RCTText'
-  s.dependency 'React-RCTVibration'
   s.dependency 'React-RCTImage'
   s.dependency 'React-Core/RCTWebSocket'
   s.dependency 'React-cxxreact'

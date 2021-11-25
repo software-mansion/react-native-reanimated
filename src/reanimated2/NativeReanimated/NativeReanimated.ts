@@ -65,4 +65,8 @@ export class NativeReanimated {
   ): Promise<T> {
     return InnerNativeModule.getViewProp(viewTag, propName, callback);
   }
+
+  enableLayoutAnimations(flag: boolean): void {
+    InnerNativeModule.enableLayoutAnimations(flag);
+  }
 }

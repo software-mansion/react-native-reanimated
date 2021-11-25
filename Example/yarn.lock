@@ -9232,9 +9232,9 @@ react-native-safe-area-context@^3.1.9:
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-3.1.9.tgz#48864ea976b0fa57142a2cc523e1fd3314e7247e"
   integrity sha512-wmcGbdyE/vBSL5IjDPReoJUEqxkZsywZw5gPwsVUV1NBpw5eTIdnL6Y0uNKHE25Z661moxPHQz6kwAkYQyorxA==
 
-"react-native-screens@github:software-mansion/react-native-screens#6d8329f4f1e0b7dd236646a3b9b13ed57ec9b0cc":
+"react-native-screens@github:software-mansion/react-native-screens#c3fd97069ee5059859ad4f1ccb509709e5dda6f6":
   version "3.8.0"
-  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/6d8329f4f1e0b7dd236646a3b9b13ed57ec9b0cc"
+  resolved "https://codeload.github.com/software-mansion/react-native-screens/tar.gz/c3fd97069ee5059859ad4f1ccb509709e5dda6f6"
   dependencies:
     warn-once "^0.1.0"
 
