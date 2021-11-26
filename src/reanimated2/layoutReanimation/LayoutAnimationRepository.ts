@@ -38,7 +38,6 @@ runOnUI(() => {
         for (const key in layoutAnimation) {
           currentAnimation[key] = layoutAnimation[key];
         }
-        enteringAnimationForTag[tag] = null;
       }
 
       const sv: { value: boolean; _value: boolean } = configs[tag].sv;
@@ -63,9 +62,6 @@ runOnUI(() => {
           _stopObservingProgress(tag, finished);
         }
         style.callback && style.callback(finished);
-        if (type === 'entering') {
-          enteringAnimationForTag[tag] = null;
-        }
       };
 
       if (backupColor) {
