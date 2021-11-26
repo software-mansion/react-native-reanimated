@@ -528,7 +528,9 @@ export default function createAnimatedComponent(
           (this.props.layout ||
             this.props.entering ||
             this.props.exiting ||
-            this.props.sharedElementTransition) &&
+            this.props.sharedElementTransition ||
+            this.props.reappearing ||
+            this.props.hiding) &&
           tag != null
         ) {
           if (!shouldBeUseWeb()) {
@@ -542,9 +544,10 @@ export default function createAnimatedComponent(
             ? this.props.exiting
             : DefaultExiting;
 
-          let sharedElementTransition = this.props.sharedElementTransition
-            ? this.props.sharedElementTransition
-            : DefaultLayout;
+          let sharedElementTransition =
+            this.props.sharedElementTransition ?? DefaultLayout;
+          let reappearing = this.props.reappearing ?? DefaultEntering;
+          let hiding = this.props.hiding ?? DefaultExiting;
 
           if (has('build', layout)) {
             layout = layout.build();
@@ -562,11 +565,21 @@ export default function createAnimatedComponent(
             sharedElementTransition = sharedElementTransition.build();
           }
 
+          if (has('build', reappearing)) {
+            reappearing = reappearing.build();
+          }
+
+          if (has('build', hiding)) {
+            hiding = hiding.build();
+          }
+
           const config = {
             layout,
             entering,
             exiting,
             sharedElementTransition,
+            reappearing,
+            hiding,
             sv: this.sv,
           };
           // console.log("sharedElementTransition", sharedElementTransition)

@@ -310,4 +310,15 @@
   _startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
 }
 
+- (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType
+{
+  NSMutableDictionary *finishValues = finish.values;
+  NSMutableDictionary *preparedValues = [NSMutableDictionary new];
+  [preparedValues addEntriesFromDictionary:finishValues];
+  for (NSString *key in finishValues.allKeys) {
+    preparedValues[[NSString stringWithFormat:@"b%@", key]] = finishValues[key];
+  }
+  _startAnimationForTag(screen.reactTag, transitionType, preparedValues, @(0));
+}
+
 @end

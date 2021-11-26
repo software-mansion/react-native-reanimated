@@ -35,11 +35,17 @@
                                 fromViewConverter:(UIView *)startingViewConverter
                                            toView:(UIView *)toView
                                   toViewConverter:(UIView *)toViewConverter
+                                   transitionType:(NSString *)transitionType
 {
   REASnapshot *before = [[REASnapshot alloc] init:fromView withConverter:converter withParent:startingViewConverter];
-  REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
-  [_animationsManager onViewTransition:fromView before:before after:after];
+  if ([transitionType isEqualToString:@"sharedElementTransition"]) {
+    REASnapshot *after = [[REASnapshot alloc] init:toView withConverter:converter withParent:toViewConverter];
+    [_animationsManager onViewTransition:fromView before:before after:after];
+  } else {
+    [_animationsManager onScreenTransition:fromView finish:before transitionType:transitionType];
+  }
 }
+
 @end
 
 namespace reanimated {
