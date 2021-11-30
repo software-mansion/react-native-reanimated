@@ -367,14 +367,14 @@ exports[`babel plugin workletizes object hook wrapped unnamed FunctionExpression
 exports[`babel plugin workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _reactNativeGestureHandler = require(\\"react-native-gesture-handler\\");
 
-var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegan(function () {
+var foo = _reactNativeGestureHandler.Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _f = function _f() {
-    console.log('onBegan');
+    console.log('onBegin');
   };
 
   _f._closure = {};
-  _f.asString = \\"function _f(){console.log('onBegan');}\\";
-  _f.__workletHash = 10358176266034;
+  _f.asString = \\"function _f(){console.log('onBegin');}\\";
+  _f.__workletHash = 13662490049850;
   _f.__location = \\"${ process.cwd() }/jest tests fixture (6:17)\\";
 
   global.__reanimatedWorkletInit(_f);
