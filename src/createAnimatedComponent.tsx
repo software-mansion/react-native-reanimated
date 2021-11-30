@@ -106,6 +106,8 @@ function isSameAnimatedStyle(style1: StyleProps, style2: StyleProps): boolean {
   return style1.viewsRef === style2.viewsRef;
 }
 
+const isSameAnimatedProps = isSameAnimatedStyle;
+
 const has = <K extends string>(
   key: K,
   x: unknown
@@ -481,7 +483,10 @@ export default function createAnimatedComponent(
       });
 
       // detach old animatedProps
-      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
+      if (
+        prevAnimatedProps &&
+        !isSameAnimatedProps(prevAnimatedProps, this.props.animatedProps)
+      ) {
         prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
