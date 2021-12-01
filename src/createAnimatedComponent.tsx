@@ -36,7 +36,7 @@ import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
-  LayoutAnimationFunction,
+  ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
 import { SharedValue, StyleProps } from './reanimated2/commonTypes';
 import {
@@ -133,7 +133,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   animatedStyle?: StyleProps;
   layout?:
     | BaseAnimationBuilder
-    | LayoutAnimationFunction
+    | ILayoutAnimationBuilder
     | typeof BaseAnimationBuilder;
   entering?:
     | BaseAnimationBuilder

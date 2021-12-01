@@ -256,6 +256,9 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
+    export class FlatList extends Component<AnimateProps<FlatList>> {
+      itemLayoutAnimation: ILayoutAnimationBuilder;
+    }
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
