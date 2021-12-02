@@ -15,7 +15,7 @@ void REAIOSErrorHandler::raiseSpec()
   if (error->handled) {
     return;
   }
-  //RCTLogError(@(error->message.c_str()));
+  // RCTLogError(@(error->message.c_str()));
   this->error->handled = true;
 }
 

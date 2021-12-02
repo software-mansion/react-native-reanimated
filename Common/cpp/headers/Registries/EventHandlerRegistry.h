@@ -30,7 +30,7 @@ class EventHandlerRegistry {
   void processEvent(
       jsi::Runtime &rt,
       std::string eventName,
-      jsi::Value & eventPayload);
+      jsi::Value &eventPayload);
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 };
 

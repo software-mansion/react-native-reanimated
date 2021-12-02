@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import ChessboardFastExample from './Fabric/ChessboardFastExample';
 import ChessboardSlowExample from './Fabric/ChessboardSlowExample';
 import ColorExample from './Fabric/ColorExample';
@@ -11,8 +13,8 @@ import NativePropsExample from './Fabric/NativePropsExample';
 import NestedComponentExample from './Fabric/NestedComponentExample';
 import ParentAndChildExample from './Fabric/ParentAndChildExample';
 import ScrollViewExample from './Fabric/ScrollViewExample';
-import TernaryExample from './Fabric/TernaryExample';
+import TernaryExample from './Fabric/TernaryExample'; // TODO: doesn't work properly (toggle shared value, wait until animation finishes and then toggle state)
 import UIPropsExample from './Fabric/UIPropsExample';
 import WorkletExample from './Fabric/WorkletExample';
 
-export default UIPropsExample;
+export default FlexExample;

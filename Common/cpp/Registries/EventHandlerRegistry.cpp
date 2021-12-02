@@ -25,7 +25,7 @@ void EventHandlerRegistry::unregisterEventHandler(unsigned long id) {
 void EventHandlerRegistry::processEvent(
     jsi::Runtime &rt,
     std::string eventName,
-    jsi::Value & eventPayload) {
+    jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);

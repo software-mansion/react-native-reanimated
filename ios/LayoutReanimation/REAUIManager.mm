@@ -1,6 +1,7 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
-#include "FeaturesConfig.h"
+#import <RNReanimated/Scheduler.h>
+#import "FeaturesConfig.h"
 #import "RCTComponentData.h"
 #import "RCTLayoutAnimation.h"
 #import "RCTLayoutAnimationGroup.h"
@@ -9,7 +10,6 @@
 #import "RCTRootViewInternal.h"
 #import "RCTUIManagerObserverCoordinator.h"
 #import "REAIOSScheduler.h"
-#include <RNReanimated/Scheduler.h>
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>

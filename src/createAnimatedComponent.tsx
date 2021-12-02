@@ -281,9 +281,9 @@ export default function createAnimatedComponent(
     _reattachNativeEvents(
       prevProps: AnimatedComponentProps<InitialComponentProps>
     ) {
-      const node = this._getEventViewRef();
-      const attached = new Set();
-      const nextEvts = new Set();
+      // const node = this._getEventViewRef();
+      // const attached = new Set();
+      // const nextEvts = new Set();
       let viewTag: number | undefined;
 
       for (const key in this.props) {
@@ -495,7 +495,7 @@ export default function createAnimatedComponent(
     }
 
     componentDidUpdate(
-      prevProps: AnimatedComponentProps<InitialComponentProps>
+      prevProps: AnimatedComponentProps<InitialComponentProps> // eslint-disable-line @typescript-eslint/no-unused-vars
     ) {
       // this._attachProps(this.props);
       // this._reattachNativeEvents(prevProps);

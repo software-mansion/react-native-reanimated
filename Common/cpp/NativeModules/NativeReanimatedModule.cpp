@@ -245,7 +245,7 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
 
 void NativeReanimatedModule::onEvent(
     std::string eventName,
-    jsi::Value && payload) {
+    jsi::Value &&payload) {
   try {
     eventHandlerRegistry->processEvent(*runtime, eventName, payload);
     mapperRegistry->execute(*runtime);

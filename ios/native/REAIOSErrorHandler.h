@@ -1,9 +1,9 @@
 #pragma once
 
+#include <RNReanimated/Scheduler.h>
 #include <memory>
 #include <string>
 #include "ErrorHandler.h"
-#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

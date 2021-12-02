@@ -1,10 +1,10 @@
 #pragma once
 
+#include <RNReanimated/Scheduler.h>
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
 #include <stdio.h>
 #include <memory>
-#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 

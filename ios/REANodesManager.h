@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
 
 #import <React/RCTBridgeModule.h>
-#import <React/RCTUIManager.h>
 #import <React/RCTSurfacePresenterStub.h>
+#import <React/RCTUIManager.h>
 
 @class REAModule;
 
@@ -19,9 +19,8 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 @property (nonatomic, nullable) NSSet<NSString *> *uiProps;
 @property (nonatomic, nullable) NSSet<NSString *> *nativeProps;
 
-
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
-                      bridge:(RCTBridge *)bridge
+                                bridge:(RCTBridge *)bridge
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 
 - (void)invalidate;

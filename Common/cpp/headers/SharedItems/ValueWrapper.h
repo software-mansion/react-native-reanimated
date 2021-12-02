@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <react/renderer/uimanager/primitives.h> // ShadowNodeWrapper
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,8 +9,6 @@
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"
 #include "WorkletsCache.h"
-
-#include <react/renderer/uimanager/primitives.h> // ShadowNodeWrapper
 
 using namespace facebook::react;
 
@@ -114,8 +113,9 @@ class MutableValueWrapper : public ValueWrapper {
 
 class ShadowNodeWrapperWrapper : public ValueWrapper {
  public:
-    ShadowNodeWrapperWrapper(const std::shared_ptr<ShadowNodeWrapper> &_value)
-      : ValueWrapper(ValueType::ShadowNodeWrapperType), value(_value){};
+  explicit ShadowNodeWrapperWrapper(
+      const std::shared_ptr<ShadowNodeWrapper> &_value)
+      : ValueWrapper(ValueType::ShadowNodeWrapperType), value(_value) {}
   std::shared_ptr<ShadowNodeWrapper> value;
 };
 
@@ -160,10 +160,11 @@ inline const std::shared_ptr<MutableValue> &ValueWrapper::asMutableValue(
   return static_cast<MutableValueWrapper *>(valueContainer.get())->value;
 }
 
-inline const std::shared_ptr<ShadowNodeWrapper> &ValueWrapper::asShadowNodeWrapper(
-    const std::unique_ptr<ValueWrapper> &valueContainer) {
+inline const std::shared_ptr<ShadowNodeWrapper>
+    &ValueWrapper::asShadowNodeWrapper(
+        const std::unique_ptr<ValueWrapper> &valueContainer) {
   return static_cast<ShadowNodeWrapperWrapper *>(valueContainer.get())->value;
-};
+}
 
 inline const HostFunctionWrapper *ValueWrapper::asHostFunctionWrapper(
     const std::unique_ptr<ValueWrapper> &valueContainer) {

@@ -150,7 +150,7 @@ function internalInterpolate(
 // TODO: support default values in worklets:
 // e.g. function interpolate(x, input, output, type = Extrapolatation.CLAMP)
 export function interpolate(
-  x: number ,
+  x: number,
   input: readonly number[],
   output: readonly number[],
   type?: ExtrapolationType

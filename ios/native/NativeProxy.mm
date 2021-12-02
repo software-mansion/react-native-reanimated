@@ -165,12 +165,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   auto propUpdater = [reanimatedModule](
-    jsi::Runtime &rt,
-    int viewTag, // equal to shadowNode->getTag()
-    const jsi::Value& viewName,
-    const jsi::Value& shadowNodeValue,
-    const jsi::Object &props
-  ) -> void {
+                         jsi::Runtime &rt,
+                         int viewTag, // equal to shadowNode->getTag()
+                         const jsi::Value &viewName,
+                         const jsi::Value &shadowNodeValue,
+                         const jsi::Object &props) -> void {
     NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
                                               encoding:[NSString defaultCStringEncoding]];
     ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
@@ -188,7 +187,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   };
 
   auto scrollToFunction = [](int viewTag, double x, double y, bool animated) {
-  //  scrollTo(viewTag, uiManager, x, y, animated); TODO
+    //  scrollTo(viewTag, uiManager, x, y, animated); TODO
   };
 
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
@@ -337,26 +336,26 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     module->onEvent(eventName, std::move(payload));
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
   }];
-    
-    facebook::react::ReanimatedListener::handleEvent = [module](RawEvent& rawEvent){
-        // handles RawEvents from React Native
 
-        auto &rt = *module->runtime;
+  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {
+    // handles RawEvents from React Native
 
-        int tag = rawEvent.eventTarget->getTag();
-        std::string eventType = rawEvent.type;
-        if (eventType.rfind("top", 0) == 0) {
-            eventType = "on" + eventType.substr(3);
-        }
-        std::string eventName = std::to_string(tag) + eventType;
-        jsi::Value payload = rawEvent.payloadFactory(rt);
-        
-        jsi::Object global = rt.global();
-        jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
-        global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
-        module->onEvent(eventName, std::move(payload));
-        global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
-    };
+    auto &rt = *module->runtime;
+
+    int tag = rawEvent.eventTarget->getTag();
+    std::string eventType = rawEvent.type;
+    if (eventType.rfind("top", 0) == 0) {
+      eventType = "on" + eventType.substr(3);
+    }
+    std::string eventName = std::to_string(tag) + eventType;
+    jsi::Value payload = rawEvent.payloadFactory(rt);
+
+    jsi::Object global = rt.global();
+    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
+    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
+    module->onEvent(eventName, std::move(payload));
+    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+  };
 
   return module;
 }

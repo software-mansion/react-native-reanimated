@@ -11,10 +11,8 @@
 #import <RNReanimated/REAModule.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCxxBridgeDelegate.h>
-#import <ReactCommon/RCTTurboModuleManager.h>
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
-
-
+#import <ReactCommon/RCTTurboModuleManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

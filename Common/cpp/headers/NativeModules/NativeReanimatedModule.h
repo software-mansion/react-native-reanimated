@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RNReanimated/Scheduler.h>
 #include <unistd.h>
 #include <memory>
 #include <string>
@@ -11,7 +12,6 @@
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
-#include <RNReanimated/Scheduler.h>
 
 namespace reanimated {
 
@@ -72,7 +72,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       override;
 
   void onRender(double timestampMs);
-  void onEvent(std::string eventName, jsi::Value && eventAsString);
+  void onEvent(std::string eventName, jsi::Value &&eventAsString);
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();

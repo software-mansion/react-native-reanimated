@@ -27,24 +27,22 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-    if (self.bridge) {
-      _surfacePresenter = self.bridge.surfacePresenter;
-        _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
-    } else {
-      // _surfacePresenter set in setSurfacePresenter:
-        _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
-    }
+  if (self.bridge) {
+    _surfacePresenter = self.bridge.surfacePresenter;
+    _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:self.bridge surfacePresenter:_surfacePresenter];
+  } else {
+    // _surfacePresenter set in setSurfacePresenter:
+    _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:nil surfacePresenter:_surfacePresenter];
+  }
 
-    [_surfacePresenter addObserver:self];
-    [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
+  [_surfacePresenter addObserver:self];
+  [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 
   _operations = [NSMutableArray new];
   [bridge.uiManager.observerCoordinator addObserver:self];
 }
 
 #pragma mark-- Transitioning API
-
-
 
 RCT_EXPORT_METHOD(triggerRender)
 {
@@ -65,21 +63,20 @@ RCT_EXPORT_METHOD(triggerRender)
 - (void)willMountComponentsWithRootTag:(NSInteger)rootTag
 {
   RCTAssertMainQueue();
-    
+
   RCTExecuteOnUIManagerQueue(^{
-      if (_operations.count == 0) {
-        return;
-      }
-      NSArray<AnimatedOperation> *operations = _operations;
-      _operations = [NSMutableArray new];
-      REANodesManager *nodesManager = _nodesManager;
+    if (_operations.count == 0) {
+      return;
+    }
+    NSArray<AnimatedOperation> *operations = _operations;
+    _operations = [NSMutableArray new];
+    REANodesManager *nodesManager = _nodesManager;
 
     RCTExecuteOnMainQueue(^{
-        for (AnimatedOperation operation in operations) {
-          operation(nodesManager);
-        }
-        [nodesManager operationsBatchDidComplete];
-     
+      for (AnimatedOperation operation in operations) {
+        operation(nodesManager);
+      }
+      [nodesManager operationsBatchDidComplete];
     });
   });
 }
@@ -92,9 +89,9 @@ RCT_EXPORT_METHOD(triggerRender)
     self->_operations = [NSMutableArray new];*/
 
     RCTExecuteOnMainQueue(^{
-      /*for (AnimatedOperation operation in operations) {
-        operation(self->_nodesManager);
-      }*/
+        /*for (AnimatedOperation operation in operations) {
+          operation(self->_nodesManager);
+        }*/
     });
   });
 }
@@ -128,7 +125,6 @@ RCT_EXPORT_METHOD(configureProps
     [nodesManager configureProps:[NSSet setWithArray:nativeProps] uiProps:[NSSet setWithArray:uiProps]];
   }];
 }
-
 
 #pragma mark-- Events
 
