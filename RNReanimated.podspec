@@ -85,7 +85,6 @@ Pod::Spec.new do |s|
   s.dependency 'RCTRequired'
   s.dependency 'RCTTypeSafety'
   s.dependency 'React-Core'
-  s.dependency "RCT-Folly/Fabric", folly_version
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
   s.dependency 'React-RCTActionSheet'
@@ -105,7 +104,8 @@ Pod::Spec.new do |s|
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  s.dependency "React-Fabric"
+  s.dependency 'React-Fabric'
+  s.dependency 'RCT-Folly/Fabric', folly_version
 
   if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
