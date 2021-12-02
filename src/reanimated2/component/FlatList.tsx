@@ -4,7 +4,7 @@ import WrappedComponents from './WrappedComponents';
 import createAnimatedComponent from '../../createAnimatedComponent';
 import { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 
-const AnimatedFlatList = createAnimatedComponent(FlatList as any);
+const AnimatedFlatList = createAnimatedComponent(FlatList as any) as any;
 
 const createCellRenderer = (itemLayoutAnimation?: ILayoutAnimationBuilder) => {
   const cellRenderer: React.FC<{
@@ -37,10 +37,7 @@ const ReanimatedFlatlist: ReanimatedFlatListFC = ({
     []
   );
   return (
-    <AnimatedFlatList
-      {...(restProps as any)}
-      CellRendererComponent={cellRenderer}
-    />
+    <AnimatedFlatList {...restProps} CellRendererComponent={cellRenderer} />
   );
 };
 

@@ -26,6 +26,7 @@ declare module 'react-native-reanimated' {
     Text as ReactNativeText,
     Image as ReactNativeImage,
     ScrollView as ReactNativeScrollView,
+    FlatList as ReactNativeFlatList,
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
@@ -258,6 +259,7 @@ declare module 'react-native-reanimated' {
     export class Code extends Component<CodeProps> {}
     export class FlatList extends Component<AnimateProps<FlatList>> {
       itemLayoutAnimation: ILayoutAnimationBuilder;
+      getNode(): ReactNativeFlatList;
     }
 
     type Options<P> = {
