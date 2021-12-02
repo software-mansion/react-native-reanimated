@@ -8989,10 +8989,10 @@ rc@^1.2.8:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-devtools-core@4.19.1:
-  version "4.19.1"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.19.1.tgz#bc37c2ef2f48f28c6af4c7292be9dca1b63deace"
-  integrity sha512-2wJiGffPWK0KggBjVwnTaAk+Z3MSxKInHmdzPTrBh1mAarexsa93Kw+WMX88+XjN+TtYgAiLe9xeTqcO5FfJTw==
+react-devtools-core@^4.13.0:
+  version "4.21.0"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.21.0.tgz#a54c9a0fd7261491e616d6c87d1869e011d8521d"
+  integrity sha512-clGWwJHV5MHwTwYyKc+7FZHwzdbzrD2/AoZSkicUcr6YLc3Za9a9FaLhccWDHfjQ+ron9yzNhDT6Tv+FiPkD3g==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
@@ -9027,15 +9027,6 @@ react-native-codegen@^0.0.7:
     jscodeshift "^0.11.0"
     nullthrows "^1.1.1"
 
-react-native-codegen@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.0.8.tgz#b7796a54074139d956fff2862cf1285db43c891b"
-  integrity sha512-k/944+0XD+8l7zDaiKfYabyEKmAmyZgS1mj+4LcSRPyHnrjgCHKrh/Y6jM6kucQ6xU1+1uyMmF/dSkikxK8i+Q==
-  dependencies:
-    flow-parser "^0.121.0"
-    jscodeshift "^0.11.0"
-    nullthrows "^1.1.1"
-
 react-native-gesture-handler@^1.6.1:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-1.7.0.tgz#0ef74a5ba836832e497dc49eb1ce58baa6c617e5"
@@ -9052,10 +9043,9 @@ react-native-screens@^3.4.0:
   dependencies:
     warn-once "^0.1.0"
 
-react-native@0.67.0-rc.3:
-  version "0.67.0-rc.3"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.67.0-rc.3.tgz#cc10f3bde2ac0f275d46043f8a4e9e15482cc015"
-  integrity sha512-l+FHxHsqZ5AyYPtgtycH2d3+oXSqwIlREzHYOEmtLxuhZ6etuQUk4MW7IKSavkzAIL6Z84gw2Sf7FlxEgwlXxg==
+react-native@software-mansion-labs/rea-fabric#reanimated:
+  version "1000.0.0"
+  resolved "git+ssh://git@github.com/software-mansion-labs/rea-fabric.git#2b7f733ef59da79d94433ecd5e839c6f03ab2781"
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^6.0.0"
@@ -9071,6 +9061,7 @@ react-native@0.67.0-rc.3:
     hermes-engine "~0.9.0"
     invariant "^2.2.4"
     jsc-android "^250230.2.1"
+    metro-babel-register "0.66.2"
     metro-react-native-babel-transformer "0.66.2"
     metro-runtime "0.66.2"
     metro-source-map "0.66.2"
@@ -9078,8 +9069,7 @@ react-native@0.67.0-rc.3:
     pretty-format "^26.5.2"
     promise "^8.0.3"
     prop-types "^15.7.2"
-    react-devtools-core "4.19.1"
-    react-native-codegen "^0.0.8"
+    react-devtools-core "^4.13.0"
     react-refresh "^0.4.0"
     regenerator-runtime "^0.13.2"
     scheduler "^0.20.2"
