@@ -262,8 +262,9 @@
     }
 
     if (_mounting) {
-      _mounting();
+      volatile void (^_mountingPtr)(void) = _mounting;
       _mounting = nil;
+      _mountingPtr();
     }
   }
   _wantRunUpdates = NO;
