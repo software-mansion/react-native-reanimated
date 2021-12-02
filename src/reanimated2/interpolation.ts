@@ -153,7 +153,7 @@ export function interpolate(
   x: number ,
   input: readonly number[],
   output: readonly number[],
-  type: ExtrapolationType
+  type?: ExtrapolationType
 ): number {
   'worklet';
   if (input.length < 2 || output.length < 2) {

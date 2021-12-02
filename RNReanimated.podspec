@@ -5,9 +5,28 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 reactVersion = '0.0.0'
 
 begin
-  reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "react-native", "package.json")))["version"]
+  # standard app
+  # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
+  # /appName/node_modules/react-native/package.json
+  reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))["version"]
 rescue
-  reactVersion = '0.64.0'
+  begin
+    # monorepo
+    # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
+    # /monorepo/node_modules/react-native/package.json
+    reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))["version"]
+  rescue
+    begin
+      # Example app in reanimated repo
+      # /react-native-reanimated/RNReanimated.podspec
+      # /react-native-reanimated/node_modules/react-native/package.json
+      reactVersion = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))["version"]
+    rescue
+      # should never happen
+      reactVersion = '0.66.0'
+      puts "[RNReanimated] Unable to recognized your `react-native` version! Default `react-native` version: " + reactVersion
+    end
+  end
 end
 
 rnVersion = reactVersion.split('.')[1]
@@ -48,9 +67,14 @@ Pod::Spec.new do |s|
     "Common/cpp/hidden_headers/**"
   ]
 
+  s.pod_target_xcconfig    = {
+    "USE_HEADERMAP" => "YES",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
+  }
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
-  s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)\" \"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Private/React-Core\"" }
-  s.xcconfig               = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\"",
+  s.xcconfig               = {
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
                                "OTHER_CFLAGS" => "$(inherited) -DRN_FABRIC_ENABLED" + " " + folly_flags  }
 
   s.requires_arc = true
@@ -71,7 +95,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-RCTBlob'
   s.dependency 'React-RCTSettings'
   s.dependency 'React-RCTText'
-  s.dependency 'React-RCTVibration'
   s.dependency 'React-RCTImage'
   s.dependency 'React-Core/RCTWebSocket'
   s.dependency 'React-cxxreact'

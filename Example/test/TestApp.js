@@ -16,9 +16,11 @@ import AnimatedReactionTest from './AnimatedReactionTest';
 import AnimationsTest from './Animations';
 import UpdatePropsTest from './UpdatePropsTest';
 import AdaptersTest from './AdaptersTest';
+import TransformsTest from './TransformsTest';
 import CustomLayout2 from './CustomLayout2';
 import CustomLayout3 from './CustomLayout3';
 import ModalInNavigation from './ModalInNavigation';
+import ModalInNavigationNativeStack from './ModalInNavigationNativeStack';
 import WithNavigation from './WithNavigation';
 import WithNavigationNested from './WithNavigationNested';
 import TestRemovalOrder from './TestRemovalOrder';
@@ -67,6 +69,10 @@ const SCREENS = {
     screen: AdaptersTest,
     title: '🆕 Adapters',
   },
+  TransformsTest: {
+    screen: TransformsTest,
+    title: '🆕 Transforms',
+  },
   CustomLayout2: {
     screen: CustomLayout2,
     title: '🆕 Custom Layout - switch to layout animation',
@@ -78,6 +84,10 @@ const SCREENS = {
   ModalInNavigation: {
     screen: ModalInNavigation,
     title: '🆕 Modal In Navigation',
+  },
+  ModalInNavigationNativeStack: {
+    screen: ModalInNavigationNativeStack,
+    title: '🆕 Modal In Navigation - native stack',
   },
   WithNavigation: {
     screen: WithNavigation,
@@ -113,7 +123,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <View collapsable={false} style={{flex:1}}>
+      <View collapsable={false} style={{ flex: 1 }}>
         <Stack.Navigator detachInactiveScreens={false}>
           <Stack.Screen
             name="Home"

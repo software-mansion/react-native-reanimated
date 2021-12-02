@@ -1,6 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "RuntimeManager.h"
 #include "SharedParent.h"
 #include "WorkletsCache.h"
@@ -18,6 +22,7 @@ class FrozenObject : public jsi::HostObject {
 
  private:
   std::unordered_map<std::string, std::shared_ptr<ShareableValue>> map;
+  std::vector<std::string> namesOrder;
 
  public:
   FrozenObject(

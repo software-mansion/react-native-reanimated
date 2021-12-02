@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "FrozenObject.h"
 #include "JSIStoreValueUser.h"
 #include "SharedParent.h"
@@ -17,7 +20,7 @@ class RemoteObject : public jsi::HostObject, public StoreUser {
   void maybeInitializeOnWorkletRuntime(jsi::Runtime &rt);
   RemoteObject(
       jsi::Runtime &rt,
-      jsi::Object &object,
+      const jsi::Object &object,
       RuntimeManager *runtimeManager,
       std::shared_ptr<Scheduler> s)
       : StoreUser(s, *runtimeManager),

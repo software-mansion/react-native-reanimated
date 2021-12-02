@@ -3,6 +3,7 @@ import { AnimationObject } from '../animation';
 import { processColor } from '../Colors';
 import {
   AnimatedStyle,
+  NativeEvent,
   NestedObjectValues,
   StyleProps,
   WorkletFunction,
@@ -31,12 +32,12 @@ export interface UseHandlerContext<TContext extends Context> {
   useWeb: boolean;
 }
 
-export function useEvent<T>(
+export function useEvent<T extends NativeEvent<T>>(
   handler: (event: T) => void,
   eventNames: string[] = [],
   rebuild = false
-): MutableRefObject<WorkletEventHandler | null> {
-  const initRef = useRef<WorkletEventHandler | null>(null);
+): MutableRefObject<WorkletEventHandler<T> | null> {
+  const initRef = useRef<WorkletEventHandler<T> | null>(null);
   if (initRef.current === null) {
     initRef.current = new WorkletEventHandler(handler, eventNames);
   } else if (rebuild) {

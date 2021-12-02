@@ -1,15 +1,15 @@
 package com.swmansion.reanimated.nodes;
 
-import java.text.NumberFormat;
-import java.util.Locale;
-
 import com.facebook.react.bridge.ReadableMap;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.Utils;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class ConcatNode extends Node {
   private final int[] mInputIDs;
-  private final static NumberFormat sFormatter = NumberFormat.getInstance(Locale.ENGLISH);
+  private static final NumberFormat sFormatter = NumberFormat.getInstance(Locale.ENGLISH);
+
   static {
     sFormatter.setMinimumFractionDigits(0);
     sFormatter.setGroupingUsed(false);

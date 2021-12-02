@@ -7,13 +7,17 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
+
 #include <memory>
+#include <string>
 #include <unordered_map>
-#include "NativeReanimatedModule.h"
+#include <utility>
+#include <vector>
 
 #include "AndroidScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
+#include "NativeReanimatedModule.h"
 #include "Scheduler.h"
 
 namespace reanimated {
@@ -40,7 +44,7 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  private:
   friend HybridBase;
 
-  AnimationFrameCallback(std::function<void(double)> callback)
+  explicit AnimationFrameCallback(std::function<void(double)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
@@ -70,7 +74,7 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  EventHandler(std::function<void(std::string, std::string)> handler)
+  explicit EventHandler(std::function<void(std::string, std::string)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<void(std::string, std::string)> handler_;
@@ -105,6 +109,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       std::function<void(std::string, std::string)> handler);
   void updateProps(jsi::Runtime &rt, int viewTag, const jsi::Object &props);
   void scrollTo(int viewTag, double x, double y, bool animated);
+  void setGestureState(int handlerTag, int newState);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 
   explicit NativeProxy(

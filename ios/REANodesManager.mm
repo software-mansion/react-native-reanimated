@@ -102,6 +102,7 @@ using namespace facebook::react;
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
+  _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
   [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   [_displayLink setPaused:true];
   return self;
@@ -298,7 +299,7 @@ using namespace facebook::react;
 
   if (_eventHandler != nil) {
     __weak REAEventHandler eventHandler = _eventHandler;
-    __weak typeof(self) weakSelf = self;
+    __weak __typeof__(self) weakSelf = self;
     RCTExecuteOnMainQueue(^void() {
       __typeof__(self) strongSelf = weakSelf;
       if (strongSelf == nil) {

@@ -6,8 +6,6 @@
 #import <React/RCTUIManagerUtils.h>
 #import <RNReanimated/REANodesManager.h>
 
-extern RCTBridge *_bridge_reanimated;
-
 @interface REAModule : RCTEventEmitter <RCTBridgeModule, RCTEventDispatcherObserver, RCTUIManagerObserver>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;

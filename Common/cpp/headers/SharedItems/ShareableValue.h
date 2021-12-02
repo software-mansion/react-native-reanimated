@@ -1,9 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "HostFunctionHandler.h"
 #include "JSIStoreValueUser.h"
 #include "LayoutAnimationsProxy.h"

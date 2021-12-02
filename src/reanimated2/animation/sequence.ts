@@ -3,7 +3,7 @@ import {
   Animation,
   Timestamp,
   NextAnimation,
-  PrimitiveValue,
+  AnimatableValue,
   HigherOrderAnimation,
   AnimationObject,
 } from './commonTypes';
@@ -66,7 +66,7 @@ export function withSequence(
 
       function onStart(
         animation: SequenceAnimation,
-        value: PrimitiveValue,
+        value: AnimatableValue,
         now: Timestamp,
         previousAnimation: SequenceAnimation
       ): void {
