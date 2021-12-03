@@ -36,7 +36,7 @@ if rnVersion.to_i >= 64
   folly_prefix = "RCT-"
 end
 
-folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
+folly_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 folly_compiler_flags = folly_flags + ' ' + '-Wno-comma -Wno-shorten-64-to-32'
 folly_version = '2021.06.28.00-v2'
 boost_compiler_flags = '-Wno-documentation'
@@ -74,16 +74,20 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig               = {
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/RCT-Folly\" \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\"",
                                "OTHER_CFLAGS" => "$(inherited) -DRN_FABRIC_ENABLED" + " " + folly_flags  }
 
   s.requires_arc = true
 
   s.dependency "React"
+  s.dependency "React-RCTFabric"
+  s.dependency "React-Codegen"
+  s.dependency "RCT-Folly", folly_version
+  s.dependency "RCTRequired"
+  s.dependency "RCTTypeSafety"
+  s.dependency "ReactCommon/turbomodule/core"
   s.dependency 'FBLazyVector'
   s.dependency 'FBReactNativeSpec'
-  s.dependency 'RCTRequired'
-  s.dependency 'RCTTypeSafety'
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
@@ -100,12 +104,9 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-jsiexecutor'
   s.dependency 'React-jsinspector'
-  s.dependency 'ReactCommon/turbomodule/core'
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  s.dependency 'React-Fabric'
-  s.dependency 'RCT-Folly/Fabric', folly_version
 
   if reactVersion.match(/^0.62/)
     s.dependency 'ReactCommon/callinvoker'
