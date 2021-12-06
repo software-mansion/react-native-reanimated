@@ -146,7 +146,7 @@ const gestureHandlerGestureObjects = new Set([
   'LongPress',
   'ForceTouch',
   'Native',
-  'Custom',
+  'Manual',
   'Race',
   'Simultaneous',
   'Exclusive',
