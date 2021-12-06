@@ -156,6 +156,7 @@ const gestureHandlerBuilderMethods = new Set([
   'onBegin',
   'onStart',
   'onEnd',
+  'onFinalize',
   'onUpdate',
   'onTouchesDown',
   'onTouchesMove',
