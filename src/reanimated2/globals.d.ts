@@ -38,6 +38,7 @@ declare global {
       _frameTimestamp: number | null;
       _measure: () => MeasuredDimensions;
       _scrollTo: () => void;
+      _chronoNow: () => number;
       performance: { now: () => number };
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
