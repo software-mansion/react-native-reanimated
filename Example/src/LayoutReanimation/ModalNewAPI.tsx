@@ -14,7 +14,7 @@ function AnimatedView() {
   const entering: EntryExitAnimationFunction = (targetValues) => {
     'worklet';
     const animations = {
-      originX: withTiming(targetValues.originX, { duration: 3000 }),
+      originX: withTiming(targetValues.targetOriginX, { duration: 3000 }),
       opacity: withTiming(1, { duration: 2000 }),
       borderRadius: withDelay(4000, withTiming(30, { duration: 3000 })),
       transform: [
@@ -41,7 +41,7 @@ function AnimatedView() {
       opacity: withTiming(0.5, { duration: 2000 }),
     };
     const initialValues = {
-      originX: startingValues.originX,
+      originX: startingValues.currentOriginX,
       opacity: 1,
     };
 
