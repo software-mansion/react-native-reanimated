@@ -228,7 +228,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     NSDictionary *preparedData = @{
       @"targetWidth" : values[@"width"],
       @"targetHeight" : values[@"height"],
-      @"targeOriginX" : values[@"originX"],
+      @"targetOriginX" : values[@"originX"],
       @"targetOriginY" : values[@"originY"],
       @"targetGlobalOriginX" : values[@"globalOriginX"],
       @"targetGlobalOriginY" : values[@"globalOriginY"],
@@ -264,7 +264,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     @"currentGlobalOriginY" : currentValues[@"globalOriginY"],
     @"targetWidth" : targetValues[@"width"],
     @"targetHeight" : targetValues[@"height"],
-    @"targeOriginX" : targetValues[@"originX"],
+    @"targetOriginX" : targetValues[@"originX"],
     @"targetOriginY" : targetValues[@"originY"],
     @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
     @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
