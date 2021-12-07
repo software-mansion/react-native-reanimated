@@ -4,7 +4,7 @@ title: getRelativeCoords
 sidebar_label: getRelativeCoords
 ---
 
-Determines the location on the screen, relative to the given view. It might be useful, when there are only absolute coordinates available and you need coordinates relative to the parent.
+Determines the location on the screen, relative to the given view. It might be useful when there are only absolute coordinates available and you need coordinates relative to the parent.
 
 ### Arguments
 

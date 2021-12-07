@@ -94,8 +94,8 @@ function CustomEnteringAnimation(values) {
 * `values` - contains information about where view wants to be displayed and what are its dimensions
   * `values.targetOriginX` - X coordinate of top left corner in parent's coordinate system
   * `values.targetOriginY` - Y coordinate of top left corner in parent's coordinate system
-  * `values.targetWidth` - view's width (after)
-  * `values.targetHeight` - view's height (after)
+  * `values.targetWidth` - view's width 
+  * `values.targetHeight` - view's height 
   * `values.targetGlobalOriginX` - X coordinate of top left corder in global coordinate system
   * `values.targetGlobalOriginY` - Y coordinate of top left corder in global coordinate system
 
@@ -163,12 +163,12 @@ function CustomLayoutTransition(values) {
 ```
 
 * `values` - contains before and after information about the view's origin and dimensions
-    * `values.targetOriginX` - X coordinate of top left corner in parent's coordinate system (after)
-    * `values.targetOriginY` - Y coordinate of top left corner in parent's coordinate system (after)
-    * `values.targetWidth` - view's width (after)
-    * `values.targetHeight` - view's height (after)
-    * `values.targetGlobalOriginX` - X coordinate of top left corder in global coordinate system (after)
-    * `values.targetGlobalOriginY` - Y coordinate of top left corder in global coordinate system (after)
+    * `values.targetOriginX` - X coordinate of top left corner in parent's coordinate system 
+    * `values.targetOriginY` - Y coordinate of top left corner in parent's coordinate system 
+    * `values.targetWidth` - view's width 
+    * `values.targetHeight` - view's height 
+    * `values.targetGlobalOriginX` - X coordinate of top left corder in global coordinate system 
+    * `values.targetGlobalOriginY` - Y coordinate of top left corder in global coordinate system 
     * `values.currentOriginX` - X coordinate of top left corner in parent's coordinate system (before)
     * `values.currentOriginY` - Y coordinate of top left corner in parent's coordinate system (before)
     * `values.currentWidth` - view's width (before)
