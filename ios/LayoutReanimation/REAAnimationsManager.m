@@ -23,6 +23,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
   NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
   NSMutableSet<NSNumber *> *_toRemove;
+  NSMutableArray<NSString *> *_targetKeys;
+  NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
 }
 
@@ -45,6 +47,13 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
     _viewForTag = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
     _cleaningScheduled = false;
+
+    _targetKeys = [NSMutableArray new];
+    _currentKeys = [NSMutableArray new];
+    for (NSString *key in [[self class] layoutKeys]) {
+      [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
+      [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
+    }
   }
   return self;
 }
@@ -58,6 +67,8 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   _viewForTag = nil;
   _toRemove = nil;
   _cleaningScheduled = false;
+  _targetKeys = nil;
+  _currentKeys = nil;
 }
 
 - (void)setAnimationStartingBlock:
@@ -317,8 +328,9 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
   if (state == Appearing) {
     BOOL doNotStartLayout = true;
-    for (NSString *key in [[self class] layoutKeys]) { // todo
-      if ([((NSNumber *)currentValues[key]) doubleValue] != [((NSNumber *)targetValues[key]) doubleValue]) {
+    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
+      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
+          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
         doNotStartLayout = false;
       }
     }
