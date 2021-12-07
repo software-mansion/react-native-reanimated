@@ -7,6 +7,8 @@
 
 @interface REAAnimationsManager ()
 
+typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
+
 @property (atomic, nullable) void (^startAnimationForTag)(NSNumber *, NSString *, NSDictionary *, NSNumber *);
 @property (atomic, nullable) void (^removeConfigForTag)(NSNumber *);
 
@@ -21,6 +23,8 @@
   NSMutableDictionary<NSNumber *, NSNumber *> *_states;
   NSMutableDictionary<NSNumber *, UIView *> *_viewForTag;
   NSMutableSet<NSNumber *> *_toRemove;
+  NSMutableArray<NSString *> *_targetKeys;
+  NSMutableArray<NSString *> *_currentKeys;
   BOOL _cleaningScheduled;
 }
 
@@ -43,6 +47,13 @@
     _viewForTag = [NSMutableDictionary new];
     _toRemove = [NSMutableSet new];
     _cleaningScheduled = false;
+
+    _targetKeys = [NSMutableArray new];
+    _currentKeys = [NSMutableArray new];
+    for (NSString *key in [[self class] layoutKeys]) {
+      [_targetKeys addObject:[NSString stringWithFormat:@"target%@", [key capitalizedString]]];
+      [_currentKeys addObject:[NSString stringWithFormat:@"current%@", [key capitalizedString]]];
+    }
   }
   return self;
 }
@@ -56,6 +67,8 @@
   _viewForTag = nil;
   _toRemove = nil;
   _cleaningScheduled = false;
+  _targetKeys = nil;
+  _currentKeys = nil;
 }
 
 - (void)setAnimationStartingBlock:
@@ -208,16 +221,53 @@
   [componentData setProps:newProps forView:view];
 }
 
-- (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values
+- (NSDictionary *)prepareDataForAnimatingWorklet:(NSMutableDictionary *)values frameConfig:(FrameConfigType)frameConfig
+{
+  UIView *windowView = UIApplication.sharedApplication.keyWindow;
+  if (frameConfig == EnteringFrame) {
+    NSDictionary *preparedData = @{
+      @"targetWidth" : values[@"width"],
+      @"targetHeight" : values[@"height"],
+      @"targetOriginX" : values[@"originX"],
+      @"targetOriginY" : values[@"originY"],
+      @"targetGlobalOriginX" : values[@"globalOriginX"],
+      @"targetGlobalOriginY" : values[@"globalOriginY"],
+      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
+      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+    };
+    return preparedData;
+  } else {
+    NSDictionary *preparedData = @{
+      @"currentWidth" : values[@"width"],
+      @"currentHeight" : values[@"height"],
+      @"currentOriginX" : values[@"originX"],
+      @"currentOriginY" : values[@"originY"],
+      @"currentGlobalOriginX" : values[@"globalOriginX"],
+      @"currentGlobalOriginY" : values[@"globalOriginY"],
+      @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
+      @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
+    };
+    return preparedData;
+  }
+}
+
+- (NSDictionary *)prepareDataForLayoutAnimatingWorklet:(NSMutableDictionary *)currentValues
+                                          targetValues:(NSMutableDictionary *)targetValues
 {
   UIView *windowView = UIApplication.sharedApplication.keyWindow;
   NSDictionary *preparedData = @{
-    @"width" : values[@"width"],
-    @"height" : values[@"height"],
-    @"originX" : values[@"originX"],
-    @"originY" : values[@"originY"],
-    @"globalOriginX" : values[@"globalOriginX"],
-    @"globalOriginY" : values[@"globalOriginY"],
+    @"currentWidth" : currentValues[@"width"],
+    @"currentHeight" : currentValues[@"height"],
+    @"currentOriginX" : currentValues[@"originX"],
+    @"currentOriginY" : currentValues[@"originY"],
+    @"currentGlobalOriginX" : currentValues[@"globalOriginX"],
+    @"currentGlobalOriginY" : currentValues[@"globalOriginY"],
+    @"targetWidth" : targetValues[@"width"],
+    @"targetHeight" : targetValues[@"height"],
+    @"targetOriginX" : targetValues[@"originX"],
+    @"targetOriginY" : targetValues[@"originY"],
+    @"targetGlobalOriginX" : targetValues[@"globalOriginX"],
+    @"targetGlobalOriginY" : targetValues[@"globalOriginY"],
     @"windowWidth" : [NSNumber numberWithDouble:windowView.bounds.size.width],
     @"windowHeight" : [NSNumber numberWithDouble:windowView.bounds.size.height]
   };
@@ -241,7 +291,7 @@
     return;
   }
   _states[tag] = [NSNumber numberWithInt:Disappearing];
-  NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues];
+  NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:startValues frameConfig:ExitingFrame];
   _startAnimationForTag(tag, @"exiting", preparedValues, @(0));
 }
 
@@ -257,7 +307,7 @@
   ViewState state = [_states[tag] intValue];
   if (state == Inactive) {
     if (targetValues != nil) {
-      NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues];
+      NSDictionary *preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
       _startAnimationForTag(tag, @"entering", preparedValues, @(0));
     }
     return;
@@ -268,7 +318,7 @@
 {
   NSNumber *tag = view.reactTag;
   NSMutableDictionary *targetValues = after.values;
-  NSMutableDictionary *startValues = before.values;
+  NSMutableDictionary *currentValues = before.values;
   if (_states[tag] == nil) {
     return;
   }
@@ -278,8 +328,9 @@
   }
   if (state == Appearing) {
     BOOL doNotStartLayout = true;
-    for (NSString *key in [[self class] layoutKeys]) {
-      if ([((NSNumber *)startValues[key]) doubleValue] != [((NSNumber *)targetValues[key]) doubleValue]) {
+    for (int i = 0; i < [[self class] layoutKeys].count; ++i) {
+      if ([((NSNumber *)currentValues[_currentKeys[i]]) doubleValue] !=
+          [((NSNumber *)targetValues[_targetKeys[i]]) doubleValue]) {
         doNotStartLayout = false;
       }
     }
@@ -288,13 +339,7 @@
     }
   }
   _states[view.reactTag] = [NSNumber numberWithInt:Layout];
-  NSDictionary *preparedStartValues = [self prepareDataForAnimatingWorklet:startValues];
-  NSDictionary *preparedTargetValues = [self prepareDataForAnimatingWorklet:targetValues];
-  NSMutableDictionary *preparedValues = [NSMutableDictionary new];
-  [preparedValues addEntriesFromDictionary:preparedTargetValues];
-  for (NSString *key in preparedStartValues.allKeys) {
-    preparedValues[[NSString stringWithFormat:@"%@%@", @"b", key]] = preparedStartValues[key];
-  }
+  NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
   _startAnimationForTag(view.reactTag, @"layout", preparedValues, @(0));
 }
 

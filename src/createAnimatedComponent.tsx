@@ -100,10 +100,13 @@ function onlyAnimatedStyles(styles: StyleProps[]) {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
-function isSameAnimatedStyle(style1: StyleProps, style2: StyleProps): boolean {
+function isSameAnimatedStyle(
+  style1?: StyleProps,
+  style2?: StyleProps
+): boolean {
   // We cannot use equality check to compare useAnimatedStyle outputs directly.
   // Instead, we can compare its viewsRefs.
-  return style1.viewsRef === style2.viewsRef;
+  return style1?.viewsRef === style2?.viewsRef;
 }
 
 const isSameAnimatedProps = isSameAnimatedStyle;

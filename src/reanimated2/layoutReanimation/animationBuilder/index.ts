@@ -4,8 +4,12 @@ export { Keyframe } from './Keyframe';
 export {
   LayoutAnimation,
   AnimationFunction,
-  EntryExitAnimationsValues,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
   EntryExitAnimationFunction,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
   ILayoutAnimationBuilder,
