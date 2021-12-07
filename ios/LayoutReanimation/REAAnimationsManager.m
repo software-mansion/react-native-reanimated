@@ -317,7 +317,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   }
   if (state == Appearing) {
     BOOL doNotStartLayout = true;
-    for (NSString *key in [[self class] layoutKeys]) {
+    for (NSString *key in [[self class] layoutKeys]) { // todo
       if ([((NSNumber *)currentValues[key]) doubleValue] != [((NSNumber *)targetValues[key]) doubleValue]) {
         doNotStartLayout = false;
       }
