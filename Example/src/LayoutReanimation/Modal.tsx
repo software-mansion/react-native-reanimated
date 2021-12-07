@@ -4,6 +4,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
 } from 'react-native-reanimated';
 
 function AnimatedView() {
@@ -11,7 +13,9 @@ function AnimatedView() {
     return {};
   });
 
-  const entering: EntryExitAnimationFunction = (targetValues) => {
+  const entering: EntryExitAnimationFunction = (
+    targetValues: EntryAnimationsValues
+  ) => {
     'worklet';
 
     return {
@@ -36,7 +40,9 @@ function AnimatedView() {
     };
   };
 
-  const exiting: EntryExitAnimationFunction = (targetValues) => {
+  const exiting: EntryExitAnimationFunction = (
+    targetValues: ExitAnimationsValues
+  ) => {
     'worklet';
 
     return {
