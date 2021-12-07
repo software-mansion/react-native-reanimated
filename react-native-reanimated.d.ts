@@ -456,34 +456,45 @@ declare module 'react-native-reanimated' {
     animations: AnimateStyle;
   };
 
-  export type EntryExitAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-  };
+  export interface EntryAnimationsValues {
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
+  }
+
+  export interface ExitAnimationsValues {
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+  }
+
   export type EntryExitAnimationFunction = (
-    targetValues: EntryExitAnimationsValues
+    targetValues: EntryAnimationsValues | ExitAnimationsValues
   ) => LayoutAnimation;
 
   export type LayoutAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-    boriginX: number;
-    boriginY: number;
-    bwidth: number;
-    bheight: number;
-    bglobalOriginX: number;
-    bglobalOriginY: number;
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
     windowWidth: number;
     windowHeight: number;
   };
+
   export type LayoutAnimationFunction = (
     targetValues: LayoutAnimationsValues
   ) => LayoutAnimation;

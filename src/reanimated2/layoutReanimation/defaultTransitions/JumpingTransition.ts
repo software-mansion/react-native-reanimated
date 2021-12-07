@@ -22,34 +22,40 @@ export class JumpingTransition
     return (values) => {
       'worklet';
       const d = Math.max(
-        Math.abs(values.originX - values.boriginX),
-        Math.abs(values.originY - values.boriginY)
+        Math.abs(values.targetOriginX - values.currentOriginX),
+        Math.abs(values.targetOriginY - values.currentOriginY)
       );
       return {
         initialValues: {
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
-          originX: delayFunction(delay, withTiming(values.originX, config)),
+          originX: delayFunction(
+            delay,
+            withTiming(values.targetOriginX, config)
+          ),
           originY: delayFunction(
             delay,
             withSequence(
-              withTiming(Math.min(values.originY, values.boriginY) - d, {
-                duration,
-                easing: Easing.out(Easing.exp),
-              }),
-              withTiming(values.originY, {
+              withTiming(
+                Math.min(values.targetOriginY, values.currentOriginY) - d,
+                {
+                  duration,
+                  easing: Easing.out(Easing.exp),
+                }
+              ),
+              withTiming(values.targetOriginY, {
                 ...config,
                 duration,
                 easing: Easing.bounce,
               })
             )
           ),
-          width: delayFunction(delay, withTiming(values.width, config)),
-          height: delayFunction(delay, withTiming(values.height, config)),
+          width: delayFunction(delay, withTiming(values.targetWidth, config)),
+          height: delayFunction(delay, withTiming(values.targetHeight, config)),
         },
         callback: callback,
       };

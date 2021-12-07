@@ -36,38 +36,50 @@ export class SequencedTransition
       'worklet';
       return {
         initialValues: {
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
           originX: delayFunction(
             delay,
             withSequence(
-              withTiming(reverse ? values.boriginX : values.originX, config),
-              withTiming(values.originX, config)
+              withTiming(
+                reverse ? values.currentOriginX : values.targetOriginX,
+                config
+              ),
+              withTiming(values.targetOriginX, config)
             )
           ),
           originY: delayFunction(
             delay,
             withSequence(
-              withTiming(reverse ? values.originY : values.boriginY, config),
-              withTiming(values.originY, config)
+              withTiming(
+                reverse ? values.targetOriginY : values.currentOriginY,
+                config
+              ),
+              withTiming(values.targetOriginY, config)
             )
           ),
           width: delayFunction(
             delay,
             withSequence(
-              withTiming(reverse ? values.bwidth : values.width, config),
-              withTiming(values.width, config)
+              withTiming(
+                reverse ? values.currentWidth : values.targetWidth,
+                config
+              ),
+              withTiming(values.targetWidth, config)
             )
           ),
           height: delayFunction(
             delay,
             withSequence(
-              withTiming(reverse ? values.height : values.bheight, config),
-              withTiming(values.height, config)
+              withTiming(
+                reverse ? values.targetHeight : values.currentHeight,
+                config
+              ),
+              withTiming(values.targetHeight, config)
             )
           ),
         },
