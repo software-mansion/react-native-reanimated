@@ -6,7 +6,7 @@ sidebar_label: Layout Animations
 
 ### What it is?
 
-#### Layout Animation - easiest way to animate entering/exiting/layout of your components.
+#### Layout Animation - the easiest way to animate entering/exiting/layout of your components.
 
 In React Native every component appears instantly whenever you add it to the component hierarchy. It's not something we are used to in the real world. Layout Animations are here to address the problem and help you animate an appearance of any view.
 
