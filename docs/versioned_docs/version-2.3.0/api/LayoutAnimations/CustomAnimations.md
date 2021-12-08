@@ -53,6 +53,10 @@ function CardView() {
       originX: values.currentOriginX,
       opacity: 1,
     };
+    return {
+      initialValues,
+      animations,
+    }
   }
 
 
