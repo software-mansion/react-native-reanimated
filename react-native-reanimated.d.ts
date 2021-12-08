@@ -474,22 +474,6 @@ declare module 'react-native-reanimated' {
     currentGlobalOriginY: number;
   }
 
-  export interface EntryExitAnimationsValues {
-    targetOriginX?: number;
-    targetOriginY?: number;
-    targetWidth?: number;
-    targetHeight?: number;
-    targetGlobalOriginX?: number;
-    targetGlobalOriginY?: number;
-    currentOriginX?: number;
-    currentOriginY?: number;
-    Ŕ;
-    currentWidth?: number;
-    currentHeight?: number;
-    currentGlobalOriginX?: number;
-    currentGlobalOriginY?: number;
-  }
-
   export type EntryExitAnimationFunction =
     | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
     | ((targetValues: ExitAnimationsValues) => LayoutAnimation);
