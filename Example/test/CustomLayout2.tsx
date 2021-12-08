@@ -19,20 +19,20 @@ function CustomLayoutTransiton(): LayoutAnimationFunction {
       animations: {
         originX: withDelay(
           isEvenLocal ? 1000 : 0,
-          withTiming(values.originX, { duration: 1000 })
+          withTiming(values.targetOriginX, { duration: 1000 })
         ),
         originY: withDelay(
           isEvenLocal ? 0 : 1000,
-          withTiming(values.originY, { duration: 1000 })
+          withTiming(values.targetOriginY, { duration: 1000 })
         ),
-        width: withTiming(values.width, { duration: 1000 }),
-        height: withTiming(values.height, { duration: 1000 }),
+        width: withTiming(values.targetWidth, { duration: 1000 }),
+        height: withTiming(values.targetHeight, { duration: 1000 }),
       },
       initialValues: {
-        originX: values.boriginX,
-        originY: values.boriginY,
-        width: values.bwidth,
-        height: values.bheight,
+        originX: values.currentOriginX,
+        originY: values.currentOriginY,
+        width: values.currentWidth,
+        height: values.currentHeight,
       },
     };
   };
