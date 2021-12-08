@@ -21,6 +21,10 @@ if (isExpoLinked) {
             main.manifest.srcFile 'src/AndroidManifest.xml'
             main.java.srcDirs = [ 'expo/src/main/java' ]
         }
+
+        libraryVariants.all {
+            generateBuildConfigProvider?.get()?.enabled = false
+        }
     }
 
     dependencies {
