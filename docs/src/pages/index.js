@@ -8,7 +8,7 @@ import styles from './styles.module.css';
 
 const heroImageUrl = 'img/swm-react-native-reanimated-illu-top-05.svg';
 const sectionImageUrl = 'img/swm-react-native-reanimated-illu-kon-06.svg';
-const screenshotUrl = 'img/3.gifdd';
+const screenshotUrl = 'img/3.gif';
 
 const boxes = [
   {
