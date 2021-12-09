@@ -39,7 +39,7 @@ const bannerDescription =
 const blogUrl =
   'https://blog.swmansion.com/introducing-reanimated-2-752b913af8b3';
 const exampleUrl =
-  'https://github.com/software-mansion/react-native-reanimated/tree/master/Example';
+  'https://github.com/software-mansion/react-native-reanimated/tree/main/Example';
 const playgroundUrl =
   'https://github.com/software-mansion-labs/reanimated-2-playground';
 const tryItOutDecription =

@@ -2,13 +2,13 @@ name: Test Android build
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - 'android/**'
       - 'Common/**'
   push:
     branches:
-      - master
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
