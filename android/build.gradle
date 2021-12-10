@@ -213,20 +213,23 @@ if (CLIENT_SIDE_BUILD) {
         }
     })
 
-    def minorCopy = Integer.parseInt(minor)
-    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+    def rnMinorVersionCopy = Integer.parseInt(minor)
+    aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
 
-    while (!aar.exists()) {
-        minorCopy -= 1
-        if (minorCopy < 63) {
-            println "No AAR for react-native-reanimated found. Attempting to build from source."
-            buildFromSource = true
-            break
+    if (aar.exists()) {
+        println "AAR for react-native-renimated has been found\n$aar"
+        buildFromSource = false
+        artifacts.add("default", aar)
+    } else {
+        while (!aar.exists() && rnMinorVersionCopy >= 63) {
+            rnMinorVersionCopy -= 1
+            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
         }
 
-        aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
-
-        if (aar.exists()) {
+        if (rnMinorVersionCopy < 63) {
+            println "No AAR for react-native-reanimated found. Attempting to build from source."
+            buildFromSource = true
+        } else { // aar exists, but was built for lower react-native version
             println "\n\n\n"
             println "****************************************************************************************"
             println "\n\n\n"
@@ -599,11 +602,11 @@ repositories {
 
 dependencies {
     //noinspection GradleDynamicVersion
-//    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
+//   implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-//    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
-//    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+//   extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+//   extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
