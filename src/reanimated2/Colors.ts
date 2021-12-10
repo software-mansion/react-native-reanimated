@@ -671,9 +671,9 @@ const interpolateColorsRGB = (
   colors: InterpolateCacheRGBA
 ) => {
   'worklet';
-  const r = interpolate(value, inputRange, colors.r, Extrapolate.CLAMP);
-  const g = interpolate(value, inputRange, colors.g, Extrapolate.CLAMP);
-  const b = interpolate(value, inputRange, colors.b, Extrapolate.CLAMP);
+  const r = Math.round(interpolate(value, inputRange, colors.r, Extrapolate.CLAMP));
+  const g = Math.round(interpolate(value, inputRange, colors.g, Extrapolate.CLAMP));
+  const b = Math.round(interpolate(value, inputRange, colors.b, Extrapolate.CLAMP));
   const a = interpolate(value, inputRange, colors.a, Extrapolate.CLAMP);
   return rgbaColor(r, g, b, a);
 };
