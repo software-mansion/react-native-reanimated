@@ -62,6 +62,7 @@ add_library(
         "${COMMON_SRC_DIR}/cpp/Tools/RuntimeDecorator.cpp"
         "${COMMON_SRC_DIR}/cpp/Tools/Scheduler.cpp"
         "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
