@@ -147,11 +147,12 @@ someSharedValue.value = withTiming(50);
 ```
 
 In the above code the `offset` Shared Value instead of being set to `50` immediately, will transition from the current value to `50` using time-based animation.
-Of course, launching animation this way can be done both from the UI and from the React-Native JS thread.
+
 Below is a complete code example which is the modified version of the example from the previous section.
 Here, instead of updating `offset` value immediately, we perform an animated transition with a timing curve.
+Note that `withSpring` has to be called within the worklet created with `useAnimatedStyle`. Hence, launching an animation this way must be done from the UI thread.
 
-```js {17}
+```js {8}
 import Animated, { withSpring } from 'react-native-reanimated';
 
 function Box() {
@@ -159,7 +160,7 @@ function Box() {
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: offset.value * 255 }],
+      transform: [{ translateX: withSpring(offset.value * 255) }],
     };
   });
 
@@ -168,7 +169,7 @@ function Box() {
       <Animated.View style={[styles.box, animatedStyles]} />
       <Button
         onPress={() => {
-          offset.value = withSpring(Math.random());
+          offset.value = Math.random();
         }}
         title="Move"
       />
@@ -177,7 +178,7 @@ function Box() {
 }
 ```
 
-The only change we made in the above code compared to the example from the previous section, is that we wrapped `Math.random()` call that updates the `offset` with `withSpring` call.
+The only change we made in the above code compared to the example from the previous section, is that we wrapped `offset.value * 255` call that updates the `offset` with `withSpring` call.
 As a result, the updates to the view's translation will be smooth:
 
 ![](/docs/shared-values/sv-spring.gif)
