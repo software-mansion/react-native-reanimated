@@ -1,15 +1,16 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
 #include "FeaturesConfig.h"
-#import "RCTComponentData.h"
-#import "RCTLayoutAnimation.h"
-#import "RCTLayoutAnimationGroup.h"
-#import "RCTModalHostView.h"
-#import "RCTRootShadowView.h"
-#import "RCTRootViewInternal.h"
-#import "RCTUIManagerObserverCoordinator.h"
 #import "REAIOSScheduler.h"
 #include "Scheduler.h"
+
+#import <React/RCTComponentData.h>
+#import <React/RCTLayoutAnimation.h>
+#import <React/RCTLayoutAnimationGroup.h>
+#import <React/RCTModalHostView.h>
+#import <React/RCTRootShadowView.h>
+#import <React/RCTRootViewInternal.h>
+#import <React/RCTUIManagerObserverCoordinator.h>
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>
