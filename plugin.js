@@ -547,11 +547,34 @@ function processWorkletFunction(t, fun, fileName) {
     t.isScopable(fun.parent) || t.isExportNamedDeclaration(fun.parent);
   fun.replaceWith(
     fun.node.id && needDeclaration
-      ? t.variableDeclaration('const', [
+      ? t.variableDeclaration('var', [
           t.variableDeclarator(fun.node.id, replacement),
         ])
       : replacement
   );
+
+  // replace nearest parent declaration with var to prevent crash
+  // privateFunctionId's _closure property will include it
+  // causing reference to uninitialized const/let variable
+  //
+  // example:
+  // const fun = function () {
+  //   const _f = function (component) {};
+  //   _f._closure = {
+  //     fun
+  //   };
+  //   return _f;
+  // }();
+  //
+  // in above scenario, replacing `fun`'s variable declaration with `var` solves crash through hoisting  
+  let maybeDeclaration = fun.parentPath;
+  while (maybeDeclaration != null) {
+    if (t.isVariableDeclaration(maybeDeclaration.node)) {
+      maybeDeclaration.node.kind = 'var';
+      break;
+    }
+    maybeDeclaration = maybeDeclaration.parentPath;
+  }
 }
 
 function processWorkletObjectMethod(t, path, fileName) {
