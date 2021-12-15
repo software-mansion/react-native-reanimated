@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react';
 import { WorkletFunction } from '../commonTypes';
-import { isWeb } from '../PlatformChecker';
+import { isJest, isWeb } from '../PlatformChecker';
 import WorkletEventHandler from '../WorkletEventHandler';
 import { Context, DependencyList } from './commonTypes';
 import { useEvent, useHandler } from './Hooks';
@@ -98,7 +98,7 @@ export function useAnimatedGestureHandler<
     }
   };
 
-  if (isWeb()) {
+  if (isWeb() || isJest()) {
     return handler;
   }
 
