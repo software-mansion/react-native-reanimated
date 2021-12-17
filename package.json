@@ -73,7 +73,6 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.2",
-    "react-native-screens": "^3.4.0",
     "string-hash-64": "^1.0.3"
   },
   "peerDependencies": {
