@@ -1,7 +1,12 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
-import { nativeShouldBeMock, shouldBeUseWeb, isWeb, isChromeDebugger } from './PlatformChecker';
+import {
+  nativeShouldBeMock,
+  shouldBeUseWeb,
+  isWeb,
+  isChromeDebugger,
+} from './PlatformChecker';
 import {
   BasicWorkletFunction,
   WorkletFunction,
