@@ -1,12 +1,7 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
-import {
-  nativeShouldBeMock,
-  shouldBeUseWeb,
-  isWeb,
-  isChromeDebugger,
-} from './PlatformChecker';
+import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
   WorkletFunction,
@@ -376,7 +371,7 @@ if (!NativeReanimatedModule.useOnlyV1) {
       : (workletValueSetterJS as <T>(value: T) => void)
   );
 
-  if (!isWeb() && !isChromeDebugger() && isConfigured()) {
+  if (!isWeb() && isConfigured()) {
     const capturableConsole = console;
     runOnUI(() => {
       'worklet';
@@ -388,9 +383,11 @@ if (!NativeReanimatedModule.useOnlyV1) {
         info: runOnJS(capturableConsole.info),
       };
       _setGlobalConsole(console);
-      global.performance = {
-        now: global._chronoNow,
-      };
+      if (global.performance == null) {
+        global.performance = {
+          now: global._chronoNow,
+        };
+      }
     })();
   }
 }
