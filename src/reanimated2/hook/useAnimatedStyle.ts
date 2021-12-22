@@ -259,7 +259,12 @@ function styleUpdater(
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
-    updateProps(viewDescriptors, newValues, maybeViewRef);
+
+    const diff = styleDiff(oldValues, newValues);
+    state.last = Object.assign({}, oldValues, newValues);
+    if (diff) {
+      updateProps(viewDescriptors, newValues, maybeViewRef);
+    }
   }
 }
 
@@ -463,9 +468,21 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       if (hasColorProps(upadterFn())) {
         upadterFn = () => {
           'worklet';
-          const style = upadterFn();
-          parseColors(style);
-          return style;
+          const newValues = upadterFn();
+          const oldValues = remoteState.last;
+          const diff = styleDiff(oldValues, newValues);
+          remoteState.last = Object.assign({}, oldValues, newValues);
+          parseColors(diff);
+          return diff as T;
+        };
+      } else {
+        upadterFn = () => {
+          'worklet';
+          const newValues = upadterFn();
+          const oldValues = remoteState.last;
+          const diff = styleDiff(oldValues, newValues);
+          remoteState.last = Object.assign({}, oldValues, newValues);
+          return diff as T;
         };
       }
     } else if (!shouldBeUseWeb()) {

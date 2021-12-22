@@ -207,27 +207,23 @@ export function styleDiff(
 ): AnimatedStyle {
   'worklet';
   const diff: AnimatedStyle = {};
-  Object.keys(oldStyle).forEach((key) => {
+  for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;
     }
-  });
-  Object.keys(newStyle).forEach((key) => {
+  }
+  for (const key in newStyle) {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
     if (isAnimated(value)) {
       // do nothing
-      return;
+      continue;
     }
-    if (
-      oldValue !== value &&
-      JSON.stringify(oldValue) !== JSON.stringify(value)
-    ) {
-      // I'd use deep equal here but that'd take additional work and this was easier
+    if (oldValue !== value) {
       diff[key] = value;
     }
-  });
+  }
   return diff;
 }
 
