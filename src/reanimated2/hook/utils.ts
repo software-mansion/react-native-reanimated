@@ -163,7 +163,12 @@ export function parseColors(updates: AnimatedStyle): void {
   'worklet';
   for (const key in updates) {
     if (colorProps.indexOf(key) !== -1) {
-      updates[key] = processColor(updates[key]);
+      // value could be an animation in which case processColor will recognize it and will return undefined
+      // -> in such a case we don't want to override style of that key
+      const processedColor = processColor(updates[key]);
+      if (processedColor !== undefined) {
+        updates[key] = processedColor;
+      }
     }
   }
 }
