@@ -451,14 +451,6 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    // FIXME jcenter is deprecated and will be removed soon, however some modules still doesn't migrate to maven central
-    jcenter() {
-        content {
-            includeModule("com.facebook.fbjni", "fbjni-java-only")
-            includeModule("com.facebook.yoga", "proguard-annotations")
-
-        }
-    }
 }
 
 dependencies {
