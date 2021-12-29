@@ -148,17 +148,17 @@ set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 # message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
-        target_link_libraries(
-                ${PACKAGE_NAME}
-                ${LOG_LIB}
-                ${JSI_LIB}
-                ${HERMES_LIB}
-                ${GLOG_LIB}
-                fbjni::fbjni
-                ${FOLLY_JSON_LIB}
-                ${REACT_NATIVE_JNI_LIB}
-                android
-        )
+    target_link_libraries(
+        ${PACKAGE_NAME}
+        ${LOG_LIB}
+        ${JSI_LIB}
+        ${HERMES_LIB}
+        ${GLOG_LIB}
+        fbjni::fbjni
+        ${FOLLY_JSON_LIB}
+        ${REACT_NATIVE_JNI_LIB}
+        android
+    )
 else()
     target_link_libraries(
             ${PACKAGE_NAME}
@@ -172,3 +172,13 @@ else()
             android
     )
 endif()
+
+# if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
+#     add_library(
+#             turbomodulejsijni
+#             # Sets the library as a shared library.
+#             SHARED
+#             # Provides a relative path to your source file(s).
+#             ./empty.cpp
+#     )
+# endif()
