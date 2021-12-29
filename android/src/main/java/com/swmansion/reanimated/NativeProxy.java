@@ -4,25 +4,26 @@ import android.os.SystemClock;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.swmansion.common.GestureHandlerStateManager;
+// import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+// import com.facebook.soloader.SoLoader;
 
 public class NativeProxy {
 
   static {
     System.loadLibrary("reanimated");
+    // SoLoader.loadLibrary("reanimated");
   }
 
   @DoNotStrip
@@ -72,7 +73,7 @@ public class NativeProxy {
   private NodesManager mNodesManager;
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
-  private final GestureHandlerStateManager gestureHandlerStateManager;
+  // private final GestureHandlerStateManager gestureHandlerStateManager;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder =
@@ -85,17 +86,17 @@ public class NativeProxy {
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
 
-    GestureHandlerStateManager tempHandlerStateManager;
-    try {
-      Class<NativeModule> gestureHandlerModuleClass =
-          (Class<NativeModule>)
-              Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
-      tempHandlerStateManager =
-          (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
-    } catch (ClassCastException | ClassNotFoundException e) {
-      tempHandlerStateManager = null;
-    }
-    gestureHandlerStateManager = tempHandlerStateManager;
+    // GestureHandlerStateManager tempHandlerStateManager;
+    // try {
+    //   Class<NativeModule> gestureHandlerModuleClass =
+    //       (Class<NativeModule>)
+    //           Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
+    //   tempHandlerStateManager =
+    //       (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
+    // } catch (ClassCastException | ClassNotFoundException e) {
+    //   tempHandlerStateManager = null;
+    // }
+    // gestureHandlerStateManager = tempHandlerStateManager;
   }
 
   private native HybridData initHybrid(
@@ -134,9 +135,9 @@ public class NativeProxy {
 
   @DoNotStrip
   private void setGestureState(int handlerTag, int newState) {
-    if (gestureHandlerStateManager != null) {
-      gestureHandlerStateManager.setGestureHandlerState(handlerTag, newState);
-    }
+    // if (gestureHandlerStateManager != null) {
+    //   gestureHandlerStateManager.setGestureHandlerState(handlerTag, newState);
+    // }
   }
 
   @DoNotStrip

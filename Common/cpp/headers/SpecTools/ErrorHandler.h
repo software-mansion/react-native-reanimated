@@ -1,8 +1,8 @@
 #pragma once
 
-#include <RNReanimated/Scheduler.h>
 #include <memory>
 #include <string>
+#include "Scheduler.h"
 
 namespace reanimated {
 

@@ -60,6 +60,7 @@ void NativeProxy::installJSIBindings() {
                          jsi::Runtime &rt,
                          int viewTag,
                          const jsi::Value &viewName,
+                         const jsi::Value &shadowNodeValue,
                          const jsi::Object &props) {
     // viewName is for iOS only, we skip it here
     this->updateProps(rt, viewTag, props);
@@ -182,7 +183,7 @@ void NativeProxy::installJSIBindings() {
     jsi::String eventTimestampName =
         jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
     global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
-    module->onEvent(eventName, eventAsString);
+    // module->onEvent(eventName, eventAsString); // TODO: fix this
     global.setProperty(
         *module->runtime, eventTimestampName, jsi::Value::undefined());
   });

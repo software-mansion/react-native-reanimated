@@ -6,10 +6,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.ref.WeakReference;
 import java.util.Map;
+// import com.facebook.soloader.SoLoader;
 
 public class LayoutAnimations {
   static {
     System.loadLibrary("reanimated");
+    // SoLoader.loadLibrary("reanimated");
   }
 
   @DoNotStrip

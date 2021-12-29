@@ -1,6 +1,5 @@
 #pragma once
 
-#include <RNReanimated/Scheduler.h>
 #include <unistd.h>
 #include <memory>
 #include <string>
@@ -12,6 +11,7 @@
 #include "PlatformDepMethodsHolder.h"
 #include "RuntimeDecorator.h"
 #include "RuntimeManager.h"
+#include "Scheduler.h"
 
 namespace reanimated {
 

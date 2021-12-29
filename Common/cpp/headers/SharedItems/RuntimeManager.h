@@ -1,11 +1,11 @@
 #pragma once
 
-#include <RNReanimated/Scheduler.h>
 #include <jsi/jsi.h>
 #include <memory>
 #include "ErrorHandler.h"
 #include "JSIStoreValueUser.h"
 #include "RuntimeDecorator.h"
+#include "Scheduler.h"
 #include "ShareableValue.h"
 #include "WorkletsCache.h"
 

@@ -11,7 +11,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.apache.tools.ant.filters.ReplaceTokens
 
 def reactProperties = new Properties()
-file("$projectDir/../node_modules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+file("$projectDir/../../rea-fabric/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
 def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
@@ -27,19 +27,19 @@ def FBJNI_VERSION = '0.2.2'
 def downloadsDir = new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
-def reactNative = new File("$projectDir/../node_modules/react-native")
+def reactNative = new File("$projectDir/../../../rea-fabric")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def HOME = System.getProperty("user.home")
 
 def _stackProtectorFlag = true;
-def FOR_HERMES = "";
-if(findProject(':app')) {
-    FOR_HERMES = project(':app').ext.react.enableHermes;
-}
-else {
-    FOR_HERMES = System.getenv("FOR_HERMES") == "True";
-}
+def FOR_HERMES = true;
+// if(findProject(':app')) {
+//     FOR_HERMES = project(':app').ext.react.enableHermes;
+// }
+// else {
+//     FOR_HERMES = System.getenv("FOR_HERMES") == "True";
+// }
 // You need to have following folders in this directory:
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
@@ -95,7 +95,6 @@ android {
     }
     compileSdkVersion safeExtGet('compileSdkVersion', 30)
     defaultConfig {
-
         minSdkVersion safeExtGet('minSdkVersion', 16)
         targetSdkVersion safeExtGet('targetSdkVersion', 30)
         versionCode 1
@@ -444,11 +443,11 @@ repositories {
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$rootDir/../node_modules/react-native/android"
+        url "$projectDir/../../rea-fabric/ReactAndroid"
     }
     maven {
         // Android JSC is installed from npm
-        url "$rootDir/../node_modules/jsc-android/dist"
+        url "$projectDir/../../rea-fabric/node_modules/jsc-android/dist"
     }
     google()
     // FIXME jcenter is deprecated and will be removed soon, however some modules still doesn't migrate to maven central
@@ -464,14 +463,15 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
-    implementation 'com.facebook.react:react-native:+' // From node_modules
+    // implementation 'com.facebook.react:react-native:+' // From node_modules
+    implementation project(':ReactAndroid')
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
-    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+    // extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION) // ?
 
-    def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
-    def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
-    extractSO(files(rnAAR, jscAAR))
+    // def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
+    // def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+    // extractSO(files(rnAAR, jscAAR))
 }
 
 task downloadNdkBuildDependencies {
@@ -496,3 +496,15 @@ tasks.whenTaskAdded { task ->
     }
 }
 
+// RNTester uses "jsc" and "hermes" build flavors which appear in various task names, e.g. `compileJscDebugSources`.
+// Due to unknown reasons, some of the Gradle tasks in Reanimated are not attached as dependencies.
+// That's why we need to add the dependencies manually.
+// NOTE: Currently, this works only for debug mode.
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('merge') && task.name.endsWith('NativeLibs')) {
+        task.dependsOn(':react-native-reanimated:externalNativeBuildDebug')
+    }
+    if (task.name.startsWith('merge') && task.name.endsWith('JniLibFolders')) {
+        task.dependsOn(':react-native-reanimated:packageNdkLibs')
+    }
+}

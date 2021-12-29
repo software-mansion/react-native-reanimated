@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)  # resolves "warning: nested namespace definition is a C++17 extension"
 set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -81,11 +81,15 @@ target_include_directories(
         "./src/main/Common/cpp/headers/LayoutAnimations"
         "./src/main/Common/cpp/hidden_headers"
         "./src/main/cpp/headers"
+        "${BUILD_DIR}/../../../rea-fabric/ReactAndroid/build/third-party-ndk/boost/boost_${BOOST_VERSION}"
+        "${BUILD_DIR}/../../../rea-fabric/ReactAndroid/build/third-party-ndk/double-conversion"
+        "${BUILD_DIR}/../../../rea-fabric/ReactAndroid/build/third-party-ndk/folly"
+        "${BUILD_DIR}/../../../rea-fabric/ReactAndroid/build/third-party-ndk/glog/exported"
 )
 
 # find libraries
 
-file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
+file (GLOB LIBRN_DIR "${BUILD_DIR}/../../../rea-fabric/ReactAndroid/src/main/jni/prebuilt/lib/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
 
@@ -141,20 +145,20 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
+# message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
-    target_link_libraries(
-            ${PACKAGE_NAME}
-            ${LOG_LIB}
-            ${JSI_LIB}
-            ${HERMES_LIB}
-            ${GLOG_LIB}
-            fbjni::fbjni
-            ${FOLLY_JSON_LIB}
-            ${REACT_NATIVE_JNI_LIB}
-            android
-    )
+        target_link_libraries(
+                ${PACKAGE_NAME}
+                ${LOG_LIB}
+                ${JSI_LIB}
+                ${HERMES_LIB}
+                ${GLOG_LIB}
+                fbjni::fbjni
+                ${FOLLY_JSON_LIB}
+                ${REACT_NATIVE_JNI_LIB}
+                android
+        )
 else()
     target_link_libraries(
             ${PACKAGE_NAME}
@@ -166,15 +170,5 @@ else()
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
-    )
-endif()
-
-if(${REACT_NATIVE_TARGET_VERSION} LESS 64)
-    add_library(
-            turbomodulejsijni
-            # Sets the library as a shared library.
-            SHARED
-            # Provides a relative path to your source file(s).
-            ./empty.cpp
     )
 endif()

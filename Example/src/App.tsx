@@ -17,4 +17,4 @@ import TernaryExample from './Fabric/TernaryExample'; // TODO: doesn't work prop
 import UIPropsExample from './Fabric/UIPropsExample';
 import WorkletExample from './Fabric/WorkletExample';
 
-export default FlexExample;
+export default WorkletExample;
