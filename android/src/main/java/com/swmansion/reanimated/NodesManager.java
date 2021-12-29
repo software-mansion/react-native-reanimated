@@ -6,22 +6,23 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
-import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.ReactShadowNode;
-import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
+import com.facebook.react.uimanager.common.ViewUtil;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -102,6 +103,7 @@ public class NodesManager implements EventDispatcherListener {
   private final NoopNode mNoopNode;
   private final ReactContext mContext;
   private final UIManagerModule mUIManager;
+  private ReactApplicationContext mReactApplicationContext;
 
   private RCTEventEmitter mCustomEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
@@ -135,6 +137,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mReactApplicationContext = reactApplicationContext;
     mNativeProxy = new NativeProxy(reactApplicationContext);
     mAnimationManager.setScheduler(getNativeProxy().getScheduler());
   }
@@ -562,14 +565,19 @@ public class NodesManager implements EventDispatcherListener {
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
+    WritableMap newUIProps = Arguments.createMap();
     WritableMap newJSProps = Arguments.createMap();
     WritableMap newNativeProps = Arguments.createMap();
+
+    FabricUIManager fuim =
+        (FabricUIManager)
+            UIManagerHelper.getUIManager(
+                mReactApplicationContext, ViewUtil.getUIManagerType(viewTag));
 
     for (Map.Entry<String, Object> entry : props.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-      if (uiProps.contains(key)) {
+      if (true) {
         hasUIProps = true;
         addProp(newUIProps, key, value);
       } else if (nativeProps.contains(key)) {
@@ -583,17 +591,16 @@ public class NodesManager implements EventDispatcherListener {
 
     if (viewTag != View.NO_ID) {
       if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
+        fuim.synchronouslyUpdateViewOnUIThread(viewTag, newUIProps);
       }
       if (hasNativeProps) {
         enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
       }
       if (hasJSProps) {
-        WritableMap evt = Arguments.createMap();
-        evt.putInt("viewTag", viewTag);
-        evt.putMap("props", newJSProps);
-        sendEvent("onReanimatedPropsChange", evt);
+        // WritableMap evt = Arguments.createMap();
+        // evt.putInt("viewTag", viewTag);
+        // evt.putMap("props", newJSProps);
+        // sendEvent("onReanimatedPropsChange", evt);
       }
     }
   }

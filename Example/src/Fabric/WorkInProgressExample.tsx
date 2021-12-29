@@ -1,30 +1,43 @@
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { Button, View } from 'react-native';
 
 import React from 'react';
 
 export default function WorkInProgressExample() {
-  const x = useSharedValue(1);
+  const [, setState] = React.useState(0);
+
+  const x = useSharedValue(0);
 
   const style = useAnimatedStyle(() => {
     return {
-      opacity: 0.25 + x.value * 0.75,
+      backgroundColor: `hsl(${Math.round(x.value * 240)}, 100%, 50%)`,
+      scaleX: x.value + 1,
+      scaleY: 1 / (x.value + 1),
     };
   });
 
   const handleClick = () => {
-    x.value = 1 - x.value;
+    x.value = withTiming(1 - x.value, { duration: 1000 });
   };
+
+  const handleRender = () => {
+    setState(Math.random());
+  };
+
+  console.log('render');
 
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Animated.View
-        style={[{ width: 100, height: 100, backgroundColor: 'navy' }, style]}
+        style={[{ width: 150, height: 150, backgroundColor: 'navy' }, style]}
       />
+      <View style={{ height: 40 }} />
       <Button onPress={handleClick} title="Click me!" />
+      <Button onPress={handleRender} title="Re-render" />
     </View>
   );
 }
