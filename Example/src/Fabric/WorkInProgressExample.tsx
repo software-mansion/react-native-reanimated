@@ -15,8 +15,7 @@ export default function WorkInProgressExample() {
   const style = useAnimatedStyle(() => {
     return {
       backgroundColor: `hsl(${Math.round(x.value * 240)}, 100%, 50%)`,
-      scaleX: x.value + 1,
-      scaleY: 1 / (x.value + 1),
+      transform: [{ rotate: `${x.value * 180}deg` }],
     };
   });
 
