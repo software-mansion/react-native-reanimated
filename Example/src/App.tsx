@@ -15,6 +15,7 @@ import ParentAndChildExample from './Fabric/ParentAndChildExample';
 import ScrollViewExample from './Fabric/ScrollViewExample';
 import TernaryExample from './Fabric/TernaryExample'; // TODO: doesn't work properly (toggle shared value, wait until animation finishes and then toggle state)
 import UIPropsExample from './Fabric/UIPropsExample';
+import WorkInProgressExample from './Fabric/WorkInProgressExample';
 import WorkletExample from './Fabric/WorkletExample';
 
-export default WorkletExample;
+export default WorkInProgressExample;
