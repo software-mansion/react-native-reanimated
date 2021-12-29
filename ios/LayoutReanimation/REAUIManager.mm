@@ -1,6 +1,5 @@
 #import "REAUIManager.h"
 #import <Foundation/Foundation.h>
-#import <RNReanimated/Scheduler.h>
 #import "FeaturesConfig.h"
 #import "RCTComponentData.h"
 #import "RCTLayoutAnimation.h"
@@ -10,6 +9,12 @@
 #import "RCTRootViewInternal.h"
 #import "RCTUIManagerObserverCoordinator.h"
 #import "REAIOSScheduler.h"
+
+#ifdef ONANDROID
+#include "Scheduler.h"
+#else
+#include "RNReanimated/Scheduler.h"
+#endif
 
 #if __has_include(<RNScreens/RNSScreen.h>)
 #import <RNScreens/RNSScreen.h>

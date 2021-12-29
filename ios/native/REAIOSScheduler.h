@@ -1,10 +1,16 @@
 #pragma once
 
-#include <RNReanimated/Scheduler.h>
 #import <React/RCTUIManager.h>
 #import <ReactCommon/CallInvoker.h>
+
 #include <stdio.h>
 #include <memory>
+
+#ifdef ONANDROID
+#include "Scheduler.h"
+#else
+#include "RNReanimated/Scheduler.h"
+#endif
 
 namespace reanimated {
 
