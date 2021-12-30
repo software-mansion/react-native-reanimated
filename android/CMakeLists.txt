@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.1)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 17)  # resolves "warning: nested namespace definition is a C++17 extension"
-set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
+set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
@@ -127,6 +127,12 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+find_library(
+        REACT_RENDER_CORE
+        react_render_core
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 find_package(fbjni REQUIRED CONFIG)
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
@@ -156,6 +162,7 @@ if(${FOR_HERMES})
         fbjni::fbjni
         ${FOLLY_JSON_LIB}
         ${REACT_NATIVE_JNI_LIB}
+        ${REACT_RENDER_CORE}
         android
     )
 else()
