@@ -578,7 +578,7 @@ public class NodesManager implements EventDispatcherListener {
     for (Map.Entry<String, Object> entry : props.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-      if (true) {
+      if (uiProps.contains(key)) {
         hasUIProps = true;
         addProp(newUIProps, key, value);
       } else if (nativeProps.contains(key)) {

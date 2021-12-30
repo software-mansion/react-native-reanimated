@@ -1,4 +1,7 @@
+import { Platform } from 'react-native';
 import ReanimatedModule from './ReanimatedModule';
+
+const isAndroid = Platform.OS === 'android';
 
 /**
  * Styles allowed to be direcly updated in UI thread
@@ -14,21 +17,30 @@ let UI_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
   scaleY: true,
   translateX: true,
   translateY: true,
+
+  backgroundColor: isAndroid,
+  borderRightColor: isAndroid,
+  borderBottomColor: isAndroid,
+  borderColor: isAndroid,
+  borderEndColor: isAndroid,
+  borderLeftColor: isAndroid,
+  borderStartColor: isAndroid,
+  borderTopColor: isAndroid,
 };
 
 /**
  * Whitelist of view props that can be updated in native thread via UIManagerModule
  */
 let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
-  // TODO: check if colors can be handled like UI props
-  backgroundColor: true,
-  borderRightColor: true,
-  borderBottomColor: true,
-  borderColor: true,
-  borderEndColor: true,
-  borderLeftColor: true,
-  borderStartColor: true,
-  borderTopColor: true,
+  // TODO: check if colors can be handled like UI props (iOS)
+  backgroundColor: !isAndroid,
+  borderRightColor: !isAndroid,
+  borderBottomColor: !isAndroid,
+  borderColor: !isAndroid,
+  borderEndColor: !isAndroid,
+  borderLeftColor: !isAndroid,
+  borderStartColor: !isAndroid,
+  borderTopColor: !isAndroid,
 
   borderBottomWidth: true,
   borderEndWidth: true,
