@@ -9,8 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
-set (NODE_MODULES_DIR "../node_modules")
-set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
+set (RN_SO_DIR "../../rea-fabric/ReactAndroid/src/main/jni/first-party/react/jni")
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
 # reanimated shared
@@ -24,11 +23,11 @@ file(GLOB sources_android  "./src/main/cpp/*.cpp")
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
                 INCLUDE_JSI_CPP 
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+                "../../rea-fabric/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
                 INCLUDE_JSIDYNAMIC_CPP 
-                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+                "../../rea-fabric/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()
 
@@ -63,16 +62,16 @@ target_include_directories(
         "${BUILD_DIR}/third-party-ndk/double-conversion"
         "${BUILD_DIR}/third-party-ndk/folly"
         "${BUILD_DIR}/third-party-ndk/glog/exported"
-        "${NODE_MODULES_DIR}/react-native/React"
-        "${NODE_MODULES_DIR}/react-native/React/Base"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
-        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
-        "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
-        "${NODE_MODULES_DIR}/hermes-engine/android/include/"
+        "../../rea-fabric/React"
+        "../../rea-fabric/React/Base"
+        "../../rea-fabric/ReactAndroid/src/main/jni"
+        "../../rea-fabric/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "../../rea-fabric/ReactCommon"
+        "../../rea-fabric/ReactCommon/callinvoker"
+        "../../rea-fabric/ReactCommon/jsi"
+        "../../rea-fabric/ReactCommon/turbomodule/core"
+        "../../rea-fabric/ReactCommon/turbomodule"
+        "../../rea-fabric/node_modules/hermes-engine/android/include/"
         "./src/main/Common/cpp/headers/Tools"
         "./src/main/Common/cpp/headers/SpecTools"
         "./src/main/Common/cpp/headers/NativeModules"
