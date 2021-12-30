@@ -8,7 +8,7 @@
 
 /* eslint no-bitwise: 0 */
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { makeRemote, makeShareable, makeMutable, isConfigured } from './core';
 import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
@@ -685,17 +685,19 @@ interface InterpolateCacheRGBA {
   a: number[];
 }
 
-const BUFFER_SIZE = 200;
-const hashOrderRGBA: any = new ArrayBuffer(BUFFER_SIZE);
-let curentHashIndexRGBA = 0;
-const interpolateCacheRGBA: { [name: string]: InterpolateCacheRGBA } = {};
+const BUFFER_SIZE = 1;
+const hashOrderRGBA: any = makeMutable(Array(BUFFER_SIZE));
+const curentHashIndexRGBA = makeMutable(0);
+const interpolateCacheRGBA: {
+  value: { [name: string]: InterpolateCacheRGBA };
+} = makeMutable({});
 
 const getInterpolateCacheRGBA = (
   colors: readonly (string | number)[]
 ): InterpolateCacheRGBA => {
   'worklet';
   const hash = colors.join('');
-  const cache = interpolateCacheRGBA[hash];
+  const cache = interpolateCacheRGBA.value[hash];
   if (cache !== undefined) {
     return cache;
   }
@@ -716,13 +718,17 @@ const getInterpolateCacheRGBA = (
     }
   }
   const newCache = { r, g, b, a };
-  const overrideHash = hashOrderRGBA[curentHashIndexRGBA];
+  const overrideHash = hashOrderRGBA.value[curentHashIndexRGBA.value];
   if (overrideHash) {
     delete interpolateCacheRGBA[overrideHash];
   }
-  interpolateCacheRGBA[hash] = newCache;
-  hashOrderRGBA[curentHashIndexRGBA] = hash;
-  curentHashIndexRGBA = (curentHashIndexRGBA + 1) % BUFFER_SIZE;
+  const mutableCache = {
+    ...interpolateCacheRGBA.value,
+  };
+  mutableCache[hash] = newCache;
+  interpolateCacheRGBA.value = mutableCache;
+  hashOrderRGBA.value[curentHashIndexRGBA.value] = hash;
+  curentHashIndexRGBA.value = (curentHashIndexRGBA.value + 1) % BUFFER_SIZE;
   return newCache;
 };
 
@@ -732,16 +738,18 @@ interface InterpolateCacheHSV {
   v: number[];
 }
 
-const hashOrderHSV: any = new ArrayBuffer(BUFFER_SIZE);
-let curentHashIndexHSV = 0;
-const interpolateCacheHSV: { [name: string]: InterpolateCacheHSV } = {};
+const hashOrderHSV: any = makeMutable(Array(BUFFER_SIZE));
+const curentHashIndexHSV = makeMutable(0);
+const interpolateCacheHSV: {
+  value: { [name: string]: InterpolateCacheHSV };
+} = makeMutable({});
 
 const getInterpolateCacheHSV = (
   colors: readonly (string | number)[]
 ): InterpolateCacheHSV => {
   'worklet';
   const hash = colors.join('');
-  const cache = interpolateCacheHSV[hash];
+  const cache = interpolateCacheHSV.value[hash];
   if (cache !== undefined) {
     return cache;
   }
@@ -759,13 +767,17 @@ const getInterpolateCacheHSV = (
     }
   }
   const newCache = { h, s, v };
-  const overrideHash = hashOrderHSV[curentHashIndexHSV];
+  const overrideHash = hashOrderHSV[curentHashIndexHSV.value];
   if (overrideHash) {
-    delete interpolateCacheHSV[overrideHash];
+    delete interpolateCacheHSV.value[overrideHash];
   }
-  interpolateCacheHSV[hash] = newCache;
-  hashOrderHSV[curentHashIndexHSV] = hash;
-  curentHashIndexHSV = (curentHashIndexHSV + 1) % BUFFER_SIZE;
+  const mutableCache = {
+    ...interpolateCacheHSV.value,
+  };
+  mutableCache[hash] = newCache;
+  interpolateCacheHSV.value = mutableCache;
+  hashOrderHSV.value[curentHashIndexHSV.value] = hash;
+  curentHashIndexHSV.value = (curentHashIndexHSV.value + 1) % BUFFER_SIZE;
   return newCache;
 };
 
