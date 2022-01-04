@@ -1,6 +1,7 @@
 package com.swmansion.reanimated;
 
 import android.os.SystemClock;
+import android.util.Log;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -161,6 +162,10 @@ public class NativeProxy {
   }
 
   public void prepare(LayoutAnimations LayoutAnimations) {
+    if (Utils.isChromeDebugger) {
+      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
+      return;
+    }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     installJSIBindings();
     AnimationsManager animationsManager =
