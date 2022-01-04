@@ -150,6 +150,10 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
   NSMutableSet<NSNumber *> *roots = [NSMutableSet new];
   for (NSNumber *viewTag in _toRemove) {
     UIView *view = _viewForTag[viewTag];
+    if (view == nil) {
+      view = [_reaUiManager viewForReactTag:viewTag];
+      _viewForTag[viewTag] = view;
+    }
     [self findRoot:view roots:roots];
   }
   for (NSNumber *viewTag in roots) {
