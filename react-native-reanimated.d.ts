@@ -981,6 +981,12 @@ declare module 'react-native-reanimated' {
       y1: number,
       x2: number,
       y2: number
+    ): { factory: () => Animated.EasingFunction };
+    bezierFn(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
