@@ -127,6 +127,7 @@ You can refer [to this diff](https://github.com/software-mansion-labs/reanimated
 If you're using Proguard, make sure to add rule preventing it from optimizing Turbomodule classes:
 
 ```
+-keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 ```
 
