@@ -201,12 +201,12 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
-export function styleDiff(
+export function styleDiff<T extends AnimatedStyle>(
   oldStyle: AnimatedStyle,
   newStyle: AnimatedStyle
-): AnimatedStyle {
+): T {
   'worklet';
-  const diff: AnimatedStyle = {};
+  const diff: any = {};
   for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;

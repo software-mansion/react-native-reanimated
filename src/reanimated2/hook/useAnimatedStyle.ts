@@ -451,10 +451,10 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   useEffect(() => {
     let fun;
-    let upadterFn = updater;
+    let updaterFn = updater;
     let optimalization = updater.__optimalization;
     if (adapters) {
-      upadterFn = () => {
+      updaterFn = () => {
         'worklet';
         const newValues = updater();
         adaptersArray.forEach((adapter) => {
@@ -464,38 +464,38 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       };
     }
 
-    if (canApplyOptimalisation(upadterFn) && !shouldBeUseWeb()) {
-      if (hasColorProps(upadterFn())) {
-        upadterFn = () => {
+    if (canApplyOptimalisation(updaterFn) && !shouldBeUseWeb()) {
+      if (hasColorProps(updaterFn())) {
+        updaterFn = () => {
           'worklet';
-          const newValues = upadterFn();
+          const newValues = updaterFn();
           const oldValues = remoteState.last;
-          const diff = styleDiff(oldValues, newValues);
+          const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
           parseColors(diff);
-          return diff as T;
+          return diff;
         };
       } else {
-        upadterFn = () => {
+        updaterFn = () => {
           'worklet';
-          const newValues = upadterFn();
+          const newValues = updaterFn();
           const oldValues = remoteState.last;
-          const diff = styleDiff(oldValues, newValues);
+          const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
-          return diff as T;
+          return diff;
         };
       }
     } else if (!shouldBeUseWeb()) {
       optimalization = 0;
-      upadterFn = () => {
+      updaterFn = () => {
         'worklet';
-        const style = upadterFn();
+        const style = updaterFn();
         parseColors(style);
         return style;
       };
     }
     if (typeof updater.__optimalization !== undefined) {
-      upadterFn.__optimalization = optimalization;
+      updaterFn.__optimalization = optimalization;
     }
 
     if (isJest()) {
@@ -516,7 +516,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
         'worklet';
         styleUpdater(
           sharableViewDescriptors,
-          upadterFn,
+          updaterFn,
           remoteState,
           maybeViewRef,
           animationsActive
@@ -527,7 +527,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
       fun,
       inputs,
       [],
-      upadterFn,
+      updaterFn,
       // TODO fix this
       sharableViewDescriptors
     );
