@@ -1,0 +1,44 @@
+name: Check for reproduction
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited, deleted]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: needs-repro-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Actions
+        uses: actions/checkout@v2
+        with:
+          repository: 'software-mansion-labs/swmansion-bot'
+          ref: stable
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install Actions
+        run: yarn install
+
+      - name: Needs Repro
+        uses: ./needs-repro
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          needs-repro-label: 🧰needs-repro
+          needs-repro-response: "Hey! 👋 \n\nThe issue doesn't seem to contain a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example).\n\nCould you provide a snippet of code, a [snack](https://snack.expo.dev/) or a link to a GitHub repository that reproduces the problem?"
+          repro-provided-label: repro-provided
+          check-issues-only-created-after: 2022-01-01
