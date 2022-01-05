@@ -25,7 +25,7 @@ export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
+  if (!_WORKLET || isChromeDebugger()) {
     console.warn('[reanimated.measure] method cannot be used on RN side!');
     return {
       x: -1,
