@@ -2,7 +2,7 @@
 name: "\U0001F41E Bug report"
 about: Report an issue with Reanimated
 title: ''
-labels: "\U0001F41E Bug"
+labels: "needs-review"
 assignees: ''
 ---
 
@@ -43,6 +43,10 @@ List other libraries if relevant.
 - Java & Gradle:
 
 ## Affected platforms
+
+<!--
+Please insert an "x" between the brackets of the affected platforms (e.g. - [x] iOS)
+-->
 
 - [ ] Android
 - [ ] iOS
