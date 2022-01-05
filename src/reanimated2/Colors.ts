@@ -685,7 +685,7 @@ interface InterpolateCacheRGBA {
   a: number[];
 }
 
-const BUFFER_SIZE = 1;
+const BUFFER_SIZE = 15;
 const hashOrderRGBA: any = makeMutable(Array(BUFFER_SIZE));
 const curentHashIndexRGBA = makeMutable(0);
 const interpolateCacheRGBA: {
