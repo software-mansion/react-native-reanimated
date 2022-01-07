@@ -610,6 +610,29 @@ declare module 'react-native-reanimated' {
     colorSpace?: 'RGB' | 'HSV'
   ): string | number;
 
+  export enum ColorSpace {
+    RGB = 0,
+    HSV = 1,
+  }
+
+  export interface InterpolateConfig {
+    inputRange: readonly number[];
+    outputRange: readonly (string | number)[];
+    colorSpace: ColorSpace;
+    cache: SharedValue<InterpolateRGBA | InterpolateHSV>;
+  }
+
+  export function useInterpolateConfig(
+    inputRange: readonly number[],
+    outputRange: readonly (string | number)[],
+    colorSpace?: ColorSpace
+  ): SharedValue<InterpolateConfig>;
+
+  export function interpolateSharableColor(
+    value: number,
+    interpolateConfig: SharedValue<InterpolateConfig>
+  ): string | number;
+
   export function makeMutable<T>(initialValue: T): SharedValue<T>;
 
   type DependencyList = ReadonlyArray<any>;

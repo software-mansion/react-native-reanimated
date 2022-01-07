@@ -8,10 +8,12 @@
 
 /* eslint no-bitwise: 0 */
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { makeRemote, makeShareable, isConfigured, makeMutable } from './core';
 import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
+import { SharedValue } from './commonTypes';
+import { useSharedValue } from './hook/useSharedValue';
 
 interface RBG {
   r: number;
@@ -758,6 +760,59 @@ export const interpolateColor = (
   );
 };
 
-export const interpolateColorSV = () => {
+export enum ColorSpace {
+  RGB = 0,
+  HSV = 1,
+}
+
+export interface InterpolateConfig {
+  inputRange: readonly number[];
+  outputRange: readonly (string | number)[];
+  colorSpace: ColorSpace;
+  cache: SharedValue<InterpolateRGBA | InterpolateHSV>;
+}
+
+export function useInterpolateConfig(
+  inputRange: readonly number[],
+  outputRange: readonly (string | number)[],
+  colorSpace = ColorSpace.RGB
+): SharedValue<InterpolateConfig> {
+  return useSharedValue({
+    inputRange,
+    outputRange,
+    colorSpace,
+    cache: makeMutable(null),
+  });
+}
+
+export const interpolateSharableColor = (
+  value: number,
+  interpolateConfig: SharedValue<InterpolateConfig>
+): string | number => {
   'worklet';
+  let colors = interpolateConfig.value.cache.value;
+  if (interpolateConfig.value.colorSpace === ColorSpace.RGB) {
+    if (!colors) {
+      colors = getInterpolateRGBA(interpolateConfig.value.outputRange);
+      interpolateConfig.value.cache.value = colors;
+    }
+    return interpolateColorsRGB(
+      value,
+      interpolateConfig.value.inputRange,
+      colors as InterpolateRGBA
+    );
+  } else if (interpolateConfig.value.colorSpace === ColorSpace.HSV) {
+    if (!colors) {
+      colors = getInterpolateHSV(interpolateConfig.value.outputRange);
+      interpolateConfig.value.cache.value = colors;
+    }
+    return interpolateColorsHSV(
+      value,
+      interpolateConfig.value.inputRange,
+      colors as InterpolateHSV
+    );
+  }
+  throw new Error(
+    `invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
+  );
 };
