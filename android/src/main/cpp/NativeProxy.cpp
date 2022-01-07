@@ -13,7 +13,10 @@
 #include <jsi/JSCRuntime.h>
 #endif
 
-#include <react/renderer/core/EventBeat.h> // ReanimatedListener
+#include <react/renderer/core/ReanimatedListener.h> // ReanimatedListener
+#include <react/renderer/core/ShadowNode.h> // ShadowNode
+#include <react/renderer/mounting/ShadowTreeRegistry.h> // ShadowTreeRegistry
+#include <react/renderer/uimanager/UIManager.h> // ReanimatedThings, UIManager
 
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
@@ -223,13 +226,78 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
   return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
 }
 
+void NativeProxy::foo(int viewTag, std::string nativePropsJson) {
+  ReanimatedListener::foo();
+
+  std::shared_ptr nativePropsJsonPtr =
+      std::make_shared<std::string>(nativePropsJson);
+
+  std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
+  ShadowTreeRegistry *shadowTreeRegistry = ReanimatedThings::shadowTreeRegistry;
+  std::shared_ptr<const ContextContainer> contextContainer =
+      uiManager->getContextContainer();
+  SurfaceId surfaceId = 1;
+  PropsParserContext propsParserContext{surfaceId, *contextContainer};
+
+  ShadowNode::Shared shadowNode =
+      ShadowNode::newestShadowNodesRegistry->getByTag(viewTag);
+  // react_native_assert(shadowNode !== nullptr); // TODO: assert
+  if (shadowNode == nullptr) {
+    return; // better safe than sorry
+  }
+
+  shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+    if (shadowTree.getCurrentRevision().rootShadowNode->getChildren().empty()) {
+      return; // empty shadow tree (only RootShadowNode with no children)
+    }
+
+    ShadowTreeCommitTransaction transaction =
+        [&](RootShadowNode const &oldRootShadowNode) {
+          // TODO: don't clone root here
+          ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
+              oldRootShadowNode.getChildren()[0]->getFamily(),
+              [&](ShadowNode const &oldShadowNode) {
+                return oldShadowNode.clone(ShadowNodeFragment{});
+              });
+
+          Tag tag = viewTag; // TODO: use ShadowNode::Shared instead of Tag
+          folly::dynamic props = folly::parseJson(*nativePropsJsonPtr);
+
+          ShadowNode::Shared shadowNode =
+              ShadowNode::newestShadowNodesRegistry->getByTag(tag);
+          const ShadowNodeFamily &family = shadowNode->getFamily();
+          // react_native_assert(family.getSurfaceId() == 1); // TODO: support
+          // other surfaces
+
+          std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)>
+              callback = [&](ShadowNode const &oldShadowNode) {
+                Props::Shared newProps =
+                    oldShadowNode.getComponentDescriptor().cloneProps(
+                        propsParserContext,
+                        oldShadowNode.getProps(),
+                        RawProps(props));
+
+                ShadowNodeFragment fragment{/* .props = */ newProps};
+                return oldShadowNode.clone(fragment);
+              };
+
+          newRoot = newRoot->cloneTree(family, callback);
+          return std::static_pointer_cast<RootShadowNode>(newRoot);
+        };
+
+    ShadowTree::CommitOptions commitOptions{};
+    shadowTree.commit(transaction, commitOptions);
+  });
+}
+
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
-           NativeProxy::isAnyHandlerWaitingForEvent)});
+           NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("foo", NativeProxy::foo)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {

@@ -49,6 +49,10 @@ import com.swmansion.reanimated.nodes.SetNode;
 import com.swmansion.reanimated.nodes.StyleNode;
 import com.swmansion.reanimated.nodes.TransformNode;
 import com.swmansion.reanimated.nodes.ValueNode;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -145,9 +149,9 @@ public class NodesManager implements EventDispatcherListener {
 
   private final class NativeUpdateOperation {
     public int mViewTag;
-    public WritableMap mNativeProps;
+    public String mNativeProps;
 
-    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
+    public NativeUpdateOperation(int viewTag, String nativeProps) {
       mViewTag = viewTag;
       mNativeProps = nativeProps;
     }
@@ -219,43 +223,10 @@ public class NodesManager implements EventDispatcherListener {
     if (!mOperationsInBatch.isEmpty()) {
       final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
-      final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
-      mTryRunBatchUpdatesSynchronously = false;
-      final Semaphore semaphore = new Semaphore(0);
-      mContext.runOnNativeModulesQueueThread(
-          new GuardedRunnable(mContext.getExceptionHandler()) {
-            @Override
-            public void runGuarded() {
-              boolean queueWasEmpty =
-                  UIManagerReanimatedHelper.isOperationQueueEmpty(mUIImplementation);
-              boolean shouldDispatchUpdates = trySynchronously && queueWasEmpty;
-              if (!shouldDispatchUpdates) {
-                semaphore.release();
-              }
-              while (!copiedOperationsQueue.isEmpty()) {
-                NativeUpdateOperation op = copiedOperationsQueue.remove();
-                ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
-                if (shadowNode != null) {
-                  mUIManager.updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
-                }
-              }
-              if (queueWasEmpty) {
-                mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
-              }
-              if (shouldDispatchUpdates) {
-                semaphore.release();
-              }
-            }
-          });
-      if (trySynchronously) {
-        while (true) {
-          try {
-            semaphore.acquire();
-            break;
-          } catch (InterruptedException e) {
-            // noop
-          }
-        }
+
+      while (!copiedOperationsQueue.isEmpty()) {
+        NativeUpdateOperation op = copiedOperationsQueue.remove();
+        mNativeProxy.foo(op.mViewTag, op.mNativeProps);
       }
     }
   }
@@ -437,12 +408,16 @@ public class NodesManager implements EventDispatcherListener {
     ((PropsNode) node).disconnectFromView(viewTag);
   }
 
-  public void enqueueUpdateViewOnNativeThread(
-      int viewTag, WritableMap nativeProps, boolean trySynchronously) {
-    if (trySynchronously) {
-      mTryRunBatchUpdatesSynchronously = true;
-    }
-    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
+  // public void enqueueUpdateViewOnNativeThread(
+  //     int viewTag, WritableMap nativeProps, boolean trySynchronously) {
+  //   if (trySynchronously) {
+  //     mTryRunBatchUpdatesSynchronously = true;
+  //   }
+  //   mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
+  // }
+
+  public void enqueueUpdateViewOnNativeThread(int viewTag, String nativePropsJson) {
+    mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativePropsJson));
   }
 
   public void attachEvent(int viewTag, String eventName, int eventNodeID) {
@@ -563,12 +538,14 @@ public class NodesManager implements EventDispatcherListener {
 
   public void updateProps(int viewTag, Map<String, Object> props) {
     // TODO: update PropsNode to use this method instead of its own way of updating props
+    // TODO: move implementation to C++
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
     JavaOnlyMap newUIProps = new JavaOnlyMap();
     WritableMap newJSProps = Arguments.createMap();
     WritableMap newNativeProps = Arguments.createMap();
+    JSONObject newNativePropsJSON = new JSONObject();
 
     FabricUIManager fuim =
         (FabricUIManager)
@@ -584,6 +561,11 @@ public class NodesManager implements EventDispatcherListener {
       } else if (nativeProps.contains(key)) {
         hasNativeProps = true;
         addProp(newNativeProps, key, value);
+        try {
+          newNativePropsJSON.put(key, value);
+        } catch (JSONException e) {
+          // TODO: handle exception
+        }
       } else {
         hasJSProps = true;
         addProp(newJSProps, key, value);
@@ -595,9 +577,10 @@ public class NodesManager implements EventDispatcherListener {
         fuim.synchronouslyUpdateViewOnUIThread(viewTag, newUIProps);
       }
       if (hasNativeProps) {
-        enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
+        enqueueUpdateViewOnNativeThread(viewTag, newNativePropsJSON.toString());
       }
       if (hasJSProps) {
+        // TODO: handle JS props?
         // WritableMap evt = Arguments.createMap();
         // evt.putInt("viewTag", viewTag);
         // evt.putMap("props", newJSProps);

@@ -3,7 +3,7 @@ def localPropertiesFile = file("local.properties")
 if (localPropertiesFile.exists()) {
     localProps.load(new InputStreamReader(new FileInputStream(localPropertiesFile), "UTF-8"))
 }
-def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
+def debugNativeLibraries = true
 
 import java.nio.file.Paths
 
@@ -494,13 +494,19 @@ tasks.whenTaskAdded { task ->
         task.dependsOn(extractAARHeaders)
         task.dependsOn(extractSOFiles)
     }
-}
 
-// RNTester uses "jsc" and "hermes" build flavors which appear in various task names, e.g. `compileJscDebugSources`.
-// Due to unknown reasons, some of the Gradle tasks in Reanimated are not attached as dependencies.
-// That's why we need to add the dependencies manually.
-// NOTE: Currently, this works only for debug mode.
-tasks.whenTaskAdded { task ->
+    // for RNTester
+    if (task.name.startsWith('buildCMake')) {
+        task.dependsOn(':ReactAndroid:prepareBoost')
+        task.dependsOn(':ReactAndroid:prepareDoubleConversion')
+        task.dependsOn(':ReactAndroid:prepareFolly')
+        task.dependsOn(':ReactAndroid:prepareGlog')
+    }
+
+    // RNTester uses "jsc" and "hermes" build flavors which appear in various task names, e.g. `compileJscDebugSources`.
+    // Due to unknown reasons, some of the Gradle tasks in Reanimated are not attached as dependencies.
+    // That's why we need to add the dependencies manually.
+    // NOTE: Currently, this works only for debug mode.
     if (task.name.startsWith('merge') && task.name.endsWith('NativeLibs')) {
         task.dependsOn(':react-native-reanimated:externalNativeBuildDebug')
     }

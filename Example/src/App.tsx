@@ -11,6 +11,7 @@ import FlexExample from './Fabric/FlexExample';
 import LayoutTransitionExample from './Fabric/LayoutTransitionExample';
 import NativePropsExample from './Fabric/NativePropsExample';
 import NestedComponentExample from './Fabric/NestedComponentExample';
+import OldNativePropsExample from './Fabric/OldNativePropsExample';
 import OldUIPropsExample from './Fabric/OldUIPropsExample';
 import ParentAndChildExample from './Fabric/ParentAndChildExample';
 import ScrollViewExample from './Fabric/ScrollViewExample';
@@ -18,4 +19,4 @@ import TernaryExample from './Fabric/TernaryExample'; // TODO: doesn't work prop
 import UIPropsExample from './Fabric/UIPropsExample';
 import WorkletExample from './Fabric/WorkletExample';
 
-export default ScrollViewExample;
+export default NativePropsExample;
