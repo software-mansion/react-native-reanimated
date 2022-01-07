@@ -6,8 +6,8 @@
 #import <React/RCTShadowView.h>
 #import "REAModule.h"
 
-#import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedListener
-#import <react/renderer/core/ShadowNode.h> // ShadowNode::Shared, ShadowTreeCommitTransaction
+#import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
+#import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedThings
 
 using namespace facebook::react;
 
@@ -200,8 +200,8 @@ using namespace facebook::react;
     NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableDictionary new];
 
-    std::shared_ptr<UIManager> uiManager = ReanimatedListener::uiManager;
-    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedListener::shadowTreeRegistry;
+    std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
+    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedThings::shadowTreeRegistry;
     std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
     SurfaceId surfaceId = 1;
     PropsParserContext propsParserContext{surfaceId, *contextContainer};
@@ -217,7 +217,7 @@ using namespace facebook::react;
           Tag tag = [key intValue]; // TODO: use ShadowNode::Shared instead of Tag
           NSMutableDictionary *props = [copiedOperationsQueue objectForKey:key];
 
-          ShadowNode::Shared shadowNode = ReanimatedListener::newestShadowNodesRegistry->getByTag(tag);
+          ShadowNode::Shared shadowNode = ShadowNode::newestShadowNodesRegistry->getByTag(tag);
           const ShadowNodeFamily &family = shadowNode->getFamily();
           react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
 

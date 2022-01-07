@@ -21,9 +21,9 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
-#import <React-Fabric/react/renderer/uimanager/UIManager.h> // ReanimatedListener
-#import <react/renderer/core/ShadowNode.h> // ShadowNode::Shared
-#import <react/renderer/uimanager/primitives.h> // shadowNodeFromValue
+#import <React-Fabric/react/renderer/core/ReanimatedListener.h> // ReanimatedListener
+#import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode::Shared
+#import <React-Fabric/react/renderer/uimanager/primitives.h> // shadowNodeFromValue
 
 #import <iostream>
 
@@ -173,7 +173,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
                                               encoding:[NSString defaultCStringEncoding]];
     ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-    ReanimatedListener::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
+    ShadowNode::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
     [reanimatedModule.nodesManager updateProps:propsDict
                                  ofViewWithTag:[NSNumber numberWithInt:viewTag]
