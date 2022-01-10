@@ -3,6 +3,7 @@
 #import <React/RCTUIManager.h>
 #import <folly/json.h>
 
+#import <RNGestureHandlerStateManager.h>
 #import "LayoutAnimationsProxy.h"
 #import "NativeMethods.h"
 #import "NativeProxy.h"
@@ -12,7 +13,6 @@
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "REAUIManager.h"
-#import "RNGestureHandlerStateManager.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
