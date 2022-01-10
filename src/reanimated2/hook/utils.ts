@@ -206,33 +206,29 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
-export function styleDiff(
+export function styleDiff<T extends AnimatedStyle>(
   oldStyle: AnimatedStyle,
   newStyle: AnimatedStyle
-): AnimatedStyle {
+): Partial<T> {
   'worklet';
-  const diff: AnimatedStyle = {};
-  Object.keys(oldStyle).forEach((key) => {
+  const diff = {};
+  for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;
     }
-  });
-  Object.keys(newStyle).forEach((key) => {
+  }
+  for (const key in newStyle) {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
     if (isAnimated(value)) {
       // do nothing
-      return;
+      continue;
     }
-    if (
-      oldValue !== value &&
-      JSON.stringify(oldValue) !== JSON.stringify(value)
-    ) {
-      // I'd use deep equal here but that'd take additional work and this was easier
+    if (oldValue !== value) {
       diff[key] = value;
     }
-  });
+  }
   return diff;
 }
 
