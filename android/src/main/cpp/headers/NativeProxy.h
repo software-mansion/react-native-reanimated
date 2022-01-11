@@ -104,7 +104,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   void installJSIBindings();
   bool isAnyHandlerWaitingForEvent(std::string);
-  void foo(int viewTag, std::string nativePropsJson);
+  void updateNativeProps(int viewTag, std::string nativePropsJson);
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler(
       std::function<void(std::string, std::string)> handler);

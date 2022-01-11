@@ -226,9 +226,7 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
   return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
 }
 
-void NativeProxy::foo(int viewTag, std::string nativePropsJson) {
-  ReanimatedListener::foo();
-
+void NativeProxy::updateNativeProps(int viewTag, std::string nativePropsJson) {
   std::shared_ptr nativePropsJsonPtr =
       std::make_shared<std::string>(nativePropsJson);
 
@@ -297,7 +295,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("foo", NativeProxy::foo)});
+       makeNativeMethod("updateNativeProps", NativeProxy::updateNativeProps)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {

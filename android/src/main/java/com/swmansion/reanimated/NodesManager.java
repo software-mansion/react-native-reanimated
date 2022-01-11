@@ -226,7 +226,7 @@ public class NodesManager implements EventDispatcherListener {
 
       while (!copiedOperationsQueue.isEmpty()) {
         NativeUpdateOperation op = copiedOperationsQueue.remove();
-        mNativeProxy.foo(op.mViewTag, op.mNativeProps);
+        mNativeProxy.updateNativeProps(op.mViewTag, op.mNativeProps);
       }
     }
   }
