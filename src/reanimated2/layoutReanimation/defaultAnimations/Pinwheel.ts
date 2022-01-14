@@ -1,17 +1,20 @@
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import {
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 
 export class PinwheelIn
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): PinwheelIn {
     return new PinwheelIn();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -50,12 +53,12 @@ export class PinwheelIn
 
 export class PinwheelOut
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): PinwheelOut {
     return new PinwheelOut();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();

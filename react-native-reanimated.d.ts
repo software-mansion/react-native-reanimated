@@ -158,12 +158,12 @@ declare module 'react-native-reanimated' {
       entering?:
         | BaseAnimationBuilder
         | typeof BaseAnimationBuilder
-        | EntryExitAnimationFunction
+        | AnimationConfigFunction<EntryAnimationsValues>
         | Keyframe;
       exiting?:
         | BaseAnimationBuilder
         | typeof BaseAnimationBuilder
-        | EntryExitAnimationFunction
+        | AnimationConfigFunction<ExitAnimationsValues>
         | Keyframe;
     };
 
@@ -474,9 +474,7 @@ declare module 'react-native-reanimated' {
     currentGlobalOriginY: number;
   }
 
-  export type EntryExitAnimationFunction =
-    | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
-    | ((targetValues: ExitAnimationsValues) => LayoutAnimation);
+  export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
   export type LayoutAnimationsValues = {
     currentOriginX: number;
@@ -503,8 +501,12 @@ declare module 'react-native-reanimated' {
     build: () => LayoutAnimationFunction;
   }
 
-  export interface IEntryExitAnimationBuilder {
-    build: () => EntryExitAnimationFunction;
+  export interface IEntryAnimationBuilder {
+    build: () => AnimationConfigFunction<EntryAnimationsValues>;
+  }
+
+  export interface IExitAnimationBuilder {
+    build: () => AnimationConfigFunction<ExitAnimationsValues>;
   }
 
   export type AnimatableValue = number | string | Array<number>;
@@ -761,7 +763,10 @@ declare module 'react-native-reanimated' {
     withCallback(callback: (finished: boolean) => void): BaseAnimationBuilder;
     static randomDelay(): BaseAnimationBuilder;
     randomDelay(): BaseAnimationBuilder;
-    build: () => LayoutAnimationFunction | EntryExitAnimationFunction;
+    build: () =>
+      | LayoutAnimationFunction
+      | AnimationConfigFunction<EntryAnimationsValues>
+      | AnimationConfigFunction<ExitAnimationsValues>;
   }
 
   export class ComplexAnimationBuilder extends BaseAnimationBuilder {

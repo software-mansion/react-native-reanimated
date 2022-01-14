@@ -1,7 +1,9 @@
 import { withDelay } from '../../animation';
 import {
-  EntryExitAnimationFunction,
+  AnimationConfigFunction,
   AnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
   LayoutAnimationFunction,
 } from './commonTypes';
 
@@ -12,7 +14,10 @@ export class BaseAnimationBuilder {
   callbackV?: (finished: boolean) => void;
 
   static createInstance: () => BaseAnimationBuilder;
-  build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
+  build = ():
+    | AnimationConfigFunction<EntryAnimationsValues>
+    | AnimationConfigFunction<ExitAnimationsValues>
+    | LayoutAnimationFunction => {
     throw Error('Unimplemented method in child class.');
   };
 
@@ -84,7 +89,10 @@ export class BaseAnimationBuilder {
         };
   }
 
-  static build(): EntryExitAnimationFunction | LayoutAnimationFunction {
+  static build():
+    | AnimationConfigFunction<EntryAnimationsValues>
+    | AnimationConfigFunction<ExitAnimationsValues>
+    | LayoutAnimationFunction {
     const instance = this.createInstance();
     return instance.build();
   }

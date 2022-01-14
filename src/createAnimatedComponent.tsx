@@ -35,7 +35,9 @@ import {
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
-  EntryExitAnimationFunction,
+  AnimationConfigFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
   ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
 import { SharedValue, StyleProps } from './reanimated2/commonTypes';
@@ -143,12 +145,12 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   entering?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
+    | AnimationConfigFunction<EntryAnimationsValues>
     | Keyframe;
   exiting?:
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder
-    | EntryExitAnimationFunction
+    | AnimationConfigFunction<ExitAnimationsValues>
     | Keyframe;
 };
 
@@ -552,11 +554,11 @@ export default function createAnimatedComponent(
           }
 
           if (has('build', entering)) {
-            entering = entering.build() as EntryExitAnimationFunction;
+            entering = entering.build() as AnimationConfigFunction<EntryAnimationsValues>;
           }
 
           if (has('build', exiting)) {
-            exiting = exiting.build() as EntryExitAnimationFunction;
+            exiting = exiting.build() as AnimationConfigFunction<ExitAnimationsValues>;
           }
 
           const config = {

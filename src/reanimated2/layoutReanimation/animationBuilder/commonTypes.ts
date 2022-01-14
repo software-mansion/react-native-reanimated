@@ -32,10 +32,6 @@ export interface ExitAnimationsValues {
   currentGlobalOriginY: number;
 }
 
-export type EntryExitAnimationFunction = (
-  targetValues: EntryAnimationsValues | ExitAnimationsValues
-) => LayoutAnimation;
-
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
 export interface LayoutAnimationsValues {
@@ -84,14 +80,10 @@ export type LayoutAnimationAndConfig = [
   BaseBuilderAnimationConfig
 ];
 
-export interface IEntryExitAnimationBuilder {
-  build: () => EntryExitAnimationFunction;
+export interface IEntryExitAnimationBuilder<T> {
+  build: () => AnimationConfigFunction<T>;
 }
 
-export interface IEntryAnimationBuilder {
-  build: () => AnimationConfigFunction<EntryAnimationsValues>;
-}
+export type IEntryAnimationBuilder = IEntryExitAnimationBuilder<EntryAnimationsValues>;
 
-export interface IExitAnimationBuilder {
-  build: () => AnimationConfigFunction<ExitAnimationsValues>;
-}
+export type IExitAnimationBuilder = IEntryExitAnimationBuilder<ExitAnimationsValues>;

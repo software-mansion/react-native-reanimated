@@ -1,6 +1,9 @@
 import {
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { withSequence, withTiming } from '../../animation';
 import { Dimensions } from 'react-native';
@@ -10,7 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 export class BounceIn
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): BounceIn {
     return new BounceIn();
   }
@@ -23,7 +26,7 @@ export class BounceIn
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -58,7 +61,7 @@ export class BounceIn
 
 export class BounceInDown
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): BounceInDown {
     return new BounceInDown();
   }
@@ -71,7 +74,7 @@ export class BounceInDown
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -110,7 +113,7 @@ export class BounceInDown
 
 export class BounceInUp
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): BounceInUp {
     return new BounceInUp();
   }
@@ -123,7 +126,7 @@ export class BounceInUp
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -158,7 +161,7 @@ export class BounceInUp
 
 export class BounceInLeft
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): BounceInLeft {
     return new BounceInLeft();
   }
@@ -171,7 +174,7 @@ export class BounceInLeft
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -206,7 +209,7 @@ export class BounceInLeft
 
 export class BounceInRight
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): BounceInRight {
     return new BounceInRight();
   }
@@ -219,7 +222,7 @@ export class BounceInRight
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -254,7 +257,7 @@ export class BounceInRight
 
 export class BounceOut
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): BounceOut {
     return new BounceOut();
   }
@@ -267,7 +270,7 @@ export class BounceOut
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -302,7 +305,7 @@ export class BounceOut
 
 export class BounceOutDown
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): BounceOutDown {
     return new BounceOutDown();
   }
@@ -315,7 +318,7 @@ export class BounceOutDown
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -352,7 +355,7 @@ export class BounceOutDown
 
 export class BounceOutUp
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): BounceOutUp {
     return new BounceOutUp();
   }
@@ -365,7 +368,7 @@ export class BounceOutUp
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -402,7 +405,7 @@ export class BounceOutUp
 
 export class BounceOutLeft
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutLeft();
   }
@@ -415,7 +418,7 @@ export class BounceOutLeft
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();
@@ -452,7 +455,7 @@ export class BounceOutLeft
 
 export class BounceOutRight
   extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): BounceOutRight {
     return new BounceOutRight();
   }
@@ -465,7 +468,7 @@ export class BounceOutRight
     return this.durationV ?? 600;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const delay = this.getDelay();
     const duration = this.getDuration();

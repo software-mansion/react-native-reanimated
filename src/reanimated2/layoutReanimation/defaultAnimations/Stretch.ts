@@ -1,17 +1,20 @@
 import {
-  IEntryExitAnimationBuilder,
-  EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class StretchInX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): StretchInX {
     return new StretchInX();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -34,12 +37,12 @@ export class StretchInX
 
 export class StretchInY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): StretchInY {
     return new StretchInY();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -62,12 +65,12 @@ export class StretchInY
 
 export class StretchOutX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): StretchOutX {
     return new StretchOutX();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -90,12 +93,12 @@ export class StretchOutX
 
 export class StretchOutY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): StretchOutY {
     return new StretchOutY();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();

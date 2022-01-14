@@ -6,7 +6,6 @@ export {
   AnimationFunction,
   EntryAnimationsValues,
   ExitAnimationsValues,
-  EntryExitAnimationFunction,
   AnimationConfigFunction,
   IEntryAnimationBuilder,
   IExitAnimationBuilder,
@@ -16,5 +15,4 @@ export {
   BaseLayoutAnimationConfig,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
-  IEntryExitAnimationBuilder,
 } from './commonTypes';
