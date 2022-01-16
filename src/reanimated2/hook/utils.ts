@@ -211,7 +211,7 @@ export function styleDiff<T extends AnimatedStyle>(
   newStyle: AnimatedStyle
 ): Partial<T> {
   'worklet';
-  const diff = {};
+  const diff: any = {};
   for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;

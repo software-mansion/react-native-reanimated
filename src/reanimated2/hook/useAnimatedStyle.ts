@@ -473,7 +473,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
           parseColors(diff);
-          return diff;
+          return diff as T;
         };
       } else {
         updaterFn = () => {
@@ -482,7 +482,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const oldValues = remoteState.last;
           const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
-          return diff;
+          return diff as T;
         };
       }
     } else if (!shouldBeUseWeb()) {
