@@ -233,7 +233,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
-    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+    if (mReaLayoutAnimator == null
+        || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
       return;
     }
     try {
@@ -263,7 +264,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       @Nullable int[] indicesToRemove,
       @Nullable ViewAtIndex[] viewsToAdd,
       @Nullable int[] tagsToDelete) {
-    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+    if (mReaLayoutAnimator == null
+        || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
       super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
       return;
     }
@@ -352,7 +354,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
   @Override
   protected synchronized void dropView(View view) {
-    if (!((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
+    if (mReaLayoutAnimator == null
+        || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled()) {
       super.dropView(view);
       return;
     }
