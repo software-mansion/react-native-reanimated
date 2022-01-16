@@ -151,10 +151,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
       field.set(this, mReaLayoutAnimator);
 
+      setLayoutAnimationEnabled(true);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       e.printStackTrace();
     }
-    setLayoutAnimationEnabled(true);
   }
 
   public ReanimatedNativeHierarchyManager(

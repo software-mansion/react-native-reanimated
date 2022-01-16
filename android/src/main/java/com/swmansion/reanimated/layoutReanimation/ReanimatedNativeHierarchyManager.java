@@ -219,10 +219,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       mPendingDeletionsForTag = new HashMap<Integer, Set<Integer>>();
       pendingTagsField.set(this, mPendingDeletionsForTag);
 
+      setLayoutAnimationEnabled(true);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       e.printStackTrace();
     }
-    setLayoutAnimationEnabled(true);
   }
 
   public ReanimatedNativeHierarchyManager(
