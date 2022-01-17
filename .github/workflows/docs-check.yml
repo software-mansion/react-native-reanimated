@@ -2,8 +2,8 @@ name: Test docs build
 
 on:
   pull_request:
-    branches: 
-      - master
+    branches:
+      - main
     paths:
       - 'docs/**'
 
@@ -23,6 +23,6 @@ jobs:
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn
-      - name: Build docs 
+      - name: Build docs
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn build

@@ -1,7 +1,7 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
-import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
+import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
   WorkletFunction,
@@ -371,8 +371,8 @@ if (!NativeReanimatedModule.useOnlyV1) {
       : (workletValueSetterJS as <T>(value: T) => void)
   );
 
-  const capturableConsole = console;
-  isConfigured() &&
+  if (!isWeb() && isConfigured()) {
+    const capturableConsole = console;
     runOnUI(() => {
       'worklet';
       const console = {
@@ -383,5 +383,40 @@ if (!NativeReanimatedModule.useOnlyV1) {
         info: runOnJS(capturableConsole.info),
       };
       _setGlobalConsole(console);
+      if (global.performance == null) {
+        global.performance = {
+          now: global._chronoNow,
+        };
+      }
     })();
+  }
+}
+
+type FeaturesConfig = {
+  enableLayoutAnimations: boolean;
+  setByUser: boolean;
+};
+
+let featuresConfig: FeaturesConfig = {
+  enableLayoutAnimations: false,
+  setByUser: false,
+};
+
+export function enableLayoutAnimations(
+  flag: boolean,
+  isCallByUser = true
+): void {
+  if (isCallByUser) {
+    featuresConfig = {
+      enableLayoutAnimations: flag,
+      setByUser: true,
+    };
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  } else if (
+    !featuresConfig.setByUser &&
+    featuresConfig.enableLayoutAnimations !== flag
+  ) {
+    featuresConfig.enableLayoutAnimations = flag;
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  }
 }

@@ -26,6 +26,7 @@ declare module 'react-native-reanimated' {
     Text as ReactNativeText,
     Image as ReactNativeImage,
     ScrollView as ReactNativeScrollView,
+    FlatList as ReactNativeFlatList,
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
@@ -256,6 +257,10 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
+    export class FlatList extends Component<AnimateProps<FlatList>> {
+      itemLayoutAnimation: ILayoutAnimationBuilder;
+      getNode(): ReactNativeFlatList;
+    }
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
@@ -451,34 +456,45 @@ declare module 'react-native-reanimated' {
     animations: AnimateStyle;
   };
 
-  export type EntryExitAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-  };
-  export type EntryExitAnimationFunction = (
-    targetValues: EntryExitAnimationsValues
-  ) => LayoutAnimation;
+  export interface EntryAnimationsValues {
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
+  }
+
+  export interface ExitAnimationsValues {
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+  }
+
+  export type EntryExitAnimationFunction =
+    | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+    | ((targetValues: ExitAnimationsValues) => LayoutAnimation);
 
   export type LayoutAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-    boriginX: number;
-    boriginY: number;
-    bwidth: number;
-    bheight: number;
-    bglobalOriginX: number;
-    bglobalOriginY: number;
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
     windowWidth: number;
     windowHeight: number;
   };
+
   export type LayoutAnimationFunction = (
     targetValues: LayoutAnimationsValues
   ) => LayoutAnimation;
@@ -965,6 +981,12 @@ declare module 'react-native-reanimated' {
       y1: number,
       x2: number,
       y2: number
+    ): { factory: () => Animated.EasingFunction };
+    bezierFn(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
@@ -1071,4 +1093,5 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const useValue: typeof Animated.useValue;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
+  export function enableLayoutAnimations(flag: boolean): void;
 }

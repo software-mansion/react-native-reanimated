@@ -32,6 +32,7 @@ def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/thi
 
 def HOME = System.getProperty("user.home")
 
+def _stackProtectorFlag = true;
 def FOR_HERMES = "";
 if(findProject(':app')) {
     FOR_HERMES = project(':app').ext.react.enableHermes;
@@ -108,6 +109,7 @@ android {
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+                _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
 
@@ -449,18 +451,12 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    // FIXME jcenter is deprecated and will be removed soon, however some modules still doesn't migrate to maven central
-    jcenter() {
-        content {
-            includeModule("com.facebook.fbjni", "fbjni-java-only")
-            includeModule("com.facebook.yoga", "proguard-annotations")
-
-        }
-    }
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
+    implementation 'com.facebook.yoga:proguard-annotations:1.19.0'
+    implementation 'com.facebook.fbjni:fbjni-java-only:0.3.0'
     implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"

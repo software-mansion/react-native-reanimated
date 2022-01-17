@@ -1,14 +1,14 @@
 name: Test iOS build
 on:
   pull_request:
-    branches: 
-      - master
+    branches:
+      - main
     paths:
       - 'ios/**'
       - 'Common/**'
   push:
     branches:
-      - master
+      - main
 jobs:
   build:
     # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060

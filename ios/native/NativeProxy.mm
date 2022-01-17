@@ -3,6 +3,7 @@
 #import <React/RCTUIManager.h>
 #import <folly/json.h>
 
+#import <RNGestureHandlerStateManager.h>
 #import "LayoutAnimationsProxy.h"
 #import "NativeMethods.h"
 #import "NativeProxy.h"
@@ -86,9 +87,10 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker)
+std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+    RCTBridge *bridge,
+    std::shared_ptr<CallInvoker> jsInvoker)
 {
-  RCTBridge *bridge = _bridge_reanimated;
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
   auto propUpdater = [reanimatedModule](
@@ -109,6 +111,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
 
   auto scrollToFunction = [uiManager](int viewTag, double x, double y, bool animated) {
     scrollTo(viewTag, uiManager, x, y, animated);
+  };
+
+  id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
+  auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
+    setGestureState(gestureHandlerStateManager, handlerTag, newState);
   };
 
   auto propObtainer = [reanimatedModule](
@@ -223,6 +230,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
+      setGestureStateFunction,
   };
 
   module = std::make_shared<NativeReanimatedModule>(

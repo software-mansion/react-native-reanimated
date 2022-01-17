@@ -409,8 +409,8 @@ describe('babel plugin', () => {
 
       const foo = Gesture.Tap()
         .numberOfTaps(2)
-        .onBegan(() => {
-          console.log('onBegan');
+        .onBegin(() => {
+          console.log('onBegin');
         })
         .onStart((_event) => {
           console.log('onStart');

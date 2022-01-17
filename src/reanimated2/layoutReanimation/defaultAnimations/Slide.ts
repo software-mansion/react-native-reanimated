@@ -1,6 +1,9 @@
 import {
-  IEntryExitAnimationBuilder,
-  EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { Dimensions } from 'react-native';
 import { ComplexAnimationBuilder } from '../animationBuilder';
@@ -9,12 +12,12 @@ const { width, height } = Dimensions.get('window');
 
 export class SlideInRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): SlideInRight {
     return new SlideInRight();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -24,10 +27,13 @@ export class SlideInRight
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
+          originX: delayFunction(
+            delay,
+            animation(values.targetOriginX, config)
+          ),
         },
         initialValues: {
-          originX: values.originX + width,
+          originX: values.targetOriginX + width,
         },
         callback: callback,
       };
@@ -37,12 +43,12 @@ export class SlideInRight
 
 export class SlideInLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): SlideInLeft {
     return new SlideInLeft();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -52,10 +58,13 @@ export class SlideInLeft
       'worklet';
       return {
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
+          originX: delayFunction(
+            delay,
+            animation(values.targetOriginX, config)
+          ),
         },
         initialValues: {
-          originX: values.originX - width,
+          originX: values.targetOriginX - width,
         },
         callback: callback,
       };
@@ -65,12 +74,12 @@ export class SlideInLeft
 
 export class SlideOutRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): SlideOutRight {
     return new SlideOutRight();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -82,11 +91,11 @@ export class SlideOutRight
         animations: {
           originX: delayFunction(
             delay,
-            animation(Math.max(values.originX + width, width), config)
+            animation(Math.max(values.currentOriginX + width, width), config)
           ),
         },
         initialValues: {
-          originX: values.originX,
+          originX: values.currentOriginX,
         },
         callback: callback,
       };
@@ -96,12 +105,12 @@ export class SlideOutRight
 
 export class SlideOutLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): SlideOutLeft {
     return new SlideOutLeft();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -113,11 +122,11 @@ export class SlideOutLeft
         animations: {
           originX: delayFunction(
             delay,
-            animation(Math.min(values.originX - width, -width), config)
+            animation(Math.min(values.currentOriginX - width, -width), config)
           ),
         },
         initialValues: {
-          originX: values.originX,
+          originX: values.currentOriginX,
         },
         callback: callback,
       };
@@ -127,12 +136,12 @@ export class SlideOutLeft
 
 export class SlideInUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): SlideInUp {
     return new SlideInUp();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -142,10 +151,13 @@ export class SlideInUp
       'worklet';
       return {
         animations: {
-          originY: delayFunction(delay, animation(values.originY, config)),
+          originY: delayFunction(
+            delay,
+            animation(values.targetOriginY, config)
+          ),
         },
         initialValues: {
-          originY: height,
+          originY: -height,
         },
         callback: callback,
       };
@@ -155,12 +167,12 @@ export class SlideInUp
 
 export class SlideInDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): SlideInDown {
     return new SlideInDown();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -170,10 +182,13 @@ export class SlideInDown
       'worklet';
       return {
         animations: {
-          originY: delayFunction(delay, animation(values.originY, config)),
+          originY: delayFunction(
+            delay,
+            animation(values.targetOriginY, config)
+          ),
         },
         initialValues: {
-          originY: values.originY + height,
+          originY: values.targetOriginY + height,
         },
         callback: callback,
       };
@@ -183,12 +198,12 @@ export class SlideInDown
 
 export class SlideOutUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): SlideOutUp {
     return new SlideOutUp();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -200,10 +215,10 @@ export class SlideOutUp
         animations: {
           originY: delayFunction(
             delay,
-            animation(Math.min(values.originY - height, -height), config)
+            animation(Math.min(values.currentOriginY - height, -height), config)
           ),
         },
-        initialValues: { originY: values.originY },
+        initialValues: { originY: values.currentOriginY },
         callback: callback,
       };
     };
@@ -212,12 +227,12 @@ export class SlideOutUp
 
 export class SlideOutDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): SlideOutDown {
     return new SlideOutDown();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -229,10 +244,10 @@ export class SlideOutDown
         animations: {
           originY: delayFunction(
             delay,
-            animation(Math.max(values.originY + height, height), config)
+            animation(Math.max(values.currentOriginY + height, height), config)
           ),
         },
-        initialValues: { originY: values.originY },
+        initialValues: { originY: values.currentOriginY },
         callback: callback,
       };
     };

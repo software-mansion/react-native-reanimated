@@ -26,7 +26,7 @@ export const colorProps = [
   'overlayColor',
 ];
 
-const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
+export const ColorProperties = !isConfigured() ? [] : makeShareable(colorProps);
 
 let updatePropsByPlatform;
 if (shouldBeUseWeb()) {

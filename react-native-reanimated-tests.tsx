@@ -364,7 +364,7 @@ function WithTimingTest() {
         width.value,
         {
           duration: 500,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
         },
         (finished) => {}
       ),
@@ -385,7 +385,7 @@ function WithTimingToValueAsColorTest() {
         'rgba(255,105,180,0)',
         {
           duration: 500,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
         },
         (_finished) => {}
       ),

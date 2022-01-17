@@ -5,16 +5,20 @@ import Animated, {
   withDelay,
   EntryExitAnimationFunction,
   Layout,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
 function AnimatedView() {
   const ref = useRef(null);
-  const entering: EntryExitAnimationFunction = (targetValues) => {
+  const entering: EntryExitAnimationFunction = (
+    targetValues: EntryAnimationsValues
+  ) => {
     'worklet';
     const animations = {
-      originX: withTiming(targetValues.originX, { duration: 3000 }),
+      originX: withTiming(targetValues.targetOriginX, { duration: 3000 }),
       opacity: withTiming(1, { duration: 2000 }),
       borderRadius: withDelay(4000, withTiming(30, { duration: 3000 })),
       transform: [
@@ -34,14 +38,16 @@ function AnimatedView() {
     };
   };
 
-  const exiting: EntryExitAnimationFunction = (startingValues) => {
+  const exiting: EntryExitAnimationFunction = (
+    startingValues: ExitAnimationsValues
+  ) => {
     'worklet';
     const animations = {
       originX: withTiming(width, { duration: 3000 }),
       opacity: withTiming(0.5, { duration: 2000 }),
     };
     const initialValues = {
-      originX: startingValues.originX,
+      originX: startingValues.currentOriginX,
       opacity: 1,
     };
 

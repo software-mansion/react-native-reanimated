@@ -36,6 +36,7 @@ class RuntimeDecorator {
       const ScrollToFunction scrollTo,
       const MeasuringFunction measure,
       const TimeProviderFunction getCurrentTime,
+      const SetGestureStateFunction setGestureState,
       std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy);
 
   /**
@@ -58,27 +59,27 @@ class RuntimeDecorator {
   static void registerRuntime(jsi::Runtime *runtime, RuntimeType runtimeType);
 
  private:
-  static std::unordered_map<RuntimePointer, RuntimeType> runtimeRegistry;
+  static std::unordered_map<RuntimePointer, RuntimeType> &runtimeRegistry();
 };
 
 inline bool RuntimeDecorator::isUIRuntime(jsi::Runtime &rt) {
-  auto iterator = runtimeRegistry.find(&rt);
-  if (iterator == runtimeRegistry.end())
+  auto iterator = runtimeRegistry().find(&rt);
+  if (iterator == runtimeRegistry().end())
     return false;
   return iterator->second == RuntimeType::UI;
 }
 
 inline bool RuntimeDecorator::isWorkletRuntime(jsi::Runtime &rt) {
-  auto iterator = runtimeRegistry.find(&rt);
-  if (iterator == runtimeRegistry.end())
+  auto iterator = runtimeRegistry().find(&rt);
+  if (iterator == runtimeRegistry().end())
     return false;
   auto type = iterator->second;
   return type == RuntimeType::UI || type == RuntimeType::Worklet;
 }
 
 inline bool RuntimeDecorator::isReactRuntime(jsi::Runtime &rt) {
-  auto iterator = runtimeRegistry.find(&rt);
-  if (iterator == runtimeRegistry.end())
+  auto iterator = runtimeRegistry().find(&rt);
+  if (iterator == runtimeRegistry().end())
     return true;
   return false;
 }

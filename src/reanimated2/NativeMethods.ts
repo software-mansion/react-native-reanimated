@@ -1,4 +1,6 @@
-/* global _WORKLET _measure _scrollTo */
+/* global _WORKLET _measure _scrollTo _setGestureState */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { RefObjectFunction } from './hook/useAnimatedRef';
@@ -46,4 +48,14 @@ export function scrollTo(
   }
   const viewTag = animatedRef();
   _scrollTo(viewTag, x, y, animated);
+}
+
+export function setGestureState(handlerTag: number, newState: number): void {
+  'worklet';
+  if (!_WORKLET && !isChromeDebugger()) {
+    console.warn(
+      '[Reanimated] You can not use setGestureState in non-worklet function.'
+    );
+  }
+  _setGestureState(handlerTag, newState);
 }

@@ -99,6 +99,17 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_getViewProp(
   return jsi::Value::undefined();
 }
 
+static jsi::Value
+__hostFunction_NativeReanimatedModuleSpec_enableLayoutAnimations(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->enableLayoutAnimations(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -124,6 +135,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["getViewProp"] =
       MethodMetadata{3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
+  methodMap_["enableLayoutAnimations"] = MethodMetadata{
+      2, __hostFunction_NativeReanimatedModuleSpec_enableLayoutAnimations};
 }
 
 } // namespace reanimated

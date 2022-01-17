@@ -22,7 +22,6 @@ import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.Scheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,6 +45,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private HashMap<Integer, Runnable> mCallbacks;
   private boolean mCleaningScheduled = false;
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
+  private boolean isCatalystInstanceDestroyed = false;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -61,10 +61,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public enum ViewState {
+    Inactive,
     Appearing,
     Disappearing,
     Layout,
-    Inactive,
     ToRemove;
   }
 
@@ -80,9 +80,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mParentViewManager = new HashMap<>();
     mParent = new HashMap();
     mCallbacks = new HashMap<>();
+    isCatalystInstanceDestroyed = false;
   }
 
   public void onCatalystInstanceDestroy() {
+    isCatalystInstanceDestroyed = true;
     mNativeMethodsHolder = null;
     mContext = null;
     mUIImplementation = null;
@@ -98,18 +100,19 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewRemoval(View view, ViewGroup parent, Snapshot before, Runnable callback) {
-    // TODO fix removal
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Integer tag = view.getId();
-    String type = "exiting";
-    HashMap<String, Object> startValues = before.toMap();
+    HashMap<String, Object> currentValues = before.toCurrentMap();
     ViewState state = mStates.get(view.getId());
 
-    if (state == null || state == ViewState.Disappearing || state == ViewState.ToRemove) {
+    if (state == ViewState.Disappearing || state == ViewState.ToRemove) {
       return;
     }
     mCallbacks.put(tag, callback);
-    if (state == ViewState.Inactive) {
-      if (startValues != null) {
+    if (state == ViewState.Inactive || state == null) {
+      if (currentValues != null) {
         mStates.put(view.getId(), ViewState.ToRemove);
         mToRemove.add(view.getId());
         scheduleCleaning();
@@ -117,12 +120,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
     mStates.put(tag, ViewState.Disappearing);
-    HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(startValues);
-    mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+    HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(currentValues, false);
+    mNativeMethodsHolder.startAnimationForTag(tag, "exiting", preparedValues);
   }
 
   @Override
   public void onViewCreate(View view, ViewGroup parent, Snapshot after) {
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Scheduler strongScheduler = mScheduler.get();
     if (strongScheduler != null) {
       strongScheduler.triggerUI();
@@ -130,20 +136,18 @@ public class AnimationsManager implements ViewHierarchyObserver {
     if (!mStates.containsKey(view.getId())) {
       mStates.put(view.getId(), ViewState.Inactive);
       mViewForTag.put(view.getId(), view);
-      HashMap<String, Object> data = after.toMap();
-      mViewManager.put(view.getId(), (ViewManager) data.get(Snapshot.VIEW_MANAGER));
-      mParentViewManager.put(view.getId(), (ViewManager) data.get(Snapshot.PARENT_VIEW_MANAGER));
-      mParent.put(view.getId(), ((View) data.get(Snapshot.PARENT)));
+      mViewManager.put(view.getId(), after.viewManager);
+      mParentViewManager.put(view.getId(), after.parentViewManager);
+      mParent.put(view.getId(), after.parent);
     }
     Integer tag = view.getId();
-    String type = "entering";
-    HashMap<String, Object> targetValues = after.toMap();
+    HashMap<String, Object> targetValues = after.toTargetMap();
     ViewState state = mStates.get(view.getId());
 
     if (state == ViewState.Inactive) { // it can be a fresh view
       if (targetValues != null) {
-        HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues);
-        mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+        HashMap<String, Float> preparedValues = prepareDataForAnimationWorklet(targetValues, true);
+        mNativeMethodsHolder.startAnimationForTag(tag, "entering", preparedValues);
       }
       return;
     }
@@ -151,10 +155,12 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   @Override
   public void onViewUpdate(View view, Snapshot before, Snapshot after) {
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
     Integer tag = view.getId();
-    String type = "entering";
-    HashMap<String, Object> targetValues = after.toMap();
-    HashMap<String, Object> startValues = before.toMap();
+    HashMap<String, Object> targetValues = after.toTargetMap();
+    HashMap<String, Object> startValues = before.toCurrentMap();
     ViewState state = mStates.get(view.getId());
     if (state == null
         || state == ViewState.Disappearing
@@ -166,9 +172,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
     // layout of the View. So dirtiness of that View is false positive
     if (state == ViewState.Appearing) {
       boolean doNotStartLayout = true;
-      for (String key : LAYOUT_KEYS) {
-        double startV = ((Number) startValues.get(key)).doubleValue();
-        double targetV = ((Number) targetValues.get(key)).doubleValue();
+      for (int i = 0; i < Snapshot.targetKeysToTransform.size(); ++i) {
+        double startV =
+            ((Number) startValues.get(Snapshot.currentKeysToTransform.get(i))).doubleValue();
+        double targetV =
+            ((Number) targetValues.get(Snapshot.targetKeysToTransform.get(i))).doubleValue();
         if (startV != targetV) {
           doNotStartLayout = false;
         }
@@ -179,15 +187,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
 
     // View must be in Layout state
-    type = "layout";
     mStates.put(view.getId(), ViewState.Layout);
-    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
-    HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
+    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
+    HashMap<String, Float> preparedTargetValues =
+        prepareDataForAnimationWorklet(targetValues, true);
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
     for (String key : preparedStartValues.keySet()) {
-      preparedValues.put("b" + key, preparedStartValues.get(key));
+      preparedValues.put(key, preparedStartValues.get(key));
     }
-    mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
+    mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
   public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
@@ -224,6 +232,10 @@ public class AnimationsManager implements ViewHierarchyObserver {
     // go through ready to remove from bottom to top
     for (int tag : mToRemove) {
       View view = mViewForTag.get(tag);
+      if (view == null) {
+        view = mUIManager.resolveView(tag);
+        mViewForTag.put(tag, view);
+      }
       findRoot(view, roots);
     }
     for (int tag : roots) {
@@ -339,18 +351,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
     return cannotStripe;
   }
 
-  public HashMap<String, Float> prepareDataForAnimationWorklet(HashMap<String, Object> values) {
+  public HashMap<String, Float> prepareDataForAnimationWorklet(
+      HashMap<String, Object> values, boolean isTargetValues) {
     HashMap<String, Float> preparedValues = new HashMap<>();
-
-    ArrayList<String> keys =
-        new ArrayList<String>(
-            Arrays.asList(
-                Snapshot.WIDTH,
-                Snapshot.HEIGHT,
-                Snapshot.ORIGIN_X,
-                Snapshot.ORIGIN_Y,
-                Snapshot.GLOBAL_ORIGIN_X,
-                Snapshot.GLOBAL_ORIGIN_Y));
+    ArrayList<String> keys;
+    if (isTargetValues) {
+      keys = Snapshot.targetKeysToTransform;
+    } else {
+      keys = Snapshot.currentKeysToTransform;
+    }
     for (String key : keys) {
       preparedValues.put(key, PixelUtil.toDIPFromPixel((int) values.get(key)));
     }
@@ -496,5 +505,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     } else {
       viewToUpdate.layout(x, y, x + width, y + height);
     }
+  }
+
+  public boolean isLayoutAnimationEnabled() {
+    return mNativeMethodsHolder != null && mNativeMethodsHolder.isLayoutAnimationEnabled(); 
   }
 }

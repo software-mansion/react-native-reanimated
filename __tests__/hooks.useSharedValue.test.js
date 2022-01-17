@@ -4,7 +4,7 @@ import Animated, { useSharedValue } from '../src/Animated';
 
 jest.mock('../src/ReanimatedEventEmitter');
 jest.mock('../src/ReanimatedModule');
-jest.mock('../src/reanimated2/NativeReanimated');
+jest.mock('../src/reanimated2/NativeReanimated/NativeReanimated');
 
 describe('useSharedValue', () => {
   it('retains value on rerender', () => {
