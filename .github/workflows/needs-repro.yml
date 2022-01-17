@@ -8,6 +8,7 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    if: ${{ !github.event.issue.pull_request }}
     concurrency:
       group: needs-repro-${{ github.ref }}
       cancel-in-progress: true
