@@ -604,7 +604,28 @@
   [_componentUpdateBufferLock unlock];
 
   __weak typeof(self) weakSelf = self;
-  RCTExecuteOnMainQueue(^void() {
+  //  RCTExecuteOnMainQueue(^void() {
+  //    __typeof__(self) strongSelf = weakSelf;
+  //    if (strongSelf == nil) {
+  //      return;
+  //    }
+  //    [strongSelf->_componentUpdateBufferLock lock];
+  //    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+  //    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+  //    [strongSelf->_componentUpdateBufferLock unlock];
+  //    for (NSNumber *tag in componentUpdateBuffer) {
+  //      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+  //      if (componentUpdate == Nil) {
+  //        continue;
+  //      }
+  //      [strongSelf updateProps:componentUpdate.props
+  //                ofViewWithTag:componentUpdate.viewTag
+  //                     withName:componentUpdate.viewName];
+  //    }
+  //    [strongSelf performOperations];
+  //  });
+
+  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     __typeof__(self) strongSelf = weakSelf;
     if (strongSelf == nil) {
       return;
@@ -623,7 +644,7 @@
                      withName:componentUpdate.viewName];
     }
     [strongSelf performOperations];
-  });
+  }];
 }
 
 @end
