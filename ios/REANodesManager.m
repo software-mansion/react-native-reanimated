@@ -111,6 +111,7 @@
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
+  NSLock *_componentUpdateBufferLock;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 }
 
@@ -127,6 +128,7 @@
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
     _componentUpdateBuffer = [NSMutableDictionary new];
+    _componentUpdateBufferLock = [[NSLock alloc] init];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
   }
 
@@ -506,6 +508,11 @@
   _nativeProps = nativeProps;
 }
 
+- (BOOL)isNativeViewFullyMounted:(ComponentUpdate *)lastSnapshot viewTag:(NSNumber *)viewTag
+{
+  return _viewRegistry[viewTag].superview == nil || lastSnapshot != nil;
+}
+
 - (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
 {
   RCTAssertParam(nodeID);
@@ -520,8 +527,9 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
+  [_componentUpdateBufferLock lock];
   ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  if (_viewRegistry[viewTag].superview == nil || lastSnapshot != nil) {
+  if ([self isNativeViewFullyMounted:lastSnapshot viewTag:viewTag]) {
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
       propsSnapshot.props = [props mutableCopy];
@@ -534,9 +542,10 @@
         [lastProps setValue:props[key] forKey:key];
       }
     }
-
+    [_componentUpdateBufferLock unlock];
     return;
   }
+  [_componentUpdateBufferLock unlock];
 
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
@@ -587,9 +596,12 @@
 
 - (void)tryToFlushUpdateBuffer
 {
+  [_componentUpdateBufferLock lock];
   if (_componentUpdateBuffer.count == 0) {
+    [_componentUpdateBufferLock unlock];
     return;
   }
+  [_componentUpdateBufferLock unlock];
 
   __weak typeof(self) weakSelf = self;
   RCTExecuteOnMainQueue(^void() {
@@ -597,8 +609,10 @@
     if (strongSelf == nil) {
       return;
     }
+    [strongSelf->_componentUpdateBufferLock lock];
     NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
     strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+    [strongSelf->_componentUpdateBufferLock unlock];
     for (NSNumber *tag in componentUpdateBuffer) {
       ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
       if (componentUpdate == Nil) {
