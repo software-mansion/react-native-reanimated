@@ -1,7 +1,6 @@
 package com.swmansion.reanimated;
 
 import android.util.Log;
-
 import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.react.bridge.JSIModuleSpec;
 import com.facebook.react.bridge.JavaScriptContextHolder;
@@ -23,9 +22,10 @@ public class ReanimatedJSIModulePackage implements JSIModulePackage {
       NodesManager nodesManager =
           reactApplicationContext.getNativeModule(ReanimatedModule.class).getNodesManager();
       nodesManager.initWithContext(reactApplicationContext);
-    }
-    else {
-      Log.w("[REANIMATED]", "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
+    } else {
+      Log.w(
+          "[REANIMATED]",
+          "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
     }
     return Arrays.<JSIModuleSpec>asList();
   }
