@@ -7,9 +7,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {
-  Button,
   StyleSheet,
   Text,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
@@ -105,7 +105,7 @@ function ReactionsCounter({
 
   return (
     <TouchableWithoutFeedback onPress={onPress}>
-      <Animated.View style={[styles.button, animatedStyle]}>
+      <Animated.View style={[styles.counter, animatedStyle]}>
         <View style={styles.contents}>
           <Text style={styles.emoji}>{emoji}</Text>
           <Animated.Text
@@ -118,6 +118,21 @@ function ReactionsCounter({
         </View>
       </Animated.View>
     </TouchableWithoutFeedback>
+  );
+}
+
+type ButtonProps = {
+  onPress: () => void;
+  children: string;
+};
+
+function Button({ onPress, children }: ButtonProps): React.ReactElement {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.button}>
+        <Text style={styles.label}>{children}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -149,9 +164,11 @@ export function ReactionsCounterExample(): React.ReactElement {
         you={you}
         onPress={toggleYou}
       />
-      <View style={styles.vspace} />
-      <Button onPress={incrementOthers} title="Increment others" />
-      <Button onPress={decrementOthers} title="Decrement others" />
+      <View style={styles.buttons}>
+        <Button onPress={decrementOthers}>&ndash;</Button>
+        <View style={styles.hspace} />
+        <Button onPress={incrementOthers}>+</Button>
+      </View>
     </View>
   );
 }
@@ -163,7 +180,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  button: {
+  counter: {
     borderWidth: 8,
     borderRadius: 50,
     width: 300,
@@ -186,7 +203,23 @@ const styles = StyleSheet.create({
     width: 110,
     textAlign: 'center',
   },
-  vspace: {
-    height: 30,
+  buttons: {
+    marginTop: 30,
+    flexDirection: 'row',
+  },
+  button: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#53575E',
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    color: 'white',
+    fontSize: 50,
+  },
+  hspace: {
+    width: 50,
   },
 });
