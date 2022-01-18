@@ -39,8 +39,8 @@ function ReactionsCounter({
   you,
   onPress,
 }: ReactionsCounterProps) {
-  const oldCount = useSharedValue<number | null>(null);
-  const newCount = useSharedValue<number | null>(null);
+  const oldCount = useSharedValue<number>(-1);
+  const newCount = useSharedValue<number>(count);
 
   React.useEffect(() => {
     newCount.value = count;
@@ -60,7 +60,7 @@ function ReactionsCounter({
 
   const entering = (values: EntryAnimationsValues) => {
     'worklet';
-    if (oldCount.value === null) {
+    if (oldCount.value === -1) {
       // skip entering animation on first render
       oldCount.value = count;
       return { initialValues: {}, animations: {} };
