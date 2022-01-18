@@ -296,14 +296,15 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     }
   }
 
-  @Override
+  // @Override
   public synchronized void manageChildren(
       int tag,
       @Nullable int[] indicesToRemove,
       @Nullable ViewAtIndex[] viewsToAdd,
       @Nullable int[] tagsToDelete) {
+    int[] mock = new int[] {};
     if (isLayoutAnimationDisabled()) {
-      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
       return;
     }
     ViewGroup viewGroup;
@@ -314,13 +315,13 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     } catch (IllegalViewOperationException e) {
       // (IllegalViewOperationException) == (vm == null)
       e.printStackTrace();
-      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
       return;
     }
 
     // we don't want layout animations in native-stack since it is currently buggy there
     if (viewGroupManager.getName().equals("RNSScreenStack")) {
-      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete);
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
       return;
     }
 
@@ -375,7 +376,6 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
     }
 
-    int[] mock = new int[] {};
     super.manageChildren(tag, indicesToRemove, viewsToAdd, mock, mock);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
