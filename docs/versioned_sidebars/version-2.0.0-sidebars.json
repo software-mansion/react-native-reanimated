@@ -142,7 +142,15 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-2.0.0/api/runOnJS"
+              "id": "version-2.0.0/api/miscellaneous/runOnJS"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/miscellaneous/runOnUI"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/miscellaneous/interpolate"
             }
           ]
         }

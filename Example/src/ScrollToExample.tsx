@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
@@ -65,14 +65,15 @@ function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
 }
 
 function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
-  const aref = useAnimatedRef<ScrollView>();
+  const aref = useAnimatedRef<Animated.ScrollView>();
 
   useDerivedValue(() => {
     if (Platform.OS === 'web') {
       if (aref && aref.current) {
-        aref.current.scrollTo({ y: digit.value * 200 });
+        aref.current.getNode().scrollTo({ y: digit.value * 200 });
       }
     } else {
+      // TODO fix this
       scrollTo(aref, 0, digit.value * 200, true);
     }
   });
@@ -80,7 +81,7 @@ function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
   return (
     <View
       style={{ height: 200, width: Platform.OS === 'web' ? 50 : undefined }}>
-      <ScrollView ref={aref}>
+      <Animated.ScrollView ref={aref}>
         {digits.map((i) => {
           return (
             <View
@@ -94,7 +95,7 @@ function Digit({ digit }: { digit: Animated.SharedValue<number> }) {
             </View>
           );
         })}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

@@ -1,13 +1,16 @@
 #include "MutableValueSetterProxy.h"
-#include "SharedParent.h"
-#include "MutableValue.h"
 #include <jsi/jsi.h>
+#include "MutableValue.h"
+#include "SharedParent.h"
 
 using namespace facebook;
 
 namespace reanimated {
 
-void MutableValueSetterProxy::set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &newValue) {
+void MutableValueSetterProxy::set(
+    jsi::Runtime &rt,
+    const jsi::PropNameID &name,
+    const jsi::Value &newValue) {
   auto propName = name.utf8(rt);
   if (propName == "_value") {
     mutableValue->setValue(rt, newValue);
@@ -18,11 +21,13 @@ void MutableValueSetterProxy::set(jsi::Runtime &rt, const jsi::PropNameID &name,
     }
     *mutableValue->animation.lock() = jsi::Value(rt, newValue);
   } else if (propName == "value") {
-      // you call `this.value` inside of value setter, we should throw
+    // you call `this.value` inside of value setter, we should throw
   }
 }
 
-jsi::Value MutableValueSetterProxy::get(jsi::Runtime &rt, const jsi::PropNameID &name) {
+jsi::Value MutableValueSetterProxy::get(
+    jsi::Runtime &rt,
+    const jsi::PropNameID &name) {
   auto propName = name.utf8(rt);
 
   if (propName == "value") {
@@ -39,5 +44,4 @@ jsi::Value MutableValueSetterProxy::get(jsi::Runtime &rt, const jsi::PropNameID 
   return jsi::Value::undefined();
 }
 
-}
-
+} // namespace reanimated

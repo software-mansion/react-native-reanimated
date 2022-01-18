@@ -1,12 +1,36 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { useRef } from 'react';
 import { makeMutable } from './core';
+import { SharedValue } from './commonTypes';
+import { Descriptor } from './hook/commonTypes';
+import { Platform } from 'react-native';
 
-export function makeViewDescriptorsSet() {
-  const ref = useRef(null);
+export interface ViewRefSet<T> {
+  items: Set<T>;
+  add: (item: T) => void;
+  remove: (item: T) => void;
+}
+
+export interface ViewDescriptorsSet {
+  batchToRemove: Set<number>;
+  tags: Set<number>;
+  waitForInsertSync: boolean;
+  waitForRemoveSync: boolean;
+  sharableViewDescriptors: SharedValue<Descriptor[]>;
+  items: Descriptor[];
+  add: (item: Descriptor) => void;
+  remove: (viewTag: number) => void;
+  rebuildsharableViewDescriptors: (
+    sharableViewDescriptor: SharedValue<Descriptor[]>
+  ) => void;
+}
+
+const scheduleUpdates =
+  Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
+
+export function makeViewDescriptorsSet(): ViewDescriptorsSet {
+  const ref = useRef<ViewDescriptorsSet | null>(null);
   if (ref.current === null) {
-    const data = {
+    const data: ViewDescriptorsSet = {
       batchToRemove: new Set(),
       tags: new Set(),
       waitForInsertSync: false,
@@ -14,7 +38,7 @@ export function makeViewDescriptorsSet() {
       sharableViewDescriptors: makeMutable([]),
       items: [],
 
-      add: (item) => {
+      add: (item: Descriptor) => {
         if (data.tags.has(item.tag)) {
           return;
         }
@@ -24,20 +48,20 @@ export function makeViewDescriptorsSet() {
         if (!data.waitForInsertSync) {
           data.waitForInsertSync = true;
 
-          setImmediate(() => {
+          scheduleUpdates(() => {
             data.sharableViewDescriptors.value = data.items;
             data.waitForInsertSync = false;
           });
         }
       },
 
-      remove: (viewTag) => {
+      remove: (viewTag: number) => {
         data.batchToRemove.add(viewTag);
 
         if (!data.waitForRemoveSync) {
           data.waitForRemoveSync = true;
 
-          setImmediate(() => {
+          scheduleUpdates(() => {
             const items = [];
             for (const item of data.items) {
               if (data.batchToRemove.has(item.tag)) {
@@ -54,7 +78,9 @@ export function makeViewDescriptorsSet() {
         }
       },
 
-      rebuildsharableViewDescriptors: (sharableViewDescriptors) => {
+      rebuildsharableViewDescriptors: (
+        sharableViewDescriptors: SharedValue<Descriptor[]>
+      ) => {
         data.sharableViewDescriptors = sharableViewDescriptors;
       },
     };
@@ -64,18 +90,18 @@ export function makeViewDescriptorsSet() {
   return ref.current;
 }
 
-export function makeViewsRefSet() {
-  const ref = useRef(null);
+export function makeViewsRefSet<T>(): ViewRefSet<T> {
+  const ref = useRef<ViewRefSet<T> | null>(null);
   if (ref.current === null) {
-    const data = {
+    const data: ViewRefSet<T> = {
       items: new Set(),
 
-      add: (item) => {
+      add: (item: T) => {
         if (data.items.has(item)) return;
         data.items.add(item);
       },
 
-      remove: (item) => {
+      remove: (item: T) => {
         data.items.delete(item);
       },
     };

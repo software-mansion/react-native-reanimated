@@ -19,6 +19,18 @@ aref.current.scrollTo({ x, y });
 
 The product of [`useAnimatedRef`](../useAnimatedRef) which is a Reanimated's extension of a standard React's ref(delivers view tag on the UI thread).
 
+#### `x-cord` [Float]
+
+Corresponds to the pixel along the horizontal axis of the element that you want displayed in the upper left.
+
+#### `y-cord` [Float]
+
+Corresponds to the pixel along the vertical axis of the element that you want displayed in the upper left.
+
+#### `animated` [Boolean]
+
+Indicates whether the scroll should be smooth.
+
 ### Returns
 
 void

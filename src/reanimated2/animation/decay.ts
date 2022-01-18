@@ -3,7 +3,7 @@ import {
   Animation,
   AnimationCallback,
   AnimationObject,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
 } from './commonTypes';
 import { Platform } from 'react-native';
@@ -15,12 +15,19 @@ interface DecayConfig {
   velocity?: number;
 }
 
+interface DefaultDecayConfig {
+  deceleration: number;
+  velocityFactor: number;
+  clamp?: number[];
+  velocity: number;
+}
+
 export interface DecayAnimation extends Animation<DecayAnimation> {
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: PrimitiveValue;
+  current: AnimatableValue;
 }
 
 export interface InnerDecayAnimation
@@ -37,10 +44,9 @@ export function withDecay(
 
   return defineAnimation<DecayAnimation>(0, () => {
     'worklet';
-    const config: Required<DecayConfig> = {
+    const config: DefaultDecayConfig = {
       deceleration: 0.998,
       velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
-      clamp: [],
       velocity: 0,
     };
     if (userConfig) {

@@ -78,6 +78,11 @@ project.ext.react = [
 ]
 def enableHermes = project.ext.react.get("enableHermes", false);
 
+/**
+ * Architectures to build native code for in debug.
+ */
+def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
+
 apply from: "../../node_modules/react-native/react.gradle"
 
 /**
@@ -106,6 +111,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        testBuildType System.getProperty('testBuildType', 'debug')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     splits {
         abi {
@@ -121,6 +128,11 @@ android {
         debug {
             packagingOptions {
                 doNotStrip "**/**/*.so"
+            }
+            if (nativeArchitectures) {
+                ndk {
+                    abiFilters nativeArchitectures.split(',')
+                }
             }
         }
         release {
@@ -142,11 +154,6 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
     packagingOptions {
         pickFirst 'lib/**/libturbomodulejsijni.so'
         pickFirst 'lib/**/libc++_shared.so'
@@ -159,17 +166,26 @@ android {
         pickFirst 'lib/**/libfolly_json.so'
         pickFirst 'lib/**/jscexecutor.so'
     }
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
     implementation project(':@react-native-community_masked-view')
     implementation project(':react-native-svg')
+    implementation project(':react-native-screens')
     implementation project(':react-native-safe-area-context')
     implementation project(':react-native-reanimated')
     implementation project(':react-native-gesture-handler')
+    implementation project(':react-native-pager-view')
+    implementation project(':react-native-community-picker')
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+    androidTestImplementation('com.wix:detox:+')
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
@@ -194,6 +210,6 @@ dependencies {
 // Run this once to be able to run the application with BUCK
 // puts all compile dependencies into folder libs for BUCK to use
 task copyDownloadableDepsToLibs(type: Copy) {
-    from configurations.compile
+    from configurations.implementation
     into 'libs'
 }

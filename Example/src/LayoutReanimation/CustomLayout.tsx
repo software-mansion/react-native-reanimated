@@ -1,15 +1,13 @@
-import { selectAssetSource } from 'expo-asset/build/AssetSources';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import Animated, {
-  AnimatedLayout,
   makeMutable,
   withTiming,
   withDelay,
-  SlideInDown,
+  LayoutAnimationFunction,
 } from 'react-native-reanimated';
 
-function CustomLayoutTransiton() {
+function CustomLayoutTransiton(): LayoutAnimationFunction {
   const isEven = makeMutable(1);
   return (values) => {
     'worklet';
@@ -20,28 +18,26 @@ function CustomLayoutTransiton() {
       animations: {
         originX: withDelay(
           isEvenLocal ? 1000 : 0,
-          withTiming(values.originX, { duration: 1000 })
+          withTiming(values.targetOriginX, { duration: 1000 })
         ),
         originY: withDelay(
           isEvenLocal ? 0 : 1000,
-          withTiming(values.originY, { duration: 1000 })
+          withTiming(values.targetOriginY, { duration: 1000 })
         ),
-        width: withTiming(values.width, { duration: 1000 }),
-        height: withTiming(values.height, { duration: 1000 }),
+        width: withTiming(values.targetWidth, { duration: 1000 }),
+        height: withTiming(values.targetHeight, { duration: 1000 }),
       },
       initialValues: {
-        originX: values.boriginX,
-        originY: values.boriginY,
-        width: values.bwidth,
-        height: values.bheight,
+        originX: values.currentOriginX,
+        originY: values.currentGlobalOriginY,
+        width: values.currentWidth,
+        height: values.currentHeight,
       },
     };
   };
 }
 
 function Box({ label, state }: { label: string; state: boolean }) {
-  const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);
-  const delay = 300 * ind;
   return (
     <Animated.View
       layout={CustomLayoutTransiton()}
@@ -56,12 +52,12 @@ export function CustomLayoutAnimationScreen(): React.ReactElement {
   return (
     <View style={{ marginTop: 30 }}>
       <View style={{ height: 300 }}>
-        <AnimatedLayout
+        <View
           style={{ flexDirection: state ? 'row' : 'column', borderWidth: 1 }}>
           <Box key="a" label="A" state={state} />
           <Box key="b" label="B" state={state} />
           <Box key="c" label="C" state={state} />
-        </AnimatedLayout>
+        </View>
       </View>
 
       <Button
@@ -84,6 +80,3 @@ const styles = StyleSheet.create({
     height: 60,
   },
 });
-
-
-

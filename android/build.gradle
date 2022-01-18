@@ -7,7 +7,6 @@ def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').to
 
 import java.nio.file.Paths
 
-import de.undercouch.gradle.tasks.download.Download
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.apache.tools.ant.filters.ReplaceTokens
 
@@ -19,6 +18,7 @@ def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_V
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
 def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_VERSION = reactProperties.getProperty("VERSION_NAME").split("\\.")[1].toInteger()
+def FBJNI_VERSION = '0.2.2'
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -32,6 +32,7 @@ def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/thi
 
 def HOME = System.getProperty("user.home")
 
+def _stackProtectorFlag = true;
 def FOR_HERMES = "";
 if(findProject(':app')) {
     FOR_HERMES = project(':app').ext.react.enableHermes;
@@ -59,23 +60,18 @@ def follyReplaceContent = '''
   return r;
 '''
 
-def boost_file = new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz")
-def double_conversion_file = new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz")
-def folly_file = new File(downloadsDir, "folly-${FOLLY_VERSION}.tar.gz")
-def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
-
-
 buildscript {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.1.2')
-        classpath("de.undercouch:gradle-download-task:4.0.4")
+        classpath('com.android.tools.build:gradle:4.2.2')
+        classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
 
@@ -84,25 +80,24 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+if (project == rootProject) {
+    apply from: 'spotless.gradle'
+}
+
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'de.undercouch.download'
 
-def CMAKE_TOOLCHAIN_FILE = ""
-if(!System.getenv('IS_TRAVIS')) {
-    CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
-}
 
 android {
     buildFeatures {
         prefab true
     }
-    compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+    compileSdkVersion safeExtGet('compileSdkVersion', 30)
     defaultConfig {
 
         minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 29)
+        targetSdkVersion safeExtGet('targetSdkVersion', 30)
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -111,10 +106,10 @@ android {
                              "-DNATIVE_DEBUG=${debugNativeLibraries}",
                              "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                              "-DANDROID_TOOLCHAIN=clang",
-                             "${CMAKE_TOOLCHAIN_FILE}",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}"
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+                _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
 
@@ -134,7 +129,7 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = REACT_VERSION < 65 ? ["**/libc++_shared.so"] : ["**/libc++_shared.so", "**/libfbjni.so"]
+        excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libjsi.so"]
     }
 
     tasks.withType(JavaCompile) {
@@ -145,10 +140,6 @@ android {
     configurations {
         extractHeaders
         extractSO
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -224,6 +215,7 @@ task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
 // Prepare glog sources to be compiled, this task will perform steps that normally should've been
 // executed by automake. This way we can avoid dependencies on make/automake
 task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
+    duplicatesStrategy = 'include'
     from(dependenciesPath ?: tarTree(downloadGlog.dest))
     from("$reactNativeThirdParty/glog/")
     include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
@@ -327,7 +319,7 @@ def findNdkBuildFullPath() {
             return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
         }
     }
-    
+
     def Properties properties = new Properties()
     if (rootProject.file("local.properties").exists()) {
         properties.load(project.rootProject.file("local.properties").newDataInputStream())
@@ -448,6 +440,7 @@ task packageNdkLibs(type: Copy) {
 }
 
 repositories {
+    mavenCentral()
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
@@ -458,16 +451,17 @@ repositories {
         url "$rootDir/../node_modules/jsc-android/dist"
     }
     google()
-    jcenter()
 }
 
 dependencies {
     //noinspection GradleDynamicVersion
-    implementation 'com.facebook.fbjni:fbjni:0.2.2'
+    implementation 'com.facebook.yoga:proguard-annotations:1.19.0'
+    implementation 'com.facebook.fbjni:fbjni-java-only:0.3.0'
+    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
-    extractSO("com.facebook.fbjni:fbjni:0.2.2")
+    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile

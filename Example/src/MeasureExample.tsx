@@ -170,12 +170,12 @@ function SectionHeader({
     if (contentHeight.value === 0) {
       contentHeight.value = withTiming(height, {
         duration: 500,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
       });
     } else {
       contentHeight.value = withTiming(0, {
         duration: 300,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
       });
     }
   };

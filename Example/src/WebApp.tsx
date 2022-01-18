@@ -1,7 +1,14 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, LogBox } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  LogBox,
+  ScrollView,
+} from 'react-native';
 
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import { RectButton } from 'react-native-gesture-handler';
 
 import {
   createStackNavigator,

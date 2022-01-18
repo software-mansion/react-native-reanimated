@@ -73,9 +73,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${Component.displayName ||
-      Component.name ||
-      'Component'}`;
+    static displayName = `Transitioning.${
+      Component.displayName || Component.name || 'Component'
+    }`;
 
     setNativeProps() {
       // noop
@@ -86,7 +86,7 @@ function createTransitioningComponent(Component) {
     }
 
     render() {
-      return <Component {...this.props} />;
+      return React.createElement(Component, this.props);
     }
   };
 }

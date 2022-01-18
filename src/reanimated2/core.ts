@@ -1,12 +1,22 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-import NativeReanimated from './NativeReanimated';
+import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
-import { addWhitelistedNativeProps } from '../ConfigHelper';
-import { nativeShouldBeMock } from './PlatformChecker';
+import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
+import {
+  BasicWorkletFunction,
+  WorkletFunction,
+  ComplexWorkletFunction,
+  SharedValue,
+} from './commonTypes';
+import {
+  AnimationObject,
+  AnimatableValue,
+  Timestamp,
+} from './animation/commonTypes';
+import { Descriptor } from './hook/commonTypes';
+import JSReanimated from './js-reanimated/JSReanimated';
 
-global.__reanimatedWorkletInit = function (worklet) {
+global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
 };
 
@@ -17,11 +27,30 @@ if (global._setGlobalConsole === undefined) {
   };
 }
 
-const testWorklet = () => {
+export type ReanimatedConsole = Pick<
+  Console,
+  'debug' | 'log' | 'warn' | 'info' | 'error'
+>;
+
+export type WorkletValue =
+  | (() => AnimationObject)
+  | AnimationObject
+  | AnimatableValue
+  | Descriptor;
+interface WorkletValueSetterContext {
+  _animation?: AnimationObject | null;
+  _value?: AnimatableValue | Descriptor;
+  value?: AnimatableValue;
+  _setValue?: (val: AnimatableValue | Descriptor) => void;
+}
+
+const testWorklet: BasicWorkletFunction<void> = () => {
   'worklet';
 };
 
-export const checkPluginState = (throwError = true) => {
+export const checkPluginState: (throwError: boolean) => boolean = (
+  throwError = true
+) => {
   if (!testWorklet.__workletHash && !shouldBeUseWeb()) {
     if (throwError) {
       throw new Error(
@@ -33,19 +62,21 @@ export const checkPluginState = (throwError = true) => {
   return true;
 };
 
-export const isConfigured = (throwError = false) => {
-  return checkPluginState(throwError) && !NativeReanimated.useOnlyV1;
+export const isConfigured: (throwError?: boolean) => boolean = (
+  throwError = false
+) => {
+  return checkPluginState(throwError) && !NativeReanimatedModule.useOnlyV1;
 };
 
-export const isConfiguredCheck = () => {
+export const isConfiguredCheck: () => void = () => {
   if (!isConfigured(true)) {
     throw new Error(
-      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/installation'
+      'If you want to use Reanimated 2 then go through our installation steps https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/installation'
     );
   }
 };
 
-function _toArrayReanimated(object) {
+function _toArrayReanimated<T>(object: Iterable<T> | ArrayLike<T> | T[]): T[] {
   'worklet';
   if (Array.isArray(object)) {
     return object;
@@ -54,19 +85,23 @@ function _toArrayReanimated(object) {
     typeof Symbol !== 'undefined' &&
     (typeof Symbol === 'function' ? Symbol.iterator : '@@iterator') in
       Object(object)
-  )
+  ) {
     return Array.from(object);
-  throw new 'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'();
+  }
+  throw new Error(
+    'Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.'
+  );
 }
 
-function _mergeObjectsReanimated() {
+function _mergeObjectsReanimated(): unknown {
   'worklet';
   // we can't use rest parameters in worklets at the moment
   // eslint-disable-next-line prefer-rest-params
-  return Object.assign.apply(null, arguments);
+  const arr = Array.from(arguments);
+  return Object.assign.apply(null, [arr[0], ...arr.slice(1)]);
 }
 
-global.__reanimatedWorkletInit = function (worklet) {
+global.__reanimatedWorkletInit = function (worklet: WorkletFunction) {
   worklet.__worklet = true;
 
   if (worklet._closure) {
@@ -83,13 +118,13 @@ global.__reanimatedWorkletInit = function (worklet) {
   }
 };
 
-function pushFrame(frame) {
-  NativeReanimated.pushFrame(frame);
+function pushFrame(frame: (timestamp: Timestamp) => void): void {
+  (NativeReanimatedModule as JSReanimated).pushFrame(frame);
 }
 
-export function requestFrame(frame) {
+export function requestFrame(frame: (timestamp: Timestamp) => void): void {
   'worklet';
-  if (NativeReanimated.native) {
+  if (NativeReanimatedModule.native) {
     requestAnimationFrame(frame);
   } else {
     pushFrame(frame);
@@ -97,35 +132,41 @@ export function requestFrame(frame) {
 }
 
 global._WORKLET = false;
-global._log = function (s) {
+global._log = function (s: string) {
   console.log(s);
 };
 
-export function runOnUI(worklet) {
+export function runOnUI<A extends any[], R>(
+  worklet: ComplexWorkletFunction<A, R>
+): (...args: A) => void {
   return makeShareable(worklet);
 }
 
-export function makeShareable(value) {
+export function makeShareable<T>(value: T): T {
   isConfiguredCheck();
-  return NativeReanimated.makeShareable(value);
+  return NativeReanimatedModule.makeShareable(value);
 }
 
-export function getViewProp(viewTag, propName) {
+export function getViewProp<T>(viewTag: string, propName: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    return NativeReanimated.getViewProp(viewTag, propName, (result) => {
-      if (result.substr(0, 6) === 'error:') {
-        reject(result);
-      } else {
-        resolve(result);
+    return NativeReanimatedModule.getViewProp(
+      viewTag,
+      propName,
+      (result: T) => {
+        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          reject(result);
+        } else {
+          resolve(result);
+        }
       }
-    });
+    );
   });
 }
 
-let _getTimestamp;
+let _getTimestamp: () => number;
 if (nativeShouldBeMock()) {
   _getTimestamp = () => {
-    return NativeReanimated.getTimestamp();
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
   };
 } else {
   _getTimestamp = () => {
@@ -140,15 +181,18 @@ if (nativeShouldBeMock()) {
   };
 }
 
-export function getTimestamp() {
+export function getTimestamp(): number {
   'worklet';
   if (Platform.OS === 'web') {
-    return NativeReanimated.getTimestamp();
+    return (NativeReanimatedModule as JSReanimated).getTimestamp();
   }
   return _getTimestamp();
 }
 
-function workletValueSetter(value) {
+function workletValueSetter<T extends WorkletValue>(
+  this: WorkletValueSetterContext,
+  value: T
+): void {
   'worklet';
   const previousAnimation = this._animation;
   if (previousAnimation) {
@@ -157,9 +201,14 @@ function workletValueSetter(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.onFrame)
+    (value !== null &&
+      typeof value === 'object' &&
+      (value as AnimationObject).onFrame !== undefined)
   ) {
-    const animation = typeof value === 'function' ? value() : value;
+    const animation: AnimationObject =
+      typeof value === 'function'
+        ? (value as () => AnimationObject)()
+        : (value as AnimationObject);
     // prevent setting again to the same value
     // and triggering the mappers that treat this value as an input
     // this happens when the animation's target value(stored in animation.current until animation.onStart is called) is set to the same value as a current one(this._value)
@@ -169,11 +218,11 @@ function workletValueSetter(value) {
       return;
     }
     // animated set
-    const initializeAnimation = (timestamp) => {
+    const initializeAnimation = (timestamp: number) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
     initializeAnimation(getTimestamp());
-    const step = (timestamp) => {
+    const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
@@ -203,13 +252,16 @@ function workletValueSetter(value) {
     if (this._value === value) {
       return;
     }
-    this._value = value;
+    this._value = value as Descriptor | AnimatableValue;
   }
 }
 
 // We cannot use pushFrame
 // so we use own implementation for js
-function workletValueSetterJS(value) {
+function workletValueSetterJS<T extends WorkletValue>(
+  this: WorkletValueSetterContext,
+  value: T
+): void {
   const previousAnimation = this._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;
@@ -217,14 +269,21 @@ function workletValueSetterJS(value) {
   }
   if (
     typeof value === 'function' ||
-    (value !== null && typeof value === 'object' && value.onFrame)
+    (value !== null &&
+      typeof value === 'object' &&
+      (value as AnimationObject).onFrame)
   ) {
     // animated set
-    const animation = typeof value === 'function' ? value() : value;
-    let initializeAnimation = (timestamp) => {
+    const animation: AnimationObject =
+      typeof value === 'function'
+        ? (value as () => AnimationObject)()
+        : (value as AnimationObject);
+    let initializeAnimation: ((timestamp: number) => void) | null = (
+      timestamp: number
+    ) => {
       animation.onStart(animation, this.value, timestamp, previousAnimation);
     };
-    const step = (timestamp) => {
+    const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback && animation.callback(false /* finished */);
         return;
@@ -235,7 +294,7 @@ function workletValueSetterJS(value) {
       }
       const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
-      this._setValue(animation.current);
+      this._setValue && this._setValue(animation.current as AnimatableValue);
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -247,31 +306,31 @@ function workletValueSetterJS(value) {
 
     requestFrame(step);
   } else {
-    this._setValue(value);
+    this._setValue && this._setValue(value as AnimatableValue | Descriptor);
   }
 }
 
-export function makeMutable(value) {
+export function makeMutable<T>(value: T): SharedValue<T> {
   isConfiguredCheck();
-  return NativeReanimated.makeMutable(value);
+  return NativeReanimatedModule.makeMutable(value);
 }
 
-export function makeRemote(object = {}) {
+export function makeRemote<T>(object = {}): T {
   isConfiguredCheck();
-  return NativeReanimated.makeRemote(object);
+  return NativeReanimatedModule.makeRemote(object);
 }
 
 export function startMapper(
-  mapper,
-  inputs = [],
-  outputs = [],
-  updater = () => {
+  mapper: () => void,
+  inputs: any[] = [],
+  outputs: any[] = [],
+  updater: () => void = () => {
     // noop
   },
-  viewDescriptors = []
-) {
+  viewDescriptors: Descriptor[] | SharedValue<Descriptor[]> = []
+): number {
   isConfiguredCheck();
-  return NativeReanimated.startMapper(
+  return NativeReanimatedModule.startMapper(
     mapper,
     inputs,
     outputs,
@@ -280,11 +339,18 @@ export function startMapper(
   );
 }
 
-export function stopMapper(mapperId) {
-  NativeReanimated.stopMapper(mapperId);
+export function stopMapper(mapperId: number): void {
+  NativeReanimatedModule.stopMapper(mapperId);
 }
 
-export const runOnJS = (fun) => {
+export interface RunOnJSFunction<A extends any[], R> {
+  __callAsync?: (...args: A) => void;
+  (...args: A): R;
+}
+
+export function runOnJS<A extends any[], R>(
+  fun: RunOnJSFunction<A, R>
+): () => void {
   'worklet';
   if (!_WORKLET) {
     return fun;
@@ -296,25 +362,17 @@ export const runOnJS = (fun) => {
   } else {
     return fun.__callAsync;
   }
-};
-
-export function createAnimatedPropAdapter(adapter, nativeProps) {
-  const nativePropsToAdd = {};
-  // eslint-disable-next-line no-unused-expressions
-  nativeProps?.forEach((prop) => {
-    nativePropsToAdd[prop] = true;
-  });
-  addWhitelistedNativeProps(nativePropsToAdd);
-  return adapter;
 }
 
-if (!NativeReanimated.useOnlyV1) {
-  NativeReanimated.installCoreFunctions(
-    NativeReanimated.native ? workletValueSetter : workletValueSetterJS
+if (!NativeReanimatedModule.useOnlyV1) {
+  NativeReanimatedModule.installCoreFunctions(
+    NativeReanimatedModule.native
+      ? (workletValueSetter as <T>(value: T) => void)
+      : (workletValueSetterJS as <T>(value: T) => void)
   );
 
-  const capturableConsole = console;
-  isConfigured() &&
+  if (!isWeb() && isConfigured()) {
+    const capturableConsole = console;
     runOnUI(() => {
       'worklet';
       const console = {
@@ -325,5 +383,40 @@ if (!NativeReanimated.useOnlyV1) {
         info: runOnJS(capturableConsole.info),
       };
       _setGlobalConsole(console);
+      if (global.performance == null) {
+        global.performance = {
+          now: global._chronoNow,
+        };
+      }
     })();
+  }
+}
+
+type FeaturesConfig = {
+  enableLayoutAnimations: boolean;
+  setByUser: boolean;
+};
+
+let featuresConfig: FeaturesConfig = {
+  enableLayoutAnimations: false,
+  setByUser: false,
+};
+
+export function enableLayoutAnimations(
+  flag: boolean,
+  isCallByUser = true
+): void {
+  if (isCallByUser) {
+    featuresConfig = {
+      enableLayoutAnimations: flag,
+      setByUser: true,
+    };
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  } else if (
+    !featuresConfig.setByUser &&
+    featuresConfig.enableLayoutAnimations !== flag
+  ) {
+    featuresConfig.enableLayoutAnimations = flag;
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  }
 }

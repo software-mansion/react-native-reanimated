@@ -4,7 +4,7 @@ import {
   NextAnimation,
   Timestamp,
   HigherOrderAnimation,
-  PrimitiveValue,
+  AnimatableValue,
 } from './commonTypes';
 
 export interface DelayAnimation
@@ -13,7 +13,7 @@ export interface DelayAnimation
   startTime: Timestamp;
   started: boolean;
   previousAnimation: DelayAnimation | null;
-  current: PrimitiveValue;
+  current: AnimatableValue;
 }
 
 export function withDelay(
@@ -44,7 +44,9 @@ export function withDelay(
         animation.current = nextAnimation.current;
         return finished;
       } else if (previousAnimation) {
-        const finished = previousAnimation.onFrame(previousAnimation, now);
+        const finished =
+          previousAnimation.finished ||
+          previousAnimation.onFrame(previousAnimation, now);
         animation.current = previousAnimation.current;
         if (finished) {
           animation.previousAnimation = null;
@@ -55,14 +57,18 @@ export function withDelay(
 
     function onStart(
       animation: DelayAnimation,
-      value: PrimitiveValue,
+      value: AnimatableValue,
       now: Timestamp,
       previousAnimation: DelayAnimation
     ): void {
       animation.startTime = now;
       animation.started = false;
       animation.current = value;
-      animation.previousAnimation = previousAnimation;
+      if (previousAnimation === animation) {
+        animation.previousAnimation = previousAnimation.previousAnimation;
+      } else {
+        animation.previousAnimation = previousAnimation;
+      }
     }
 
     const callback = (finished?: boolean): void => {

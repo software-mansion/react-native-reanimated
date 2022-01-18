@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { View, Button } from 'react-native';
-import Animated, {
-  AnimatedLayout,
-  Easing,
-  Keyframe,
-} from 'react-native-reanimated';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 export function KeyframeAnimation(): React.ReactElement {
   const [show, setShow] = useState(false);
@@ -35,15 +31,15 @@ export function KeyframeAnimation(): React.ReactElement {
   const exitingAnimation = new Keyframe({
     0: {
       opacity: 1,
-      originY: 0,
+      originX: 0,
     },
     30: {
-      originY: -50,
+      originX: -50,
       easing: Easing.exp,
     },
     to: {
       opacity: 0,
-      originY: 500,
+      originX: 500,
     },
   }).duration(2000);
   return (
@@ -57,19 +53,17 @@ export function KeyframeAnimation(): React.ReactElement {
       <View
         style={{ height: 400, alignItems: 'center', justifyContent: 'center' }}>
         {show && (
-          <AnimatedLayout>
-            <Animated.View
-              entering={enteringAnimation}
-              exiting={exitingAnimation}
-              style={{
-                height: 100,
-                width: 200,
-                backgroundColor: 'blue',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            />
-          </AnimatedLayout>
+          <Animated.View
+            entering={enteringAnimation}
+            exiting={exitingAnimation}
+            style={{
+              height: 100,
+              width: 200,
+              backgroundColor: 'blue',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         )}
       </View>
     </View>

@@ -1,23 +1,28 @@
 import {
   IEntryExitAnimationBuilder,
-  EntryExitAnimationBuild,
+  EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
-import { BaseAnimationBuilder } from '../animationBuilder/BaseAnimationBuilder';
 import { Dimensions } from 'react-native';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 const { width, height } = Dimensions.get('window');
 
 export class ZoomIn
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomIn {
     return new ZoomIn();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {
@@ -36,16 +41,16 @@ export class ZoomIn
 }
 
 export class ZoomInRotate
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInRotate {
     return new ZoomInRotate();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
 
@@ -68,28 +73,29 @@ export class ZoomInRotate
 }
 
 export class ZoomInLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInLeft {
     return new ZoomInLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originX: delayFunction(delay, animation(values.originX, config)),
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originX: values.originX - width,
+          transform: [{ translateX: -width }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -98,28 +104,29 @@ export class ZoomInLeft
 }
 
 export class ZoomInRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInRight {
     return new ZoomInRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originX: delayFunction(delay, animation(values.originX, config)),
+          transform: [
+            { translateX: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originX: values.originX + width,
+          transform: [{ translateX: width }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -128,28 +135,29 @@ export class ZoomInRight
 }
 
 export class ZoomInUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInUp {
     return new ZoomInUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.originY - height,
+          transform: [{ translateY: -height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -158,28 +166,29 @@ export class ZoomInUp
 }
 
 export class ZoomInDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomInDown {
     return new ZoomInDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.originY + height,
+          transform: [{ translateY: height }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -188,28 +197,29 @@ export class ZoomInDown
 }
 
 export class ZoomInEasyUp
-  extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  extends ComplexAnimationBuilder
+  implements IEntryAnimationBuilder {
   static createInstance(): ZoomInEasyUp {
     return new ZoomInEasyUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: -values.height,
+          transform: [{ translateY: -values.targetHeight }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -218,28 +228,29 @@ export class ZoomInEasyUp
 }
 
 export class ZoomInEasyDown
-  extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  extends ComplexAnimationBuilder
+  implements IEntryAnimationBuilder {
   static createInstance(): ZoomInEasyDown {
     return new ZoomInEasyDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(1, config)) }],
-          originY: delayFunction(delay, animation(values.originY, config)),
+          transform: [
+            { translateY: delayFunction(delay, animation(0, config)) },
+            { scale: delayFunction(delay, animation(1, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          originY: values.height,
+          transform: [{ translateY: values.targetHeight }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -248,16 +259,16 @@ export class ZoomInEasyDown
 }
 
 export class ZoomOut
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOut {
     return new ZoomOut();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return () => {
@@ -276,16 +287,16 @@ export class ZoomOut
 }
 
 export class ZoomOutRotate
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutRotate {
     return new ZoomOutRotate();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
 
@@ -308,31 +319,29 @@ export class ZoomOutRotate
 }
 
 export class ZoomOutLeft
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutLeft {
     return new ZoomOutLeft();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(
-            delay,
-            animation(values.originX - width, config)
-          ),
+          transform: [
+            { translateX: delayFunction(delay, animation(-width, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originX: values.originX,
+          transform: [{ translateX: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -341,31 +350,29 @@ export class ZoomOutLeft
 }
 
 export class ZoomOutRight
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutRight {
     return new ZoomOutRight();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originX: delayFunction(
-            delay,
-            animation(values.originX + width, config)
-          ),
+          transform: [
+            { translateX: delayFunction(delay, animation(width, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originX: values.originX,
+          transform: [{ translateX: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -374,31 +381,29 @@ export class ZoomOutRight
 }
 
 export class ZoomOutUp
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutUp {
     return new ZoomOutUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(
-            delay,
-            animation(values.originY - height, config)
-          ),
+          transform: [
+            { translateY: delayFunction(delay, animation(-height, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -407,31 +412,29 @@ export class ZoomOutUp
 }
 
 export class ZoomOutDown
-  extends BaseAnimationBuilder
+  extends ComplexAnimationBuilder
   implements IEntryExitAnimationBuilder {
   static createInstance(): ZoomOutDown {
     return new ZoomOutDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
-    return (values) => {
+    return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(
-            delay,
-            animation(values.originY + height, config)
-          ),
+          transform: [
+            { translateY: delayFunction(delay, animation(height, config)) },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -440,28 +443,34 @@ export class ZoomOutDown
 }
 
 export class ZoomOutEasyUp
-  extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  extends ComplexAnimationBuilder
+  implements IExitAnimationBuilder {
   static createInstance(): ZoomOutEasyUp {
     return new ZoomOutEasyUp();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(-values.height, config)),
+          transform: [
+            {
+              translateY: delayFunction(
+                delay,
+                animation(-values.currentHeight, config)
+              ),
+            },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };
@@ -470,28 +479,34 @@ export class ZoomOutEasyUp
 }
 
 export class ZoomOutEasyDown
-  extends BaseAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  extends ComplexAnimationBuilder
+  implements IExitAnimationBuilder {
   static createInstance(): ZoomOutEasyDown {
     return new ZoomOutEasyDown();
   }
 
-  build: EntryExitAnimationBuild = () => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
-    const delay = this.delayV;
+    const delay = this.getDelay();
     const callback = this.callbackV;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
-          originY: delayFunction(delay, animation(values.height, config)),
+          transform: [
+            {
+              translateY: delayFunction(
+                delay,
+                animation(values.currentHeight, config)
+              ),
+            },
+            { scale: delayFunction(delay, animation(0, config)) },
+          ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          originY: 0,
+          transform: [{ translateY: 0 }, { scale: 1 }],
         },
         callback: callback,
       };

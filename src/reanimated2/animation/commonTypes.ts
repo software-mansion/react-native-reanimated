@@ -1,12 +1,14 @@
-export type PrimitiveValue = number | string;
+export type AnimatableValue = number | string | Array<number>;
 
 export interface AnimationObject {
   [key: string]: any;
   callback: AnimationCallback;
-  current?: PrimitiveValue;
+  current?: AnimatableValue;
   toValue?: AnimationObject['current'];
   startValue?: AnimationObject['current'];
   finished?: boolean;
+  strippedCurrent?: number;
+  cancelled?: boolean;
 
   __prefix?: string;
   __suffix?: string;
@@ -23,7 +25,7 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
   onFrame: (animation: T, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: T,
-    current: T extends NumericAnimation ? number : PrimitiveValue,
+    current: T extends NumericAnimation ? number : AnimatableValue,
     timestamp: Timestamp,
     previousAnimation: T
   ) => void;
@@ -38,14 +40,9 @@ export interface HigherOrderAnimation {
 
 export type AnimationCallback = (
   finished?: boolean,
-  current?: PrimitiveValue
+  current?: AnimatableValue
 ) => void;
 
 export type NextAnimation<T extends AnimationObject> = T | (() => T);
-
-export type SharedValue = {
-  // TODO: just temporary mock
-  value: unknown;
-};
 
 export type Timestamp = number;
