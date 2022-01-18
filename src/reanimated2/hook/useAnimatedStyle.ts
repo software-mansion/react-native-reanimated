@@ -36,6 +36,7 @@ import {
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
+  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
 } from '../commonTypes';
@@ -451,7 +452,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater;
+    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
     let optimalization = updater.__optimalization;
     if (adapters) {
       updaterFn = () => {
@@ -473,7 +474,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
           parseColors(diff);
-          return diff as T;
+          return diff;
         };
       } else {
         updaterFn = () => {
@@ -482,7 +483,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
           const oldValues = remoteState.last;
           const diff = styleDiff<T>(oldValues, newValues);
           remoteState.last = Object.assign({}, oldValues, newValues);
-          return diff as T;
+          return diff;
         };
       }
     } else if (!shouldBeUseWeb()) {
