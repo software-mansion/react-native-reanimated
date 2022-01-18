@@ -6,7 +6,13 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 
 import React from 'react';
 
@@ -20,15 +26,25 @@ const COUNT_ANIMATION_DURATION = 200;
 const COUNT_ANIMATION_DELAY = 60;
 const COUNT_ANIMATION_DISTANCE = 120;
 
-export function ReactionsCounter(): React.ReactElement {
-  const [others, setOthers] = React.useState(3);
-  const [you, setYou] = React.useState(false);
+type ReactionsCounterProps = {
+  emoji: string;
+  count: number;
+  you: boolean;
+  onPress: () => void;
+};
 
+function ReactionsCounter({
+  emoji,
+  count,
+  you,
+  onPress,
+}: ReactionsCounterProps) {
   const oldCount = useSharedValue<number | null>(null);
   const newCount = useSharedValue<number | null>(null);
 
-  const emoji = '🚀';
-  const count = others + (you ? 1 : 0);
+  React.useEffect(() => {
+    newCount.value = count;
+  }, [count]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -41,18 +57,6 @@ export function ReactionsCounter(): React.ReactElement {
       }),
     };
   }, [you]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const updateCount = (newOthers: number, newYou: boolean) => {
-    newCount.value = newOthers + (newYou ? 1 : 0);
-    setOthers(newOthers);
-    setYou(newYou);
-  };
-
-  const toggleYou = () => {
-    newCount.value = others + (you ? 0 : 1);
-    setYou((y) => !y);
-  };
 
   const entering = (values: EntryAnimationsValues) => {
     'worklet';
@@ -100,21 +104,54 @@ export function ReactionsCounter(): React.ReactElement {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={onPress}>
+      <Animated.View style={[styles.button, animatedStyle]}>
+        <View style={styles.contents}>
+          <Text style={styles.emoji}>{emoji}</Text>
+          <Animated.Text
+            key={count}
+            style={styles.count}
+            entering={entering}
+            exiting={exiting}>
+            {count}
+          </Animated.Text>
+        </View>
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  );
+}
+
+export function ReactionsCounterExample(): React.ReactElement {
+  const [others, setOthers] = React.useState(3);
+  const [you, setYou] = React.useState(false);
+
+  const toggleYou = () => {
+    setYou((y) => !y);
+  };
+
+  const incrementOthers = () => {
+    setOthers(others + 1);
+  };
+
+  const decrementOthers = () => {
+    if (others >= 2) {
+      setOthers(others - 1);
+    }
+  };
+
+  const count = others + (you ? 1 : 0);
+
+  return (
     <View style={styles.container}>
-      <TouchableWithoutFeedback onPress={toggleYou}>
-        <Animated.View style={[styles.button, animatedStyle]}>
-          <View style={styles.contents}>
-            <Text style={styles.emoji}>{emoji}</Text>
-            <Animated.Text
-              key={count}
-              style={styles.count}
-              entering={entering}
-              exiting={exiting}>
-              {count}
-            </Animated.Text>
-          </View>
-        </Animated.View>
-      </TouchableWithoutFeedback>
+      <ReactionsCounter
+        emoji="🚀"
+        count={count}
+        you={you}
+        onPress={toggleYou}
+      />
+      <View style={styles.vspace} />
+      <Button onPress={incrementOthers} title="Increment others" />
+      <Button onPress={decrementOthers} title="Decrement others" />
     </View>
   );
 }
@@ -148,5 +185,8 @@ const styles = StyleSheet.create({
     color: '#B9BBBE',
     width: 110,
     textAlign: 'center',
+  },
+  vspace: {
+    height: 30,
   },
 });

@@ -38,7 +38,7 @@ import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
-import { ReactionsCounter } from './ReactionsCounterExample';
+import { ReactionsCounterExample } from './ReactionsCounterExample';
 // @ts-ignore JS file
 import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
@@ -97,8 +97,8 @@ const SCREENS: Screens = {
     title: '🆕 Mounting Unmounting',
     screen: MountingUnmounting,
   },
-  ReactionsCounter: {
-    screen: ReactionsCounter,
+  ReactionsCounterExample: {
+    screen: ReactionsCounterExample,
     title: '🆕 Reactions counter',
   },
   SwipeableList: {
