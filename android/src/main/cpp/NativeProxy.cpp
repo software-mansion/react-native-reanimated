@@ -129,195 +129,188 @@ void NativeProxy::installJSIBindings() {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
 
-  auto rejectSensorFunction =
-      [this](int sensorId) {
-        rejectSensor(sensorId);
-        auto setGestureStateFunction =
-            [this](int handlerTag, int newState) -> void {
-          setGestureState(handlerTag, newState);
-        };
+  auto rejectSensorFunction = [this](int sensorId) { rejectSensor(sensorId); };
+  auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
+    setGestureState(handlerTag, newState);
+  };
 #if FOR_HERMES
-        std::shared_ptr<jsi::Runtime> animatedRuntime =
-            facebook::hermes::makeHermesRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      facebook::hermes::makeHermesRuntime();
 #else
-        std::shared_ptr<jsi::Runtime> animatedRuntime =
-            facebook::jsc::makeJSCRuntime();
+  std::shared_ptr<jsi::Runtime> animatedRuntime =
+      facebook::jsc::makeJSCRuntime();
 #endif
-        runtime_->global().setProperty(
-            *runtime_,
-            "_WORKLET_RUNTIME",
-            static_cast<double>(
-                reinterpret_cast<std::uintptr_t>(animatedRuntime.get())));
+  runtime_->global().setProperty(
+      *runtime_,
+      "_WORKLET_RUNTIME",
+      static_cast<double>(
+          reinterpret_cast<std::uintptr_t>(animatedRuntime.get())));
 
-        std::shared_ptr<ErrorHandler> errorHandler =
-            std::make_shared<AndroidErrorHandler>(scheduler_);
+  std::shared_ptr<ErrorHandler> errorHandler =
+      std::make_shared<AndroidErrorHandler>(scheduler_);
 
-        // Layout Animations Start
+  // Layout Animations Start
 
-        auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
-          this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
-        };
+  auto notifyAboutProgress = [=](int tag, jsi::Value progress) {
+    this->layoutAnimations->cthis()->notifyAboutProgress(progress, tag);
+  };
 
-        auto notifyAboutEnd = [=](int tag, bool isCancelled) {
-          this->layoutAnimations->cthis()->notifyAboutEnd(
-              tag, (isCancelled) ? 1 : 0);
-        };
+  auto notifyAboutEnd = [=](int tag, bool isCancelled) {
+    this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
+  };
 
-        std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
-            std::make_shared<LayoutAnimationsProxy>(
-                notifyAboutProgress, notifyAboutEnd);
-        std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-        layoutAnimations->cthis()->setWeakUIRuntime(wrt);
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
+      std::make_shared<LayoutAnimationsProxy>(
+          notifyAboutProgress, notifyAboutEnd);
+  std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
+  layoutAnimations->cthis()->setWeakUIRuntime(wrt);
 
-        // Layout Animations End
+  // Layout Animations End
 
-        PlatformDepMethodsHolder platformDepMethodsHolder = {
-            requestRender,
-            propUpdater,
-            scrollToFunction,
-            measuringFunction,
-            getCurrentTime,
-            getSensorDataFunction,
-            registerSensorFunction,
-            rejectSensorFunction,
-            setGestureStateFunction};
+  PlatformDepMethodsHolder platformDepMethodsHolder = {
+      requestRender,
+      propUpdater,
+      scrollToFunction,
+      measuringFunction,
+      getCurrentTime,
+      getSensorDataFunction,
+      registerSensorFunction,
+      rejectSensorFunction,
+      setGestureStateFunction};
 
-        auto module = std::make_shared<NativeReanimatedModule>(
-            jsCallInvoker_,
-            scheduler_,
-            animatedRuntime,
-            errorHandler,
-            propObtainer,
-            layoutAnimationsProxy,
-            platformDepMethodsHolder);
+  auto module = std::make_shared<NativeReanimatedModule>(
+      jsCallInvoker_,
+      scheduler_,
+      animatedRuntime,
+      errorHandler,
+      propObtainer,
+      layoutAnimationsProxy,
+      platformDepMethodsHolder);
 
-        _nativeReanimatedModule = module;
+  _nativeReanimatedModule = module;
 
-        this->registerEventHandler([module, getCurrentTime](
-                                       std::string eventName,
-                                       std::string eventAsString) {
-          jsi::Object global = module->runtime->global();
-          jsi::String eventTimestampName =
-              jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-          global.setProperty(
-              *module->runtime, eventTimestampName, getCurrentTime());
-          module->onEvent(eventName, eventAsString);
-          global.setProperty(
-              *module->runtime, eventTimestampName, jsi::Value::undefined());
-        });
+  this->registerEventHandler([module, getCurrentTime](
+                                 std::string eventName,
+                                 std::string eventAsString) {
+    jsi::Object global = module->runtime->global();
+    jsi::String eventTimestampName =
+        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
+    module->onEvent(eventName, eventAsString);
+    global.setProperty(
+        *module->runtime, eventTimestampName, jsi::Value::undefined());
+  });
 
-        runtime_->global().setProperty(
-            *runtime_,
-            jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
-            jsi::Object::createFromHostObject(*runtime_, module));
-      }
+  runtime_->global().setProperty(
+      *runtime_,
+      jsi::PropNameID::forAscii(*runtime_, "__reanimatedModuleProxy"),
+      jsi::Object::createFromHostObject(*runtime_, module));
+}
 
-  bool
-  NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
-    return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
-  }
+bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
+  return _nativeReanimatedModule->isAnyHandlerWaitingForEvent(s);
+}
 
-  void NativeProxy::registerNatives() {
-    registerHybrid(
-        {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
-         makeNativeMethod(
-             "installJSIBindings", NativeProxy::installJSIBindings),
-         makeNativeMethod(
-             "isAnyHandlerWaitingForEvent",
-             NativeProxy::isAnyHandlerWaitingForEvent)});
-  }
+void NativeProxy::registerNatives() {
+  registerHybrid(
+      {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
+       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+       makeNativeMethod(
+           "isAnyHandlerWaitingForEvent",
+           NativeProxy::isAnyHandlerWaitingForEvent)});
+}
 
-  void NativeProxy::requestRender(std::function<void(double)> onRender) {
-    static auto method =
-        javaPart_->getClass()
-            ->getMethod<void(AnimationFrameCallback::javaobject)>(
-                "requestRender");
-    method(
-        javaPart_.get(),
-        AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
-  }
+void NativeProxy::requestRender(std::function<void(double)> onRender) {
+  static auto method =
+      javaPart_->getClass()
+          ->getMethod<void(AnimationFrameCallback::javaobject)>(
+              "requestRender");
+  method(
+      javaPart_.get(),
+      AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
+}
 
-  void NativeProxy::registerEventHandler(
-      std::function<void(std::string, std::string)> handler) {
-    static auto method =
-        javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
-            "registerEventHandler");
-    method(
-        javaPart_.get(),
-        EventHandler::newObjectCxxArgs(std::move(handler)).get());
-  }
+void NativeProxy::registerEventHandler(
+    std::function<void(std::string, std::string)> handler) {
+  static auto method =
+      javaPart_->getClass()->getMethod<void(EventHandler::javaobject)>(
+          "registerEventHandler");
+  method(
+      javaPart_.get(),
+      EventHandler::newObjectCxxArgs(std::move(handler)).get());
+}
 
-  void NativeProxy::updateProps(
-      jsi::Runtime & rt, int viewTag, const jsi::Object &props) {
-    auto method =
-        javaPart_->getClass()
-            ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
-                "updateProps");
-    method(
-        javaPart_.get(),
-        viewTag,
-        JNIHelper::ConvertToPropsMap(rt, props).get());
-  }
+void NativeProxy::updateProps(
+    jsi::Runtime &rt,
+    int viewTag,
+    const jsi::Object &props) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<void(int, JMap<JString, JObject>::javaobject)>(
+                        "updateProps");
+  method(
+      javaPart_.get(), viewTag, JNIHelper::ConvertToPropsMap(rt, props).get());
+}
 
-  void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-    auto method =
-        javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
-            "scrollTo");
-    method(javaPart_.get(), viewTag, x, y, animated);
-  }
+void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
+  auto method =
+      javaPart_->getClass()->getMethod<void(int, double, double, bool)>(
+          "scrollTo");
+  method(javaPart_.get(), viewTag, x, y, animated);
+}
 
-  std::vector<std::pair<std::string, double>> NativeProxy::measure(
-      int viewTag) {
-    auto method = javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>(
-        "measure");
-    local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
-    size_t size = output->size();
-    auto elements = output->getRegion(0, size);
-    std::vector<std::pair<std::string, double>> result;
+std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
+  auto method =
+      javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>("measure");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
 
-    result.push_back({"x", elements[0]});
-    result.push_back({"y", elements[1]});
+  result.push_back({"x", elements[0]});
+  result.push_back({"y", elements[1]});
 
-    result.push_back({"pageX", elements[2]});
-    result.push_back({"pageY", elements[3]});
+  result.push_back({"pageX", elements[2]});
+  result.push_back({"pageY", elements[3]});
 
-    result.push_back({"width", elements[4]});
-    result.push_back({"height", elements[5]});
+  result.push_back({"width", elements[4]});
+  result.push_back({"height", elements[5]});
 
-    return result;
-  }
+  return result;
+}
 
-  std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(
-      int sensor) {
-    auto method = javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>(
-        "getSensorData");
-    local_ref<JArrayFloat> output = method(javaPart_.get(), sensor);
-    size_t size = output->size();
-    auto elements = output->getRegion(0, size);
-    std::vector<std::pair<std::string, double>> result;
-    result.push_back({"sensor", elements[0]});
-    return result;
-  }
+std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(
+    int sensor) {
+  auto method = javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>(
+      "getSensorData");
+  local_ref<JArrayFloat> output = method(javaPart_.get(), sensor);
+  size_t size = output->size();
+  auto elements = output->getRegion(0, size);
+  std::vector<std::pair<std::string, double>> result;
+  result.push_back({"sensor", elements[0]});
+  return result;
+}
 
-  int NativeProxy::registerSensor(
-      int sensorType, int interval, std::function<void(double)> setter) {
-    static auto method =
-        javaPart_->getClass()
-            ->getMethod<int(int, int, SensorSetter::javaobject)>(
-                "registerSensor");
-    return method(
-        javaPart_.get(),
-        sensorType,
-        interval,
-        SensorSetter::newObjectCxxArgs(std::move(setter)).get());
-  }
+int NativeProxy::registerSensor(
+    int sensorType,
+    int interval,
+    std::function<void(double)> setter) {
+  static auto method =
+      javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
+          "registerSensor");
+  return method(
+      javaPart_.get(),
+      sensorType,
+      interval,
+      SensorSetter::newObjectCxxArgs(std::move(setter)).get());
+}
 
-  void NativeProxy::rejectSensor(int sensorId) {
-    auto method = javaPart_->getClass()->getMethod<void(int)>("rejectSensor");
-    method(javaPart_.get(), sensorId);
-    void NativeProxy::setGestureState(int handlerTag, int newState) {
-      auto method =
-          javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
-      method(javaPart_.get(), handlerTag, newState);
-    }
-  } // namespace reanimated
+void NativeProxy::rejectSensor(int sensorId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>("rejectSensor");
+  method(javaPart_.get(), sensorId);
+}
+void NativeProxy::setGestureState(int handlerTag, int newState) {
+  auto method =
+      javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
+  method(javaPart_.get(), handlerTag, newState);
+}
+} // namespace reanimated
