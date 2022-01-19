@@ -10,16 +10,21 @@ public class ReanimatedSensorListener implements SensorEventListener {
 
     private NativeProxy.SensorSetter setter;
     private int counter = 0;
+    private double lastRead = (double) System.currentTimeMillis();
+    private double interval;
 
-    ReanimatedSensorListener(NativeProxy.SensorSetter setter) {
+    ReanimatedSensorListener(NativeProxy.SensorSetter setter, double interval) {
         this.setter = setter;
+        this.interval = interval;
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        counter++;
-        if(counter < 100) return;
-        counter = 0;
+        double current = (double) System.currentTimeMillis();
+        if (current - lastRead < interval) {
+            return;
+        }
+        lastRead = current;
         System.out.println(event.values[0]);
         setter.sensorSetter(event.values[0]); // TODO
     }

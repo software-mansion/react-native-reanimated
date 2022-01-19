@@ -44,7 +44,7 @@ export function useAnimatedSensor(
   const ref = useRef(null);
 
   if (ref.current === null) {
-    const config: SensorConfig = Object.assign({ interval: 1000 }, userConfig);
+    const config: SensorConfig = Object.assign({ interval: 50 }, userConfig);
     let sensorData: SensorValue3D | SensorValueRotation;
     if (sensorType !== SensorType.ROTATION_VECTOR) {
       sensorData = {
