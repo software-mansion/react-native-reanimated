@@ -1,5 +1,9 @@
 package com.swmansion.reanimated;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.Nullable;
@@ -17,15 +21,6 @@ import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
-
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import android.hardware.SensorManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,15 +74,14 @@ public class NativeProxy {
   @DoNotStrip
   public static class SensorSetter {
 
-    @DoNotStrip
-    private final HybridData mHybridData;
+    @DoNotStrip private final HybridData mHybridData;
 
     @DoNotStrip
     private SensorSetter(HybridData hybridData) {
       mHybridData = hybridData;
     }
 
-    public native void sensorSetter(double value);
+    public native void sensorSetter(float[] value);
   }
 
   @DoNotStrip
@@ -184,6 +178,7 @@ public class NativeProxy {
 
   static class SensorListener implements SensorEventListener {
     public static float value;
+
     @Override
     public void onSensorChanged(SensorEvent event) {
       value = event.values[0];
@@ -191,10 +186,9 @@ public class NativeProxy {
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
   }
+
   SensorListener listener = new SensorListener();
   boolean isInit = false;
   SensorManager sensorManager;
@@ -202,13 +196,14 @@ public class NativeProxy {
 
   @DoNotStrip
   private float[] getSensorData(int sensorType) {
-    //TODO
-    if(!isInit) {
-      sensorManager = (SensorManager)mContext.get().getSystemService(mContext.get().SENSOR_SERVICE);
+    // TODO
+    if (!isInit) {
+      sensorManager =
+          (SensorManager) mContext.get().getSystemService(mContext.get().SENSOR_SERVICE);
       sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
       sensorManager.registerListener(listener, sensor, 2 * 1000);
     }
-    float[] result = new float [1];
+    float[] result = new float[1];
     result[0] = SensorListener.value;
     return result;
   }

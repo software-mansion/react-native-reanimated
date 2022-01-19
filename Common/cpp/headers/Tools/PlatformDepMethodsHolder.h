@@ -25,7 +25,7 @@ using GetSensorDataFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 
 using RegisterSensorFunction =
-    std::function<int(int, int, std::function<void(double)>)>;
+    std::function<int(int, int, std::function<void(double[])>)>;
 using RejectSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 

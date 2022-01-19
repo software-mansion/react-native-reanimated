@@ -122,10 +122,9 @@ void NativeProxy::installJSIBindings() {
     return getSensorData(sensor);
   };
 
-  auto registerSensorFunction = [this](
-                                    int sensorType,
-                                    int interval,
-                                    std::function<void(double)> setter) -> int {
+  auto registerSensorFunction =
+      [this](int sensorType, int interval, std::function<void(double[])> setter)
+      -> int {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
 
@@ -293,7 +292,7 @@ std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
-    std::function<void(double)> setter) {
+    std::function<void(double[])> setter) {
   static auto method =
       javaPart_->getClass()->getMethod<int(int, int, SensorSetter::javaobject)>(
           "registerSensor");

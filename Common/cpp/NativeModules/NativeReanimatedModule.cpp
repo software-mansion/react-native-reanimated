@@ -321,16 +321,13 @@ jsi::Value NativeReanimatedModule::registerSensor(
   for (const auto &propName : propertiesName) {
     sharedProperties.emplace_back(ShareableValue::adapt(
         rt, dataObject.getProperty(rt, propName.c_str()), this));
-    //    sharedProperties.push_back(ShareableValue::adapt(
-    //            rt, dataObject.getProperty(rt, propName.c_str()), this));
   }
-  auto setter = [&rt, sharedProperties](double newValue) { // newValues[]
+  auto setter = [&rt, sharedProperties](double newValues[]) {
     int index = 0;
     for (const auto &sharedValue : sharedProperties) {
       auto &mutableObject =
           ValueWrapper::asMutableValue(sharedValue->valueContainer);
-      //      mutableObject->setValue(rt, jsi::Value(newValues[index]));
-      mutableObject->setValue(rt, jsi::Value(newValue));
+      mutableObject->setValue(rt, jsi::Value(newValues[index]));
       index++;
     }
   };

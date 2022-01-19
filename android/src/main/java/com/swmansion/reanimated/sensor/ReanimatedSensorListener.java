@@ -26,7 +26,7 @@ public class ReanimatedSensorListener implements SensorEventListener {
         }
         lastRead = current;
         System.out.println(event.values[0]);
-        setter.sensorSetter(event.values[0]); // TODO
+        setter.sensorSetter(event.values); // TODO
     }
 
     @Override
