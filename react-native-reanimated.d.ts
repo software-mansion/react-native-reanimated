@@ -16,6 +16,7 @@ declare module 'react-native-reanimated' {
     TextProps,
     ImageProps,
     ScrollViewProps,
+    FlatListProps,
     StyleProp,
     RegisteredStyle,
     ViewStyle,
@@ -257,7 +258,7 @@ declare module 'react-native-reanimated' {
       getNode(): ReactNativeScrollView;
     }
     export class Code extends Component<CodeProps> {}
-    export class FlatList extends Component<AnimateProps<FlatList>> {
+    export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
       itemLayoutAnimation: ILayoutAnimationBuilder;
       getNode(): ReactNativeFlatList;
     }
@@ -977,12 +978,6 @@ declare module 'react-native-reanimated' {
     back(s?: number): Animated.EasingFunction;
     bounce: Animated.EasingFunction;
     bezier(
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
-    ): { factory: () => Animated.EasingFunction };
-    bezierFn(
       x1: number,
       y1: number,
       x2: number,
