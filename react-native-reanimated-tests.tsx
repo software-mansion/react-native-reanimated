@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useCallback, forwardRef } from 'react';
 import {
+  Text,
   StyleSheet,
   Button,
   View,
@@ -102,7 +103,7 @@ function CreateAnimatedComponentTest3() {
   );
 }
 
-function CreateAnimatedFlatList() {
+function CreateAnimatedFlatListTest1() {
   const renderItem = useCallback(
     ({ item, index }: { item: Item[]; index: number }) => {
       if (Math.random()) {
@@ -126,6 +127,23 @@ function CreateAnimatedFlatList() {
         renderItem={() => null}
       />
       <AnimatedImage style={{ flex: 1 }} source={{ uri: '' }} />
+    </>
+  );
+}
+
+function CreateAnimatedFlatListTest2() {
+  return (
+    <>
+      <Animated.FlatList<Item>
+        // @ts-expect-error
+        data={[{ foo: 1 }]}
+        // @ts-expect-error
+        renderItem={({ item, index }) => <View key={item.foo} />}
+      />
+      <Animated.FlatList<Item>
+        data={[{ id: 1 }]}
+        renderItem={({ item, index }) => <View key={item.id} />}
+      />
     </>
   );
 }
