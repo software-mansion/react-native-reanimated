@@ -65,7 +65,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer) = 0;
-  virtual void rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) = 0;
+  virtual void unregisterSensor(
+      jsi::Runtime &rt,
+      const jsi::Value &sensorId) = 0;
 
   // other
   virtual jsi::Value enableLayoutAnimations(

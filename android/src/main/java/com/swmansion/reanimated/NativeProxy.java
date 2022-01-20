@@ -214,8 +214,8 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private void rejectSensor(int sensorId) {
-    reanimatedSensorContainer.rejectSensor(sensorId);
+  private void unregisterSensor(int sensorId) {
+    reanimatedSensorContainer.unregisterSensor(sensorId);
   }
 
   public void onCatalystInstanceDestroy() {

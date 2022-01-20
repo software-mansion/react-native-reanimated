@@ -21,6 +21,10 @@ public class ReanimatedSensor {
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
     sensor = sensorManager.getDefaultSensor(sensorType);
-    sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+    sensorManager.registerListener(listener, sensor, interval * 1000);
+  }
+
+  void cancel() {
+    sensorManager.unregisterListener(listener, sensor);
   }
 }

@@ -71,7 +71,7 @@ export function useAnimatedSensor(
     );
     const animatedSensor: AnimatedSensor = {
       sensor: sensorData,
-      reject: () => NativeReanimated.rejectSensor(id),
+      unregister: () => NativeReanimated.unregisterSensor(id),
     };
     ref.current = animatedSensor;
     console.log('ID:', id);

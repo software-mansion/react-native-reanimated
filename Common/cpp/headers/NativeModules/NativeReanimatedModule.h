@@ -78,14 +78,14 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
   RegisterSensorFunction registerSensorFunction;
-  RejectSensorFunction rejectSensorFunction;
+  unregisterSensorFunction unregisterSensorFunction;
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &sensorDataContainer) override;
-  void rejectSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
 
  private:
   std::shared_ptr<MapperRegistry> mapperRegistry;

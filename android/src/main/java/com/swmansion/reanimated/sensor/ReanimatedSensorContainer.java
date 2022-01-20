@@ -1,6 +1,7 @@
 package com.swmansion.reanimated.sensor;
 
 import android.hardware.Sensor;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.swmansion.reanimated.NativeProxy;
@@ -24,7 +25,14 @@ public class ReanimatedSensorContainer {
         return id;
     }
 
-    public void rejectSensor(int sensorId) {
-        sensors.remove(sensorId);
+    public void unregisterSensor(int sensorId) {
+        ReanimatedSensor sensor = sensors.get(sensorId);
+        if (sensor != null) {
+            sensor.cancel();
+            sensors.remove(sensorId);
+        }
+        else {
+            Log.e("Reanimated", "You try to reject non existing sensor listener.");
+        }
     }
 }

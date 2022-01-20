@@ -111,7 +111,7 @@ void RuntimeDecorator::decorateUIRuntime(
     const TimeProviderFunction getCurrentTime,
     const GetSensorDataFunction getSensorData,
     const RegisterSensorFunction registerSensor,
-    const RejectSensorFunction rejectSensor,
+    const unregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");

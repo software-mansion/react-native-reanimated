@@ -90,7 +90,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
     auto elements = value->getRegion(0, size);
     double array[7];
     for (int i = 0; i < size; i++) {
-      array[i++] = elements[i];
+      array[i] = elements[i];
     }
     callback_(array);
   }
@@ -146,7 +146,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       int sensorType,
       int interval,
       std::function<void(double[])> setter);
-  void rejectSensor(int sensorId);
+  void unregisterSensor(int sensorId);
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,

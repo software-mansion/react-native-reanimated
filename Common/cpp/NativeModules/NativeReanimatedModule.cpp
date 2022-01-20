@@ -88,7 +88,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.getCurrentTime,
       platformDepMethodsHolder.getSensorData,
       platformDepMethodsHolder.registerSensor,
-      platformDepMethodsHolder.rejectSensor,
+      platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,
       layoutAnimationsProxy);
   onRenderCallback = [this](double timestampMs) {
@@ -97,7 +97,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   };
   updaterFunction = platformDepMethodsHolder.updaterFunction;
   registerSensorFunction = platformDepMethodsHolder.registerSensor;
-  rejectSensorFunction = platformDepMethodsHolder.rejectSensor;
+  unregisterSensorFunction = platformDepMethodsHolder.unregisterSensor;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -336,10 +336,10 @@ jsi::Value NativeReanimatedModule::registerSensor(
       sensorType.asNumber(), interval.asNumber(), setter));
 }
 
-void NativeReanimatedModule::rejectSensor(
+void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
-  rejectSensorFunction(sensorId.asNumber());
+  unregisterSensorFunction(sensorId.asNumber());
 }
 
 } // namespace reanimated

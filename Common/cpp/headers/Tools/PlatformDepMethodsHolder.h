@@ -26,7 +26,7 @@ using GetSensorDataFunction =
 
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
-using RejectSensorFunction = std::function<void(int)>;
+using unregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 
 struct PlatformDepMethodsHolder {
@@ -37,7 +37,7 @@ struct PlatformDepMethodsHolder {
   TimeProviderFunction getCurrentTime;
   GetSensorDataFunction getSensorData;
   RegisterSensorFunction registerSensor;
-  RejectSensorFunction rejectSensor;
+  unregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
 };
 

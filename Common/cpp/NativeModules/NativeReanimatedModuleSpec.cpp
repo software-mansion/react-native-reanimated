@@ -120,13 +120,13 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerSensor(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
-static jsi::Value __hostFunction_NativeReanimatedModuleSpec_rejectSensor(
+static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterSensor(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t count) {
   static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->rejectSensor(rt, std::move(args[0]));
+      ->unregisterSensor(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -158,8 +158,8 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
 
   methodMap_["registerSensor"] = MethodMetadata{
       3, __hostFunction_NativeReanimatedModuleSpec_registerSensor};
-  methodMap_["rejectSensor"] =
-      MethodMetadata{1, __hostFunction_NativeReanimatedModuleSpec_rejectSensor};
+  methodMap_["unregisterSensor"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_unregisterSensor};
   methodMap_["enableLayoutAnimations"] = MethodMetadata{
       2, __hostFunction_NativeReanimatedModuleSpec_enableLayoutAnimations};
 }

@@ -31,8 +31,8 @@ export class NativeReanimated {
     return InnerNativeModule.registerSensor(sensorType, interval, sensorData);
   }
 
-  rejectSensor(sensorId: number) {
-    return InnerNativeModule.rejectSensor(sensorId);
+  unregisterSensor(sensorId: number) {
+    return InnerNativeModule.unregisterSensor(sensorId);
   }
 
   startMapper(

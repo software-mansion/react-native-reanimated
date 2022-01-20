@@ -128,7 +128,9 @@ void NativeProxy::installJSIBindings() {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
 
-  auto rejectSensorFunction = [this](int sensorId) { rejectSensor(sensorId); };
+  auto unregisterSensorFunction = [this](int sensorId) {
+    unregisterSensor(sensorId);
+  };
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
@@ -174,7 +176,7 @@ void NativeProxy::installJSIBindings() {
       getCurrentTime,
       getSensorDataFunction,
       registerSensorFunction,
-      rejectSensorFunction,
+      unregisterSensorFunction,
       setGestureStateFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
@@ -303,8 +305,8 @@ int NativeProxy::registerSensor(
       SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 
-void NativeProxy::rejectSensor(int sensorId) {
-  auto method = javaPart_->getClass()->getMethod<void(int)>("rejectSensor");
+void NativeProxy::unregisterSensor(int sensorId) {
+  auto method = javaPart_->getClass()->getMethod<void(int)>("unregisterSensor");
   method(javaPart_.get(), sensorId);
 }
 void NativeProxy::setGestureState(int handlerTag, int newState) {
