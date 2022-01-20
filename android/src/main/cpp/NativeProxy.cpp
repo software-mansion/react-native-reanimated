@@ -290,7 +290,6 @@ std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(
   result.push_back({"sensor", elements[0]});
   return result;
 }
-
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
@@ -304,11 +303,11 @@ int NativeProxy::registerSensor(
       interval,
       SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
-
 void NativeProxy::unregisterSensor(int sensorId) {
   auto method = javaPart_->getClass()->getMethod<void(int)>("unregisterSensor");
   method(javaPart_.get(), sensorId);
 }
+
 void NativeProxy::setGestureState(int handlerTag, int newState) {
   auto method =
       javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");

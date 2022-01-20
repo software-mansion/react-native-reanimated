@@ -6,10 +6,10 @@ import NativeReanimated from '../NativeReanimated';
 
 export enum SensorType {
   ACCELEROMETER = 1,
-  GYROSCOPE,
-  GRAVITY,
-  MAGNETIC_FIELD,
-  ROTATION_VECTOR,
+  GYROSCOPE = 2,
+  GRAVITY = 3,
+  MAGNETIC_FIELD = 4,
+  ROTATION_VECTOR = 5,
 }
 
 export type SensorConfig = {
@@ -18,7 +18,7 @@ export type SensorConfig = {
 
 export type AnimatedSensor = {
   sensor: SensorValue3D | SensorValueRotation;
-  reject: () => void;
+  unregister: () => void;
 };
 
 export type SensorValue3D = {
@@ -74,12 +74,11 @@ export function useAnimatedSensor(
       unregister: () => NativeReanimated.unregisterSensor(id),
     };
     ref.current = animatedSensor;
-    console.log('ID:', id);
   }
 
   useEffect(() => {
     return () => {
-      ref.current.reject();
+      ref.current.unregister();
     };
   }, []);
 

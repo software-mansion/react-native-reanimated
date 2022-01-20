@@ -304,6 +304,14 @@ void NativeReanimatedModule::onRender(double timestampMs) {
   }
 }
 
+enum SensorType {
+  ACCELEROMETER = 1,
+  GYROSCOPE = 2,
+  GRAVITY = 3,
+  MAGNETIC_FIELD = 4,
+  ROTATION_VECTOR = 5,
+};
+
 jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
@@ -311,7 +319,7 @@ jsi::Value NativeReanimatedModule::registerSensor(
     const jsi::Value &sensorDataContainer) {
   std::vector<std::shared_ptr<ShareableValue>> sharedProperties;
   std::vector<std::string> propertiesName;
-  if (sensorType.asNumber() != 5) { // ROTATION_VECTOR
+  if (sensorType.asNumber() != SensorType::ROTATION_VECTOR) {
     propertiesName = {"x", "y", "z"};
   } else {
     propertiesName = {"qw", "qx", "qy", "qz", "yaw", "pitch", "roll"};
