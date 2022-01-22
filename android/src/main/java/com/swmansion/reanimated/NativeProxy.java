@@ -3,7 +3,6 @@ package com.swmansion.reanimated;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.Nullable;
@@ -187,25 +186,6 @@ public class NativeProxy {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-  }
-
-  SensorListener listener = new SensorListener();
-  boolean isInit = false;
-  SensorManager sensorManager;
-  Sensor sensor;
-
-  @DoNotStrip
-  private float[] getSensorData(int sensorType) {
-    // TODO
-    if (!isInit) {
-      sensorManager =
-          (SensorManager) mContext.get().getSystemService(mContext.get().SENSOR_SERVICE);
-      sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-      sensorManager.registerListener(listener, sensor, 2 * 1000);
-    }
-    float[] result = new float[1];
-    result[0] = SensorListener.value;
-    return result;
   }
 
   @DoNotStrip

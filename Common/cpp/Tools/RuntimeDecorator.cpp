@@ -109,9 +109,8 @@ void RuntimeDecorator::decorateUIRuntime(
     const ScrollToFunction scrollTo,
     const MeasuringFunction measure,
     const TimeProviderFunction getCurrentTime,
-    const GetSensorDataFunction getSensorData,
     const RegisterSensorFunction registerSensor,
-    const unregisterSensorFunction unregisterSensor,
+    const UnregisterSensorFunction unregisterSensor,
     const SetGestureStateFunction setGestureState,
     std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy) {
   RuntimeDecorator::decorateRuntime(rt, "UI");
@@ -191,23 +190,6 @@ void RuntimeDecorator::decorateUIRuntime(
   jsi::Value timeFun = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_getCurrentTime"), 0, clb6);
   rt.global().setProperty(rt, "_getCurrentTime", timeFun);
-
-  auto clb_sensor = [getSensorData](
-                        jsi::Runtime &rt,
-                        const jsi::Value &thisValue,
-                        const jsi::Value *args,
-                        const size_t count) -> jsi::Value {
-    int sensor = static_cast<int>(args[0].asNumber());
-    auto result = getSensorData(sensor);
-    jsi::Object resultObject(rt);
-    for (auto &i : result) {
-      resultObject.setProperty(rt, i.first.c_str(), i.second);
-    }
-    return resultObject;
-  };
-  jsi::Value getSensorDataFun = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "_getSensorData"), 1, clb_sensor);
-  rt.global().setProperty(rt, "_getSensorData", getSensorDataFun);
 
   rt.global().setProperty(rt, "_frameTimestamp", jsi::Value::undefined());
   rt.global().setProperty(rt, "_eventTimestamp", jsi::Value::undefined());

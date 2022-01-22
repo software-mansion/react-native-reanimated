@@ -86,7 +86,6 @@ NativeReanimatedModule::NativeReanimatedModule(
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
       platformDepMethodsHolder.getCurrentTime,
-      platformDepMethodsHolder.getSensorData,
       platformDepMethodsHolder.registerSensor,
       platformDepMethodsHolder.unregisterSensor,
       platformDepMethodsHolder.setGestureStateFunction,

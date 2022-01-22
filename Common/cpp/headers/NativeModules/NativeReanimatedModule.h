@@ -78,7 +78,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
   RegisterSensorFunction registerSensorFunction;
-  unregisterSensorFunction unregisterSensorFunction;
+  UnregisterSensorFunction unregisterSensorFunction;
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,

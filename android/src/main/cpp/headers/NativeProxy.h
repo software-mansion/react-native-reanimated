@@ -141,7 +141,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void scrollTo(int viewTag, double x, double y, bool animated);
   void setGestureState(int handlerTag, int newState);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
-  std::vector<std::pair<std::string, double>> getSensorData(int sensor);
   int registerSensor(
       int sensorType,
       int interval,

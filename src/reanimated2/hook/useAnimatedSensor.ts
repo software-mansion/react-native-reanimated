@@ -19,6 +19,7 @@ export type SensorConfig = {
 export type AnimatedSensor = {
   sensor: SensorValue3D | SensorValueRotation;
   unregister: () => void;
+  isAvailable: boolean;
 };
 
 export type SensorValue3D = {
@@ -69,10 +70,24 @@ export function useAnimatedSensor(
       config.interval,
       sensorData
     );
-    const animatedSensor: AnimatedSensor = {
-      sensor: sensorData,
-      unregister: () => NativeReanimated.unregisterSensor(id),
-    };
+    let animatedSensor: AnimatedSensor;
+    if (id !== -1) {
+      // if sensor is available
+      animatedSensor = {
+        sensor: sensorData,
+        unregister: () => NativeReanimated.unregisterSensor(id),
+        isAvailable: true,
+      };
+    } else {
+      // if sensor is unavailable
+      animatedSensor = {
+        sensor: sensorData,
+        unregister: () => {
+          // NOOP
+        },
+        isAvailable: false,
+      };
+    }
     ref.current = animatedSensor;
   }
 

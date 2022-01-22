@@ -117,20 +117,15 @@ void NativeProxy::installJSIBindings() {
     scrollTo(viewTag, x, y, animated);
   };
 
-  auto getSensorDataFunction =
-      [this](int sensor) -> std::vector<std::pair<std::string, double>> {
-    return getSensorData(sensor);
-  };
-
   auto registerSensorFunction =
       [this](int sensorType, int interval, std::function<void(double[])> setter)
       -> int {
     return this->registerSensor(sensorType, interval, std::move(setter));
   };
-
   auto unregisterSensorFunction = [this](int sensorId) {
     unregisterSensor(sensorId);
   };
+
   auto setGestureStateFunction = [this](int handlerTag, int newState) -> void {
     setGestureState(handlerTag, newState);
   };
@@ -174,7 +169,6 @@ void NativeProxy::installJSIBindings() {
       scrollToFunction,
       measuringFunction,
       getCurrentTime,
-      getSensorDataFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction};
@@ -279,17 +273,6 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   return result;
 }
 
-std::vector<std::pair<std::string, double>> NativeProxy::getSensorData(
-    int sensor) {
-  auto method = javaPart_->getClass()->getMethod<local_ref<JArrayFloat>(int)>(
-      "getSensorData");
-  local_ref<JArrayFloat> output = method(javaPart_.get(), sensor);
-  size_t size = output->size();
-  auto elements = output->getRegion(0, size);
-  std::vector<std::pair<std::string, double>> result;
-  result.push_back({"sensor", elements[0]});
-  return result;
-}
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,

@@ -1,28 +1,19 @@
 import Animated, {
-  useSharedValue,
   withTiming,
   useAnimatedStyle,
   // Easing,
   useAnimatedSensor,
+  // SensorType,
 } from 'react-native-reanimated';
 import { View, Button } from 'react-native';
 import React from 'react';
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
-  const randomWidth = useSharedValue(10);
-
-  // const config = {
-  //   duration: 500,
-  //   easing: Easing.bezierFn(0.5, 0.01, 0, 1),
-  // };
-
-  const animatedSensor = useAnimatedSensor(1);
+  const animatedSensor = useAnimatedSensor(2);
 
   const style = useAnimatedStyle(() => {
     return {
-      // width: withTiming(randomWidth.value, config),
-      // height: withTiming(animatedSensor.sensor.x.value * 10)
-      width: withTiming(animatedSensor.sensor.x.value * 15 + 20),
+      width: withTiming(animatedSensor.sensor.y.value * 150 + 20),
     };
   });
 
@@ -43,8 +34,10 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       <Button
         title="toggle"
         onPress={() => {
-          randomWidth.value = Math.random() * 350;
-          console.log(animatedSensor.sensor.x.value);
+          // randomWidth.value = Math.random() * 350;
+          // animatedSensor.unregister()
+          console.log(animatedSensor);
+          console.log('mleko');
         }}
       />
     </View>

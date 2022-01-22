@@ -21,12 +21,10 @@ using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasuringFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 using TimeProviderFunction = std::function<double(void)>;
-using GetSensorDataFunction =
-    std::function<std::vector<std::pair<std::string, double>>(int)>;
 
 using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
-using unregisterSensorFunction = std::function<void(int)>;
+using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 
 struct PlatformDepMethodsHolder {
@@ -35,9 +33,8 @@ struct PlatformDepMethodsHolder {
   ScrollToFunction scrollToFunction;
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;
-  GetSensorDataFunction getSensorData;
   RegisterSensorFunction registerSensor;
-  unregisterSensorFunction unregisterSensor;
+  UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
 };
 
