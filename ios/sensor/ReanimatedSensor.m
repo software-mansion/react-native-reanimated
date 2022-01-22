@@ -15,7 +15,7 @@
 - (bool)initialize
 {
   if (_sensorType == ACCELEROMETER) {
-    return [self initializeGyroscope];
+    return [self initializeAccelerometer];
   } else if (_sensorType == GYROSCOPE) {
     return [self initializeGyroscope];
   } else if (_sensorType == GRAVITY) {

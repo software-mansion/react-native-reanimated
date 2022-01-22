@@ -48,6 +48,7 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import AnimatedSensorExample from './AnimatedSensorExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -63,6 +64,10 @@ const SCREENS: Screens = {
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
+  },
+  AnimatedSensor: {
+    screen: AnimatedSensorExample,
+    title: '🆕 Use Animated Sensor',
   },
   DefaultTransistions: {
     screen: WaterfallGridExample,
