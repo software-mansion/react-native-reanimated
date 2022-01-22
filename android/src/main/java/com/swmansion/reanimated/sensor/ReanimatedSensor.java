@@ -11,17 +11,28 @@ public class ReanimatedSensor {
   ReanimatedSensorListener listener;
   SensorManager sensorManager;
   Sensor sensor;
+  ReanimatedSensorType sensorType;
+  int interval;
 
   ReanimatedSensor(
       WeakReference<ReactApplicationContext> reactContext,
-      int sensorType,
+      ReanimatedSensorType sensorType,
       int interval,
       NativeProxy.SensorSetter setter) {
     listener = new ReanimatedSensorListener(setter, interval);
     sensorManager =
         (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
-    sensor = sensorManager.getDefaultSensor(sensorType);
-    sensorManager.registerListener(listener, sensor, interval * 1000);
+    this.sensorType = sensorType;
+    this.interval = interval;
+  }
+
+  boolean initialize() {
+    sensor = sensorManager.getDefaultSensor(sensorType.getType());
+    if (sensor != null) {
+      sensorManager.registerListener(listener, sensor, interval * 1000);
+      return true;
+    }
+    return false;
   }
 
   void cancel() {

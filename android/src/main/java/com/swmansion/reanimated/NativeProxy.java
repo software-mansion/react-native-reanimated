@@ -20,6 +20,7 @@ import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
+import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -190,7 +191,8 @@ public class NativeProxy {
 
   @DoNotStrip
   private int registerSensor(int sensorType, int interval, SensorSetter setter) {
-    return reanimatedSensorContainer.registerSensor(sensorType, interval, setter);
+    return reanimatedSensorContainer.registerSensor(
+        ReanimatedSensorType.getInstanceById(sensorType), interval, setter);
   }
 
   @DoNotStrip
