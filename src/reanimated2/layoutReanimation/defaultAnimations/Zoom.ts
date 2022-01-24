@@ -1,6 +1,11 @@
 import {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  AnimationConfigFunction,
+  IEntryAnimationBuilder,
+  IExitAnimationBuilder,
 } from '../animationBuilder/commonTypes';
 import { Dimensions } from 'react-native';
 import { ComplexAnimationBuilder } from '../animationBuilder';
@@ -193,12 +198,12 @@ export class ZoomInDown
 
 export class ZoomInEasyUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): ZoomInEasyUp {
     return new ZoomInEasyUp();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -214,7 +219,7 @@ export class ZoomInEasyUp
           ],
         },
         initialValues: {
-          transform: [{ translateY: -values.height }, { scale: 0 }],
+          transform: [{ translateY: -values.targetHeight }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -224,12 +229,12 @@ export class ZoomInEasyUp
 
 export class ZoomInEasyDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryAnimationBuilder {
   static createInstance(): ZoomInEasyDown {
     return new ZoomInEasyDown();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<EntryAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -245,7 +250,7 @@ export class ZoomInEasyDown
           ],
         },
         initialValues: {
-          transform: [{ translateY: values.height }, { scale: 0 }],
+          transform: [{ translateY: values.targetHeight }, { scale: 0 }],
         },
         callback: callback,
       };
@@ -439,12 +444,12 @@ export class ZoomOutDown
 
 export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): ZoomOutEasyUp {
     return new ZoomOutEasyUp();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -458,7 +463,7 @@ export class ZoomOutEasyUp
             {
               translateY: delayFunction(
                 delay,
-                animation(-values.height, config)
+                animation(-values.currentHeight, config)
               ),
             },
             { scale: delayFunction(delay, animation(0, config)) },
@@ -475,12 +480,12 @@ export class ZoomOutEasyUp
 
 export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IExitAnimationBuilder {
   static createInstance(): ZoomOutEasyDown {
     return new ZoomOutEasyDown();
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
@@ -494,7 +499,7 @@ export class ZoomOutEasyDown
             {
               translateY: delayFunction(
                 delay,
-                animation(values.height, config)
+                animation(values.currentHeight, config)
               ),
             },
             { scale: delayFunction(delay, animation(0, config)) },

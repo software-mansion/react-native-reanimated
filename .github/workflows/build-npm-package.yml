@@ -1,6 +1,7 @@
 name: Build npm package
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 12 */1 * *'
 
@@ -33,3 +34,10 @@ jobs:
         with:
           name: react-native-reanimated-2.0.0-alpha.tgz
           path: '*.tgz'
+
+      - name: Upload Android build folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-build-output
+          path: android/build/
+          retention-days: 5

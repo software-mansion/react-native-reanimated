@@ -36,7 +36,7 @@ import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
-  LayoutAnimationFunction,
+  ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
 import { SharedValue, StyleProps } from './reanimated2/commonTypes';
 import {
@@ -100,11 +100,16 @@ function onlyAnimatedStyles(styles: StyleProps[]) {
   return styles.filter((style) => style?.viewDescriptors);
 }
 
-function isSameAnimatedStyle(style1: StyleProps, style2: StyleProps): boolean {
+function isSameAnimatedStyle(
+  style1?: StyleProps,
+  style2?: StyleProps
+): boolean {
   // We cannot use equality check to compare useAnimatedStyle outputs directly.
   // Instead, we can compare its viewsRefs.
-  return style1.viewsRef === style2.viewsRef;
+  return style1?.viewsRef === style2?.viewsRef;
 }
+
+const isSameAnimatedProps = isSameAnimatedStyle;
 
 const has = <K extends string>(
   key: K,
@@ -133,7 +138,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   animatedStyle?: StyleProps;
   layout?:
     | BaseAnimationBuilder
-    | LayoutAnimationFunction
+    | ILayoutAnimationBuilder
     | typeof BaseAnimationBuilder;
   entering?:
     | BaseAnimationBuilder
@@ -481,8 +486,11 @@ export default function createAnimatedComponent(
       });
 
       // detach old animatedProps
-      if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
-        prevAnimatedProps.viewDescriptors.remove(viewTag);
+      if (
+        prevAnimatedProps &&
+        !isSameAnimatedProps(prevAnimatedProps, this.props.animatedProps)
+      ) {
+        prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
       }
 
       // attach animatedProps property

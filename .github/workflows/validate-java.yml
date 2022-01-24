@@ -1,17 +1,17 @@
 name: Java Lint
 on:
   pull_request:
-    branches: 
-      - master
+    branches:
+      - main
     paths:
       - 'android/src/java**'
   push:
     branches:
-      - master
+      - main
 jobs:
   check:
     runs-on: ubuntu-latest
-    concurrency: 
+    concurrency:
       group: static-root-${{ github.ref }}
       cancel-in-progress: true
     steps:

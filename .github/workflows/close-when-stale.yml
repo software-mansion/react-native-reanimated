@@ -1,0 +1,41 @@
+name: Check for stale issues
+on:
+  schedule:
+    - cron: '37 21 * * *' # at 21:37 every day
+  issues:
+    types: [edited]
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions
+        uses: actions/checkout@v2
+        with:
+          repository: 'software-mansion-labs/swmansion-bot'
+          ref: stable
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install Actions
+        run: yarn install
+
+      - name: Close when stale
+        uses: ./close-when-stale
+        with:
+          close-when-stale-label: close-when-stale
+          days-to-close: 20

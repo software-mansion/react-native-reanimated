@@ -26,6 +26,7 @@ declare global {
     y: number,
     animated: boolean
   ) => void;
+  const _chronoNow: () => number;
   namespace NodeJS {
     interface Global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
@@ -37,6 +38,8 @@ declare global {
       _frameTimestamp: number | null;
       _measure: () => MeasuredDimensions;
       _scrollTo: () => void;
+      _chronoNow: () => number;
+      performance: { now: () => number };
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
         registerConfig(tag: number, config: Record<string, unknown>): void;

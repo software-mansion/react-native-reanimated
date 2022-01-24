@@ -1,0 +1,46 @@
+def isExpoLinked = false
+rootProject.getSubprojects().forEach({ project ->
+    if (project.plugins.hasPlugin("com.android.application")) {
+        if (project.configurations.implementation.getDependencies().find { dep -> dep.name == "expo" }) {
+            isExpoLinked = true
+        }
+    }
+})
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+if (isExpoLinked) {
+    apply plugin: 'com.android.library'
+
+    android {
+        // Disable aar bundling to fix the error when running `gradle assembleRelease` over `gradle :app:assembleRelease`
+        // which will throw `Direct local .aar file dependencies are not supported when building an AAR.`
+        tasks.whenTaskAdded { task ->
+            if (['bundleDebugAar', 'bundleReleaseAar'].contains(task.name)) {
+                task.enabled = false
+            }
+        }
+
+        compileSdkVersion safeExtGet('compileSdkVersion', 30)
+
+        sourceSets {
+            main.manifest.srcFile 'src/AndroidManifest.xml'
+            main.java.srcDirs = [ 'expo/src/main/java' ]
+        }
+
+        libraryVariants.all {
+            generateBuildConfigProvider?.get()?.enabled = false
+        }
+    }
+
+    dependencies {
+        implementation 'com.facebook.react:react-native:+'
+        implementation project(':expo-modules-core')
+
+        project.configurations.default.artifacts.each { artifact ->
+            api files(artifact.file)
+        }
+    }
+}

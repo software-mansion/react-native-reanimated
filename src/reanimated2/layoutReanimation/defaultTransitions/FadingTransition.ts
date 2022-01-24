@@ -23,10 +23,10 @@ export class FadingTransition
       return {
         initialValues: {
           opacity: 1,
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
           opacity: delayFunction(
@@ -38,19 +38,19 @@ export class FadingTransition
           ),
           originX: delayFunction(
             delay + duration,
-            withTiming(values.originX, { duration: 50 })
+            withTiming(values.targetOriginX, { duration: 50 })
           ),
           originY: delayFunction(
             delay + duration,
-            withTiming(values.originY, { duration: 50 })
+            withTiming(values.targetOriginY, { duration: 50 })
           ),
           width: delayFunction(
             delay + duration,
-            withTiming(values.width, { duration: 50 })
+            withTiming(values.targetWidth, { duration: 50 })
           ),
           height: delayFunction(
             delay + duration,
-            withTiming(values.height, { duration: 50 })
+            withTiming(values.targetHeight, { duration: 50 })
           ),
         },
         callback: callback,

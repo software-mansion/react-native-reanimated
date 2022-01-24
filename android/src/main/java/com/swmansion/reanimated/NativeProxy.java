@@ -3,7 +3,6 @@ package com.swmansion.reanimated;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
-
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -20,8 +19,6 @@ import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
-import com.swmansion.reanimated.layoutReanimation.Snapshot;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -181,6 +178,10 @@ public class NativeProxy {
   }
 
   public void prepare(LayoutAnimations LayoutAnimations) {
+    if (Utils.isChromeDebugger) {
+      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
+      return;
+    }
     mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
     installJSIBindings();
     AnimationsManager animationsManager =
@@ -192,11 +193,12 @@ public class NativeProxy {
 
     try {
       Class<NativeModule> sharedElementAnimatorClass =
-              (Class<NativeModule>)
-                      Class.forName("com.swmansion.rnscreens.SharedElementAnimatorClass");
-      SharedElementAnimator sharedElementAnimator = (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
+          (Class<NativeModule>) Class.forName("com.swmansion.rnscreens.SharedElementAnimatorClass");
+      SharedElementAnimator sharedElementAnimator =
+          (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
       if (sharedElementAnimator != null) {
-        sharedElementAnimator.setDelegate(new SharedElementAnimatorDelegateClass(animationsManager));
+        sharedElementAnimator.setDelegate(
+            new SharedElementAnimatorDelegateClass(animationsManager));
       }
     } catch (ClassCastException | ClassNotFoundException e) {
     }

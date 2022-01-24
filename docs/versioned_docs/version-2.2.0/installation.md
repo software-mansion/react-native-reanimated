@@ -43,9 +43,9 @@ yarn add react-native-reanimated@next
 
 To use experimental support of Reanimated 2 in the Expo managed apps follow [their installation instructions](https://docs.expo.io/versions/latest/sdk/reanimated/).
 
-### Using master branch builds
+### Using main branch builds
 
-To use Reanimated 2 built from the master branch:
+To use Reanimated 2 built from the main branch:
 
 - go to the ["Build npm package" workflow in Reanimated repository](https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22)
 - select latest build and download `react-native-reanimated-2.0.0-alpha.tgz` artifact

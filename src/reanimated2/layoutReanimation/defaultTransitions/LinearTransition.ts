@@ -3,8 +3,6 @@ import {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
-import { processColor } from '../../Colors';
-import { withTiming } from '../../animation';
 
 export class LinearTransition
   extends ComplexAnimationBuilder
@@ -24,20 +22,22 @@ export class LinearTransition
       'worklet';
       return {
         initialValues: {
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
-          // opacity: 0,
-          // backgroundColor: 0,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
-          originY: delayFunction(delay, animation(values.originY, config)),
-          width: delayFunction(delay, animation(values.width, config)),
-          height: delayFunction(delay, animation(values.height, config)),
-          // opacity: delayFunction(delay, animation(1, config)),
-          // backgroundColor: withTiming('green'),
+          originX: delayFunction(
+            delay,
+            animation(values.targetOriginX, config)
+          ),
+          originY: delayFunction(
+            delay,
+            animation(values.targetOriginY, config)
+          ),
+          width: delayFunction(delay, animation(values.targetWidth, config)),
+          height: delayFunction(delay, animation(values.targetHeight, config)),
         },
         callback: callback,
       };

@@ -4,6 +4,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   EntryExitAnimationFunction,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
 } from 'react-native-reanimated';
 
 function AnimatedView() {
@@ -11,42 +13,46 @@ function AnimatedView() {
     return {};
   });
 
-  const entering: EntryExitAnimationFunction = (targetValues) => {
+  const entering: EntryExitAnimationFunction = (
+    targetValues: EntryAnimationsValues
+  ) => {
     'worklet';
 
     return {
       initialValues: {
         transform: [
-          { translateY: targetValues.height / 2 },
+          { translateY: targetValues.targetHeight / 2 },
           { perspective: 500 },
           { rotateX: '90deg' },
-          { translateY: -targetValues.height / 2 },
+          { translateY: -targetValues.targetHeight / 2 },
           { translateY: 300 },
         ],
       },
       animations: {
         transform: [
-          { translateY: withTiming(targetValues.height / 2) },
+          { translateY: withTiming(targetValues.targetHeight / 2) },
           { perspective: withTiming(500) },
           { rotateX: withTiming('0deg') },
-          { translateY: withTiming(-targetValues.height / 2) },
+          { translateY: withTiming(-targetValues.targetHeight / 2) },
           { translateY: withTiming(0) },
         ],
       },
     };
   };
 
-  const exiting: EntryExitAnimationFunction = (targetValues) => {
+  const exiting: EntryExitAnimationFunction = (
+    targetValues: ExitAnimationsValues
+  ) => {
     'worklet';
 
     return {
       initialValues: {},
       animations: {
         transform: [
-          { translateY: withTiming(targetValues.height / 2) },
+          { translateY: withTiming(targetValues.currentHeight / 2) },
           { perspective: withTiming(500) },
           { rotateX: withTiming('90deg') },
-          { translateY: withTiming(-targetValues.height / 2) },
+          { translateY: withTiming(-targetValues.currentHeight / 2) },
           { translateY: withTiming(300) },
         ],
       },
