@@ -97,6 +97,7 @@ function Second({
 
   return (
     <View style={{flex: 1, justifyContent: 'center'}}>
+      <View style={{width: '100%', height: 100, backgroundColor: 'yellow'}}/>
       <Animated.View style={{width: '100%', height: 200, backgroundColor: 'green'}}
         nativeID={sharedElements[0].toID} sharedElementTransition={LinearTransition}/>
       <Animated.Text style={{fontSize: 20}}
@@ -118,10 +119,10 @@ export default function App(): JSX.Element {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          stackAnimation: 'default',
+          stackAnimation: 'slide_from_bottom',
         }}>
-        <Stack.Screen name="First" component={NestedFirst} options={{sharedElements, headerShown: false}}/>
-        <Stack.Screen name="Second" component={Second} options={{headerShown: false, sharedElements}}/>
+        <Stack.Screen name="First" component={First} options={{sharedElements, headerShown: false}}/>
+        <Stack.Screen name="Second" component={Second} options={{headerShown: true, sharedElements}}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

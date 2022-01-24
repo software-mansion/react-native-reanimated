@@ -201,6 +201,26 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, type, preparedValues);
   }
 
+  public void onViewTransition(View before, View after){
+    if (isCatalystInstanceDestroyed) {
+      return;
+    }
+
+    Snapshot beforeSnapshot = new Snapshot(before, getReanimatedNativeHierarchyManager());
+    Snapshot afterSnapshot = new Snapshot(after, getReanimatedNativeHierarchyManager());
+    Integer tag = before.getId();
+    HashMap<String, Object> targetValues = afterSnapshot.toMap();
+    HashMap<String, Object> startValues = beforeSnapshot.toMap();
+
+    HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues);
+    HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues);
+    HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
+    for (String key : preparedStartValues.keySet()) {
+      preparedValues.put("b" + key, preparedStartValues.get(key));
+    }
+    mNativeMethodsHolder.startAnimationForTag(tag, "sharedElementTransition", preparedValues);
+  }
+
   public void notifyAboutProgress(Map<String, Object> newStyle, Integer tag) {
     ViewState state = mStates.get(tag);
     if (state == ViewState.Inactive) {

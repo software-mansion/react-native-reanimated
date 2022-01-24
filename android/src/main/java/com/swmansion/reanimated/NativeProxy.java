@@ -1,6 +1,9 @@
 package com.swmansion.reanimated;
 
 import android.os.SystemClock;
+import android.util.Log;
+import android.view.View;
+
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -12,9 +15,13 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.common.GestureHandlerStateManager;
+import com.swmansion.common.SharedElementAnimator;
+import com.swmansion.common.SharedElementAnimatorDelegate;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
+import com.swmansion.reanimated.layoutReanimation.Snapshot;
+
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +30,19 @@ public class NativeProxy {
 
   static {
     System.loadLibrary("reanimated");
+  }
+
+  private static class SharedElementAnimatorDelegateClass implements SharedElementAnimatorDelegate {
+    private AnimationsManager mAnimationsManager;
+
+    SharedElementAnimatorDelegateClass(AnimationsManager animationsManager) {
+      mAnimationsManager = animationsManager;
+    }
+
+    public void runTransition(View before, View after) {
+
+      mAnimationsManager.onViewTransition(before, after);
+    }
   }
 
   @DoNotStrip
@@ -169,6 +189,17 @@ public class NativeProxy {
             .getNativeModule(ReanimatedModule.class)
             .getNodesManager()
             .getAnimationsManager();
+
+    try {
+      Class<NativeModule> sharedElementAnimatorClass =
+              (Class<NativeModule>)
+                      Class.forName("com.swmansion.rnscreens.SharedElementAnimatorClass");
+      SharedElementAnimator sharedElementAnimator = (SharedElementAnimator) mContext.get().getNativeModule(sharedElementAnimatorClass);
+      if (sharedElementAnimator != null) {
+        sharedElementAnimator.setDelegate(new SharedElementAnimatorDelegateClass(animationsManager));
+      }
+    } catch (ClassCastException | ClassNotFoundException e) {
+    }
 
     WeakReference<LayoutAnimations> weakLayoutAnimations = new WeakReference<>(LayoutAnimations);
     animationsManager.setNativeMethods(

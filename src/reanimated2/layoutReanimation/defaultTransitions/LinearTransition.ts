@@ -19,24 +19,25 @@ export class LinearTransition
     const callback = this.callbackV;
     const delay = this.getDelay();
 
+    config.duration = 2000;
     return (values) => {
       'worklet';
       return {
         initialValues: {
-          // originX: values.boriginX,
-          // originY: values.boriginY,
-          // width: values.bwidth,
-          // height: values.bheight,
+          originX: values.boriginX,
+          originY: values.boriginY,
+          width: values.bwidth,
+          height: values.bheight,
           // opacity: 0,
-          backgroundColor: 0,
+          // backgroundColor: 0,
         },
         animations: {
-          // originX: delayFunction(delay, animation(values.originX, config)),
-          // originY: delayFunction(delay, animation(values.originY, config)),
-          // width: delayFunction(delay, animation(values.width, config)),
-          // height: delayFunction(delay, animation(values.height, config)),
+          originX: delayFunction(delay, animation(values.originX, config)),
+          originY: delayFunction(delay, animation(values.originY, config)),
+          width: delayFunction(delay, animation(values.width, config)),
+          height: delayFunction(delay, animation(values.height, config)),
           // opacity: delayFunction(delay, animation(1, config)),
-          backgroundColor: withTiming('green'),
+          // backgroundColor: withTiming('green'),
         },
         callback: callback,
       };
