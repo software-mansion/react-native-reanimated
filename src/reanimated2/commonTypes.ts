@@ -59,6 +59,10 @@ export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
 }
 
+export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
+  (): Partial<T>;
+}
+
 export interface NativeEvent<T> {
   nativeEvent: T;
 }

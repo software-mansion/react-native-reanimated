@@ -36,6 +36,7 @@ import {
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,
+  BasicWorkletFunctionOptional,
   NestedObjectValues,
   SharedValue,
 } from '../commonTypes';
@@ -451,7 +452,7 @@ export function useAnimatedStyle<T extends AnimatedStyle>(
 
   useEffect(() => {
     let fun;
-    let updaterFn = updater;
+    let updaterFn = updater as BasicWorkletFunctionOptional<T>;
     let optimalization = updater.__optimalization;
     if (adapters) {
       updaterFn = () => {
