@@ -1,4 +1,5 @@
 #import "REAInitializer.h"
+#import "REAKeyboardEventObserver.h"
 #import "REAUIManager.h"
 
 @interface RCTEventDispatcher (Reanimated)
@@ -34,6 +35,9 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 #else
   [eventDispatcher setBridge:bridge];
 #endif
+  REAKeyboardEventObserver *keyboardEventObserver =
+      [[REAKeyboardEventObserver alloc] initWithEventDispatcher:eventDispatcher];
+  [keyboardEventObserver registerKeyboardEventsObservers];
   [bridge updateModuleWithInstance:eventDispatcher];
   const auto runtimeInstaller = [bridge, runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
