@@ -28,12 +28,12 @@ export function measure(
   if (!_WORKLET || isChromeDebugger()) {
     console.warn('[reanimated.measure] method cannot be used on RN side!');
     return {
-      x: -1,
-      y: -1,
-      width: -1,
-      height: -1,
-      pageX: -1,
-      pageY: -1,
+      x: NaN,
+      y: NaN,
+      width: NaN,
+      height: NaN,
+      pageX: NaN,
+      pageY: NaN,
     };
   }
   const viewTag = animatedRef();
