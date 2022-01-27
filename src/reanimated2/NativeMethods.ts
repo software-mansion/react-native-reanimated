@@ -25,8 +25,16 @@ export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
-    throw new Error('(measure) method cannot be used on RN side!');
+  if (!_WORKLET || isChromeDebugger()) {
+    console.warn('[reanimated.measure] method cannot be used on RN side!');
+    return {
+      x: NaN,
+      y: NaN,
+      width: NaN,
+      height: NaN,
+      pageX: NaN,
+      pageY: NaN,
+    };
   }
   const viewTag = animatedRef();
   const result = _measure(viewTag);
