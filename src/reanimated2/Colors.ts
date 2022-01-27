@@ -667,7 +667,7 @@ const interpolateColorsHSV = (
   return hsvToColor(h, s, v);
 };
 
-const interpolateColorsRGB = (
+const interpolateColorsRGBA = (
   value: number,
   inputRange: readonly number[],
   colors: InterpolateRGBA
@@ -749,7 +749,7 @@ export const interpolateColor = (
       getInterpolateHSV(outputRange)
     );
   } else if (colorSpace === 'RGB') {
-    return interpolateColorsRGB(
+    return interpolateColorsRGBA(
       value,
       inputRange,
       getInterpolateRGBA(outputRange)
@@ -796,7 +796,7 @@ export const interpolateSharableColor = (
       colors = getInterpolateRGBA(interpolateConfig.value.outputRange);
       interpolateConfig.value.cache.value = colors;
     }
-    return interpolateColorsRGB(
+    return interpolateColorsRGBA(
       value,
       interpolateConfig.value.inputRange,
       colors as InterpolateRGBA
