@@ -350,24 +350,29 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (void)onViewTransition:(UIView *)view before:(REASnapshot *)before after:(REASnapshot *)after
 {
   NSMutableDictionary *targetValues = after.values;
-  NSMutableDictionary *startValues = before.values;
-  NSMutableDictionary *preparedValues = [NSMutableDictionary new];
-  [preparedValues addEntriesFromDictionary:targetValues];
-  for (NSString *key in startValues.allKeys) {
-    preparedValues[[NSString stringWithFormat:@"b%@", key]] = startValues[key];
-  }
-  _startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
+  NSMutableDictionary *currentValues = before.values;
+  NSDictionary *preparedValues = [self prepareDataForLayoutAnimatingWorklet:currentValues targetValues:targetValues];
+
+  // we dispatch it asynchronously so it does not mess up with native animiation of transitioning screens
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self->_startAnimationForTag(view.reactTag, @"sharedElementTransition", preparedValues, @(0));
+  });
 }
 
 - (void)onScreenTransition:(UIView *)screen finish:(REASnapshot *)finish transitionType:(NSString *)transitionType
 {
-  NSMutableDictionary *finishValues = finish.values;
-  NSMutableDictionary *preparedValues = [NSMutableDictionary new];
-  [preparedValues addEntriesFromDictionary:finishValues];
-  for (NSString *key in finishValues.allKeys) {
-    preparedValues[[NSString stringWithFormat:@"b%@", key]] = finishValues[key];
+  NSMutableDictionary *targetValues = finish.values;
+  NSDictionary *preparedValues = nil;
+  if ([transitionType isEqualToString:@"exiting"] || [transitionType isEqualToString:@"hiding"]) {
+    preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:ExitingFrame];
+  } else {
+    preparedValues = [self prepareDataForAnimatingWorklet:targetValues frameConfig:EnteringFrame];
   }
-  _startAnimationForTag(screen.reactTag, transitionType, preparedValues, @(0));
+
+  // we dispatch it asynchronously so it does not mess up with native animiation of transitioning screens
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self->_startAnimationForTag(screen.reactTag, transitionType, preparedValues, @(0));
+  });
 }
 
 @end
