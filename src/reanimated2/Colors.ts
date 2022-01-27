@@ -756,7 +756,7 @@ export const interpolateColor = (
     );
   }
   throw new Error(
-    `invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+    `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
 };
 
@@ -813,6 +813,6 @@ export const interpolateSharableColor = (
     );
   }
   throw new Error(
-    `invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
+    `Invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
 };
