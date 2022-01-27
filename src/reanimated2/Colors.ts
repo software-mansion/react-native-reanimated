@@ -15,7 +15,7 @@ import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
-interface RBG {
+interface RGB {
   r: number;
   g: number;
   b: number;
@@ -477,7 +477,7 @@ export const rgbaColor = (
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-function RGBtoHSV(rgb: RBG): HSV;
+function RGBtoHSV(rgb: RGB): HSV;
 function RGBtoHSV(r: number, g: number, b: number): HSV;
 function RGBtoHSV(r: any, g?: any, b?: any): HSV {
   'worklet';
@@ -530,8 +530,8 @@ function RGBtoHSV(r: any, g?: any, b?: any): HSV {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(hsv: HSV): RBG;
-function HSVtoRGB(h: number, s: number, v: number): RBG;
+function HSVtoRGB(hsv: HSV): RGB;
+function HSVtoRGB(h: number, s: number, v: number): RGB;
 function HSVtoRGB(h: any, s?: any, v?: any) {
   'worklet';
   /* eslint-disable */
@@ -670,7 +670,7 @@ const interpolateColorsHSV = (
 const interpolateColorsRGB = (
   value: number,
   inputRange: readonly number[],
-  colors: InterpolateRGBA
+  colors: InterpolateRGB
 ) => {
   'worklet';
   const r = interpolate(value, inputRange, colors.r, Extrapolate.CLAMP);
@@ -680,16 +680,16 @@ const interpolateColorsRGB = (
   return rgbaColor(r, g, b, a);
 };
 
-interface InterpolateRGBA {
+interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
   a: number[];
 }
 
-const getInterpolateRGBA = (
+const getInterpolateRGB = (
   colors: readonly (string | number)[]
-): InterpolateRGBA => {
+): InterpolateRGB => {
   'worklet';
 
   const r = [];
@@ -752,7 +752,7 @@ export const interpolateColor = (
     return interpolateColorsRGB(
       value,
       inputRange,
-      getInterpolateRGBA(outputRange)
+      getInterpolateRGB(outputRange)
     );
   }
   throw new Error(
@@ -769,7 +769,7 @@ export interface InterpolateConfig {
   inputRange: readonly number[];
   outputRange: readonly (string | number)[];
   colorSpace: ColorSpace;
-  cache: SharedValue<InterpolateRGBA | InterpolateHSV>;
+  cache: SharedValue<InterpolateRGB | InterpolateHSV>;
 }
 
 export function useInterpolateConfig(
@@ -793,13 +793,13 @@ export const interpolateSharableColor = (
   let colors = interpolateConfig.value.cache.value;
   if (interpolateConfig.value.colorSpace === ColorSpace.RGB) {
     if (!colors) {
-      colors = getInterpolateRGBA(interpolateConfig.value.outputRange);
+      colors = getInterpolateRGB(interpolateConfig.value.outputRange);
       interpolateConfig.value.cache.value = colors;
     }
     return interpolateColorsRGB(
       value,
       interpolateConfig.value.inputRange,
-      colors as InterpolateRGBA
+      colors as InterpolateRGB
     );
   } else if (interpolateConfig.value.colorSpace === ColorSpace.HSV) {
     if (!colors) {
