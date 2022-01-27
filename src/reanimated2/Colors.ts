@@ -8,12 +8,14 @@
 
 /* eslint no-bitwise: 0 */
 import { Platform } from 'react-native';
-import { makeRemote, makeShareable, isConfigured } from './core';
+import { makeRemote, makeShareable, isConfigured, makeMutable } from './core';
 import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
+import { SharedValue } from './commonTypes';
+import { useSharedValue } from './hook/useSharedValue';
 
-interface RBG {
+interface RGB {
   r: number;
   g: number;
   b: number;
@@ -475,7 +477,7 @@ export const rgbaColor = (
  * 0 <= r, g, b <= 255
  * returns 0 <= h, s, v <= 1
  */
-function RGBtoHSV(rgb: RBG): HSV;
+function RGBtoHSV(rgb: RGB): HSV;
 function RGBtoHSV(r: number, g: number, b: number): HSV;
 function RGBtoHSV(r: any, g?: any, b?: any): HSV {
   'worklet';
@@ -528,8 +530,8 @@ function RGBtoHSV(r: any, g?: any, b?: any): HSV {
  * 0 <= h, s, v <= 1
  * returns 0 <= r, g, b <= 255
  */
-function HSVtoRGB(hsv: HSV): RBG;
-function HSVtoRGB(h: number, s: number, v: number): RBG;
+function HSVtoRGB(hsv: HSV): RGB;
+function HSVtoRGB(h: number, s: number, v: number): RGB;
 function HSVtoRGB(h: any, s?: any, v?: any) {
   'worklet';
   /* eslint-disable */
@@ -656,7 +658,7 @@ export function toRGBA(HSVA: ParsedColorArray): string {
 const interpolateColorsHSV = (
   value: number,
   inputRange: readonly number[],
-  colors: InterpolateCacheHSV
+  colors: InterpolateHSV
 ) => {
   'worklet';
   const h = interpolate(value, inputRange, colors.h, Extrapolate.CLAMP);
@@ -668,7 +670,7 @@ const interpolateColorsHSV = (
 const interpolateColorsRGB = (
   value: number,
   inputRange: readonly number[],
-  colors: InterpolateCacheRGBA
+  colors: InterpolateRGB
 ) => {
   'worklet';
   const r = interpolate(value, inputRange, colors.r, Extrapolate.CLAMP);
@@ -678,27 +680,17 @@ const interpolateColorsRGB = (
   return rgbaColor(r, g, b, a);
 };
 
-interface InterpolateCacheRGBA {
+interface InterpolateRGB {
   r: number[];
   g: number[];
   b: number[];
   a: number[];
 }
 
-const BUFFER_SIZE = 200;
-const hashOrderRGBA: any = new ArrayBuffer(BUFFER_SIZE);
-let curentHashIndexRGBA = 0;
-const interpolateCacheRGBA: { [name: string]: InterpolateCacheRGBA } = {};
-
-const getInterpolateCacheRGBA = (
+const getInterpolateRGB = (
   colors: readonly (string | number)[]
-): InterpolateCacheRGBA => {
+): InterpolateRGB => {
   'worklet';
-  const hash = colors.join('');
-  const cache = interpolateCacheRGBA[hash];
-  if (cache !== undefined) {
-    return cache;
-  }
 
   const r = [];
   const g = [];
@@ -715,37 +707,19 @@ const getInterpolateCacheRGBA = (
       a.push(opacity(proocessedColor));
     }
   }
-  const newCache = { r, g, b, a };
-  const overrideHash = hashOrderRGBA[curentHashIndexRGBA];
-  if (overrideHash) {
-    delete interpolateCacheRGBA[overrideHash];
-  }
-  interpolateCacheRGBA[hash] = newCache;
-  hashOrderRGBA[curentHashIndexRGBA] = hash;
-  curentHashIndexRGBA = (curentHashIndexRGBA + 1) % BUFFER_SIZE;
-  return newCache;
+  return { r, g, b, a };
 };
 
-interface InterpolateCacheHSV {
+interface InterpolateHSV {
   h: number[];
   s: number[];
   v: number[];
 }
 
-const hashOrderHSV: any = new ArrayBuffer(BUFFER_SIZE);
-let curentHashIndexHSV = 0;
-const interpolateCacheHSV: { [name: string]: InterpolateCacheHSV } = {};
-
-const getInterpolateCacheHSV = (
+const getInterpolateHSV = (
   colors: readonly (string | number)[]
-): InterpolateCacheHSV => {
+): InterpolateHSV => {
   'worklet';
-  const hash = colors.join('');
-  const cache = interpolateCacheHSV[hash];
-  if (cache !== undefined) {
-    return cache;
-  }
-
   const h = [];
   const s = [];
   const v = [];
@@ -758,15 +732,7 @@ const getInterpolateCacheHSV = (
       v.push(proocessedColor.v);
     }
   }
-  const newCache = { h, s, v };
-  const overrideHash = hashOrderHSV[curentHashIndexHSV];
-  if (overrideHash) {
-    delete interpolateCacheHSV[overrideHash];
-  }
-  interpolateCacheHSV[hash] = newCache;
-  hashOrderHSV[curentHashIndexHSV] = hash;
-  curentHashIndexHSV = (curentHashIndexHSV + 1) % BUFFER_SIZE;
-  return newCache;
+  return { h, s, v };
 };
 
 export const interpolateColor = (
@@ -780,16 +746,73 @@ export const interpolateColor = (
     return interpolateColorsHSV(
       value,
       inputRange,
-      getInterpolateCacheHSV(outputRange)
+      getInterpolateHSV(outputRange)
     );
   } else if (colorSpace === 'RGB') {
     return interpolateColorsRGB(
       value,
       inputRange,
-      getInterpolateCacheRGBA(outputRange)
+      getInterpolateRGB(outputRange)
     );
   }
   throw new Error(
-    `invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+    `Invalid color space provided: ${colorSpace}. Supported values are: ['RGB', 'HSV']`
+  );
+};
+
+export enum ColorSpace {
+  RGB = 0,
+  HSV = 1,
+}
+
+export interface InterpolateConfig {
+  inputRange: readonly number[];
+  outputRange: readonly (string | number)[];
+  colorSpace: ColorSpace;
+  cache: SharedValue<InterpolateRGB | InterpolateHSV>;
+}
+
+export function useInterpolateConfig(
+  inputRange: readonly number[],
+  outputRange: readonly (string | number)[],
+  colorSpace = ColorSpace.RGB
+): SharedValue<InterpolateConfig> {
+  return useSharedValue({
+    inputRange,
+    outputRange,
+    colorSpace,
+    cache: makeMutable(null),
+  });
+}
+
+export const interpolateSharableColor = (
+  value: number,
+  interpolateConfig: SharedValue<InterpolateConfig>
+): string | number => {
+  'worklet';
+  let colors = interpolateConfig.value.cache.value;
+  if (interpolateConfig.value.colorSpace === ColorSpace.RGB) {
+    if (!colors) {
+      colors = getInterpolateRGB(interpolateConfig.value.outputRange);
+      interpolateConfig.value.cache.value = colors;
+    }
+    return interpolateColorsRGB(
+      value,
+      interpolateConfig.value.inputRange,
+      colors as InterpolateRGB
+    );
+  } else if (interpolateConfig.value.colorSpace === ColorSpace.HSV) {
+    if (!colors) {
+      colors = getInterpolateHSV(interpolateConfig.value.outputRange);
+      interpolateConfig.value.cache.value = colors;
+    }
+    return interpolateColorsHSV(
+      value,
+      interpolateConfig.value.inputRange,
+      colors as InterpolateHSV
+    );
+  }
+  throw new Error(
+    `Invalid color space provided: ${interpolateConfig.value.colorSpace}. Supported values are: ['RGB', 'HSV']`
   );
 };
