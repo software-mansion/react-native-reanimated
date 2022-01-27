@@ -615,11 +615,24 @@ declare module 'react-native-reanimated' {
     HSV = 1,
   }
 
+  export interface InterpolateRGB {
+    r: number[];
+    g: number[];
+    b: number[];
+    a: number[];
+  }
+
+  export interface InterpolateHSV {
+    h: number[];
+    s: number[];
+    v: number[];
+  }
+
   export interface InterpolateConfig {
     inputRange: readonly number[];
     outputRange: readonly (string | number)[];
     colorSpace: ColorSpace;
-    cache: SharedValue<InterpolateRGBA | InterpolateHSV>;
+    cache: SharedValue<InterpolateRGB | InterpolateHSV>;
   }
 
   export function useInterpolateConfig(
