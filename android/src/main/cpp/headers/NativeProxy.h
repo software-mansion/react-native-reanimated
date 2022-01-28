@@ -70,7 +70,6 @@ class EventHandler : public HybridClass<EventHandler> {
       // for details.
       return;
     }
-
     handler_(eventKey->toString(), eventAsString);
   }
 
