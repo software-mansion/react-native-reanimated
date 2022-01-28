@@ -250,7 +250,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     std::string eventAsString;
     try {
       eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
-    } catch (folly::json::parse_error) {
+    } catch (folly::json::parse_error &) {
       // Events from other libraries may contain NaN or INF values which cannot be represented in JSON.
       // See https://github.com/software-mansion/react-native-reanimated/issues/1776 for details.
       return;
