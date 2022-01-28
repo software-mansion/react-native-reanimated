@@ -209,6 +209,7 @@ const Reanimated = {
   },
   diff: NOOP,
   diffClamp: NOOP,
+  interpolate: NOOP,
   interpolateNode: NOOP,
   interpolateColors: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),
