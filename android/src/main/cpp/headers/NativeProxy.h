@@ -59,16 +59,16 @@ class EventHandler : public HybridClass<EventHandler> {
       jni::alias_ref<JString> eventKey,
       jni::alias_ref<react::WritableMap> event) {
     std::string eventAsString = "{NativeMap:null}";
-    try {
-      if (event != nullptr) {
+    if (event != nullptr) {
+      try {
         eventAsString = event->toString();
+      } catch (std::exception) {
+        // Events from other libraries may contain NaN or INF values which
+        // cannot be represented in JSON. See
+        // https://github.com/software-mansion/react-native-reanimated/issues/1776
+        // for details.
+        return;
       }
-    } catch (const std::exception &) {
-      // Events from other libraries may contain NaN or INF values which cannot
-      // be represented in JSON. See
-      // https://github.com/software-mansion/react-native-reanimated/issues/1776
-      // for details.
-      return;
     }
     handler_(eventKey->toString(), eventAsString);
   }
