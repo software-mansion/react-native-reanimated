@@ -133,6 +133,15 @@ def resolveBuildType() {
     return "$rootDir" != "$projectDir"
 }
 
+def resolveReactNativeDirectory() {
+    return file("$rootDir/node_modules/react-native")
+}
+
+boolean CLIENT_SIDE_BUILD = resolveBuildType()
+boolean BUILD_AAR_FROM_SOURCE = !CLIENT_SIDE_BUILD
+
+def reactNative = resolveReactNativeDirectory()
+
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -142,7 +151,7 @@ def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').to
 
 
 def reactProperties = new Properties()
-file("$projectDir/../node_modules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+file("$reactNative/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
 
 def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
 def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
@@ -158,7 +167,6 @@ def FBJNI_VERSION = '0.2.2'
 def downloadsDir = new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
-def reactNative = new File("$projectDir/../node_modules/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
 
 def HOME = System.getProperty("user.home")
@@ -206,9 +214,6 @@ buildscript {
     }
 }
 
-
-
-
 if (project == rootProject) {
     apply from: 'spotless.gradle'
 }
@@ -216,7 +221,6 @@ if (project == rootProject) {
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 apply plugin: 'de.undercouch.download'
-
 
 android {
     buildFeatures {
@@ -379,8 +383,6 @@ task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) 
         }
     }
 }
-
-
 
 task prepareHermes() {
     def hermesPackagePath = findNodeModulePath(projectDir, "hermes-engine")
