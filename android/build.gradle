@@ -133,14 +133,22 @@ def resolveBuildType() {
     return "$rootDir" != "$projectDir"
 }
 
+println "rootDir: $rootDir"
+println "projectDir: $projectDir"
+
 def resolveReactNativeDirectory() {
-    return file("$rootDir/node_modules/react-native")
+    return file("$rootDir/../node_modules/react-native")
 }
 
 boolean CLIENT_SIDE_BUILD = resolveBuildType()
+
+println "Client side build: ${CLIENT_SIDE_BUILD}"
+
 boolean BUILD_AAR_FROM_SOURCE = !CLIENT_SIDE_BUILD
 
 def reactNative = resolveReactNativeDirectory()
+
+println "Resolved RN directory: ${reactNative}"
 
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
