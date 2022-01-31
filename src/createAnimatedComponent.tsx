@@ -590,10 +590,6 @@ export default function createAnimatedComponent(
             hiding,
             sv: this.sv,
           };
-          // console.log("sharedElementTransition", sharedElementTransition)
-          // if(sharedElementTransition) {
-          //   console.log(tag)
-          // }
           runOnUI(() => {
             'worklet';
             global.LayoutAnimationRepository.registerConfig(tag, config);

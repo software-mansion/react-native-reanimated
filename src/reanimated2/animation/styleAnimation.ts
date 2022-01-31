@@ -90,7 +90,6 @@ export function withStyleAnimation(
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
     'worklet';
-    console.log('aaa', styleAnimations);
     const onFrame = (
       animation: StyleLayoutAnimation,
       now: Timestamp
@@ -201,7 +200,6 @@ export function withStyleAnimation(
             typeof currentEntry.value !== 'object' ||
             !currentEntry.value.onStart
           ) {
-            // console.warn(currentEntry.value)
             currentAnimation = withTiming(
               currentEntry.value as AnimatableValue,
               { duration: 0 }
@@ -214,7 +212,6 @@ export function withStyleAnimation(
           } else {
             currentAnimation = currentEntry.value as Animation<AnimationObject>;
           }
-          console.warn(currentAnimation);
           currentAnimation.onStart(
             currentAnimation,
             prevVal,

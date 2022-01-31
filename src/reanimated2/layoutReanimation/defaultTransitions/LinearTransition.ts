@@ -26,6 +26,7 @@ export class LinearTransition
           originY: values.currentOriginY,
           width: values.currentWidth,
           height: values.currentHeight,
+          backgroundColor: 'red',
         },
         animations: {
           originX: delayFunction(
@@ -38,6 +39,7 @@ export class LinearTransition
           ),
           width: delayFunction(delay, animation(values.targetWidth, config)),
           height: delayFunction(delay, animation(values.targetHeight, config)),
+          backgroundColor: delayFunction(delay, animation('green', config)),
         },
         callback: callback,
       };

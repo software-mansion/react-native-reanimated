@@ -147,7 +147,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     });
 
     animation.current = toRGBA(res as ParsedColorArray);
-    console.log(animation.current);
   };
 
   const colorOnFrame = (
@@ -165,7 +164,6 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     });
 
     animation.current = toRGBA(res as ParsedColorArray);
-    console.log(animation.current);
     return finished;
   };
 

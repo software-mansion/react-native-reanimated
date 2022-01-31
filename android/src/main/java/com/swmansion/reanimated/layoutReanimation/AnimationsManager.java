@@ -198,23 +198,25 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mNativeMethodsHolder.startAnimationForTag(tag, "layout", preparedValues);
   }
 
-  public void onViewTransition(View before, View after){
+  public void onViewTransition(View before, View after) {
     if (isCatalystInstanceDestroyed) {
       return;
     }
 
     Snapshot beforeSnapshot = new Snapshot(before, getReanimatedNativeHierarchyManager());
     Snapshot afterSnapshot = new Snapshot(after, getReanimatedNativeHierarchyManager());
-    Integer tag = before.getId();
+    Integer tag = after.getId();
     HashMap<String, Object> targetValues = afterSnapshot.toTargetMap();
     HashMap<String, Object> startValues = beforeSnapshot.toCurrentMap();
 
     HashMap<String, Float> preparedStartValues = prepareDataForAnimationWorklet(startValues, false);
-    HashMap<String, Float> preparedTargetValues = prepareDataForAnimationWorklet(targetValues, true);
+    HashMap<String, Float> preparedTargetValues =
+        prepareDataForAnimationWorklet(targetValues, true);
     HashMap<String, Float> preparedValues = new HashMap<>(preparedTargetValues);
-    for (String key : preparedStartValues.keySet()) {
-      preparedValues.put("b" + key, preparedStartValues.get(key));
-    }
+    preparedValues.putAll(preparedStartValues);
+
+    // we dont want any other transitions to start on this view
+    mStates.put(after.getId(), null);
     mNativeMethodsHolder.startAnimationForTag(tag, "sharedElementTransition", preparedValues);
   }
 
