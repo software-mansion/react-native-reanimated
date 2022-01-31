@@ -769,7 +769,7 @@ export interface InterpolateConfig {
   inputRange: readonly number[];
   outputRange: readonly (string | number)[];
   colorSpace: ColorSpace;
-  cache: SharedValue<InterpolateRGB | InterpolateHSV>;
+  cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
 }
 
 export function useInterpolateConfig(
