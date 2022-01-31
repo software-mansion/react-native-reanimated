@@ -48,7 +48,7 @@ do
 
     ./gradlew clean
 
-    FOR_HERMES=${for_hermes} ./gradlew :assembleDebug
+    CLIENT_SIDE_BUILD="False" FOR_HERMES=${for_hermes} ./gradlew :assembleDebug
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
