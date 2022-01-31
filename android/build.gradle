@@ -120,6 +120,19 @@ def getCurrentFlavor() {
     return "NOT-FOUND"
 }
 
+def resolveBuildType() {
+    def buildType = System.getenv("CLIENT_SIDE_BUILD")
+    if (buildType != null) {
+        return buildType == "True"
+    }
+
+    if (hasProperty("clientSideBuild")) {
+        return property("clientSideBuild") == "true"
+    }
+
+    return "$rootDir" != "$projectDir"
+}
+
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
 if (localPropertiesFile.exists()) {
