@@ -17,7 +17,7 @@ version_name=("67")
 for index in {0..0}
 do
   yarn add react-native@"${versions[$index]}"
-  for for_hermes in "True" "False"
+  for for_hermes in "True"
   do
     engine="jsc"
     if [ "$for_hermes" == "True" ]; then
