@@ -4,7 +4,21 @@ import { AnimatedStyle, StyleProps } from '../commonTypes';
 
 const reanimatedJS = new JSReanimated();
 
+declare class TaroElementStyle {
+  _usedStyleProp: Set<string>;
+  _value: Partial<CSSStyleDeclaration>;
+  private setCssVariables;
+  get cssText(): string;
+  set cssText(str: string);
+  setProperty(propertyName: string, value?: string | null): void;
+  removeProperty(propertyName: string): string;
+  getPropertyValue(propertyName: string): any;
+}
+
 interface JSReanimatedComponent {
+  state: { style: StyleProps };
+  setState: (state: unknown) => void;
+  style?: TaroElementStyle;
   previousStyle: StyleProps;
   setNativeProps: (style: StyleProps) => void;
   props: Record<string, string | number>;
@@ -61,13 +75,40 @@ export const _updatePropsJS = (
 
     if (typeof component.setNativeProps === 'function') {
       setNativeProps(component, rawStyles);
-    } else if (Object.keys(component.props).length > 0) {
+    } else if (component.state.style && !component._touchableNode) {
+      // Taro RN compliant
+      const previousStyle = component.state.style;
+      component.setState({ style: { ...previousStyle, ...rawStyles } });
+    } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;
         }
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
+      });
+    } else if (
+      component.style &&
+      typeof component.style.setProperty === 'function'
+    ) {
+      // Taro H5 / Weapp compliant
+      const transformList: string[] = [];
+      Object.keys(rawStyles).forEach((key) => {
+        if (key === 'transform') {
+          rawStyles.transform!.forEach((item) => {
+            Object.keys(item).forEach((transformKey) => {
+              transformList.push(
+                `${transformKey}(${
+                  ((item as unknown) as Record<string, string>)[transformKey]
+                })`
+              );
+            });
+          });
+          component.style!.setProperty('transform', transformList.join(' '));
+        } else {
+          const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+          component.style!.setProperty(dashedKey, rawStyles[key]);
+        }
       });
     } else {
       console.warn('It is not possible to manipulate component');

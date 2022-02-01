@@ -73,7 +73,7 @@ exports[`babel plugin doesn't transform string literals 1`] = `
 exports[`babel plugin transforms 1`] = `
 "var _interopRequireWildcard = require(\\"@babel/runtime/helpers/interopRequireWildcard\\");
 
-var _reactNativeReanimated = _interopRequireWildcard(require(\\"react-native-reanimated\\"));
+var _reactNativeReanimated = _interopRequireWildcard(require(\\"taro-reanimated\\"));
 
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);

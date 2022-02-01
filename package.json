@@ -1,6 +1,6 @@
 {
-  "name": "react-native-reanimated",
-  "version": "2.4.0",
+  "name": "taro-reanimated",
+  "version": "2.3.1-release3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -30,7 +30,7 @@
   "module": "lib/Animated",
   "react-native": "src/Animated",
   "source": "src/Animated",
-  "types": "react-native-reanimated.d.ts",
+  "types": "taro-reanimated.d.ts",
   "files": [
     "Common/",
     "src/",
@@ -45,7 +45,7 @@
     "!android/build/",
     "RNReanimated.podspec",
     "README.md",
-    "react-native-reanimated.d.ts",
+    "taro-reanimated.d.ts",
     "mock.js",
     "plugin.js",
     "expo-module.config.json",
@@ -55,7 +55,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "url": "git+https://github.com/yiheyang/taro-reanimated.git"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
@@ -64,9 +64,9 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
+    "url": "https://github.com/yiheyang/taro-reanimated/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
+  "homepage": "https://github.com/yiheyang/taro-reanimated#readme",
   "dependencies": {
     "@babel/plugin-transform-object-assign": "^7.10.4",
     "@types/invariant": "^2.2.35",
@@ -125,7 +125,7 @@
   },
   "lint-staged": {
     "*.(js|ts|tsx)": [
-      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern react-native-reanimated.d.ts --ignore-pattern docs",
+      "eslint --ext '.js,.ts,.tsx' src/ --ignore-pattern src/reanimated1 --ignore-pattern taro-reanimated.d.ts --ignore-pattern docs",
       "prettier --write"
     ],
     "**/*.{h,cpp}": "yarn lint:cpp",

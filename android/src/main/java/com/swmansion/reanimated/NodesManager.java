@@ -176,7 +176,7 @@ public class NodesManager implements EventDispatcherListener {
     // We register as event listener at the end, because we pass `this` and we haven't finished
     // contructing an object yet.
     // This lead to a crash described in
-    // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
+    // https://github.com/yiheyang/taro-reanimated/issues/604 which was caused by
     // Nodes Manager being constructed on UI thread and registering for events.
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event

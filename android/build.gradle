@@ -199,7 +199,7 @@ task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy
     include("folly-${FOLLY_VERSION}/folly/**/*", "Android.mk")
     eachFile { fname -> fname.path = (fname.path - "folly-${FOLLY_VERSION}/") }
     // Fixes problem with Folly failing to build on certain systems. See
-    // https://github.com/software-mansion/react-native-reanimated/issues/1024
+    // https://github.com/yiheyang/taro-reanimated/issues/1024
     filter { line -> line.replaceAll('return int\\(wrapNoInt\\(open, name, flags, mode\\)\\);', follyReplaceContent) }
     includeEmptyDirs = false
     into("$thirdPartyNdkDir/folly")

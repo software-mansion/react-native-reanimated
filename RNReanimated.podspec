@@ -6,20 +6,20 @@ reactVersion = '0.0.0'
 
 begin
   # standard app
-  # /appName/node_modules/react-native-reanimated/RNReanimated.podspec
+  # /appName/node_modules/taro-reanimated/RNReanimated.podspec
   # /appName/node_modules/react-native/package.json
   reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")))["version"]
 rescue
   begin
     # monorepo
-    # /monorepo/packages/appName/node_modules/react-native-reanimated/RNReanimated.podspec
+    # /monorepo/packages/appName/node_modules/taro-reanimated/RNReanimated.podspec
     # /monorepo/node_modules/react-native/package.json
     reactVersion = JSON.parse(File.read(File.join(__dir__, "..", "..", "..", "..", "node_modules", "react-native", "package.json")))["version"]
   rescue
     begin
       # Example app in reanimated repo
-      # /react-native-reanimated/RNReanimated.podspec
-      # /react-native-reanimated/node_modules/react-native/package.json
+      # /taro-reanimated/RNReanimated.podspec
+      # /taro-reanimated/node_modules/react-native/package.json
       reactVersion = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))["version"]
     rescue
       # should never happen
@@ -49,12 +49,12 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
                   RNReanimated
                    DESC
-  s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
+  s.homepage     = "https://github.com/yiheyang/taro-reanimated"
   s.license      = "MIT"
   # s.license    = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author       = { "author" => "author@domain.cn" }
   s.platforms    = { :ios => "9.0", :tvos => "9.0" }
-  s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/yiheyang/taro-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = [
     "ios/**/*.{mm,h,m}",

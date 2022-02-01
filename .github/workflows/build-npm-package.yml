@@ -32,7 +32,7 @@ jobs:
       - name: Upload npm package
         uses: actions/upload-artifact@v2
         with:
-          name: react-native-reanimated-2.0.0-alpha.tgz
+          name: taro-reanimated-2.0.0-alpha.tgz
           path: '*.tgz'
 
       - name: Upload Android build folder

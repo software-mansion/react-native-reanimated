@@ -46,8 +46,8 @@ def replaceSoTaskRelease
 if(Integer.parseInt(minor) < 65) {
     tasks.register("replaceSoTaskDebug", replaceSoTask)
     tasks.register("replaceSoTaskRelease", replaceSoTask)
-    replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
-    replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
+    replaceSoTaskDebug = project.getTasks().getByPath(":taro-reanimated:replaceSoTaskDebug")
+    replaceSoTaskRelease = project.getTasks().getByPath(":taro-reanimated:replaceSoTaskRelease")
 }
 
 rootProject.getSubprojects().forEach({project ->
@@ -84,13 +84,13 @@ rootProject.getSubprojects().forEach({project ->
 })
 
 def minorCopy = Integer.parseInt(minor)
-def aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+def aar = file("taro-reanimated-${minorCopy}-${engine}.aar")
 
 while (!aar.exists()) {
     minorCopy -= 1
-    aar = file("react-native-reanimated-${minorCopy}-${engine}.aar")
+    aar = file("taro-reanimated-${minorCopy}-${engine}.aar")
     if (minorCopy < 63) {
-      throw new GradleException('No aar for react-native-reanimated found.')
+      throw new GradleException('No aar for taro-reanimated found.')
     }
     if (aar.exists()) {
       println "\n\n\n"
@@ -103,7 +103,7 @@ while (!aar.exists()) {
       println "Thanks!"
       println "\n\n\n"
       println "****************************************************************************************"
-    }    
+    }
 }
 
 artifacts.add("default", aar)

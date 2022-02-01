@@ -17,7 +17,7 @@ describe('babel plugin', () => {
       import Animated, {
         useAnimatedStyle,
         useSharedValue,
-      } from 'react-native-reanimated';
+      } from 'taro-reanimated';
       
       function Box() {
         const offset = useSharedValue(0);
@@ -43,7 +43,7 @@ describe('babel plugin', () => {
 
   it('supports default ES6 style imports', () => {
     const input = `
-      import * as Reanimated from 'react-native-reanimated';
+      import * as Reanimated from 'taro-reanimated';
 
       function Box() {
         const offset = Reanimated.useSharedValue(0);

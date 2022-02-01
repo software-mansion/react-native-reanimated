@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    // for react-native-reanimated-tests.tsx
+    // for taro-reanimated-tests.tsx
     "paths": {
-      "react-native-reanimated": ["./react-native-reanimated.d.ts"]
+      "taro-reanimated": ["./taro-reanimated.d.ts"]
     },
     // change to true after we transition to TS
     "declaration": false,
@@ -21,7 +21,7 @@
   "include": [
     "lib/**/*.ts",
     "lib/**/*.tsx",
-    "react-native-reanimated.d.ts",
-    "react-native-reanimated-tests.tsx"
+    "taro-reanimated.d.ts",
+    "taro-reanimated-tests.tsx"
   ]
 }

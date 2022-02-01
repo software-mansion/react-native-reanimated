@@ -20,7 +20,7 @@ do
     fi
     echo "engine=${engine}"
 
-    cd android 
+    cd android
 
     echo "APPLY PATCH"
     versionNumber=${version_name[$index]}
@@ -28,7 +28,7 @@ do
     rm -rf ../backup/*
     cp -r . ../backup
     if [ "$(find . | grep 'java')" ];
-    then 
+    then
       fileList=$(find . | grep -i 'java')
       for file in $fileList; do
         echo "COPY: $file"
@@ -47,7 +47,7 @@ do
 
     cd ./rnVersionPatch/$versionNumber
     if [ $(find . | grep 'java') ];
-    then 
+    then
       echo "RESTORE BACKUP"
       for file in $fileList; do
         echo "BACKUP: $file"
@@ -60,8 +60,8 @@ do
 
     cd $ROOT
 
-    rm -rf android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
-    cp android/build/outputs/aar/*.aar android-npm/react-native-reanimated-"${version_name[$index]}-${engine}".aar
+    rm -rf android-npm/taro-reanimated-"${version_name[$index]}-${engine}".aar
+    cp android/build/outputs/aar/*.aar android-npm/taro-reanimated-"${version_name[$index]}-${engine}".aar
   done
 done
 
@@ -71,7 +71,7 @@ cd libSo
 mkdir fbjni
 cd fbjni
 wget https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar
-unzip fbjni-0.2.2.aar 
+unzip fbjni-0.2.2.aar
 rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
 rm $(find . -name '*libc++_shared.so')
 cd ../..

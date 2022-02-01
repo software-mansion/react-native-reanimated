@@ -1,7 +1,7 @@
-// Project: https://github.com/software-mansion/react-native-reanimated
+// Project: https://github.com/yiheyang/taro-reanimated
 // TypeScript Version: 2.8
 
-declare module 'react-native-reanimated' {
+declare module 'taro-reanimated' {
   import {
     ComponentClass,
     ReactNode,
@@ -267,13 +267,9 @@ declare module 'react-native-reanimated' {
       setNativeProps: (ref: any, props: P) => void;
     };
     export function createAnimatedComponent<P extends object>(
-      component: ComponentClass<P>,
+      component: ComponentType<P>,
       options?: Options<P>
-    ): ComponentClass<AnimateProps<P>>;
-    export function createAnimatedComponent<P extends object>(
-      component: FunctionComponent<P>,
-      options?: Options<P>
-    ): FunctionComponent<AnimateProps<P>>;
+    ): ComponentType<AnimateProps<P>>;
 
     // classes
     export {

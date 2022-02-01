@@ -47,7 +47,7 @@ import Animated, {
   useAnimatedProps,
   useAnimatedRef,
   // eslint-disable-next-line import/no-unresolved
-} from 'react-native-reanimated';
+} from 'taro-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
@@ -150,6 +150,7 @@ function CreateAnimatedFlatListTest2() {
 
 function TestClassComponentRef() {
   const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+  // @ts-expect-error ref is not available on plain function-components
   return <AnimatedImage ref={animatedRef} source={{}} />;
 }
 
