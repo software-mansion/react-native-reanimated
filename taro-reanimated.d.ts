@@ -122,7 +122,7 @@ declare module 'taro-reanimated' {
     export type TransformStyleTypes = TransformsStyle['transform'] extends
       | readonly (infer T)[]
       | undefined
-      ? T
+      ? any
       : never;
     export type AdaptTransforms<T> = {
       [P in keyof T]: Adaptable<T[P]>;
@@ -561,25 +561,25 @@ declare module 'taro-reanimated' {
     toValue: AnimatableValue,
     userConfig?: WithTimingConfig,
     callback?: AnimationCallback
-  ): number;
+  ): any;
   export function withSpring(
     toValue: AnimatableValue,
     userConfig?: WithSpringConfig,
     callback?: AnimationCallback
-  ): number;
+  ): any;
   export function withDecay(
     userConfig: WithDecayConfig,
     callback?: AnimationCallback
-  ): number;
+  ): any;
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
-  export function withDelay(delayMS: number, delayedAnimation: number): number;
+  export function withDelay(delayMS: number, delayedAnimation: number): any;
   export function withRepeat(
     animation: number,
     numberOfReps?: number,
     reverse?: boolean,
     callback?: AnimationCallback
-  ): number;
-  export function withSequence(...animations: [number, ...number[]]): number;
+  ): any;
+  export function withSequence(...animations: [number, ...number[]]): any;
 
   // reanimated2 functions
   export function runOnUI<A extends any[], R>(

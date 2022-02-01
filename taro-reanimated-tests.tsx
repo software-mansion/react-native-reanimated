@@ -285,7 +285,6 @@ function AnimatedScrollHandlerTest() {
       ],
     };
   });
-  // @ts-expect-error
   const style2 = useAnimatedStyle(() => {
     return {
       transform: [

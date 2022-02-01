@@ -78,10 +78,10 @@ cd ../..
 
 yarn add react-native@0.67.0-rc.4 --dev
 
+yarn run type:generate
+
 mv android android-temp
 mv android-npm android
-
-yarn run type:generate
 
 npm pack
 

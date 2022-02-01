@@ -75,11 +75,20 @@ export const _updatePropsJS = (
 
     if (typeof component.setNativeProps === 'function') {
       setNativeProps(component, rawStyles);
-    } else if (component.state.style && !component._touchableNode) {
+    } else if (
+      !component._touchableNode &&
+      component.state &&
+      component.state.style &&
+      !component.style
+    ) {
       // Taro RN compliant
       const previousStyle = component.state.style;
       component.setState({ style: { ...previousStyle, ...rawStyles } });
-    } else if (component.props && Object.keys(component.props).length > 0) {
+    } else if (
+      component._touchableNode &&
+      component.props &&
+      Object.keys(component.props).length > 0
+    ) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
           return;

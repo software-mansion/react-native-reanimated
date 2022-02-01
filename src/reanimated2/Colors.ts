@@ -54,9 +54,8 @@ type Matchers = {
 };
 function getMatchers(): Matchers {
   'worklet';
-  const cachedMatchers: Matchers = _WORKLET
-    ? uiCachedMatchers
-    : jsCachedMatchers;
+  const cachedMatchers: Matchers =
+    Platform.OS !== 'web' && _WORKLET ? uiCachedMatchers : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
@@ -777,12 +776,12 @@ export function useInterpolateConfig(
   outputRange: readonly (string | number)[],
   colorSpace = ColorSpace.RGB
 ): SharedValue<InterpolateConfig> {
-  return useSharedValue({
+  return useSharedValue(({
     inputRange,
     outputRange,
     colorSpace,
     cache: makeMutable(null),
-  });
+  } as unknown) as InterpolateConfig);
 }
 
 export const interpolateSharableColor = (
