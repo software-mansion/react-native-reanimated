@@ -133,32 +133,4 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 ## iOS
 
-Run `pod install` in the `ios/` directory.
-
-:::info
-
-In previous releases, the installation process was manual and required turning turbo modules on. Some libraries break when turbo modules are enabled so we decided to change our approach and we no longer
-use the standard way for registering a turbo module. It let us simplify the installation process and as a result, you can safely
-undo all installation steps from the [previous instruction](https://github.com/software-mansion/react-native-reanimated/blob/2.0.0-alpha.4/docs/docs/installation.md#ios).
-
-:::
-
-:::tip
-
-If you want to turn off autoinstall on iOS please add the following compilation flag:
-`DONT_AUTOINSTALL_REANIMATED`.
-It can be done by pasting:
-
-```js
-post_install do |installer|
-   installer.pods_project.targets.each do |target|
-       target.build_configurations.each do |config|
-           config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINSTALL_REANIMATED'
-       end
-   end
-end
-```
-
-to your `Podfile`. Don't forget to run `pod install` after doing that.
-
-:::
+As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Naitve apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
