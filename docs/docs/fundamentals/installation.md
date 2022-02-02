@@ -4,54 +4,17 @@ title: Installation
 sidebar_label: Installation
 ---
 
-Reanimated 2 is primarily built in C++ using [Turbo Modules](https://github.com/react-native-community/discussions-and-proposals/issues/40) infrastructure which is not yet completely deployed in React Native (specifically on Android).
-Because of that the installation of new Reanimated requires additional steps apart from just adding a dependency to `package.json` .
-
-As a consequence of the above the minimum supported version of React Native is [v0.62](https://github.com/facebook/react-native/releases/tag/v0.62.0).
-Before you continue with the installation, make sure that you are running the supported version of React Native.
-
-Please follow the below instructions for Android and iOS.
-
-## I just want to try new Reanimated...
-
-We realize the project setup is very complex and you may not want to add that to your existing app rightaway.
-If you just want to play with Reanimated 2, we made a clean repo that has all the steps configured so that you can pull it from github and give the new version a shot.
-
-[Visit the Playground repo here](https://github.com/software-mansion-labs/reanimated-2-playground) or copy the command below to do a git clone:
-
-```bash
-git clone git@github.com:software-mansion-labs/reanimated-2-playground.git
-```
-
-Continue with the instruction below if you'd like to install Reanimated v2 on an existing or new React Native project.
+Installing Reanimated requires a couple of additional steps compared to installing most of the popular react-naitve packages.
+Specifically on Android the setup consist of adding additional code to the main application class.
+The steps needed to get reanimated properly configured are listed in the below paragraphs.
 
 ## Installing the package
-
-:::caution
-
-Please note that Reanimated 2 doesn't support remote debugging, only Flipper can be used for debugging.
-
-:::
 
 First step is to install `react-native-reanimated` alpha as a dependency in your project:
 
 ```bash
 yarn add react-native-reanimated
 ```
-
-### Reanimated 2 in Expo
-
-To use experimental support of Reanimated 2 in the Expo managed apps follow [their installation instructions](https://docs.expo.io/versions/latest/sdk/reanimated/).
-
-### Using main branch builds
-
-To use Reanimated 2 built from the main branch:
-
-- go to the ["Build npm package" workflow in Reanimated repository](https://github.com/software-mansion/react-native-reanimated/actions?query=workflow%3A%22Build+npm+package%22)
-- select latest build and download `react-native-reanimated-2.0.0-alpha.tgz` artifact
-- run `tar zxvf react-native-reanimated-2.0.0-alpha.tgz.zip` to unpack zip (or unpack it manually)
-- run `yarn add file:react-native-reanimated-2.0.0-*.tgz` to install the package
-- run `cd android && ./gradlew clean`
 
 ## Babel plugin
 
@@ -119,3 +82,16 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 ## iOS
 
 As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Naitve apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
+
+Reanimated 2 is primarily built in C++ using [Turbo Modules](https://github.com/react-native-community/discussions-and-proposals/issues/40) infrastructure which is not yet completely deployed in React Native (specifically on Android).
+Because of that the installation of new Reanimated requires additional steps apart from just adding a dependency to `package.json` .
+
+As a consequence of the above the minimum supported version of React Native is [v0.62](https://github.com/facebook/react-native/releases/tag/v0.62.0).
+Before you continue with the installation, make sure that you are running the supported version of React Native.
+
+Please follow the below instructions for Android and iOS.
+
+## Sample React-Native project configured with Reanimated
+
+If you have troubles configuring Reanimated in your project, or just want to try the library without the need of setting it up ion a fresh project we recommend checking our [Reanimated Playground](https://github.com/software-mansion-labs/reanimated-2-playground) repo, which is essentially a fresh React-Native app with Reanimated library installed and configured properly.
+[Visit the Playground repo here] or copy the command below to do a git clone:
