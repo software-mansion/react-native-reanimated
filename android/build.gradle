@@ -501,6 +501,7 @@ tasks.whenTaskAdded { task ->
         task.dependsOn(':ReactAndroid:prepareDoubleConversion')
         task.dependsOn(':ReactAndroid:prepareFolly')
         task.dependsOn(':ReactAndroid:prepareGlog')
+        task.dependsOn(':ReactAndroid:buildNdkBuildDebug')
     }
 
     // RNTester uses "jsc" and "hermes" build flavors which appear in various task names, e.g. `compileJscDebugSources`.

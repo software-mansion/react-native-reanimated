@@ -184,37 +184,41 @@ void NativeProxy::installJSIBindings() {
   this->registerEventHandler([module, getCurrentTime](
                                  std::string eventName,
                                  std::string eventAsString) {
-    // TODO: handle events from RNGestureHandler
+    // handles RCTEvents from RNGestureHandler
     jsi::Object global = module->runtime->global();
+    std::string eventJSON = eventAsString.substr(
+        13, eventAsString.length() - 15); // remove "{ NativeMap: " and " }"
+    jsi::Value payload =
+        jsi::valueFromDynamic(*module->runtime, folly::parseJson(eventJSON));
+    // TODO: convert event directly to jsi::Value without JSON serialization
     jsi::String eventTimestampName =
         jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
     global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
-    // module->onEvent(eventName, eventAsString); // TODO: fix this
+    module->onEvent(eventName, std::move(payload));
     global.setProperty(
         *module->runtime, eventTimestampName, jsi::Value::undefined());
   });
 
-  facebook::react::ReanimatedListener::handleEvent =
-      [module, getCurrentTime](RawEvent &rawEvent) {
-        // handles RawEvents from React Native
+  facebook::react::ReanimatedListener::handleEvent = [module, getCurrentTime](
+                                                         RawEvent &rawEvent) {
+    // handles RawEvents from React Native
 
-        auto &rt = *module->runtime;
+    int tag = rawEvent.eventTarget->getTag();
+    std::string eventType = rawEvent.type;
+    if (eventType.rfind("top", 0) == 0) {
+      eventType = "on" + eventType.substr(3);
+    }
+    std::string eventName = std::to_string(tag) + eventType;
+    jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
 
-        int tag = rawEvent.eventTarget->getTag();
-        std::string eventType = rawEvent.type;
-        if (eventType.rfind("top", 0) == 0) {
-          eventType = "on" + eventType.substr(3);
-        }
-        std::string eventName = std::to_string(tag) + eventType;
-        jsi::Value payload = rawEvent.payloadFactory(rt);
-
-        jsi::Object global = rt.global();
-        jsi::String eventTimestampName =
-            jsi::String::createFromAscii(rt, "_eventTimestamp");
-        global.setProperty(rt, eventTimestampName, getCurrentTime());
-        module->onEvent(eventName, std::move(payload));
-        global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
-      };
+    jsi::Object global = module->runtime->global();
+    jsi::String eventTimestampName =
+        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
+    module->onEvent(eventName, std::move(payload));
+    global.setProperty(
+        *module->runtime, eventTimestampName, jsi::Value::undefined());
+  };
 
   runtime_->global().setProperty(
       *runtime_,
