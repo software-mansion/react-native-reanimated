@@ -61,13 +61,13 @@ add_library(
         ${source_tools}
         ${INCLUDE_JSI_CPP}
         ${INCLUDE_JSIDYNAMIC_CPP}
-        "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
-        "./src/main/Common/cpp/Tools/Mapper.cpp"
-        "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
-        "./src/main/Common/cpp/Tools/Scheduler.cpp"
-        "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
-        "./src/main/Common/cpp/Tools/FeaturesConfig.cpp"
-        "./src/main/Common/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/JSIStoreValueUser.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Mapper.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/RuntimeDecorator.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Scheduler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
 # includes
