@@ -105,21 +105,6 @@ project.ext.react = [
   ...
 ```
 
-:::info
-
-In previous releases, we required an additional step which is turning on Turbo Modules.
-If you are upgrading from alpha.{ <=3 } please remove the following lines:
-
-```Java
-static {
-   ReactFeatureFlags.useTurboModules = true;
- }
-```
-
-from `MainActivity.java`.
-
-:::
-
 You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
 
 ### Proguard
