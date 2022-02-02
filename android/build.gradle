@@ -1,5 +1,4 @@
 import java.nio.file.Paths
-import org.apache.tools.ant.taskdefs.condition.Os
 import org.apache.tools.ant.filters.ReplaceTokens
 
 import java.util.regex.Matcher
@@ -39,69 +38,6 @@ static def findNodeModulePath(baseDir, packageName) {
         basePath = basePath.getParent()
     }
     return null
-}
-
-static def getNdkBuildName() {
-    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        return "ndk-build.cmd"
-    } else {
-        return "ndk-build"
-    }
-}
-
-def findNdkBuildFullPath() {
-    // we allow to provide full path to ndk-build tool
-    if (hasProperty("ndk.command")) {
-        return property("ndk.command")
-    }
-    // or just a path to the containing directory
-    if (hasProperty("ndk.path")) {
-        def ndkDir = property("ndk.path")
-        return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
-    }
-
-    if (System.getenv("ANDROID_NDK") != null) {
-        def ndkDir = System.getenv("ANDROID_NDK")
-        return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
-    }
-
-    if (hasProperty("ndkDirectory")) {
-        def ndkDir = android.ndkDirectory ? android.ndkDirectory.absolutePath : null
-
-        if (ndkDir) {
-            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
-        }
-    }
-
-    def Properties properties = new Properties()
-    if (rootProject.file("local.properties").exists()) {
-        properties.load(project.rootProject.file("local.properties").newDataInputStream())
-        def ndkDir=properties.getProperty("ndk.dir", null);
-        if(ndkDir)
-        {
-            return new File(ndkDir, getNdkBuildName()).getAbsolutePath()
-        }
-    }
-    return null
-}
-
-def getNdkBuildFullPath() {
-    def ndkBuildFullPath = findNdkBuildFullPath()
-    if (ndkBuildFullPath == null) {
-        throw new GradleScriptException(
-                "ndk-build binary cannot be found, check if you've set " +
-                        "\$ANDROID_NDK environment variable correctly or if ndk.dir is " +
-                        "setup in local.properties",
-                null)
-    }
-    if (!new File(ndkBuildFullPath).canExecute()) {
-        throw new GradleScriptException(
-                "ndk-build binary " + ndkBuildFullPath + " doesn't exist or isn't executable.\n" +
-                        "Check that the \$ANDROID_NDK environment variable, or ndk.dir in local.properties, is set correctly.\n" +
-                        "(On Windows, make sure you escape backslashes in local.properties or use forward slashes, e.g. C:\\\\ndk or C:/ndk rather than C:\\ndk)",
-                null)
-    }
-    return ndkBuildFullPath
 }
 
 def safeExtGet(prop, fallback) {
@@ -339,11 +275,8 @@ android {
     buildFeatures {
         prefab true
     }
-
     compileSdkVersion safeExtGet('compileSdkVersion', 30)
-
     defaultConfig {
-
         minSdkVersion safeExtGet('minSdkVersion', 16)
         targetSdkVersion safeExtGet('targetSdkVersion', 30)
         versionCode 1
@@ -365,28 +298,23 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
     }
-
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
         }
     }
-
     lintOptions {
         abortOnError false
     }
-
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
         excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libjsi.so"]
     }
-
     tasks.withType(JavaCompile) {
         compileTask ->
             compileTask.dependsOn(packageNdkLibs)
     }
-
     configurations {
         extractHeaders
         extractSO
