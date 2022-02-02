@@ -1,4 +1,4 @@
-name: Build npm package
+name: Test build on different react-native versions
 
 on:
   pull_request:
