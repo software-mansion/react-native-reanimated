@@ -168,15 +168,16 @@ abstract class replaceSoTask extends DefaultTask {
     }
 }
 
+def reactNativeManifest = file("$reactNative/package.json")
+def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
+def reactNativeVersion = reactNativeManifestAsJson.version as String
+def (major, minor, patch) = reactNativeVersion.tokenize('.')
+def rnMinorVersion = Integer.parseInt(minor)
+def engine = "jsc"
+
 def aar
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
-    def reactNativeManifest = file("$reactNative/package.json")
-    def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
-    def reactNativeVersion = reactNativeManifestAsJson.version as String
-    def (major, minor, patch) = reactNativeVersion.tokenize('.')
-    def rnMinorVersion = Integer.parseInt(minor)
-    def engine = "jsc"
 
     def replaceSoTaskDebug
     def replaceSoTaskRelease
@@ -396,7 +397,20 @@ task Log {
     print("building Reanimated2")
 }
 
-task createNativeDepsDirectories {
+task applyJavaPatches(type: Copy) {
+    def patchDirectory = file("${projectDir}/rnVersionPatch/${rnMinorVersion}")
+    println "applyJavaPatches executes"
+    println "${patchDirectory}"
+
+    if (CLIENT_SIDE_BUILD && patchDirectory.exists()) {
+        from ("${patchDirectory}") {
+            include "**/*.java"
+        }
+        into ("${projectDir}/src/main/java/com/swmansion/reanimated")
+    }
+}
+
+task createNativeDepsDirectories(dependsOn: applyJavaPatches) {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
 }
