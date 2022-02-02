@@ -83,14 +83,6 @@ If you're using Proguard, make sure to add rule preventing it from optimizing Tu
 
 As reanimated is setup to configure and install automatically, the only thing you have to do is to run `pod install` in the `ios/` directory. Note that the auto-installation setup works for the standard React Naitve apps, if you have problems setting it up with a custom setup (e.g. brownfield) please start a new issue where we can find a way to guide you through that process.
 
-Reanimated 2 is primarily built in C++ using [Turbo Modules](https://github.com/react-native-community/discussions-and-proposals/issues/40) infrastructure which is not yet completely deployed in React Native (specifically on Android).
-Because of that the installation of new Reanimated requires additional steps apart from just adding a dependency to `package.json` .
-
-As a consequence of the above the minimum supported version of React Native is [v0.62](https://github.com/facebook/react-native/releases/tag/v0.62.0).
-Before you continue with the installation, make sure that you are running the supported version of React Native.
-
-Please follow the below instructions for Android and iOS.
-
 ## Sample React-Native project configured with Reanimated
 
 If you have troubles configuring Reanimated in your project, or just want to try the library without the need of setting it up ion a fresh project we recommend checking our [Reanimated Playground](https://github.com/software-mansion-labs/reanimated-2-playground) repo, which is essentially a fresh React-Native app with Reanimated library installed and configured properly.
