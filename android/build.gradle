@@ -185,13 +185,15 @@ if (CLIENT_SIDE_BUILD) {
         tasks.register("replaceSoTaskDebug", replaceSoTask)
         tasks.register("replaceSoTaskRelease", replaceSoTask)
         replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
-        replaceSoTaskRelease = project.getTasks().getByPath("react-native-reanimated:replaceSoTaskRelease")
+        replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
     }
 
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
             if (project.ext.react.enableHermes) {
                 engine = "hermes"
+                project.getProperties().android.packagingOptions.pickFirst("lib/**/*")
+                project.configurations.all*.exclude module: 'fbjni-java-only'
             }
 
             if (project.getProperties().get("android") && rnMinorVersion < 65) {
@@ -235,7 +237,7 @@ if (CLIENT_SIDE_BUILD) {
         if (rnMinorVersionCopy < 63) {
             println "No AAR for react-native-reanimated found. Attempting to build from source."
             BUILD_AAR_FROM_SOURCE = true
-        } else { // aar exists, but was build for lower reac-native version
+        } else { // aar exists, but was build for lower react-native version
             println "\n\n\n"
             println "****************************************************************************************"
             println "\n\n\n"
@@ -605,12 +607,12 @@ repositories {
 dependencies {
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.yoga:proguard-annotations:1.19.0'
-    implementation 'com.facebook.fbjni:fbjni-java-only:0.3.0'
-    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
+//    implementation 'com.facebook.fbjni:fbjni-java-only:0.3.0'
+//    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
     implementation 'com.facebook.react:react-native:+' // From node_modules
     implementation "androidx.transition:transition:1.1.0"
-    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
-    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+//    extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
+//    extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
     def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
     def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
