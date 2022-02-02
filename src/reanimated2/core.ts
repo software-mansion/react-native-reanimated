@@ -352,7 +352,7 @@ export function runOnJS<A extends any[], R>(
   fun: RunOnJSFunction<A, R>
 ): () => void {
   'worklet';
-  if (!_WORKLET) {
+  if (Platform.OS === 'web' || !_WORKLET) {
     return fun;
   }
   if (!fun.__callAsync) {

@@ -27,6 +27,7 @@ declare global {
     animated: boolean
   ) => void;
   const _chronoNow: () => number;
+  const performance: { now: () => number };
   namespace NodeJS {
     interface Global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;

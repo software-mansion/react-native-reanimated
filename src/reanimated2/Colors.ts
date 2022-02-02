@@ -13,7 +13,6 @@ import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
-import { useSharedValue } from './hook/useSharedValue';
 
 interface RGB {
   r: number;
@@ -54,9 +53,8 @@ type Matchers = {
 };
 function getMatchers(): Matchers {
   'worklet';
-  const cachedMatchers: Matchers = _WORKLET
-    ? uiCachedMatchers
-    : jsCachedMatchers;
+  const cachedMatchers: Matchers =
+    Platform.OS !== 'web' && _WORKLET ? uiCachedMatchers : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
@@ -770,19 +768,6 @@ export interface InterpolateConfig {
   outputRange: readonly (string | number)[];
   colorSpace: ColorSpace;
   cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
-}
-
-export function useInterpolateConfig(
-  inputRange: readonly number[],
-  outputRange: readonly (string | number)[],
-  colorSpace = ColorSpace.RGB
-): SharedValue<InterpolateConfig> {
-  return useSharedValue({
-    inputRange,
-    outputRange,
-    colorSpace,
-    cache: makeMutable(null),
-  });
 }
 
 export const interpolateSharableColor = (

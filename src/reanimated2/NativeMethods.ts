@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { Component } from 'react';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle, Platform } from 'react-native';
 import { RefObjectFunction } from './hook/useAnimatedRef';
 import { isChromeDebugger } from './PlatformChecker';
 
@@ -25,7 +25,7 @@ export function measure(
   animatedRef: RefObjectFunction<Component>
 ): MeasuredDimensions {
   'worklet';
-  if (!_WORKLET || isChromeDebugger()) {
+  if (Platform.OS === 'web' || !_WORKLET || isChromeDebugger()) {
     console.warn('[reanimated.measure] method cannot be used on RN side!');
     return {
       x: NaN,
@@ -51,7 +51,7 @@ export function scrollTo(
   animated: boolean
 ): void {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
+  if ((Platform.OS === 'web' || !_WORKLET) && !isChromeDebugger()) {
     return;
   }
   const viewTag = animatedRef();
@@ -60,7 +60,7 @@ export function scrollTo(
 
 export function setGestureState(handlerTag: number, newState: number): void {
   'worklet';
-  if (!_WORKLET && !isChromeDebugger()) {
+  if ((Platform.OS === 'web' || !_WORKLET) && !isChromeDebugger()) {
     console.warn(
       '[Reanimated] You can not use setGestureState in non-worklet function.'
     );

@@ -17,8 +17,10 @@ export default class JSReanimated extends NativeReanimated {
     super(false);
     if (process.env.JEST_WORKER_ID) {
       this.timeProvider = { now: () => Date.now() };
+    } else if (global.performance) {
+      this.timeProvider = { now: () => global.performance.now() };
     } else {
-      this.timeProvider = { now: () => window.performance.now() };
+      this.timeProvider = { now: () => Date.now() };
     }
   }
 
