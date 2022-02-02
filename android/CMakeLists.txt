@@ -143,6 +143,7 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+
 find_package(fbjni REQUIRED CONFIG)
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)

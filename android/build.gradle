@@ -208,7 +208,7 @@ def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_V
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
 def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_VERSION = reactProperties.getProperty("VERSION_NAME").split("\\.")[1].toInteger()
-def FBJNI_VERSION = '0.2.2'
+def FBJNI_VERSION = "0.2.2"
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -222,8 +222,8 @@ def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/thi
 def _stackProtectorFlag = true
 def FOR_HERMES = ""
 
-if (findProject(':app')) {
-    FOR_HERMES = project(':app').ext.react.enableHermes;
+if (findProject(":app")) {
+    FOR_HERMES = project(":app").ext.react.enableHermes;
 } else {
     FOR_HERMES = System.getenv("FOR_HERMES") == "True";
 }
@@ -257,28 +257,28 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.android.tools.build:gradle:4.2.2')
-        classpath("de.undercouch:gradle-download-task:4.1.2")
+        classpath "com.android.tools.build:gradle:4.2.2"
+        classpath "de.undercouch:gradle-download-task:4.1.2"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:5.15.0"
     }
 }
 
 if (project == rootProject) {
-    apply from: 'spotless.gradle'
+    apply from: "spotless.gradle"
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
-apply plugin: 'de.undercouch.download'
+apply plugin: "com.android.library"
+apply plugin: "maven-publish"
+apply plugin: "de.undercouch.download"
 
 android {
     buildFeatures {
         prefab true
     }
-    compileSdkVersion safeExtGet('compileSdkVersion', 30)
+    compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 30)
+        minSdkVersion safeExtGet("minSdkVersion", 16)
+        targetSdkVersion safeExtGet("targetSdkVersion", 30)
         versionCode 1
         versionName "1.0"
         externalNativeBuild {
@@ -290,7 +290,7 @@ android {
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}",
                              "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}"
-                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+                abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
@@ -391,7 +391,7 @@ task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy
     eachFile { fname -> fname.path = (fname.path - "folly-${FOLLY_VERSION}/") }
     // Fixes problem with Folly failing to build on certain systems. See
     // https://github.com/software-mansion/react-native-reanimated/issues/1024
-    filter { line -> line.replaceAll('return int\\(wrapNoInt\\(open, name, flags, mode\\)\\);', follyReplaceContent) }
+    filter { line -> line.replaceAll("return int\\(wrapNoInt\\(open, name, flags, mode\\)\\);", follyReplaceContent) }
     includeEmptyDirs = false
     into("$thirdPartyNdkDir/folly")
 }
@@ -406,7 +406,7 @@ task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
 // Prepare glog sources to be compiled, this task will perform steps that normally should've been
 // executed by automake. This way we can avoid dependencies on make/automake
 task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
-    duplicatesStrategy = 'include'
+    duplicatesStrategy = "include"
     from(dependenciesPath ?: tarTree(downloadGlog.dest))
     from("$reactNativeThirdParty/glog/")
     include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
@@ -545,11 +545,11 @@ repositories {
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-    implementation 'com.facebook.yoga:proguard-annotations:1.19.0'
-//    implementation 'com.facebook.fbjni:fbjni-java-only:0.3.0'
-//    implementation 'com.facebook.fbjni:fbjni:' + FBJNI_VERSION
-    implementation 'com.facebook.react:react-native:+' // From node_modules
+    // noinspection GradleDynamicVersion
+    implementation "com.facebook.yoga:proguard-annotations:1.19.0"
+//    implementation "com.facebook.fbjni:fbjni-java-only:0.3.0"
+//    implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+    implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
@@ -572,7 +572,7 @@ task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepar
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name.contains('externalNativeBuild')) {
+    if (task.name.contains("externalNativeBuild")) {
         task.dependsOn(prepareThirdPartyNdkHeaders)
         extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
         extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
