@@ -13,7 +13,6 @@ import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
-import { useSharedValue } from './hook/useSharedValue';
 
 interface RGB {
   r: number;
@@ -769,19 +768,6 @@ export interface InterpolateConfig {
   outputRange: readonly (string | number)[];
   colorSpace: ColorSpace;
   cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
-}
-
-export function useInterpolateConfig(
-  inputRange: readonly number[],
-  outputRange: readonly (string | number)[],
-  colorSpace = ColorSpace.RGB
-): SharedValue<InterpolateConfig> {
-  return useSharedValue(({
-    inputRange,
-    outputRange,
-    colorSpace,
-    cache: makeMutable(null),
-  } as unknown) as InterpolateConfig);
 }
 
 export const interpolateSharableColor = (
