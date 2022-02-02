@@ -29,7 +29,7 @@ jobs:
         run: >-
           ./createNPMPackage.sh
 
-      - run: export PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")
+      - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
       
       - name: Upload npm package
         uses: actions/upload-artifact@v2
