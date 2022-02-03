@@ -30,6 +30,6 @@ jobs:
       - name: Lint
         run: yarn lint:js
       - name: Finding circular dependencies
-        run: yarn circural_dependency_check
+        run: yarn circular_dependency_check
       - name: Jest test:unit
         run: yarn test:unit
