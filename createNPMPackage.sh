@@ -6,15 +6,10 @@ ROOT=$(pwd)
 
 unset CI
 
-<<<<<<< HEAD
-versions=("0.67.2" "0.66.3" "0.65.1" "0.64.3" "0.63.3")
+versions=("0.67.0-rc.4" "0.66.3" "0.65.1" "0.64.3" "0.63.3")
 version_name=("67" "66" "65" "64" "63")
-=======
-versions=("0.67.0-rc.4")
-version_name=("67")
->>>>>>> 9734ce98f (Temporary create package only for RN 0.67 [tests])
 
-for index in {0..0}
+for index in {0..4}
 do
   yarn add react-native@"${versions[$index]}"
   for for_hermes in "True" "False"
