@@ -4,15 +4,9 @@ import {
   Timestamp,
   NextAnimation,
   AnimatableValue,
-  HigherOrderAnimation,
   AnimationObject,
+  SequenceAnimation,
 } from './commonTypes';
-
-export interface SequenceAnimation
-  extends Animation<SequenceAnimation>,
-    HigherOrderAnimation {
-  animationIndex: number;
-}
 
 export function withSequence(
   ..._animations: NextAnimation<AnimationObject>[]

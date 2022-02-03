@@ -3,18 +3,9 @@ import {
   Animation,
   NextAnimation,
   Timestamp,
-  HigherOrderAnimation,
   AnimatableValue,
+  DelayAnimation,
 } from './commonTypes';
-
-export interface DelayAnimation
-  extends Animation<DelayAnimation>,
-    HigherOrderAnimation {
-  startTime: Timestamp;
-  started: boolean;
-  previousAnimation: DelayAnimation | null;
-  current: AnimatableValue;
-}
 
 export function withDelay(
   delayMs: number,

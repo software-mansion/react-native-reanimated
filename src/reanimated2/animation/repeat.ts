@@ -5,17 +5,8 @@ import {
   NextAnimation,
   AnimatableValue,
   Timestamp,
-  HigherOrderAnimation,
+  RepeatAnimation,
 } from './commonTypes';
-
-export interface RepeatAnimation
-  extends Animation<RepeatAnimation>,
-    HigherOrderAnimation {
-  reps: number;
-  startValue: AnimatableValue;
-  toValue?: AnimatableValue;
-  previousAnimation?: RepeatAnimation;
-}
 
 export interface InnerRepeatAnimation
   extends Omit<RepeatAnimation, 'toValue' | 'startValue'> {

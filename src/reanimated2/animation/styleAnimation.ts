@@ -1,8 +1,7 @@
 import { defineAnimation } from './util';
 import {
   Timestamp,
-  HigherOrderAnimation,
-  AnimationCallback,
+  StyleLayoutAnimation,
   AnimatableValue,
   AnimationObject,
   Animation,
@@ -11,24 +10,10 @@ import {
   AnimatedStyle,
   NestedObject,
   NestedObjectValues,
-  StyleProps,
 } from '../commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties } from '../UpdateProps';
 import { processColor } from '../Colors';
-
-export interface StyleLayoutAnimation extends HigherOrderAnimation {
-  current: StyleProps;
-  styleAnimations: AnimatedStyle;
-  onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
-  onStart: (
-    nextAnimation: StyleLayoutAnimation,
-    current: AnimatedStyle,
-    timestamp: Timestamp,
-    previousAnimation: StyleLayoutAnimation
-  ) => void;
-  callback?: AnimationCallback;
-}
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined

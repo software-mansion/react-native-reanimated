@@ -1,6 +1,6 @@
 import MapperRegistry from './MapperRegistry';
-import MutableValue from './MutableValue';
 import Mapper from './Mapper';
+import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp } from '../animation/commonTypes';
 import { NestedObjectValues } from '../commonTypes';
