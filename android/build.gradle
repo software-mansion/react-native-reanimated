@@ -272,9 +272,6 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    buildFeatures {
-        prefab true
-    }
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
@@ -321,8 +318,13 @@ android {
     }
 }
 
+task printVersions {
+    println "Android gradle plugin: ${com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+    println "Gradle: ${project.gradle.gradleVersion}"
+}
+
 task Log {
-    print("building Reanimated2")
+    println("building Reanimated2")
 }
 
 task applyJavaPatches(type: Copy) {
@@ -331,9 +333,8 @@ task applyJavaPatches(type: Copy) {
     println "${patchDirectory}"
 
     if (CLIENT_SIDE_BUILD && patchDirectory.exists()) {
-        from ("${patchDirectory}") {
-            include "**/*.java"
-        }
+        from ("${patchDirectory}")
+        include "**/*.java"
         into ("${projectDir}/src/main/java/com/swmansion/reanimated")
     }
 }
@@ -519,7 +520,6 @@ task extractSOFiles {
         }
     }
 }
-
 
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
