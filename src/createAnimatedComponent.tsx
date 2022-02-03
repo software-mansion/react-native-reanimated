@@ -43,6 +43,8 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
+import MutableValue from './reanimated2/js-reanimated/MutableValue';
+import { _updatePropsJS, makeH5StyleProps } from './reanimated2/js-reanimated';
 
 const NODE_MAPPING = new Map();
 
@@ -194,10 +196,17 @@ export default function createAnimatedComponent(
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
-    sv: SharedValue<null | Record<string, unknown>> | null;
+    sv:
+      | SharedValue<null | Record<string, unknown>>
+      | MutableValue<StyleProps>
+      | null;
+
     _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
     static displayName: string;
+    state = {
+      style: {} as StyleProps,
+    };
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -206,6 +215,13 @@ export default function createAnimatedComponent(
         this.animatedStyle = { value: {} };
       }
       this.sv = makeMutable({});
+
+      if (Platform.OS === 'web') {
+        const sv = this.sv as MutableValue<StyleProps>;
+        sv.addListener(() => {
+          _updatePropsJS(sv.value, this as any);
+        });
+      }
     }
 
     componentWillUnmount() {
@@ -214,6 +230,22 @@ export default function createAnimatedComponent(
       this._detachNativeEvents();
       this._detachStyles();
       this.sv = null;
+
+      // TODO: adding exit animation
+      // if (Platform.OS === 'web') {
+      //   const componentRect = ((this
+      //     ._component as unknown) as HTMLElement).getBoundingClientRect();
+      //   global.LayoutAnimationRepository.startAnimationForWeb(this, 'exiting', {
+      //     windowHeight: window.innerHeight,
+      //     windowWidth: window.innerWidth,
+      //     currentGlobalOriginX: componentRect.left,
+      //     currentGlobalOriginY: componentRect.top,
+      //     currentHeight: componentRect.height,
+      //     currentOriginX: componentRect.left,
+      //     currentOriginY: componentRect.top,
+      //     currentWidth: componentRect.width,
+      //   });
+      // }
     }
 
     componentDidMount() {
@@ -228,6 +260,26 @@ export default function createAnimatedComponent(
       this._attachNativeEvents();
       this._attachPropUpdater();
       this._attachAnimatedStyles();
+
+      // TODO: adding enter animation
+      // if (Platform.OS === 'web') {
+      //   const componentRect = ((this
+      //     ._component as unknown) as HTMLElement).getBoundingClientRect();
+      //   global.LayoutAnimationRepository.startAnimationForWeb(
+      //     this,
+      //     'entering',
+      //     {
+      //       windowHeight: window.innerHeight,
+      //       windowWidth: window.innerWidth,
+      //       targetGlobalOriginX: componentRect.left,
+      //       targetGlobalOriginY: componentRect.top,
+      //       targetHeight: componentRect.height,
+      //       targetOriginX: componentRect.left,
+      //       targetOriginY: componentRect.top,
+      //       targetWidth: componentRect.width,
+      //     }
+      //   );
+      // }
     }
 
     _getEventViewRef() {
@@ -522,6 +574,40 @@ export default function createAnimatedComponent(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this._propsAnimated.setNativeView(this._component!);
       this._attachAnimatedStyles();
+
+      // TODO: adding layout animation
+      // if (Platform.OS === 'web') {
+      //   const componentRect = ((this
+      //     ._component as unknown) as HTMLElement).getBoundingClientRect();
+      //   const isRectEqual =
+      //     prevComponentRect.top === componentRect.top &&
+      //     prevComponentRect.left === componentRect.left &&
+      //     prevComponentRect.width === componentRect.width &&
+      //     prevComponentRect.height === componentRect.height;
+      //
+      //   if (!isRectEqual) {
+      //     global.LayoutAnimationRepository.startAnimationForWeb(
+      //       this,
+      //       'layout',
+      //       {
+      //         windowHeight: window.innerHeight,
+      //         windowWidth: window.innerWidth,
+      //         currentGlobalOriginX: prevComponentRect.left,
+      //         currentGlobalOriginY: prevComponentRect.top,
+      //         currentHeight: prevComponentRect.height,
+      //         currentOriginX: prevComponentRect.left,
+      //         currentOriginY: prevComponentRect.top,
+      //         currentWidth: prevComponentRect.width,
+      //         targetGlobalOriginX: componentRect.left,
+      //         targetGlobalOriginY: componentRect.top,
+      //         targetHeight: componentRect.height,
+      //         targetOriginX: componentRect.left,
+      //         targetOriginY: componentRect.top,
+      //         targetWidth: componentRect.width,
+      //       }
+      //     );
+      //   }
+      // }
     }
 
     _setComponentRef = setAndForwardRef<Component>({
@@ -565,10 +651,15 @@ export default function createAnimatedComponent(
             exiting,
             sv: this.sv,
           };
-          runOnUI(() => {
-            'worklet';
-            global.LayoutAnimationRepository.registerConfig(tag, config);
-          })();
+
+          if (Platform.OS === 'web') {
+            global.LayoutAnimationRepository.registerWebConfig(this, config);
+          } else {
+            runOnUI(() => {
+              'worklet';
+              global.LayoutAnimationRepository.registerConfig(tag, config);
+            })();
+          }
         }
 
         if (ref !== this._component) {
@@ -606,9 +697,15 @@ export default function createAnimatedComponent(
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
               if (this._isFirstRender) {
+                let initialResult = initialUpdaterRun<StyleProps>(
+                  style.initial.updater
+                );
+                if (Platform.OS === 'web') {
+                  initialResult = makeH5StyleProps(initialResult);
+                }
                 return {
                   ...style.initial.value,
-                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
+                  ...initialResult,
                 };
               } else {
                 return style.initial.value;
@@ -670,16 +767,18 @@ export default function createAnimatedComponent(
         props.animatedStyle = this.animatedStyle;
       }
 
-      if (this._isFirstRender) {
-        this._isFirstRender = false;
-      }
-
       const platformProps = Platform.select({
         web: {},
         default: { collapsable: false },
       });
+
       return (
-        <Component {...props} ref={this._setComponentRef} {...platformProps} />
+        <Component
+          {...props}
+          style={{ ...(props as any).style, ...this.state.style }}
+          ref={this._setComponentRef}
+          {...platformProps}
+        />
       );
     }
   }

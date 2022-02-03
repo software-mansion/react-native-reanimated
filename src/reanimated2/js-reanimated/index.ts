@@ -57,9 +57,45 @@ if (shouldBeUseWeb()) {
   };
 }
 
+export const makeH5StyleProps = (
+  updates: StyleProps | AnimatedStyle
+): StyleProps => {
+  const [rawStyles] = Object.keys(updates).reduce(
+    (acc: [StyleProps, AnimatedStyle], key) => {
+      const value = updates[key];
+      const index = typeof value === 'function' ? 1 : 0;
+      acc[index][key] = value;
+      return acc;
+    },
+    [{}, {}]
+  );
+
+  const transformList: string[] = [];
+  const styles: Record<string, any> = {};
+  Object.keys(rawStyles).forEach((key) => {
+    if (key === 'transform') {
+      rawStyles.transform!.forEach((item) => {
+        Object.keys(item).forEach((transformKey) => {
+          transformList.push(
+            `${transformKey}(${
+              ((item as unknown) as Record<string, string>)[transformKey]
+            })`
+          );
+        });
+      });
+      styles.transform = transformList.join(' ');
+    } else {
+      const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+      styles[dashedKey] = rawStyles[key];
+    }
+  });
+
+  return styles;
+};
+
 export const _updatePropsJS = (
   updates: StyleProps | AnimatedStyle,
-  viewRef: { _component?: JSReanimatedComponent }
+  viewRef: any
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
@@ -102,6 +138,7 @@ export const _updatePropsJS = (
     ) {
       // Taro H5 / Weapp compliant
       const transformList: string[] = [];
+      const styles: Record<string, any> = {};
       Object.keys(rawStyles).forEach((key) => {
         if (key === 'transform') {
           rawStyles.transform!.forEach((item) => {
@@ -113,12 +150,14 @@ export const _updatePropsJS = (
               );
             });
           });
-          component.style!.setProperty('transform', transformList.join(' '));
+          styles.transform = transformList.join(' ');
         } else {
           const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-          component.style!.setProperty(dashedKey, rawStyles[key]);
+          styles[dashedKey] = rawStyles[key];
         }
       });
+      const previousStyle = viewRef.state.style;
+      viewRef.setState({ style: { ...previousStyle, ...styles } });
     } else {
       console.warn('It is not possible to manipulate component');
     }

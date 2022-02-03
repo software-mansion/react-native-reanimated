@@ -2,6 +2,7 @@ import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
 import { ReanimatedConsole } from './core';
 import { MeasuredDimensions } from './NativeMethods';
 import { NativeReanimated } from './NativeReanimated/NativeReanimated';
+import { Component } from 'react';
 declare global {
   const _WORKLET: boolean;
   const _frameTimestamp: number;
@@ -43,8 +44,18 @@ declare global {
       performance: { now: () => number };
       LayoutAnimationRepository: {
         configs: Record<string, unknown>;
+        refList: (Component | null)[];
         registerConfig(tag: number, config: Record<string, unknown>): void;
+        registerWebConfig(
+          ref: Component,
+          config: Record<string, unknown>
+        ): void;
         removeConfig(tag: number): void;
+        startAnimationForWeb(
+          ref: Component,
+          type: string,
+          yogaValues: unknown
+        ): void;
         startAnimationForTag(
           tag: number,
           type: string,
