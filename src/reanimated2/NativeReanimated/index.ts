@@ -1,10 +1,10 @@
 import reanimatedJS from '../js-reanimated';
-import { nativeShouldBeMock } from '../PlatformChecker';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import { Platform } from 'react-native';
 import { NativeReanimated } from './NativeReanimated';
 
 let exportedModule;
-if (nativeShouldBeMock()) {
+if (shouldBeUseWeb()) {
   exportedModule = reanimatedJS;
 } else {
   exportedModule = new NativeReanimated();
