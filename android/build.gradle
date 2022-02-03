@@ -329,12 +329,10 @@ task Log {
 
 task applyJavaPatches(type: Copy) {
     def patchDirectory = file("${projectDir}/rnVersionPatch/${rnMinorVersion}")
-    println "applyJavaPatches executes"
-    println "${patchDirectory}"
-
     if (CLIENT_SIDE_BUILD && patchDirectory.exists()) {
-        from ("${patchDirectory}")
-        include "**/*.java"
+        from ("${patchDirectory}") {
+            include "**/*.java"
+        }
         into ("${projectDir}/src/main/java/com/swmansion/reanimated")
     }
 }
