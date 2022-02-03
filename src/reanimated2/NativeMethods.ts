@@ -4,7 +4,7 @@
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { RefObjectFunction } from './hook/useAnimatedRef';
-import { isChromeDebugger, isWeb } from './PlatformChecker'
+import { isChromeDebugger, isWeb } from './PlatformChecker';
 
 export function getTag(
   view: null | number | React.Component<any, any> | React.ComponentClass<any>

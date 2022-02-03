@@ -7,7 +7,7 @@
 // @ts-ignore reanimated1/Easing is JS file
 import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
-import { isWeb } from './PlatformChecker'
+import { isWeb } from './PlatformChecker';
 
 /**
  * The `Easing` module implements common easing functions. This module is used

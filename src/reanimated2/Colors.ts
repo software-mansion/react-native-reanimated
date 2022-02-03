@@ -13,7 +13,7 @@ import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
-import { isWeb } from './PlatformChecker'
+import { isWeb } from './PlatformChecker';
 
 interface RGB {
   r: number;

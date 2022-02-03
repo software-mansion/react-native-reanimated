@@ -6,7 +6,7 @@ import {
   AnimatableValue,
   Timestamp,
 } from './commonTypes';
-import { isWeb } from '../PlatformChecker'
+import { isWeb } from '../PlatformChecker';
 
 interface DecayConfig {
   deceleration?: number;

@@ -15,7 +15,7 @@ import NativeReanimatedModule from '../NativeReanimated';
 import { RepeatAnimation } from './repeat';
 import { SequenceAnimation } from './sequence';
 import { StyleLayoutAnimation } from './styleAnimation';
-import { isWeb } from '../PlatformChecker'
+import { isWeb } from '../PlatformChecker';
 
 let IN_STYLE_UPDATER = false;
 
@@ -273,10 +273,7 @@ export function withStartValue(
   'worklet';
   return defineAnimation(startValue, () => {
     'worklet';
-    if (
-      (isWeb() || !_WORKLET) &&
-      typeof animation === 'function'
-    ) {
+    if ((isWeb() || !_WORKLET) && typeof animation === 'function') {
       animation = animation();
     }
     (animation as Animation<AnimationObject>).current = startValue;
