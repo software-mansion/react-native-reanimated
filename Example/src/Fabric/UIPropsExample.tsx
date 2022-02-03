@@ -9,6 +9,7 @@ import React from 'react';
 
 export default function UIPropsExample() {
   const [count, setCount] = React.useState(0);
+  const state = React.useRef(0);
 
   const sv = useSharedValue(0);
 
@@ -25,7 +26,8 @@ export default function UIPropsExample() {
   });
 
   const handleToggle = () => {
-    sv.value = withTiming(1 - sv.value, { duration: 2000 });
+    state.current = 1 - state.current;
+    sv.value = withTiming(state.current, { duration: 2000 });
   };
 
   const handleIncrement = () => {
