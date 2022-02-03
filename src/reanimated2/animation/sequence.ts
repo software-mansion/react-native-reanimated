@@ -1,12 +1,11 @@
 import { defineAnimation } from './util';
+import { NextAnimation, SequenceAnimation } from './commonTypes';
 import {
   Animation,
-  Timestamp,
-  NextAnimation,
   AnimatableValue,
   AnimationObject,
-  SequenceAnimation,
-} from './commonTypes';
+  Timestamp,
+} from '../commonTypes';
 
 export function withSequence(
   ..._animations: NextAnimation<AnimationObject>[]

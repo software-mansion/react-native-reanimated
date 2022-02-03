@@ -2,7 +2,7 @@ import { Timestamp, NestedObjectValues } from '../commonTypes';
 import MutableValue from './MutableValue';
 
 export interface Mapper<T> {
-  MAPPER_ID: number;
+  MAPPER_ID?: number;
   id: number;
   inputs: MutableValue<T>[];
   outputs: MutableValue<T>[];
@@ -23,7 +23,6 @@ export interface MapperRegistry<T> {
   stopMapper(id: number): void;
   execute(): void;
   updateOrder(): void;
-  needRunOnRender(): boolean;
 }
 
 export interface JSReanimated {

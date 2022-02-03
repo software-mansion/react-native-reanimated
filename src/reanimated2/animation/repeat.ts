@@ -2,11 +2,10 @@ import { defineAnimation } from './util';
 import {
   Animation,
   AnimationCallback,
-  NextAnimation,
   AnimatableValue,
   Timestamp,
-  RepeatAnimation,
-} from './commonTypes';
+} from '../commonTypes';
+import { NextAnimation, RepeatAnimation } from './commonTypes';
 
 export interface InnerRepeatAnimation
   extends Omit<RepeatAnimation, 'toValue' | 'startValue'> {
