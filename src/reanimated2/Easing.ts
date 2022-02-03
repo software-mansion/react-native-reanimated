@@ -7,7 +7,7 @@
 // @ts-ignore reanimated1/Easing is JS file
 import EasingNode from '../reanimated1/Easing';
 import { Bezier } from './Bezier';
-import { Platform } from 'react-native';
+import { isWeb } from './PlatformChecker'
 
 /**
  * The `Easing` module implements common easing functions. This module is used
@@ -295,7 +295,7 @@ function createChecker(
   /* should return Animated.Value or worklet */
   function checkIfReaOne(): any {
     'worklet';
-    if (arguments && (Platform.OS === 'web' || !_WORKLET)) {
+    if (arguments && (isWeb() || !_WORKLET)) {
       for (let i = 0; i < arguments.length; i++) {
         const arg = arguments[i];
         if (arg && arg.__nodeID) {
@@ -314,7 +314,7 @@ function createChecker(
     // @ts-ignore this is implicitly any - TODO
     const res = worklet.apply(this, arguments);
     if (
-      (Platform.OS === 'web' || !_WORKLET) &&
+      (isWeb() || !_WORKLET) &&
       res &&
       typeof res === 'function' &&
       res.__worklet

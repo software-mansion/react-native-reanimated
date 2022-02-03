@@ -6,7 +6,7 @@ import {
   AnimatableValue,
   Timestamp,
 } from './commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker'
 
 interface DecayConfig {
   deceleration?: number;
@@ -46,7 +46,7 @@ export function withDecay(
     'worklet';
     const config: DefaultDecayConfig = {
       deceleration: 0.998,
-      velocityFactor: Platform.OS !== 'web' ? 1 : 1000,
+      velocityFactor: !isWeb() ? 1 : 1000,
       velocity: 0,
     };
     if (userConfig) {
@@ -56,7 +56,7 @@ export function withDecay(
       );
     }
 
-    const VELOCITY_EPS = Platform.OS !== 'web' ? 1 : 1 / 20;
+    const VELOCITY_EPS = !isWeb() ? 1 : 1 / 20;
     const SLOPE_FACTOR = 0.1;
 
     function decay(animation: InnerDecayAnimation, now: number): boolean {

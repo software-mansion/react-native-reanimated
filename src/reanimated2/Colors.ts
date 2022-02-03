@@ -13,6 +13,7 @@ import { interpolate } from './interpolation';
 // @ts-ignore JS file
 import { Extrapolate } from '../reanimated1/derived';
 import { SharedValue } from './commonTypes';
+import { isWeb } from './PlatformChecker'
 
 interface RGB {
   r: number;
@@ -54,7 +55,7 @@ type Matchers = {
 function getMatchers(): Matchers {
   'worklet';
   const cachedMatchers: Matchers =
-    Platform.OS !== 'web' && _WORKLET ? uiCachedMatchers : jsCachedMatchers;
+    !isWeb() && _WORKLET ? uiCachedMatchers : jsCachedMatchers;
   if (cachedMatchers.rgb === undefined) {
     cachedMatchers.rgb = new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER));
     cachedMatchers.rgba = new RegExp(
@@ -452,7 +453,7 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
+  if (isWeb() || !_WORKLET) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 

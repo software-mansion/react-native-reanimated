@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { makeMutable } from './core';
 import { SharedValue } from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
-import { Platform } from 'react-native';
+import { isWeb } from './PlatformChecker'
 
 export interface ViewRefSet<T> {
   items: Set<T>;
@@ -25,7 +25,7 @@ export interface ViewDescriptorsSet {
 }
 
 const scheduleUpdates =
-  Platform.OS === 'web' ? requestAnimationFrame : setImmediate;
+  isWeb() ? requestAnimationFrame : setImmediate;
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const ref = useRef<ViewDescriptorsSet | null>(null);

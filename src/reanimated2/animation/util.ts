@@ -15,7 +15,7 @@ import NativeReanimatedModule from '../NativeReanimated';
 import { RepeatAnimation } from './repeat';
 import { SequenceAnimation } from './sequence';
 import { StyleLayoutAnimation } from './styleAnimation';
-import { Platform } from 'react-native';
+import { isWeb } from '../PlatformChecker'
 
 let IN_STYLE_UPDATER = false;
 
@@ -252,7 +252,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if ((Platform.OS !== 'web' && _WORKLET) || !NativeReanimatedModule.native) {
+  if ((!isWeb() && _WORKLET) || !NativeReanimatedModule.native) {
     return create();
   }
   // @ts-ignore: eslint-disable-line
@@ -274,7 +274,7 @@ export function withStartValue(
   return defineAnimation(startValue, () => {
     'worklet';
     if (
-      (Platform.OS === 'web' || !_WORKLET) &&
+      (isWeb() || !_WORKLET) &&
       typeof animation === 'function'
     ) {
       animation = animation();

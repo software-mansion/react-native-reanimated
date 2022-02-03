@@ -1,6 +1,5 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
-import { Platform } from 'react-native';
 import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
@@ -183,7 +182,7 @@ if (nativeShouldBeMock()) {
 
 export function getTimestamp(): number {
   'worklet';
-  if (Platform.OS === 'web') {
+  if (isWeb()) {
     return (NativeReanimatedModule as JSReanimated).getTimestamp();
   }
   return _getTimestamp();
@@ -352,7 +351,7 @@ export function runOnJS<A extends any[], R>(
   fun: RunOnJSFunction<A, R>
 ): () => void {
   'worklet';
-  if (Platform.OS === 'web' || !_WORKLET) {
+  if (isWeb() || !_WORKLET) {
     return fun;
   }
   if (!fun.__callAsync) {
