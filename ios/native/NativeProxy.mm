@@ -42,9 +42,15 @@ static CGFloat SimAnimationDragCoefficient(void)
 
 static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
 {
+#if TARGET_IPHONE_SIMULATOR
   static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
+  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
 
   const CGFloat dragCoef = SimAnimationDragCoefficient();
+  if (previousDragCoef != dragCoef) {
+    previousDragCoef = dragCoef;
+    dragCoefChangedTimestamp = CACurrentMediaTime();
+  }
 
   const bool areSlowAnimationsEnabled = dragCoef != 1.f;
   if (areSlowAnimationsEnabled) {
@@ -52,6 +58,9 @@ static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval curren
   } else {
     return currentTimestamp;
   }
+#else
+  return currentTimestamp;
+#endif
 }
 
 // COPIED FROM RCTTurboModule.mm
