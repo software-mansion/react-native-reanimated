@@ -19,7 +19,7 @@ Check out our dedicated documentation page for info about this library, API refe
 
 ## Examples
 
-The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/master/Example/) directory.
+The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/) directory.
 If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check Example/ directory README for installation instructions.
 
 ## License

@@ -73,9 +73,9 @@ function createMockComponent(name) {
 
 function createTransitioningComponent(Component) {
   return class extends React.Component {
-    static displayName = `Transitioning.${Component.displayName ||
-      Component.name ||
-      'Component'}`;
+    static displayName = `Transitioning.${
+      Component.displayName || Component.name || 'Component'
+    }`;
 
     setNativeProps() {
       // noop
@@ -209,6 +209,7 @@ const Reanimated = {
   },
   diff: NOOP,
   diffClamp: NOOP,
+  interpolate: NOOP,
   interpolateNode: NOOP,
   interpolateColors: NOOP,
   max: (a, b) => Math.max(getValue(a), getValue(b)),

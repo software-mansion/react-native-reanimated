@@ -137,7 +137,7 @@ function ListItem({ item, index, onPress }: ListItemProps) {
 
 const timingConfig = {
   duration: 240,
-  easing: Easing.bezier(0.33, 0.01, 0, 1),
+  easing: Easing.bezierFn(0.33, 0.01, 0, 1),
 };
 
 function ImageTransition({

@@ -1,16 +1,14 @@
-import { Image, ScrollView, Text, View, LogBox } from 'react-native';
+import { LogBox } from 'react-native';
 import createAnimatedComponent from './createAnimatedComponent';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
 } from './ConfigHelper';
+import ReanimatedComponents from './reanimated2/component';
 
 const Animated = {
   // components
-  View: createAnimatedComponent(View),
-  Text: createAnimatedComponent(Text),
-  Image: createAnimatedComponent(Image),
-  ScrollView: createAnimatedComponent(ScrollView),
+  ...ReanimatedComponents,
   createAnimatedComponent,
   // configuration
   addWhitelistedNativeProps,

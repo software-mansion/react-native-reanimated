@@ -2,6 +2,7 @@
 #import <React/RCTUIManager.h>
 // #import <folly/json.h>
 
+#import <RNGestureHandlerStateManager.h>
 #import "LayoutAnimationsProxy.h"
 #import "NativeMethods.h"
 #import "NativeProxy.h"
@@ -11,7 +12,6 @@
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "REAUIManager.h"
-#import "RNGestureHandlerStateManager.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
@@ -329,6 +329,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
     std::string eventName = [eventNameNSString UTF8String];
     jsi::Value payload = convertNSDictionaryToJSIObject(rt, [event arguments][2]);
+    // TODO: check if NaN and INF values are converted properly
 
     jsi::Object global = rt.global();
     jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");

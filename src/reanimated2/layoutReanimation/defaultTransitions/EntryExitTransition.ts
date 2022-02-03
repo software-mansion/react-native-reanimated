@@ -174,28 +174,28 @@ export class EntryExitTransition
       return {
         initialValues: {
           ...exitingValues.initialValues,
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
           transform: mergedTransform,
         },
         animations: {
           originX: delayFunction(
             delay + exitingDuration,
-            withTiming(values.originX, { duration: exitingDuration })
+            withTiming(values.targetOriginX, { duration: exitingDuration })
           ),
           originY: delayFunction(
             delay + exitingDuration,
-            withTiming(values.originY, { duration: exitingDuration })
+            withTiming(values.targetOriginY, { duration: exitingDuration })
           ),
           width: delayFunction(
             delay + exitingDuration,
-            withTiming(values.width, { duration: exitingDuration })
+            withTiming(values.targetWidth, { duration: exitingDuration })
           ),
           height: delayFunction(
             delay + exitingDuration,
-            withTiming(values.height, { duration: exitingDuration })
+            withTiming(values.targetHeight, { duration: exitingDuration })
           ),
           ...animations,
         },

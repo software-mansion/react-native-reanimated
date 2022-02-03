@@ -1,10 +1,13 @@
 package com.swmansion.reanimated.layoutReanimation;
 
+import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.RootViewManager;
 import com.facebook.react.uimanager.ViewAtIndex;
@@ -20,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 class ReaLayoutAnimator extends LayoutAnimationController {
   private AnimationsManager mAnimationsManager = null;
@@ -45,6 +49,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   }
 
   public boolean shouldAnimateLayout(View viewToAnimate) {
+    if (!isLayoutAnimationEnabled()) {
+      return super.shouldAnimateLayout(viewToAnimate);
+    }
     // if view parent is null, skip animation: view have been clipped, we don't want animation to
     // resume when view is re-attached to parent, which is the standard android animation behavior.
     // If there's a layout handling animation going on, it should be animated nonetheless since the
@@ -67,6 +74,10 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    * @param height the new height value for the view
    */
   public void applyLayoutUpdate(View view, int x, int y, int width, int height) {
+    if (!isLayoutAnimationEnabled()) {
+      super.applyLayoutUpdate(view, x, y, width, height);
+      return;
+    }
     UiThreadUtil.assertOnUiThread();
     maybeInit();
     // Determine which animation to use : if view is initially invisible, use create animation,
@@ -74,10 +85,12 @@ class ReaLayoutAnimator extends LayoutAnimationController {
     // for recently created views.
     if (view.getWidth() == 0 || view.getHeight() == 0) {
       view.layout(x, y, x + width, y + height);
-      mAnimationsManager.onViewCreate(
-          view,
-          (ViewGroup) view.getParent(),
-          new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
+      if (view.getId() != -1) {
+        mAnimationsManager.onViewCreate(
+            view,
+            (ViewGroup) view.getParent(),
+            new Snapshot(view, mWeakNativeViewHierarchyManage.get()));
+      }
     } else {
       Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
       view.layout(x, y, x + width, y + height);
@@ -95,15 +108,50 @@ class ReaLayoutAnimator extends LayoutAnimationController {
    *     view.
    */
   public void deleteView(final View view, final LayoutAnimationListener listener) {
+    if (!isLayoutAnimationEnabled()) {
+      super.deleteView(view, listener);
+      return;
+    }
     UiThreadUtil.assertOnUiThread();
+    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
+    ViewManager viewManager;
+    try {
+      viewManager = nativeViewHierarchyManager.resolveViewManager(view.getId());
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
+      super.deleteView(view, listener);
+      return;
+    }
+    // we don't want layout animations in native-stack since it is currently buggy there
+    // so we check if it is a (grand)child of ScreenStack
+    if (viewManager.getName().equals("RNSScreen")
+        && view.getParent() != null
+        && view.getParent().getParent() instanceof View) {
+      // we check grandparent of Screen since the parent is a ScreenStackFragment
+      View screenParentView = (View) view.getParent().getParent();
+      ViewManager screenParentViewManager;
+      try {
+        screenParentViewManager =
+            nativeViewHierarchyManager.resolveViewManager(screenParentView.getId());
+      } catch (IllegalViewOperationException e) {
+        // (IllegalViewOperationException) == (vm == null)
+        e.printStackTrace();
+        super.deleteView(view, listener);
+        return;
+      }
+      String parentName = screenParentViewManager.getName();
+      if (parentName.equals("RNSScreenStack")) {
+        super.deleteView(view, listener);
+        return;
+      }
+    }
     maybeInit();
     Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
     mAnimationsManager.onViewRemoval(
         view, (ViewGroup) view.getParent(), before, () -> listener.onAnimationEnd());
-    NativeViewHierarchyManager nativeViewHierarchyManager = mWeakNativeViewHierarchyManage.get();
-    ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
-    if (vm instanceof ViewGroupManager) {
-      ViewGroupManager vgm = (ViewGroupManager) vm;
+    if (viewManager instanceof ViewGroupManager) {
+      ViewGroupManager vgm = (ViewGroupManager) viewManager;
       for (int i = 0; i < vgm.getChildCount((ViewGroup) view); ++i) {
         dfs(vgm.getChildAt((ViewGroup) view, i), nativeViewHierarchyManager);
       }
@@ -111,8 +159,13 @@ class ReaLayoutAnimator extends LayoutAnimationController {
   }
 
   private void dfs(View view, NativeViewHierarchyManager nativeViewHierarchyManager) {
-    ViewManager vm = nativeViewHierarchyManager.resolveViewManager(view.getId());
-    if (vm != null) {
+    int tag = view.getId();
+    if (tag == -1) {
+      return;
+    }
+    ViewManager vm = null;
+    try {
+      vm = nativeViewHierarchyManager.resolveViewManager(tag);
       Snapshot before = new Snapshot(view, mWeakNativeViewHierarchyManage.get());
       mAnimationsManager.onViewRemoval(
           view,
@@ -123,6 +176,9 @@ class ReaLayoutAnimator extends LayoutAnimationController {
                 (ReanimatedNativeHierarchyManager) nativeViewHierarchyManager;
             reanimatedNativeHierarchyManager.publicDropView(view);
           });
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
     }
     if (vm instanceof ViewGroupManager) {
       ViewGroupManager vgm = (ViewGroupManager) vm;
@@ -131,30 +187,77 @@ class ReaLayoutAnimator extends LayoutAnimationController {
       }
     }
   }
+
+  public boolean isLayoutAnimationEnabled() {
+    maybeInit();
+    return mAnimationsManager.isLayoutAnimationEnabled();
+  }
 }
 
 public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
-  private HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap();
-  private HashMap<Integer, Runnable> cleanerCallback = new HashMap();
+  private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
+  private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
   private LayoutAnimationController mReaLayoutAnimator = null;
+  private HashMap<Integer, Set<Integer>> mPendingDeletionsForTag = new HashMap<>();
+  private boolean initOk = true;
 
   public ReanimatedNativeHierarchyManager(
       ViewManagerRegistry viewManagers, ReactApplicationContext reactContext) {
     super(viewManagers);
-    Class clazz = this.getClass().getSuperclass();
-    try {
-      Field field = clazz.getDeclaredField("mLayoutAnimator");
-      field.setAccessible(true);
-      Field modifiersField = Field.class.getDeclaredField("accessFlags");
-      modifiersField.setAccessible(true);
-      modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-      mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
-      field.set(this, mReaLayoutAnimator);
 
+    mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
+
+    Class clazz = this.getClass().getSuperclass();
+    if (clazz == null) {
+      Log.e("reanimated", "unable to resolve super class of ReanimatedNativeHierarchyManager");
+      return;
+    }
+
+    try {
+      Field layoutAnimatorField = clazz.getDeclaredField("mLayoutAnimator");
+      layoutAnimatorField.setAccessible(true);
+
+      if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        try {
+          // accessFlags is supported only by API >=23
+          Field modifiersField = Field.class.getDeclaredField("accessFlags");
+          modifiersField.setAccessible(true);
+          modifiersField.setInt(
+              layoutAnimatorField, layoutAnimatorField.getModifiers() & ~Modifier.FINAL);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          e.printStackTrace();
+        }
+      }
+      layoutAnimatorField.set(this, mReaLayoutAnimator);
     } catch (NoSuchFieldException | IllegalAccessException e) {
+      initOk = false;
       e.printStackTrace();
     }
-    setLayoutAnimationEnabled(true);
+
+    try {
+      Field pendingTagsField = clazz.getDeclaredField("mPendingDeletionsForTag");
+      pendingTagsField.setAccessible(true);
+
+      if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        try {
+          // accessFlags is supported only by API >=23
+          Field pendingTagsFieldModifiers = Field.class.getDeclaredField("accessFlags");
+          pendingTagsFieldModifiers.setAccessible(true);
+          pendingTagsFieldModifiers.setInt(
+              pendingTagsField, pendingTagsField.getModifiers() & ~Modifier.FINAL);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          e.printStackTrace();
+        }
+      }
+      pendingTagsField.set(this, mPendingDeletionsForTag);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      initOk = false;
+      e.printStackTrace();
+    }
+
+    if (initOk) {
+      setLayoutAnimationEnabled(true);
+    }
   }
 
   public ReanimatedNativeHierarchyManager(
@@ -162,16 +265,34 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     super(viewManagers, manager);
   }
 
+  private boolean isLayoutAnimationDisabled() {
+    return !initOk || !((ReaLayoutAnimator) mReaLayoutAnimator).isLayoutAnimationEnabled();
+  }
+
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height) {
     super.updateLayout(parentTag, tag, x, y, width, height);
-    View viewToUpdate = this.resolveView(tag);
-    ViewManager parentViewManager = this.resolveViewManager(parentTag);
-    String parentViewManagerName = parentViewManager.getName();
-    View container = resolveView(parentTag);
-    if (container != null && parentViewManagerName.equals("RNSScreenContainer")) {
-      this.mReaLayoutAnimator.applyLayoutUpdate(
-          viewToUpdate, 0, 0, container.getWidth(), container.getHeight());
+    if (isLayoutAnimationDisabled()) {
+      return;
+    }
+    try {
+      View viewToUpdate = this.resolveView(tag);
+      ViewManager viewManager = this.resolveViewManager(tag);
+      String viewManagerName = viewManager.getName();
+      View container = resolveView(parentTag);
+      if (container != null
+          && viewManagerName.equals("RNSScreen")
+          && this.mReaLayoutAnimator != null) {
+        this.mReaLayoutAnimator.applyLayoutUpdate(
+            viewToUpdate,
+            (int) container.getX(),
+            (int) container.getY(),
+            container.getWidth(),
+            container.getHeight());
+      }
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
     }
   }
 
@@ -181,8 +302,29 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       @Nullable int[] indicesToRemove,
       @Nullable ViewAtIndex[] viewsToAdd,
       @Nullable int[] tagsToDelete) {
-    ViewGroup viewGroup = (ViewGroup) resolveView(tag);
-    ViewGroupManager viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+    int[] mock = new int[] {};
+    if (isLayoutAnimationDisabled()) {
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
+      return;
+    }
+    ViewGroup viewGroup;
+    ViewGroupManager viewGroupManager;
+    try {
+      viewGroup = (ViewGroup) resolveView(tag);
+      viewGroupManager = (ViewGroupManager) resolveViewManager(tag);
+    } catch (IllegalViewOperationException e) {
+      // (IllegalViewOperationException) == (vm == null)
+      e.printStackTrace();
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
+      return;
+    }
+
+    // we don't want layout animations in native-stack since it is currently buggy there
+    if (viewGroupManager.getName().equals("RNSScreenStack")) {
+      super.manageChildren(tag, indicesToRemove, viewsToAdd, tagsToDelete, mock);
+      return;
+    }
+
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
       HashSet<Integer> tagsToRemove = new HashSet<Integer>();
@@ -205,7 +347,14 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
       }
       ArrayList<View> toBeRemovedChildren = toBeRemoved.get(tag);
       for (Integer childtag : tagsToDelete) {
-        View view = resolveView(childtag);
+        View view;
+        try {
+          view = resolveView(childtag);
+        } catch (IllegalViewOperationException e) {
+          // (IllegalViewOperationException) == (vm == null)
+          e.printStackTrace();
+          continue;
+        }
         toBeRemovedChildren.add(view);
         cleanerCallback.put(
             view.getId(),
@@ -213,11 +362,20 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
               @Override
               public void run() {
                 toBeRemovedChildren.remove(view);
+                viewGroupManager.removeView(viewGroup, view);
               } // It's far from optimal but let's leave it as it is for now
             });
       }
     }
-    int[] mock = new int[] {};
+
+    // mPendingDeletionsForTag is modify by React
+    if (mPendingDeletionsForTag != null) {
+      Set<Integer> pendingTags = mPendingDeletionsForTag.get(tag);
+      if (pendingTags != null) {
+        pendingTags.clear();
+      }
+    }
+
     super.manageChildren(tag, indicesToRemove, viewsToAdd, mock, mock);
     if (toBeRemoved.containsKey(tag)) {
       ArrayList<View> childrenToBeRemoved = toBeRemoved.get(tag);
@@ -235,6 +393,10 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
 
   @Override
   protected synchronized void dropView(View view) {
+    if (isLayoutAnimationDisabled()) {
+      super.dropView(view);
+      return;
+    }
     if (toBeRemoved.containsKey(view.getId())) {
       toBeRemoved.remove(view.getId());
     }

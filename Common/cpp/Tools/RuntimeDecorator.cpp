@@ -1,4 +1,5 @@
 #include "RuntimeDecorator.h"
+#include <chrono>
 #include <memory>
 #include <unordered_map>
 #include "LayoutAnimationsProxy.h"
@@ -83,6 +84,22 @@ void RuntimeDecorator::decorateRuntime(
           jsi::PropNameID::forAscii(rt, "_setGlobalConsole"),
           1,
           setGlobalConsole));
+
+  rt.global().setProperty(
+      rt,
+      "_chronoNow",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_chronoNow"),
+          0,
+          [](jsi::Runtime &rt,
+             const jsi::Value &thisValue,
+             const jsi::Value *args,
+             size_t count) -> jsi::Value {
+            double now = std::chrono::system_clock::now().time_since_epoch() /
+                std::chrono::milliseconds(1);
+            return jsi::Value(now);
+          }));
 }
 
 void RuntimeDecorator::decorateUIRuntime(

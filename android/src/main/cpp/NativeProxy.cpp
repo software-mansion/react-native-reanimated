@@ -128,8 +128,10 @@ void NativeProxy::installJSIBindings() {
   };
 
 #if FOR_HERMES
+  auto config =
+      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
-      facebook::hermes::makeHermesRuntime();
+      facebook::hermes::makeHermesRuntime(config.build());
 #else
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::jsc::makeJSCRuntime();
@@ -190,6 +192,7 @@ void NativeProxy::installJSIBindings() {
         13, eventAsString.length() - 15); // remove "{ NativeMap: " and " }"
     jsi::Value payload =
         jsi::valueFromDynamic(*module->runtime, folly::parseJson(eventJSON));
+    // TODO: support NaN and INF values
     // TODO: convert event directly to jsi::Value without JSON serialization
     jsi::String eventTimestampName =
         jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");

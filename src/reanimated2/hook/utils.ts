@@ -9,7 +9,7 @@ import {
   WorkletFunction,
 } from '../commonTypes';
 import { makeRemote } from '../core';
-import { isWeb } from '../PlatformChecker';
+import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import {
@@ -80,7 +80,7 @@ export function useHandler<T, TContext extends Context>(
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
-  const useWeb = isWeb();
+  const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
 }
@@ -163,7 +163,12 @@ export function parseColors(updates: AnimatedStyle): void {
   'worklet';
   for (const key in updates) {
     if (colorProps.indexOf(key) !== -1) {
-      updates[key] = processColor(updates[key]);
+      // value could be an animation in which case processColor will recognize it and will return undefined
+      // -> in such a case we don't want to override style of that key
+      const processedColor = processColor(updates[key]);
+      if (processedColor !== undefined) {
+        updates[key] = processedColor;
+      }
     }
   }
 }
@@ -201,33 +206,29 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   return false;
 }
 
-export function styleDiff(
+export function styleDiff<T extends AnimatedStyle>(
   oldStyle: AnimatedStyle,
   newStyle: AnimatedStyle
-): AnimatedStyle {
+): Partial<T> {
   'worklet';
-  const diff: AnimatedStyle = {};
-  Object.keys(oldStyle).forEach((key) => {
+  const diff: any = {};
+  for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;
     }
-  });
-  Object.keys(newStyle).forEach((key) => {
+  }
+  for (const key in newStyle) {
     const value = newStyle[key];
     const oldValue = oldStyle[key];
 
     if (isAnimated(value)) {
       // do nothing
-      return;
+      continue;
     }
-    if (
-      oldValue !== value &&
-      JSON.stringify(oldValue) !== JSON.stringify(value)
-    ) {
-      // I'd use deep equal here but that'd take additional work and this was easier
+    if (oldValue !== value) {
       diff[key] = value;
     }
-  });
+  }
   return diff;
 }
 

@@ -220,6 +220,16 @@ function bezier(
   };
 }
 
+function bezierFn(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): (x: number) => number {
+  'worklet';
+  return Bezier(x1, y1, x2, y2);
+}
+
 /**
  * Runs an easing function forwards.
  */
@@ -268,6 +278,7 @@ const EasingObject = {
   back,
   bounce,
   bezier,
+  bezierFn,
   in: in_,
   out,
   inOut,
