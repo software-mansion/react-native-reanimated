@@ -271,9 +271,9 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    //  buildFeatures {
-    //      prefab true
-    //  }
+//     buildFeatures {
+//         prefab true
+//     }
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
@@ -288,7 +288,8 @@ android {
                              "-DANDROID_TOOLCHAIN=clang",
                              "-DBOOST_VERSION=${BOOST_VERSION}",
                              "-DFOR_HERMES=${FOR_HERMES}",
-                             "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}"
+                             "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
+                             "--clean-first"
                 abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
@@ -317,6 +318,13 @@ android {
     configurations {
         extractHeaders
         extractSO
+    }
+}
+
+task cleanCmakeCache() {
+    tasks.getByName("clean").dependsOn(cleanCmakeCache)
+    doFirst {
+        delete "${projectDir}/.cxx"
     }
 }
 
@@ -548,9 +556,9 @@ dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
 //    implementation "com.facebook.fbjni:fbjni-java-only:0.3.0"
-    // if (!CLIENT_SIDE_BUILD) {
-    //     implementation ("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
-    // }
+//    if (!CLIENT_SIDE_BUILD) {
+//        implementation ("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+//    }
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
