@@ -114,7 +114,6 @@ def engine = "jsc"
 def aar
 if (CLIENT_SIDE_BUILD) {
     configurations.maybeCreate("default")
-
     def replaceSoTaskDebug
     def replaceSoTaskRelease
 
@@ -272,6 +271,9 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
+    //  buildFeatures {
+    //      prefab true
+    //  }
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
@@ -546,7 +548,9 @@ dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
 //    implementation "com.facebook.fbjni:fbjni-java-only:0.3.0"
-    implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+    // if (!CLIENT_SIDE_BUILD) {
+    //     implementation ("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
+    // }
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
