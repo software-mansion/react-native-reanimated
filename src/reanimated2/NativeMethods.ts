@@ -3,7 +3,7 @@
 // @ts-nocheck
 import { Component } from 'react';
 import { findNodeHandle } from 'react-native';
-import { RefObjectFunction } from './hook/useAnimatedRef';
+import { RefObjectFunction } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 
 export function getTag(

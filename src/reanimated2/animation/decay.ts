@@ -5,7 +5,7 @@ import {
   AnimationObject,
   AnimatableValue,
   Timestamp,
-} from './commonTypes';
+} from '../commonTypes';
 import { Platform } from 'react-native';
 
 interface DecayConfig {

@@ -1,5 +1,4 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-import { AnimationObject } from '../animation';
 import { processColor } from '../Colors';
 import {
   AnimatedStyle,
@@ -7,6 +6,7 @@ import {
   NestedObjectValues,
   StyleProps,
   WorkletFunction,
+  AnimationObject,
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
