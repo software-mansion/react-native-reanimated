@@ -1,6 +1,7 @@
 import JSReanimated from './JSReanimated';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { AnimatedStyle, StyleProps } from '../commonTypes';
+import { Platform } from 'react-native';
 
 const reanimatedJS = new JSReanimated();
 
@@ -57,7 +58,7 @@ if (shouldBeUseWeb()) {
   };
 }
 
-export const makeH5StyleProps = (
+const stylePropsWithoutAnimatedStyle = (
   updates: StyleProps | AnimatedStyle
 ): StyleProps => {
   const [rawStyles] = Object.keys(updates).reduce(
@@ -69,7 +70,13 @@ export const makeH5StyleProps = (
     },
     [{}, {}]
   );
+  return rawStyles;
+};
 
+export const makeH5StyleProps = (
+  updates: StyleProps | AnimatedStyle,
+  rawStyles = stylePropsWithoutAnimatedStyle(updates)
+): StyleProps => {
   const transformList: string[] = [];
   const styles: Record<string, any> = {};
   Object.keys(rawStyles).forEach((key) => {
@@ -99,27 +106,19 @@ export const _updatePropsJS = (
 ): void => {
   if (viewRef._component) {
     const component = viewRef._component;
-    const [rawStyles] = Object.keys(updates).reduce(
-      (acc: [StyleProps, AnimatedStyle], key) => {
-        const value = updates[key];
-        const index = typeof value === 'function' ? 1 : 0;
-        acc[index][key] = value;
-        return acc;
-      },
-      [{}, {}]
-    );
+    const rawStyles = stylePropsWithoutAnimatedStyle(updates);
 
     if (typeof component.setNativeProps === 'function') {
       setNativeProps(component, rawStyles);
-    } else if (
-      !component._touchableNode &&
-      component.state &&
-      component.state.style &&
-      !component.style
-    ) {
+    } else if (Platform.OS !== 'web' && !component.style) {
       // Taro RN compliant
-      const previousStyle = component.state.style;
-      component.setState({ style: { ...previousStyle, ...rawStyles } });
+      const previousStyle = viewRef.state.style;
+      viewRef.setState({ style: { ...previousStyle, ...rawStyles } });
+    } else if (Platform.OS === 'web' && component.style) {
+      // Taro H5 / Weapp compliant
+      const styles = makeH5StyleProps(updates, rawStyles);
+      const previousStyle = viewRef.state.style;
+      viewRef.setState({ style: { ...previousStyle, ...styles } });
     } else if (
       component._touchableNode &&
       component.props &&
@@ -132,32 +131,6 @@ export const _updatePropsJS = (
         const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
         component._touchableNode.setAttribute(dashedKey, rawStyles[key]);
       });
-    } else if (
-      component.style &&
-      typeof component.style.setProperty === 'function'
-    ) {
-      // Taro H5 / Weapp compliant
-      const transformList: string[] = [];
-      const styles: Record<string, any> = {};
-      Object.keys(rawStyles).forEach((key) => {
-        if (key === 'transform') {
-          rawStyles.transform!.forEach((item) => {
-            Object.keys(item).forEach((transformKey) => {
-              transformList.push(
-                `${transformKey}(${
-                  ((item as unknown) as Record<string, string>)[transformKey]
-                })`
-              );
-            });
-          });
-          styles.transform = transformList.join(' ');
-        } else {
-          const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-          styles[dashedKey] = rawStyles[key];
-        }
-      });
-      const previousStyle = viewRef.state.style;
-      viewRef.setState({ style: { ...previousStyle, ...styles } });
     } else {
       console.warn('It is not possible to manipulate component');
     }

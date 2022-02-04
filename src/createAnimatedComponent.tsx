@@ -772,10 +772,12 @@ export default function createAnimatedComponent(
         default: { collapsable: false },
       });
 
+      const { style, ...rest } = props;
+
       return (
         <Component
-          {...props}
-          style={{ ...(props as any).style, ...this.state.style }}
+          {...rest}
+          style={{ ...(style as StyleProps), ...this.state.style }}
           ref={this._setComponentRef}
           {...platformProps}
         />
