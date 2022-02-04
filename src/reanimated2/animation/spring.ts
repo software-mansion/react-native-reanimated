@@ -4,7 +4,7 @@ import {
   AnimationCallback,
   AnimatableValue,
   Timestamp,
-} from './commonTypes';
+} from '../commonTypes';
 
 interface SpringConfig {
   mass?: number;

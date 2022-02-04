@@ -8,3 +8,4 @@ export * from './Colors';
 export * from './PropAdapters';
 export * from './layoutReanimation';
 export * from './utils';
+export * from './commonTypes';

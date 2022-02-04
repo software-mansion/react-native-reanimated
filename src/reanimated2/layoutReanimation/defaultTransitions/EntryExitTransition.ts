@@ -4,9 +4,13 @@ import {
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
-import { AnimationObject, withSequence, withTiming } from '../../animation';
+import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
-import { StyleProps, TransformProperty } from '../../commonTypes';
+import {
+  StyleProps,
+  TransformProperty,
+  AnimationObject,
+} from '../../commonTypes';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
