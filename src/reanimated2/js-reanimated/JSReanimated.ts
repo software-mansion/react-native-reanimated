@@ -1,15 +1,14 @@
 import MapperRegistry from './MapperRegistry';
-import MutableValue from './MutableValue';
 import Mapper from './Mapper';
+import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
-import { Timestamp } from '../animation/commonTypes';
-import { NestedObjectValues } from '../commonTypes';
+import { Timestamp, NestedObjectValues } from '../commonTypes';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
 
   _renderRequested = false;
-  _mapperRegistry = new MapperRegistry(this);
+  _mapperRegistry: MapperRegistry<any> = new MapperRegistry(this);
   _frames: ((timestamp: Timestamp) => void)[] = [];
   timeProvider: { now: () => number };
 

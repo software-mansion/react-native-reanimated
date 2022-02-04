@@ -2,6 +2,7 @@ import { SharedValue } from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
 
 const InnerNativeModule = global.__reanimatedModuleProxy;
+
 export class NativeReanimated {
   native: boolean;
   useOnlyV1: boolean;

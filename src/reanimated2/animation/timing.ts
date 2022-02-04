@@ -5,7 +5,7 @@ import {
   AnimationCallback,
   Timestamp,
   AnimatableValue,
-} from './commonTypes';
+} from '../commonTypes';
 
 interface TimingConfig {
   duration?: number;
