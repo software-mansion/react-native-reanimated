@@ -96,10 +96,10 @@ while (!aar.exists()) {
       println "\n\n\n"
       println "****************************************************************************************"
       println "\n\n\n"
-      println "WARNING reanimated - no version-specific reanimated AAR for react-native version " . minor . " found."
-      println "Falling back to AAR for react-native version " . minorCopy
+      println "WARNING reanimated - no version-specific reanimated AAR for react-native version " + minor + " found."
+      println "Falling back to AAR for react-native version " + minorCopy
       println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
-      println "Please post a pull request to implement support for react-native version " . minor . " to the reanimated repo."
+      println "Please post a pull request to implement support for react-native version " + minor + " to the reanimated repo."
       println "Thanks!"
       println "\n\n\n"
       println "****************************************************************************************"

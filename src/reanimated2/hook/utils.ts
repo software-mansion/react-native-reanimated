@@ -9,7 +9,7 @@ import {
   WorkletFunction,
 } from '../commonTypes';
 import { makeRemote } from '../core';
-import { isWeb } from '../PlatformChecker';
+import { isWeb, isJest } from '../PlatformChecker';
 import { colorProps } from '../UpdateProps';
 import WorkletEventHandler from '../WorkletEventHandler';
 import {
@@ -80,7 +80,7 @@ export function useHandler<T, TContext extends Context>(
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
-  const useWeb = isWeb();
+  const useWeb = isWeb() || isJest();
 
   return { context, doDependenciesDiffer, useWeb };
 }
@@ -211,7 +211,7 @@ export function styleDiff<T extends AnimatedStyle>(
   newStyle: AnimatedStyle
 ): Partial<T> {
   'worklet';
-  const diff = {};
+  const diff: any = {};
   for (const key in oldStyle) {
     if (newStyle[key] === undefined) {
       diff[key] = null;

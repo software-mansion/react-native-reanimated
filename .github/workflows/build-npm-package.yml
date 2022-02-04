@@ -29,10 +29,12 @@ jobs:
         run: >-
           ./createNPMPackage.sh
 
+      - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+      
       - name: Upload npm package
         uses: actions/upload-artifact@v2
         with:
-          name: react-native-reanimated-2.0.0-alpha.tgz
+          name: ${{ env.PACKAGE_NAME }}
           path: '*.tgz'
 
       - name: Upload Android build folder

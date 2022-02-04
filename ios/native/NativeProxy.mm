@@ -246,7 +246,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);
-    std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+
+    std::string eventAsString;
+    try {
+      eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+    } catch (folly::json::parse_error &) {
+      // Events from other libraries may contain NaN or INF values which cannot be represented in JSON.
+      // See https://github.com/software-mansion/react-native-reanimated/issues/1776 for details.
+      return;
+    }
 
     eventAsString = "{ NativeMap:" + eventAsString + "}";
     jsi::Object global = module->runtime->global();
