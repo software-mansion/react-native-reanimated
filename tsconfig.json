@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     // for taro-reanimated-tests.tsx
+    "baseUrl": ".",
     "paths": {
       "taro-reanimated": ["./taro-reanimated.d.ts"]
     },
@@ -16,12 +17,13 @@
     "lib": ["es6", "dom"],
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "outDir": "./lib",
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "taro-reanimated.d.ts",
-    "taro-reanimated-tests.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    // "taro-reanimated.d.ts",
+    // "taro-reanimated-tests.tsx"
   ]
 }

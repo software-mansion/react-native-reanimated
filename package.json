@@ -1,6 +1,6 @@
 {
   "name": "taro-reanimated",
-  "version": "2.4.0-release4",
+  "version": "2.4.0-release6",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -119,6 +119,7 @@
     "react-native": "0.67.0-rc.4",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
+    "react-native-web": "^0.17.5",
     "react-test-renderer": "17.0.2",
     "release-it": "^13.7.2",
     "typescript": "^4.1.3"
