@@ -1,4 +1,6 @@
+#if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
+#endif
 
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
