@@ -2,6 +2,7 @@ export * from './core';
 export * from './hook';
 export * from './animation';
 export * from './interpolation';
+export * from './interpolateColor';
 export * from './Easing';
 export * from './NativeMethods';
 export * from './Colors';
