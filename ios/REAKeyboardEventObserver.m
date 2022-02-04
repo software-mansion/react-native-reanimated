@@ -11,7 +11,6 @@
 
 @implementation REAKeyboardEventObserver {
   REAEventDispatcher *dispatcher;
-  NSNotificationCenter *notificationCenter;
 }
 
 - (instancetype)init
@@ -23,7 +22,6 @@
 {
   if (self = [super init]) {
     dispatcher = eventDispatcher;
-    notificationCenter = [NSNotificationCenter defaultCenter];
   }
 
   return self;
@@ -74,6 +72,8 @@
 
 - (void)registerKeyboardEventsObservers
 {
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserver:self selector:@selector(allEvents:) name:nil object:nil];
   [notificationCenter addObserver:self
                          selector:@selector(keyboardWillChangeFrame:)
                              name:UIKeyboardWillChangeFrameNotification

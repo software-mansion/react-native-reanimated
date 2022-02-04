@@ -35,7 +35,7 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 #else
   [eventDispatcher setBridge:bridge];
 #endif
-  REAKeyboardEventObserver *keyboardEventObserver =
+  static REAKeyboardEventObserver *keyboardEventObserver =
       [[REAKeyboardEventObserver alloc] initWithEventDispatcher:eventDispatcher];
   [keyboardEventObserver registerKeyboardEventsObservers];
   [bridge updateModuleWithInstance:eventDispatcher];
