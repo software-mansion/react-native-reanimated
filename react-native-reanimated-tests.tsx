@@ -81,7 +81,12 @@ const AnimatedFCWithRef = Animated.createAnimatedComponent(SomeFCWithRef);
 
 function CreateAnimatedComponentTest1() {
   const animatedProps = useAnimatedProps(() => ({ fill: 'blue' }));
-  return <AnimatedPath animatedProps={animatedProps} />;
+  return (
+    <AnimatedPath
+      animatedProps={animatedProps}
+      style={{ backgroundColor: 'red' }}
+    />
+  );
 }
 
 function CreateAnimatedComponentTest2() {

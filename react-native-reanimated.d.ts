@@ -146,10 +146,14 @@ declare module 'react-native-reanimated' {
               >;
     };
 
-    export type AnimateProps<P extends object> = {
-      [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<P[K]>>
-        : P[K] | AnimatedNode<P[K]>;
+    export type StylesOrDefault<T> = 'style' extends keyof T
+      ? T['style']
+      : Record<string, unknown>;
+
+    export type AnimateProps<P extends Record<string, unknown>> = {
+      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+    } & {
+      style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
