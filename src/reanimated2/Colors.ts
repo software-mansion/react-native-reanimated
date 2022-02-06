@@ -647,10 +647,26 @@ export function convertToHSVA(color: unknown): ParsedColorArray {
   return [h, s, v, a];
 }
 
+export function convertToRGBA(color: unknown): ParsedColorArray {
+  'worklet';
+  const processedColor = processColorInitially(color)!; // argb;
+  const a = (processedColor >>> 24) / 255;
+  const r = (processedColor << 8) >>> 24;
+  const g = (processedColor << 16) >>> 24;
+  const b = (processedColor << 24) >>> 24;
+  return [r, g, b, a];
+}
+
 export function toRGBA(HSVA: ParsedColorArray): string {
   'worklet';
   const { r, g, b } = HSVtoRGB(HSVA[0], HSVA[1], HSVA[2]);
   return `rgba(${r}, ${g}, ${b}, ${HSVA[3]})`;
+}
+
+export function toRGBAString(RGBA: ParsedColorArray): string {
+  'worklet';
+  const [r, g, b, a] = RGBA;
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 const interpolateColorsHSV = (
