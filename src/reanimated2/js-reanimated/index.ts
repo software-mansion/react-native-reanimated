@@ -92,8 +92,9 @@ export const makeH5StyleProps = (
       });
       styles.transform = transformList.join(' ');
     } else {
-      const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
-      styles[dashedKey] = rawStyles[key];
+      // will be parsed by Yoga, no need to transform key to dashed format
+      // const dashedKey = key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+      styles[key] = rawStyles[key];
     }
   });
 
