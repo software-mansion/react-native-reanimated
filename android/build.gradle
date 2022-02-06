@@ -129,7 +129,16 @@ android {
     packagingOptions {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
-        excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libjsi.so"]
+        excludes = [
+            "**/libc++_shared.so", 
+            "**/libfbjni.so", 
+            "**/libjsi.so",
+            "**/libfolly_json.so",
+            "**/libglog.so",
+            "**/libhermes.so",
+            "**/libreactnativejni.so",
+            "**/libjscexecutor.so",
+        ]
     }
 
     tasks.withType(JavaCompile) {

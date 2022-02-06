@@ -10,7 +10,7 @@ import {
   makeMutable,
 } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
-import { initialUpdaterRun, Timestamp } from '../animation';
+import { initialUpdaterRun } from '../animation';
 import NativeReanimatedModule from '../NativeReanimated';
 import { useSharedValue } from './useSharedValue';
 import {
@@ -31,8 +31,9 @@ import {
   ViewRefSet,
 } from '../ViewDescriptorsSet';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { AnimationObject } from '../animation/commonTypes';
 import {
+  AnimationObject,
+  Timestamp,
   AdapterWorkletFunction,
   AnimatedStyle,
   BasicWorkletFunction,

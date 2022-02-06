@@ -7,12 +7,10 @@ import {
   WorkletFunction,
   ComplexWorkletFunction,
   SharedValue,
-} from './commonTypes';
-import {
   AnimationObject,
   AnimatableValue,
   Timestamp,
-} from './animation/commonTypes';
+} from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
 

@@ -1,4 +1,4 @@
-import JSReanimated from './JSReanimated';
+import { JSReanimated } from './commonTypes';
 import Mapper from './Mapper';
 
 export default class MapperRegistry<T> {

@@ -146,10 +146,14 @@ declare module 'taro-reanimated' {
               >;
     };
 
-    export type AnimateProps<P extends object> = {
-      [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<P[K]>>
-        : P[K] | AnimatedNode<P[K]>;
+    export type StylesOrDefault<T> = 'style' extends keyof T
+      ? T['style']
+      : Record<string, unknown>;
+
+    export type AnimateProps<P extends Record<string, unknown>> = {
+      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+    } & {
+      style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
@@ -248,20 +252,31 @@ declare module 'taro-reanimated' {
     export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface View extends ReactNativeView {}
     export class Text extends Component<AnimateProps<TextProps>> {
       getNode(): ReactNativeText;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Text extends ReactNativeText {}
     export class Image extends Component<AnimateProps<ImageProps>> {
       getNode(): ReactNativeImage;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Image extends ReactNativeImage {}
     export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
       getNode(): ReactNativeScrollView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface ScrollView extends ReactNativeScrollView {}
+
     export class Code extends Component<CodeProps> {}
     export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
       itemLayoutAnimation: ILayoutAnimationBuilder;
       getNode(): ReactNativeFlatList;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface FlatList<T> extends ReactNativeView<T> {}
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
