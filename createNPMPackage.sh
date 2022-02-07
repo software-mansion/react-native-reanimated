@@ -9,10 +9,10 @@ unset CI
 versions=("0.67.2" "0.66.3" "0.65.1" "0.64.3" "0.63.3")
 version_name=("67" "66" "65" "64" "63")
 
-for index in {0..4}
+for index in {0..0}
 do
   yarn add react-native@"${versions[$index]}"
-  for for_hermes in "True" "False"
+  for for_hermes in "True"
   do
     engine="jsc"
     if [ "$for_hermes" == "True" ]; then
@@ -76,7 +76,7 @@ rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
 rm $(find . -name '*libc++_shared.so')
 cd ../..
 
-yarn add react-native@0.67.2 --dev
+# yarn add react-native@0.67.2 --dev
 
 mv android android-temp
 mv android-npm android
