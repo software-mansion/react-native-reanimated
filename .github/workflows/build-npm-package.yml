@@ -37,7 +37,7 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: '*.tgz'
 
-      - name: Compress android build output
+      - name: Compress Android build output
         run: zip -r android-build-output.zip android/build/
 
       - name: Upload Android build folder
