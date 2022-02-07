@@ -1,6 +1,7 @@
 name: Build npm package
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 12 */1 * *'
 
@@ -28,8 +29,20 @@ jobs:
         run: >-
           ./createNPMPackage.sh
 
+      - run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+      
       - name: Upload npm package
         uses: actions/upload-artifact@v2
         with:
-          name: react-native-reanimated-2.0.0-alpha.tgz
+          name: ${{ env.PACKAGE_NAME }}
           path: '*.tgz'
+
+      - name: Compress Android build output
+        run: zip -r android-build-output.zip android/build/
+
+      - name: Upload Android build folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-build-output
+          path: android-build-output.zip
+          retention-days: 5
