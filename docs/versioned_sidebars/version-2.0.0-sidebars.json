@@ -1,0 +1,170 @@
+{
+  "version-2.0.0/docs": [
+    {
+      "type": "category",
+      "label": "Fundamentals",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-2.0.0/about"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/installation"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/worklets"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/shared-values"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/animations"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/events"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/architecture"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/migration"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/web-support"
+        },
+        {
+          "type": "doc",
+          "id": "version-2.0.0/troubleshooting"
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "API Reference",
+      "items": [
+        {
+          "type": "category",
+          "label": "Hooks",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useSharedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedStyle"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useDerivedValue"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedScrollHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedGestureHandler"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedRef"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedReaction"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/useAnimatedProps"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Animations",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withTiming"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withSpring"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withDecay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/cancelAnimation"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withDelay"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withSequence"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/withRepeat"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Native methods",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/nativeMethods/measure"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/nativeMethods/scrollTo"
+            }
+          ]
+        },
+        {
+          "type": "category",
+          "label": "Miscellaneous",
+          "items": [
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/miscellaneous/runOnJS"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/miscellaneous/runOnUI"
+            },
+            {
+              "type": "doc",
+              "id": "version-2.0.0/api/miscellaneous/interpolate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Guides",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-2.0.0/testing"
+        }
+      ]
+    }
+  ]
+}

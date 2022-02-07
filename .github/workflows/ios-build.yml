@@ -1,0 +1,39 @@
+name: Test iOS build
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ios/**'
+      - 'Common/**'
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
+    runs-on: macos-11
+    env:
+      WORKING_DIRECTORY: Example
+    concurrency:
+      group: ios-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+      - name: Install Reanimated node dependencies
+        run: yarn
+      - name: Install node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Install pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: pod install
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx react-native run-ios

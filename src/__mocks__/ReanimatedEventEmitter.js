@@ -1,4 +1,8 @@
+const NOOP = () => {
+  // noop
+};
+
 export default {
-  addListener: () => {},
-  removeAllListeners: () => {},
+  addListener: NOOP,
+  removeAllListeners: NOOP,
 };

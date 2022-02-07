@@ -1,0 +1,40 @@
+name: Check for platforms
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  main:
+    if: ${{ !contains(github.event.issue.labels.*.name, 'maintainer-issue') }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: platforms-${{ github.event.issue.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Actions
+        uses: actions/checkout@v2
+        with:
+          repository: 'software-mansion-labs/swmansion-bot'
+          ref: stable
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install Actions
+        run: yarn install
+
+      - name: Platforms
+        uses: ./platforms
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          platforms-with-labels: '{"Android": "🤖android", "iOS": "🍎iOS", "Web": "🧭web"}'

@@ -4,13 +4,13 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.UpdateContext;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-
 import javax.annotation.Nullable;
 
 public abstract class Node {
@@ -21,13 +21,14 @@ public abstract class Node {
   protected final int mNodeID;
   protected final NodesManager mNodesManager;
 
-  private final UpdateContext mUpdateContext;
+  protected final UpdateContext mUpdateContext;
 
-  private long mLastLoopID = -1;
-  private @Nullable Object mMemoizedValue;
+  private final Map<String, Long> mLastLoopID = new HashMap<>();
+  private final Map<String, Object> mMemoizedValue = new HashMap<>();
   private @Nullable List<Node> mChildren; /* lazy-initialized when a child is added */
 
   public Node(int nodeID, @Nullable ReadableMap config, NodesManager nodesManager) {
+    mLastLoopID.put("", -1L);
     mNodeID = nodeID;
     mNodesManager = nodesManager;
     mUpdateContext = nodesManager.updateContext;
@@ -36,11 +37,15 @@ public abstract class Node {
   protected abstract @Nullable Object evaluate();
 
   public final @Nullable Object value() {
-    if (mLastLoopID < mUpdateContext.updateLoopID) {
-      mLastLoopID = mUpdateContext.updateLoopID;
-      return (mMemoizedValue = evaluate());
+    if (!mLastLoopID.containsKey(mUpdateContext.callID)
+        || mLastLoopID.get(mUpdateContext.callID) < mUpdateContext.updateLoopID) {
+      mLastLoopID.put(mUpdateContext.callID, mUpdateContext.updateLoopID);
+      Object result = evaluate();
+      mMemoizedValue.put(mUpdateContext.callID, result);
+
+      return result;
     }
-    return mMemoizedValue;
+    return mMemoizedValue.get(mUpdateContext.callID);
   }
 
   /**
@@ -67,7 +72,7 @@ public abstract class Node {
       mChildren = new ArrayList<>();
     }
     mChildren.add(child);
-    dangerouslyRescheduleEvaluate();
+    child.dangerouslyRescheduleEvaluate();
   }
 
   public void removeChild(Node child) {
@@ -82,17 +87,22 @@ public abstract class Node {
     mNodesManager.postRunUpdatesAfterAnimation();
   }
 
+  public void onDrop() {
+    // noop
+  }
+
   protected final void dangerouslyRescheduleEvaluate() {
-    mLastLoopID = -1;
+    mLastLoopID.put(mUpdateContext.callID, -1L);
     markUpdated();
   }
 
   protected final void forceUpdateMemoizedValue(Object value) {
-    mMemoizedValue = value;
+    mMemoizedValue.put(mUpdateContext.callID, value);
     markUpdated();
   }
 
-  private static void findAndUpdateNodes(Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
+  private static void findAndUpdateNodes(
+      Node node, Set<Node> visitedNodes, Stack<FinalNode> finalNodes) {
     if (visitedNodes.contains(node)) {
       return;
     } else {

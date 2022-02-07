@@ -73,8 +73,15 @@ import com.android.build.OutputFile
  */
 
 project.ext.react = [
-    entryFile: "index.js"
+        entryFile   : "index.js",
+        enableHermes: true,
 ]
+def enableHermes = project.ext.react.get("enableHermes", false);
+
+/**
+ * Architectures to build native code for in debug.
+ */
+def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
 
 apply from: "../../node_modules/react-native/react.gradle"
 
@@ -95,17 +102,17 @@ def enableProguardInReleaseBuilds = false
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-
+    configurations {
+        all*.exclude module: 'fbjni-java-only'
+    }
     defaultConfig {
         applicationId "com.swmansion.reanimated.example"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
-        }
+        testBuildType System.getProperty('testBuildType', 'debug')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     splits {
         abi {
@@ -115,7 +122,19 @@ android {
             include "armeabi-v7a", "x86"
         }
     }
+    signingConfigs {
+    }
     buildTypes {
+        debug {
+            packagingOptions {
+                doNotStrip "**/**/*.so"
+            }
+            if (nativeArchitectures) {
+                ndk {
+                    abiFilters nativeArchitectures.split(',')
+                }
+            }
+        }
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -126,28 +145,71 @@ android {
         variant.outputs.each { output ->
             // For each separate APK per architecture, set a unique version code as described here:
             // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
-            def versionCodes = ["armeabi-v7a":1, "x86":2]
+            def versionCodes = ["armeabi-v7a": 1, "x86": 2]
             def abi = output.getFilter(OutputFile.ABI)
             if (abi != null) {  // null for the universal-debug, universal-release variants
                 output.versionCodeOverride =
-                        versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
+                        defaultConfig.versionCode * 1000 + versionCodes.get(abi)
             }
         }
+    }
+
+    packagingOptions {
+        pickFirst 'lib/**/libturbomodulejsijni.so'
+        pickFirst 'lib/**/libc++_shared.so'
+        pickFirst 'lib/**/libreanimated.so'
+        pickFirst 'lib/**/libjsc.so'
+        pickFirst 'lib/**/libfbjni.so'
+        pickFirst 'lib/**/libreactnativejni.so'
+        pickFirst 'lib/**/libglog.so'
+        pickFirst 'lib/**/libhermes.so'
+        pickFirst 'lib/**/libfolly_json.so'
+        pickFirst 'lib/**/jscexecutor.so'
+    }
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
     }
 }
 
 dependencies {
+    implementation project(':@react-native-community_masked-view')
+    implementation project(':react-native-svg')
+    implementation project(':react-native-screens')
+    implementation project(':react-native-safe-area-context')
     implementation project(':react-native-reanimated')
     implementation project(':react-native-gesture-handler')
+    implementation project(':react-native-pager-view')
+    implementation project(':react-native-community-picker')
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+    androidTestImplementation('com.wix:detox:+')
+
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
+        exclude group: 'com.facebook.fbjni'
+    }
+    debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
+        exclude group: 'com.facebook.flipper'
+    }
+    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
+        exclude group: 'com.facebook.flipper'
+    }
+
+    if (enableHermes) {
+        def hermesPath = "../../node_modules/hermes-engine/android/"
+        debugImplementation files(hermesPath + "hermes-debug.aar")
+        releaseImplementation files(hermesPath + "hermes-release.aar")
+    } else {
+        implementation 'org.webkit:android-jsc:+'
+    }
 }
 
 // Run this once to be able to run the application with BUCK
 // puts all compile dependencies into folder libs for BUCK to use
 task copyDownloadableDepsToLibs(type: Copy) {
-    from configurations.compile
+    from configurations.implementation
     into 'libs'
 }

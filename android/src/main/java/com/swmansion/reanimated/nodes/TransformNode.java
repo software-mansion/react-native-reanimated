@@ -7,13 +7,12 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableArray;
 import com.swmansion.reanimated.NodesManager;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransformNode extends Node {
 
-  private static abstract class TransformConfig {
+  private abstract static class TransformConfig {
     public String propertyName;
 
     public abstract Object getValue(NodesManager nodesManager);
@@ -50,10 +49,14 @@ public class TransformNode extends Node {
       } else {
         StaticTransformConfig transformConfig = new StaticTransformConfig();
         transformConfig.propertyName = property;
-        transformConfig.value = transformConfigMap.getType("value") ==
-                ReadableType.String ?
-                transformConfigMap.getString("value") :
-                transformConfigMap.getDouble("value");
+        ReadableType type = transformConfigMap.getType("value");
+        if (type == ReadableType.String) {
+          transformConfig.value = transformConfigMap.getString("value");
+        } else if (type == ReadableType.Array) {
+          transformConfig.value = transformConfigMap.getArray("value");
+        } else {
+          transformConfig.value = transformConfigMap.getDouble("value");
+        }
         configs.add(transformConfig);
       }
     }
@@ -73,7 +76,7 @@ public class TransformNode extends Node {
 
     for (TransformConfig transformConfig : mTransforms) {
       transforms.add(
-              JavaOnlyMap.of(transformConfig.propertyName, transformConfig.getValue(mNodesManager)));
+          JavaOnlyMap.of(transformConfig.propertyName, transformConfig.getValue(mNodesManager)));
     }
 
     return JavaOnlyArray.from(transforms);

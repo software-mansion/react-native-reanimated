@@ -1,0 +1,37 @@
+name: Test Example App TypeScript and Lint
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Example/**'
+  push:
+    branches:
+      - main
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: Example
+    concurrency:
+      group: static-example-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+      - name: Install root node dependencies
+        run: yarn
+      - name: Install example app node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Check types
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn tsc --noEmit
+      - name: Lint
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn lint:js

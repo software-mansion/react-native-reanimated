@@ -1,0 +1,39 @@
+name: Test Android build
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'android/**'
+      - 'Common/**'
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: Example
+    concurrency:
+      group: android-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set ANDROID_NDK
+        run: echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
+      - name: Accept licenses
+        run: /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+      - name: Install root node dependencies
+        run: yarn
+      - name: Install example app node dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}/android
+        run: ./gradlew assembleDebug --console=plain

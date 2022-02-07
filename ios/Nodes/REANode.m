@@ -6,7 +6,7 @@
 @interface REAUpdateContext ()
 
 @property (nonatomic, nonnull) NSMutableArray<REANode *> *updatedNodes;
-@property (nonatomic) NSUInteger loopID;
+@property (nonatomic) NSNumber *loopID;
 
 @end
 
@@ -15,45 +15,47 @@
 - (instancetype)init
 {
   if ((self = [super init])) {
-    _loopID = 1;
+    _loopID = [[NSNumber alloc] initWithInt:1];
     _updatedNodes = [NSMutableArray new];
+    _callID = @"";
   }
   return self;
 }
 
 @end
 
-
 @interface REANode ()
 
-@property (nonatomic) NSUInteger lastLoopID;
-@property (nonatomic) id memoizedValue;
+@property (nonatomic) NSMutableDictionary<REANodeID, NSNumber *> *lastLoopID;
+@property (nonatomic) NSMutableDictionary<REANodeID, id> *memoizedValue;
 @property (nonatomic, nullable) NSMutableArray<REANode *> *childNodes;
 
 @end
 
 @implementation REANode
 
-- (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *,id> *)config
+- (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *, id> *)config
 {
   if ((self = [super init])) {
     _nodeID = nodeID;
-    _lastLoopID = 0;
+    _lastLoopID = [NSMutableDictionary dictionary];
+    _memoizedValue = [NSMutableDictionary dictionary];
+    _lastLoopID[@""] = 0;
   }
   return self;
 }
 
-RCT_NOT_IMPLEMENTED(- (instancetype)init)
+RCT_NOT_IMPLEMENTED(-(instancetype)init)
 
 - (void)dangerouslyRescheduleEvaluate
 {
-  _lastLoopID = 0;
+  _lastLoopID[self.updateContext.callID] = 0;
   [self markUpdated];
 }
 
 - (void)forceUpdateMemoizedValue:(id)value
 {
-  _memoizedValue = value;
+  _memoizedValue[self.updateContext.callID] = value;
   [self markUpdated];
 }
 
@@ -64,11 +66,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (id)value
 {
-  if (_lastLoopID < _updateContext.loopID) {
-    _lastLoopID = _updateContext.loopID;
-    return (_memoizedValue = [self evaluate]);
+  if (![_lastLoopID objectForKey:_updateContext.callID] ||
+      [[_lastLoopID objectForKey:_updateContext.callID] longValue] < [_updateContext.loopID longValue]) {
+    [_lastLoopID setObject:_updateContext.loopID forKey:_updateContext.callID];
+    id val = [self evaluate];
+    [_memoizedValue setObject:(val == nil ? [NSNull null] : val) forKey:_updateContext.callID];
+    return val;
   }
-  return _memoizedValue;
+  id memoizedValue = [_memoizedValue objectForKey:_updateContext.callID];
+  return [memoizedValue isKindOfClass:[NSNull class]] ? nil : memoizedValue;
 }
 
 - (void)addChild:(REANode *)child
@@ -78,7 +84,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
   if (child) {
     [_childNodes addObject:child];
-    [self dangerouslyRescheduleEvaluate];
+    [child dangerouslyRescheduleEvaluate];
   }
 }
 
@@ -127,9 +133,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   NSMutableSet<REANode *> *visitedNodes = [NSMutableSet new];
   NSMutableArray<id<REAFinalNode>> *finalNodes = [NSMutableArray new];
   for (NSUInteger i = 0; i < context.updatedNodes.count; i++) {
-    [self findAndUpdateNodes:context.updatedNodes[i]
-              withVisitedSet:visitedNodes
-              withFinalNodes:finalNodes];
+    [self findAndUpdateNodes:context.updatedNodes[i] withVisitedSet:visitedNodes withFinalNodes:finalNodes];
     if (i == context.updatedNodes.count - 1) {
       while (finalNodes.count > 0) {
         // NSMutableArray used for stack implementation
@@ -140,7 +144,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   }
 
   [context.updatedNodes removeAllObjects];
-  context.loopID++;
+  context.loopID = [[NSNumber alloc] initWithLong:context.loopID.longValue + 1];
+}
+
+- (void)onDrop
+{
+  // noop
 }
 
 @end

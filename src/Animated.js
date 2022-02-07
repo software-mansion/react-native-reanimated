@@ -1,59 +1,31 @@
-import { Image, ScrollView, Text, View } from 'react-native';
-import Easing from './Easing';
-import AnimatedClock from './core/AnimatedClock';
-import AnimatedValue from './core/AnimatedValue';
-import AnimatedNode from './core/AnimatedNode';
-import AnimatedCode from './core/AnimatedCode';
-import * as base from './base';
-import * as derived from './derived';
+import { LogBox } from 'react-native';
 import createAnimatedComponent from './createAnimatedComponent';
-import decay from './animations/decay';
-import timing from './animations/timing';
-import spring from './animations/spring';
-import TimingAnimation from './animations/TimingAnimation';
-import SpringAnimation from './animations/SpringAnimation';
-import DecayAnimation from './animations/DecayAnimation';
 import {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
 } from './ConfigHelper';
-import backwardCompatibleAnimWrapper from './animations/backwardCompatibleAnimWrapper';
-import {
-  Transition,
-  Transitioning,
-  createTransitioningComponent,
-} from './Transitioning';
-import SpringUtils from './animations/SpringUtils';
+import * as reanimated1 from './reanimated1';
+import ReanimatedComponents from './reanimated2/component';
 
 const Animated = {
   // components
-  View: createAnimatedComponent(View),
-  Text: createAnimatedComponent(Text),
-  Image: createAnimatedComponent(Image),
-  ScrollView: createAnimatedComponent(ScrollView),
-  Code: AnimatedCode,
+  ...ReanimatedComponents,
   createAnimatedComponent,
-
-  // classes
-  Clock: AnimatedClock,
-  Value: AnimatedValue,
-  Node: AnimatedNode,
-
-  // operations
-  ...base,
-  ...derived,
-
-  // animations
-  decay: backwardCompatibleAnimWrapper(decay, DecayAnimation),
-  timing: backwardCompatibleAnimWrapper(timing, TimingAnimation),
-  spring: backwardCompatibleAnimWrapper(spring, SpringAnimation),
-  SpringUtils,
-
   // configuration
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
+  // reanimated 1
+  ...reanimated1,
 };
 
+export * from './reanimated2';
+export * from './reanimated1';
 export default Animated;
 
-export { Easing, Transitioning, Transition, createTransitioningComponent };
+// I think we can ignore this message as long as Gesture Handler doesn't
+// try to load the Reanimated module. I figured it should be here instead of
+// RNGH because this prevents the message from being displayed for all
+// versions of RNGH.
+LogBox.ignoreLogs([
+  'RCTBridge required dispatch_sync to load RNGestureHandlerModule. This may lead to deadlocks',
+]);

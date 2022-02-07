@@ -1,0 +1,35 @@
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '11.0'
+
+config = use_native_modules!
+use_react_native!(
+  :path => config[:reactNativePath],
+  # to enable hermes on iOS, change `false` to `true` and then install pods
+  :hermes_enabled => false
+)
+
+def pods()
+  pod 'RNReanimated', :path => '../../'
+  pod 'ReactCommon/turbomodule/samples', :path => '../node_modules/react-native/ReactCommon'
+
+  # Additional Pods which aren't included in the default Podfile
+  pod 'Yoga', :path => '../node_modules/react-native/ReactCommon/yoga', :modular_headers => true
+  pod 'React-callinvoker', :path => "../node_modules/react-native/ReactCommon/callinvoker"
+  use_native_modules!
+end
+
+target 'ReanimatedExample' do
+  project 'ReanimatedExample'
+  pods()
+  post_install do |installer|
+    react_native_post_install(installer)
+    __apply_Xcode_12_5_M1_post_install_workaround(installer)
+  end
+end
+
+target 'ReanimatedExampleTests' do
+  inherit! :complete
+  pods()
+end

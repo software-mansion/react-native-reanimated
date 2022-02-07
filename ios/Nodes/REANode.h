@@ -3,7 +3,7 @@
 
 @class REANodesManager;
 
-typedef NSNumber* REANodeID;
+typedef NSNumber *REANodeID;
 
 @protocol REAFinalNode
 
@@ -12,14 +12,14 @@ typedef NSNumber* REANodeID;
 @end
 
 @interface REAUpdateContext : NSObject
+@property (nonatomic) NSString *callID;
 @end
 
 @interface REANode : NSObject
 
 + (void)runPropUpdates:(nonnull REAUpdateContext *)context;
 
-- (instancetype)initWithID:(REANodeID)nodeID
-                    config:(NSDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithID:(REANodeID)nodeID config:(NSDictionary<NSString *, id> *)config NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, weak, nullable) REANodesManager *nodesManager;
 @property (nonatomic, nullable) REAUpdateContext *updateContext;
@@ -34,5 +34,7 @@ typedef NSNumber* REANodeID;
 
 - (void)dangerouslyRescheduleEvaluate;
 - (void)forceUpdateMemoizedValue:(id)value;
+
+- (void)onDrop;
 
 @end
