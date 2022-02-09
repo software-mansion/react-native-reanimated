@@ -40,7 +40,6 @@ declare module 'react-native-reanimated' {
   } from 'react-native-gesture-handler';
 
   export {
-    Animation,
     TimingAnimation,
     SpringAnimation,
     DecayAnimation,
@@ -49,6 +48,8 @@ declare module 'react-native-reanimated' {
     SequenceAnimation,
     StyleLayoutAnimation,
   } from './src/reanimated2/animation/index';
+
+  export { Animation } from './src/reanimated2/commonTypes';
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
