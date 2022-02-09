@@ -16,8 +16,8 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
-message(WARNING "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+#message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
+#message(WARNING "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
@@ -27,7 +27,7 @@ else()
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
 
-message(WARNING "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
+#message(WARNING "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
 
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
@@ -161,7 +161,7 @@ endif()
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
+#message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
     target_link_libraries(
