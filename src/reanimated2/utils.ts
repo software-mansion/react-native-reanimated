@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { measure } from './NativeMethods';
-import { RefObjectFunction } from './hook/useAnimatedRef';
+import { RefObjectFunction } from './hook/commonTypes';
 
 export interface ComponentCoords {
   x: number;
