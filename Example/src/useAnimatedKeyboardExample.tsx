@@ -1,15 +1,19 @@
 import Animated, {
   useAnimatedStyle,
   useAnimatedKeyboard,
+  withTiming,
 } from 'react-native-reanimated';
 import { View, Button, TextInput, StyleSheet, Keyboard } from 'react-native';
 import React from 'react';
+
+const BOX_SIZE = 50;
 
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const style = useAnimatedStyle(() => {
     return {
       backgroundColor: keyboard.isShown.value ? 'pink' : 'blue',
+      borderRadius: withTiming(keyboard.isAnimating.value ? BOX_SIZE / 2 : 0),
     };
   });
 
@@ -33,7 +37,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 50,
   },
-  box: { width: 50, height: 50, marginBottom: 200 },
+  box: { width: BOX_SIZE, height: BOX_SIZE, marginBottom: 200 },
   textInput: {
     borderColor: 'blue',
     borderStyle: 'solid',

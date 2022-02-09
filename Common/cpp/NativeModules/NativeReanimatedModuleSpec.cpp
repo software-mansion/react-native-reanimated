@@ -108,8 +108,7 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value
-SPEC_PREFIX(subscribeForKeyboardEvents)(
+static jsi::Value SPEC_PREFIX(subscribeForKeyboardEvents)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
@@ -119,8 +118,7 @@ SPEC_PREFIX(subscribeForKeyboardEvents)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value
-SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
+static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
@@ -151,8 +149,10 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["getViewProp"] = MethodMetadata{3, SPEC_PREFIX(getViewProp)};
   methodMap_["enableLayoutAnimations"] =
       MethodMetadata{2, SPEC_PREFIX(enableLayoutAnimations)};
-  methodMap_["subscribeForKeyboardEvents"] = MethodMetadata{1, SPEC_PREFIX(subscribeForKeyboardEvents)};
-      methodMap_["unsubscribeFromKeyboardEvents"] = MethodMetadata{0, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
+  methodMap_["subscribeForKeyboardEvents"] =
+      MethodMetadata{1, SPEC_PREFIX(subscribeForKeyboardEvents)};
+  methodMap_["unsubscribeFromKeyboardEvents"] =
+      MethodMetadata{0, SPEC_PREFIX(unsubscribeFromKeyboardEvents)};
 }
 
 } // namespace reanimated
