@@ -69,6 +69,15 @@ def resolveBuildType() {
     return "$rootDir" != "$projectDir"
 }
 
+def resolveExpoLinkingGradle() {
+    def gradleScript = file("./expo/linking.gradle")
+    if (gradleScript.exists()) {
+        return "./expo/linking.gradle"
+    } else {
+        return "../android-npm/expo/linking.gradle"
+    }
+}
+
 println "rootDir: $rootDir"
 println "projectDir: $projectDir"
 
@@ -190,7 +199,7 @@ if (CLIENT_SIDE_BUILD) {
         }
     }
 
-    apply from: "./expo/linking.gradle"
+    apply from: resolveExpoLinkingGradle()
 }
 
 if (!BUILD_AAR_FROM_SOURCE) return
