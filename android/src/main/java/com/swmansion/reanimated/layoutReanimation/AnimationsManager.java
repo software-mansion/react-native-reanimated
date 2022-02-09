@@ -237,6 +237,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
           view = mUIManager.resolveView(tag);
           mViewForTag.put(tag, view);
         } catch (IllegalViewOperationException ignored) {
+          continue;
         }
       }
       findRoot(view, roots);
