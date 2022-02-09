@@ -702,6 +702,15 @@ declare module 'react-native-reanimated' {
   ): (...args: Parameters<typeof fn>) => R;
 
   export function useAnimatedRef<T extends Component>(): RefObject<T>;
+
+  export interface AnimatedKeyboardInfo {
+    isShown: SharedValue<boolean>;
+    isAnimating: SharedValue<boolean>;
+    height: SharedValue<number>;
+  }
+
+  export function useAnimatedKeyboard(): AnimatedKeyboardInfo;
+
   export function defineAnimation<T>(starting: any, factory: () => T): number;
   export function measure<T extends Component>(
     ref: RefObject<T>

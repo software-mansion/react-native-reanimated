@@ -63,6 +63,11 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value enableLayoutAnimations(
       jsi::Runtime &rt,
       const jsi::Value &config) = 0;
+
+  virtual void subscribeForKeyboardEvents(
+      jsi::Runtime &rt,
+      const jsi::Value &keyboardEventContainer) = 0;
+  virtual void unsubscribeFromKeyboardEvents(jsi::Runtime &rt) = 0;
 };
 
 } // namespace reanimated

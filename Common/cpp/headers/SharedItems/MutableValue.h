@@ -27,17 +27,16 @@ class MutableValue : public jsi::HostObject,
   std::weak_ptr<jsi::Value> animation;
   std::map<unsigned long, std::function<void()>> listeners;
 
+ public:
   void setValue(jsi::Runtime &rt, const jsi::Value &newValue);
   jsi::Value getValue(jsi::Runtime &rt);
 
- public:
   MutableValue(
       jsi::Runtime &rt,
       const jsi::Value &initial,
       RuntimeManager *runtimeManager,
       std::shared_ptr<Scheduler> s);
 
- public:
   void
   set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name);

@@ -35,9 +35,6 @@ JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
 #else
   [eventDispatcher setBridge:bridge];
 #endif
-  static REAKeyboardEventObserver *keyboardEventObserver =
-      [[REAKeyboardEventObserver alloc] initWithEventDispatcher:eventDispatcher];
-  [keyboardEventObserver registerKeyboardEventsObservers];
   [bridge updateModuleWithInstance:eventDispatcher];
   const auto runtimeInstaller = [bridge, runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
     if (!bridge) {

@@ -69,4 +69,12 @@ export class NativeReanimated {
   enableLayoutAnimations(flag: boolean): void {
     InnerNativeModule.enableLayoutAnimations(flag);
   }
+
+  subscribeForKeyboardEvents(keyboardEventData) {
+    return InnerNativeModule.subscribeForKeyboardEvents(keyboardEventData);
+  }
+
+  unsubscribeFromKeyboardEvents() {
+    InnerNativeModule.unsubscribeFromKeyboardEvents();
+  }
 }

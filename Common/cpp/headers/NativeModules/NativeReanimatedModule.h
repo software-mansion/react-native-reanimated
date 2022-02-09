@@ -78,6 +78,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
 
+  void subscribeForKeyboardEvents(
+      jsi::Runtime &rt,
+      const jsi::Value &keyboardEventContainer) override;
+  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt) override;
+
  private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
   std::shared_ptr<EventHandlerRegistry> eventHandlerRegistry;
@@ -89,6 +94,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       propObtainer;
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+
+  KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction;
+  KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction;
 };
 
 } // namespace reanimated

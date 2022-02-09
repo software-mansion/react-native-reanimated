@@ -110,6 +110,28 @@ __hostFunction_NativeReanimatedModuleSpec_enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
+static jsi::Value
+__hostFunction_NativeReanimatedModuleSpec_subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->subscribeForKeyboardEvents(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value
+__hostFunction_NativeReanimatedModuleSpec_unsubscribeFromKeyboardEvents(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->unsubscribeFromKeyboardEvents(rt);
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -137,6 +159,12 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
       MethodMetadata{3, __hostFunction_NativeReanimatedModuleSpec_getViewProp};
   methodMap_["enableLayoutAnimations"] = MethodMetadata{
       2, __hostFunction_NativeReanimatedModuleSpec_enableLayoutAnimations};
+
+  methodMap_["subscribeForKeyboardEvents"] = MethodMetadata{
+      1, __hostFunction_NativeReanimatedModuleSpec_subscribeForKeyboardEvents};
+  methodMap_["unsubscribeFromKeyboardEvents"] = MethodMetadata{
+      0,
+      __hostFunction_NativeReanimatedModuleSpec_unsubscribeFromKeyboardEvents};
 }
 
 } // namespace reanimated

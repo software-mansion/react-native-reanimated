@@ -8,6 +8,7 @@
 #include "JSIStoreValueUser.h"
 #include "Mapper.h"
 #include "MapperRegistry.h"
+#include "MutableValue.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "RuntimeDecorator.h"
 #include "ShareableValue.h"
@@ -92,6 +93,10 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->onRender(timestampMs);
   };
   updaterFunction = platformDepMethodsHolder.updaterFunction;
+  subscribeForKeyboardEventsFunction =
+      platformDepMethodsHolder.subscribeForKeyboardEvents;
+  unsubscribeFromKeyboardEventsFunction =
+      platformDepMethodsHolder.unsubscribeFromKeyboardEvents;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -296,6 +301,47 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+void NativeReanimatedModule::subscribeForKeyboardEvents(
+    jsi::Runtime &rt,
+    const jsi::Value &keyboardEventContainer) {
+  jsi::Object keyboardEventObj = keyboardEventContainer.getObject(rt);
+  std::unordered_map<std::string, std::shared_ptr<ShareableValue>>
+      sharedProperties;
+  sharedProperties.emplace(
+      "isShown",
+      ShareableValue::adapt(
+          rt, keyboardEventObj.getProperty(rt, "isShown"), this));
+  sharedProperties.emplace(
+      "isAnimating",
+      ShareableValue::adapt(
+          rt, keyboardEventObj.getProperty(rt, "isAnimating"), this));
+  sharedProperties.emplace(
+      "height",
+      ShareableValue::adapt(
+          rt, keyboardEventObj.getProperty(rt, "height"), this));
+
+  auto keyboardEventDataUpdater =
+      [&rt, sharedProperties](bool isShown, bool isAnimating, int height) {
+        auto &isShownMutableValue = ValueWrapper::asMutableValue(
+            sharedProperties.at("isShown")->valueContainer);
+        isShownMutableValue->setValue(rt, jsi::Value(isShown));
+
+        auto &isAnimatingMutableValue = ValueWrapper::asMutableValue(
+            sharedProperties.at("isAnimating")->valueContainer);
+        isAnimatingMutableValue->setValue(rt, jsi::Value(isAnimating));
+
+        auto &heightMutableValue = ValueWrapper::asMutableValue(
+            sharedProperties.at("height")->valueContainer);
+        heightMutableValue->setValue(rt, jsi::Value(height));
+      };
+
+  subscribeForKeyboardEventsFunction(keyboardEventDataUpdater);
+}
+
+void NativeReanimatedModule::unsubscribeFromKeyboardEvents(jsi::Runtime &rt) {
+  unsubscribeFromKeyboardEventsFunction();
 }
 
 } // namespace reanimated

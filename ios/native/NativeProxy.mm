@@ -10,6 +10,7 @@
 #import "REAAnimationsManager.h"
 #import "REAIOSErrorHandler.h"
 #import "REAIOSScheduler.h"
+#import "REAKeyboardEventObserver.h"
 #import "REAModule.h"
 #import "REANodesManager.h"
 #import "REAUIManager.h"
@@ -224,6 +225,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   // Layout Animations end
 
+  // keyboard events
+
+  static REAKeyboardEventObserver *kbObserver = [[REAKeyboardEventObserver alloc] init];
+  auto subscribeForKeyboardEventsFunction =
+      [](std::function<void(bool isShown, bool isAnimating, int height)> keyboardEventDataUpdater) {
+        [kbObserver subscribeForKeyboardEvents:^(bool isShown, bool isAnimating, int height) {
+          NSLog(@"isShown: %d, isAnimating: %d, height: %d", isShown, isAnimating, height);
+          keyboardEventDataUpdater(isShown, isAnimating, height);
+        }];
+      };
+
+  auto unsubscribeFromKeyboardEventsFunction = []() { [kbObserver unsubscribeFromKeyboardEvents]; };
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       propUpdater,
@@ -231,7 +245,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       measuringFunction,
       getCurrentTime,
       setGestureStateFunction,
-  };
+      subscribeForKeyboardEventsFunction,
+      unsubscribeFromKeyboardEventsFunction};
 
   module = std::make_shared<NativeReanimatedModule>(
       jsInvoker,

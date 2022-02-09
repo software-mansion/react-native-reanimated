@@ -49,6 +49,7 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import useAnimatedKeyboardExample from './useAnimatedKeyboardExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -61,6 +62,10 @@ if (Platform.OS === 'android') {
 type Screens = Record<string, { screen: React.ComponentType; title?: string }>;
 
 const SCREENS: Screens = {
+  useAnimatedKeyboardExample: {
+    screen: useAnimatedKeyboardExample,
+    title: '🆕 useAnimatedKeyboard',
+  },
   DefaultAnimations: {
     screen: DefaultAnimations,
     title: '🆕 Default layout animations',
