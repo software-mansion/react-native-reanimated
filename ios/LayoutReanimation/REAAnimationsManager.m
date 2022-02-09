@@ -198,9 +198,9 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 - (double)getSafeDouble:(NSNumber *)number
 {
   double doubleValue = [number doubleValue];
-  //  if (doubleValue != doubleValue) { // NaN != NaN
-  //    return 0;
-  //  }
+  if (doubleValue != doubleValue) { // NaN != NaN
+    return 0;
+  }
   return doubleValue;
 }
 
