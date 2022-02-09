@@ -14,7 +14,7 @@ typedef NS_ENUM(NSInteger, FrameConfigType) { EnteringFrame, ExitingFrame };
 
 - (void)removeLeftovers;
 - (void)scheduleCleaning;
-- (double)getSafeDouble:(NSNumber *)number;
+- (double)getDoubleOrZero:(NSNumber *)number;
 
 @end
 
