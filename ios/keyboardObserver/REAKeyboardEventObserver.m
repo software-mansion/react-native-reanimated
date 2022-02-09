@@ -27,7 +27,7 @@
 {
   NSDictionary *userInfo = notification.userInfo;
   CGRect frameStart = [userInfo[UIKeyboardFrameBeginUserInfoKey] CGRectValue];
-  self->listener(true, false, frameStart.size.height);
+  self->listener(true, true, frameStart.size.height);
 }
 
 - (void)keyboardDidShow:(NSNotification *)notification
