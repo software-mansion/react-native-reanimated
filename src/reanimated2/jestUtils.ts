@@ -174,6 +174,7 @@ export const advanceAnimationByFrame = (count) => {
 
 export const setUpTests = (userConfig = {}) => {
   const expect = require('expect');
+  require('setimmediate');
   frameTime = Math.round(1000 / config.fps);
 
   config = {
