@@ -11,9 +11,11 @@ const BOX_SIZE = 50;
 function AnimatedStyleUpdateExample(): React.ReactElement {
   const keyboard = useAnimatedKeyboard();
   const style = useAnimatedStyle(() => {
+    const isTransitioning =
+      keyboard.isAnimating.value === keyboard.isShown.value;
     return {
       backgroundColor: keyboard.isShown.value ? 'pink' : 'blue',
-      borderRadius: withTiming(keyboard.isAnimating.value ? BOX_SIZE / 2 : 0),
+      borderRadius: withTiming(isTransitioning ? BOX_SIZE / 2 : 0),
     };
   });
 
