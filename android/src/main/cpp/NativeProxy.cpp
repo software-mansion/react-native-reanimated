@@ -67,7 +67,7 @@ void NativeProxy::installJSIBindings() {
 
   auto getCurrentTime = [this]() {
     auto method =
-        javaPart_->getClass()->getMethod<local_ref<JString>()>("getUpTime");
+        javaPart_->getClass()->getMethod<local_ref<JString>()>("getUptime");
     local_ref<JString> output = method(javaPart_.get());
     return static_cast<double>(
         std::strtoll(output->toStdString().c_str(), NULL, 10));

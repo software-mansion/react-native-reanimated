@@ -1,3 +1,6 @@
+#if TARGET_IPHONE_SIMULATOR
+#import <dlfcn.h>
+#endif
 
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
@@ -26,6 +29,41 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
+
+static CGFloat SimAnimationDragCoefficient(void)
+{
+  static float (*UIAnimationDragCoefficient)(void) = NULL;
+#if TARGET_IPHONE_SIMULATOR
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    UIAnimationDragCoefficient = (float (*)(void))dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient");
+  });
+#endif
+  return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;
+}
+
+static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
+{
+#if TARGET_IPHONE_SIMULATOR
+  static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
+  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
+
+  const CGFloat dragCoef = SimAnimationDragCoefficient();
+  if (previousDragCoef != dragCoef) {
+    previousDragCoef = dragCoef;
+    dragCoefChangedTimestamp = CACurrentMediaTime();
+  }
+
+  const bool areSlowAnimationsEnabled = dragCoef != 1.f;
+  if (areSlowAnimationsEnabled) {
+    return (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
+  } else {
+    return currentTimestamp;
+  }
+#else
+  return currentTimestamp;
+#endif
+}
 
 // COPIED FROM RCTTurboModule.mm
 static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &value);
@@ -149,7 +187,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      double frameTimestamp = displayLink.targetTimestamp * 1000;
+      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
       global.setProperty(rt, frameTimestampName, frameTimestamp);
@@ -158,7 +196,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }];
   };
 
-  auto getCurrentTime = []() { return CACurrentMediaTime() * 1000; };
+  auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // Layout Animations start
   REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
