@@ -168,7 +168,7 @@ As you can see context may be really handy sparing us declaring additional varia
 
 ## Reanimated and react-native-gesture-handler
 
-You have already met *TapGestureHandler* and *PanGestureHandler* but there are many more. For instance, you can listen for pinch gestures with *PinchGestureHandler*. It allows you to track the distance between two fingers and uses that information to scale or zoom your content. The full list of available gesture handlers can be found here.
+You have already met *TapGestureHandler* and *PanGestureHandler* but there are many more. For instance, you can listen for pinch gestures with *PinchGestureHandler*. It allows you to track the distance between two fingers and uses that information to scale or zoom your content. The full list of available gesture handlers can be found [here](https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/basics/about-handlers#available-gesture-handlers).
 
 <div class="resp-container">
 <iframe class="resp-iframe"  gesture="media"  allow="encrypted-media" allowfullscreen src="https://www.youtube.com/embed/IdVnnIkNzGA">
