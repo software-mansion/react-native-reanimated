@@ -3,6 +3,7 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
 #import <React/RCTAppSetupUtils.h>
+#import "MBFingerTipWindow.h"
 
 @implementation AppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -17,6 +18,14 @@
     rootView.backgroundColor = [UIColor whiteColor];
   }
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+
+  const bool showTaps = true;
+  if (showTaps) {
+    MBFingerTipWindow *window = [[MBFingerTipWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    window.alwaysShowTouches = YES;
+    self.window = window;
+  }
+
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
