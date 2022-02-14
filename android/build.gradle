@@ -17,8 +17,10 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'maven'
+plugins {
+    id('com.android.library')
+    id('maven-publish')
+}
 
 android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
@@ -54,34 +56,6 @@ dependencies {
     implementation "androidx.transition:transition:1.1.0"
 }
 
-def configureReactNativePom(def pom) {
-    def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
-
-    pom.project {
-        name packageJson.title
-        artifactId packageJson.name
-        version = packageJson.version
-        group = "com.swmansion.reanimated"
-        description packageJson.description
-        url packageJson.repository.baseUrl
-
-        licenses {
-            license {
-                name packageJson.license
-                url packageJson.repository.baseUrl + '/blob/master/' + packageJson.licenseFilename
-                distribution 'repo'
-            }
-        }
-
-        developers {
-            developer {
-                id packageJson.author.username
-                name packageJson.author.name
-            }
-        }
-    }
-}
-
 afterEvaluate { project ->
 
     task androidJavadoc(type: Javadoc) {
@@ -92,12 +66,12 @@ afterEvaluate { project ->
     }
 
     task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
-        classifier = 'javadoc'
+        archiveClassifier = 'javadoc'
         from androidJavadoc.destinationDir
     }
 
     task androidSourcesJar(type: Jar) {
-        classifier = 'sources'
+        archiveClassifier = 'sources'
         from android.sourceSets.main.java.srcDirs
         include '**/*.java'
     }
@@ -121,13 +95,11 @@ afterEvaluate { project ->
         archives androidJavadocJar
     }
 
-    task installArchives(type: Upload) {
-        configuration = configurations.archives
-        repositories.mavenDeployer {
-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
-            repository url: "file://${projectDir}/../android/maven"
-
-            configureReactNativePom pom
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifact androidSourcesJar
+            }
         }
     }
 }
