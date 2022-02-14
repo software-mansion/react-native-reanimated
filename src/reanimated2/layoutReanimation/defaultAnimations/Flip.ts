@@ -21,6 +21,7 @@ export class FlipInXUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -31,6 +32,7 @@ export class FlipInXUp
             { rotateX: '90deg' },
             { translateY: -targetValues.targetHeight },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -57,6 +59,7 @@ export class FlipInYLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -67,6 +70,7 @@ export class FlipInYLeft
             { rotateY: '-90deg' },
             { translateX: -targetValues.targetWidth },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -93,6 +97,7 @@ export class FlipInXDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -103,6 +108,7 @@ export class FlipInXDown
             { rotateX: '-90deg' },
             { translateY: targetValues.targetHeight },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -129,6 +135,7 @@ export class FlipInYRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -139,6 +146,7 @@ export class FlipInYRight
             { rotateY: '90deg' },
             { translateX: targetValues.targetWidth },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -165,12 +173,14 @@ export class FlipInEasyX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateX: '90deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -196,12 +206,14 @@ export class FlipInEasyY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateY: '90deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -227,6 +239,7 @@ export class FlipOutXUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -237,6 +250,7 @@ export class FlipOutXUp
             { rotateX: '0deg' },
             { translateY: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -268,6 +282,7 @@ export class FlipOutYLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -278,6 +293,7 @@ export class FlipOutYLeft
             { rotateY: '0deg' },
             { translateX: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -309,6 +325,7 @@ export class FlipOutXDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -319,6 +336,7 @@ export class FlipOutXDown
             { rotateX: '0deg' },
             { translateY: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -350,6 +368,7 @@ export class FlipOutYRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -360,6 +379,7 @@ export class FlipOutYRight
             { rotateY: '0deg' },
             { translateX: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -391,12 +411,14 @@ export class FlipOutEasyX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateX: '0deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -422,12 +444,14 @@ export class FlipOutEasyY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateY: '0deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [

@@ -830,6 +830,9 @@ declare module 'react-native-reanimated' {
       callback: (finished: boolean) => void
     ): ComplexAnimationBuilder;
 
+    static withInitialValues(values: StyleProps): BaseAnimationBuilder;
+    withInitialValues(values: StyleProps): BaseAnimationBuilder;
+
     static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     static springify(): ComplexAnimationBuilder;

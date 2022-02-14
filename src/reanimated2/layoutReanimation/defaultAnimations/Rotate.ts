@@ -19,6 +19,7 @@ export class RotateInDownLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -38,6 +39,7 @@ export class RotateInDownLeft
             { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
             { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -57,6 +59,7 @@ export class RotateInDownRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -76,6 +79,7 @@ export class RotateInDownRight
             { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
             { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -95,6 +99,7 @@ export class RotateInUpLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -114,6 +119,7 @@ export class RotateInUpLeft
             { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
             { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -133,6 +139,7 @@ export class RotateInUpRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -152,6 +159,7 @@ export class RotateInUpRight
             { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
             { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -171,6 +179,7 @@ export class RotateOutDownLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -202,6 +211,7 @@ export class RotateOutDownLeft
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -221,6 +231,7 @@ export class RotateOutDownRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -252,6 +263,7 @@ export class RotateOutDownRight
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -271,6 +283,7 @@ export class RotateOutUpLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -302,6 +315,7 @@ export class RotateOutUpLeft
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -321,6 +335,7 @@ export class RotateOutUpRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -352,6 +367,7 @@ export class RotateOutUpRight
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };

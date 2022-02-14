@@ -24,6 +24,7 @@ export class ZoomIn
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -33,6 +34,7 @@ export class ZoomIn
         },
         initialValues: {
           transform: [{ scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -53,6 +55,7 @@ export class ZoomInRotate
     const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -65,6 +68,7 @@ export class ZoomInRotate
         },
         initialValues: {
           transform: [{ scale: 0 }, { rotate: rotate }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -84,6 +88,7 @@ export class ZoomInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -96,6 +101,7 @@ export class ZoomInLeft
         },
         initialValues: {
           transform: [{ translateX: -width }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -115,6 +121,7 @@ export class ZoomInRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -127,6 +134,7 @@ export class ZoomInRight
         },
         initialValues: {
           transform: [{ translateX: width }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -146,6 +154,7 @@ export class ZoomInUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -158,6 +167,7 @@ export class ZoomInUp
         },
         initialValues: {
           transform: [{ translateY: -height }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -177,6 +187,7 @@ export class ZoomInDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -189,6 +200,7 @@ export class ZoomInDown
         },
         initialValues: {
           transform: [{ translateY: height }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -208,6 +220,7 @@ export class ZoomInEasyUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -220,6 +233,7 @@ export class ZoomInEasyUp
         },
         initialValues: {
           transform: [{ translateY: -values.targetHeight }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -239,6 +253,7 @@ export class ZoomInEasyDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -251,6 +266,7 @@ export class ZoomInEasyDown
         },
         initialValues: {
           transform: [{ translateY: values.targetHeight }, { scale: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -270,6 +286,7 @@ export class ZoomOut
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -279,6 +296,7 @@ export class ZoomOut
         },
         initialValues: {
           transform: [{ scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -299,6 +317,7 @@ export class ZoomOutRotate
     const delay = this.getDelay();
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -311,6 +330,7 @@ export class ZoomOutRotate
         },
         initialValues: {
           transform: [{ scale: 1 }, { rotate: '0' }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -330,6 +350,7 @@ export class ZoomOutLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -342,6 +363,7 @@ export class ZoomOutLeft
         },
         initialValues: {
           transform: [{ translateX: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -361,6 +383,7 @@ export class ZoomOutRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -373,6 +396,7 @@ export class ZoomOutRight
         },
         initialValues: {
           transform: [{ translateX: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -392,6 +416,7 @@ export class ZoomOutUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -404,6 +429,7 @@ export class ZoomOutUp
         },
         initialValues: {
           transform: [{ translateY: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -423,6 +449,7 @@ export class ZoomOutDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -435,6 +462,7 @@ export class ZoomOutDown
         },
         initialValues: {
           transform: [{ translateY: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -454,6 +482,7 @@ export class ZoomOutEasyUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -471,6 +500,7 @@ export class ZoomOutEasyUp
         },
         initialValues: {
           transform: [{ translateY: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -490,6 +520,7 @@ export class ZoomOutEasyDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -507,6 +538,7 @@ export class ZoomOutEasyDown
         },
         initialValues: {
           transform: [{ translateY: 0 }, { scale: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
