@@ -510,7 +510,7 @@
   _nativeProps = nativeProps;
 }
 
-- (BOOL)isNativeViewFullyMounted:(NSNumber *)viewTag
+- (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag
 {
   return _viewRegistry[viewTag].superview == nil;
 }
@@ -530,7 +530,7 @@
            withName:(nonnull NSString *)viewName
 {
   ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  if ([self isNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
+  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
       propsSnapshot.props = [props mutableCopy];
