@@ -78,6 +78,6 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 
 - (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue;
 
-- (void)tryToFlushUpdateBuffer;
+- (void)maybeFlushUpdateBuffer;
 
 @end

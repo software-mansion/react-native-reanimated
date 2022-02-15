@@ -3,6 +3,7 @@
 #import <React/RCTConvert.h>
 
 #import <React/RCTShadowView.h>
+#import <stdatomic.h>
 #import "Nodes/REAAlwaysNode.h"
 #import "Nodes/REABezierNode.h"
 #import "Nodes/REABlockNode.h"
@@ -111,7 +112,7 @@
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  NSLock *_componentUpdateBufferLock;
+  volatile atomic_bool _isComponentUpdateBufferEmpty;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 }
 
@@ -128,8 +129,8 @@
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableArray new];
     _componentUpdateBuffer = [NSMutableDictionary new];
-    _componentUpdateBufferLock = [[NSLock alloc] init];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
+    _isComponentUpdateBufferEmpty = false;
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -509,9 +510,9 @@
   _nativeProps = nativeProps;
 }
 
-- (BOOL)isNativeViewFullyMounted:(ComponentUpdate *)lastSnapshot viewTag:(NSNumber *)viewTag
+- (BOOL)isNativeViewFullyMounted:(NSNumber *)viewTag
 {
-  return _viewRegistry[viewTag].superview == nil || lastSnapshot != nil;
+  return _viewRegistry[viewTag].superview == nil;
 }
 
 - (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
@@ -528,9 +529,8 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  [_componentUpdateBufferLock lock];
   ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  if ([self isNativeViewFullyMounted:lastSnapshot viewTag:viewTag]) {
+  if ([self isNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
       propsSnapshot.props = [props mutableCopy];
@@ -543,10 +543,9 @@
         [lastProps setValue:props[key] forKey:key];
       }
     }
-    [_componentUpdateBufferLock unlock];
+    atomic_store(&_isComponentUpdateBufferEmpty, false);
     return;
   }
-  [_componentUpdateBufferLock unlock];
 
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
@@ -595,14 +594,13 @@
   return result;
 }
 
-- (void)tryToFlushUpdateBuffer
+- (void)maybeFlushUpdateBuffer
 {
-  [_componentUpdateBufferLock lock];
-  if (_componentUpdateBuffer.count == 0) {
-    [_componentUpdateBufferLock unlock];
+  RCTAssertUIManagerQueue();
+  bool isEmptyButter = atomic_load(&_isComponentUpdateBufferEmpty);
+  if (isEmptyButter) {
     return;
   }
-  [_componentUpdateBufferLock unlock];
 
   __weak typeof(self) weakSelf = self;
   [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
@@ -610,10 +608,9 @@
     if (strongSelf == nil) {
       return;
     }
-    [strongSelf->_componentUpdateBufferLock lock];
+    atomic_store(&strongSelf->_isComponentUpdateBufferEmpty, true);
     NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
     strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-    [strongSelf->_componentUpdateBufferLock unlock];
     for (NSNumber *tag in componentUpdateBuffer) {
       ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
       if (componentUpdate == Nil) {

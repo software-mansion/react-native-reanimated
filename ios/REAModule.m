@@ -153,7 +153,7 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
-  [_nodesManager tryToFlushUpdateBuffer];
+  [_nodesManager maybeFlushUpdateBuffer];
   if (_operations.count == 0) {
     return;
   }
