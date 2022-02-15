@@ -21,6 +21,7 @@ export class LightSpeedInRight
     const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -49,6 +50,7 @@ export class LightSpeedInRight
         initialValues: {
           opacity: 0,
           transform: [{ translateX: width }, { skewX: '-45deg' }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -69,6 +71,7 @@ export class LightSpeedInLeft
     const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -97,6 +100,7 @@ export class LightSpeedInLeft
         initialValues: {
           opacity: 0,
           transform: [{ translateX: -width }, { skewX: '45deg' }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -116,6 +120,7 @@ export class LightSpeedOutRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -134,6 +139,7 @@ export class LightSpeedOutRight
         initialValues: {
           opacity: 1,
           transform: [{ translateX: 0 }, { skewX: '0deg' }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -153,6 +159,7 @@ export class LightSpeedOutLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -171,6 +178,7 @@ export class LightSpeedOutLeft
         initialValues: {
           opacity: 1,
           transform: [{ translateX: 0 }, { skewX: '0deg' }],
+          ...initialValues,
         },
         callback: callback,
       };

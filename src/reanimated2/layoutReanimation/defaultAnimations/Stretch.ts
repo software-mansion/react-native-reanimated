@@ -16,6 +16,7 @@ export class StretchInX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -25,6 +26,7 @@ export class StretchInX
         },
         initialValues: {
           transform: [{ scaleX: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -44,6 +46,7 @@ export class StretchInY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -53,6 +56,7 @@ export class StretchInY
         },
         initialValues: {
           transform: [{ scaleY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -72,6 +76,7 @@ export class StretchOutX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -81,6 +86,7 @@ export class StretchOutX
         },
         initialValues: {
           transform: [{ scaleX: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -100,6 +106,7 @@ export class StretchOutY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
@@ -109,6 +116,7 @@ export class StretchOutY
         },
         initialValues: {
           transform: [{ scaleY: 1 }],
+          ...initialValues,
         },
         callback: callback,
       };

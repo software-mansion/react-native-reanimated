@@ -6,6 +6,8 @@ import {
 } from './commonTypes';
 import { EasingFn } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
+import { StyleProps } from '../../commonTypes';
+
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   easingV?: EasingFn;
   rotateV?: string;
@@ -16,6 +18,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   overshootClampingV?: number;
   restDisplacementThresholdV?: number;
   restSpeedThresholdV?: number;
+  initialValues?: StyleProps;
 
   static createInstance: () => ComplexAnimationBuilder;
 
@@ -112,6 +115,16 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   restSpeedThreshold(restSpeedThreshold: number): ComplexAnimationBuilder {
     this.restSpeedThresholdV = restSpeedThreshold;
+    return this;
+  }
+
+  static withInitialValues(values: StyleProps): BaseAnimationBuilder {
+    const instance = this.createInstance();
+    return instance.withInitialValues(values);
+  }
+
+  withInitialValues(values: StyleProps): BaseAnimationBuilder {
+    this.initialValues = values;
     return this;
   }
 
