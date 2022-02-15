@@ -537,13 +537,13 @@
       propsSnapshot.viewTag = viewTag;
       propsSnapshot.viewName = viewName;
       _componentUpdateBuffer[viewTag] = propsSnapshot;
+      atomic_store(&_isComponentUpdateBufferEmpty, false);
     } else {
       NSMutableDictionary *lastProps = lastSnapshot.props;
       for (NSString *key in props) {
         [lastProps setValue:props[key] forKey:key];
       }
     }
-    atomic_store(&_isComponentUpdateBufferEmpty, false);
     return;
   }
 
