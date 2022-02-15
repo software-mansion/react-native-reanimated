@@ -47,7 +47,7 @@ import Animated, {
   useAnimatedProps,
   useAnimatedRef,
   // eslint-disable-next-line import/no-unresolved
-} from 'react-native-reanimated';
+} from '@exodus/react-native-reanimated';
 
 class Path extends React.Component<{ fill?: string }> {
   render() {
