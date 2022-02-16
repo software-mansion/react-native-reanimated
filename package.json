@@ -25,7 +25,10 @@
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "prepare": "husky install",
-    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src"
+    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
+    "setup": "yarn && cd Example && yarn && cd ios && pod install && cd ../..",
+    "clear": "rm -rf ./node_modules && cd Example && rm -rf ./node_modules && cd ios && pod deintegrate && cd ../..",
+    "reset": "yarn clear && yarn setup"
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
