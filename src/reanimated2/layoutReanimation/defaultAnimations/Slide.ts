@@ -22,6 +22,7 @@ export class SlideInRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -34,6 +35,7 @@ export class SlideInRight
         },
         initialValues: {
           originX: values.targetOriginX + width,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -53,6 +55,7 @@ export class SlideInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -65,6 +68,7 @@ export class SlideInLeft
         },
         initialValues: {
           originX: values.targetOriginX - width,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -84,6 +88,7 @@ export class SlideOutRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -96,6 +101,7 @@ export class SlideOutRight
         },
         initialValues: {
           originX: values.currentOriginX,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -115,6 +121,7 @@ export class SlideOutLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -127,6 +134,7 @@ export class SlideOutLeft
         },
         initialValues: {
           originX: values.currentOriginX,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -146,6 +154,7 @@ export class SlideInUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -158,6 +167,7 @@ export class SlideInUp
         },
         initialValues: {
           originY: -height,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -177,6 +187,7 @@ export class SlideInDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -189,6 +200,7 @@ export class SlideInDown
         },
         initialValues: {
           originY: values.targetOriginY + height,
+          ...initialValues,
         },
         callback: callback,
       };
@@ -208,6 +220,7 @@ export class SlideOutUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -218,7 +231,7 @@ export class SlideOutUp
             animation(Math.min(values.currentOriginY - height, -height), config)
           ),
         },
-        initialValues: { originY: values.currentOriginY },
+        initialValues: { originY: values.currentOriginY, ...initialValues },
         callback: callback,
       };
     };
@@ -237,6 +250,7 @@ export class SlideOutDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -247,7 +261,7 @@ export class SlideOutDown
             animation(Math.max(values.currentOriginY + height, height), config)
           ),
         },
-        initialValues: { originY: values.currentOriginY },
+        initialValues: { originY: values.currentOriginY, ...initialValues },
         callback: callback,
       };
     };

@@ -5,10 +5,13 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.devsupport.interfaces.DevOptionHandler;
+import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -74,6 +77,8 @@ public class NativeProxy {
   private final WeakReference<ReactApplicationContext> mContext;
   private Scheduler mScheduler = null;
   private final GestureHandlerStateManager gestureHandlerStateManager;
+  private Long firstUptime = SystemClock.uptimeMillis();
+  private boolean slowAnimationsEnabled = false;
 
   public NativeProxy(ReactApplicationContext context) {
     CallInvokerHolderImpl holder =
@@ -85,6 +90,7 @@ public class NativeProxy {
             context.getJavaScriptContextHolder().get(), holder, mScheduler, LayoutAnimations);
     mContext = new WeakReference<>(context);
     prepare(LayoutAnimations);
+    addDevMenuOption();
 
     GestureHandlerStateManager tempHandlerStateManager;
     try {
@@ -111,6 +117,22 @@ public class NativeProxy {
 
   public Scheduler getScheduler() {
     return mScheduler;
+  }
+
+  private void toggleSlowAnimations() {
+    slowAnimationsEnabled = !slowAnimationsEnabled;
+    if (slowAnimationsEnabled) {
+      firstUptime = SystemClock.uptimeMillis();
+    }
+  }
+
+  private void addDevMenuOption() {
+    final DevSupportManager devSupportManager = ((ReactApplication) mContext.get().getApplicationContext())
+        .getReactNativeHost()
+        .getReactInstanceManager()
+        .getDevSupportManager();
+
+    devSupportManager.addCustomDevOption("Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
   }
 
   @DoNotStrip
@@ -141,8 +163,13 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  private String getUpTime() {
-    return Long.toString(SystemClock.uptimeMillis());
+  private String getUptime() {
+    if (slowAnimationsEnabled) {
+      final long ANIMATIONS_DRAG_FACTOR = 10;
+      return Long.toString(this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+    } else {
+      return Long.toString(SystemClock.uptimeMillis());
+    }
   }
 
   @DoNotStrip
