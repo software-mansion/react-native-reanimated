@@ -4,7 +4,7 @@ import { Descriptor } from '../hook/commonTypes';
 
 export class NativeReanimated {
   native: boolean;
-  private InnerNativeModule: Record<string, <T>(...args) => T>;
+  private InnerNativeModule: any;
 
   constructor(native = true) {
     if (global.__reanimatedModuleProxy === undefined) {

@@ -63,7 +63,7 @@ export const checkPluginState: (throwError: boolean) => boolean = (
 export const isConfigured: (throwError?: boolean) => boolean = (
   throwError = false
 ) => {
-  return checkPluginState(throwError) && !NativeReanimatedModule.useOnlyV1;
+  return checkPluginState(throwError);
 };
 
 export const isConfiguredCheck: () => void = () => {
@@ -362,32 +362,30 @@ export function runOnJS<A extends any[], R>(
   }
 }
 
-if (!NativeReanimatedModule.useOnlyV1) {
-  NativeReanimatedModule.installCoreFunctions(
-    NativeReanimatedModule.native
-      ? (workletValueSetter as <T>(value: T) => void)
-      : (workletValueSetterJS as <T>(value: T) => void)
-  );
+NativeReanimatedModule.installCoreFunctions(
+  NativeReanimatedModule.native
+    ? (workletValueSetter as <T>(value: T) => void)
+    : (workletValueSetterJS as <T>(value: T) => void)
+);
 
-  if (!isWeb() && isConfigured()) {
-    const capturableConsole = console;
-    runOnUI(() => {
-      'worklet';
-      const console = {
-        debug: runOnJS(capturableConsole.debug),
-        log: runOnJS(capturableConsole.log),
-        warn: runOnJS(capturableConsole.warn),
-        error: runOnJS(capturableConsole.error),
-        info: runOnJS(capturableConsole.info),
+if (!isWeb() && isConfigured()) {
+  const capturableConsole = console;
+  runOnUI(() => {
+    'worklet';
+    const console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+    if (global.performance == null) {
+      global.performance = {
+        now: global._chronoNow,
       };
-      _setGlobalConsole(console);
-      if (global.performance == null) {
-        global.performance = {
-          now: global._chronoNow,
-        };
-      }
-    })();
-  }
+    }
+  })();
 }
 
 type FeaturesConfig = {
