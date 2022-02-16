@@ -9,7 +9,8 @@ import {
 
 export class RotateInDownLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInDownLeft {
     return new RotateInDownLeft();
   }
@@ -49,7 +50,8 @@ export class RotateInDownLeft
 
 export class RotateInDownRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInDownRight {
     return new RotateInDownRight();
   }
@@ -89,7 +91,8 @@ export class RotateInDownRight
 
 export class RotateInUpLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInUpLeft {
     return new RotateInUpLeft();
   }
@@ -129,7 +132,8 @@ export class RotateInUpLeft
 
 export class RotateInUpRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInUpRight {
     return new RotateInUpRight();
   }
@@ -169,7 +173,8 @@ export class RotateInUpRight
 
 export class RotateOutDownLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutDownLeft {
     return new RotateOutDownLeft();
   }
@@ -221,7 +226,8 @@ export class RotateOutDownLeft
 
 export class RotateOutDownRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutDownRight {
     return new RotateOutDownRight();
   }
@@ -273,7 +279,8 @@ export class RotateOutDownRight
 
 export class RotateOutUpLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutUpLeft {
     return new RotateOutUpLeft();
   }
@@ -325,7 +332,8 @@ export class RotateOutUpLeft
 
 export class RotateOutUpRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutUpRight {
     return new RotateOutUpRight();
   }

@@ -10,7 +10,8 @@ const { width } = Dimensions.get('window');
 
 export class LightSpeedInRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): LightSpeedInRight {
     return new LightSpeedInRight();
   }
@@ -60,7 +61,8 @@ export class LightSpeedInRight
 
 export class LightSpeedInLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): LightSpeedInLeft {
     return new LightSpeedInLeft();
   }
@@ -110,7 +112,8 @@ export class LightSpeedInLeft
 
 export class LightSpeedOutRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): LightSpeedOutRight {
     return new LightSpeedOutRight();
   }
@@ -149,7 +152,8 @@ export class LightSpeedOutRight
 
 export class LightSpeedOutLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): LightSpeedOutLeft {
     return new LightSpeedOutLeft();
   }

@@ -10,7 +10,6 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.devsupport.interfaces.DevOptionHandler;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -127,12 +126,14 @@ public class NativeProxy {
   }
 
   private void addDevMenuOption() {
-    final DevSupportManager devSupportManager = ((ReactApplication) mContext.get().getApplicationContext())
-        .getReactNativeHost()
-        .getReactInstanceManager()
-        .getDevSupportManager();
+    final DevSupportManager devSupportManager =
+        ((ReactApplication) mContext.get().getApplicationContext())
+            .getReactNativeHost()
+            .getReactInstanceManager()
+            .getDevSupportManager();
 
-    devSupportManager.addCustomDevOption("Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
+    devSupportManager.addCustomDevOption(
+        "Toggle slow animations (Reanimated)", this::toggleSlowAnimations);
   }
 
   @DoNotStrip
@@ -166,7 +167,9 @@ public class NativeProxy {
   private String getUptime() {
     if (slowAnimationsEnabled) {
       final long ANIMATIONS_DRAG_FACTOR = 10;
-      return Long.toString(this.firstUptime + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
+      return Long.toString(
+          this.firstUptime
+              + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR);
     } else {
       return Long.toString(SystemClock.uptimeMillis());
     }

@@ -6,7 +6,8 @@ import {
 
 export class PinwheelIn
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): PinwheelIn {
     return new PinwheelIn();
   }
@@ -52,7 +53,8 @@ export class PinwheelIn
 
 export class PinwheelOut
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): PinwheelOut {
     return new PinwheelOut();
   }

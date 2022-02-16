@@ -12,7 +12,8 @@ const { width, height } = Dimensions.get('window');
 
 export class SlideInRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): SlideInRight {
     return new SlideInRight();
   }
@@ -45,7 +46,8 @@ export class SlideInRight
 
 export class SlideInLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): SlideInLeft {
     return new SlideInLeft();
   }
@@ -78,7 +80,8 @@ export class SlideInLeft
 
 export class SlideOutRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): SlideOutRight {
     return new SlideOutRight();
   }
@@ -111,7 +114,8 @@ export class SlideOutRight
 
 export class SlideOutLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): SlideOutLeft {
     return new SlideOutLeft();
   }
@@ -144,7 +148,8 @@ export class SlideOutLeft
 
 export class SlideInUp
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): SlideInUp {
     return new SlideInUp();
   }
@@ -177,7 +182,8 @@ export class SlideInUp
 
 export class SlideInDown
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): SlideInDown {
     return new SlideInDown();
   }
@@ -210,7 +216,8 @@ export class SlideInDown
 
 export class SlideOutUp
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): SlideOutUp {
     return new SlideOutUp();
   }
@@ -240,7 +247,8 @@ export class SlideOutUp
 
 export class SlideOutDown
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): SlideOutDown {
     return new SlideOutDown();
   }

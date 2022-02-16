@@ -122,8 +122,8 @@ void NativeProxy::installJSIBindings() {
   };
 
 #if FOR_HERMES
-  auto config = ::hermes::vm::RuntimeConfig::Builder()
-          .withEnableSampleProfiling(false);
+  auto config =
+      ::hermes::vm::RuntimeConfig::Builder().withEnableSampleProfiling(false);
   std::shared_ptr<jsi::Runtime> animatedRuntime =
       facebook::hermes::makeHermesRuntime(config.build());
 #else

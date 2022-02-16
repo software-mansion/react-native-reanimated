@@ -11,7 +11,8 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class FlipInXUp
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInXUp {
     return new FlipInXUp();
   }
@@ -49,7 +50,8 @@ export class FlipInXUp
 
 export class FlipInYLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInYLeft {
     return new FlipInYLeft();
   }
@@ -87,7 +89,8 @@ export class FlipInYLeft
 
 export class FlipInXDown
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInXDown {
     return new FlipInXDown();
   }
@@ -125,7 +128,8 @@ export class FlipInXDown
 
 export class FlipInYRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInYRight {
     return new FlipInYRight();
   }
@@ -163,7 +167,8 @@ export class FlipInYRight
 
 export class FlipInEasyX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipInEasyX {
     return new FlipInEasyX();
   }
@@ -196,7 +201,8 @@ export class FlipInEasyX
 
 export class FlipInEasyY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipInEasyY {
     return new FlipInEasyY();
   }
@@ -229,7 +235,8 @@ export class FlipInEasyY
 
 export class FlipOutXUp
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutXUp {
     return new FlipOutXUp();
   }
@@ -272,7 +279,8 @@ export class FlipOutXUp
 
 export class FlipOutYLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutYLeft {
     return new FlipOutYLeft();
   }
@@ -315,7 +323,8 @@ export class FlipOutYLeft
 
 export class FlipOutXDown
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutXDown {
     return new FlipOutXDown();
   }
@@ -358,7 +367,8 @@ export class FlipOutXDown
 
 export class FlipOutYRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutYRight {
     return new FlipOutYRight();
   }
@@ -401,7 +411,8 @@ export class FlipOutYRight
 
 export class FlipOutEasyX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipOutEasyX {
     return new FlipOutEasyX();
   }
@@ -434,7 +445,8 @@ export class FlipOutEasyX
 
 export class FlipOutEasyY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipOutEasyY {
     return new FlipOutEasyY();
   }

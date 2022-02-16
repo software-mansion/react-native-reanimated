@@ -6,7 +6,8 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class StretchInX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): StretchInX {
     return new StretchInX();
   }
@@ -36,7 +37,8 @@ export class StretchInX
 
 export class StretchInY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): StretchInY {
     return new StretchInY();
   }
@@ -66,7 +68,8 @@ export class StretchInY
 
 export class StretchOutX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): StretchOutX {
     return new StretchOutX();
   }
@@ -96,7 +99,8 @@ export class StretchOutX
 
 export class StretchOutY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): StretchOutY {
     return new StretchOutY();
   }

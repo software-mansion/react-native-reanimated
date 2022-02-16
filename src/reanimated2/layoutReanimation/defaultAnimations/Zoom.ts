@@ -14,7 +14,8 @@ const { width, height } = Dimensions.get('window');
 
 export class ZoomIn
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomIn {
     return new ZoomIn();
   }
@@ -44,7 +45,8 @@ export class ZoomIn
 
 export class ZoomInRotate
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomInRotate {
     return new ZoomInRotate();
   }
@@ -78,7 +80,8 @@ export class ZoomInRotate
 
 export class ZoomInLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomInLeft {
     return new ZoomInLeft();
   }
@@ -111,7 +114,8 @@ export class ZoomInLeft
 
 export class ZoomInRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomInRight {
     return new ZoomInRight();
   }
@@ -144,7 +148,8 @@ export class ZoomInRight
 
 export class ZoomInUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomInUp {
     return new ZoomInUp();
   }
@@ -177,7 +182,8 @@ export class ZoomInUp
 
 export class ZoomInDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomInDown {
     return new ZoomInDown();
   }
@@ -210,7 +216,8 @@ export class ZoomInDown
 
 export class ZoomInEasyUp
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): ZoomInEasyUp {
     return new ZoomInEasyUp();
   }
@@ -243,7 +250,8 @@ export class ZoomInEasyUp
 
 export class ZoomInEasyDown
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): ZoomInEasyDown {
     return new ZoomInEasyDown();
   }
@@ -276,7 +284,8 @@ export class ZoomInEasyDown
 
 export class ZoomOut
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOut {
     return new ZoomOut();
   }
@@ -306,7 +315,8 @@ export class ZoomOut
 
 export class ZoomOutRotate
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOutRotate {
     return new ZoomOutRotate();
   }
@@ -340,7 +350,8 @@ export class ZoomOutRotate
 
 export class ZoomOutLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOutLeft {
     return new ZoomOutLeft();
   }
@@ -373,7 +384,8 @@ export class ZoomOutLeft
 
 export class ZoomOutRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOutRight {
     return new ZoomOutRight();
   }
@@ -406,7 +418,8 @@ export class ZoomOutRight
 
 export class ZoomOutUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOutUp {
     return new ZoomOutUp();
   }
@@ -439,7 +452,8 @@ export class ZoomOutUp
 
 export class ZoomOutDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): ZoomOutDown {
     return new ZoomOutDown();
   }
@@ -472,7 +486,8 @@ export class ZoomOutDown
 
 export class ZoomOutEasyUp
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): ZoomOutEasyUp {
     return new ZoomOutEasyUp();
   }
@@ -510,7 +525,8 @@ export class ZoomOutEasyUp
 
 export class ZoomOutEasyDown
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): ZoomOutEasyDown {
     return new ZoomOutEasyDown();
   }

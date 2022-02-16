@@ -6,7 +6,8 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class FadeIn
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeIn {
     return new FadeIn();
   }
@@ -36,7 +37,8 @@ export class FadeIn
 
 export class FadeInRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeInRight {
     return new FadeInRight();
   }
@@ -70,7 +72,8 @@ export class FadeInRight
 
 export class FadeInLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeInLeft {
     return new FadeInLeft();
   }
@@ -104,7 +107,8 @@ export class FadeInLeft
 
 export class FadeInUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeInUp {
     return new FadeInUp();
   }
@@ -138,7 +142,8 @@ export class FadeInUp
 
 export class FadeInDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeInDown {
     return new FadeInDown();
   }
@@ -172,7 +177,8 @@ export class FadeInDown
 
 export class FadeOut
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeOut {
     return new FadeOut();
   }
@@ -202,7 +208,8 @@ export class FadeOut
 
 export class FadeOutRight
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeOutRight {
     return new FadeOutRight();
   }
@@ -236,7 +243,8 @@ export class FadeOutRight
 
 export class FadeOutLeft
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeOutLeft {
     return new FadeOutLeft();
   }
@@ -270,7 +278,8 @@ export class FadeOutLeft
 
 export class FadeOutUp
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeOutUp {
     return new FadeOutUp();
   }
@@ -304,7 +313,8 @@ export class FadeOutUp
 
 export class FadeOutDown
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FadeOutDown {
     return new FadeOutDown();
   }
