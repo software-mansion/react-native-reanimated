@@ -38,37 +38,7 @@ Reanimated plugin has to be listed last.
 
 ## Android
 
-1. Turn on Hermes engine by editing `android/app/build.gradle`
-
-```java {2}
-project.ext.react = [
-  enableHermes: true  // <- here | clean and rebuild if changing
-]
-```
-
-2. Plug Reanimated in `MainApplication.java`
-
-```java {1-2,12-15}
-  import com.facebook.react.bridge.JSIModulePackage; // <- add
-  import com.swmansion.reanimated.ReanimatedJSIModulePackage; // <- add
-  ...
-  private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
-  ...
-
-      @Override
-      protected String getJSMainModuleName() {
-        return "index";
-      }
-
-      @Override
-      protected JSIModulePackage getJSIModulePackage() {
-        return new ReanimatedJSIModulePackage(); // <- add
-      }
-    };
-  ...
-```
-
-You can refer [to this diff](https://github.com/software-mansion-labs/reanimated-2-playground/pull/8/commits/71642dbe7bd96eb41df5b9f59d661ab15f6fc3f8) that presents the set of the above changes made to a fresh react native project in our [Playground repo](https://github.com/software-mansion-labs/reanimated-2-playground).
+No additional steps are necessary.
 
 ### Proguard
 

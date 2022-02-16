@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.util.Log;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -100,6 +101,21 @@ public class ReanimatedModule extends ReactContextBaseJavaModule
     }
 
     return mNodesManager;
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public void installTurboModule() {
+    // When debugging in chrome the JS context is not available.
+    // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
+    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+
+    if (!Utils.isChromeDebugger) {
+      this.getNodesManager().initWithContext(getReactApplicationContext());
+    } else {
+      Log.w(
+          "[REANIMATED]",
+          "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
+    }
   }
 
   @ReactMethod
