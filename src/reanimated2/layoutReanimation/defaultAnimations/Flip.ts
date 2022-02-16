@@ -11,7 +11,8 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 
 export class FlipInXUp
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInXUp {
     return new FlipInXUp();
   }
@@ -21,6 +22,7 @@ export class FlipInXUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -31,6 +33,7 @@ export class FlipInXUp
             { rotateX: '90deg' },
             { translateY: -targetValues.targetHeight },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -47,7 +50,8 @@ export class FlipInXUp
 
 export class FlipInYLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInYLeft {
     return new FlipInYLeft();
   }
@@ -57,6 +61,7 @@ export class FlipInYLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -67,6 +72,7 @@ export class FlipInYLeft
             { rotateY: '-90deg' },
             { translateX: -targetValues.targetWidth },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -83,7 +89,8 @@ export class FlipInYLeft
 
 export class FlipInXDown
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInXDown {
     return new FlipInXDown();
   }
@@ -93,6 +100,7 @@ export class FlipInXDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -103,6 +111,7 @@ export class FlipInXDown
             { rotateX: '-90deg' },
             { translateY: targetValues.targetHeight },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -119,7 +128,8 @@ export class FlipInXDown
 
 export class FlipInYRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): FlipInYRight {
     return new FlipInYRight();
   }
@@ -129,6 +139,7 @@ export class FlipInYRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -139,6 +150,7 @@ export class FlipInYRight
             { rotateY: '90deg' },
             { translateX: targetValues.targetWidth },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -155,7 +167,8 @@ export class FlipInYRight
 
 export class FlipInEasyX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipInEasyX {
     return new FlipInEasyX();
   }
@@ -165,12 +178,14 @@ export class FlipInEasyX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateX: '90deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -186,7 +201,8 @@ export class FlipInEasyX
 
 export class FlipInEasyY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipInEasyY {
     return new FlipInEasyY();
   }
@@ -196,12 +212,14 @@ export class FlipInEasyY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateY: '90deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -217,7 +235,8 @@ export class FlipInEasyY
 
 export class FlipOutXUp
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutXUp {
     return new FlipOutXUp();
   }
@@ -227,6 +246,7 @@ export class FlipOutXUp
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -237,6 +257,7 @@ export class FlipOutXUp
             { rotateX: '0deg' },
             { translateY: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -258,7 +279,8 @@ export class FlipOutXUp
 
 export class FlipOutYLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutYLeft {
     return new FlipOutYLeft();
   }
@@ -268,6 +290,7 @@ export class FlipOutYLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -278,6 +301,7 @@ export class FlipOutYLeft
             { rotateY: '0deg' },
             { translateX: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -299,7 +323,8 @@ export class FlipOutYLeft
 
 export class FlipOutXDown
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutXDown {
     return new FlipOutXDown();
   }
@@ -309,6 +334,7 @@ export class FlipOutXDown
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -319,6 +345,7 @@ export class FlipOutXDown
             { rotateX: '0deg' },
             { translateY: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -340,7 +367,8 @@ export class FlipOutXDown
 
 export class FlipOutYRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): FlipOutYRight {
     return new FlipOutYRight();
   }
@@ -350,6 +378,7 @@ export class FlipOutYRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (targetValues) => {
       'worklet';
@@ -360,6 +389,7 @@ export class FlipOutYRight
             { rotateY: '0deg' },
             { translateX: 0 },
           ],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -381,7 +411,8 @@ export class FlipOutYRight
 
 export class FlipOutEasyX
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipOutEasyX {
     return new FlipOutEasyX();
   }
@@ -391,12 +422,14 @@ export class FlipOutEasyX
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateX: '0deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [
@@ -412,7 +445,8 @@ export class FlipOutEasyX
 
 export class FlipOutEasyY
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): FlipOutEasyY {
     return new FlipOutEasyY();
   }
@@ -422,12 +456,14 @@ export class FlipOutEasyY
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return () => {
       'worklet';
       return {
         initialValues: {
           transform: [{ perspective: 500 }, { rotateY: '0deg' }],
+          ...initialValues,
         },
         animations: {
           transform: [

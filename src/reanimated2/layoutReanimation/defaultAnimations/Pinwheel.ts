@@ -6,7 +6,8 @@ import {
 
 export class PinwheelIn
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): PinwheelIn {
     return new PinwheelIn();
   }
@@ -16,6 +17,7 @@ export class PinwheelIn
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (_values) => {
       'worklet';
@@ -41,6 +43,7 @@ export class PinwheelIn
               rotate: '5',
             },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -50,7 +53,8 @@ export class PinwheelIn
 
 export class PinwheelOut
   extends ComplexAnimationBuilder
-  implements IEntryExitAnimationBuilder {
+  implements IEntryExitAnimationBuilder
+{
   static createInstance(): PinwheelOut {
     return new PinwheelOut();
   }
@@ -60,6 +64,7 @@ export class PinwheelOut
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (_values) => {
       'worklet';
@@ -85,6 +90,7 @@ export class PinwheelOut
               rotate: '0',
             },
           ],
+          ...initialValues,
         },
         callback: callback,
       };

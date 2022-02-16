@@ -14,7 +14,8 @@ import {
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   enteringV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeIn;
 
   exitingV: BaseAnimationBuilder | typeof BaseAnimationBuilder = FadeOut;
@@ -152,24 +153,30 @@ export class EntryExitTransition
         exitingValues.initialValues.transform ?? []
       ).concat(
         (enteringValues.animations.transform ?? []).map((value) => {
-          for (const transformProp of Object.keys(value)) {
-            const current = (value[
-              transformProp as keyof TransformProperty
-            ] as AnimationObject).current;
-            if (typeof current === 'string') {
-              if (current.includes('deg'))
-                return ({
-                  [transformProp]: '0deg',
-                } as unknown) as TransformProperty;
-              else
-                return ({
-                  [transformProp]: '0',
-                } as unknown) as TransformProperty;
-            } else if (transformProp.includes('translate')) {
-              return ({ [transformProp]: 0 } as unknown) as TransformProperty;
-            } else {
-              return ({ [transformProp]: 1 } as unknown) as TransformProperty;
-            }
+          const objectKeys = Object.keys(value);
+          if (objectKeys?.length < 1) {
+            console.error(
+              `[Reanimated]: \${value} is not a valid Transform object`
+            );
+            return value;
+          }
+          const transformProp = objectKeys[0];
+          const current = (
+            value[transformProp as keyof TransformProperty] as AnimationObject
+          ).current;
+          if (typeof current === 'string') {
+            if (current.includes('deg'))
+              return {
+                [transformProp]: '0deg',
+              } as unknown as TransformProperty;
+            else
+              return {
+                [transformProp]: '0',
+              } as unknown as TransformProperty;
+          } else if (transformProp.includes('translate')) {
+            return { [transformProp]: 0 } as unknown as TransformProperty;
+          } else {
+            return { [transformProp]: 1 } as unknown as TransformProperty;
           }
           return value;
         })
