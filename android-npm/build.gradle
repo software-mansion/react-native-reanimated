@@ -3,7 +3,7 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 configurations.maybeCreate("default")
 
-def inputFile = new File(projectDir, '../../react-native/package.json')
+def inputFile = new File(projectDir, '../../../react-native/package.json')
 def json = new JsonSlurper().parseText(inputFile.text)
 def reactNativeVersion = json.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
