@@ -46,8 +46,8 @@ def replaceSoTaskRelease
 if(Integer.parseInt(minor) < 65) {
     tasks.register("replaceSoTaskDebug", replaceSoTask)
     tasks.register("replaceSoTaskRelease", replaceSoTask)
-    replaceSoTaskDebug = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskDebug")
-    replaceSoTaskRelease = project.getTasks().getByPath(":react-native-reanimated:replaceSoTaskRelease")
+    replaceSoTaskDebug = project.getTasks().getByPath(":exodus_react-native-reanimated:replaceSoTaskDebug")
+    replaceSoTaskRelease = project.getTasks().getByPath(":exodus_react-native-reanimated:replaceSoTaskRelease")
 }
 
 rootProject.getSubprojects().forEach({project ->
