@@ -557,7 +557,7 @@ declare module 'react-native-reanimated' {
     finished?: boolean,
     current?: AnimatableValue
   ) => void;
-  export type EasingFactoryFunction = { factory: () => EasingFunction };
+  export type EasingFunctionFactory = { factory: () => EasingFunction };
   export interface WithTimingConfig {
     duration?: number;
     easing?: EasingFunction | EasingFunctionFactory;
