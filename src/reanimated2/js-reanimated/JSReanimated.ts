@@ -3,6 +3,7 @@ import Mapper from './Mapper';
 import MutableValue from './MutableValue';
 import { NativeReanimated } from '../NativeReanimated/NativeReanimated';
 import { Timestamp, NestedObjectValues } from '../commonTypes';
+import { isJest } from '../PlatformChecker';
 
 export default class JSReanimated extends NativeReanimated {
   _valueSetter?: <T>(value: T) => void = undefined;
@@ -14,8 +15,8 @@ export default class JSReanimated extends NativeReanimated {
 
   constructor() {
     super(false);
-    if (process.env.JEST_WORKER_ID) {
-      this.timeProvider = { now: () => Date.now() };
+    if (isJest()) {
+      this.timeProvider = { now: () => global.ReanimatedDataMock.now() };
     } else {
       this.timeProvider = { now: () => window.performance.now() };
     }
@@ -102,5 +103,18 @@ export default class JSReanimated extends NativeReanimated {
     console.warn(
       '[Reanimated] enableLayoutAnimations is not available for WEB yet'
     );
+  }
+
+  jestResetModule() {
+    if (isJest()) {
+      /**
+       * If someone used timers to stop animation before the end,
+       * then _renderRequested was set as true
+       * and any new update from another test wasn't applied.
+       */
+      this._renderRequested = false;
+    } else {
+      throw Error('This method can be only use in Jest testing.');
+    }
   }
 }

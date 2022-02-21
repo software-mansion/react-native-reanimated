@@ -418,3 +418,7 @@ export function enableLayoutAnimations(
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
 }
+
+export function jestResetJsReanimatedModule() {
+  (NativeReanimatedModule as JSReanimated).jestResetModule();
+}
