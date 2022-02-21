@@ -57,9 +57,8 @@ export function setPath<T>(
     currObj = currObj[keys[i]];
   }
 
-  (currObj as { [key: string]: NestedObjectValues<T> })[
-    keys[keys.length - 1]
-  ] = value;
+  (currObj as { [key: string]: NestedObjectValues<T> })[keys[keys.length - 1]] =
+    value;
 }
 
 interface NestedObjectEntry<T> {
@@ -83,7 +82,8 @@ export function withStyleAnimation(
         { value: animation.styleAnimations, path: [] },
       ];
       while (entriesToCheck.length > 0) {
-        const currentEntry: NestedObjectEntry<AnimationObject> = entriesToCheck.pop() as NestedObjectEntry<AnimationObject>;
+        const currentEntry: NestedObjectEntry<AnimationObject> =
+          entriesToCheck.pop() as NestedObjectEntry<AnimationObject>;
         if (Array.isArray(currentEntry.value)) {
           for (let index = 0; index < currentEntry.value.length; index++) {
             entriesToCheck.push({
@@ -103,7 +103,8 @@ export function withStyleAnimation(
             });
           }
         } else {
-          const currentStyleAnimation: AnimationObject = currentEntry.value as AnimationObject;
+          const currentStyleAnimation: AnimationObject =
+            currentEntry.value as AnimationObject;
           if (currentStyleAnimation.finished) {
             continue;
           }
@@ -211,7 +212,8 @@ export function withStyleAnimation(
           styleAnimations,
         ];
         while (animationsToCheck.length > 0) {
-          const currentAnimation: NestedObjectValues<AnimationObject> = animationsToCheck.pop() as NestedObjectValues<AnimationObject>;
+          const currentAnimation: NestedObjectValues<AnimationObject> =
+            animationsToCheck.pop() as NestedObjectValues<AnimationObject>;
           if (Array.isArray(currentAnimation)) {
             for (const element of currentAnimation) {
               animationsToCheck.push(element);
@@ -224,7 +226,8 @@ export function withStyleAnimation(
               animationsToCheck.push(value);
             }
           } else {
-            const currentStyleAnimation: AnimationObject = currentAnimation as AnimationObject;
+            const currentStyleAnimation: AnimationObject =
+              currentAnimation as AnimationObject;
             if (
               !currentStyleAnimation.finished &&
               currentStyleAnimation.callback
