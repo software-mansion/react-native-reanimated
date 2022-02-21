@@ -64,7 +64,8 @@ function getMatchers(): Matchers {
       'hsla' + call(NUMBER, PERCENTAGE, PERCENTAGE, NUMBER)
     );
     cachedMatchers.hex3 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
-    cachedMatchers.hex4 = /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
+    cachedMatchers.hex4 =
+      /^#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/;
     cachedMatchers.hex6 = /^#([0-9a-fA-F]{6})$/;
     cachedMatchers.hex8 = /^#([0-9a-fA-F]{8})$/;
   }

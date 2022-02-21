@@ -7,7 +7,8 @@ import { Easing } from '../../Easing';
 import { BaseAnimationBuilder } from '../animationBuilder';
 export class JumpingTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   static createInstance(): JumpingTransition {
     return new JumpingTransition();
   }
