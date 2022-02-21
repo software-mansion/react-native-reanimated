@@ -32,11 +32,5 @@ module.exports = {
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     '@typescript-eslint/no-var-requires': 'warn',
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-non-null-assertion': 'warn',
-    'no-empty': 'warn',
-    'node/no-callback-literal': 'warn',
-    'no-unreachable-loop': 'warn',
-    'no-var': 'off',
   },
 };
