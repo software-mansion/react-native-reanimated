@@ -26,9 +26,11 @@
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "prepare": "husky install",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
-    "setup": "yarn && cd Example && yarn && cd ios && pod install && cd ../..",
+    "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
     "clear": "rm -rf ./node_modules && cd Example && rm -rf ./node_modules && cd ios && pod deintegrate && cd ../..",
-    "reset": "yarn clear && yarn setup"
+    "reset": "yarn clear && yarn setup",
+    "clean:deep": "cd android && rm -rf ./.cxx && rm -rf ./.gradle && rm -rf ./build && cd ../Example/android && rm -rf ./.gradle && rm -rf ./build &&rm -rf ./app/build && cd ../.. && yarn clear",
+    "reset:deep": "yarn clean:deep & yarn setup"
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
