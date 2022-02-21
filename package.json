@@ -27,9 +27,9 @@
     "prepare": "husky install",
     "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
     "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
-    "clean": "rm -rf ./node_modules && cd Example && rm -rf ./node_modules && cd ios && pod deintegrate && cd ../..",
+    "clean": "rm -rf ./node_modules ./Example/node_modules && cd ./Example/ios && pod deintegrate && cd ../..",
     "reset": "yarn clean && yarn setup",
-    "clean:deep": "cd android && rm -rf ./.cxx && rm -rf ./.gradle && rm -rf ./build && cd ../Example/android && rm -rf ./.gradle && rm -rf ./build && rm -rf ./app/build && cd ../.. && yarn clean",
+    "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
     "reset:deep": "yarn clean:deep & yarn setup"
   },
   "main": "lib/Animated.js",
