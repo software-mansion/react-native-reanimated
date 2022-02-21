@@ -74,9 +74,8 @@ export class Keyframe implements IEntryExitAnimationBuilder {
       if (styleProp === 'transform') {
         initialValues[styleProp]?.forEach((transformStyle, index) => {
           Object.keys(transformStyle).forEach((transformProp: string) => {
-            parsedKeyframes[
-              index.toString() + '_transform:' + transformProp
-            ] = [];
+            parsedKeyframes[index.toString() + '_transform:' + transformProp] =
+              [];
           });
         });
       } else {

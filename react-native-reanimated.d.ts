@@ -557,7 +557,7 @@ declare module 'react-native-reanimated' {
     finished?: boolean,
     current?: AnimatableValue
   ) => void;
-  export type EasingFactoryFunction = { factory: () => EasingFunction };
+  export type EasingFunctionFactory = { factory: () => EasingFunction };
   export interface WithTimingConfig {
     duration?: number;
     easing?: EasingFunction | EasingFunctionFactory;
@@ -829,6 +829,9 @@ declare module 'react-native-reanimated' {
     withCallback(
       callback: (finished: boolean) => void
     ): ComplexAnimationBuilder;
+
+    static withInitialValues(values: StyleProps): BaseAnimationBuilder;
+    withInitialValues(values: StyleProps): BaseAnimationBuilder;
 
     static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     easing(easingFunction: EasingFunction): ComplexAnimationBuilder;

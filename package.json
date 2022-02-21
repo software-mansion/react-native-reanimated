@@ -25,7 +25,12 @@
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
     "prepare": "husky install",
-    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src"
+    "circular_dependency_check": "yarn madge --extensions js,ts,tsx --circular ./src",
+    "setup": "yarn && cd Example && yarn && cd ios && pod install --verbose && cd ../..",
+    "clean": "rm -rf node_modules && cd Example && rm -rf node_modules && cd ios && pod deintegrate && cd ../..",
+    "reset": "yarn clean && yarn setup",
+    "clean:deep": "cd android && rm -rf .cxx .gradle build && cd ../Example/android && rm -rf .gradle build app/build && cd ../.. && yarn clean",
+    "reset:deep": "yarn clean:deep && yarn setup"
   },
   "main": "lib/Animated.js",
   "module": "lib/Animated",
@@ -74,7 +79,7 @@
     "invariant": "^2.2.4",
     "lodash.isequal": "^4.5.0",
     "mockdate": "^3.0.5",
-    "react-native-screens": "^3.11.0",
+    "react-native-screens": "^3.11.1",
     "setimmediate": "^1.0.5",
     "string-hash-64": "^1.0.3"
   },
@@ -119,7 +124,7 @@
     "madge": "^5.0.1",
     "prettier": "^2.5.1",
     "react": "17.0.2",
-    "react-native": "0.67.2",
+    "react-native": "0.68.0-rc.1",
     "react-native-codegen": "^0.0.7",
     "react-native-gesture-handler": "^1.6.1",
     "react-test-renderer": "17.0.2",
