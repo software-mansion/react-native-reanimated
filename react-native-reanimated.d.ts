@@ -39,10 +39,6 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  import { AnimatedStyle, StyleProps, WorkletFunction } from './commonTypes';
-  import { ReanimatedConsole } from './core';
-  import { MeasuredDimensions } from './NativeMethods';
-  import { NativeReanimated } from './NativeReanimated/NativeReanimated';
   import('./src/reanimated2/globals');
 
   export type TimingAnimation =
