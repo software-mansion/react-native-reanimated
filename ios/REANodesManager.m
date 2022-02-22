@@ -112,7 +112,7 @@
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
-  volatile atomic_bool _isComponentUpdateBufferEmpty;
+  volatile atomic_bool _shouldFlushUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 }
 
@@ -130,7 +130,7 @@
     _operationsInBatch = [NSMutableArray new];
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
-    _isComponentUpdateBufferEmpty = true;
+    _shouldFlushUpdateBuffer = false;
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -537,7 +537,7 @@
       propsSnapshot.viewTag = viewTag;
       propsSnapshot.viewName = viewName;
       _componentUpdateBuffer[viewTag] = propsSnapshot;
-      atomic_store(&_isComponentUpdateBufferEmpty, false);
+      atomic_store(&_shouldFlushUpdateBuffer, true);
     } else {
       NSMutableDictionary *lastProps = lastSnapshot.props;
       for (NSString *key in props) {
@@ -597,8 +597,8 @@
 - (void)maybeFlushUpdateBuffer
 {
   RCTAssertUIManagerQueue();
-  bool isEmptyButter = atomic_load(&_isComponentUpdateBufferEmpty);
-  if (isEmptyButter) {
+  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  if (!shouldFlushUpdateBuffer) {
     return;
   }
 
@@ -608,7 +608,7 @@
     if (strongSelf == nil) {
       return;
     }
-    atomic_store(&strongSelf->_isComponentUpdateBufferEmpty, true);
+    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
     NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
     strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
     for (NSNumber *tag in componentUpdateBuffer) {
