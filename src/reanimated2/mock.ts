@@ -1,4 +1,4 @@
-/* eslint-disable standard/no-callback-literal */
+/* eslint-disable node/no-callback-literal */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 const NOOP = () => {

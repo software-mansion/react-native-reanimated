@@ -228,17 +228,16 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AnimationToDecoration<
-  T extends AnimationObject | StyleLayoutAnimation
-> = T extends StyleLayoutAnimation
-  ? Record<string, unknown>
-  : T extends DelayAnimation
-  ? NextAnimation<DelayAnimation>
-  : T extends RepeatAnimation
-  ? NextAnimation<RepeatAnimation>
-  : T extends SequenceAnimation
-  ? NextAnimation<SequenceAnimation>
-  : AnimatableValue | T;
+type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
+  T extends StyleLayoutAnimation
+    ? Record<string, unknown>
+    : T extends DelayAnimation
+    ? NextAnimation<DelayAnimation>
+    : T extends RepeatAnimation
+    ? NextAnimation<RepeatAnimation>
+    : T extends SequenceAnimation
+    ? NextAnimation<SequenceAnimation>
+    : AnimatableValue | T;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation

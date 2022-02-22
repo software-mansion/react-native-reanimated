@@ -123,12 +123,8 @@ function internalInterpolate(
   extrapolationConfig: RequiredExtrapolationConfig
 ) {
   'worklet';
-  const {
-    leftEdgeInput,
-    rightEdgeInput,
-    leftEdgeOutput,
-    rightEdgeOutput,
-  } = narrowedInput;
+  const { leftEdgeInput, rightEdgeInput, leftEdgeOutput, rightEdgeOutput } =
+    narrowedInput;
   if (rightEdgeInput - leftEdgeInput === 0) return leftEdgeOutput;
   const progress = (x - leftEdgeInput) / (rightEdgeInput - leftEdgeInput);
   const val = leftEdgeOutput + progress * (rightEdgeOutput - leftEdgeOutput);

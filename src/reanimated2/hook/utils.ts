@@ -187,7 +187,8 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
   const propsToCheck: NestedObjectValues<AnimationObject>[] = [prop];
   while (propsToCheck.length > 0) {
-    const currentProp: NestedObjectValues<AnimationObject> = propsToCheck.pop() as NestedObjectValues<AnimationObject>;
+    const currentProp: NestedObjectValues<AnimationObject> =
+      propsToCheck.pop() as NestedObjectValues<AnimationObject>;
     if (Array.isArray(currentProp)) {
       for (const item of currentProp) {
         propsToCheck.push(item);

@@ -151,7 +151,7 @@ declare module 'react-native-reanimated' {
       ? T['style']
       : Record<string, unknown>;
 
-    export type AnimateProps<P extends Record<string, unknown>> = {
+    export type AnimateProps<P extends object> = {
       [K in keyof P]: P[K] | AnimatedNode<P[K]>;
     } & {
       style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
@@ -558,9 +558,10 @@ declare module 'react-native-reanimated' {
     finished?: boolean,
     current?: AnimatableValue
   ) => void;
+  export type EasingFunctionFactory = { factory: () => EasingFunction };
   export interface WithTimingConfig {
     duration?: number;
-    easing?: EasingFunction;
+    easing?: EasingFunction | EasingFunctionFactory;
   }
   export interface WithDecayConfig {
     deceleration?: number;
@@ -829,6 +830,9 @@ declare module 'react-native-reanimated' {
     withCallback(
       callback: (finished: boolean) => void
     ): ComplexAnimationBuilder;
+
+    static withInitialValues(values: StyleProps): BaseAnimationBuilder;
+    withInitialValues(values: StyleProps): BaseAnimationBuilder;
 
     static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
