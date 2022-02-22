@@ -46,6 +46,14 @@ import Animated, {
   createAnimatedPropAdapter,
   useAnimatedProps,
   useAnimatedRef,
+  TimingAnimation,
+  SpringAnimation,
+  DecayAnimation,
+  DelayAnimation,
+  RepeatAnimation,
+  SequenceAnimation,
+  StyleLayoutAnimation,
+  Animation,
   // eslint-disable-next-line import/no-unresolved
 } from 'react-native-reanimated';
 
@@ -71,9 +79,8 @@ const SomeFCWithRef = forwardRef((props: ViewProps) => {
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-const AnimatedTypedFlatList = Animated.createAnimatedComponent<
-  FlatListProps<Item[]>
->(FlatList);
+const AnimatedTypedFlatList =
+  Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
 
 // Function Component -> Animated Function Component
 const AnimatedFC = Animated.createAnimatedComponent(SomeFC);
@@ -348,16 +355,15 @@ function AnimatedGestureHandlerTest() {
 
 function AnimatedPinchGestureHandlerTest() {
   const x = useSharedValue(0);
-  const gestureHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>(
-    {
+  const gestureHandler =
+    useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
       onActive: (event) => {
         x.value = event.scale;
       },
       onEnd: () => {
         x.value = withTiming(1);
       },
-    }
-  );
+    });
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [

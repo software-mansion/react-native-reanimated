@@ -39,16 +39,24 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  export {
-    Animation,
-    TimingAnimation,
-    SpringAnimation,
-    DecayAnimation,
-    DelayAnimation,
-    RepeatAnimation,
-    SequenceAnimation,
-    StyleLayoutAnimation,
-  } from './src/reanimated2/animation/index';
+  import('./src/reanimated2/globals');
+
+  export type TimingAnimation =
+    import('./src/reanimated2/animation/index').TimingAnimation;
+  export type SpringAnimation =
+    import('./src/reanimated2/animation/index').SpringAnimation;
+  export type DecayAnimation =
+    import('./src/reanimated2/animation/index').DecayAnimation;
+  export type DelayAnimation =
+    import('./src/reanimated2/animation/commonTypes').DelayAnimation;
+  export type RepeatAnimation =
+    import('./src/reanimated2/animation/index').RepeatAnimation;
+  export type SequenceAnimation =
+    import('./src/reanimated2/animation/index').SequenceAnimation;
+  export type StyleLayoutAnimation =
+    import('./src/reanimated2/animation/index').StyleLayoutAnimation;
+  export type Animation<T> =
+    import('./src/reanimated2/commonTypes').Animation<T>;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;

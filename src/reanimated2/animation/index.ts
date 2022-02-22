@@ -1,6 +1,7 @@
 export {
   HigherOrderAnimation,
   NextAnimation,
+  DelayAnimation,
   RepeatAnimation,
   SequenceAnimation,
   StyleLayoutAnimation,
