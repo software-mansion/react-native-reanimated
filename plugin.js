@@ -301,16 +301,20 @@ function buildWorkletString(t, fun, closureVariables, name) {
 
   traverse(fun, {
     enter(path) {
-      t.removeComments(path.node);
+      if (path.node.type === 'ExpressionStatement') {
+        t.removeComments(path.node);
+      }
     },
   });
 
+ const expression=  fun.program.body.find(({type})=>type=== 'ExpressionStatement').expression
+
   const workletFunction = t.functionExpression(
     t.identifier(name),
-    fun.program.body[0].expression.params,
+    expression.params,
     prependClosureVariablesIfNecessary(
       closureVariables,
-      fun.program.body[0].expression.body
+      expression.body
     )
   );
 
