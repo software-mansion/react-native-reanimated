@@ -55,7 +55,5 @@ ios/Pods/
 lib/
 react-native-reanimated-tests.js
 
-# npm package
-react-native-reanimated-*.tgz
 # eclipse
 *.settings**
