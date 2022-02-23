@@ -1,12 +1,7 @@
 name: Test build on different react-native versions
 
 on:
-  pull_request:
-    branches: 
-      - master
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,6 +14,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v1
+        
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
@@ -45,18 +41,18 @@ jobs:
         run: >-
           ./createNPMPackage.sh
 
-      - name: Clone repository reanimated-rn-version-tester
-        uses: actions/checkout@master
-        with:
-          repository: jmysliv/reanimated-rn-version-tester
-          path: tester
+      # - name: Clone repository reanimated-rn-version-tester
+      #   uses: actions/checkout@master
+      #   with:
+      #     repository: jmysliv/reanimated-rn-version-tester
+      #     path: tester
 
-      - name: Install dependencies and pods
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: cp ../react-native-reanimated-*.tgz . && ./setup.sh
+      # - name: Install dependencies and pods
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: cp ../react-native-reanimated-*.tgz . && ./setup.sh
         
-      - name: Test reanimated with different rn versions
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: ./testVersions.sh
+      # - name: Test reanimated with different rn versions
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: ./testVersions.sh
 
       
