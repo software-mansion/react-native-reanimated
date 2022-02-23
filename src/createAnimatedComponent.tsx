@@ -605,14 +605,10 @@ export default function createAnimatedComponent(
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              if (this._isFirstRender) {
-                return {
-                  ...style.initial.value,
-                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
-                };
-              } else {
-                return style.initial.value;
-              }
+              return {
+                ...style.initial.value,
+                ...initialUpdaterRun<StyleProps>(style.initial.updater),
+              };
             } else {
               return style;
             }
@@ -668,10 +664,6 @@ export default function createAnimatedComponent(
       const props = this._filterNonAnimatedProps(this.props);
       if (isJest()) {
         props.animatedStyle = this.animatedStyle;
-      }
-
-      if (this._isFirstRender) {
-        this._isFirstRender = false;
       }
 
       const platformProps = Platform.select({
