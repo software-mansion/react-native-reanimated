@@ -192,7 +192,6 @@ export default function createAnimatedComponent(
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
-    _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
     sv: SharedValue<null | Record<string, unknown>> | null;
     _propsAnimated?: PropsAnimated;
