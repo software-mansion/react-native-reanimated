@@ -383,7 +383,7 @@ if (!isWeb() && isConfigured()) {
     if (global.performance == null) {
       global.performance = {
         now: global._chronoNow,
-      };
+      } as any; // due to conflict with lib.dom.d.ts -> Performance
     }
   })();
 }
