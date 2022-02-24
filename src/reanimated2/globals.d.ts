@@ -27,6 +27,9 @@ declare global {
     animated: boolean
   ) => void;
   const _chronoNow: () => number;
+  const ReanimatedDataMock: {
+    now: () => number;
+  };
   namespace NodeJS {
     interface Global {
       __reanimatedWorkletInit: (worklet: WorkletFunction) => void;
@@ -49,6 +52,9 @@ declare global {
           type: string,
           yogaValues: unknown
         ): void;
+      };
+      ReanimatedDataMock: {
+        now: () => number;
       };
     }
   }

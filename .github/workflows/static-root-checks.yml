@@ -27,5 +27,11 @@ jobs:
         run: yarn
       - name: Check types
         run: yarn tsc --noEmit
+      - name: Check type:generate
+        run: yarn run type:generate
       - name: Lint
         run: yarn lint:js
+      - name: Finding circular dependencies
+        run: yarn circular_dependency_check
+      - name: Jest test:unit
+        run: yarn test:unit

@@ -9,7 +9,8 @@ import {
 
 export class RotateInDownLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInDownLeft {
     return new RotateInDownLeft();
   }
@@ -19,6 +20,7 @@ export class RotateInDownLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -38,6 +40,7 @@ export class RotateInDownLeft
             { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
             { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -47,7 +50,8 @@ export class RotateInDownLeft
 
 export class RotateInDownRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInDownRight {
     return new RotateInDownRight();
   }
@@ -57,6 +61,7 @@ export class RotateInDownRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -76,6 +81,7 @@ export class RotateInDownRight
             { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
             { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -85,7 +91,8 @@ export class RotateInDownRight
 
 export class RotateInUpLeft
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInUpLeft {
     return new RotateInUpLeft();
   }
@@ -95,6 +102,7 @@ export class RotateInUpLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -114,6 +122,7 @@ export class RotateInUpLeft
             { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
             { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -123,7 +132,8 @@ export class RotateInUpLeft
 
 export class RotateInUpRight
   extends ComplexAnimationBuilder
-  implements IEntryAnimationBuilder {
+  implements IEntryAnimationBuilder
+{
   static createInstance(): RotateInUpRight {
     return new RotateInUpRight();
   }
@@ -133,6 +143,7 @@ export class RotateInUpRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -152,6 +163,7 @@ export class RotateInUpRight
             { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
             { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
           ],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -161,7 +173,8 @@ export class RotateInUpRight
 
 export class RotateOutDownLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutDownLeft {
     return new RotateOutDownLeft();
   }
@@ -171,6 +184,7 @@ export class RotateOutDownLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -202,6 +216,7 @@ export class RotateOutDownLeft
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -211,7 +226,8 @@ export class RotateOutDownLeft
 
 export class RotateOutDownRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutDownRight {
     return new RotateOutDownRight();
   }
@@ -221,6 +237,7 @@ export class RotateOutDownRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -252,6 +269,7 @@ export class RotateOutDownRight
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -261,7 +279,8 @@ export class RotateOutDownRight
 
 export class RotateOutUpLeft
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutUpLeft {
     return new RotateOutUpLeft();
   }
@@ -271,6 +290,7 @@ export class RotateOutUpLeft
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -302,6 +322,7 @@ export class RotateOutUpLeft
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };
@@ -311,7 +332,8 @@ export class RotateOutUpLeft
 
 export class RotateOutUpRight
   extends ComplexAnimationBuilder
-  implements IExitAnimationBuilder {
+  implements IExitAnimationBuilder
+{
   static createInstance(): RotateOutUpRight {
     return new RotateOutUpRight();
   }
@@ -321,6 +343,7 @@ export class RotateOutUpRight
     const [animation, config] = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
+    const initialValues = this.initialValues;
 
     return (values) => {
       'worklet';
@@ -352,6 +375,7 @@ export class RotateOutUpRight
         initialValues: {
           opacity: 1,
           transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+          ...initialValues,
         },
         callback: callback,
       };

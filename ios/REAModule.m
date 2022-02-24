@@ -28,6 +28,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return RCTGetUIManagerQueue();
 }
 
+#pragma mark-- Initialize
+
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
@@ -38,6 +40,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   _transitionManager = [[REATransitionManager alloc] initWithUIManager:self.bridge.uiManager];
 
   [bridge.uiManager.observerCoordinator addObserver:self];
+}
+
+RCT_EXPORT_METHOD(installTurboModule)
+{
+  // TODO: Move initialization from UIResponder+Reanimated to here
 }
 
 #pragma mark-- Transitioning API
@@ -153,6 +160,7 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
+  [_nodesManager maybeFlushUpdateBuffer];
   if (_operations.count == 0) {
     return;
   }
