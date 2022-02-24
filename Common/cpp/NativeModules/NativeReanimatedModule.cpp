@@ -70,7 +70,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      propObtainer(propObtainer) {
+      propObtainer(propObtainer), _platformDepMethodsHolder(platformDepMethodsHolder) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -145,7 +145,7 @@ jsi::Value NativeReanimatedModule::startMapper(
   auto updaterSV = ShareableValue::adapt(rt, updater, this);
   auto viewDescriptorsSV = ShareableValue::adapt(rt, viewDescriptors, this);
 
-  scheduler->scheduleOnUI([=] {
+  auto xd = [=] {
     auto mapperFunction =
         mapperShareable->getValue(*runtime).asObject(*runtime).asFunction(
             *runtime);
@@ -164,7 +164,10 @@ jsi::Value NativeReanimatedModule::startMapper(
     }
     mapperRegistry->startMapper(mapperPointer);
     maybeRequestRender();
-  });
+  };
+  
+  _platformDepMethodsHolder.mleko(xd);
+//  scheduler->scheduleOnUI(xd);
 
   return jsi::Value(static_cast<double>(newMapperId));
 }

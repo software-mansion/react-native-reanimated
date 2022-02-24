@@ -55,7 +55,7 @@ if (shouldBeUseWeb()) {
         updates[key] = processColor(updates[key]);
       }
     }
-
+    // console.log(viewDescriptors)
     viewDescriptors.value.forEach((viewDescriptor) => {
       _updateProps(
         viewDescriptor.tag,

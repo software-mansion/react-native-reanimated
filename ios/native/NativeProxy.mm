@@ -184,7 +184,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       scheduler->triggerUI();
     }
   };
-
+  
+  auto mleko = [reanimatedModule, uiManager](std::function<void()> fn){
+    [reanimatedModule.nodesManager addUIBlock:^() {
+      fn();
+    }];
+//    dispatch_async(uiManager.methodQueue, ^{
+//      [uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,UIView *> *viewRegistry) {
+//        fn();
+//      }];
+//    });
+  };
+  
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
       double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
@@ -269,6 +280,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       measuringFunction,
       getCurrentTime,
       setGestureStateFunction,
+      mleko
   };
 
   module = std::make_shared<NativeReanimatedModule>(

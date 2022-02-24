@@ -89,6 +89,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       propObtainer;
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  PlatformDepMethodsHolder _platformDepMethodsHolder;
 };
 
 } // namespace reanimated
