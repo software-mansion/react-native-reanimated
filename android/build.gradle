@@ -101,11 +101,31 @@ abstract class replaceSoTask extends DefaultTask {
 
     @TaskAction
     def run() {
+        def libSoDir = new File("${buildDir}/tmp/libSo")
+        if (!libSoDir.exists() || true) {
+            libSoDir.mkdir()
+            def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar"
+            new File("${libSoDir.path}/fbjni-0.2.2.aar").withOutputStream { out ->
+                def url = new URL(fbjniUrl).openConnection()
+                out << url.inputStream
+            }
+            def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-0.2.2.aar"))
+            zipFile.entries().each {
+                def zipIt = it
+                println(zipIt.name)
+                if (zipIt.name.contains("libfbjni.so")) {
+                    new File("${libSoDir.path}/" + zipIt.name.replace("/libfbjni.so", "")).mkdirs()
+                    new File("${libSoDir.path}/" + zipIt.name).withOutputStream{
+                        it << zipFile.getInputStream(zipIt)
+                    }
+                }
+            }
+        }
         for(def abiVersion in ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]) {
             ant.sequential {
                 copy(
                         tofile: "${buildDir}/intermediates/merged_native_libs/debug/out/lib/${abiVersion}/libfbjni.so",
-                        file: "../libSo/fbjni/jni/${abiVersion}/libfbjni.so",
+                        file: "${buildDir}/tmp/libSo/jni/${abiVersion}/libfbjni.so",
                         overwrite: true
                 )
             }
