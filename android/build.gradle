@@ -4,6 +4,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import groovy.json.JsonSlurper
+import java.util.zip.ZipFile
 
 /**
  * Finds the path of the installed npm package with the given name using Node's
