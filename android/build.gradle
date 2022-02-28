@@ -67,7 +67,11 @@ def resolveBuildType() {
         return property("clientSideBuild") == "true"
     }
 
-    return "$rootDir" != "$projectDir"
+    if (isDeveloperMode()) {
+        return false
+    }
+
+    return true
 }
 
 def resolveExpoLinkingGradle() {
@@ -79,10 +83,15 @@ def resolveExpoLinkingGradle() {
     }
 }
 
-println "rootDir: $rootDir"
-println "projectDir: $projectDir"
+def isDeveloperMode() {
+    // developer mode, to run Example app
+    return file("$projectDir/../node_modules/react-native/package.json").exists()
+}
 
 def resolveReactNativeDirectory() {
+    if (isDeveloperMode()) {
+        return file("$projectDir/../node_modules/react-native")
+    }
     return file("$rootDir/../node_modules/react-native")
 }
 
@@ -93,8 +102,6 @@ println "Client side build: ${CLIENT_SIDE_BUILD}"
 boolean BUILD_AAR_FROM_SOURCE = !CLIENT_SIDE_BUILD
 
 def reactNative = resolveReactNativeDirectory()
-
-println "Resolved RN directory: ${reactNative}"
 
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"

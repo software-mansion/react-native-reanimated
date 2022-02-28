@@ -16,8 +16,7 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-#message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
-#message(WARNING "CMakeLists.txt CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
 
 if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
@@ -26,8 +25,6 @@ else()
     set (NODE_MODULES_DIR "../node_modules")
     set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
 endif()
-
-#message(WARNING "CMakeLists.txt NODE_MODULES_DIR=${NODE_MODULES_DIR}")
 
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
@@ -42,11 +39,11 @@ file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
-                INCLUDE_JSI_CPP 
+                INCLUDE_JSI_CPP
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
-                INCLUDE_JSIDYNAMIC_CPP 
+                INCLUDE_JSIDYNAMIC_CPP
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()
@@ -107,7 +104,6 @@ target_include_directories(
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
 
-
 find_library(
         LOG_LIB
         log
@@ -160,8 +156,6 @@ endif()
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
-#message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
     target_link_libraries(
