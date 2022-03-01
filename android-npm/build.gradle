@@ -41,6 +41,26 @@ def getCurrentFlavor() {
     return "NOT-FOUND"
 }
 
+def safelyFindTask(Project project, String path) {
+    try {
+        def appName = project.getProperties().path
+        project.getTasks().getByPath(path)
+    }
+    catch(Exception e) {
+        return 'NOT-FOUND'
+    }
+}
+
+def getTaskSafely(Project project, String path) {
+    String taskName = safelyFindTask(project, path)
+
+    if('NOT-FOUND'.equals(taskName)){
+        String flavor = getCurrentFlavor()
+        return safelyFindTask(project, path.replace(flavor, flavor.capitalize()))
+    }
+    return taskName
+}
+
 def replaceSoTaskDebug
 def replaceSoTaskRelease
 if(Integer.parseInt(minor) < 65) {
@@ -68,16 +88,16 @@ rootProject.getSubprojects().forEach({project ->
                 def appName = project.getProperties().path
 
                 replaceSoTaskDebug.dependsOn(
-                        project.getTasks().getByPath("${appName}:merge${flavorString}DebugNativeLibs"),
-                        project.getTasks().getByPath("${appName}:strip${flavorString}DebugDebugSymbols")
+                        getTaskSafely(project, "${appName}:merge${flavorString}DebugNativeLibs"),
+                        getTaskSafely(project, "${appName}:strip${flavorString}DebugDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
+                getTaskSafely(project, "${appName}:package${flavorString}Debug").dependsOn(replaceSoTaskDebug)
 
                 replaceSoTaskRelease.dependsOn(
-                        project.getTasks().getByPath("${appName}:merge${flavorString}ReleaseNativeLibs"),
-                        project.getTasks().getByPath("${appName}:strip${flavorString}ReleaseDebugSymbols")
+                        getTaskSafely(project, "${appName}:merge${flavorString}ReleaseNativeLibs"),
+                        getTaskSafely(project, "${appName}:strip${flavorString}ReleaseDebugSymbols")
                 )
-                project.getTasks().getByPath("${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
+                getTaskSafely(project, "${appName}:package${flavorString}Release").dependsOn(replaceSoTaskRelease)
             }
         }
     }
