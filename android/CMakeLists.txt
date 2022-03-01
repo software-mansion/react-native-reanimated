@@ -16,8 +16,6 @@ set (PACKAGE_NAME "reanimated")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
-message(WARNING "CMakeLists.txt CLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}")
-
 if(${CLIENT_SIDE_BUILD})
     set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
     set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
@@ -39,11 +37,11 @@ file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
-                INCLUDE_JSI_CPP
+                INCLUDE_JSI_CPP 
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
-                INCLUDE_JSIDYNAMIC_CPP
+                INCLUDE_JSIDYNAMIC_CPP 
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()
@@ -140,7 +138,12 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
-find_package(fbjni REQUIRED CONFIG)
+find_library(
+        FBJNI_LIB
+        fbjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (JSI_LIB "")
@@ -164,7 +167,7 @@ if(${FOR_HERMES})
             ${JSI_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
-            fbjni::fbjni
+            ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
@@ -176,7 +179,7 @@ else()
             ${JSI_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
-            fbjni::fbjni
+            ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android

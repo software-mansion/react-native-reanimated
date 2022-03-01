@@ -164,7 +164,6 @@ if (CLIENT_SIDE_BUILD) {
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
             project.configurations.all*.exclude module: 'fbjni-java-only'
-            project.getProperties().android.packagingOptions.pickFirst("lib/**/*")
 
             if (project.ext.react.enableHermes) {
                 engine = "hermes"
@@ -250,7 +249,7 @@ def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_V
 def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
 def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def REACT_VERSION = reactProperties.getProperty("VERSION_NAME").split("\\.")[1].toInteger()
-def FBJNI_VERSION = "0.2.2"
+def FBJNI_VERSION = "0.3.0"
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -314,9 +313,6 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    buildFeatures {
-        prefab true
-    }
     compileSdkVersion safeExtGet("compileSdkVersion", 30)
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 16)
