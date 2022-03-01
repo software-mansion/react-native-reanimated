@@ -9,10 +9,10 @@ unset CI
 versions=("0.68.0-rc.2" "0.67.3" "0.66.3" "0.65.1" "0.64.3")
 version_name=("68" "67" "66" "65" "64")
 
-for index in {0..0}
+for index in {0..4}
 do
   yarn add react-native@"${versions[$index]}"
-  for for_hermes in "False"
+  for for_hermes in "True" "False"
   do
     engine="jsc"
     if [ "$for_hermes" == "True" ]; then
