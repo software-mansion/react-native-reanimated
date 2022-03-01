@@ -99,7 +99,7 @@ boolean CLIENT_SIDE_BUILD = resolveBuildType()
 
 println "Client side build: ${CLIENT_SIDE_BUILD}"
 
-boolean BUILD_AAR_FROM_SOURCE = !CLIENT_SIDE_BUILD
+boolean BUILD_AAR_FROM_SOURCE = true
 
 def reactNative = resolveReactNativeDirectory()
 
@@ -198,7 +198,10 @@ if (CLIENT_SIDE_BUILD) {
     def rnMinorVersionCopy = Integer.parseInt(minor)
     aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
 
-    if (aar.exists()) {
+    if (project.ext.has("reanimated") && project.ext.reanimated.buildFromSource) {
+        BUILD_AAR_FROM_SOURCE = true
+    }
+    else if (aar.exists()) {
         println "AAR for react-native-reanimated has been found\n$aar"
         BUILD_AAR_FROM_SOURCE = false
         artifacts.add("default", aar)
