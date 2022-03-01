@@ -20,7 +20,7 @@
     "type:check": "yarn tsc --noEmit",
     "type:generate": "yarn type:generate:clean && yarn type:generate:cp-js-src && yarn type:generate:tsc && yarn type:generate:remove.ts && yarn type:generate:remove.tsx",
     "type:generate:clean": "rm -rf lib/ && mkdir lib/",
-    "type:generate:cp-js-src": "cp -RL src/ lib/",
+    "type:generate:cp-js-src": "cp -RL src/* lib/",
     "type:generate:tsc": "yarn tsc",
     "type:generate:remove.ts": "find ./lib -type f -name \"*.ts\" -and -not -name \"*.d.ts\" -delete",
     "type:generate:remove.tsx": "find ./lib -type f -name \"*.tsx\" -and -not -name \"*.d.ts\" -delete",
