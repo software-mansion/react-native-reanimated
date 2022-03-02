@@ -21,7 +21,7 @@
 #import <jsi/JSCRuntime.h>
 #endif
 
-#import <React-Fabric/react/renderer/core/ReanimatedListener.h> // ReanimatedListener
+//#import <React-Fabric/react/renderer/core/ReanimatedListener.h> // ReanimatedListener
 #import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode::Shared
 #import <React-Fabric/react/renderer/uimanager/primitives.h> // shadowNodeFromValue
 
@@ -173,7 +173,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
                                               encoding:[NSString defaultCStringEncoding]];
     ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-    ShadowNode::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
+    //    ShadowNode::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
     [reanimatedModule.nodesManager updateProps:propsDict
                                  ofViewWithTag:[NSNumber numberWithInt:viewTag]
@@ -338,25 +338,25 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
   }];
 
-  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {
-    // handles RawEvents from React Native
-
-    auto &rt = *module->runtime;
-
-    int tag = rawEvent.eventTarget->getTag();
-    std::string eventType = rawEvent.type;
-    if (eventType.rfind("top", 0) == 0) {
-      eventType = "on" + eventType.substr(3);
-    }
-    std::string eventName = std::to_string(tag) + eventType;
-    jsi::Value payload = rawEvent.payloadFactory(rt);
-
-    jsi::Object global = rt.global();
-    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
-    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
-    module->onEvent(eventName, std::move(payload));
-    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
-  };
+  //  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {
+  //    // handles RawEvents from React Native
+  //
+  //    auto &rt = *module->runtime;
+  //
+  //    int tag = rawEvent.eventTarget->getTag();
+  //    std::string eventType = rawEvent.type;
+  //    if (eventType.rfind("top", 0) == 0) {
+  //      eventType = "on" + eventType.substr(3);
+  //    }
+  //    std::string eventName = std::to_string(tag) + eventType;
+  //    jsi::Value payload = rawEvent.payloadFactory(rt);
+  //
+  //    jsi::Object global = rt.global();
+  //    jsi::String eventTimestampName = jsi::String::createFromAscii(rt, "_eventTimestamp");
+  //    global.setProperty(rt, eventTimestampName, CACurrentMediaTime() * 1000);
+  //    module->onEvent(eventName, std::move(payload));
+  //    global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
+  //  };
 
   return module;
 }

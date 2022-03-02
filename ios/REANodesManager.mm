@@ -200,48 +200,48 @@ using namespace facebook::react;
     NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue = _operationsInBatch;
     _operationsInBatch = [NSMutableDictionary new];
 
-    std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
-    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedThings::shadowTreeRegistry;
-    std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
-    SurfaceId surfaceId = 1;
-    PropsParserContext propsParserContext{surfaceId, *contextContainer};
-
-    shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-      ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
-        // TODO: don't clone root here
-        ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
-            oldRootShadowNode.getChildren()[0]->getFamily(),
-            [&](ShadowNode const &oldShadowNode) { return oldShadowNode.clone(ShadowNodeFragment{}); });
-
-        for (id key in copiedOperationsQueue) {
-          Tag tag = [key intValue]; // TODO: use ShadowNode::Shared instead of Tag
-          NSMutableDictionary *props = [copiedOperationsQueue objectForKey:key];
-
-          ShadowNode::Shared shadowNode = ShadowNode::newestShadowNodesRegistry->getByTag(tag);
-          const ShadowNodeFamily &family = shadowNode->getFamily();
-          react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
-
-          std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
-              [&](ShadowNode const &oldShadowNode) {
-                Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-                    propsParserContext, oldShadowNode.getProps(), RawProps(convertIdToFollyDynamic(props)));
-
-                ShadowNodeFragment fragment{/* .props = */ newProps};
-                return oldShadowNode.clone(fragment);
-              };
-
-          newRoot = newRoot->cloneTree(family, callback);
-          if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
-            break; // cancel transaction by returning null RootShadowNode
-          }
-        }
-
-        return std::static_pointer_cast<RootShadowNode>(newRoot);
-      };
-
-      ShadowTree::CommitOptions commitOptions{};
-      shadowTree.commit(transaction, commitOptions);
-    });
+    //    std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
+    //    ShadowTreeRegistry *shadowTreeRegistry = ReanimatedThings::shadowTreeRegistry;
+    //    std::shared_ptr<const ContextContainer> contextContainer = uiManager->getContextContainer();
+    //    SurfaceId surfaceId = 1;
+    //    PropsParserContext propsParserContext{surfaceId, *contextContainer};
+    //
+    //    shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+    //      ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
+    //        // TODO: don't clone root here
+    //        ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
+    //            oldRootShadowNode.getChildren()[0]->getFamily(),
+    //            [&](ShadowNode const &oldShadowNode) { return oldShadowNode.clone(ShadowNodeFragment{}); });
+    //
+    //        for (id key in copiedOperationsQueue) {
+    //          Tag tag = [key intValue]; // TODO: use ShadowNode::Shared instead of Tag
+    //          NSMutableDictionary *props = [copiedOperationsQueue objectForKey:key];
+    //
+    //          ShadowNode::Shared shadowNode = ShadowNode::newestShadowNodesRegistry->getByTag(tag);
+    //          const ShadowNodeFamily &family = shadowNode->getFamily();
+    //          react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
+    //
+    //          std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
+    //              [&](ShadowNode const &oldShadowNode) {
+    //                Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
+    //                    propsParserContext, oldShadowNode.getProps(), RawProps(convertIdToFollyDynamic(props)));
+    //
+    //                ShadowNodeFragment fragment{/* .props = */ newProps};
+    //                return oldShadowNode.clone(fragment);
+    //              };
+    //
+    //          newRoot = newRoot->cloneTree(family, callback);
+    //          if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
+    //            break; // cancel transaction by returning null RootShadowNode
+    //          }
+    //        }
+    //
+    //        return std::static_pointer_cast<RootShadowNode>(newRoot);
+    //      };
+    //
+    //      ShadowTree::CommitOptions commitOptions{};
+    //      shadowTree.commit(transaction, commitOptions);
+    //    });
   }
   _wantRunUpdates = NO;
 }
