@@ -164,6 +164,7 @@ if (CLIENT_SIDE_BUILD) {
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
             project.configurations.all*.exclude module: 'fbjni-java-only'
+            project.getProperties().android.packagingOptions.pickFirst("lib/**/*")
 
             if (project.ext.react.enableHermes) {
                 engine = "hermes"
