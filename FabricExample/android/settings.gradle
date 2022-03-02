@@ -4,6 +4,11 @@ include ':app'
 includeBuild('../node_modules/react-native-gradle-plugin')
 
 if (settings.hasProperty("newArchEnabled") && settings.newArchEnabled == "true") {
+    includeBuild('../node_modules/react-native-gradle-plugin') {
+        dependencySubstitution {
+            substitute(module("com.facebook.react:react")).using(project(":"))
+        }
+    }
     include(":ReactAndroid")
     project(":ReactAndroid").projectDir = file('../node_modules/react-native/ReactAndroid')
 }
