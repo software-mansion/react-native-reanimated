@@ -97,27 +97,24 @@ def resolveReactNativeDirectory() {
 
 boolean CLIENT_SIDE_BUILD = resolveBuildType()
 
-println "Client side build: ${CLIENT_SIDE_BUILD}"
-
-boolean BUILD_AAR_FROM_SOURCE = true
-
 def reactNative = resolveReactNativeDirectory()
 
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
     public static String buildDir = "../../../android/app/build"
+    public static String fbjniVersion = "0.2.2"
 
     @TaskAction
     def run() {
         def libSoDir = new File("${buildDir}/tmp/libSo")
-        if (!libSoDir.exists() || true) {
+        if (!libSoDir.exists()) {
             libSoDir.mkdir()
-            def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar"
-            new File("${libSoDir.path}/fbjni-0.2.2.aar").withOutputStream { out ->
+            def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/${fbjniVersion}/fbjni-${fbjniVersion}.aar"
+            new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar").withOutputStream { out ->
                 def url = new URL(fbjniUrl).openConnection()
                 out << url.inputStream
             }
-            def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-0.2.2.aar"))
+            def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar"))
             zipFile.entries().each {
                 def zipIt = it
                 println(zipIt.name)
@@ -147,6 +144,7 @@ def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 def rnMinorVersion = Integer.parseInt(minor)
 def engine = "jsc"
+boolean BUILD_FROM_SOURCE = false
 
 def aar
 if (CLIENT_SIDE_BUILD) {
@@ -170,7 +168,11 @@ if (CLIENT_SIDE_BUILD) {
                 engine = "hermes"
             }
 
-            if (project.getProperties().get("android") && rnMinorVersion < 65) {
+            if (project.ext.reanimated?.buildFromSource) {
+                BUILD_FROM_SOURCE = true
+            }
+
+            if (project.getProperties().get("android") && rnMinorVersion < 65 && !BUILD_FROM_SOURCE) {
                 def projectProperties = project.getProperties()
                 def flavorString = getCurrentFlavor()
                 if (flavorString != "NOT-FOUND" && (!projectProperties.get("reanimated")
@@ -198,12 +200,9 @@ if (CLIENT_SIDE_BUILD) {
     def rnMinorVersionCopy = Integer.parseInt(minor)
     aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
 
-    if (project.ext.has("reanimated") && project.ext.reanimated.buildFromSource) {
-        BUILD_AAR_FROM_SOURCE = true
-    }
-    else if (aar.exists()) {
+    if (aar.exists()) {
         println "AAR for react-native-reanimated has been found\n$aar"
-        BUILD_AAR_FROM_SOURCE = false
+        BUILD_FROM_SOURCE = false
         artifacts.add("default", aar)
     } else {
         while (!aar.exists() && rnMinorVersionCopy >= 63) {
@@ -213,7 +212,7 @@ if (CLIENT_SIDE_BUILD) {
 
         if (rnMinorVersionCopy < 63) {
             println "No AAR for react-native-reanimated found. Attempting to build from source."
-            BUILD_AAR_FROM_SOURCE = true
+            BUILD_FROM_SOURCE = true
         } else { // aar exists, but was build for lower react-native version
             println "\n\n\n"
             println "****************************************************************************************"
@@ -229,11 +228,12 @@ if (CLIENT_SIDE_BUILD) {
             artifacts.add("default", aar)
         }
     }
-
-    apply from: resolveExpoLinkingGradle()
+    if (!BUILD_FROM_SOURCE) {
+        apply from: resolveExpoLinkingGradle()
+    }
 }
 
-if (!BUILD_AAR_FROM_SOURCE) return
+if (!BUILD_FROM_SOURCE) return
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
