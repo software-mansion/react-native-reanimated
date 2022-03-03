@@ -161,14 +161,15 @@ if (CLIENT_SIDE_BUILD) {
 
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
-            project.configurations.all*.exclude module: 'fbjni-java-only'
-            project.getProperties().android.packagingOptions.pickFirst("lib/**/*")
-
             if (project.ext.react.enableHermes) {
                 engine = "hermes"
             }
 
-            if (project.ext.reanimated?.buildFromSource) {
+            if (
+                project.ext.has("reanimated") 
+                && project.ext.reanimated.has("buildFromSource") 
+                && project.ext.reanimated.buildFromSource
+            ) {
                 BUILD_FROM_SOURCE = true
             }
 
@@ -604,7 +605,12 @@ repositories {
 dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+    if (isDeveloperMode()) {
+        implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+    }
+    else {
+        implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
+    }
     implementation "com.facebook.react:react-native:+" // From node_modules
     implementation "androidx.transition:transition:1.1.0"
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
