@@ -144,7 +144,7 @@ def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 def rnMinorVersion = Integer.parseInt(minor)
 def engine = "jsc"
-boolean BUILD_FROM_SOURCE = false
+boolean BUILD_FROM_SOURCE = isDeveloperMode()
 
 def aar
 if (CLIENT_SIDE_BUILD) {
