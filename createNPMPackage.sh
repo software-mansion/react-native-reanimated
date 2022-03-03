@@ -79,6 +79,7 @@ cd ../..
 yarn add react-native@"${versions[0]}" --dev
 
 cp -R android-npm/expo android/
+cd android && ./gradlew clean && cd ..
 yarn run type:generate
 npm pack
 rm -rf android/expo
