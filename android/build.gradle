@@ -108,16 +108,20 @@ abstract class replaceSoTask extends DefaultTask {
     def run() {
         def libSoDir = new File("${buildDir}/tmp/libSo")
         if (!libSoDir.exists()) {
-            libSoDir.mkdir()
+            libSoDir.mkdirs()
             def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/${fbjniVersion}/fbjni-${fbjniVersion}.aar"
-            new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar").withOutputStream { out ->
+            def aarFile = new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar")
+            if (!aarFile.exists()) {
+                println("Unable to find ${libSoDir.path}/fbjni-${fbjniVersion}.aar")
+                return
+            }
+            aarFile.withOutputStream { out ->
                 def url = new URL(fbjniUrl).openConnection()
                 out << url.inputStream
             }
             def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar"))
             zipFile.entries().each {
                 def zipIt = it
-                println(zipIt.name)
                 if (zipIt.name.contains("libfbjni.so")) {
                     new File("${libSoDir.path}/" + zipIt.name.replace("/libfbjni.so", "")).mkdirs()
                     new File("${libSoDir.path}/" + zipIt.name).withOutputStream{
