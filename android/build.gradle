@@ -111,13 +111,14 @@ abstract class replaceSoTask extends DefaultTask {
             libSoDir.mkdirs()
             def fbjniUrl = "https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/${fbjniVersion}/fbjni-${fbjniVersion}.aar"
             def aarFile = new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar")
-            if (!aarFile.exists()) {
-                println("Unable to find ${libSoDir.path}/fbjni-${fbjniVersion}.aar")
-                return
-            }
+            aarFile.createNewFile()
             aarFile.withOutputStream { out ->
                 def url = new URL(fbjniUrl).openConnection()
                 out << url.inputStream
+            }
+            if (!aarFile.exists()) {
+                println("Unable to find ${libSoDir.path}/fbjni-${fbjniVersion}.aar")
+                return
             }
             def zipFile = new ZipFile(new File("${libSoDir.path}/fbjni-${fbjniVersion}.aar"))
             zipFile.entries().each {
@@ -170,8 +171,8 @@ if (CLIENT_SIDE_BUILD) {
             }
 
             if (
-                project.ext.has("reanimated") 
-                && project.ext.reanimated.has("buildFromSource") 
+                project.ext.has("reanimated")
+                && project.ext.reanimated.has("buildFromSource")
                 && project.ext.reanimated.buildFromSource
             ) {
                 BUILD_FROM_SOURCE = true
@@ -328,13 +329,13 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
-                             "-DNATIVE_DEBUG=${debugNativeLibraries}",
-                             "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
-                             "-DANDROID_TOOLCHAIN=clang",
-                             "-DBOOST_VERSION=${BOOST_VERSION}",
-                             "-DFOR_HERMES=${FOR_HERMES}",
-                             "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
-                             "--clean-first"
+                        "-DNATIVE_DEBUG=${debugNativeLibraries}",
+                        "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
+                        "-DANDROID_TOOLCHAIN=clang",
+                        "-DBOOST_VERSION=${BOOST_VERSION}",
+                        "-DFOR_HERMES=${FOR_HERMES}",
+                        "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
+                        "--clean-first"
                 abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
@@ -355,8 +356,8 @@ android {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
         excludes = [
-            "**/libc++_shared.so", 
-            "**/libfbjni.so", 
+            "**/libc++_shared.so",
+            "**/libfbjni.so",
             "**/libjsi.so",
             "**/libfolly_json.so",
             "**/libglog.so",
