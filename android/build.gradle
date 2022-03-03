@@ -95,14 +95,10 @@ def resolveReactNativeDirectory() {
     return file("$rootDir/../node_modules/react-native")
 }
 
-boolean CLIENT_SIDE_BUILD = resolveBuildType()
-
-def reactNative = resolveReactNativeDirectory()
-
 abstract class replaceSoTask extends DefaultTask {
     public static String appName = ":app"
     public static String buildDir = "../../../android/app/build"
-    public static String fbjniVersion = "0.2.2"
+    public static String fbjniVersion = "0.3.0"
 
     @TaskAction
     def run() {
@@ -143,17 +139,87 @@ abstract class replaceSoTask extends DefaultTask {
     }
 }
 
+def detectAAR(minor, engine) {
+    def rnMinorVersionCopy = Integer.parseInt(minor)
+    def aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+
+    if (aar.exists()) {
+        println "AAR for react-native-reanimated has been found\n$aar"
+        return aar
+    } else {
+        while (!aar.exists() && rnMinorVersionCopy >= 63) {
+            rnMinorVersionCopy -= 1
+            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
+        }
+
+        if (rnMinorVersionCopy < 63) {
+            println "No AAR for react-native-reanimated found. Attempting to build from source."
+        } else { // aar exists, but was build for lower react-native version
+            println "\n\n\n"
+            println "****************************************************************************************"
+            println "\n\n\n"
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersion found."
+            println "Falling back to AAR for react-native version $rnMinorVersionCopy."
+            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
+            println "Please post a pull request to implement support for react-native version $rnMinorVersion to the reanimated repo."
+            println "Thanks!"
+            println "\n\n\n"
+            println "****************************************************************************************"
+
+            return aar
+        }
+    }
+    return null
+}
+
+def detectJsRuntime() {
+    def runtimeType = "jsc"
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            if (project.ext.react.enableHermes) {
+                runtimeType = "hermes"
+            }
+        }
+    })
+    return runtimeType
+}
+
+def shouldBuildFromSource(aar) {
+    if (isDeveloperMode()) {
+        // Example app
+        return true
+    }
+    else if (
+        project.ext.has("reanimated")
+        && project.ext.reanimated.has("buildFromSource")
+        && project.ext.reanimated.buildFromSource
+    ) {
+        // on user demand
+        return true
+    }
+    else if (aar != null) {
+        // when binary exist
+        return false
+    }
+    // when binary is not found
+    return true
+}
+
+boolean CLIENT_SIDE_BUILD = resolveBuildType()
+if (CLIENT_SIDE_BUILD) {
+    configurations.maybeCreate("default")
+}
+def reactNative = resolveReactNativeDirectory()
 def reactNativeManifest = file("$reactNative/package.json")
 def reactNativeManifestAsJson = new JsonSlurper().parseText(reactNativeManifest.text)
 def reactNativeVersion = reactNativeManifestAsJson.version as String
 def (major, minor, patch) = reactNativeVersion.tokenize('.')
 def rnMinorVersion = Integer.parseInt(minor)
-def engine = "jsc"
-boolean BUILD_FROM_SOURCE = isDeveloperMode()
+def engine = detectJsRuntime()
+def aar = detectAAR(minor, engine)
+boolean BUILD_FROM_SOURCE = shouldBuildFromSource(aar)
 
-def aar
-if (CLIENT_SIDE_BUILD) {
-    configurations.maybeCreate("default")
+if (!BUILD_FROM_SOURCE) {
     def replaceSoTaskDebug
     def replaceSoTaskRelease
 
@@ -166,19 +232,7 @@ if (CLIENT_SIDE_BUILD) {
 
     rootProject.getSubprojects().forEach({project ->
         if (project.plugins.hasPlugin("com.android.application")) {
-            if (project.ext.react.enableHermes) {
-                engine = "hermes"
-            }
-
-            if (
-                project.ext.has("reanimated")
-                && project.ext.reanimated.has("buildFromSource")
-                && project.ext.reanimated.buildFromSource
-            ) {
-                BUILD_FROM_SOURCE = true
-            }
-
-            if (project.getProperties().get("android") && rnMinorVersion < 65 && !BUILD_FROM_SOURCE) {
+            if (project.getProperties().get("android") && rnMinorVersion < 65) {
                 def projectProperties = project.getProperties()
                 def flavorString = getCurrentFlavor()
                 if (flavorString != "NOT-FOUND" && (!projectProperties.get("reanimated")
@@ -203,43 +257,14 @@ if (CLIENT_SIDE_BUILD) {
         }
     })
 
-    def rnMinorVersionCopy = Integer.parseInt(minor)
-    aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
-
-    if (aar.exists()) {
-        println "AAR for react-native-reanimated has been found\n$aar"
-        BUILD_FROM_SOURCE = false
-        artifacts.add("default", aar)
-    } else {
-        while (!aar.exists() && rnMinorVersionCopy >= 63) {
-            rnMinorVersionCopy -= 1
-            aar = file("react-native-reanimated-${rnMinorVersionCopy}-${engine}.aar")
-        }
-
-        if (rnMinorVersionCopy < 63) {
-            println "No AAR for react-native-reanimated found. Attempting to build from source."
-            BUILD_FROM_SOURCE = true
-        } else { // aar exists, but was build for lower react-native version
-            println "\n\n\n"
-            println "****************************************************************************************"
-            println "\n\n\n"
-            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersion found."
-            println "Falling back to AAR for react-native version $rnMinorVersionCopy."
-            println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
-            println "Please post a pull request to implement support for react-native version $rnMinorVersion to the reanimated repo."
-            println "Thanks!"
-            println "\n\n\n"
-            println "****************************************************************************************"
-
-            artifacts.add("default", aar)
-        }
-    }
-    if (!BUILD_FROM_SOURCE) {
-        apply from: resolveExpoLinkingGradle()
-    }
+    artifacts.add("default", aar)
 }
 
+// end if already loaded aar
 if (!BUILD_FROM_SOURCE) return
+
+// apply expo config
+apply from: resolveExpoLinkingGradle()
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")
@@ -356,14 +381,14 @@ android {
         println "Native libs debug enabled: ${debugNativeLibraries}"
         doNotStrip debugNativeLibraries ? "**/**/*.so" : ''
         excludes = [
-            "**/libc++_shared.so",
-            "**/libfbjni.so",
-            "**/libjsi.so",
-            "**/libfolly_json.so",
-            "**/libglog.so",
-            "**/libhermes.so",
-            "**/libreactnativejni.so",
-            "**/libjscexecutor.so",
+                "**/libc++_shared.so",
+                "**/libfbjni.so",
+                "**/libjsi.so",
+                "**/libfolly_json.so",
+                "**/libglog.so",
+                "**/libhermes.so",
+                "**/libreactnativejni.so",
+                "**/libjscexecutor.so",
         ]
     }
     tasks.withType(JavaCompile) {
@@ -373,6 +398,10 @@ android {
     configurations {
         extractHeaders
         extractSO
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -651,7 +680,6 @@ tasks.whenTaskAdded { task ->
 if (CLIENT_SIDE_BUILD) {
     def aarDir = "${buildDir}/outputs"
     aar = file("${aarDir}/android-debug.aar")
-    // TODO: move aar to projectDir with appropriate name
     if (aar == null) {
         throw GradleScriptException("AAR build failed. No AAR found in ${aarDir}.")
     }
