@@ -184,16 +184,27 @@ def detectJsRuntime() {
     return runtimeType
 }
 
+def detectReanimatedConfig() {
+    def buildFromSourceConf = false
+    rootProject.getSubprojects().forEach({project ->
+        if (project.plugins.hasPlugin("com.android.application")) {
+            if (
+                project.ext.has("reanimated")
+                && project.ext.reanimated.buildFromSource
+            ) {
+                buildFromSourceConf = true
+            }
+        }
+    })
+    return buildFromSourceConf
+}
+
 def shouldBuildFromSource(aar) {
     if (isDeveloperMode()) {
         // Example app
         return true
     }
-    else if (
-        project.ext.has("reanimated")
-        && project.ext.reanimated.has("buildFromSource")
-        && project.ext.reanimated.buildFromSource
-    ) {
+    else if (detectReanimatedConfig()) {
         // on user demand
         return true
     }
