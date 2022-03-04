@@ -434,7 +434,7 @@ task Log {
 
 task applyJavaPatches(type: Copy) {
     def patchDirectory = file("${projectDir}/rnVersionPatch/${rnMinorVersion}")
-    if (CLIENT_SIDE_BUILD && patchDirectory.exists()) {
+    if (patchDirectory.exists()) {
         from ("${patchDirectory}") {
             include "**/*.java"
         }

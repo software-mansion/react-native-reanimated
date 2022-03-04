@@ -21,42 +21,9 @@ do
     echo "engine=${engine}"
 
     cd android 
-
-    echo "APPLY PATCH"
-    versionNumber=${version_name[$index]}
-    cd ./rnVersionPatch/$versionNumber
-    rm -rf ../backup/*
-    cp -r . ../backup
-    if [ "$(find . | grep 'java')" ];
-    then 
-      fileList=$(find . | grep -i 'java')
-      for file in $fileList; do
-        echo "COPY: $file"
-        cp ../../src/main/java/com/swmansion/reanimated/$file ../backup/$file
-        cp $file ../../src/main/java/com/swmansion/reanimated/$file
-      done
-    else
-    pwd
-      echo "NO PATCH";
-    fi
-    cd ../..
-
     ./gradlew clean
 
     CLIENT_SIDE_BUILD="False" FOR_HERMES=${for_hermes} ./gradlew :assembleDebug --no-build-cache --rerun-tasks
-
-    cd ./rnVersionPatch/$versionNumber
-    if [ $(find . | grep 'java') ];
-    then 
-      echo "RESTORE BACKUP"
-      for file in $fileList; do
-        echo "BACKUP: $file"
-        cp ../backup/$file ../../src/main/java/com/swmansion/reanimated/$file
-      done
-      echo "CLEAR BACKUP"
-      rm -rf ../backup/*
-    fi
-    cd ../..
 
     cd $ROOT
 
@@ -64,17 +31,6 @@ do
     cp android/build/outputs/aar/*.aar android/react-native-reanimated-"${version_name[$index]}-${engine}".aar
   done
 done
-
-rm -rf libSo
-mkdir libSo
-cd libSo
-mkdir fbjni
-cd fbjni
-wget https://repo1.maven.org/maven2/com/facebook/fbjni/fbjni/0.2.2/fbjni-0.2.2.aar
-unzip fbjni-0.2.2.aar 
-rm -r $(find . ! -name '.' ! -name 'jni' -maxdepth 1)
-rm $(find . -name '*libc++_shared.so')
-cd ../..
 
 yarn add react-native@"${versions[0]}" --dev
 
@@ -85,7 +41,6 @@ yarn run type:generate
 npm pack
 rm -rf android/expo
 
-rm -rf ./libSo
 rm -rf ./lib
 rm -rf ./android/rnVersionPatch/backup/*
 touch ./android/rnVersionPatch/backup/.gitkeep
