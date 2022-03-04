@@ -38,7 +38,7 @@ jobs:
           path: '*.tgz'
 
       - name: Compress Android build output
-        run: zip -r android-build-output.zip android/build/
+        run: zip -r android-build-output.zip build_output
 
       - name: Upload Android build folder
         uses: actions/upload-artifact@v2
