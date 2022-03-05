@@ -13,10 +13,11 @@
 #include <jsi/JSCRuntime.h>
 #endif
 
-#include <react/renderer/core/ReanimatedListener.h> // ReanimatedListener
-#include <react/renderer/core/ShadowNode.h> // ShadowNode
-#include <react/renderer/mounting/ShadowTreeRegistry.h> // ShadowTreeRegistry
-#include <react/renderer/uimanager/UIManager.h> // ReanimatedThings, UIManager
+// #include <react/renderer/core/ReanimatedListener.h> // ReanimatedListener
+// #include <react/renderer/core/ShadowNode.h> // ShadowNode
+// #include <react/renderer/mounting/ShadowTreeRegistry.h> // ShadowTreeRegistry
+// #include <react/renderer/uimanager/UIManager.h> // ReanimatedThings,
+// UIManager
 
 #include <android/log.h>
 #include "AndroidErrorHandler.h"
@@ -202,26 +203,28 @@ void NativeProxy::installJSIBindings() {
         *module->runtime, eventTimestampName, jsi::Value::undefined());
   });
 
-  facebook::react::ReanimatedListener::handleEvent = [module, getCurrentTime](
-                                                         RawEvent &rawEvent) {
-    // handles RawEvents from React Native
+  // facebook::react::ReanimatedListener::handleEvent = [module,
+  // getCurrentTime](
+  //                                                        RawEvent &rawEvent)
+  //                                                        {
+  //   // handles RawEvents from React Native
 
-    int tag = rawEvent.eventTarget->getTag();
-    std::string eventType = rawEvent.type;
-    if (eventType.rfind("top", 0) == 0) {
-      eventType = "on" + eventType.substr(3);
-    }
-    std::string eventName = std::to_string(tag) + eventType;
-    jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
+  //   int tag = rawEvent.eventTarget->getTag();
+  //   std::string eventType = rawEvent.type;
+  //   if (eventType.rfind("top", 0) == 0) {
+  //     eventType = "on" + eventType.substr(3);
+  //   }
+  //   std::string eventName = std::to_string(tag) + eventType;
+  //   jsi::Value payload = rawEvent.payloadFactory(*module->runtime);
 
-    jsi::Object global = module->runtime->global();
-    jsi::String eventTimestampName =
-        jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
-    global.setProperty(*module->runtime, eventTimestampName, getCurrentTime());
-    module->onEvent(eventName, std::move(payload));
-    global.setProperty(
-        *module->runtime, eventTimestampName, jsi::Value::undefined());
-  };
+  //   jsi::Object global = module->runtime->global();
+  //   jsi::String eventTimestampName =
+  //       jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
+  //   global.setProperty(*module->runtime, eventTimestampName,
+  //   getCurrentTime()); module->onEvent(eventName, std::move(payload));
+  //   global.setProperty(
+  //       *module->runtime, eventTimestampName, jsi::Value::undefined());
+  // };
 
   runtime_->global().setProperty(
       *runtime_,
@@ -234,65 +237,69 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(std::string s) {
 }
 
 void NativeProxy::updateNativeProps(int viewTag, std::string nativePropsJson) {
-  std::shared_ptr nativePropsJsonPtr =
-      std::make_shared<std::string>(nativePropsJson);
+  // std::shared_ptr nativePropsJsonPtr =
+  //     std::make_shared<std::string>(nativePropsJson);
 
-  std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
-  ShadowTreeRegistry *shadowTreeRegistry = ReanimatedThings::shadowTreeRegistry;
-  std::shared_ptr<const ContextContainer> contextContainer =
-      uiManager->getContextContainer();
-  SurfaceId surfaceId = 1;
-  PropsParserContext propsParserContext{surfaceId, *contextContainer};
+  // std::shared_ptr<UIManager> uiManager = ReanimatedThings::uiManager;
+  // ShadowTreeRegistry *shadowTreeRegistry =
+  // ReanimatedThings::shadowTreeRegistry; std::shared_ptr<const
+  // ContextContainer> contextContainer =
+  //     uiManager->getContextContainer();
+  // SurfaceId surfaceId = 1;
+  // PropsParserContext propsParserContext{surfaceId, *contextContainer};
 
-  ShadowNode::Shared shadowNode =
-      ShadowNode::newestShadowNodesRegistry->getByTag(viewTag);
-  // react_native_assert(shadowNode !== nullptr); // TODO: assert
-  if (shadowNode == nullptr) {
-    return; // better safe than sorry
-  }
+  // ShadowNode::Shared shadowNode =
+  //     ShadowNode::newestShadowNodesRegistry->getByTag(viewTag);
+  // // react_native_assert(shadowNode !== nullptr); // TODO: assert
+  // if (shadowNode == nullptr) {
+  //   return; // better safe than sorry
+  // }
 
-  shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-    if (shadowTree.getCurrentRevision().rootShadowNode->getChildren().empty()) {
-      return; // empty shadow tree (only RootShadowNode with no children)
-    }
+  // shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+  //   if
+  //   (shadowTree.getCurrentRevision().rootShadowNode->getChildren().empty()) {
+  //     return; // empty shadow tree (only RootShadowNode with no children)
+  //   }
 
-    ShadowTreeCommitTransaction transaction =
-        [&](RootShadowNode const &oldRootShadowNode) {
-          // TODO: don't clone root here
-          ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
-              oldRootShadowNode.getChildren()[0]->getFamily(),
-              [&](ShadowNode const &oldShadowNode) {
-                return oldShadowNode.clone(ShadowNodeFragment{});
-              });
+  //   ShadowTreeCommitTransaction transaction =
+  //       [&](RootShadowNode const &oldRootShadowNode) {
+  //         // TODO: don't clone root here
+  //         ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
+  //             oldRootShadowNode.getChildren()[0]->getFamily(),
+  //             [&](ShadowNode const &oldShadowNode) {
+  //               return oldShadowNode.clone(ShadowNodeFragment{});
+  //             });
 
-          Tag tag = viewTag; // TODO: use ShadowNode::Shared instead of Tag
-          folly::dynamic props = folly::parseJson(*nativePropsJsonPtr);
+  //         Tag tag = viewTag; // TODO: use ShadowNode::Shared instead of Tag
+  //         folly::dynamic props = folly::parseJson(*nativePropsJsonPtr);
 
-          ShadowNode::Shared shadowNode =
-              ShadowNode::newestShadowNodesRegistry->getByTag(tag);
-          const ShadowNodeFamily &family = shadowNode->getFamily();
-          // react_native_assert(family.getSurfaceId() == 1); // TODO: support
-          // other surfaces
+  //         ShadowNode::Shared shadowNode =
+  //             ShadowNode::newestShadowNodesRegistry->getByTag(tag);
+  //         const ShadowNodeFamily &family = shadowNode->getFamily();
+  //         // react_native_assert(family.getSurfaceId() == 1); // TODO:
+  //         support
+  //         // other surfaces
 
-          std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)>
-              callback = [&](ShadowNode const &oldShadowNode) {
-                Props::Shared newProps =
-                    oldShadowNode.getComponentDescriptor().cloneProps(
-                        propsParserContext,
-                        oldShadowNode.getProps(),
-                        RawProps(props));
+  //         std::function<ShadowNode::Unshared(ShadowNode const
+  //         &oldShadowNode)>
+  //             callback = [&](ShadowNode const &oldShadowNode) {
+  //               Props::Shared newProps =
+  //                   oldShadowNode.getComponentDescriptor().cloneProps(
+  //                       propsParserContext,
+  //                       oldShadowNode.getProps(),
+  //                       RawProps(props));
 
-                ShadowNodeFragment fragment{/* .props = */ newProps};
-                return oldShadowNode.clone(fragment);
-              };
+  //               ShadowNodeFragment fragment{/* .props = */ newProps};
+  //               return oldShadowNode.clone(fragment);
+  //             };
 
-          newRoot = newRoot->cloneTree(family, callback);
-          return std::static_pointer_cast<RootShadowNode>(newRoot);
-        };
+  //         newRoot = newRoot->cloneTree(family, callback);
+  //         return std::static_pointer_cast<RootShadowNode>(newRoot);
+  //       };
 
-    ShadowTree::CommitOptions commitOptions{};
-    shadowTree.commit(transaction, commitOptions);
-  });
+  //   ShadowTree::CommitOptions commitOptions{};
+  //   shadowTree.commit(transaction, commitOptions);
+  // });
 }
 
 void NativeProxy::registerNatives() {

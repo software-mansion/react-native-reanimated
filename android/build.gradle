@@ -651,7 +651,8 @@ dependencies {
     // noinspection GradleDynamicVersion
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
     if (isDeveloperMode()) {
-        implementation "com.facebook.fbjni:fbjni:" + FBJNI_VERSION
+        implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION
+        // resolves error "Duplicate class com.facebook.jni.CppException" when building FabricExample
     }
     else {
         implementation "com.facebook.fbjni:fbjni-java-only:" + FBJNI_VERSION

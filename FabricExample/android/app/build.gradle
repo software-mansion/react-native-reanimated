@@ -82,6 +82,10 @@ project.ext.react = [
     enableHermes: true,  // clean and rebuild if changing
 ]
 
+project.ext.reanimated = [
+  buildFromSource: true // clean and rebuild if changing
+]
+
 apply from: "../../node_modules/react-native/react.gradle"
 
 /**

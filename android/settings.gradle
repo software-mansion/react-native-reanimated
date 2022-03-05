@@ -1,3 +1,1 @@
-include ':ReactAndroid'
-project(':ReactAndroid').projectDir = new File(rootProject.projectDir, '../rea-fabric')
 include 'lib'
