@@ -354,23 +354,23 @@ using namespace facebook::react;
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
-    if (lastSnapshot == nil) {
-      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
-      propsSnapshot.props = [props mutableCopy];
-      propsSnapshot.viewTag = viewTag;
-      propsSnapshot.viewName = viewName;
-      _componentUpdateBuffer[viewTag] = propsSnapshot;
-      atomic_store(&_shouldFlushUpdateBuffer, true);
-    } else {
-      NSMutableDictionary *lastProps = lastSnapshot.props;
-      for (NSString *key in props) {
-        [lastProps setValue:props[key] forKey:key];
-      }
-    }
-    return;
-  }
+  //  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+  //  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
+  //    if (lastSnapshot == nil) {
+  //      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
+  //      propsSnapshot.props = [props mutableCopy];
+  //      propsSnapshot.viewTag = viewTag;
+  //      propsSnapshot.viewName = viewName;
+  //      _componentUpdateBuffer[viewTag] = propsSnapshot;
+  //      atomic_store(&_shouldFlushUpdateBuffer, true);
+  //    } else {
+  //      NSMutableDictionary *lastProps = lastSnapshot.props;
+  //      for (NSString *key in props) {
+  //        [lastProps setValue:props[key] forKey:key];
+  //      }
+  //    }
+  //    return;
+  //  }
 
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
