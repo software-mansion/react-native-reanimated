@@ -11,3 +11,8 @@ export interface Descriptor {
   name: string;
   shareableNode: any; // ShadowNodeWrapper
 }
+
+export interface RefObjectFunction<T> {
+  current: T | null;
+  (component?: T): number;
+}

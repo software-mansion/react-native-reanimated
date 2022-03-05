@@ -1,5 +1,4 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
-import { AnimationObject } from '../animation';
 import { processColor } from '../Colors';
 import {
   AnimatedStyle,
@@ -7,6 +6,7 @@ import {
   NestedObjectValues,
   StyleProps,
   WorkletFunction,
+  AnimationObject,
 } from '../commonTypes';
 import { makeRemote } from '../core';
 import { isWeb, isJest } from '../PlatformChecker';
@@ -187,7 +187,8 @@ export function isAnimated(prop: NestedObjectValues<AnimationObject>): boolean {
   'worklet';
   const propsToCheck: NestedObjectValues<AnimationObject>[] = [prop];
   while (propsToCheck.length > 0) {
-    const currentProp: NestedObjectValues<AnimationObject> = propsToCheck.pop() as NestedObjectValues<AnimationObject>;
+    const currentProp: NestedObjectValues<AnimationObject> =
+      propsToCheck.pop() as NestedObjectValues<AnimationObject>;
     if (Array.isArray(currentProp)) {
       for (const item of currentProp) {
         propsToCheck.push(item);

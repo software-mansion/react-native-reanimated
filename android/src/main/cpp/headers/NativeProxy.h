@@ -62,7 +62,7 @@ class EventHandler : public HybridClass<EventHandler> {
     if (event != nullptr) {
       try {
         eventAsString = event->toString();
-      } catch (folly::json::parse_error &) {
+      } catch (std::exception &) {
         // Events from other libraries may contain NaN or INF values which
         // cannot be represented in JSON. See
         // https://github.com/software-mansion/react-native-reanimated/issues/1776

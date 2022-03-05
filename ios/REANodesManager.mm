@@ -4,10 +4,11 @@
 #import <React/RCTFollyConvert.h>
 
 #import <React/RCTShadowView.h>
+#import <stdatomic.h>
 #import "REAModule.h"
 
-#import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
-#import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedThings
+//#import <React-Fabric/react/renderer/core/ShadowNode.h> // ShadowNode, ShadowTreeCommitTransaction
+//#import <React-Fabric/react/renderer/uimanager/UIManager.h> // UIManager, ReanimatedThings
 
 using namespace facebook::react;
 
@@ -31,6 +32,17 @@ using namespace facebook::react;
 
 - (void)runSyncUIUpdatesWithObserver:(id<RCTUIManagerObserver>)observer;
 
+@end
+
+@interface ComponentUpdate : NSObject
+
+@property (nonnull) NSMutableDictionary *props;
+@property (nonnull) NSNumber *viewTag;
+@property (nonnull) NSString *viewName;
+
+@end
+
+@implementation ComponentUpdate
 @end
 
 @implementation RCTUIManager (SyncUpdates)
@@ -85,6 +97,9 @@ using namespace facebook::react;
   REAEventHandler _eventHandler;
   volatile void (^_mounting)(void);
   __weak id<RCTSurfacePresenterStub> _surfacePresenter;
+  NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
+  volatile atomic_bool _shouldFlushUpdateBuffer;
+  NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
 }
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
@@ -99,6 +114,9 @@ using namespace facebook::react;
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
     _operationsInBatch = [NSMutableDictionary new];
+    _componentUpdateBuffer = [NSMutableDictionary new];
+    _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
+    _shouldFlushUpdateBuffer = false;
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -317,10 +335,43 @@ using namespace facebook::react;
   _nativeProps = nativeProps;
 }
 
+- (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag
+{
+  return _viewRegistry[viewTag].superview == nil;
+}
+
+- (void)setValueForNodeID:(nonnull NSNumber *)nodeID value:(nonnull NSNumber *)newValue
+{
+  RCTAssertParam(nodeID);
+
+  // REANode *node = _nodes[nodeID];
+
+  // REAValueNode *valueNode = (REAValueNode *)node;
+  // [valueNode setValue:newValue];
+}
+
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
+  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
+  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
+    if (lastSnapshot == nil) {
+      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
+      propsSnapshot.props = [props mutableCopy];
+      propsSnapshot.viewTag = viewTag;
+      propsSnapshot.viewName = viewName;
+      _componentUpdateBuffer[viewTag] = propsSnapshot;
+      atomic_store(&_shouldFlushUpdateBuffer, true);
+    } else {
+      NSMutableDictionary *lastProps = lastSnapshot.props;
+      for (NSString *key in props) {
+        [lastProps setValue:props[key] forKey:key];
+      }
+    }
+    return;
+  }
+
   // TODO: refactor PropsNode to also use this function
   NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
@@ -372,6 +423,36 @@ using namespace facebook::react;
   }
 
   return result;
+}
+
+- (void)maybeFlushUpdateBuffer
+{
+  RCTAssertUIManagerQueue();
+  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  if (!shouldFlushUpdateBuffer) {
+    return;
+  }
+
+  __weak __typeof__(self) weakSelf = self;
+  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    __typeof__(self) strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+    for (NSNumber *tag in componentUpdateBuffer) {
+      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+      if (componentUpdate == Nil) {
+        continue;
+      }
+      [strongSelf updateProps:componentUpdate.props
+                ofViewWithTag:componentUpdate.viewTag
+                     withName:componentUpdate.viewName];
+    }
+    [strongSelf performOperations];
+  }];
 }
 
 @end

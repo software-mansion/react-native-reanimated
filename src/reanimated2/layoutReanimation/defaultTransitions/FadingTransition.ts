@@ -7,7 +7,8 @@ import { BaseAnimationBuilder } from '../animationBuilder';
 
 export class FadingTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   static createInstance(): FadingTransition {
     return new FadingTransition();
   }

@@ -564,7 +564,7 @@
     "@babel/helper-simple-access" "^7.16.7"
     babel-plugin-dynamic-import-node "^2.3.3"
 
-"@babel/plugin-transform-object-assign@^7.0.0", "@babel/plugin-transform-object-assign@^7.10.4":
+"@babel/plugin-transform-object-assign@^7.0.0", "@babel/plugin-transform-object-assign@^7.16.7":
   version "7.16.7"
   resolved "https://registry.yarnpkg.com/@babel/plugin-transform-object-assign/-/plugin-transform-object-assign-7.16.7.tgz#5fe08d63dccfeb6a33aa2638faf98e5c584100f8"
   integrity sha512-R8mawvm3x0COTJtveuoqZIjNypn2FjfvXZr4pSQ8VhEFBuQGBz4XhHasZtHXjgXU4XptZ4HtGof3NoYc93ZH9Q==
@@ -4937,11 +4937,6 @@ mkdirp@^0.5.1:
   dependencies:
     minimist "^1.2.5"
 
-mockdate@^3.0.2:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/mockdate/-/mockdate-3.0.5.tgz#789be686deb3149e7df2b663d2bc4392bc3284fb"
-  integrity sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==
-
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -5565,10 +5560,10 @@ react-native-gradle-plugin@^0.0.5:
   version "0.0.0"
   uid ""
 
-react-native-screens@^3.4.0:
-  version "3.13.0"
-  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-3.13.0.tgz#011ed3b27d358aeab664f88d1b9eb8edc5c5f6fb"
-  integrity sha512-cAreMaFPW+qikOc0YFFvfue0tJ9CQaHwzRNg0IPd8/VILbqM7U8TJrCK+K0OUY6o+9B0KYbFfDrkj1wmqidHpw==
+react-native-screens@^3.11.1:
+  version "3.13.1"
+  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-3.13.1.tgz#b3b1c5788dca25a71668909f66d87fb35c5c5241"
+  integrity sha512-xcrnuUs0qUrGpc2gOTDY4VgHHADQwp80mwR1prU/Q0JqbZN5W3koLhuOsT6FkSRKjR5t40l+4LcjhHdpqRB2HA==
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
@@ -6020,6 +6015,11 @@ set-value@^2.0.0, set-value@^2.0.1:
     is-extendable "^0.1.1"
     is-plain-object "^2.0.3"
     split-string "^3.0.1"
+
+setimmediate@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
+  integrity sha1-KQy7Iy4waULX1+qbg3Mqt4VvgoU=
 
 setprototypeof@1.2.0:
   version "1.2.0"
