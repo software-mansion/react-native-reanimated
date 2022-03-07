@@ -1,29 +1,24 @@
-//
-//  REAInitializer.h
-//  RNReanimated
-//
-//  Created by Szymon Kapala on 27/07/2021.
-//
-
 #import <Foundation/Foundation.h>
-#import <RNReanimated/NativeProxy.h>
-#import <RNReanimated/REAEventDispatcher.h>
-#import <RNReanimated/REAModule.h>
-#import <React/RCTBridge+Private.h>
-#import <React/RCTCxxBridgeDelegate.h>
-#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#import <React/RCTBridge.h>
+#import <React/RCTRootView.h>
+
+#ifndef RCT_USE_HERMES
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#define RCT_USE_HERMES 1
+#else
+#define RCT_USE_HERMES 0
+#endif
+#endif
+
+#if RCT_USE_HERMES
+#import <reacthermes/HermesExecutorFactory.h>
+#else
+#import <React/JSCExecutorFactory.h>
+#endif
+
 #import <ReactCommon/RCTTurboModuleManager.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
-namespace reanimated {
-
-using namespace facebook;
-using namespace react;
-
-JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
+std::unique_ptr<facebook::react::JSExecutorFactory>
+REAAppSetupDefaultJsExecutorFactory(
     RCTBridge *bridge,
-    JSIExecutor::RuntimeInstaller runtimeInstallerToWrap);
-
-} // namespace reanimated
-NS_ASSUME_NONNULL_END
+    RCTTurboModuleManager *turboModuleManager);

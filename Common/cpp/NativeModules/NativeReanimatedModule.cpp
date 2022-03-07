@@ -243,6 +243,19 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
+struct UIManagerBindingPublic {
+  void *vtable;
+  std::shared_ptr<UIManager> uiManager_;
+};
+
+jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
+  auto uiManagerBinding = UIManagerBinding::getBinding(rt);
+  auto uiManagerBindingPublic =
+      reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
+  uiManager_ = uiManagerBindingPublic->uiManager_;
+  return jsi::Value::undefined();
+}
+
 void NativeReanimatedModule::onEvent(
     std::string eventName,
     jsi::Value &&payload) {

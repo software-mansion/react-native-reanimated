@@ -108,6 +108,16 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value SPEC_PREFIX(initializeForFabric)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count) {
+  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+      ->initializeForFabric(rt);
+  return jsi::Value::undefined();
+}
+
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -129,6 +139,9 @@ NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
   methodMap_["getViewProp"] = MethodMetadata{3, SPEC_PREFIX(getViewProp)};
   methodMap_["enableLayoutAnimations"] =
       MethodMetadata{2, SPEC_PREFIX(enableLayoutAnimations)};
+
+  methodMap_["initializeForFabric"] =
+      MethodMetadata{0, SPEC_PREFIX(initializeForFabric)};
 }
 
 } // namespace reanimated

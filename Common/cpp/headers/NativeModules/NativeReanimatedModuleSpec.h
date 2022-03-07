@@ -63,6 +63,9 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value enableLayoutAnimations(
       jsi::Runtime &rt,
       const jsi::Value &config) = 0;
+
+  // fabric
+  virtual jsi::Value initializeForFabric(jsi::Runtime &rt) = 0;
 };
 
 } // namespace reanimated

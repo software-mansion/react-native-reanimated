@@ -1,64 +1,60 @@
 #import "REAInitializer.h"
-#import "REAUIManager.h"
 
-#import <React-Fabric/react/renderer/uimanager/UIManager.h> // ReanimatedListener
+#import <React/CoreModulesPlugins.h>
+#import <React/RCTDataRequestHandler.h>
+#import <React/RCTFabricSurfaceHostingProxyRootView.h>
+#import <React/RCTFileRequestHandler.h>
+#import <React/RCTGIFImageDecoder.h>
+#import <React/RCTHTTPRequestHandler.h>
+#import <React/RCTImageLoader.h>
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#import <React/RCTLocalAssetImageLoader.h>
+#import <React/RCTNetworking.h>
 
-@interface RCTEventDispatcher (Reanimated)
+#import "NativeProxy.h"
 
-- (void)setBridge:(RCTBridge *)bridge;
-
-@end
-
-namespace reanimated {
-
-using namespace facebook;
-using namespace react;
-
-JSIExecutor::RuntimeInstaller REAJSIExecutorRuntimeInstaller(
+std::unique_ptr<facebook::react::JSExecutorFactory> REAAppSetupDefaultJsExecutorFactory(
     RCTBridge *bridge,
-    JSIExecutor::RuntimeInstaller runtimeInstallerToWrap)
+    RCTTurboModuleManager *turboModuleManager)
 {
-  /*[bridge moduleForClass:[RCTUIManager class]];
-  REAUIManager *reaUiManager = [REAUIManager new];
-  [reaUiManager setBridge:bridge];
-  RCTUIManager *uiManager = reaUiManager;
-  [bridge updateModuleWithInstance:uiManager];*/
+  // Necessary to allow NativeModules to lookup TurboModules
+  [bridge setRCTTurboModuleRegistry:turboModuleManager];
 
-  /*[bridge moduleForClass:[RCTEventDispatcher class]];
-  RCTEventDispatcher *eventDispatcher = [REAEventDispatcher new];
-#if RNVERSION >= 66
-  RCTCallableJSModules *callableJSModules = [RCTCallableJSModules new];
-  [bridge setValue:callableJSModules forKey:@"_callableJSModules"];
-  [callableJSModules setBridge:bridge];
-  [eventDispatcher setValue:callableJSModules forKey:@"_callableJSModules"];
-  [eventDispatcher setValue:bridge forKey:@"_bridge"];
-  [eventDispatcher initialize];
-#else
-  [eventDispatcher setBridge:bridge];
+#if RCT_DEV
+  if (!RCTTurboModuleEagerInitEnabled()) {
+    /**
+     * Instantiating DevMenu has the side-effect of registering
+     * shortcuts for CMD + d, CMD + i,  and CMD + n via RCTDevMenu.
+     * Therefore, when TurboModules are enabled, we must manually create this
+     * NativeModule.
+     */
+    [turboModuleManager moduleForName:"RCTDevMenu"];
+  }
 #endif
-  [bridge updateModuleWithInstance:eventDispatcher];
-  _bridge_reanimated = bridge;*/
-  const auto runtimeInstaller = [bridge, runtimeInstallerToWrap](facebook::jsi::Runtime &runtime) {
-    if (!bridge) {
-      return;
-    }
 
-    if (runtimeInstallerToWrap) {
-      runtimeInstallerToWrap(runtime);
-    }
+#if RCT_USE_HERMES
+  return std::make_unique<facebook::react::HermesExecutorFactory>(
+#else
+  return std::make_unique<facebook::react::JSCExecutorFactory>(
+#endif
+      facebook::react::RCTJSIExecutorRuntimeInstaller([turboModuleManager, bridge](facebook::jsi::Runtime &runtime) {
+        if (!bridge || !turboModuleManager) {
+          return;
+        }
+        facebook::react::RuntimeExecutor syncRuntimeExecutor =
+            [&](std::function<void(facebook::jsi::Runtime & runtime_)> &&callback) { callback(runtime); };
+        [turboModuleManager installJSBindingWithRuntimeExecutor:syncRuntimeExecutor];
 
-    auto reanimatedModule = reanimated::createReanimatedModule(bridge, bridge.jsCallInvoker);
-    runtime.global().setProperty(
-        runtime,
-        "_WORKLET_RUNTIME",
-        static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
+        // Reanimated
+        auto reanimatedModule = reanimated::createReanimatedModule(bridge, bridge.jsCallInvoker);
+        runtime.global().setProperty(
+            runtime,
+            "_WORKLET_RUNTIME",
+            static_cast<double>(reinterpret_cast<std::uintptr_t>(reanimatedModule->runtime.get())));
 
-    runtime.global().setProperty(
-        runtime,
-        jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
-        jsi::Object::createFromHostObject(runtime, reanimatedModule));
-  };
-  return runtimeInstaller;
-}
-
+        runtime.global().setProperty(
+            runtime,
+            jsi::PropNameID::forAscii(runtime, "__reanimatedModuleProxy"),
+            jsi::Object::createFromHostObject(runtime, reanimatedModule));
+      }));
 }

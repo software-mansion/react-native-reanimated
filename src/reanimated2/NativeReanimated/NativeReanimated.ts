@@ -73,4 +73,8 @@ export class NativeReanimated {
   enableLayoutAnimations(flag: boolean): void {
     this.InnerNativeModule.enableLayoutAnimations(flag);
   }
+
+  initializeForFabric(): void {
+    this.InnerNativeModule.initializeForFabric();
+  }
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <react/renderer/uimanager/UIManager.h>
+
 #include <unistd.h>
 #include <memory>
 #include <string>
@@ -71,12 +73,18 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
 
+  jsi::Value initializeForFabric(jsi::Runtime &rt) override;
+
   void onRender(double timestampMs);
   void onEvent(std::string eventName, jsi::Value &&eventAsString);
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
+
+  std::shared_ptr<UIManager> getUIManager() const {
+    return uiManager_;
+  }
 
  private:
   std::shared_ptr<MapperRegistry> mapperRegistry;
@@ -89,6 +97,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       propObtainer;
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  std::shared_ptr<UIManager> uiManager_;
 };
 
 } // namespace reanimated

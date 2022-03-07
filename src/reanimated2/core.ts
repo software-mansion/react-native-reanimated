@@ -417,6 +417,10 @@ export function enableLayoutAnimations(
   }
 }
 
+export function initializeForFabric(): void {
+  NativeReanimatedModule.initializeForFabric();
+}
+
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
