@@ -250,6 +250,9 @@ struct UIManagerBindingPublic {
 
 jsi::Value NativeReanimatedModule::initializeForFabric(jsi::Runtime &rt) {
   auto uiManagerBinding = UIManagerBinding::getBinding(rt);
+  react_native_assert(
+      uiManagerBinding !=
+      nullptr); // too early, UIManagerBinding is not registered yet
   auto uiManagerBindingPublic =
       reinterpret_cast<UIManagerBindingPublic *>(&*uiManagerBinding);
   uiManager_ = uiManagerBindingPublic->uiManager_;

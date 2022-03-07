@@ -83,6 +83,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   UpdaterFunction updaterFunction;
 
   std::shared_ptr<UIManager> getUIManager() const {
+    react_native_assert(
+        uiManager_ !=
+        nullptr); // make sure you have called initializeForFabric() before
     return uiManager_;
   }
 
