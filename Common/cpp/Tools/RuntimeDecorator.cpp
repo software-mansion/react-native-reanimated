@@ -120,10 +120,10 @@ void RuntimeDecorator::decorateUIRuntime(
                  const jsi::Value *args,
                  const size_t count) -> jsi::Value {
     const auto viewTag = args[0].asNumber();
-    const jsi::Value *viewName = &args[1];
-    const jsi::Value *shadowNode = &args[2];
-    const auto params = args[3].asObject(rt);
-    updater(rt, viewTag, *viewName, *shadowNode, params);
+    const jsi::Value &viewName = args[1];
+    const jsi::Value &shadowNode = args[2];
+    const jsi::Value &params = args[3];
+    updater(rt, viewTag, viewName, shadowNode, params);
     return jsi::Value::undefined();
   };
   jsi::Value updateProps = jsi::Function::createFromHostFunction(

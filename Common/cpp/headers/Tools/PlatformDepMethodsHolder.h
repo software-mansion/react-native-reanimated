@@ -15,7 +15,7 @@ using UpdaterFunction = std::function<void(
     int viewTag,
     const jsi::Value &viewName,
     const jsi::Value &shadowNode,
-    const jsi::Object &object)>;
+    const jsi::Value &props)>;
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;

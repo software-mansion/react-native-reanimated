@@ -9,7 +9,7 @@
 typedef void (^REAOnAnimationCallback)(CADisplayLink *displayLink);
 typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
-typedef void (^REAPerformOperations)(NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue);
+typedef void (^REAPerformOperations)();
 
 @interface REANodesManager : NSObject
 

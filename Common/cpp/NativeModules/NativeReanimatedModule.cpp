@@ -78,9 +78,18 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
+  updaterFunction = [this](
+                        jsi::Runtime &rt,
+                        int viewTag,
+                        const jsi::Value &viewName,
+                        const jsi::Value &shadowNodeValue,
+                        const jsi::Value &props) {
+    this->updateProps(rt, shadowNodeValue, props);
+  };
+
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
-      platformDepMethodsHolder.updaterFunction,
+      updaterFunction,
       requestAnimationFrame,
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
@@ -91,7 +100,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->renderRequested = false;
     this->onRender(timestampMs);
   };
-  updaterFunction = platformDepMethodsHolder.updaterFunction;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -312,6 +320,88 @@ void NativeReanimatedModule::onRender(double timestampMs) {
     this->errorHandler->setError(str);
     this->errorHandler->raise();
   }
+}
+
+// TODO: move to separate file
+struct UIManagerPublic {
+  void *vtable;
+  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+  UIManagerDelegate *delegate_;
+  UIManagerAnimationDelegate *animationDelegate_{nullptr};
+  RuntimeExecutor const runtimeExecutor_{};
+  ShadowTreeRegistry shadowTreeRegistry_{};
+  BackgroundExecutor const backgroundExecutor_{};
+  ContextContainer::Shared contextContainer_;
+};
+
+void NativeReanimatedModule::updateProps(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue,
+    const jsi::Value &props) {
+  // TODO: use uiManager_->getNewestCloneOfShadowNode?
+  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  std::unique_ptr<RawProps> rawProps = std::make_unique<RawProps>(rt, props);
+  operationsInBatch_.emplace_back(shadowNode, std::move(rawProps));
+}
+
+void NativeReanimatedModule::performOperations() {
+  if (operationsInBatch_.empty()) {
+    return;
+  }
+
+  auto copiedOperationsQueue = std::move(operationsInBatch_);
+  operationsInBatch_ =
+      std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>();
+  // TODO: refactor this and make sure that we don't copy anything here
+
+  // TODO: move shadowTreeRegistry and contextContainer to
+  // NativeReanimatedModule fields
+  std::shared_ptr<UIManager> uiManager = uiManager_;
+  auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
+  ShadowTreeRegistry *shadowTreeRegistry =
+      &uiManagerPublic->shadowTreeRegistry_;
+  std::shared_ptr<const ContextContainer> contextContainer =
+      uiManagerPublic->contextContainer_;
+  SurfaceId surfaceId = 1; // TODO: handle surface id
+  PropsParserContext propsParserContext{surfaceId, *contextContainer};
+
+  shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
+    ShadowTreeCommitTransaction transaction =
+        [&](RootShadowNode const &oldRootShadowNode) {
+          // TODO: don't clone root here
+          ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
+              oldRootShadowNode.getChildren()[0]->getFamily(),
+              [&](ShadowNode const &oldShadowNode) {
+                return oldShadowNode.clone(ShadowNodeFragment{});
+              });
+
+          for (const auto &pair : copiedOperationsQueue) {
+            const ShadowNodeFamily &family = pair.first->getFamily();
+            react_native_assert(family.getSurfaceId() == 1);
+
+            std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)>
+                callback = [&](ShadowNode const &oldShadowNode) {
+                  Props::Shared newProps =
+                      oldShadowNode.getComponentDescriptor().cloneProps(
+                          propsParserContext,
+                          oldShadowNode.getProps(),
+                          *pair.second);
+
+                  ShadowNodeFragment fragment{/* .props = */ newProps};
+                  return oldShadowNode.clone(fragment);
+                };
+
+            newRoot = newRoot->cloneTree(family, callback);
+            if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
+              break; // cancel transaction by returning null RootShadowNode
+            }
+          }
+
+          return std::static_pointer_cast<RootShadowNode>(newRoot);
+        };
+    ShadowTree::CommitOptions commitOptions{};
+    shadowTree.commit(transaction, commitOptions);
+  });
 }
 
 } // namespace reanimated

@@ -221,12 +221,7 @@ using namespace facebook::react;
 
 - (void)performOperations
 {
-  if (_operationsInBatch.count != 0) {
-    NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue = _operationsInBatch;
-    _operationsInBatch = [NSMutableDictionary new];
-
-    _performOperations(copiedOperationsQueue);
-  }
+  _performOperations(); // calls NativeReanimatedModule::performOperations
   _wantRunUpdates = NO;
 }
 

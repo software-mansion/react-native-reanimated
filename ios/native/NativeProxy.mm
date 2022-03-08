@@ -197,17 +197,6 @@ static jsi::Value convertObjCObjectToJSIValue(jsi::Runtime &runtime, id value)
 }
 // COPIED FROM RCTTurboModule.mm END
 
-struct UIManagerPublic {
-  void *vtable;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  UIManagerDelegate *delegate_;
-  UIManagerAnimationDelegate *animationDelegate_{nullptr};
-  RuntimeExecutor const runtimeExecutor_{};
-  ShadowTreeRegistry shadowTreeRegistry_{};
-  BackgroundExecutor const backgroundExecutor_{};
-  ContextContainer::Shared contextContainer_;
-};
-
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
     std::shared_ptr<CallInvoker> jsInvoker)
@@ -219,15 +208,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
                          int viewTag, // equal to shadowNode->getTag()
                          const jsi::Value &viewName,
                          const jsi::Value &shadowNodeValue,
-                         const jsi::Object &props) -> void {
-    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
-                                              encoding:[NSString defaultCStringEncoding]];
-    ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-    //    ShadowNode::newestShadowNodesRegistry->setNewest(shadowNode); // TODO: pass ShadowNode::Shared directly
-    NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
-    [reanimatedModule.nodesManager updateProps:propsDict
-                                 ofViewWithTag:[NSNumber numberWithInt:viewTag]
-                                      withName:nsViewName];
+                         const jsi::Value &props) -> void {
+    // TODO: rename this function and synchronously update UI props here
   };
 
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
@@ -388,53 +370,9 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     global.setProperty(rt, eventTimestampName, jsi::Value::undefined());
   }];
 
-  [reanimatedModule.nodesManager
-      registerPerformOperations:^(NSMutableDictionary<NSNumber *, NSMutableDictionary *> *copiedOperationsQueue) {
-        std::shared_ptr<UIManager> uiManager = module->getUIManager();
-
-        auto uiManagerPublic = reinterpret_cast<UIManagerPublic *>(&*uiManager);
-        ShadowTreeRegistry *shadowTreeRegistry = &uiManagerPublic->shadowTreeRegistry_;
-
-        std::shared_ptr<const ContextContainer> contextContainer = uiManagerPublic->contextContainer_;
-
-        SurfaceId surfaceId = 1;
-        PropsParserContext propsParserContext{surfaceId, *contextContainer};
-
-        shadowTreeRegistry->visit(surfaceId, [&](ShadowTree const &shadowTree) {
-          ShadowTreeCommitTransaction transaction = [&](RootShadowNode const &oldRootShadowNode) {
-            // TODO: don't clone root here
-            ShadowNode::Unshared newRoot = oldRootShadowNode.cloneTree(
-                oldRootShadowNode.getChildren()[0]->getFamily(),
-                [&](ShadowNode const &oldShadowNode) { return oldShadowNode.clone(ShadowNodeFragment{}); });
-
-            for (id key in copiedOperationsQueue) {
-              Tag tag = [key intValue]; // TODO: use ShadowNode::Shared instead of Tag
-              NSMutableDictionary *props = [copiedOperationsQueue objectForKey:key];
-
-              //          ShadowNode::Shared shadowNode = ShadowNode::newestShadowNodesRegistry->getByTag(tag);
-              //          const ShadowNodeFamily &family = shadowNode->getFamily();
-              //          react_native_assert(family.getSurfaceId() == 1); // TODO: support other surfaces
-              //
-              //          std::function<ShadowNode::Unshared(ShadowNode const &oldShadowNode)> callback =
-              //            [&](ShadowNode const &oldShadowNode) {
-              //              Props::Shared newProps = oldShadowNode.getComponentDescriptor().cloneProps(
-              //              propsParserContext, oldShadowNode.getProps(), RawProps(convertIdToFollyDynamic(props)));
-              //
-              //              ShadowNodeFragment fragment{/* .props = */ newProps};
-              //              return oldShadowNode.clone(fragment);
-              //            };
-              //
-              //          newRoot = newRoot->cloneTree(family, callback);
-              //          if (!newRoot) { // cloneTree returned ShadowNode::Unshared{nullptr}
-              //            break; // cancel transaction by returning null RootShadowNode
-              //          }
-            }
-            return std::static_pointer_cast<RootShadowNode>(newRoot);
-          };
-          ShadowTree::CommitOptions commitOptions{};
-          shadowTree.commit(transaction, commitOptions);
-        });
-      }];
+  [reanimatedModule.nodesManager registerPerformOperations:^() {
+    module->performOperations();
+  }];
 
   //  facebook::react::ReanimatedListener::handleEvent = [module](RawEvent &rawEvent) {
   //    // handles RawEvents from React Native

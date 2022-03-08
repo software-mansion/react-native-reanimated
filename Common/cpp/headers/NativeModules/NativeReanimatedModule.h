@@ -82,6 +82,12 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
 
+  void updateProps(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue,
+      const jsi::Value &props);
+  void performOperations();
+
   std::shared_ptr<UIManager> getUIManager() const {
     react_native_assert(
         uiManager_ !=
@@ -101,6 +107,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   std::shared_ptr<UIManager> uiManager_;
+  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>
+      operationsInBatch_; // TODO: refactor std::pair to custom struct
 };
 
 } // namespace reanimated
