@@ -34,12 +34,8 @@ void Mapper::execute(jsi::Runtime &rt) {
     for (int i = 0; i < jsViewDescriptorArray.length(rt); ++i) {
       auto jsViewDescriptor =
           jsViewDescriptorArray.getValueAtIndex(rt, i).getObject(rt);
-      (*updateProps)(
-          rt,
-          static_cast<int>(jsViewDescriptor.getProperty(rt, "tag").asNumber()),
-          jsViewDescriptor.getProperty(rt, "name"),
-          jsViewDescriptor.getProperty(rt, "shareableNode"),
-          newStyle);
+      updateProps(
+          rt, jsViewDescriptor.getProperty(rt, "shareableNode"), newStyle);
     }
   }
 }
@@ -53,7 +49,12 @@ void Mapper::enableFastMode(
   }
   viewDescriptors = jsViewDescriptors;
   this->optimalizationLvl = optimalizationLvl;
-  updateProps = &module->updaterFunction;
+  updateProps = [this](
+                    jsi::Runtime &rt,
+                    const jsi::Value &shadowNodeValue,
+                    const jsi::Value &props) {
+    this->module->updateProps(rt, shadowNodeValue, props);
+  };
   jsi::Runtime *rt = module->runtime.get();
   userUpdater = std::make_shared<jsi::Function>(
       updater->getValue(*rt).asObject(*rt).asFunction(*rt));

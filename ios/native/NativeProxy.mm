@@ -268,6 +268,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }];
   };
 
+  auto synchronouslyUpdateUIPropsFunction = [reanimatedModule](jsi::Runtime &rt, Tag tag, const jsi::Value &props) {
+    NSNumber *viewTag = @(tag);
+    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props.asObject(rt));
+    [reanimatedModule.nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+  };
+
   auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
 
   // Layout Animations start
@@ -336,7 +342,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
-      propUpdater,
+      synchronouslyUpdateUIPropsFunction,
       scrollToFunction,
       measuringFunction,
       getCurrentTime,

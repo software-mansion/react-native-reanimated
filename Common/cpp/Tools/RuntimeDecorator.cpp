@@ -104,7 +104,10 @@ void RuntimeDecorator::decorateRuntime(
 
 void RuntimeDecorator::decorateUIRuntime(
     jsi::Runtime &rt,
-    const UpdaterFunction updater,
+    const std::function<void(
+        jsi::Runtime &rt,
+        const jsi::Value &shadowNodeValue,
+        const jsi::Value &props)> updateProps,
     const RequestFrameFunction requestFrame,
     const ScrollToFunction scrollTo,
     const MeasuringFunction measure,
@@ -114,21 +117,19 @@ void RuntimeDecorator::decorateUIRuntime(
   RuntimeDecorator::decorateRuntime(rt, "UI");
   rt.global().setProperty(rt, "_UI", jsi::Value(true));
 
-  auto clb = [updater](
+  auto clb = [updateProps](
                  jsi::Runtime &rt,
                  const jsi::Value &thisValue,
                  const jsi::Value *args,
                  const size_t count) -> jsi::Value {
-    const auto viewTag = args[0].asNumber();
-    const jsi::Value &viewName = args[1];
     const jsi::Value &shadowNode = args[2];
     const jsi::Value &params = args[3];
-    updater(rt, viewTag, viewName, shadowNode, params);
+    updateProps(rt, shadowNode, params);
     return jsi::Value::undefined();
   };
-  jsi::Value updateProps = jsi::Function::createFromHostFunction(
+  jsi::Value updatePropsHostFunction = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "_updateProps"), 2, clb);
-  rt.global().setProperty(rt, "_updateProps", updateProps);
+  rt.global().setProperty(rt, "_updateProps", updatePropsHostFunction);
 
   auto clb2 = [requestFrame](
                   jsi::Runtime &rt,

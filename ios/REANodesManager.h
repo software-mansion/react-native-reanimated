@@ -41,9 +41,7 @@ typedef void (^REAPerformOperations)();
 
 - (void)configureProps:(nonnull NSSet<NSString *> *)nativeProps uiProps:(nonnull NSSet<NSString *> *)uiProps;
 
-- (void)updateProps:(nonnull NSDictionary *)props
-      ofViewWithTag:(nonnull NSNumber *)viewTag
-           withName:(nonnull NSString *)viewName;
+- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 
 - (NSString *)obtainProp:(nonnull NSNumber *)viewTag propName:(nonnull NSString *)propName;
 

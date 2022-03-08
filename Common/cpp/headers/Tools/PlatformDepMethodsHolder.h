@@ -6,16 +6,16 @@
 #include <utility>
 #include <vector>
 
+#include <react/renderer/core/ReactPrimitives.h>
+
 using namespace facebook;
+using namespace react;
 
 namespace reanimated {
 
-using UpdaterFunction = std::function<void(
-    jsi::Runtime &rt,
-    int viewTag,
-    const jsi::Value &viewName,
-    const jsi::Value &shadowNode,
-    const jsi::Value &props)>;
+using SynchronouslyUpdateUIPropsFunction =
+    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Value &props)>;
+
 using RequestRender =
     std::function<void(std::function<void(double)>, jsi::Runtime &rt)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
@@ -26,7 +26,7 @@ using SetGestureStateFunction = std::function<void(int, int)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
-  UpdaterFunction updaterFunction;
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   ScrollToFunction scrollToFunction;
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;

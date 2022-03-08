@@ -15,7 +15,7 @@ export default function UIPropsExample() {
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: `hsl(${Math.round(sv.value * 240)}, 100%, 50%)`,
+      // backgroundColor: `hsl(${Math.round(sv.value * 240)}, 100%, 50%)`,
       transform: [
         { rotate: `${sv.value * 180}deg` },
         { rotateY: `${sv.value * 360}deg` },

@@ -311,60 +311,12 @@ using namespace facebook::react;
   // [valueNode setValue:newValue];
 }
 
-- (void)updateProps:(nonnull NSDictionary *)props
-      ofViewWithTag:(nonnull NSNumber *)viewTag
-           withName:(nonnull NSString *)viewName
+- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
 {
-  //  ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  //  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
-  //    if (lastSnapshot == nil) {
-  //      ComponentUpdate *propsSnapshot = [ComponentUpdate new];
-  //      propsSnapshot.props = [props mutableCopy];
-  //      propsSnapshot.viewTag = viewTag;
-  //      propsSnapshot.viewName = viewName;
-  //      _componentUpdateBuffer[viewTag] = propsSnapshot;
-  //      atomic_store(&_shouldFlushUpdateBuffer, true);
-  //    } else {
-  //      NSMutableDictionary *lastProps = lastSnapshot.props;
-  //      for (NSString *key in props) {
-  //        [lastProps setValue:props[key] forKey:key];
-  //      }
-  //    }
-  //    return;
-  //  }
-
-  // TODO: refactor PropsNode to also use this function
-  NSMutableDictionary *uiProps = [NSMutableDictionary new];
-  NSMutableDictionary *nativeProps = [NSMutableDictionary new];
-  NSMutableDictionary *jsProps = [NSMutableDictionary new];
-
-  void (^addBlock)(NSString *key, id obj, BOOL *stop) = ^(NSString *key, id obj, BOOL *stop) {
-    if ([self.uiProps containsObject:key]) {
-      uiProps[key] = obj;
-    } else if ([self.nativeProps containsObject:key]) {
-      nativeProps[key] = obj;
-    } else {
-      jsProps[key] = obj;
-    }
-  };
-
-  [props enumerateKeysAndObjectsUsingBlock:addBlock];
-
-  if (uiProps.count > 0) {
-    if (_bridge.surfacePresenter) {
-      [_bridge.surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-    } else {
-      [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-    }
-    //[self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
-  }
-  if (nativeProps.count > 0) {
-    _operationsInBatch[viewTag] = nativeProps;
-    // [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
-  }
-  if (jsProps.count > 0) {
-    [self.reanimatedModule sendEventWithName:@"onReanimatedPropsChange"
-                                        body:@{@"viewTag" : viewTag, @"props" : jsProps}];
+  if (_bridge.surfacePresenter) {
+    [_bridge.surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
+  } else {
+    [_surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   }
 }
 
@@ -388,32 +340,33 @@ using namespace facebook::react;
 
 - (void)maybeFlushUpdateBuffer
 {
-  RCTAssertUIManagerQueue();
-  //  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
-  //  if (!shouldFlushUpdateBuffer) {
-  //    return;
-  //  }
-
-  __weak __typeof__(self) weakSelf = self;
-  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    __typeof__(self) strongSelf = weakSelf;
-    if (strongSelf == nil) {
-      return;
-    }
-    //    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
-    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
-    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
-    for (NSNumber *tag in componentUpdateBuffer) {
-      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
-      if (componentUpdate == Nil) {
-        continue;
-      }
-      [strongSelf updateProps:componentUpdate.props
-                ofViewWithTag:componentUpdate.viewTag
-                     withName:componentUpdate.viewName];
-    }
-    [strongSelf performOperations];
-  }];
+  //  RCTAssertUIManagerQueue();
+  //  //  bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
+  //  //  if (!shouldFlushUpdateBuffer) {
+  //  //    return;
+  //  //  }
+  //
+  //  __weak __typeof__(self) weakSelf = self;
+  //  [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *>
+  //  *viewRegistry) {
+  //    __typeof__(self) strongSelf = weakSelf;
+  //    if (strongSelf == nil) {
+  //      return;
+  //    }
+  //    //    atomic_store(&strongSelf->_shouldFlushUpdateBuffer, false);
+  //    NSMutableDictionary *componentUpdateBuffer = [strongSelf->_componentUpdateBuffer copy];
+  //    strongSelf->_componentUpdateBuffer = [NSMutableDictionary new];
+  //    for (NSNumber *tag in componentUpdateBuffer) {
+  //      ComponentUpdate *componentUpdate = componentUpdateBuffer[tag];
+  //      if (componentUpdate == Nil) {
+  //        continue;
+  //      }
+  //      [strongSelf updateProps:componentUpdate.props
+  //                ofViewWithTag:componentUpdate.viewTag
+  //                     withName:componentUpdate.viewName];
+  //    }
+  //    [strongSelf performOperations];
+  //  }];
 }
 
 @end

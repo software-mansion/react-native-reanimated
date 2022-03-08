@@ -70,7 +70,9 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      propObtainer(propObtainer) {
+      propObtainer(propObtainer),
+      synchronouslyUpdateUIPropsFunction(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -78,18 +80,16 @@ NativeReanimatedModule::NativeReanimatedModule(
 
   this->layoutAnimationsProxy = layoutAnimationsProxy;
 
-  updaterFunction = [this](
-                        jsi::Runtime &rt,
-                        int viewTag,
-                        const jsi::Value &viewName,
-                        const jsi::Value &shadowNodeValue,
-                        const jsi::Value &props) {
+  auto updateProps = [this](
+                         jsi::Runtime &rt,
+                         const jsi::Value &shadowNodeValue,
+                         const jsi::Value &props) {
     this->updateProps(rt, shadowNodeValue, props);
   };
 
   RuntimeDecorator::decorateUIRuntime(
       *runtime,
-      updaterFunction,
+      updateProps,
       requestAnimationFrame,
       platformDepMethodsHolder.scrollToFunction,
       platformDepMethodsHolder.measuringFunction,
@@ -357,7 +357,7 @@ void NativeReanimatedModule::updateProps(
 
   if (uiPropsOnly) {
     Tag tag = shadowNode->getTag();
-    // TODO: call synchronouslyUpdateUiProps(tag, props);
+    synchronouslyUpdateUIPropsFunction(rt, tag, props);
   } else {
     // TODO: use uiManager_->getNewestCloneOfShadowNode?
     std::unique_ptr<RawProps> rawProps = std::make_unique<RawProps>(rt, props);

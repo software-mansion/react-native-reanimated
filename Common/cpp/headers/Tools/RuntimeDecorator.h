@@ -31,7 +31,10 @@ class RuntimeDecorator {
   static void decorateRuntime(jsi::Runtime &rt, const std::string &label);
   static void decorateUIRuntime(
       jsi::Runtime &rt,
-      const UpdaterFunction updater,
+      const std::function<void(
+          jsi::Runtime &rt,
+          const jsi::Value &shadowNodeValue,
+          const jsi::Value &props)> updateProps,
       const RequestFrameFunction requestFrame,
       const ScrollToFunction scrollTo,
       const MeasuringFunction measure,

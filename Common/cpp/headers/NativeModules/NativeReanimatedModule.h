@@ -80,7 +80,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   bool isAnyHandlerWaitingForEvent(std::string eventName);
 
   void maybeRequestRender();
-  UpdaterFunction updaterFunction;
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 
   void updateProps(
       jsi::Runtime &rt,

@@ -29,7 +29,11 @@ class Mapper : public std::enable_shared_from_this<Mapper> {
   std::vector<std::shared_ptr<MutableValue>> outputs;
   bool dirty = true;
   std::shared_ptr<jsi::Function> userUpdater;
-  UpdaterFunction *updateProps;
+  std::function<void(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeValue,
+      const jsi::Value &props)>
+      updateProps;
   int optimalizationLvl = 0;
   std::shared_ptr<ShareableValue> viewDescriptors;
 
