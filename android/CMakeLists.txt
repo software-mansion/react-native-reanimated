@@ -13,7 +13,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
-set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 
 if(${CLIENT_SIDE_BUILD})
@@ -37,11 +36,11 @@ file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
 
 if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
         set (
-                INCLUDE_JSI_CPP 
+                INCLUDE_JSI_CPP
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
         )
         set (
-                INCLUDE_JSIDYNAMIC_CPP 
+                INCLUDE_JSIDYNAMIC_CPP
                 "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
         )
 endif()

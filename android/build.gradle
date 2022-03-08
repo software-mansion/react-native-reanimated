@@ -386,6 +386,7 @@ android {
                         "-DREACT_NATIVE_TARGET_VERSION=${REACT_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DBOOST_VERSION=${BOOST_VERSION}",
+                        "-DBUILD_DIR=${buildDir}",
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "--clean-first"
