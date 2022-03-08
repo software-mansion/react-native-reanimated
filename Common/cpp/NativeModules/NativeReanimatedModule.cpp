@@ -341,26 +341,27 @@ void NativeReanimatedModule::updateProps(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
 
   // TODO: move to separate method
-  bool uiPropsOnly = true;
-  const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    bool isNativeProp = nativePropNames_.find(propName) !=
-        nativePropNames_
-            .end(); // TODO: std::unordered_set<std::string>::contains?
-    if (isNativeProp) {
-      uiPropsOnly = false;
-      break;
+  bool uiPropsOnly = [&]() {
+    const jsi::Array propNames = props.asObject(rt).getPropertyNames(rt);
+    for (size_t i = 0; i < propNames.size(rt); ++i) {
+      const std::string propName =
+          propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+      bool isNativeProp =
+          nativePropNames_.find(propName) != nativePropNames_.end();
+      // TODO: std::unordered_set<std::string>::contains?
+      if (isNativeProp) {
+        return false;
+      }
     }
-  }
+    return true;
+  }();
 
   if (uiPropsOnly) {
     Tag tag = shadowNode->getTag();
     synchronouslyUpdateUIPropsFunction(rt, tag, props);
   } else {
     // TODO: use uiManager_->getNewestCloneOfShadowNode?
-    std::unique_ptr<RawProps> rawProps = std::make_unique<RawProps>(rt, props);
+    auto rawProps = std::make_unique<RawProps>(rt, props);
     operationsInBatch_.emplace_back(shadowNode, std::move(rawProps));
   }
 }
@@ -373,7 +374,6 @@ void NativeReanimatedModule::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_ =
       std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<RawProps>>>();
-  // TODO: refactor this and make sure that we don't copy anything here
 
   // TODO: move shadowTreeRegistry and contextContainer to
   // NativeReanimatedModule fields
