@@ -92,7 +92,7 @@ def resolveReactNativeDirectory() {
     if (isDeveloperMode()) {
         return file("$projectDir/../node_modules/react-native")
     }
-    return file("$rootDir/../node_modules/react-native")
+    return file("$projectDir/../../react-native")
 }
 
 abstract class replaceSoTask extends DefaultTask {
@@ -661,11 +661,11 @@ repositories {
     mavenLocal()
     maven {
         // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$rootDir/../node_modules/react-native/android"
+        url "$reactNative/android"
     }
     maven {
         // Android JSC is installed from npm
-        url "$rootDir/../node_modules/jsc-android/dist"
+        url "$reactNative/../jsc-android/dist"
     }
     google()
 }
@@ -684,8 +684,8 @@ dependencies {
     extractHeaders("com.facebook.fbjni:fbjni:" + FBJNI_VERSION + ":headers")
     extractSO("com.facebook.fbjni:fbjni:" + FBJNI_VERSION)
 
-    def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
-    def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+    def rnAAR = fileTree("$reactNative/android").matching({ it.include "**/**/*.aar" }).singleFile
+    def jscAAR = fileTree("$reactNative/../jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
     extractSO(files(rnAAR, jscAAR))
 }
 
