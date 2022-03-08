@@ -329,6 +329,11 @@ if (findProject(":app")) {
     FOR_HERMES = System.getenv("FOR_HERMES") == "True";
 }
 
+def reactNativeArchitectures() {
+    def value = project.getProperties().get("reactNativeArchitectures")
+    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
 // You need to have following folders in this directory:
 //   - boost_1_63_0
 //   - double-conversion-1.1.6
@@ -390,7 +395,7 @@ android {
                         "-DFOR_HERMES=${FOR_HERMES}",
                         "-DCLIENT_SIDE_BUILD=${CLIENT_SIDE_BUILD}",
                         "--clean-first"
-                abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+                abiFilters (*reactNativeArchitectures())
                 _stackProtectorFlag ? (cppFlags("-fstack-protector-all")) : null
             }
         }
