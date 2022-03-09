@@ -1,4 +1,4 @@
-import ReanimatedModule from './ReanimatedModule';
+import { configureProps as jsiConfigureProps } from './reanimated2/core';
 
 /**
  * Styles allowed to be direcly updated in UI thread
@@ -107,7 +107,7 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
 };
 
 function configureProps(): void {
-  ReanimatedModule.configureProps(
+  jsiConfigureProps(
     Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
     Object.keys(UI_THREAD_PROPS_WHITELIST)
   );

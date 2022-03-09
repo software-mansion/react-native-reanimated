@@ -217,6 +217,25 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
+  auto configurePropsFunction = [reanimatedModule](
+                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+    NSMutableSet *usPropsSet = [[NSMutableSet alloc] init];
+    jsi::Array propsNames = uiProps.asObject(rt).asArray(rt);
+    for (int i = 0; i < propsNames.size(rt); i++) {
+      NSString *propName = @(propsNames.getValueAtIndex(rt, i).asString(rt).utf8(rt).c_str());
+      [usPropsSet addObject:propName];
+    }
+
+    NSMutableSet *nativePropsSet = [[NSMutableSet alloc] init];
+    propsNames = nativeProps.asObject(rt).asArray(rt);
+    for (int i = 0; i < propsNames.size(rt); i++) {
+      NSString *propName = @(propsNames.getValueAtIndex(rt, i).asString(rt).utf8(rt).c_str());
+      [nativePropsSet addObject:propName];
+    }
+
+    [reanimatedModule.nodesManager configureProps:usPropsSet uiProps:nativePropsSet];
+  };
+
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
@@ -269,7 +288,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       measuringFunction,
       getCurrentTime,
       setGestureStateFunction,
-  };
+      configurePropsFunction};
 
   module = std::make_shared<NativeReanimatedModule>(
       jsInvoker,

@@ -417,6 +417,10 @@ export function enableLayoutAnimations(
   }
 }
 
+export function configureProps(uiProps: string[], nativeProps: string[]): void {
+  NativeReanimatedModule.configureProps(uiProps, nativeProps);
+}
+
 export function jestResetJsReanimatedModule() {
   (NativeReanimatedModule as JSReanimated).jestResetModule();
 }
