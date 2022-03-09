@@ -219,11 +219,11 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   auto configurePropsFunction = [reanimatedModule](
                                     jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
-    NSMutableSet *usPropsSet = [[NSMutableSet alloc] init];
+    NSMutableSet *uiPropsSet = [[NSMutableSet alloc] init];
     jsi::Array propsNames = uiProps.asObject(rt).asArray(rt);
     for (int i = 0; i < propsNames.size(rt); i++) {
       NSString *propName = @(propsNames.getValueAtIndex(rt, i).asString(rt).utf8(rt).c_str());
-      [usPropsSet addObject:propName];
+      [uiPropsSet addObject:propName];
     }
 
     NSMutableSet *nativePropsSet = [[NSMutableSet alloc] init];
@@ -233,7 +233,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       [nativePropsSet addObject:propName];
     }
 
-    [reanimatedModule.nodesManager configureProps:usPropsSet uiProps:nativePropsSet];
+    [reanimatedModule.nodesManager configureNativeProps:nativePropsSet andUiProps:uiPropsSet];
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =

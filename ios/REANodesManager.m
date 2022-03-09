@@ -504,7 +504,7 @@
   }
 }
 
-- (void)configureProps:(NSSet<NSString *> *)nativeProps uiProps:(NSSet<NSString *> *)uiProps
+- (void)configureNativeProps:(NSSet<NSString *> *)nativeProps andUiProps:(NSSet<NSString *> *)uiProps
 {
   _uiProps = uiProps;
   _nativeProps = nativeProps;

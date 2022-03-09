@@ -64,7 +64,7 @@ typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 
 // configuration
 
-- (void)configureProps:(nonnull NSSet<NSString *> *)nativeProps uiProps:(nonnull NSSet<NSString *> *)uiProps;
+- (void)configureNativeProps:(nonnull NSSet<NSString *> *)nativeProps andUiProps:(nonnull NSSet<NSString *> *)uiProps;
 
 - (void)updateProps:(nonnull NSDictionary *)props
       ofViewWithTag:(nonnull NSNumber *)viewTag
