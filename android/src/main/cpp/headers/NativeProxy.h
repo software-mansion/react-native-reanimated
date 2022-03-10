@@ -119,6 +119,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void scrollTo(int viewTag, double x, double y, bool animated);
   void setGestureState(int handlerTag, int newState);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
+  void configureProps(
+      jsi::Runtime &rt,
+      const jsi::Value &uiProps,
+      const jsi::Value &nativeProps);
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
