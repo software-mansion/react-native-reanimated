@@ -203,15 +203,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 {
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
-  auto propUpdater = [reanimatedModule](
-                         jsi::Runtime &rt,
-                         int viewTag, // equal to shadowNode->getTag()
-                         const jsi::Value &viewName,
-                         const jsi::Value &shadowNodeValue,
-                         const jsi::Value &props) -> void {
-    // TODO: rename this function and synchronously update UI props here
-  };
-
   // RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
   auto measuringFunction = [](int viewTag) -> std::vector<std::pair<std::string, double>> {
     // return measure(viewTag, uiManager);
