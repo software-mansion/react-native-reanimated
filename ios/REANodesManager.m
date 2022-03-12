@@ -114,8 +114,6 @@
   NSMutableDictionary<NSNumber *, ComponentUpdate *> *_componentUpdateBuffer;
   volatile atomic_bool _shouldFlushUpdateBuffer;
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
-  NSMutableArray<MapperUpdateFn> *_pendingBlocks;
-  NSMutableDictionary<NSNumber *, RCTShadowView *> *_shadowViewRegistry;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
@@ -134,8 +132,6 @@
     _componentUpdateBuffer = [NSMutableDictionary new];
     _viewRegistry = [_uiManager valueForKey:@"_viewRegistry"];
     _shouldFlushUpdateBuffer = false;
-    _pendingBlocks = [NSMutableArray new];
-    _shadowViewRegistry = [_uiManager valueForKey:@"_shadowViewRegistry"];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -603,22 +599,6 @@
 {
   RCTAssertUIManagerQueue();
 
-  if ([_pendingBlocks count] > 0) {
-    __weak typeof(self) weakSelf = self;
-    [_uiManager
-        addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-          __typeof__(self) strongSelf = weakSelf;
-          if (strongSelf == nil) {
-            return;
-          }
-          NSMutableArray *pendingBlocksCopy = [strongSelf->_pendingBlocks copy];
-          strongSelf->_pendingBlocks = [NSMutableArray new];
-          for (MapperUpdateFn item in pendingBlocksCopy) {
-            item();
-          }
-        }];
-  }
-
   bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
   if (!shouldFlushUpdateBuffer) {
     return;
@@ -650,11 +630,6 @@ static RCTUIManager *_uiManagerPublic;
 + (RCTUIManager *)uiManagerPublic
 {
   return _uiManagerPublic;
-}
-
-- (void)addUIBlock:(MapperUpdateFn)block
-{
-  [_pendingBlocks addObject:block];
 }
 
 @end
