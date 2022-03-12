@@ -160,22 +160,27 @@ RCT_EXPORT_METHOD(triggerRender)
 
 - (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
 {
+  //  [_nodesManager maybeFlushUpdateBuffer];
+  if (_operations.count == 0) {
+    return;
+  }
+
+  NSArray<AnimatedOperation> *operations = _operations;
+  _operations = [NSMutableArray new];
+
+  REANodesManager *nodesManager = _nodesManager;
+
+  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    for (AnimatedOperation operation in operations) {
+      operation(nodesManager);
+    }
+    [nodesManager operationsBatchDidComplete];
+  }];
+}
+
+- (void)uiManagerDidPerformLayout:(RCTUIManager *)manager
+{
   [_nodesManager maybeFlushUpdateBuffer];
-//  if (_operations.count == 0) {
-//    return;
-//  }
-//
-//  NSArray<AnimatedOperation> *operations = _operations;
-//  _operations = [NSMutableArray new];
-//
-//  REANodesManager *nodesManager = _nodesManager;
-//
-//  [uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-//    for (AnimatedOperation operation in operations) {
-//      operation(nodesManager);
-//    }
-//    [nodesManager operationsBatchDidComplete];
-//  }];
 }
 
 #pragma mark-- Events

@@ -24,7 +24,6 @@
 #import "Nodes/REATransformNode.h"
 #import "Nodes/REAValueNode.h"
 #import "REAModule.h"
-#import "MlekoWrapper.h"
 
 // Interface below has been added in order to use private methods of RCTUIManager,
 // RCTUIManager#UpdateView is a React Method which is exported to JS but in
@@ -117,7 +116,6 @@
   NSMutableDictionary<NSNumber *, UIView *> *_viewRegistry;
   NSMutableArray<MapperUpdateFn> *_pendingBlocks;
   NSMutableDictionary<NSNumber *, RCTShadowView *> *_shadowViewRegistry;
-  MlekoWrapper * _mlekoWrapper;
 }
 
 - (instancetype)initWithModule:(REAModule *)reanimatedModule uiManager:(RCTUIManager *)uiManager
@@ -138,7 +136,6 @@
     _shouldFlushUpdateBuffer = false;
     _pendingBlocks = [NSMutableArray new];
     _shadowViewRegistry = [_uiManager valueForKey:@"_shadowViewRegistry"];
-    _mlekoWrapper = [[MlekoWrapper alloc] init];
   }
 
   _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
@@ -537,13 +534,8 @@
       ofViewWithTag:(nonnull NSNumber *)viewTag
            withName:(nonnull NSString *)viewName
 {
-  
-//  NSNumber * parentTag = _viewRegistry[viewTag].superview.reactTag;
-  bool isDirty = [_mlekoWrapper isDirty:_shadowViewRegistry viewTag:viewTag];
-//  bool isDirty2 = [_mlekoWrapper isDirty:_shadowViewRegistry viewTag:parentTag];
-  
   ComponentUpdate *lastSnapshot = _componentUpdateBuffer[viewTag];
-  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil || isDirty) {
+  if ([self isNotNativeViewFullyMounted:viewTag] || lastSnapshot != nil) {
     if (lastSnapshot == nil) {
       ComponentUpdate *propsSnapshot = [ComponentUpdate new];
       propsSnapshot.props = [props mutableCopy];
@@ -610,22 +602,23 @@
 - (void)maybeFlushUpdateBuffer
 {
   RCTAssertUIManagerQueue();
-  
+
   if ([_pendingBlocks count] > 0) {
     __weak typeof(self) weakSelf = self;
-    [_uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-      __typeof__(self) strongSelf = weakSelf;
-      if (strongSelf == nil) {
-        return;
-      }
-      NSMutableArray* pendingBlocksCopy = [strongSelf->_pendingBlocks copy];
-      strongSelf->_pendingBlocks = [NSMutableArray new];
-      for (MapperUpdateFn item in pendingBlocksCopy) {
-        item();
-      }
-    }];
+    [_uiManager
+        addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+          __typeof__(self) strongSelf = weakSelf;
+          if (strongSelf == nil) {
+            return;
+          }
+          NSMutableArray *pendingBlocksCopy = [strongSelf->_pendingBlocks copy];
+          strongSelf->_pendingBlocks = [NSMutableArray new];
+          for (MapperUpdateFn item in pendingBlocksCopy) {
+            item();
+          }
+        }];
   }
-  
+
   bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
   if (!shouldFlushUpdateBuffer) {
     return;
@@ -653,8 +646,11 @@
   }];
 }
 
-static RCTUIManager * _uiManagerPublic;
-+ (RCTUIManager *)uiManagerPublic { return _uiManagerPublic; }
+static RCTUIManager *_uiManagerPublic;
++ (RCTUIManager *)uiManagerPublic
+{
+  return _uiManagerPublic;
+}
 
 - (void)addUIBlock:(MapperUpdateFn)block
 {

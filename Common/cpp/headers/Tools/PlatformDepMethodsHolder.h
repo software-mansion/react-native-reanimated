@@ -30,7 +30,6 @@ struct PlatformDepMethodsHolder {
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;
   SetGestureStateFunction setGestureStateFunction;
-  std::function<void(std::function<void()> fn)> mleko;
 };
 
 } // namespace reanimated
