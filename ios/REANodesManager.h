@@ -11,10 +11,7 @@ typedef void (^REANativeAnimationOp)(RCTUIManager *uiManager);
 typedef void (^REAEventHandler)(NSString *eventName, id<RCTEvent> event);
 
 @interface REANodesManager : NSObject
-typedef void (^MapperUpdateFn)();
-- (void)addUIBlock:(MapperUpdateFn)block;
 
-@property (class) RCTUIManager *uiManagerPublic;
 @property (nonatomic, weak, nullable) RCTUIManager *uiManager;
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 @property (nonatomic, readonly) CFTimeInterval currentAnimationTimestamp;

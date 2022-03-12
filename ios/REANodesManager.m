@@ -121,7 +121,6 @@
   if ((self = [super init])) {
     _reanimatedModule = reanimatedModule;
     _uiManager = uiManager;
-    _uiManagerPublic = uiManager;
     _nodes = [NSMutableDictionary new];
     _eventMapping = [NSMapTable strongToWeakObjectsMapTable];
     _eventQueue = [NSMutableArray new];
@@ -624,12 +623,6 @@
     }
     [strongSelf performOperations];
   }];
-}
-
-static RCTUIManager *_uiManagerPublic;
-+ (RCTUIManager *)uiManagerPublic
-{
-  return _uiManagerPublic;
 }
 
 @end
