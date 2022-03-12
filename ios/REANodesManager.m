@@ -597,7 +597,6 @@
 - (void)maybeFlushUpdateBuffer
 {
   RCTAssertUIManagerQueue();
-
   bool shouldFlushUpdateBuffer = atomic_load(&_shouldFlushUpdateBuffer);
   if (!shouldFlushUpdateBuffer) {
     return;

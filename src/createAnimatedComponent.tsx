@@ -32,6 +32,7 @@ import {
   isChromeDebugger,
   shouldBeUseWeb,
 } from './reanimated2/PlatformChecker';
+import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
@@ -193,6 +194,7 @@ export default function createAnimatedComponent(
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
+    initialStyle = {};
     sv: SharedValue<null | Record<string, unknown>> | null;
     _propsAnimated?: PropsAnimated;
     _component: ComponentRef | null = null;
@@ -604,7 +606,13 @@ export default function createAnimatedComponent(
             if (style && style.viewDescriptors) {
               // this is how we recognize styles returned by useAnimatedStyle
               style.viewsRef.add(this);
-              return style.initial.value;
+              if (this._isFirstRender) {
+                this.initialStyle = {
+                  ...style.initial.value,
+                  ...initialUpdaterRun<StyleProps>(style.initial.updater),
+                };
+              }
+              return this.initialStyle;
             } else {
               return style;
             }
