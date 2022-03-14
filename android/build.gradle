@@ -74,15 +74,6 @@ def resolveBuildType() {
     return true
 }
 
-def resolveExpoLinkingGradle() {
-    def gradleScript = file("./expo/linking.gradle")
-    if (gradleScript.exists()) {
-        return "./expo/linking.gradle"
-    } else {
-        return "../android-npm/expo/linking.gradle"
-    }
-}
-
 def isDeveloperMode() {
     // developer mode, to run Example app
     return file("$projectDir/../node_modules/react-native/package.json").exists()
@@ -158,10 +149,10 @@ def detectAAR(minor, engine) {
             println "\n\n\n"
             println "****************************************************************************************"
             println "\n\n\n"
-            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersion found."
+            println "WARNING reanimated - no version-specific reanimated AAR for react-native version $rnMinorVersionCopy found."
             println "Falling back to AAR for react-native version $rnMinorVersionCopy."
             println "The react-native JSI interface is not ABI-safe yet, this may result in crashes."
-            println "Please post a pull request to implement support for react-native version $rnMinorVersion to the reanimated repo."
+            println "Please post a pull request to implement support for react-native version $rnMinorVersionCopy to the reanimated repo."
             println "Thanks!"
             println "\n\n\n"
             println "****************************************************************************************"
@@ -290,9 +281,6 @@ if (!BUILD_FROM_SOURCE) {
 
 // end if already loaded aar
 if (!BUILD_FROM_SOURCE) return
-
-// apply expo config
-apply from: resolveExpoLinkingGradle()
 
 def localProps = new Properties()
 def localPropertiesFile = file("local.properties")

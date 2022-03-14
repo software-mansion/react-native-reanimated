@@ -1,3 +1,6 @@
 {
-  "platforms": ["android"]
+  "platforms": ["android"],
+  "android": {
+    "gradlePath": "expo/android/build.gradle"
+  }
 }
