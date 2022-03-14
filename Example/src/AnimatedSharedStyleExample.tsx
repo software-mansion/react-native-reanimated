@@ -4,16 +4,16 @@ import Animated, {
   useAnimatedStyle,
   Easing,
 } from 'react-native-reanimated';
-import { View, Button } from 'react-native';
+import { View, Button, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 
 export default function AnimatedSharedStyleExample() {
-  const randomWidth = useSharedValue(10);
+  const randomWidth = useSharedValue(100);
 
-  const [counter, setCounter] = useState(0);
-  const [counter2, setCounter2] = useState(0);
-  const [itemList, setItemList] = useState([]);
-  const [toggleState, setToggleState] = useState(false);
+  const [blueCounter, setBlueCounter] = useState<number>(0);
+  const [greenCounter, setGreenCounter] = useState<number>(0);
+  const [itemList, setItemList] = useState<any>([]);
+  const [toggleState, setToggleState] = useState<boolean>(false);
 
   const config = {
     duration: 500,
@@ -26,25 +26,19 @@ export default function AnimatedSharedStyleExample() {
     };
   });
 
-  const staticObject = (
+  const scopeObject = (
     <Animated.View
-      style={[
-        { width: 100, height: 3, backgroundColor: 'black', margin: 1 },
-        style,
-      ]}
+      style={[{ backgroundColor: 'black' }, styles.block, style]}
     />
   );
 
   const renderItems = () => {
     const output = [];
-    for (let i = 0; i < counter; i++) {
+    for (let i = 0; i < blueCounter; i++) {
       output.push(
         <Animated.View
           key={i + 'a'}
-          style={[
-            { width: 100, height: 3, backgroundColor: 'blue', margin: 1 },
-            style,
-          ]}
+          style={[{ backgroundColor: 'blue' }, styles.block, style]}
         />
       );
     }
@@ -67,21 +61,18 @@ export default function AnimatedSharedStyleExample() {
       <Button
         title="increment counter"
         onPress={() => {
-          setCounter(counter + 1);
+          setBlueCounter(blueCounter + 1);
         }}
       />
       <Button
         title="add item to static lists"
         onPress={() => {
-          setCounter2(counter2 + 1);
+          setGreenCounter(greenCounter + 1);
           setItemList([
             ...itemList,
             <Animated.View
-              key={counter2 + 'b'}
-              style={[
-                { width: 100, height: 3, backgroundColor: 'green', margin: 1 },
-                style,
-              ]}
+              key={greenCounter + 'b'}
+              style={[{ backgroundColor: 'green' }, styles.block, style]}
             />,
           ]);
         }}
@@ -93,22 +84,24 @@ export default function AnimatedSharedStyleExample() {
         }}
       />
       <Animated.View
-        style={[
-          { width: 100, height: 3, backgroundColor: 'orange', margin: 1 },
-          style,
-        ]}
+        style={[{ backgroundColor: 'orange' }, styles.block, style]}
       />
       {toggleState && (
         <Animated.View
-          style={[
-            { width: 100, height: 3, backgroundColor: 'black', margin: 1 },
-            style,
-          ]}
+          style={[{ backgroundColor: 'black' }, styles.block, style]}
         />
       )}
-      {toggleState && staticObject}
+      {toggleState && scopeObject}
       {renderItems()}
       {itemList}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  block: {
+    width: 100,
+    height: 3,
+    margin: 1,
+  },
+});
