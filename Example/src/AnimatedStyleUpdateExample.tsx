@@ -26,8 +26,7 @@ function AnimatedStyleUpdateExample(): React.ReactElement {
       style={{
         flex: 1,
         flexDirection: 'column',
-      }}
-    >
+      }}>
       <Animated.View
         style={[
           { width: 100, height: 80, backgroundColor: 'black', margin: 30 },
