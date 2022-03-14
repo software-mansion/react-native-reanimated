@@ -263,7 +263,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   // Layout Animations end
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
-      requestRender, propUpdater, scrollToFunction, measuringFunction, getCurrentTime, setGestureStateFunction};
+      requestRender,
+      propUpdater,
+      scrollToFunction,
+      measuringFunction,
+      getCurrentTime,
+      setGestureStateFunction,
+  };
 
   module = std::make_shared<NativeReanimatedModule>(
       jsInvoker,
