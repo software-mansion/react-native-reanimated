@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v1
-        
+
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
@@ -22,12 +22,12 @@ jobs:
           cache: 'yarn'
 
       - name: Set up Node
-        run: npm install -g react-native-cli
+        run: npm install -g react-native-cli && npm install -g npx
 
-      - name: Set up JDK 1.8
+      - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: '11'
 
       - name: Install NDK
         uses: nttld/setup-ndk@v1
@@ -40,6 +40,28 @@ jobs:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: >-
           ./createNPMPackage.sh
+
+      - name: Get package name
+        run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+
+      - name: Create react app
+        run: npx react-native init reactApp --version 0.68.0-rc.2
+      
+      - name: Config app
+        run: cd reactApp && yarn add react-native-reanimated
+
+      - name: Replace Reanimated package
+        run: rm -rf node_modules/react-native-reanimated/* && tar zxvf react-native-reanimated* && mv package/* node_modules/react-native-reanimated/
+
+      - name: Configure ios
+        run: cd ios && pod install && cd ..
+      
+      - name: Build ios
+        run: npx react-native run-ios
+
+      # todo: run detox
+      # todo: test other versions
+      # todo: test building from source
 
       # - name: Clone repository reanimated-rn-version-tester
       #   uses: actions/checkout@master
