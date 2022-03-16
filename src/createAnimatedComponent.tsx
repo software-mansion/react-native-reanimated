@@ -43,6 +43,7 @@ import {
   ViewDescriptorsSet,
   ViewRefSet,
 } from './reanimated2/ViewDescriptorsSet';
+import { getShadowNodeFromRef } from './reanimated2/getShadowNodeFromRef';
 
 const NODE_MAPPING = new Map();
 
@@ -424,7 +425,7 @@ export default function createAnimatedComponent(
         if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
-        shareableNode = hostInstance._internalInstanceHandle.stateNode.node; // ShadowNodeWrapper
+        shareableNode = getShadowNodeFromRef(this); // ShadowNodeWrapper
       }
       this._viewTag = viewTag as number;
 
