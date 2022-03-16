@@ -30,7 +30,9 @@ const objectHooks = new Set([
 const globals = new Set([
   'this',
   'console',
+  'performance',
   '_setGlobalConsole',
+  '_chronoNow',
   'Date',
   'Array',
   'ArrayBuffer',
@@ -69,6 +71,7 @@ const globals = new Set([
   'global',
   '_measure',
   '_scrollTo',
+  '_setGestureState',
   '_getCurrentTime',
   '_eventTimestamp',
   '_frameTimestamp',
@@ -145,61 +148,23 @@ const gestureHandlerGestureObjects = new Set([
   'LongPress',
   'ForceTouch',
   'Native',
+  'Manual',
   'Race',
   'Simultaneous',
   'Exclusive',
 ]);
 
 const gestureHandlerBuilderMethods = new Set([
-  // BaseGesture
-  'withRef',
-  'onBegan',
+  'onBegin',
   'onStart',
   'onEnd',
-  'enabled',
-  'shouldCancelWhenOutside',
-  'hitSlop',
-  'simultaneousWithExternalGesture',
-  'requireExternalGestureToFail',
-
-  // ContinousBaseGesture
+  'onFinalize',
   'onUpdate',
-
-  // TapGesture
-  'minPointers',
-  'numberOfTaps',
-  'maxDistance',
-  'maxDuration',
-  'maxDelay',
-  'maxDeltaX',
-  'maxDeltaY',
-
-  // PanGesture
-  'activeOffsetY',
-  'activeOffsetX',
-  'failOffsetY',
-  'failOffsetX',
-  'minPointers',
-  'minDistance',
-  'averageTouches',
-  'enableTrackpadTwoFingerGesture',
-
-  // FlingGesture
-  'numberOfPointers',
-  'direction',
-
-  // LongPress
-  'minDuration',
-  'maxDistance',
-
-  // ForceTouchGesture:
-  'minForce',
-  'maxForce',
-  'feedbackOnActivation',
-
-  // NativeGesture
-  'shouldActivateOnStart',
-  'disallowInterruption',
+  'onChange',
+  'onTouchesDown',
+  'onTouchesMove',
+  'onTouchesUp',
+  'onTouchesCancelled',
 ]);
 
 class ClosureGenerator {
@@ -352,20 +317,45 @@ function buildWorkletString(t, fun, closureVariables, name) {
   return generate(workletFunction, { compact: true }).code;
 }
 
-function processWorkletFunction(t, fun, fileName) {
-  if (!t.isFunctionParent(fun)) {
-    return;
+function makeWorkletName(t, fun) {
+  if (t.isObjectMethod(fun)) {
+    return fun.node.key.name;
   }
-  const functionName = fun.node.id ? fun.node.id.name : '_f';
+  if (t.isFunctionDeclaration(fun)) {
+    return fun.node.id.name;
+  }
+  if (t.isFunctionExpression(fun) && t.isIdentifier(fun.node.id)) {
+    return fun.node.id.name;
+  }
+  return '_f'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+}
+
+function makeWorklet(t, fun, fileName) {
+  // Returns a new FunctionExpression which is a workletized version of provided
+  // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
+
+  const functionName = makeWorkletName(t, fun);
 
   const closure = new Map();
   const outputs = new Set();
   const closureGenerator = new ClosureGenerator();
   const options = {};
 
+  // remove 'worklet'; directive before calling .toString()
+  fun.traverse({
+    DirectiveLiteral(path) {
+      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
+        path.parentPath.remove();
+      }
+    },
+  });
+
   // We use copy because some of the plugins don't update bindings and
   // some even break them
-  const code = '\n(' + fun.toString() + '\n)';
+
+  const code =
+    '\n(' + (t.isObjectMethod(fun) ? 'function ' : '') + fun.toString() + '\n)';
+
   const transformed = transformSync(code, {
     filename: fileName,
     presets: ['@babel/preset-typescript'],
@@ -424,7 +414,7 @@ function processWorkletFunction(t, fun, fileName) {
       closureGenerator.addPath(name, path);
     },
     AssignmentExpression(path) {
-      // test for <somethin>.value = <something> expressions
+      // test for <something>.value = <something> expressions
       const left = path.node.left;
       if (
         t.isMemberExpression(left) &&
@@ -436,13 +426,6 @@ function processWorkletFunction(t, fun, fileName) {
     },
   });
 
-  fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
-      }
-    },
-  });
   const variables = Array.from(closure.values());
 
   const privateFunctionId = t.identifier('_f');
@@ -458,7 +441,7 @@ function processWorkletFunction(t, fun, fileName) {
     transformed.ast,
     variables,
     functionName
-  ).replace("'worklet';", '');
+  );
   const workletHash = hash(funString);
 
   const loc = fun && fun.node && fun.node.loc && fun.node.loc.start;
@@ -469,7 +452,7 @@ function processWorkletFunction(t, fun, fileName) {
     }
   }
 
-  const steatmentas = [
+  const statements = [
     t.variableDeclaration('const', [
       t.variableDeclarator(privateFunctionId, funExpression),
     ]),
@@ -512,7 +495,7 @@ function processWorkletFunction(t, fun, fileName) {
   ];
 
   if (options && options.optFlags) {
-    steatmentas.push(
+    statements.push(
       t.expressionStatement(
         t.assignmentExpression(
           '=',
@@ -527,7 +510,7 @@ function processWorkletFunction(t, fun, fileName) {
     );
   }
 
-  steatmentas.push(
+  statements.push(
     t.expressionStatement(
       t.callExpression(
         t.memberExpression(
@@ -539,20 +522,30 @@ function processWorkletFunction(t, fun, fileName) {
       )
     )
   );
-  steatmentas.push(t.returnStatement(privateFunctionId));
+  statements.push(t.returnStatement(privateFunctionId));
 
-  const newFun = t.functionExpression(
-    fun.id,
-    [],
-    t.blockStatement(steatmentas)
-  );
+  const newFun = t.functionExpression(fun.id, [], t.blockStatement(statements));
+
+  return newFun;
+}
+
+function processWorkletFunction(t, fun, fileName) {
+  // Replaces FunctionDeclaration, FunctionExpression or ArrowFunctionExpression
+  // with a workletized version of itself.
+
+  if (!t.isFunctionParent(fun)) {
+    return;
+  }
+
+  const newFun = makeWorklet(t, fun, fileName);
 
   const replacement = t.callExpression(newFun, []);
+
   // we check if function needs to be assigned to variable declaration.
   // This is needed if function definition directly in a scope. Some other ways
   // where function definition can be used is for example with variable declaration:
   // const ggg = function foo() { }
-  // ^ in such a case we don't need to definte variable for the function
+  // ^ in such a case we don't need to define variable for the function
   const needDeclaration =
     t.isScopable(fun.parent) || t.isExportNamedDeclaration(fun.parent);
   fun.replaceWith(
@@ -562,6 +555,23 @@ function processWorkletFunction(t, fun, fileName) {
         ])
       : replacement
   );
+}
+
+function processWorkletObjectMethod(t, path, fileName) {
+  // Replaces ObjectMethod with a workletized version of itself.
+
+  if (!t.isFunctionParent(path)) {
+    return;
+  }
+
+  const newFun = makeWorklet(t, path, fileName);
+
+  const replacement = t.objectProperty(
+    t.identifier(path.node.key.name),
+    t.callExpression(newFun, [])
+  );
+
+  path.replaceWith(replacement);
 }
 
 function processIfWorkletNode(t, fun, fileName) {
@@ -648,36 +658,33 @@ function processIfGestureHandlerEventCallbackFunctionNode(t, fun, fileName) {
 
 function isGestureObjectEventCallbackMethod(t, node) {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
-  // where `[*]` represents any number of `.onBar(...)` or similar method calls.
-  /*
-  node: MemberExpression(
-    object: CallExpression(
-      callee: MemberExpression(
-        object: Identifier('Gesture')
-        property: Identifier('Tap')
-      )
-    )
-    property: Identifier('onEnd')
-  )
-  */
-  if (
+  // where `[*]` represents any number of method calls.
+  return (
     t.isMemberExpression(node) &&
     t.isIdentifier(node.property) &&
-    gestureHandlerBuilderMethods.has(node.property.name)
-  ) {
-    // direct call
-    if (isGestureObject(t, node.object)) {
-      return true;
-    }
+    gestureHandlerBuilderMethods.has(node.property.name) &&
+    containsGestureObject(t, node.object)
+  );
+}
 
-    // method chaining
-    if (
-      t.isCallExpression(node.object) &&
-      isGestureObjectEventCallbackMethod(t, node.object.callee)
-    ) {
-      return true;
-    }
+function containsGestureObject(t, node) {
+  // Checks if node matches the pattern `Gesture.Foo()[*]`
+  // where `[*]` represents any number of chained method calls, like `.something(42)`.
+
+  // direct call
+  if (isGestureObject(t, node)) {
+    return true;
   }
+
+  // method chaining
+  if (
+    t.isCallExpression(node) &&
+    t.isMemberExpression(node.callee) &&
+    containsGestureObject(t, node.callee.object)
+  ) {
+    return true;
+  }
+
   return false;
 }
 
@@ -710,17 +717,14 @@ function processWorklets(t, path, fileName) {
     objectHooks.has(name) &&
     path.get('arguments.0').type === 'ObjectExpression'
   ) {
-    const objectPath = path.get('arguments.0.properties.0');
-    if (!objectPath) {
-      // edge case empty object
-      return;
-    }
-    for (let i = 0; i < objectPath.container.length; i++) {
-      processWorkletFunction(
-        t,
-        objectPath.getSibling(i).get('value'),
-        fileName
-      );
+    const properties = path.get('arguments.0.properties');
+    for (const property of properties) {
+      if (t.isObjectMethod(property)) {
+        processWorkletObjectMethod(t, property, fileName);
+      } else {
+        const value = property.get('value');
+        processWorkletFunction(t, value, fileName);
+      }
     }
   } else {
     const indexes = functionArgsToWorkletize.get(name);
@@ -737,7 +741,7 @@ const STATEMENTLESS_FLAG = 0b00000010;
 
 function isPossibleOptimization(fun) {
   let isFunctionCall = false;
-  let isSteatements = false;
+  let isStatement = false;
   traverse(fun, {
     CallExpression(path) {
       if (!possibleOptFunction.has(path.node.callee.name)) {
@@ -745,14 +749,14 @@ function isPossibleOptimization(fun) {
       }
     },
     IfStatement() {
-      isSteatements = true;
+      isStatement = true;
     },
   });
   let flags = 0;
   if (!isFunctionCall) {
     flags = flags | FUNCTIONLESS_FLAG;
   }
-  if (!isSteatements) {
+  if (!isStatement) {
     flags = flags | STATEMENTLESS_FLAG;
   }
   return flags;

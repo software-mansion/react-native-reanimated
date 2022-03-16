@@ -1,6 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
+#include <string>
 
 using namespace facebook;
 

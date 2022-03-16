@@ -1,17 +1,18 @@
 name: Test iOS build
 on:
   pull_request:
-    branches: 
-      - master
+    branches:
+      - main
     paths:
       - 'ios/**'
       - 'Common/**'
   push:
     branches:
-      - master
+      - main
 jobs:
   build:
-    runs-on: macos-latest
+    # runs-on: macos-latest // issue: https://github.com/actions/virtual-environments/issues/4060
+    runs-on: macos-11
     env:
       WORKING_DIRECTORY: Example
     concurrency:
@@ -25,6 +26,8 @@ jobs:
         with:
           node-version: 14
           cache: 'yarn'
+      - name: Install Reanimated node dependencies
+        run: yarn
       - name: Install node dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn

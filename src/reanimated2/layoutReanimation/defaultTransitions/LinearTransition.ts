@@ -6,7 +6,8 @@ import {
 
 export class LinearTransition
   extends ComplexAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   static createInstance(): LinearTransition {
     return new LinearTransition();
   }
@@ -21,16 +22,22 @@ export class LinearTransition
       'worklet';
       return {
         initialValues: {
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
-          originX: delayFunction(delay, animation(values.originX, config)),
-          originY: delayFunction(delay, animation(values.originY, config)),
-          width: delayFunction(delay, animation(values.width, config)),
-          height: delayFunction(delay, animation(values.height, config)),
+          originX: delayFunction(
+            delay,
+            animation(values.targetOriginX, config)
+          ),
+          originY: delayFunction(
+            delay,
+            animation(values.targetOriginY, config)
+          ),
+          width: delayFunction(delay, animation(values.targetWidth, config)),
+          height: delayFunction(delay, animation(values.targetHeight, config)),
         },
         callback: callback,
       };

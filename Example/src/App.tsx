@@ -24,6 +24,7 @@ import {
   MountingUnmounting,
   SpringLayoutAnimation,
   SwipeableList,
+  NativeModals,
 } from './LayoutReanimation';
 
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
@@ -37,6 +38,7 @@ import LightboxExample from './LightboxExample';
 import LiquidSwipe from './LiquidSwipe';
 import MeasureExample from './MeasureExample';
 import { OlympicAnimation } from './LayoutReanimation/OlympicAnimation';
+import { ReactionsCounterExample } from './ReactionsCounterExample';
 // @ts-ignore JS file
 import Reanimated1 from '../reanimated1/App';
 import ScrollEventExample from './ScrollEventExample';
@@ -95,6 +97,10 @@ const SCREENS: Screens = {
     title: '🆕 Mounting Unmounting',
     screen: MountingUnmounting,
   },
+  ReactionsCounterExample: {
+    screen: ReactionsCounterExample,
+    title: '🆕 Reactions counter',
+  },
   SwipeableList: {
     title: '🆕 Swipeable list',
     screen: SwipeableList,
@@ -102,6 +108,10 @@ const SCREENS: Screens = {
   Modal: {
     title: '🆕 Modal',
     screen: Modal,
+  },
+  NativeModals: {
+    title: '🆕  Native modals (RN and Screens)',
+    screen: NativeModals,
   },
   Carousel: {
     title: '🆕 Carousel',

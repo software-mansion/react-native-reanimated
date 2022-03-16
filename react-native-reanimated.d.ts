@@ -16,6 +16,7 @@ declare module 'react-native-reanimated' {
     TextProps,
     ImageProps,
     ScrollViewProps,
+    FlatListProps,
     StyleProp,
     RegisteredStyle,
     ViewStyle,
@@ -26,6 +27,7 @@ declare module 'react-native-reanimated' {
     Text as ReactNativeText,
     Image as ReactNativeImage,
     ScrollView as ReactNativeScrollView,
+    FlatList as ReactNativeFlatList,
     NativeScrollEvent,
     NativeSyntheticEvent,
     ColorValue,
@@ -36,6 +38,26 @@ declare module 'react-native-reanimated' {
     GestureHandlerGestureEvent,
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
+
+  import('./src/reanimated2/globals');
+
+  export type TimingAnimation =
+    import('./src/reanimated2/animation/index').TimingAnimation;
+  export type SpringAnimation =
+    import('./src/reanimated2/animation/index').SpringAnimation;
+  export type DecayAnimation =
+    import('./src/reanimated2/animation/index').DecayAnimation;
+  export type DelayAnimation =
+    import('./src/reanimated2/animation/commonTypes').DelayAnimation;
+  export type RepeatAnimation =
+    import('./src/reanimated2/animation/index').RepeatAnimation;
+  export type SequenceAnimation =
+    import('./src/reanimated2/animation/index').SequenceAnimation;
+  export type StyleLayoutAnimation =
+    import('./src/reanimated2/animation/index').StyleLayoutAnimation;
+  export type Animation<T> =
+    import('./src/reanimated2/commonTypes').Animation<T>;
+
   namespace Animated {
     type Nullable<T> = T | null | undefined;
     class AnimatedNode<T> {
@@ -132,10 +154,14 @@ declare module 'react-native-reanimated' {
               >;
     };
 
+    export type StylesOrDefault<T> = 'style' extends keyof T
+      ? T['style']
+      : Record<string, unknown>;
+
     export type AnimateProps<P extends object> = {
-      [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<P[K]>>
-        : P[K] | AnimatedNode<P[K]>;
+      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+    } & {
+      style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
@@ -234,16 +260,31 @@ declare module 'react-native-reanimated' {
     export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface View extends ReactNativeView {}
     export class Text extends Component<AnimateProps<TextProps>> {
       getNode(): ReactNativeText;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Text extends ReactNativeText {}
     export class Image extends Component<AnimateProps<ImageProps>> {
       getNode(): ReactNativeImage;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Image extends ReactNativeImage {}
     export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
       getNode(): ReactNativeScrollView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface ScrollView extends ReactNativeScrollView {}
+
     export class Code extends Component<CodeProps> {}
+    export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
+      itemLayoutAnimation: ILayoutAnimationBuilder;
+      getNode(): ReactNativeFlatList;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface FlatList<T> extends ReactNativeView<T> {}
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
@@ -439,34 +480,45 @@ declare module 'react-native-reanimated' {
     animations: AnimateStyle;
   };
 
-  export type EntryExitAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-  };
-  export type EntryExitAnimationFunction = (
-    targetValues: EntryExitAnimationsValues
-  ) => LayoutAnimation;
+  export interface EntryAnimationsValues {
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
+  }
+
+  export interface ExitAnimationsValues {
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+  }
+
+  export type EntryExitAnimationFunction =
+    | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+    | ((targetValues: ExitAnimationsValues) => LayoutAnimation);
 
   export type LayoutAnimationsValues = {
-    originX: number;
-    originY: number;
-    width: number;
-    height: number;
-    globalOriginX: number;
-    globalOriginY: number;
-    boriginX: number;
-    boriginY: number;
-    bwidth: number;
-    bheight: number;
-    bglobalOriginX: number;
-    bglobalOriginY: number;
+    currentOriginX: number;
+    currentOriginY: number;
+    currentWidth: number;
+    currentHeight: number;
+    currentGlobalOriginX: number;
+    currentGlobalOriginY: number;
+    targetOriginX: number;
+    targetOriginY: number;
+    targetWidth: number;
+    targetHeight: number;
+    targetGlobalOriginX: number;
+    targetGlobalOriginY: number;
     windowWidth: number;
     windowHeight: number;
   };
+
   export type LayoutAnimationFunction = (
     targetValues: LayoutAnimationsValues
   ) => LayoutAnimation;
@@ -479,7 +531,7 @@ declare module 'react-native-reanimated' {
     build: () => EntryExitAnimationFunction;
   }
 
-  export type PrimitiveValue = number | string;
+  export type AnimatableValue = number | string | Array<number>;
 
   // reanimated2 derived operations
   export enum Extrapolation {
@@ -511,11 +563,12 @@ declare module 'react-native-reanimated' {
   // reanimated2 animations
   export type AnimationCallback = (
     finished?: boolean,
-    current?: PrimitiveValue
+    current?: AnimatableValue
   ) => void;
+  export type EasingFunctionFactory = { factory: () => EasingFunction };
   export interface WithTimingConfig {
     duration?: number;
-    easing?: EasingFunction;
+    easing?: EasingFunction | EasingFunctionFactory;
   }
   export interface WithDecayConfig {
     deceleration?: number;
@@ -533,12 +586,12 @@ declare module 'react-native-reanimated' {
     velocity?: number;
   }
   export function withTiming(
-    toValue: PrimitiveValue,
+    toValue: AnimatableValue,
     userConfig?: WithTimingConfig,
     callback?: AnimationCallback
   ): number;
   export function withSpring(
-    toValue: PrimitiveValue,
+    toValue: AnimatableValue,
     userConfig?: WithSpringConfig,
     callback?: AnimationCallback
   ): number;
@@ -580,6 +633,42 @@ declare module 'react-native-reanimated' {
     inputRange: readonly number[],
     outputRange: readonly (string | number)[],
     colorSpace?: 'RGB' | 'HSV'
+  ): string | number;
+
+  export enum ColorSpace {
+    RGB = 0,
+    HSV = 1,
+  }
+
+  export interface InterpolateRGB {
+    r: number[];
+    g: number[];
+    b: number[];
+    a: number[];
+  }
+
+  export interface InterpolateHSV {
+    h: number[];
+    s: number[];
+    v: number[];
+  }
+
+  export interface InterpolateConfig {
+    inputRange: readonly number[];
+    outputRange: readonly (string | number)[];
+    colorSpace: ColorSpace;
+    cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
+  }
+
+  export function useInterpolateConfig(
+    inputRange: readonly number[],
+    outputRange: readonly (string | number)[],
+    colorSpace?: ColorSpace
+  ): SharedValue<InterpolateConfig>;
+
+  export function interpolateSharableColor(
+    value: number,
+    interpolateConfig: SharedValue<InterpolateConfig>
   ): string | number;
 
   export function makeMutable<T>(initialValue: T): SharedValue<T>;
@@ -748,6 +837,9 @@ declare module 'react-native-reanimated' {
     withCallback(
       callback: (finished: boolean) => void
     ): ComplexAnimationBuilder;
+
+    static withInitialValues(values: StyleProps): BaseAnimationBuilder;
+    withInitialValues(values: StyleProps): BaseAnimationBuilder;
 
     static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
@@ -953,6 +1045,12 @@ declare module 'react-native-reanimated' {
       y1: number,
       x2: number,
       y2: number
+    ): { factory: () => Animated.EasingFunction };
+    bezierFn(
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number
     ): Animated.EasingFunction;
     in(easing: Animated.EasingFunction): Animated.EasingFunction;
     out(easing: Animated.EasingFunction): Animated.EasingFunction;
@@ -1059,4 +1157,5 @@ declare module 'react-native-reanimated' {
   export const SpringUtils: typeof Animated.SpringUtils;
   export const useValue: typeof Animated.useValue;
   export const ReverseAnimation: typeof Animated.ReverseAnimation;
+  export function enableLayoutAnimations(flag: boolean): void;
 }

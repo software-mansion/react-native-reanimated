@@ -1,14 +1,20 @@
-#import "NativeProxy.h"
-#import "REAIOSScheduler.h"
-#import "REAIOSErrorHandler.h"
-#import "REAModule.h"
-#import "REANodesManager.h"
-#import "NativeMethods.h"
-#import <folly/json.h>
+#if TARGET_IPHONE_SIMULATOR
+#import <dlfcn.h>
+#endif
+
 #import <React/RCTFollyConvert.h>
 #import <React/RCTUIManager.h>
+#import <folly/json.h>
+
+#import <RNGestureHandlerStateManager.h>
 #import "LayoutAnimationsProxy.h"
+#import "NativeMethods.h"
+#import "NativeProxy.h"
 #import "REAAnimationsManager.h"
+#import "REAIOSErrorHandler.h"
+#import "REAIOSScheduler.h"
+#import "REAModule.h"
+#import "REANodesManager.h"
 #import "REAUIManager.h"
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
@@ -24,6 +30,40 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+static CGFloat SimAnimationDragCoefficient(void)
+{
+  static float (*UIAnimationDragCoefficient)(void) = NULL;
+#if TARGET_IPHONE_SIMULATOR
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    UIAnimationDragCoefficient = (float (*)(void))dlsym(RTLD_DEFAULT, "UIAnimationDragCoefficient");
+  });
+#endif
+  return UIAnimationDragCoefficient ? UIAnimationDragCoefficient() : 1.f;
+}
+
+static CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
+{
+#if TARGET_IPHONE_SIMULATOR
+  static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
+  static CGFloat previousDragCoef = SimAnimationDragCoefficient();
+
+  const CGFloat dragCoef = SimAnimationDragCoefficient();
+  if (previousDragCoef != dragCoef) {
+    previousDragCoef = dragCoef;
+    dragCoefChangedTimestamp = CACurrentMediaTime();
+  }
+
+  const bool areSlowAnimationsEnabled = dragCoef != 1.f;
+  if (areSlowAnimationsEnabled) {
+    return (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
+  } else {
+    return currentTimestamp;
+  }
+#else
+  return currentTimestamp;
+#endif
+}
 
 // COPIED FROM RCTTurboModule.mm
 static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &value);
@@ -49,15 +89,13 @@ static NSDictionary *convertJSIObjectToNSDictionary(jsi::Runtime &runtime, const
   return [result copy];
 }
 
-static NSArray *
-convertJSIArrayToNSArray(jsi::Runtime &runtime, const jsi::Array &value)
+static NSArray *convertJSIArrayToNSArray(jsi::Runtime &runtime, const jsi::Array &value)
 {
   size_t size = value.size(runtime);
   NSMutableArray *result = [NSMutableArray new];
   for (size_t i = 0; i < size; i++) {
     // Insert kCFNull when it's `undefined` value to preserve the indices.
-    [result
-        addObject:convertJSIValueToObjCObject(runtime, value.getValueAtIndex(runtime, i)) ?: (id)kCFNull];
+    [result addObject:convertJSIValueToObjCObject(runtime, value.getValueAtIndex(runtime, i)) ?: (id)kCFNull];
   }
   return [result copy];
 }
@@ -87,17 +125,22 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<CallInvoker> jsInvoker) {
-  RCTBridge *bridge = _bridge_reanimated;
+std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+    RCTBridge *bridge,
+    std::shared_ptr<CallInvoker> jsInvoker)
+{
   REAModule *reanimatedModule = [bridge moduleForClass:[REAModule class]];
 
-  auto propUpdater = [reanimatedModule](jsi::Runtime &rt, int viewTag, const jsi::Value& viewName, const jsi::Object &props) -> void {
-    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str() encoding:[NSString defaultCStringEncoding]];
+  auto propUpdater = [reanimatedModule](
+                         jsi::Runtime &rt, int viewTag, const jsi::Value &viewName, const jsi::Object &props) -> void {
+    NSString *nsViewName = [NSString stringWithCString:viewName.asString(rt).utf8(rt).c_str()
+                                              encoding:[NSString defaultCStringEncoding]];
 
     NSDictionary *propsDict = convertJSIObjectToNSDictionary(rt, props);
-    [reanimatedModule.nodesManager updateProps:propsDict ofViewWithTag:[NSNumber numberWithInt:viewTag] withName:nsViewName];
+    [reanimatedModule.nodesManager updateProps:propsDict
+                                 ofViewWithTag:[NSNumber numberWithInt:viewTag]
+                                      withName:nsViewName];
   };
-
 
   RCTUIManager *uiManager = reanimatedModule.nodesManager.uiManager;
   auto measuringFunction = [uiManager](int viewTag) -> std::vector<std::pair<std::string, double>> {
@@ -108,11 +151,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     scrollTo(viewTag, uiManager, x, y, animated);
   };
 
-  auto propObtainer = [reanimatedModule](jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
-    NSString* propNameConverted = [NSString stringWithFormat:@"%s",propName.utf8(rt).c_str()];
-      std::string resultStr = std::string([[reanimatedModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag] propName:propNameConverted] UTF8String]);
-      jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
-      return val;
+  id<RNGestureHandlerStateManager> gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
+  auto setGestureStateFunction = [gestureHandlerStateManager](int handlerTag, int newState) {
+    setGestureState(gestureHandlerStateManager, handlerTag, newState);
+  };
+
+  auto propObtainer = [reanimatedModule](
+                          jsi::Runtime &rt, const int viewTag, const jsi::String &propName) -> jsi::Value {
+    NSString *propNameConverted = [NSString stringWithFormat:@"%s", propName.utf8(rt).c_str()];
+    std::string resultStr = std::string([[reanimatedModule.nodesManager obtainProp:[NSNumber numberWithInt:viewTag]
+                                                                          propName:propNameConverted] UTF8String]);
+    jsi::Value val = jsi::String::createFromUtf8(rt, resultStr);
+    return val;
   };
 
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
@@ -128,16 +178,16 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
   std::shared_ptr<NativeReanimatedModule> module;
 
   __block std::weak_ptr<Scheduler> weakScheduler = scheduler;
-  ((REAUIManager*)uiManager).flushUiOperations = ^void() {
+  ((REAUIManager *)uiManager).flushUiOperations = ^void() {
     std::shared_ptr<Scheduler> scheduler = weakScheduler.lock();
     if (scheduler != nullptr) {
       scheduler->triggerUI();
     }
   };
-  
+
   auto requestRender = [reanimatedModule, &module](std::function<void(double)> onRender, jsi::Runtime &rt) {
     [reanimatedModule.nodesManager postOnAnimation:^(CADisplayLink *displayLink) {
-      double frameTimestamp = displayLink.targetTimestamp * 1000;
+      double frameTimestamp = calculateTimestampWithSlowAnimations(displayLink.targetTimestamp) * 1000;
       jsi::Object global = rt.global();
       jsi::String frameTimestampName = jsi::String::createFromAscii(rt, "_frameTimestamp");
       global.setProperty(rt, frameTimestampName, frameTimestamp);
@@ -146,88 +196,105 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(std::shared_ptr<C
     }];
   };
 
-  auto getCurrentTime = []() {
-    return CACurrentMediaTime() * 1000;
-  };
-  
+  auto getCurrentTime = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
+
   // Layout Animations start
-  REAUIManager* reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
-  RCTUIManager* reaUiManager = reaUiManagerNoCast;
+  REAUIManager *reaUiManagerNoCast = [bridge moduleForClass:[REAUIManager class]];
+  RCTUIManager *reaUiManager = reaUiManagerNoCast;
   REAAnimationsManager *animationsManager = [[REAAnimationsManager alloc] initWithUIManager:reaUiManager];
   [reaUiManagerNoCast setUp:animationsManager];
-  
+
   auto notifyAboutProgress = [=](int tag, jsi::Object newStyle) {
     if (animationsManager) {
       NSDictionary *propsDict = convertJSIObjectToNSDictionary(*animatedRuntime, newStyle);
-      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt: tag]];
+      [animationsManager notifyAboutProgress:propsDict tag:[NSNumber numberWithInt:tag]];
     }
   };
-  
+
   auto notifyAboutEnd = [=](int tag, bool isCancelled) {
     if (animationsManager) {
-      [animationsManager notifyAboutEnd:[NSNumber numberWithInt: tag] cancelled:isCancelled];
+      [animationsManager notifyAboutEnd:[NSNumber numberWithInt:tag] cancelled:isCancelled];
     }
   };
-  
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy = std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
+
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
+      std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
-  [animationsManager setAnimationStartingBlock:^(NSNumber * _Nonnull tag, NSString * type,  NSDictionary* _Nonnull values, NSNumber* depth) {
+  [animationsManager setAnimationStartingBlock:^(
+                         NSNumber *_Nonnull tag, NSString *type, NSDictionary *_Nonnull values, NSNumber *depth) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
     if (wrt.expired()) {
       return;
     }
     jsi::Object yogaValues(*rt);
     for (NSString *key in values.allKeys) {
-      NSNumber* value = values[key];
+      NSNumber *value = values[key];
       yogaValues.setProperty(*rt, [key UTF8String], [value doubleValue]);
     }
-    
-    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+
+    jsi::Value layoutAnimationRepositoryAsValue =
+        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
     if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function startAnimationForTag = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
-      startAnimationForTag.call(*rt, jsi::Value([tag intValue]), jsi::String::createFromAscii(*rt, std::string([type UTF8String])), yogaValues, jsi::Value([depth intValue]));
+      jsi::Function startAnimationForTag =
+          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "startAnimationForTag");
+      startAnimationForTag.call(
+          *rt,
+          jsi::Value([tag intValue]),
+          jsi::String::createFromAscii(*rt, std::string([type UTF8String])),
+          yogaValues,
+          jsi::Value([depth intValue]));
     }
   }];
 
-  
-  [animationsManager setRemovingConfigBlock:^(NSNumber* _Nonnull tag) {
+  [animationsManager setRemovingConfigBlock:^(NSNumber *_Nonnull tag) {
     std::shared_ptr<jsi::Runtime> rt = wrt.lock();
     if (wrt.expired()) {
       return;
     }
-    jsi::Value layoutAnimationRepositoryAsValue = rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
+    jsi::Value layoutAnimationRepositoryAsValue =
+        rt->global().getPropertyAsObject(*rt, "global").getProperty(*rt, "LayoutAnimationRepository");
     if (!layoutAnimationRepositoryAsValue.isUndefined()) {
-      jsi::Function removeConfig = layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
+      jsi::Function removeConfig =
+          layoutAnimationRepositoryAsValue.getObject(*rt).getPropertyAsFunction(*rt, "removeConfig");
       removeConfig.call(*rt, jsi::Value([tag intValue]));
     }
   }];
-  
+
   // Layout Animations end
-  
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
-    requestRender,
-    propUpdater,
-    scrollToFunction,
-    measuringFunction,
-    getCurrentTime,
+      requestRender,
+      propUpdater,
+      scrollToFunction,
+      measuringFunction,
+      getCurrentTime,
+      setGestureStateFunction,
   };
 
-  module = std::make_shared<NativeReanimatedModule>(jsInvoker,
-                                                    scheduler,
-                                                    animatedRuntime,
-                                                    errorHandler,
-                                                    propObtainer,
-                                                    layoutAnimationsProxy,
-                                                    platformDepMethodsHolder
-                                                    );
+  module = std::make_shared<NativeReanimatedModule>(
+      jsInvoker,
+      scheduler,
+      animatedRuntime,
+      errorHandler,
+      propObtainer,
+      layoutAnimationsProxy,
+      platformDepMethodsHolder);
 
   scheduler->setRuntimeManager(module);
 
   [reanimatedModule.nodesManager registerEventHandler:^(NSString *eventName, id<RCTEvent> event) {
     std::string eventNameString([eventName UTF8String]);
-    std::string eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
 
-    eventAsString = "{ NativeMap:"  + eventAsString + "}";
+    std::string eventAsString;
+    try {
+      eventAsString = folly::toJson(convertIdToFollyDynamic([event arguments][2]));
+    } catch (std::exception &) {
+      // Events from other libraries may contain NaN or INF values which cannot be represented in JSON.
+      // See https://github.com/software-mansion/react-native-reanimated/issues/1776 for details.
+      return;
+    }
+
+    eventAsString = "{ NativeMap:" + eventAsString + "}";
     jsi::Object global = module->runtime->global();
     jsi::String eventTimestampName = jsi::String::createFromAscii(*module->runtime, "_eventTimestamp");
     global.setProperty(*module->runtime, eventTimestampName, CACurrentMediaTime() * 1000);

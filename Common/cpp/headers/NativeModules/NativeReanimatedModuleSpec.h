@@ -19,7 +19,7 @@ namespace reanimated {
 
 class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
  protected:
-  NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
+  explicit NativeReanimatedModuleSpec(std::shared_ptr<CallInvoker> jsInvoker);
 
  public:
   virtual void installCoreFunctions(
@@ -58,6 +58,11 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const jsi::Value &viewTag,
       const jsi::Value &propName,
       const jsi::Value &callback) = 0;
+
+  // other
+  virtual jsi::Value enableLayoutAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &config) = 0;
 };
 
 } // namespace reanimated

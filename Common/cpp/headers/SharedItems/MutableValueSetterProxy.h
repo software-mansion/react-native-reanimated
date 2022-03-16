@@ -1,6 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
+#include <utility>
 #include "SharedParent.h"
 
 using namespace facebook;
@@ -13,7 +15,7 @@ class MutableValueSetterProxy : public jsi::HostObject {
   std::shared_ptr<MutableValue> mutableValue;
 
  public:
-  MutableValueSetterProxy(std::shared_ptr<MutableValue> mutableValue)
+  explicit MutableValueSetterProxy(std::shared_ptr<MutableValue> mutableValue)
       : mutableValue(std::move(mutableValue)) {}
   void
   set(jsi::Runtime &rt, const jsi::PropNameID &name, const jsi::Value &value);

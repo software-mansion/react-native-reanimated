@@ -87,7 +87,7 @@ const springConfig = (velocity: number) => {
 
 const timingConfig = {
   duration: 400,
-  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+  easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
 };
 
 type ListItemProps = {

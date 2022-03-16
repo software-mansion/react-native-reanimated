@@ -1,5 +1,5 @@
 import { NestedObjectValues } from '../commonTypes';
-import JSReanimated from './JSReanimated';
+import { JSReanimated } from './commonTypes';
 import MutableValue from './MutableValue';
 
 export default class Mapper<T> {
@@ -43,7 +43,9 @@ export default class Mapper<T> {
     const res: MutableValue<T>[] = [];
 
     function extractMutables(value: NestedObjectValues<MutableValue<T>>) {
-      if (value instanceof MutableValue) {
+      if (value == null) {
+        // return;
+      } else if (value instanceof MutableValue) {
         res.push(value);
       } else if (Array.isArray(value)) {
         value.forEach((v) => extractMutables(v));

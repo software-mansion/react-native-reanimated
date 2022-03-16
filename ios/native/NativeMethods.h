@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <RNGestureHandlerStateManager.h>
 #import <React/RCTUIManager.h>
 #include <string>
 #import <string>
@@ -17,5 +18,9 @@ void scrollTo(
     double x,
     double y,
     bool animated);
+void setGestureState(
+    id<RNGestureHandlerStateManager> gestureHandlerStateManager,
+    int handlerTag,
+    int newState);
 
 } // namespace reanimated

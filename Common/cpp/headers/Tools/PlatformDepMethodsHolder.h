@@ -2,6 +2,9 @@
 
 #include <jsi/jsi.h>
 #include <stdio.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace facebook;
 
@@ -18,6 +21,7 @@ using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using MeasuringFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 using TimeProviderFunction = std::function<double(void)>;
+using SetGestureStateFunction = std::function<void(int, int)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -25,6 +29,7 @@ struct PlatformDepMethodsHolder {
   ScrollToFunction scrollToFunction;
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;
+  SetGestureStateFunction setGestureStateFunction;
 };
 
 } // namespace reanimated

@@ -17,18 +17,26 @@ import './reanimated2/layoutReanimation/LayoutAnimationRepository';
 import invariant from 'invariant';
 import { adaptViewConfig } from './ConfigHelper';
 import { RNRenderer } from './reanimated2/platform-specific/RNRenderer';
-import { makeMutable, runOnUI } from './reanimated2/core';
+import {
+  makeMutable,
+  runOnUI,
+  enableLayoutAnimations,
+} from './reanimated2/core';
 import {
   DefaultEntering,
   DefaultExiting,
   DefaultLayout,
 } from './reanimated2/layoutReanimation/defaultAnimations/Default';
-import { isJest, isChromeDebugger } from './reanimated2/PlatformChecker';
+import {
+  isJest,
+  isChromeDebugger,
+  shouldBeUseWeb,
+} from './reanimated2/PlatformChecker';
 import { initialUpdaterRun } from './reanimated2/animation';
 import {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
-  LayoutAnimationFunction,
+  ILayoutAnimationBuilder,
 } from './reanimated2/layoutReanimation';
 import { SharedValue, StyleProps } from './reanimated2/commonTypes';
 import {
@@ -88,6 +96,21 @@ function flattenArray<T>(array: NestedArray<T>): T[] {
   return resultArr;
 }
 
+function onlyAnimatedStyles(styles: StyleProps[]) {
+  return styles.filter((style) => style?.viewDescriptors);
+}
+
+function isSameAnimatedStyle(
+  style1?: StyleProps,
+  style2?: StyleProps
+): boolean {
+  // We cannot use equality check to compare useAnimatedStyle outputs directly.
+  // Instead, we can compare its viewsRefs.
+  return style1?.viewsRef === style2?.viewsRef;
+}
+
+const isSameAnimatedProps = isSameAnimatedStyle;
+
 const has = <K extends string>(
   key: K,
   x: unknown
@@ -115,7 +138,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   animatedStyle?: StyleProps;
   layout?:
     | BaseAnimationBuilder
-    | LayoutAnimationFunction
+    | ILayoutAnimationBuilder
     | typeof BaseAnimationBuilder;
   entering?:
     | BaseAnimationBuilder
@@ -167,6 +190,7 @@ export default function createAnimatedComponent(
   > {
     _invokeAnimatedPropsCallbackOnMount = false;
     _styles: StyleProps[] | null = null;
+    _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _viewTag = -1;
     _isFirstRender = true;
     animatedStyle: { value: StyleProps } = { value: {} };
@@ -255,9 +279,7 @@ export default function createAnimatedComponent(
         }
       } else if (this._viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
-          if (style?.viewDescriptors) {
-            style.viewDescriptors.remove(this._viewTag);
-          }
+          style.viewDescriptors.remove(this._viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(this._viewTag);
@@ -387,8 +409,15 @@ export default function createAnimatedComponent(
     }
 
     _attachAnimatedStyles() {
-      const styles = flattenArray<StyleProps>(this.props.style ?? []);
+      const styles = this.props.style
+        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
+        : [];
+      const prevStyles = this._styles;
       this._styles = styles;
+
+      const prevAnimatedProps = this._animatedProps;
+      this._animatedProps = this.props.animatedProps;
+
       let viewTag: number | null;
       let viewName: string | null;
       if (Platform.OS === 'web') {
@@ -410,34 +439,60 @@ export default function createAnimatedComponent(
          */
         viewName = hostInstance?.viewConfig?.uiViewClassName;
         // update UI props whitelist for this view
-        if (
-          hostInstance &&
-          this._hasReanimated2Props(styles) &&
-          hostInstance.viewConfig
-        ) {
+        const hasReanimated2Props =
+          this.props.animatedProps?.viewDescriptors || styles.length;
+        if (hasReanimated2Props && hostInstance?.viewConfig) {
           adaptViewConfig(hostInstance.viewConfig);
         }
       }
       this._viewTag = viewTag as number;
 
-      styles.forEach((style) => {
-        if (style?.viewDescriptors) {
-          style.viewDescriptors.add({ tag: viewTag, name: viewName });
-          if (isJest()) {
-            /**
-             * We need to connect Jest's TestObject instance whose contains just props object
-             * with the updateProps() function where we update the properties of the component.
-             * We can't update props object directly because TestObject contains a copy of props - look at render function:
-             * const props = this._filterNonAnimatedProps(this.props);
-             */
-            this.animatedStyle.value = {
-              ...this.animatedStyle.value,
-              ...style.initial.value,
-            };
-            style.animatedStyle.current = this.animatedStyle;
+      // remove old styles
+      if (prevStyles) {
+        // in most of the cases, views have only a single animated style and it remains unchanged
+        const hasOneSameStyle =
+          styles.length === 1 &&
+          prevStyles.length === 1 &&
+          isSameAnimatedStyle(styles[0], prevStyles[0]);
+
+        if (!hasOneSameStyle) {
+          // otherwise, remove each style that is not present in new styles
+          for (const prevStyle of prevStyles) {
+            const isPresent = styles.some((style) =>
+              isSameAnimatedStyle(style, prevStyle)
+            );
+            if (!isPresent) {
+              prevStyle.viewDescriptors.remove(viewTag);
+            }
           }
         }
+      }
+
+      styles.forEach((style) => {
+        style.viewDescriptors.add({ tag: viewTag, name: viewName });
+        if (isJest()) {
+          /**
+           * We need to connect Jest's TestObject instance whose contains just props object
+           * with the updateProps() function where we update the properties of the component.
+           * We can't update props object directly because TestObject contains a copy of props - look at render function:
+           * const props = this._filterNonAnimatedProps(this.props);
+           */
+          this.animatedStyle.value = {
+            ...this.animatedStyle.value,
+            ...style.initial.value,
+          };
+          style.animatedStyle.current = this.animatedStyle;
+        }
       });
+
+      // detach old animatedProps
+      if (
+        prevAnimatedProps &&
+        !isSameAnimatedProps(prevAnimatedProps, this.props.animatedProps)
+      ) {
+        prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
+      }
+
       // attach animatedProps property
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.add({
@@ -447,21 +502,6 @@ export default function createAnimatedComponent(
           name: viewName!,
         });
       }
-    }
-
-    _hasReanimated2Props(flattenStyles: StyleProps[]) {
-      if (this.props.animatedProps?.viewDescriptors) {
-        return true;
-      }
-      if (this.props.style) {
-        for (const style of flattenStyles) {
-          // eslint-disable-next-line no-prototype-builtins
-          if (style?.hasOwnProperty('viewDescriptors')) {
-            return true;
-          }
-        }
-      }
-      return false;
     }
 
     _detachPropUpdater() {
@@ -496,6 +536,9 @@ export default function createAnimatedComponent(
           (this.props.layout || this.props.entering || this.props.exiting) &&
           tag != null
         ) {
+          if (!shouldBeUseWeb()) {
+            enableLayoutAnimations(true, false);
+          }
           let layout = this.props.layout ? this.props.layout : DefaultLayout;
           let entering = this.props.entering
             ? this.props.entering

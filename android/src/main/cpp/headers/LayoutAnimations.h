@@ -1,6 +1,8 @@
 #pragma once
+
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <memory>
 #include "JNIHelper.h"
 
 namespace reanimated {
@@ -21,10 +23,11 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
       alias_ref<JString> type,
       alias_ref<JMap<jstring, jstring>> values);
   void removeConfigForTag(int tag);
+  bool isLayoutAnimationEnabled();
 
   void setWeakUIRuntime(std::weak_ptr<jsi::Runtime> wrt);
 
-  void notifyAboutProgress(jsi::Value &progress, int tag);
+  void notifyAboutProgress(const jsi::Value &progress, int tag);
   void notifyAboutEnd(int tag, int cancelled);
 
  private:

@@ -8,7 +8,8 @@ import { withTiming } from '../../animation';
 
 export class CurvedTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   easingXV: EasingFn = Easing.in(Easing.ease);
   easingYV: EasingFn = Easing.out(Easing.ease);
   easingWidthV: EasingFn = Easing.in(Easing.exp);
@@ -74,27 +75,39 @@ export class CurvedTransition
 
       return {
         initialValues: {
-          originX: values.boriginX,
-          originY: values.boriginY,
-          width: values.bwidth,
-          height: values.bheight,
+          originX: values.currentOriginX,
+          originY: values.currentOriginY,
+          width: values.currentWidth,
+          height: values.currentHeight,
         },
         animations: {
           originX: delayFunction(
             delay,
-            withTiming(values.originX, { duration, easing: easing.easingX })
+            withTiming(values.targetOriginX, {
+              duration,
+              easing: easing.easingX,
+            })
           ),
           originY: delayFunction(
             delay,
-            withTiming(values.originY, { duration, easing: easing.easingY })
+            withTiming(values.targetOriginY, {
+              duration,
+              easing: easing.easingY,
+            })
           ),
           width: delayFunction(
             delay,
-            withTiming(values.width, { duration, easing: easing.easingWidth })
+            withTiming(values.targetWidth, {
+              duration,
+              easing: easing.easingWidth,
+            })
           ),
           height: delayFunction(
             delay,
-            withTiming(values.height, { duration, easing: easing.easingHeight })
+            withTiming(values.targetHeight, {
+              duration,
+              easing: easing.easingHeight,
+            })
           ),
         },
         callback: callback,

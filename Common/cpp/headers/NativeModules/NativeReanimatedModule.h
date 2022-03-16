@@ -2,7 +2,9 @@
 
 #include <unistd.h>
 #include <memory>
+#include <string>
 #include <vector>
+
 #include "ErrorHandler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
@@ -65,6 +67,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       const jsi::Value &viewTag,
       const jsi::Value &propName,
       const jsi::Value &callback) override;
+
+  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
+      override;
 
   void onRender(double timestampMs);
   void onEvent(std::string eventName, std::string eventAsString);

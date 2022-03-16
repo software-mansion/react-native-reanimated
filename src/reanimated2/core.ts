@@ -1,18 +1,16 @@
 /* global _WORKLET _getCurrentTime _frameTimestamp _eventTimestamp, _setGlobalConsole */
 import NativeReanimatedModule from './NativeReanimated';
 import { Platform } from 'react-native';
-import { nativeShouldBeMock, shouldBeUseWeb } from './PlatformChecker';
+import { nativeShouldBeMock, shouldBeUseWeb, isWeb } from './PlatformChecker';
 import {
   BasicWorkletFunction,
   WorkletFunction,
   ComplexWorkletFunction,
   SharedValue,
-} from './commonTypes';
-import {
   AnimationObject,
-  PrimitiveValue,
+  AnimatableValue,
   Timestamp,
-} from './animation/commonTypes';
+} from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
 
@@ -35,13 +33,13 @@ export type ReanimatedConsole = Pick<
 export type WorkletValue =
   | (() => AnimationObject)
   | AnimationObject
-  | PrimitiveValue
+  | AnimatableValue
   | Descriptor;
 interface WorkletValueSetterContext {
   _animation?: AnimationObject | null;
-  _value?: PrimitiveValue | Descriptor;
-  value?: PrimitiveValue;
-  _setValue?: (val: PrimitiveValue | Descriptor) => void;
+  _value?: AnimatableValue | Descriptor;
+  value?: AnimatableValue;
+  _setValue?: (val: AnimatableValue | Descriptor) => void;
 }
 
 const testWorklet: BasicWorkletFunction<void> = () => {
@@ -65,7 +63,7 @@ export const checkPluginState: (throwError: boolean) => boolean = (
 export const isConfigured: (throwError?: boolean) => boolean = (
   throwError = false
 ) => {
-  return checkPluginState(throwError) && !NativeReanimatedModule.useOnlyV1;
+  return checkPluginState(throwError);
 };
 
 export const isConfiguredCheck: () => void = () => {
@@ -252,7 +250,7 @@ function workletValueSetter<T extends WorkletValue>(
     if (this._value === value) {
       return;
     }
-    this._value = value as Descriptor | PrimitiveValue;
+    this._value = value as Descriptor | AnimatableValue;
   }
 }
 
@@ -294,7 +292,7 @@ function workletValueSetterJS<T extends WorkletValue>(
       }
       const finished = animation.onFrame(animation, timestamp);
       animation.timestamp = timestamp;
-      this._setValue && this._setValue(animation.current as PrimitiveValue);
+      this._setValue && this._setValue(animation.current as AnimatableValue);
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
@@ -306,7 +304,7 @@ function workletValueSetterJS<T extends WorkletValue>(
 
     requestFrame(step);
   } else {
-    this._setValue && this._setValue(value as PrimitiveValue | Descriptor);
+    this._setValue && this._setValue(value as AnimatableValue | Descriptor);
   }
 }
 
@@ -364,24 +362,61 @@ export function runOnJS<A extends any[], R>(
   }
 }
 
-if (!NativeReanimatedModule.useOnlyV1) {
-  NativeReanimatedModule.installCoreFunctions(
-    NativeReanimatedModule.native
-      ? (workletValueSetter as <T>(value: T) => void)
-      : (workletValueSetterJS as <T>(value: T) => void)
-  );
+NativeReanimatedModule.installCoreFunctions(
+  NativeReanimatedModule.native
+    ? (workletValueSetter as <T>(value: T) => void)
+    : (workletValueSetterJS as <T>(value: T) => void)
+);
 
+if (!isWeb() && isConfigured()) {
   const capturableConsole = console;
-  isConfigured() &&
-    runOnUI(() => {
-      'worklet';
-      const console = {
-        debug: runOnJS(capturableConsole.debug),
-        log: runOnJS(capturableConsole.log),
-        warn: runOnJS(capturableConsole.warn),
-        error: runOnJS(capturableConsole.error),
-        info: runOnJS(capturableConsole.info),
-      };
-      _setGlobalConsole(console);
-    })();
+  runOnUI(() => {
+    'worklet';
+    const console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+    if (global.performance == null) {
+      global.performance = {
+        now: global._chronoNow,
+      } as any; // due to conflict with lib.dom.d.ts -> Performance
+    }
+  })();
+}
+
+type FeaturesConfig = {
+  enableLayoutAnimations: boolean;
+  setByUser: boolean;
+};
+
+let featuresConfig: FeaturesConfig = {
+  enableLayoutAnimations: false,
+  setByUser: false,
+};
+
+export function enableLayoutAnimations(
+  flag: boolean,
+  isCallByUser = true
+): void {
+  if (isCallByUser) {
+    featuresConfig = {
+      enableLayoutAnimations: flag,
+      setByUser: true,
+    };
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  } else if (
+    !featuresConfig.setByUser &&
+    featuresConfig.enableLayoutAnimations !== flag
+  ) {
+    featuresConfig.enableLayoutAnimations = flag;
+    NativeReanimatedModule.enableLayoutAnimations(flag);
+  }
+}
+
+export function jestResetJsReanimatedModule() {
+  (NativeReanimatedModule as JSReanimated).jestResetModule();
 }

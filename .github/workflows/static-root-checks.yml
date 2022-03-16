@@ -1,18 +1,18 @@
 name: Test TypeScript and Lint
 on:
   pull_request:
-    branches: 
-      - master
+    branches:
+      - main
     paths:
       - 'src/**'
       - '*'
   push:
     branches:
-      - master
+      - main
 jobs:
   check:
     runs-on: ubuntu-latest
-    concurrency: 
+    concurrency:
       group: static-root-${{ github.ref }}
       cancel-in-progress: true
     steps:
@@ -27,5 +27,11 @@ jobs:
         run: yarn
       - name: Check types
         run: yarn tsc --noEmit
+      - name: Check type:generate
+        run: yarn run type:generate
       - name: Lint
-        run: yarn lint-check
+        run: yarn lint:js
+      - name: Finding circular dependencies
+        run: yarn circular_dependency_check
+      - name: Jest test:unit
+        run: yarn test:unit

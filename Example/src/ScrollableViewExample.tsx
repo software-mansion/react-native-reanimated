@@ -100,7 +100,7 @@ function ScrollableView({
 
         translateY.value = withTiming(toValue, {
           duration: 250,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          easing: Easing.bezierFn(0.25, 0.1, 0.25, 1),
         });
       } else {
         translateY.value = withDecay({

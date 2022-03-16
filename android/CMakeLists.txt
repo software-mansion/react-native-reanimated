@@ -4,22 +4,46 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HAVE_MEMRCHR=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_MOBILE=1 -DON_ANDROID -DONANDROID -DFOR_HERMES=${FOR_HERMES} -fexceptions -fno-omit-frame-pointer -frtti -Wno-sign-compare")
 
+if(${NATIVE_DEBUG})
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 set (PACKAGE_NAME "reanimated")
-set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
-set (NODE_MODULES_DIR "../node_modules")
+set (SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+
+if(${CLIENT_SIDE_BUILD})
+    set (NODE_MODULES_DIR "${CMAKE_SOURCE_DIR}/../../")
+    set (COMMON_SRC_DIR "${CMAKE_SOURCE_DIR}/../Common")
+else()
+    set (NODE_MODULES_DIR "../node_modules")
+    set (COMMON_SRC_DIR "${SRC_DIR}/main/Common")
+endif()
+
 set (RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
 set (FBJNI_HEADERS_DIR ${RN_SO_DIR}/../../fbjni/headers)
 
 # reanimated shared
 
-file(GLOB sources_tools  "./src/main/Common/cpp/Tools/*.cpp")
-file(GLOB sources_native_modules  "./src/main/Common/cpp/NativeModules/*.cpp")
-file(GLOB sources_shared_items  "./src/main/Common/cpp/SharedItems/*.cpp")
-file(GLOB sources_registries  "./src/main/Common/cpp/Registries/*.cpp")
-file(GLOB sources_android  "./src/main/cpp/*.cpp")
+file(GLOB sources_tools  "${COMMON_SRC_DIR}/cpp/Tools/*.cpp")
+file(GLOB sources_native_modules  "${COMMON_SRC_DIR}/cpp/NativeModules/*.cpp")
+file(GLOB sources_shared_items  "${COMMON_SRC_DIR}/cpp/SharedItems/*.cpp")
+file(GLOB sources_registries  "${COMMON_SRC_DIR}/cpp/Registries/*.cpp")
+file(GLOB sources_android  "${SRC_DIR}/main/cpp/*.cpp")
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+        set (
+                INCLUDE_JSI_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+        )
+        set (
+                INCLUDE_JSIDYNAMIC_CPP
+                "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp"
+        )
+endif()
 
 add_library(
         ${PACKAGE_NAME}
@@ -29,14 +53,15 @@ add_library(
         ${sources_registries}
         ${sources_android}
         ${source_tools}
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp
-        ${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/JSIDynamic.cpp
-        "./src/main/Common/cpp/Tools/JSIStoreValueUser.cpp"
-        "./src/main/Common/cpp/Tools/Mapper.cpp"
-        "./src/main/Common/cpp/Tools/RuntimeDecorator.cpp"
-        "./src/main/Common/cpp/Tools/Scheduler.cpp"
-        "./src/main/Common/cpp/Tools/WorkletEventHandler.cpp"
-        "./src/main/Common/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
+        ${INCLUDE_JSI_CPP}
+        ${INCLUDE_JSIDYNAMIC_CPP}
+        "${COMMON_SRC_DIR}/cpp/Tools/JSIStoreValueUser.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Mapper.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/RuntimeDecorator.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/Scheduler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/WorkletEventHandler.cpp"
+        "${COMMON_SRC_DIR}/cpp/Tools/FeaturesConfig.cpp"
+        "${COMMON_SRC_DIR}/cpp/LayoutAnimations/LayoutAnimationsProxy.cpp"
 )
 
 # includes
@@ -61,23 +86,20 @@ target_include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule"
         "${NODE_MODULES_DIR}/hermes-engine/android/include/"
-        "./src/main/Common/cpp/headers/Tools"
-        "./src/main/Common/cpp/headers/SpecTools"
-        "./src/main/Common/cpp/headers/NativeModules"
-        "./src/main/Common/cpp/headers/SharedItems"
-        "./src/main/Common/cpp/headers/Registries"
-        "./src/main/Common/cpp/headers/LayoutAnimations"
-        "./src/main/Common/cpp/hidden_headers"
-        "./src/main/cpp/headers"
+        "${COMMON_SRC_DIR}/cpp/headers/Tools"
+        "${COMMON_SRC_DIR}/cpp/headers/SpecTools"
+        "${COMMON_SRC_DIR}/cpp/headers/NativeModules"
+        "${COMMON_SRC_DIR}/cpp/headers/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/headers/Registries"
+        "${COMMON_SRC_DIR}/cpp/headers/LayoutAnimations"
+        "${COMMON_SRC_DIR}/cpp/hidden_headers"
+        "${SRC_DIR}/main/cpp/headers"
 )
 
 # find libraries
 
 file (GLOB LIBRN_DIR "${RN_SO_DIR}/${ANDROID_ABI}")
 file (GLOB HERMES_DIR "${BUILD_DIR}/third-party-ndk/hermes/jni/${ANDROID_ABI}")
-
-message(STATUS "{LIBRN_DIR}: ")
-message(STATUS ${LIBRN_DIR})
 
 find_library(
         LOG_LIB
@@ -107,26 +129,44 @@ find_library(
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
+
 find_library(
-        GLOG_LIB 
+        GLOG_LIB
         glog
         PATHS ${LIBRN_DIR}
         NO_CMAKE_FIND_ROOT_PATH
 )
-find_package(fbjni REQUIRED CONFIG)
+
+find_library(
+        FBJNI_LIB
+        fbjni
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+
+if(${REACT_NATIVE_TARGET_VERSION} LESS 66)
+        set (JSI_LIB "")
+else()
+        find_library(
+                JSI_LIB
+                jsi
+                PATHS ${LIBRN_DIR}
+                NO_CMAKE_FIND_ROOT_PATH
+        )
+endif()
+
 # build shared lib
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
-message(WARNING "CMakeLists.txt FOR_HERMES=${FOR_HERMES}")
 
 if(${FOR_HERMES})
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${HERMES_LIB}
             ${GLOG_LIB}
-            fbjni::fbjni
+            ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android
@@ -135,9 +175,10 @@ else()
     target_link_libraries(
             ${PACKAGE_NAME}
             ${LOG_LIB}
+            ${JSI_LIB}
             ${JSEXECUTOR_LIB}
             ${GLOG_LIB}
-            fbjni::fbjni
+            ${FBJNI_LIB}
             ${FOLLY_JSON_LIB}
             ${REACT_NATIVE_JNI_LIB}
             android

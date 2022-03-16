@@ -2,7 +2,9 @@
 
 #include <jsi/jsi.h>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <vector>
 #include "JSIStoreValueUser.h"
 #include "LayoutAnimationsProxy.h"
 #include "MutableValueSetterProxy.h"

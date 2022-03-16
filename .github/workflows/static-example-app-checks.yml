@@ -2,12 +2,12 @@ name: Test Example App TypeScript and Lint
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - 'Example/**'
   push:
     branches:
-      - master
+      - main
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -34,4 +34,4 @@ jobs:
         run: yarn tsc --noEmit
       - name: Lint
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn lint-check
+        run: yarn lint:js

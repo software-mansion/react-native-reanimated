@@ -1,0 +1,44 @@
+name: Check issue template
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  main:
+    if: ${{ !contains(github.event.issue.labels.*.name, 'maintainer-issue') }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: needs-more-info-${{ github.event.issue.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout Actions
+        uses: actions/checkout@v2
+        with:
+          repository: 'software-mansion-labs/swmansion-bot'
+          ref: stable
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install Actions
+        run: yarn install
+
+      - name: Needs More Info
+        uses: ./needs-more-info
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          needs-more-info-label: needs-more-info
+          required-sections: 'Description;Snack or minimal code example;Package versions;Affected platforms'
+          needs-more-info-response: "Hey! 👋 \n\nIt looks like you've omitted a few important sections from the issue template."
+          # This action also appends something like: "Please complete X, Y and Z sections." to the response.
+          # Code responsible for this can be found here: https://github.com/software-mansion-labs/swmansion-bot/blob/main/needs-more-info/MissingSectionsFormatter.js
