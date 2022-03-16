@@ -1,0 +1,80 @@
+name: Test Reanimated build on different react-native versions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      WORKING_DIRECTORY: tester
+    concurrency:
+      group: ios-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@v1
+
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'yarn'
+
+      - name: Set up Node
+        run: npm install -g react-native-cli && npm install -g npx
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+
+      - name: Install NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r21d
+
+      - name: Build package
+        env:
+          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: >-
+          ./createNPMPackage.sh
+
+      - name: Get package name
+        run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+
+      - name: Create react app
+        run: npx react-native init reactApp --version 0.68.0-rc.2
+      
+      - name: Config app
+        run: cd reactApp && yarn add react-native-reanimated
+
+      - name: Replace Reanimated package
+        run: rm -rf node_modules/react-native-reanimated/* && tar zxvf react-native-reanimated* && mv package/* node_modules/react-native-reanimated/
+
+      - name: Configure ios
+        run: cd ios && pod install && cd ..
+      
+      - name: Build ios
+        run: npx react-native run-ios
+
+      # todo: run detox
+      # todo: test other versions
+      # todo: test building from source
+
+      # - name: Clone repository reanimated-rn-version-tester
+      #   uses: actions/checkout@master
+      #   with:
+      #     repository: jmysliv/reanimated-rn-version-tester
+      #     path: tester
+
+      # - name: Install dependencies and pods
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: cp ../react-native-reanimated-*.tgz . && ./setup.sh
+        
+      # - name: Test reanimated with different rn versions
+      #   working-directory: ${{ env.WORKING_DIRECTORY }}
+      #   run: ./testVersions.sh
+
+      
