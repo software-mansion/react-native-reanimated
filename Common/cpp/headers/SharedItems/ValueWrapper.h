@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <react/renderer/uimanager/primitives.h> // ShadowNodeWrapper
+#include <react/renderer/core/ShadowNode.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,7 +42,7 @@ class ValueWrapper {
       const std::unique_ptr<ValueWrapper> &valueContainer);
   static inline const std::shared_ptr<MutableValue> &asMutableValue(
       const std::unique_ptr<ValueWrapper> &valueContainer);
-  static inline const std::shared_ptr<ShadowNodeWrapper> &asShadowNodeWrapper(
+  static inline const ShadowNode::Shared &asShadowNode(
       const std::unique_ptr<ValueWrapper> &valueContainer);
 
   static const HostFunctionWrapper *asHostFunctionWrapper(
@@ -111,12 +111,11 @@ class MutableValueWrapper : public ValueWrapper {
   std::shared_ptr<MutableValue> value;
 };
 
-class ShadowNodeWrapperWrapper : public ValueWrapper {
+class ShadowNodeValueWrapper : public ValueWrapper {
  public:
-  explicit ShadowNodeWrapperWrapper(
-      const std::shared_ptr<ShadowNodeWrapper> &_value)
-      : ValueWrapper(ValueType::ShadowNodeWrapperType), value(_value) {}
-  std::shared_ptr<ShadowNodeWrapper> value;
+  explicit ShadowNodeValueWrapper(const ShadowNode::Shared &_value)
+      : ValueWrapper(ValueType::ShadowNodeType), value(_value) {}
+  ShadowNode::Shared value;
 };
 
 inline bool ValueWrapper::asBoolean(
@@ -160,10 +159,9 @@ inline const std::shared_ptr<MutableValue> &ValueWrapper::asMutableValue(
   return static_cast<MutableValueWrapper *>(valueContainer.get())->value;
 }
 
-inline const std::shared_ptr<ShadowNodeWrapper>
-    &ValueWrapper::asShadowNodeWrapper(
-        const std::unique_ptr<ValueWrapper> &valueContainer) {
-  return static_cast<ShadowNodeWrapperWrapper *>(valueContainer.get())->value;
+inline const ShadowNode::Shared &ValueWrapper::asShadowNode(
+    const std::unique_ptr<ValueWrapper> &valueContainer) {
+  return static_cast<ShadowNodeValueWrapper *>(valueContainer.get())->value;
 }
 
 inline const HostFunctionWrapper *ValueWrapper::asHostFunctionWrapper(
