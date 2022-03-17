@@ -112,8 +112,7 @@ function ReactionsCounter({
             key={count}
             style={styles.count}
             entering={entering}
-            exiting={exiting}
-          >
+            exiting={exiting}>
             {count}
           </Animated.Text>
         </View>
