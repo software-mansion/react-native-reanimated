@@ -108,8 +108,8 @@ let NATIVE_THREAD_PROPS_WHITELIST: Record<string, boolean> = {
 
 function configureProps(): void {
   jsiConfigureProps(
-    Object.keys(NATIVE_THREAD_PROPS_WHITELIST),
-    Object.keys(UI_THREAD_PROPS_WHITELIST)
+    Object.keys(UI_THREAD_PROPS_WHITELIST),
+    Object.keys(NATIVE_THREAD_PROPS_WHITELIST)
   );
 }
 
