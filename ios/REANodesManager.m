@@ -504,10 +504,11 @@
   }
 }
 
-- (void)configureNativeProps:(NSSet<NSString *> *)nativeProps andUiProps:(NSSet<NSString *> *)uiProps
+- (void)configureUiProps:(nonnull NSSet<NSString *> *)uiPropsSet
+          andNativeProps:(nonnull NSSet<NSString *> *)nativePropsSet
 {
-  _uiProps = uiProps;
-  _nativeProps = nativeProps;
+  _uiProps = uiPropsSet;
+  _nativeProps = nativePropsSet;
 }
 
 - (BOOL)isNotNativeViewFullyMounted:(NSNumber *)viewTag

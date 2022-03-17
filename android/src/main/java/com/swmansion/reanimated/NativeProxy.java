@@ -186,9 +186,9 @@ public class NativeProxy {
 
   @DoNotStrip
   private void configureProps(ReadableNativeArray uiProps, ReadableNativeArray nativeProps) {
-    Set<String> nativePropsSet = convertProps(nativeProps);
     Set<String> uiPropsSet = convertProps(uiProps);
-    mNodesManager.configureProps(nativePropsSet, uiPropsSet);
+    Set<String> nativePropsSet = convertProps(nativeProps);
+    mNodesManager.configureProps(uiPropsSet, nativePropsSet);
   }
 
   private Set<String> convertProps(ReadableNativeArray props) {

@@ -232,7 +232,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
                                     jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
     NSSet *uiPropsSet = convertProps(rt, uiProps);
     NSSet *nativePropsSet = convertProps(rt, nativeProps);
-    [reanimatedModule.nodesManager configureNativeProps:nativePropsSet andUiProps:uiPropsSet];
+    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
   };
 
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
