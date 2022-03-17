@@ -108,7 +108,7 @@ static jsi::Value SPEC_PREFIX(enableLayoutAnimations)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerSensor(
+static jsi::Value SPEC_PREFIX(registerSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
@@ -118,7 +118,7 @@ static jsi::Value __hostFunction_NativeReanimatedModuleSpec_registerSensor(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
-static jsi::Value __hostFunction_NativeReanimatedModuleSpec_unregisterSensor(
+static jsi::Value SPEC_PREFIX(unregisterSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
