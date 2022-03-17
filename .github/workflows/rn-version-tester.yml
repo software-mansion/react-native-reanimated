@@ -57,10 +57,10 @@ jobs:
         run: rm -rf reactApp/node_modules/react-native-reanimated/* && tar zxvf ${{ env.PACKAGE_NAME }} && cp -R package/* reactApp/node_modules/react-native-reanimated/
 
       - name: Configure ios
-        run: cd ios && pod install && cd ..
+        run: cd reactApp/ios && pod install && cd ..
       
       - name: Build ios
-        run: npx react-native run-ios
+        run: cd reactApp && npx react-native run-ios
 
       # todo: run detox
       # todo: test other versions
