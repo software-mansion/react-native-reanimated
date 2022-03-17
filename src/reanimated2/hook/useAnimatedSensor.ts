@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { makeMutable } from '../core';
-import { SharedValue } from '../commonTypes';
 import NativeReanimated from '../NativeReanimated';
+import { SensorValue3D, SensorValueRotation } from '../commonTypes';
 
 export enum SensorType {
   ACCELEROMETER = 1,
@@ -23,26 +23,6 @@ export type AnimatedSensor = {
     interval: number;
   };
 };
-
-export type Value3D = {
-  x: number;
-  y: number;
-  z: number;
-};
-
-export type SensorValue3D = SharedValue<Value3D>;
-
-export type ValueRotation = {
-  qw: number;
-  qx: number;
-  qy: number;
-  qz: number;
-  yaw: number;
-  pitch: number;
-  roll: number;
-};
-
-export type SensorValueRotation = SharedValue<ValueRotation>;
 
 export function useAnimatedSensor(
   sensorType: SensorType,

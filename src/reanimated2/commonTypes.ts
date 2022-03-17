@@ -126,3 +126,23 @@ export type AnimationCallback = (
 ) => void;
 
 export type Timestamp = number;
+
+export type Value3D = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+export type SensorValue3D = SharedValue<Value3D>;
+
+export type ValueRotation = {
+  qw: number;
+  qx: number;
+  qy: number;
+  qz: number;
+  yaw: number;
+  pitch: number;
+  roll: number;
+};
+
+export type SensorValueRotation = SharedValue<ValueRotation>;

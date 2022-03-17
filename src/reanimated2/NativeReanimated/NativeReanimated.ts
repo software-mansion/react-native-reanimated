@@ -1,7 +1,10 @@
 import { NativeModules } from 'react-native';
-import { SharedValue } from '../commonTypes';
+import {
+  SharedValue,
+  SensorValue3D,
+  SensorValueRotation,
+} from '../commonTypes';
 import { Descriptor } from '../hook/commonTypes';
-import { SensorValue3D, SensorValueRotation } from '../hook/useAnimatedSensor';
 
 export class NativeReanimated {
   native: boolean;
