@@ -1,15 +1,14 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { useEffect, useRef } from 'react';
 import { makeMutable } from '../core';
+import { SharedValue } from '../commonTypes';
 import NativeReanimated from '../NativeReanimated';
 
 export enum SensorType {
   ACCELEROMETER = 1,
   GYROSCOPE = 2,
   GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION_VECTOR = 5,
+  MAGNETIC = 4,
+  ROTATION = 5,
 }
 
 export type SensorConfig = {
@@ -20,15 +19,18 @@ export type AnimatedSensor = {
   sensor: SensorValue3D | SensorValueRotation;
   unregister: () => void;
   isAvailable: boolean;
+  config: {
+    interval: number;
+  };
 };
 
-export type SensorValue3D = {
+export type SensorValue3D = SharedValue<{
   x: number;
   y: number;
   z: number;
-};
+}>;
 
-export type SensorValueRotation = {
+export type SensorValueRotation = SharedValue<{
   qw: number;
   qx: number;
   qy: number;
@@ -36,66 +38,70 @@ export type SensorValueRotation = {
   yaw: number;
   pitch: number;
   roll: number;
-};
+}>;
 
 export function useAnimatedSensor(
   sensorType: SensorType,
   userConfig?: SensorConfig
 ): AnimatedSensor {
-  const ref = useRef(null);
+  const ref = useRef({
+    sensor: null,
+    unregister: () => {
+      // NOOP
+    },
+    isAvailable: false,
+    config: {
+      interval: 0,
+    },
+  });
 
-  if (ref.current === null) {
-    const config: SensorConfig = Object.assign({ interval: 50 }, userConfig);
-    let sensorData: SensorValue3D | SensorValueRotation;
-    if (sensorType !== SensorType.ROTATION_VECTOR) {
+  if (ref.current.sensor === null) {
+    ref.current.config = Object.assign({ interval: 10 }, userConfig);
+    let sensorData;
+    if (sensorType === SensorType.ROTATION) {
       sensorData = {
-        x: makeMutable(0),
-        y: makeMutable(0),
-        z: makeMutable(0),
+        qw: 0,
+        qx: 0,
+        qy: 0,
+        qz: 0,
+        yaw: 0,
+        pitch: 0,
+        roll: 0,
       };
     } else {
       sensorData = {
-        qw: makeMutable(0),
-        qx: makeMutable(0),
-        qy: makeMutable(0),
-        qz: makeMutable(0),
-        yaw: makeMutable(0),
-        pitch: makeMutable(0),
-        roll: makeMutable(0),
+        x: 0,
+        y: 0,
+        z: 0,
       };
     }
-
-    const id = NativeReanimated.registerSensor(
-      sensorType,
-      config.interval,
-      sensorData
-    );
-    let animatedSensor: AnimatedSensor;
-    if (id !== -1) {
-      // if sensor is available
-      animatedSensor = {
-        sensor: sensorData,
-        unregister: () => NativeReanimated.unregisterSensor(id),
-        isAvailable: true,
-      };
-    } else {
-      // if sensor is unavailable
-      animatedSensor = {
-        sensor: sensorData,
-        unregister: () => {
-          // NOOP
-        },
-        isAvailable: false,
-      };
-    }
-    ref.current = animatedSensor;
+    ref.current.sensor = makeMutable(sensorData);
   }
 
   useEffect(() => {
+    ref.current.config = Object.assign({ interval: 10 }, userConfig);
+    const id = NativeReanimated.registerSensor(
+      sensorType,
+      ref.current.config.interval,
+      ref.current.sensor
+    );
+
+    if (id !== -1) {
+      // if sensor is available
+      ref.current.unregister = () => NativeReanimated.unregisterSensor(id);
+      ref.current.isAvailable = true;
+    } else {
+      // if sensor is unavailable
+      ref.current.unregister = () => {
+        // NOOP
+      };
+      ref.current.isAvailable = false;
+    }
+
     return () => {
       ref.current.unregister();
     };
-  }, []);
+  }, [sensorType, userConfig]);
 
   return ref.current;
 }

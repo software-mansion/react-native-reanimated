@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "AnimatedSensorModule.h"
 #include "ErrorHandler.h"
 #include "LayoutAnimationsProxy.h"
 #include "NativeReanimatedModuleSpec.h"
@@ -77,8 +78,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   void maybeRequestRender();
   UpdaterFunction updaterFunction;
-  RegisterSensorFunction registerSensorFunction;
-  UnregisterSensorFunction unregisterSensorFunction;
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -98,6 +97,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
       propObtainer;
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
+  AnimatedSensorModule animatedSensorModule;
 };
 
 } // namespace reanimated

@@ -469,11 +469,18 @@ declare module 'react-native-reanimated' {
     ACCELEROMETER = 1,
     GYROSCOPE = 2,
     GRAVITY = 3,
-    MAGNETIC_FIELD = 4,
-    ROTATION_VECTOR = 5,
+    MAGNETIC = 4,
+    ROTATION = 5,
   }
 
-  export function useAnimatedSensor(sensorType: SensorType);
+  export type SensorConfig = {
+    interval: number;
+  };
+
+  export function useAnimatedSensor(
+    sensorType: SensorType,
+    userConfig?: SensorConfig
+  );
 
   export interface ExitAnimationsValues {
     currentOriginX: number;

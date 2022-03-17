@@ -104,4 +104,13 @@ export default class JSReanimated extends NativeReanimated {
       '[Reanimated] enableLayoutAnimations is not available for WEB yet'
     );
   }
+
+  registerSensor(): number {
+    console.warn('[Reanimated] sensors API is not available for WEB');
+    return -1;
+  }
+
+  unregisterSensor(): void {
+    // noop
+  }
 }

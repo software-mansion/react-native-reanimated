@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "AnimatedSensorModule.h"
 #include "HostFunctionHandler.h"
 #include "JSIStoreValueUser.h"
 #include "LayoutAnimationsProxy.h"
@@ -25,6 +26,7 @@ class ShareableValue : public std::enable_shared_from_this<ShareableValue>,
   friend FrozenObject;
   friend LayoutAnimationsProxy;
   friend NativeReanimatedModule;
+  friend AnimatedSensorModule;
   friend void extractMutables(
       jsi::Runtime &rt,
       std::shared_ptr<ShareableValue> sv,

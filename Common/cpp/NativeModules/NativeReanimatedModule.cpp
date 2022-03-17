@@ -71,7 +71,8 @@ NativeReanimatedModule::NativeReanimatedModule(
       mapperRegistry(std::make_shared<MapperRegistry>()),
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
-      propObtainer(propObtainer) {
+      propObtainer(propObtainer),
+      animatedSensorModule(platformDepMethodsHolder, this) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -95,8 +96,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     this->onRender(timestampMs);
   };
   updaterFunction = platformDepMethodsHolder.updaterFunction;
-  registerSensorFunction = platformDepMethodsHolder.registerSensor;
-  unregisterSensorFunction = platformDepMethodsHolder.unregisterSensor;
 }
 
 void NativeReanimatedModule::installCoreFunctions(
@@ -303,50 +302,19 @@ void NativeReanimatedModule::onRender(double timestampMs) {
   }
 }
 
-enum SensorType {
-  ACCELEROMETER = 1,
-  GYROSCOPE = 2,
-  GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION_VECTOR = 5,
-};
-
 jsi::Value NativeReanimatedModule::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
     const jsi::Value &sensorDataContainer) {
-  std::vector<std::shared_ptr<ShareableValue>> sharedProperties;
-  std::vector<std::string> propertiesName;
-  if (sensorType.asNumber() != SensorType::ROTATION_VECTOR) {
-    propertiesName = {"x", "y", "z"};
-  } else {
-    propertiesName = {"qw", "qx", "qy", "qz", "yaw", "pitch", "roll"};
-  }
-  auto dataObject = sensorDataContainer.getObject(rt);
-  sharedProperties.reserve(propertiesName.size());
-  for (const auto &propName : propertiesName) {
-    sharedProperties.emplace_back(ShareableValue::adapt(
-        rt, dataObject.getProperty(rt, propName.c_str()), this));
-  }
-  auto setter = [&rt, sharedProperties](double newValues[]) {
-    int index = 0;
-    for (const auto &sharedValue : sharedProperties) {
-      auto &mutableObject =
-          ValueWrapper::asMutableValue(sharedValue->valueContainer);
-      mutableObject->setValue(rt, jsi::Value(newValues[index]));
-      index++;
-    }
-  };
-
-  return jsi::Value(registerSensorFunction(
-      sensorType.asNumber(), interval.asNumber(), setter));
+  return animatedSensorModule.registerSensor(
+      rt, sensorType, interval, sensorDataContainer);
 }
 
 void NativeReanimatedModule::unregisterSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorId) {
-  unregisterSensorFunction(sensorId.asNumber());
+  animatedSensorModule.unregisterSensor(sensorId);
 }
 
 } // namespace reanimated

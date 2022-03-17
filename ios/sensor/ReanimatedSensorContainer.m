@@ -3,12 +3,17 @@
 #import <Foundation/Foundation.h>
 #import "ReanimatedSensor.h"
 
+static NSNumber *_nextSensorId = nil;
+
 @implementation ReanimatedSensorContainer
 
 - (instancetype)init
 {
   self = [super init];
-  _nextSensorId = @0;
+  _sensors = [[NSMutableDictionary alloc] init];
+  if (_nextSensorId == nil) {
+    _nextSensorId = @0;
+  }
   return self;
 }
 
@@ -28,6 +33,9 @@
 - (void)unregisterSensor:(int)sensorId
 {
   NSNumber *_sensorId = [NSNumber numberWithInt:sensorId];
+  if (_sensors[_sensorId] == nil) {
+    return;
+  }
   [_sensors[_sensorId] cancel];
   [_sensors removeObjectForKey:_sensorId];
 }
