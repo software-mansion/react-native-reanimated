@@ -53,7 +53,7 @@ jobs:
       - name: Config app
         run: cd reactApp && yarn add react-native-reanimated
 
-      - name: Replace Reanimated package
+      - name: Replace Reanimated package_
         run: rm -rf node_modules/react-native-reanimated/* && tar zxvf ${{ env.PACKAGE_NAME }} && cp -R package/* node_modules/react-native-reanimated/
 
       - name: Configure ios
