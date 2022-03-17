@@ -1,8 +1,5 @@
 package com.swmansion.reanimated;
 
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.Nullable;
@@ -204,19 +201,6 @@ public class NativeProxy {
   private void registerEventHandler(EventHandler handler) {
     handler.mCustomEventNamesResolver = mNodesManager.getEventNameResolver();
     mNodesManager.registerEventHandler(handler);
-  }
-
-  static class SensorListener implements SensorEventListener {
-    public static float value;
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-      value = event.values[0];
-      System.out.println(event.values[0]);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
   }
 
   @DoNotStrip
