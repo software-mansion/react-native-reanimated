@@ -7,12 +7,10 @@ import {
   WorkletFunction,
   ComplexWorkletFunction,
   SharedValue,
-} from './commonTypes';
-import {
   AnimationObject,
   AnimatableValue,
   Timestamp,
-} from './animation/commonTypes';
+} from './commonTypes';
 import { Descriptor } from './hook/commonTypes';
 import JSReanimated from './js-reanimated/JSReanimated';
 
@@ -65,7 +63,7 @@ export const checkPluginState: (throwError: boolean) => boolean = (
 export const isConfigured: (throwError?: boolean) => boolean = (
   throwError = false
 ) => {
-  return checkPluginState(throwError) && !NativeReanimatedModule.useOnlyV1;
+  return checkPluginState(throwError);
 };
 
 export const isConfiguredCheck: () => void = () => {
@@ -364,32 +362,30 @@ export function runOnJS<A extends any[], R>(
   }
 }
 
-if (!NativeReanimatedModule.useOnlyV1) {
-  NativeReanimatedModule.installCoreFunctions(
-    NativeReanimatedModule.native
-      ? (workletValueSetter as <T>(value: T) => void)
-      : (workletValueSetterJS as <T>(value: T) => void)
-  );
+NativeReanimatedModule.installCoreFunctions(
+  NativeReanimatedModule.native
+    ? (workletValueSetter as <T>(value: T) => void)
+    : (workletValueSetterJS as <T>(value: T) => void)
+);
 
-  if (!isWeb() && isConfigured()) {
-    const capturableConsole = console;
-    runOnUI(() => {
-      'worklet';
-      const console = {
-        debug: runOnJS(capturableConsole.debug),
-        log: runOnJS(capturableConsole.log),
-        warn: runOnJS(capturableConsole.warn),
-        error: runOnJS(capturableConsole.error),
-        info: runOnJS(capturableConsole.info),
-      };
-      _setGlobalConsole(console);
-      if (global.performance == null) {
-        global.performance = {
-          now: global._chronoNow,
-        };
-      }
-    })();
-  }
+if (!isWeb() && isConfigured()) {
+  const capturableConsole = console;
+  runOnUI(() => {
+    'worklet';
+    const console = {
+      debug: runOnJS(capturableConsole.debug),
+      log: runOnJS(capturableConsole.log),
+      warn: runOnJS(capturableConsole.warn),
+      error: runOnJS(capturableConsole.error),
+      info: runOnJS(capturableConsole.info),
+    };
+    _setGlobalConsole(console);
+    if (global.performance == null) {
+      global.performance = {
+        now: global._chronoNow,
+      } as any; // due to conflict with lib.dom.d.ts -> Performance
+    }
+  })();
 }
 
 type FeaturesConfig = {
@@ -419,4 +415,8 @@ export function enableLayoutAnimations(
     featuresConfig.enableLayoutAnimations = flag;
     NativeReanimatedModule.enableLayoutAnimations(flag);
   }
+}
+
+export function jestResetJsReanimatedModule() {
+  (NativeReanimatedModule as JSReanimated).jestResetModule();
 }

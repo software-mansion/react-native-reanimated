@@ -15,7 +15,6 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Animation, AnimationObject } from './animation/commonTypes';
 import { Context } from './hook/commonTypes';
 
 export type TransformProperty =
@@ -59,6 +58,10 @@ export interface BasicWorkletFunction<T> extends WorkletFunction {
   (): T;
 }
 
+export interface BasicWorkletFunctionOptional<T> extends WorkletFunction {
+  (): Partial<T>;
+}
+
 export interface NativeEvent<T> {
   nativeEvent: T;
 }
@@ -79,3 +82,47 @@ export type NestedObjectValues<T> =
 export interface AdapterWorkletFunction extends WorkletFunction {
   (value: NestedObject<string | number | AnimationObject>): void;
 }
+
+export type AnimatableValue = number | string | Array<number>;
+
+export interface AnimationObject {
+  [key: string]: any;
+  callback: AnimationCallback;
+  current?: AnimatableValue;
+  toValue?: AnimationObject['current'];
+  startValue?: AnimationObject['current'];
+  finished?: boolean;
+  strippedCurrent?: number;
+  cancelled?: boolean;
+
+  __prefix?: string;
+  __suffix?: string;
+  onFrame: (animation: any, timestamp: Timestamp) => boolean;
+  onStart: (
+    nextAnimation: any,
+    current: any,
+    timestamp: Timestamp,
+    previousAnimation: any
+  ) => void;
+}
+
+export interface Animation<T extends AnimationObject> extends AnimationObject {
+  onFrame: (animation: T, timestamp: Timestamp) => boolean;
+  onStart: (
+    nextAnimation: T,
+    current: T extends NumericAnimation ? number : AnimatableValue,
+    timestamp: Timestamp,
+    previousAnimation: T
+  ) => void;
+}
+
+export interface NumericAnimation {
+  current?: number;
+}
+
+export type AnimationCallback = (
+  finished?: boolean,
+  current?: AnimatableValue
+) => void;
+
+export type Timestamp = number;

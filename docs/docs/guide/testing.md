@@ -42,7 +42,7 @@ If you have custom babel configuration for testing, make sure that Reanimated's 
 #### Timers
 You can use jest timers to control animation
 ```js
-jest.useFakeTimers();
+jest.useFakeTimers(); // jest.useFakeTimers('legacy') for jest >= 27
 // call animation
 jest.runAllTimers();
 ```

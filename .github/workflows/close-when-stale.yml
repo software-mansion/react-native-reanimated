@@ -1,15 +1,16 @@
-name: Check for platforms
+name: Check for stale issues
 on:
+  schedule:
+    - cron: '37 21 * * *' # at 21:37 every day
   issues:
-    types: [opened, edited]
+    types: [edited]
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
 
 jobs:
   main:
-    if: ${{ !contains(github.event.issue.labels.*.name, 'maintainer-issue') }}
     runs-on: ubuntu-latest
-    concurrency:
-      group: platforms-${{ github.event.issue.number }}
-      cancel-in-progress: true
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v2
@@ -33,8 +34,8 @@ jobs:
       - name: Install Actions
         run: yarn install
 
-      - name: Platforms
-        uses: ./platforms
+      - name: Close when stale
+        uses: ./close-when-stale
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          platforms-with-labels: '{"Android": "🤖android", "iOS": "🍎iOS", "Web": "🧭web"}'
+          close-when-stale-label: close-when-stale
+          days-to-close: 20

@@ -3,23 +3,18 @@ package com.swmansion.reanimated.example;
 import android.app.Application;
 import android.content.Context;
 
-import androidx.annotation.Nullable;
-
 import com.facebook.react.ReactApplication;
-import com.facebook.react.uimanager.UIImplementationProvider;
 import com.reactnativecommunity.picker.RNCPickerPackage;
 import com.swmansion.rnscreens.RNScreensPackage;
 import com.th3rdwave.safeareacontext.SafeAreaContextPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.horcrux.svg.SvgPackage;
 import com.reactnativepagerview.PagerViewPackage;
 import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
-import com.swmansion.reanimated.ReanimatedJSIModulePackage;
 import com.swmansion.reanimated.ReanimatedPackage;
 
 import org.reactnative.maskedview.RNCMaskedViewPackage;
@@ -55,12 +50,6 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected String getJSMainModuleName() {
       return "index";
-    }
-
-    @Nullable
-    @Override
-    protected JSIModulePackage getJSIModulePackage() {
-      return new ReanimatedJSIModulePackage();
     }
   };
 

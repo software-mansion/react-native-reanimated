@@ -16,6 +16,7 @@ declare module 'react-native-reanimated' {
     TextProps,
     ImageProps,
     ScrollViewProps,
+    FlatListProps,
     StyleProp,
     RegisteredStyle,
     ViewStyle,
@@ -38,16 +39,24 @@ declare module 'react-native-reanimated' {
     PanGestureHandlerGestureEvent,
   } from 'react-native-gesture-handler';
 
-  export {
-    Animation,
-    TimingAnimation,
-    SpringAnimation,
-    DecayAnimation,
-    DelayAnimation,
-    RepeatAnimation,
-    SequenceAnimation,
-    StyleLayoutAnimation,
-  } from './src/reanimated2/animation/index';
+  import('./src/reanimated2/globals');
+
+  export type TimingAnimation =
+    import('./src/reanimated2/animation/index').TimingAnimation;
+  export type SpringAnimation =
+    import('./src/reanimated2/animation/index').SpringAnimation;
+  export type DecayAnimation =
+    import('./src/reanimated2/animation/index').DecayAnimation;
+  export type DelayAnimation =
+    import('./src/reanimated2/animation/commonTypes').DelayAnimation;
+  export type RepeatAnimation =
+    import('./src/reanimated2/animation/index').RepeatAnimation;
+  export type SequenceAnimation =
+    import('./src/reanimated2/animation/index').SequenceAnimation;
+  export type StyleLayoutAnimation =
+    import('./src/reanimated2/animation/index').StyleLayoutAnimation;
+  export type Animation<T> =
+    import('./src/reanimated2/commonTypes').Animation<T>;
 
   namespace Animated {
     type Nullable<T> = T | null | undefined;
@@ -145,10 +154,14 @@ declare module 'react-native-reanimated' {
               >;
     };
 
+    export type StylesOrDefault<T> = 'style' extends keyof T
+      ? T['style']
+      : Record<string, unknown>;
+
     export type AnimateProps<P extends object> = {
-      [K in keyof P]: K extends 'style'
-        ? StyleProp<AnimateStyle<P[K]>>
-        : P[K] | AnimatedNode<P[K]>;
+      [K in keyof P]: P[K] | AnimatedNode<P[K]>;
+    } & {
+      style?: StyleProp<AnimateStyle<StylesOrDefault<P>>>;
     } & {
       animatedProps?: Partial<AnimateProps<P>>;
       layout?:
@@ -247,20 +260,31 @@ declare module 'react-native-reanimated' {
     export class View extends Component<AnimateProps<ViewProps>> {
       getNode(): ReactNativeView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface View extends ReactNativeView {}
     export class Text extends Component<AnimateProps<TextProps>> {
       getNode(): ReactNativeText;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Text extends ReactNativeText {}
     export class Image extends Component<AnimateProps<ImageProps>> {
       getNode(): ReactNativeImage;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface Image extends ReactNativeImage {}
     export class ScrollView extends Component<AnimateProps<ScrollViewProps>> {
       getNode(): ReactNativeScrollView;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface ScrollView extends ReactNativeScrollView {}
+
     export class Code extends Component<CodeProps> {}
-    export class FlatList extends Component<AnimateProps<FlatList>> {
+    export class FlatList<T> extends Component<AnimateProps<FlatListProps<T>>> {
       itemLayoutAnimation: ILayoutAnimationBuilder;
       getNode(): ReactNativeFlatList;
     }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface FlatList<T> extends ReactNativeView<T> {}
 
     type Options<P> = {
       setNativeProps: (ref: any, props: P) => void;
@@ -558,9 +582,10 @@ declare module 'react-native-reanimated' {
     finished?: boolean,
     current?: AnimatableValue
   ) => void;
+  export type EasingFunctionFactory = { factory: () => EasingFunction };
   export interface WithTimingConfig {
     duration?: number;
-    easing?: EasingFunction;
+    easing?: EasingFunction | EasingFunctionFactory;
   }
   export interface WithDecayConfig {
     deceleration?: number;
@@ -625,6 +650,42 @@ declare module 'react-native-reanimated' {
     inputRange: readonly number[],
     outputRange: readonly (string | number)[],
     colorSpace?: 'RGB' | 'HSV'
+  ): string | number;
+
+  export enum ColorSpace {
+    RGB = 0,
+    HSV = 1,
+  }
+
+  export interface InterpolateRGB {
+    r: number[];
+    g: number[];
+    b: number[];
+    a: number[];
+  }
+
+  export interface InterpolateHSV {
+    h: number[];
+    s: number[];
+    v: number[];
+  }
+
+  export interface InterpolateConfig {
+    inputRange: readonly number[];
+    outputRange: readonly (string | number)[];
+    colorSpace: ColorSpace;
+    cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
+  }
+
+  export function useInterpolateConfig(
+    inputRange: readonly number[],
+    outputRange: readonly (string | number)[],
+    colorSpace?: ColorSpace
+  ): SharedValue<InterpolateConfig>;
+
+  export function interpolateSharableColor(
+    value: number,
+    interpolateConfig: SharedValue<InterpolateConfig>
   ): string | number;
 
   export function makeMutable<T>(initialValue: T): SharedValue<T>;
@@ -793,6 +854,9 @@ declare module 'react-native-reanimated' {
     withCallback(
       callback: (finished: boolean) => void
     ): ComplexAnimationBuilder;
+
+    static withInitialValues(values: StyleProps): BaseAnimationBuilder;
+    withInitialValues(values: StyleProps): BaseAnimationBuilder;
 
     static easing(easingFunction: EasingFunction): ComplexAnimationBuilder;
     easing(easingFunction: EasingFunction): ComplexAnimationBuilder;

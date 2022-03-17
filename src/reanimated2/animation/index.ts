@@ -1,16 +1,16 @@
 export {
-  AnimationObject,
-  Animation,
   HigherOrderAnimation,
-  AnimationCallback,
   NextAnimation,
-  Timestamp,
+  DelayAnimation,
+  RepeatAnimation,
+  SequenceAnimation,
+  StyleLayoutAnimation,
 } from './commonTypes';
 export { cancelAnimation, defineAnimation, initialUpdaterRun } from './util';
 export { withTiming, TimingAnimation } from './timing';
 export { withSpring, SpringAnimation } from './spring';
 export { withDecay, DecayAnimation } from './decay';
-export { withDelay, DelayAnimation } from './delay';
-export { withRepeat, RepeatAnimation } from './repeat';
-export { withSequence, SequenceAnimation } from './sequence';
-export { withStyleAnimation, StyleLayoutAnimation } from './styleAnimation';
+export { withDelay } from './delay';
+export { withRepeat } from './repeat';
+export { withSequence } from './sequence';
+export { withStyleAnimation } from './styleAnimation';

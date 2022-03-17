@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-const MockDate = require('mockdate');
+import { jestResetJsReanimatedModule } from './core';
 
 let config = {
   fps: 60,
@@ -129,26 +129,30 @@ const compareStyle = (received, expectedStyle, config) => {
 
 let frameTime = 1000 / config.fps;
 let requestAnimationFrameCopy;
+let currentTimestamp = 0;
 
 const requestAnimationFrame = (callback) => {
   setTimeout(callback, frameTime);
 };
 
 const beforeTest = () => {
+  jestResetJsReanimatedModule();
   requestAnimationFrameCopy = global.requestAnimationFrame;
   global.requestAnimationFrame = requestAnimationFrame;
-  MockDate.set(0);
+  global.ReanimatedDataMock = {
+    now: () => currentTimestamp,
+  };
+  currentTimestamp = 0;
   jest.useFakeTimers();
 };
 
 const afterTest = () => {
-  MockDate.reset();
   jest.useRealTimers();
   global.requestAnimationFrame = requestAnimationFrameCopy;
 };
 
 const tickTravel = () => {
-  MockDate.set(new Date(Date.now() + frameTime));
+  currentTimestamp += frameTime;
   jest.advanceTimersByTime(frameTime);
 };
 
@@ -174,6 +178,7 @@ export const advanceAnimationByFrame = (count) => {
 
 export const setUpTests = (userConfig = {}) => {
   const expect = require('expect');
+  require('setimmediate');
   frameTime = Math.round(1000 / config.fps);
 
   config = {

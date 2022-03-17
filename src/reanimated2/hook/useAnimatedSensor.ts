@@ -16,7 +16,7 @@ export type SensorConfig = {
 };
 
 export type AnimatedSensor = {
-  sensor: SensorValue3D | SensorValueRotation;
+  sensor: SensorValue3D | SensorValueRotation | null;
   unregister: () => void;
   isAvailable: boolean;
   config: {
@@ -24,13 +24,15 @@ export type AnimatedSensor = {
   };
 };
 
-export type SensorValue3D = SharedValue<{
+export type Value3D = {
   x: number;
   y: number;
   z: number;
-}>;
+};
 
-export type SensorValueRotation = SharedValue<{
+export type SensorValue3D = SharedValue<Value3D>;
+
+export type ValueRotation = {
   qw: number;
   qx: number;
   qy: number;
@@ -38,7 +40,9 @@ export type SensorValueRotation = SharedValue<{
   yaw: number;
   pitch: number;
   roll: number;
-}>;
+};
+
+export type SensorValueRotation = SharedValue<ValueRotation>;
 
 export function useAnimatedSensor(
   sensorType: SensorType,
@@ -75,7 +79,7 @@ export function useAnimatedSensor(
         z: 0,
       };
     }
-    ref.current.sensor = makeMutable(sensorData);
+    ref.current.sensor = makeMutable(sensorData) as any;
   }
 
   useEffect(() => {
@@ -83,7 +87,7 @@ export function useAnimatedSensor(
     const id = NativeReanimated.registerSensor(
       sensorType,
       ref.current.config.interval,
-      ref.current.sensor
+      ref.current.sensor as any
     );
 
     if (id !== -1) {

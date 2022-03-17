@@ -1,20 +1,23 @@
 import {
-  Animation,
-  AnimationObject,
   HigherOrderAnimation,
   NextAnimation,
-  AnimatableValue,
-  Timestamp,
+  DelayAnimation,
+  RepeatAnimation,
+  SequenceAnimation,
+  StyleLayoutAnimation,
 } from './commonTypes';
 /* global _WORKLET */
 import { ParsedColorArray, convertToHSVA, isColor, toRGBA } from '../Colors';
 
-import { AnimatedStyle, SharedValue } from '../commonTypes';
-import { DelayAnimation } from './delay';
+import {
+  AnimatedStyle,
+  SharedValue,
+  AnimatableValue,
+  Animation,
+  AnimationObject,
+  Timestamp,
+} from '../commonTypes';
 import NativeReanimatedModule from '../NativeReanimated';
-import { RepeatAnimation } from './repeat';
-import { SequenceAnimation } from './sequence';
-import { StyleLayoutAnimation } from './styleAnimation';
 
 let IN_STYLE_UPDATER = false;
 
@@ -225,17 +228,16 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   };
 }
 
-type AnimationToDecoration<
-  T extends AnimationObject | StyleLayoutAnimation
-> = T extends StyleLayoutAnimation
-  ? Record<string, unknown>
-  : T extends DelayAnimation
-  ? NextAnimation<DelayAnimation>
-  : T extends RepeatAnimation
-  ? NextAnimation<RepeatAnimation>
-  : T extends SequenceAnimation
-  ? NextAnimation<SequenceAnimation>
-  : AnimatableValue | T;
+type AnimationToDecoration<T extends AnimationObject | StyleLayoutAnimation> =
+  T extends StyleLayoutAnimation
+    ? Record<string, unknown>
+    : T extends DelayAnimation
+    ? NextAnimation<DelayAnimation>
+    : T extends RepeatAnimation
+    ? NextAnimation<RepeatAnimation>
+    : T extends SequenceAnimation
+    ? NextAnimation<SequenceAnimation>
+    : AnimatableValue | T;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation

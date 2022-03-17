@@ -8,7 +8,8 @@ import { withTiming } from '../../animation';
 
 export class CurvedTransition
   extends BaseAnimationBuilder
-  implements ILayoutAnimationBuilder {
+  implements ILayoutAnimationBuilder
+{
   easingXV: EasingFn = Easing.in(Easing.ease);
   easingYV: EasingFn = Easing.out(Easing.ease);
   easingWidthV: EasingFn = Easing.in(Easing.exp);

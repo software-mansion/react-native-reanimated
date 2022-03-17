@@ -7,9 +7,10 @@ on:
 
 jobs:
   main:
+    if: ${{ !contains(github.event.issue.labels.*.name, 'maintainer-issue') }}
     runs-on: ubuntu-latest
     concurrency:
-      group: needs-repro-${{ github.ref }}
+      group: needs-repro-${{ github.event.issue.number }}
       cancel-in-progress: true
     steps:
       - name: Checkout Actions
