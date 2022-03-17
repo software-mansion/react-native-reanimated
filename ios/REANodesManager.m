@@ -276,7 +276,9 @@
       [strongSelf.uiManager setNeedsLayout];
     });
     if (trySynchronously) {
-      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+      // Timeout of 100ms, otherwise this will freeze the app when standard Animated API animations
+      // are run in parallel to reanimated animations
+      dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 100000000));
     }
 
     if (_mounting) {
