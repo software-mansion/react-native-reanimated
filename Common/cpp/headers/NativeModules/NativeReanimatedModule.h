@@ -71,6 +71,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
+  jsi::Value configureProps(
+      jsi::Runtime &rt,
+      const jsi::Value &uiProps,
+      const jsi::Value &nativeProps) override;
 
   void onRender(double timestampMs);
   void onEvent(std::string eventName, std::string eventAsString);
@@ -98,6 +102,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec,
   std::function<void(double)> onRenderCallback;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy;
   AnimatedSensorModule animatedSensorModule;
+  ConfigurePropsFunction configurePropsPlatformFunction;
 };
 
 } // namespace reanimated

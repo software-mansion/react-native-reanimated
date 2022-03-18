@@ -50,6 +50,7 @@ import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
 import AnimatedSensorExample from './AnimatedSensorExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -115,20 +116,24 @@ const SCREENS: Screens = {
     screen: Modal,
   },
   NativeModals: {
-    title: '🆕  Native modals (RN and Screens)',
+    title: '🆕 Native modals (RN and Screens)',
     screen: NativeModals,
   },
   Carousel: {
-    title: '🆕 Carousel',
+    title: 'Carousel',
     screen: Carousel,
   },
   PagerExample: {
     screen: PagerExample,
-    title: '🆕 Custom Handler Example - Pager',
+    title: 'Custom Handler Example - Pager',
   },
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
   },
   WobbleExample: {
     screen: WobbleExample,

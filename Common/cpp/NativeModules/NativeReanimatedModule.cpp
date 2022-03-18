@@ -72,7 +72,9 @@ NativeReanimatedModule::NativeReanimatedModule(
       eventHandlerRegistry(std::make_shared<EventHandlerRegistry>()),
       requestRender(platformDepMethodsHolder.requestRender),
       propObtainer(propObtainer),
-      animatedSensorModule(platformDepMethodsHolder, this) {
+      animatedSensorModule(platformDepMethodsHolder, this),
+      configurePropsPlatformFunction(
+          platformDepMethodsHolder.configurePropsFunction) {
   auto requestAnimationFrame = [=](FrameCallback callback) {
     frameCallbacks.push_back(callback);
     maybeRequestRender();
@@ -244,6 +246,14 @@ jsi::Value NativeReanimatedModule::enableLayoutAnimations(
     jsi::Runtime &rt,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
+  return jsi::Value::undefined();
+}
+
+jsi::Value NativeReanimatedModule::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+  configurePropsPlatformFunction(rt, uiProps, nativeProps);
   return jsi::Value::undefined();
 }
 

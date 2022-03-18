@@ -154,6 +154,10 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       int interval,
       std::function<void(double[])> setter);
   void unregisterSensor(int sensorId);
+  void configureProps(
+      jsi::Runtime &rt,
+      const jsi::Value &uiProps,
+      const jsi::Value &nativeProps);
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,

@@ -26,6 +26,10 @@ using RegisterSensorFunction =
     std::function<int(int, int, std::function<void(double[])>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
+using ConfigurePropsFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -36,6 +40,7 @@ struct PlatformDepMethodsHolder {
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
+  ConfigurePropsFunction configurePropsFunction;
 };
 
 } // namespace reanimated
