@@ -49,6 +49,7 @@ import SwipeableListExample from './SwipeableListExample';
 import WobbleExample from './WobbleExample';
 import AnimatedListExample from './LayoutReanimation/AnimatedList';
 import { WaterfallGridExample } from './LayoutReanimation/WaterfallGridExample';
+import AnimatedSharedStyleExample from './AnimatedSharedStyleExample';
 
 LogBox.ignoreLogs(['Calling `getNode()`']);
 
@@ -124,6 +125,10 @@ const SCREENS: Screens = {
   AnimatedStyleUpdate: {
     screen: AnimatedStyleUpdateExample,
     title: 'Animated Style Update',
+  },
+  AnimatedSharedStyle: {
+    screen: AnimatedSharedStyleExample,
+    title: 'Animated Shared Style',
   },
   WobbleExample: {
     screen: WobbleExample,
