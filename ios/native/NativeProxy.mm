@@ -125,6 +125,17 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
   throw std::runtime_error("Unsupported jsi::jsi::Value kind");
 }
 
+static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
+{
+  NSMutableSet *propsSet = [[NSMutableSet alloc] init];
+  jsi::Array propsNames = props.asObject(rt).asArray(rt);
+  for (int i = 0; i < propsNames.size(rt); i++) {
+    NSString *propName = @(propsNames.getValueAtIndex(rt, i).asString(rt).utf8(rt).c_str());
+    [propsSet addObject:propName];
+  }
+  return propsSet;
+}
+
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
     std::shared_ptr<CallInvoker> jsInvoker)
@@ -217,6 +228,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     }
   };
 
+  auto configurePropsFunction = [reanimatedModule](
+                                    jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+    NSSet *uiPropsSet = convertProps(rt, uiProps);
+    NSSet *nativePropsSet = convertProps(rt, nativeProps);
+    [reanimatedModule.nodesManager configureUiProps:uiPropsSet andNativeProps:nativePropsSet];
+  };
+
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(notifyAboutProgress, notifyAboutEnd);
   std::weak_ptr<jsi::Runtime> wrt = animatedRuntime;
@@ -269,7 +287,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       measuringFunction,
       getCurrentTime,
       setGestureStateFunction,
-  };
+      configurePropsFunction};
 
   module = std::make_shared<NativeReanimatedModule>(
       jsInvoker,

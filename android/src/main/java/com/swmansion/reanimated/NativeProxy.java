@@ -8,6 +8,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.devsupport.interfaces.DevSupportManager;
@@ -19,8 +20,11 @@ import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class NativeProxy {
 
@@ -178,6 +182,22 @@ public class NativeProxy {
   @DoNotStrip
   private float[] measure(int viewTag) {
     return mNodesManager.measure(viewTag);
+  }
+
+  @DoNotStrip
+  private void configureProps(ReadableNativeArray uiProps, ReadableNativeArray nativeProps) {
+    Set<String> uiPropsSet = convertProps(uiProps);
+    Set<String> nativePropsSet = convertProps(nativeProps);
+    mNodesManager.configureProps(uiPropsSet, nativePropsSet);
+  }
+
+  private Set<String> convertProps(ReadableNativeArray props) {
+    Set<String> propsSet = new HashSet<>();
+    ArrayList<Object> propsList = props.toArrayList();
+    for (int i = 0; i < propsList.size(); i++) {
+      propsSet.add((String) propsList.get(i));
+    }
+    return propsSet;
   }
 
   @DoNotStrip

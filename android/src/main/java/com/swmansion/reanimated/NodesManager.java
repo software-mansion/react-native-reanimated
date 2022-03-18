@@ -464,9 +464,9 @@ public class NodesManager implements EventDispatcherListener {
     mEventMapping.remove(key);
   }
 
-  public void configureProps(Set<String> nativePropsSet, Set<String> uiPropsSet) {
-    nativeProps = nativePropsSet;
+  public void configureProps(Set<String> uiPropsSet, Set<String> nativePropsSet) {
     uiProps = uiPropsSet;
+    nativeProps = nativePropsSet;
   }
 
   public void getValue(int nodeID, Callback callback) {

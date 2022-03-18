@@ -149,6 +149,12 @@ void NativeProxy::installJSIBindings() {
     this->layoutAnimations->cthis()->notifyAboutEnd(tag, (isCancelled) ? 1 : 0);
   };
 
+  auto configurePropsFunction = [=](jsi::Runtime &rt,
+                                    const jsi::Value &uiProps,
+                                    const jsi::Value &nativeProps) {
+    this->configureProps(rt, uiProps, nativeProps);
+  };
+
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy =
       std::make_shared<LayoutAnimationsProxy>(
           notifyAboutProgress, notifyAboutEnd);
@@ -164,7 +170,7 @@ void NativeProxy::installJSIBindings() {
       measuringFunction,
       getCurrentTime,
       setGestureStateFunction,
-  };
+      configurePropsFunction};
 
   auto module = std::make_shared<NativeReanimatedModule>(
       jsCallInvoker_,
@@ -270,6 +276,24 @@ void NativeProxy::setGestureState(int handlerTag, int newState) {
   auto method =
       javaPart_->getClass()->getMethod<void(int, int)>("setGestureState");
   method(javaPart_.get(), handlerTag, newState);
+}
+
+void NativeProxy::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+  auto method = javaPart_->getClass()
+                    ->getMethod<void(
+                        ReadableNativeArray::javaobject,
+                        ReadableNativeArray::javaobject)>("configureProps");
+  method(
+      javaPart_.get(),
+      ReadableNativeArray::newObjectCxxArgs(
+          std::move(jsi::dynamicFromValue(rt, uiProps)))
+          .get(),
+      ReadableNativeArray::newObjectCxxArgs(
+          std::move(jsi::dynamicFromValue(rt, nativeProps)))
+          .get());
 }
 
 } // namespace reanimated

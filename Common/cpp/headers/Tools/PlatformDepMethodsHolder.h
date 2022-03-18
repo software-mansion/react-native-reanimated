@@ -22,6 +22,10 @@ using MeasuringFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
 using TimeProviderFunction = std::function<double(void)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
+using ConfigurePropsFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps)>;
 
 struct PlatformDepMethodsHolder {
   RequestRender requestRender;
@@ -30,6 +34,7 @@ struct PlatformDepMethodsHolder {
   MeasuringFunction measuringFunction;
   TimeProviderFunction getCurrentTime;
   SetGestureStateFunction setGestureStateFunction;
+  ConfigurePropsFunction configurePropsFunction;
 };
 
 } // namespace reanimated
